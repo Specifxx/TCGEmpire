@@ -1,0 +1,252 @@
+Sweeping markets: US
+Official registry: 8340 stores worldwide, 42 pages …
+1573 unique, untracked, non-social shop domains across the requested markets.
+84 extra candidate(s) from probe-in/sisters.json.
+1708 store(s) to sweep (51 already tracked, re-checked for regressions).
+1708 to sweep this run.
+
+  … 25/1708 done
+  … 50/1708 done
+  … 75/1708 done
+  … 100/1708 done
+  … 125/1708 done
+  … 150/1708 done
+  … 175/1708 done
+  … 200/1708 done
+  … 225/1708 done
+  … 250/1708 done
+  … 275/1708 done
+  … 300/1708 done
+  … 325/1708 done
+  … 350/1708 done
+  … 375/1708 done
+  … 400/1708 done
+  … 425/1708 done
+  … 450/1708 done
+  … 475/1708 done
+  … 500/1708 done
+  … 525/1708 done
+  … 550/1708 done
+  … 575/1708 done
+  … 600/1708 done
+  … 625/1708 done
+  … 650/1708 done
+  … 675/1708 done
+  … 700/1708 done
+  … 725/1708 done
+  … 750/1708 done
+  … 775/1708 done
+  … 800/1708 done
+  … 825/1708 done
+  … 850/1708 done
+  … 875/1708 done
+  … 900/1708 done
+  … 925/1708 done
+  … 950/1708 done
+  … 975/1708 done
+  … 1000/1708 done
+  … 1025/1708 done
+  … 1050/1708 done
+  … 1075/1708 done
+  … 1100/1708 done
+  … 1125/1708 done
+  … 1150/1708 done
+  … 1175/1708 done
+  … 1200/1708 done
+  … 1225/1708 done
+  … 1250/1708 done
+  … 1275/1708 done
+  … 1300/1708 done
+  … 1325/1708 done
+  … 1350/1708 done
+  … 1375/1708 done
+  … 1400/1708 done
+  … 1425/1708 done
+  … 1450/1708 done
+  … 1475/1708 done
+  … 1500/1708 done
+  … 1525/1708 done
+  … 1550/1708 done
+  … 1575/1708 done
+  … 1600/1708 done
+  … 1625/1708 done
+  … 1650/1708 done
+  … 1675/1708 done
+  … 1700/1708 done
+
+════ US — 13 new store(s) clear the bar (of 1657 swept, 6 already-tracked duplicates) ════
+Level Up Games MD            levelupgamesmd.com             shopify    singles= 483 inStock= 485 cur=USD policy=y [riftbound,riftbound-single] e.g. Diana - Scorn of the Moon (Overnumbered) 239.99
+Triad Cards and Gaming       triadgroup.shop                shopify    singles= 401 inStock= 439 cur=USD policy=y [riftbound,riftbound-singles] e.g. Swain, Visionary (065/166) (OPP) 1.99
+Poke-Collect                 poke-collect.com               shopify    singles=  72 inStock=  72 cur=USD policy=y [riftbound-singles,riftbound-single] e.g. Azir - Sovereign (177/221) - Spiritforge 8.50
+Hasty Goblin Games           hastygoblingames.com           shopify    singles=  64 inStock= 219 cur=USD policy=y [riftbound,riftbound-origins] e.g. Viktor, Innovator - 117/298 - Origins (O 0.25
+Columbus Card Shop           columbuscardshop.com           shopify    singles=  55 inStock=  55 cur=USD policy=n [riftbound-league-of-legends-singles,riftbound-single] e.g. Thousand-Tailed Watcher [OGN - 116/298] 24.99
+Stupid Geeks, Inc.           stupidgeeksinc.com             shopify    singles=  43 inStock=  43 cur=USD policy=n [riftbound-singles-instock,riftbound-single] e.g. Yone, Blademaster (Signature) (SFD - 233 655.99
+Burbank Sportscards          burbankcards.com               shopify    singles=  38 inStock= 154 cur=USD policy=y [riftbound-careds,riftbound] e.g. 2026 League of Legends Spiritforged Over 300.00
+Solacido Cards and Collectib solacido.com                   shopify    singles=  19 inStock= 928 cur=USD policy=y [singles-riftbound,riftbound] e.g. Body Rune (R04a) 4.25
+NOLA TCG Experience          nolatcg.com                    shopify    singles=  17 inStock=  23 cur=USD policy=y [riftbound-league-of-legends-tcg,riftbound-league-of-legends-tcg-spiritforged] e.g. Vilemaw (060/219) - Unleashed Foil 15.00
+Card Shop Near Me            cardshopnear.me                shopify    singles=  15 inStock=  18 cur=USD policy=n [riftbound-singles,riftbound-single] e.g. Seal of Strength #231/221 - Spiritforged 39.99
+Epic Trading Collectibles    epictradingcollectibles.com    shopify    singles=  14 inStock=  20 cur=USD policy=y [league-of-legends-riftbound-tcg,riftbound-single] e.g. Riftbound TCG: 2026 Mind Rune R03a Unlea 6.00
+Papa Joey’s Collectibles - P papajoeys.com                  shopify    singles=  12 inStock=  90 cur=USD policy=y [riftbound-tcg-singles,riftbound-graded-slabs] e.g. 2026 League of Legends—Chaos Rune #R05a  5.00
+Do Big Things Collectibles I pullbighits.com                shopify    singles=  10 inStock= 360 cur=USD policy=y [riftbound-league-of-legends,riftbound-singles-copy] e.g. Chaos Rune (R05a) Foil 9.00
+  platform histogram (non-Shopify, riftbound-mentioned/total):
+    other            231/565
+    squarespace      74/82
+    wix              54/116
+    ecwid            15/33
+    bigcommerce      11/21
+    crystal-commerce 5/8
+    shopware         1/1
+    magento          0/1
+  tracked stores now returning < 10 singles (report only — nothing removed):
+    hobbiesville         hobbiesville.com               singles=416 verdict=wrong-currency
+    vegassingles         vegas.singles                  singles=1107 verdict=wrong-currency
+    gamecraftgamestore   gamecraftgamestore.com         singles=0 verdict=not-shopify
+    wolfdentcg           wolfdentcg.com                 singles=0 verdict=thin
+    gachaboba            gachaboba.com                  singles=0 verdict=no-stock
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+  other            riftbound-mentioned=231 / total=565
+  squarespace      riftbound-mentioned=74 / total=82
+  wix              riftbound-mentioned=54 / total=116
+  ecwid            riftbound-mentioned=15 / total=33
+  bigcommerce      riftbound-mentioned=11 / total=21
+  crystal-commerce riftbound-mentioned=5 / total=8
+  shopware         riftbound-mentioned=1 / total=1
+  magento          riftbound-mentioned=0 / total=1
+
+── retailers.ts block ──
+
+  // ---- Registry sweep (2026-10-28, scripts/sweep-registry.ts) — 13 store(s) cleared MIN_SINGLES_FOR_STORE ----
+  levelupgamesmd: {
+    key: "levelupgamesmd",
+    name: "Level Up Games MD",
+    base: "https://levelupgamesmd.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 483 singles, cur=USD
+  triadgroup: {
+    key: "triadgroup",
+    name: "Triad Cards and Gaming",
+    base: "https://triadgroup.shop",
+    collections: ["riftbound", "riftbound-all-product", "riftbound-pre-sale"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 401 singles, cur=USD
+  pokecollect: {
+    key: "pokecollect",
+    name: "Poke-Collect",
+    base: "https://poke-collect.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 72 singles, cur=USD
+  hastygoblingames: {
+    key: "hastygoblingames",
+    name: "Hasty Goblin Games",
+    base: "https://hastygoblingames.com",
+    collections: ["riftbound", "riftbound-origins", "riftbound-spiritforged", "riftbound-1"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 64 singles, cur=USD
+  columbuscardshop: {
+    key: "columbuscardshop",
+    name: "Columbus Card Shop",
+    base: "https://columbuscardshop.com",
+    collections: ["riftbound-league-of-legends-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 55 singles, cur=USD
+  stupidgeeksinc: {
+    key: "stupidgeeksinc",
+    name: "Stupid Geeks, Inc.",
+    base: "https://stupidgeeksinc.com",
+    collections: ["riftbound-singles-instock"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 43 singles, cur=USD
+  burbankcards: {
+    key: "burbankcards",
+    name: "Burbank Sportscards",
+    base: "https://burbankcards.com",
+    collections: ["riftbound-careds", "riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 38 singles, cur=USD
+  solacido: {
+    key: "solacido",
+    name: "Solacido Cards and Collectibles",
+    base: "https://solacido.com",
+    collections: ["singles-riftbound", "riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 19 singles, cur=USD
+  nolatcg: {
+    key: "nolatcg",
+    name: "NOLA TCG Experience",
+    base: "https://nolatcg.com",
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-league-of-legends-tcg-spiritforged", "riftbound-league-of-legends-tcg-all-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 17 singles, cur=USD
+  cardshopnear: {
+    key: "cardshopnear",
+    name: "Card Shop Near Me",
+    base: "https://cardshopnear.me",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 15 singles, cur=USD
+  epictradingcollectibles: {
+    key: "epictradingcollectibles",
+    name: "Epic Trading Collectibles",
+    base: "https://epictradingcollectibles.com",
+    collections: ["league-of-legends-riftbound-tcg"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 14 singles, cur=USD
+  papajoeys: {
+    key: "papajoeys",
+    name: "Papa Joey’s Collectibles - PB",
+    base: "https://papajoeys.com",
+    collections: ["riftbound-tcg-singles", "riftbound-graded-slabs", "riftbound-events-the-shoppes-carlsbad-ca", "riftbound-events-plaza-bonita-national-city-ca"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 12 singles, cur=USD
+  pullbighits: {
+    key: "pullbighits",
+    name: "Do Big Things Collectibles Inc",
+    base: "https://pullbighits.com",
+    collections: ["riftbound-league-of-legends", "riftbound-singles-copy", "riftbound-singles-copy-1", "one-piece-singles-copy-2"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep: 10 singles, cur=USD
+
+  // add to STORES_WITH_POLICY: "pullbighits", "hastygoblingames", "papajoeys", "solacido", "burbankcards", "levelupgamesmd", "triadgroup", "epictradingcollectibles", "nolatcg", "pokecollect"
+

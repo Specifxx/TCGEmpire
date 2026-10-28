@@ -1,0 +1,191 @@
+Sweeping markets: AU
+Official registry: 8340 stores worldwide, 42 pages …
+109 unique, untracked, non-social shop domains across the requested markets.
+62 extra candidate(s) from probe-in/sisters.json.
+206 store(s) to sweep (35 already tracked, re-checked for regressions).
+206 to sweep this run.
+
+  … 25/206 done
+  … 50/206 done
+  … 75/206 done
+  … 100/206 done
+  … 125/206 done
+  … 150/206 done
+  … 175/206 done
+  … 200/206 done
+
+════ AU — 15 new store(s) clear the bar (of 171 swept, 0 already-tracked duplicates) ════
+Good Games Morley            goodgamesmorley.com.au         shopify    singles=1365 inStock=1365 cur=AUD policy=n [see-more-riftbound,riftbound-single] e.g. Iridescent Avian 027/167 (Radiance)  - F 1000.00
+Wonderland Games             wonderlandgames.com.au         shopify    singles=1168 inStock=1170 cur=AUD policy=y [riftbound-league-of-legends-tcg,riftbound-single] e.g. Not So Fast 45/221 (Spiritforged) 2.00
+Steel City Games             steelcitygames.com.au          shopify    singles=1091 inStock=1091 cur=AUD policy=n [riftbound-singles,riftbound-single] e.g. Long Sword 22/221 (Spiritforged)  - Foil 1.00
+Plenty of Games              plentyofgames.com.au           shopify    singles= 901 inStock= 901 cur=AUD policy=y [riftbound-singles,riftbound-single] e.g. Switcheroo (145/221) - Riftbound - [Spir 6.00
+Team Card Titan              teamcardtitan.com              shopify    singles= 881 inStock= 889 cur=AUD policy=y [riftbound-league-of-legends,riftbound-league-of-legends-1] e.g. Packed Amphitheater (Overnumbered) (184/ 876.54
+Irresistible Force TCG       tcg.irresistibleforce.com.au   shopify    singles= 745 inStock= 746 cur=AUD policy=y [riftbound-tcg,riftbound-single] e.g. Fiora - Victorious (232/298) - Origins F 3.00
+Card Bot                     cardbot.co.nz                  shopify    singles= 734 inStock= 768 cur=AUD policy=y [riftbound-origins-singles,riftbound] e.g. Riftbound - Origins - 001/298 Blazing Sc 0.50
+Mayhem Collectables          mayhemcollectables.com.au      shopify    singles= 375 inStock= 376 cur=AUD policy=y [riftbound,riftbound-1] e.g. Evelynn - Consuming 090a/167 (Radiance)  8.00
+Crystal Collectables TCG     crystalcollectablestcg.com.au  shopify    singles= 327 inStock= 348 cur=AUD policy=n [riftbound,riftbound-singles] e.g. 179/219-UNL Rift Herald Epic 14.30
+The Combat Company           thecombatcompany.com           shopify    singles= 265 inStock= 664 cur=AUD policy=y [riftbound-tcg,quokka-riftbound] e.g. Legion Marauder (074/166) [Vendetta] 0.75
+Good Games Greensborough     gggreensborough.com.au         shopify    singles= 212 inStock= 212 cur=AUD policy=y [riftbound,riftbound-single] e.g. Evelynn - Entrancing 141/219 (Unleashed) 1.00
+HBT Collectables             hbtcollectables.com            shopify    singles= 132 inStock= 145 cur=AUD policy=y [riftbound-league-of-legends,riftbound-tcg-singles] e.g. Akali, Silent [VEN - 038/166] 1.00
+Groovy Collectables          groovycollectables.com.au      shopify    singles=  83 inStock=  87 cur=AUD policy=y [riftbound-league-of-legends,riftbound-singles] e.g. Kai'Sa, Survivor SP1/006 - (Vendetta) (S 155.00
+Hobby Collectors Australia   hobbycollectorsaustralia.com.au shopify    singles=  45 inStock= 108 cur=AUD policy=y [riftbound-league-of-legends-tcg,riftbound-league-of-legends-tcg-origins] e.g. Yamper (99/94) - Mega Evolution - Phanta 8.00
+Light of Cards - Zetland     lightofcards.com.au            shopify    singles=  23 inStock=  27 cur=AUD policy=y [riftbound,riftbound-single-cards] e.g. Riftbound TCG - Rhasa the Sunderer - 195 4.99
+  platform histogram (non-Shopify, riftbound-mentioned/total):
+    other            21/33
+    wix              2/2
+    ecwid            2/3
+    bigcommerce      1/1
+    squarespace      1/1
+  tracked stores now returning < 10 singles (report only — nothing removed):
+    ozzie                ozziecollectables.com          singles=1 verdict=thin
+    manamarket           manamarket.com.au              singles=6 verdict=thin
+    elementalarcade      elementalarcade.com.au         singles=6 verdict=thin
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+  other            riftbound-mentioned=21 / total=33
+  wix              riftbound-mentioned=2 / total=2
+  ecwid            riftbound-mentioned=2 / total=3
+  bigcommerce      riftbound-mentioned=1 / total=1
+  squarespace      riftbound-mentioned=1 / total=1
+
+── retailers.ts block ──
+
+  // ---- Registry sweep (2026-10-28, scripts/sweep-registry.ts) — 15 store(s) cleared MIN_SINGLES_FOR_STORE ----
+  goodgamesmorley: {
+    key: "goodgamesmorley",
+    name: "Good Games Morley",
+    base: "https://goodgamesmorley.com.au",
+    collections: ["see-more-riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 1365 singles, cur=AUD
+  wonderlandgames: {
+    key: "wonderlandgames",
+    name: "Wonderland Games",
+    base: "https://wonderlandgames.com.au",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 1168 singles, cur=AUD
+  steelcitygames: {
+    key: "steelcitygames",
+    name: "Steel City Games",
+    base: "https://steelcitygames.com.au",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 1091 singles, cur=AUD
+  plentyofgames: {
+    key: "plentyofgames",
+    name: "Plenty of Games",
+    base: "https://plentyofgames.com.au",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 901 singles, cur=AUD
+  teamcardtitan: {
+    key: "teamcardtitan",
+    name: "Team Card Titan",
+    base: "https://teamcardtitan.com",
+    collections: ["riftbound-league-of-legends", "riftbound-league-of-legends-1", "explore-all-riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 881 singles, cur=AUD
+  tcg: {
+    key: "tcg",
+    name: "Irresistible Force TCG",
+    base: "https://tcg.irresistibleforce.com.au",
+    collections: ["riftbound-tcg"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 745 singles, cur=AUD
+  cardbot2: {
+    key: "cardbot2",
+    name: "Card Bot",
+    base: "https://cardbot.co.nz",
+    collections: ["riftbound-origins-singles", "riftbound", "riftbound-spiritforged-singles", "riftbound-unleashed-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 734 singles, cur=AUD
+  mayhemcollectables: {
+    key: "mayhemcollectables",
+    name: "Mayhem Collectables",
+    base: "https://mayhemcollectables.com.au",
+    collections: ["riftbound", "riftbound-1", "all-riftbound-products", "hot-singles-riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 375 singles, cur=AUD
+  crystalcollectablestcg: {
+    key: "crystalcollectablestcg",
+    name: "Crystal Collectables TCG",
+    base: "https://crystalcollectablestcg.com.au",
+    collections: ["riftbound", "riftbound-vendetta"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 327 singles, cur=AUD
+  thecombatcompany: {
+    key: "thecombatcompany",
+    name: "The Combat Company",
+    base: "https://thecombatcompany.com",
+    collections: ["riftbound-tcg", "quokka-riftbound", "quokka-riftbound-copy"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 265 singles, cur=AUD
+  gggreensborough: {
+    key: "gggreensborough",
+    name: "Good Games Greensborough",
+    base: "https://gggreensborough.com.au",
+    collections: ["riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 212 singles, cur=AUD
+  hbtcollectables: {
+    key: "hbtcollectables",
+    name: "HBT Collectables",
+    base: "https://hbtcollectables.com",
+    collections: ["riftbound-league-of-legends", "riftbound-tcg-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 132 singles, cur=AUD
+  groovycollectables: {
+    key: "groovycollectables",
+    name: "Groovy Collectables",
+    base: "https://groovycollectables.com.au",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 83 singles, cur=AUD
+  hobbycollectorsaustralia: {
+    key: "hobbycollectorsaustralia",
+    name: "Hobby Collectors Australia",
+    base: "https://hobbycollectorsaustralia.com.au",
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-league-of-legends-tcg-origins", "riftbound-league-of-legends-tcg-origins-copy", "riftbound-league-of-legends-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 45 singles, cur=AUD
+  lightofcards: {
+    key: "lightofcards",
+    name: "Light of Cards - Zetland",
+    base: "https://lightofcards.com.au",
+    collections: ["riftbound", "riftbound-single-cards", "riftbound-single-cards-1", "riftbound-vault"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep: 23 singles, cur=AUD
+
+  // add to STORES_WITH_POLICY: "hobbycollectorsaustralia", "lightofcards", "plentyofgames", "thecombatcompany", "gggreensborough", "hbtcollectables", "mayhemcollectables", "teamcardtitan", "wonderlandgames", "groovycollectables", "tcg", "cardbot2"
+

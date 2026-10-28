@@ -1,0 +1,34 @@
+Sweeping markets: SG
+Official registry: 8340 stores worldwide, 42 pages …
+34 unique, untracked, non-social shop domains across the requested markets.
+10 extra candidate(s) from probe-in/sisters.json.
+57 store(s) to sweep (13 already tracked, re-checked for regressions).
+57 to sweep this run.
+
+  … 25/57 done
+  … 50/57 done
+
+════ SG — 1 new store(s) clear the bar (of 44 swept, 0 already-tracked duplicates) ════
+Hideyoshi                    hideyoshitcg.com               shopify    singles=  27 inStock=  27 cur=SGD policy=n [riftbound,riftbound-single] e.g. First Mate [OGN-132/298] 1.00
+  platform histogram (non-Shopify, riftbound-mentioned/total):
+    other            6/8
+    wix              2/3
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+  other            riftbound-mentioned=6 / total=8
+  wix              riftbound-mentioned=2 / total=3
+
+── retailers.ts block ──
+
+  // ---- Registry sweep (2026-10-28, scripts/sweep-registry.ts) — 1 store(s) cleared MIN_SINGLES_FOR_STORE ----
+  hideyoshitcg: {
+    key: "hideyoshitcg",
+    name: "Hideyoshi",
+    base: "https://hideyoshitcg.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  }, // sweep: 27 singles, cur=SGD
+
