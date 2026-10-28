@@ -203,7 +203,9 @@ longer lands on its entry.
   moved up in Stripe. No trial: `PREMIUM_TRIAL_DAYS` defaults to 0 (the 30-day
   trial below is superseded). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.
-  `/premium` copies Collectr's page for non-members. A rate-the-site corner card
+  `/premium` copies Collectr's page for non-members. Until the site has 100 ratings, a closable rating pop-up asks
+  every visitor who has not rated once per visit, then switches itself off
+  ([2026-10-28](../DECISIONS.md#L20675)). After that, a rate-the-site corner card
   (not a modal) asks after 4 pages and 3 minutes, or on return from a store
   tab, at most three times 14 days apart, and is the one uninvited opinion ask;
   a tapped star counts even when the form is closed unsent ([2026-10-28](../DECISIONS.md#L20608)); one rating-and-review form everywhere (corner card,

@@ -24,6 +24,34 @@
 // Escape, "Not now") waits RATE_SNOOZE_MS; it gives up after RATE_MAX_ASKS.
 // It is a small corner card, not a modal: it never blocks the page.
 
+// THE RATING DRIVE (owner, 2026-10-28: "have it pop up with like the next 100
+// visitors until we get like over 100 reviews. And then we can like turn it
+// off"). While the site has fewer than RATING_DRIVE_TARGET ratings
+// (/api/rating-drive), the ask is a centred pop-up instead of the corner card,
+// for EVERY visitor who has not rated, once per visit, until they rate: no
+// "Don't ask again", and a click on the dimmed page does not close it (✕,
+// "Maybe later" and Escape do: a pop-up with no way out is what Google's
+// intrusive-interstitial rule punishes). Never on a visit's landing page
+// before RATING_DRIVE_LANDING_MS, so a visitor from search reads the page they
+// came for first. At the target it switches itself off and the corner card's
+// rules below apply again. DECISIONS.md, "Rating drive: a pop-up until 100".
+export const RATING_DRIVE_TARGET = 100;
+/** On a visit's first page, the pop-up waits this long; from the second page, RATING_DRIVE_DELAY_MS. */
+export const RATING_DRIVE_LANDING_MS = 30_000;
+export const RATING_DRIVE_DELAY_MS = 6_000;
+/** sessionStorage: the drive's state for this visit ("1" on, "0" off), so it is asked once per visit. */
+export const RATING_DRIVE_SESSION_KEY = "rc_rate_drive";
+
+/** Is the drive on for a site with this many ratings? (unknown = off: never nag on an error) */
+export function ratingDriveActive(count: number | null | undefined): boolean {
+  return typeof count === "number" && Number.isFinite(count) && count >= 0 && count < RATING_DRIVE_TARGET;
+}
+
+/** During the drive: may the pop-up be armed on this page view? */
+export function shouldAskRatingDrive(s: RateState, path: string, shownThisVisit: boolean): boolean {
+  return !s.rated && !shownThisVisit && rateAllowedOn(path);
+}
+
 export const RATE_AFTER_PAGES = 4;
 export const RATE_AFTER_MS = 3 * 60_000;
 /** Pages a visitor must have seen before a store click may bring the card. */
