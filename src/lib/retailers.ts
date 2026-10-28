@@ -2947,6 +2947,460 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //     serve a non-EUR currency to a ?country=ES request. Re-run the probe before
   //     assuming any of them is still a "no" — several are clearly growing.
 
+
+  // ---- Store audit 2026-10-28 (scripts/sweep-registry.ts over the UVS registry
+  // plus every store the sister sites track; DECISIONS.md "Store audit: 46 stores
+  // added") — in-stock Riftbound singles counted live, currency proven ----
+  goodgamesmorley: {
+    key: "goodgamesmorley",
+    name: "Good Games Morley",
+    base: "https://goodgamesmorley.com.au",
+    collections: ["see-more-riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 1365 in-stock singles, cur=AUD
+  wonderlandgames: {
+    key: "wonderlandgames",
+    name: "Wonderland Games",
+    base: "https://wonderlandgames.com.au",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 1168 in-stock singles, cur=AUD
+  steelcitygames: {
+    key: "steelcitygames",
+    name: "Steel City Games",
+    base: "https://steelcitygames.com.au",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 1091 in-stock singles, cur=AUD
+  teamcardtitan: {
+    key: "teamcardtitan",
+    name: "Team Card Titan",
+    base: "https://teamcardtitan.com",
+    collections: ["riftbound-league-of-legends", "riftbound-league-of-legends-1", "explore-all-riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 881 in-stock singles, cur=AUD
+  irresistibleforcetcg: {
+    key: "irresistibleforcetcg",
+    name: "Irresistible Force TCG",
+    base: "https://tcg.irresistibleforce.com.au",
+    collections: ["riftbound-tcg"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 745 in-stock singles, cur=AUD
+  mayhemcollectables: {
+    key: "mayhemcollectables",
+    name: "Mayhem Collectables",
+    base: "https://mayhemcollectables.com.au",
+    collections: ["riftbound", "riftbound-1", "all-riftbound-products", "hot-singles-riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 375 in-stock singles, cur=AUD
+  crystalcollectables: {
+    key: "crystalcollectables",
+    name: "Crystal Collectables TCG",
+    base: "https://crystalcollectablestcg.com.au",
+    collections: ["riftbound", "riftbound-vendetta"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 327 in-stock singles, cur=AUD
+  thecombatcompany: {
+    key: "thecombatcompany",
+    name: "The Combat Company",
+    base: "https://thecombatcompany.com",
+    collections: ["riftbound-tcg", "quokka-riftbound", "quokka-riftbound-copy"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 265 in-stock singles, cur=AUD
+  gggreensborough: {
+    key: "gggreensborough",
+    name: "Good Games Greensborough",
+    base: "https://gggreensborough.com.au",
+    collections: ["riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 212 in-stock singles, cur=AUD
+  hbtcollectables: {
+    key: "hbtcollectables",
+    name: "HBT Collectables",
+    base: "https://hbtcollectables.com",
+    collections: ["riftbound-league-of-legends", "riftbound-tcg-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 132 in-stock singles, cur=AUD
+  groovycollectables: {
+    key: "groovycollectables",
+    name: "Groovy Collectables",
+    base: "https://groovycollectables.com.au",
+    collections: ["riftbound-league-of-legends"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // sweep 2026-10-28: 83 in-stock singles, cur=AUD
+  desertcitygames: {
+    key: "desertcitygames",
+    name: "Desert City Games",
+    base: "https://desertcitygamestcg.ca",
+    collections: ["riftbound", "riftbound-starter-decks", "riftbound-upcoming-new-releases"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 1403 in-stock singles, cur=CAD
+  paradoxtcg: {
+    key: "paradoxtcg",
+    name: "ParadoxTCG",
+    base: "https://paradoxtcg.com",
+    collections: ["riftbound-singles-1", "riftbound-unleashed", "riftbound-set-origins", "riftbound-vendetta"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 1181 in-stock singles, cur=CAD
+  hfxgames: {
+    key: "hfxgames",
+    name: "HFX Games",
+    base: "https://hfxgames.com",
+    collections: ["riftbound-events"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 1177 in-stock singles, cur=CAD
+  seatoskygames: {
+    key: "seatoskygames",
+    name: "SeaToSky Games",
+    base: "https://seatoskygames.com",
+    collections: ["riftbound-promotional-cards"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 956 in-stock singles, cur=CAD
+  fafnirshoard: {
+    key: "fafnirshoard",
+    name: "Fafnir's Hoard",
+    base: "https://fafnirshoard.ca",
+    collections: ["latest-riftbound"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 913 in-stock singles, cur=CAD
+  beardycards: {
+    key: "beardycards",
+    name: "BeardyCards",
+    base: "https://beardycards.com",
+    collections: ["league-of-legends-riftbound", "league-of-legends-riftbound-decks", "riftbound"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 848 in-stock singles, cur=CAD
+  exorgames: {
+    key: "exorgames",
+    name: "Exor Games",
+    base: "https://exorgames.com",
+    collections: ["all-riftbound", "riftbound-radiance"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 841 in-stock singles, cur=CAD
+  dragoncardsandgames: {
+    key: "dragoncardsandgames",
+    name: "Dragon Cards & Games",
+    base: "https://tcg.dragoncardsandgames.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 748 in-stock singles, cur=CAD
+  realmhoppers: {
+    key: "realmhoppers",
+    name: "Realm Hoppers",
+    base: "https://realmhoppers.com",
+    collections: ["riftbound-tcg-in-stock-singles", "riftbound-vendetta-in-stock-singles", "riftbound-vendetta-in-stock-singles-copy", "riftbound-spiritforged-in-stock-singles-copy"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 737 in-stock singles, cur=CAD
+  trinityhobby: {
+    key: "trinityhobby",
+    name: "Trinity Hobby",
+    base: "https://trinityhobby.com",
+    collections: ["lol-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 698 in-stock singles, cur=CAD
+  deckoutgaming: {
+    key: "deckoutgaming",
+    name: "Deck Out Gaming",
+    base: "https://deckoutgaming.ca",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 651 in-stock singles, cur=CAD
+  collectedition: {
+    key: "collectedition",
+    name: "Collect-Edition",
+    base: "https://cards.collect-edition.com",
+    collections: ["riftbound-all", "riftbound-in-stock-over-15"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 649 in-stock singles, cur=CAD
+  boardgamebliss: {
+    key: "boardgamebliss",
+    name: "Board Game Bliss",
+    base: "https://boardgamebliss.com",
+    collections: ["riftbound-single", "riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 275 in-stock singles, cur=CAD
+  cardcaster: {
+    key: "cardcaster",
+    name: "Card Caster Games",
+    base: "https://cardcastergames.com",
+    collections: ["league-of-legends-riftbound"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 270 in-stock singles, cur=CAD
+  tkotoyco: {
+    key: "tkotoyco",
+    name: "TKO Toy Co",
+    base: "https://tkotoyco.com",
+    collections: ["riftbound-singles-1"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 263 in-stock singles, cur=CAD
+  gamerslair: {
+    key: "gamerslair",
+    name: "Gamer's Lair (Duel Kingdom)",
+    base: "https://duelkingdom.ca",
+    collections: ["restocked-riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 194 in-stock singles, cur=CAD
+  pokegemsmtl: {
+    key: "pokegemsmtl",
+    name: "Poke Gems MTL",
+    base: "https://pokegemsmtl.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 166 in-stock singles, cur=CAD
+  letsplaycards: {
+    key: "letsplaycards",
+    name: "Let's Play! Cards and Games",
+    base: "https://skafexpress.ca",
+    collections: ["buylist-riftbound-cards", "riftbound", "one-piece-card-singles-copy"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 124 in-stock singles, cur=CAD
+  infinitycards: {
+    key: "infinitycards",
+    name: "Infinity Cards & Collectibles",
+    base: "https://infinitycards.ca",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 105 in-stock singles, cur=CAD
+  championcitygames: {
+    key: "championcitygames",
+    name: "Champion City Games",
+    base: "https://championcitygames.ca",
+    collections: ["riftbound-new-arrivals"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 98 in-stock singles, cur=CAD
+  cardboardhero: {
+    key: "cardboardhero",
+    name: "Cardboard Hero",
+    base: "https://cardboardhero.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 69 in-stock singles, cur=CAD
+  luniversdelacarte: {
+    key: "luniversdelacarte",
+    name: "L'univers de la carte",
+    base: "https://luniversdelacarte.ca",
+    collections: ["surplus-riftbound", "riftbound-promo"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // sweep 2026-10-28: 43 in-stock singles, cur=CAD
+  lakecards: {
+    key: "lakecards",
+    name: "Lake Cards",
+    base: "https://lakecards.de",
+    collections: ["riftbound", "riftbound-starter-decks", "riftbound-display", "unleashed-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  }, // sweep 2026-10-28: 725 in-stock singles, cur=EUR
+  ohanagiochi: {
+    key: "ohanagiochi",
+    name: "Ohana Giochi",
+    base: "https://ohanagiochi.com",
+    collections: ["riftbound", "unleashed-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  }, // sweep 2026-10-28: 553 in-stock singles, cur=EUR
+  tradingcardsxxx: {
+    key: "tradingcardsxxx",
+    name: "Tradingcardsxxx",
+    base: "https://tradingcardsxxx.fr",
+    collections: ["riftbound-league-of-legends-tcg", "displays-riftbound", "decks-riftbound", "coffrets-packs-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  }, // sweep 2026-10-28: 311 in-stock singles, cur=EUR
+  facetofacenl: {
+    key: "facetofacenl",
+    name: "Face to Face Games Rotterdam",
+    base: "https://facetofacegames.nl",
+    collections: ["riftbound", "unleashed-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  }, // sweep 2026-10-28: 281 in-stock singles, cur=EUR
+  magicianscircle: {
+    key: "magicianscircle",
+    name: "Magician's Circle",
+    base: "https://magicians-circle.com",
+    collections: ["riftbound", "unleashed-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  }, // sweep 2026-10-28: 175 in-stock singles, cur=EUR
+  retroempire: {
+    key: "retroempire",
+    name: "Retro Empire Gaming",
+    base: "https://retro-empire.nl",
+    collections: ["league-of-legends-riftbound", "riftbound", "unleashed-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  }, // sweep 2026-10-28: 125 in-stock singles, cur=EUR
+  hideyoshi: {
+    key: "hideyoshi",
+    name: "Hideyoshi",
+    base: "https://hideyoshitcg.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  }, // sweep 2026-10-28: 27 in-stock singles, cur=SGD
+  jgccollectables: {
+    key: "jgccollectables",
+    name: "JGC Collectables",
+    base: "https://jgc-collectables.co.uk",
+    collections: ["riftbound"],
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  }, // sweep 2026-10-28: 199 in-stock singles, cur=GBP
+  levelupgamesmd: {
+    key: "levelupgamesmd",
+    name: "Level Up Games MD",
+    base: "https://levelupgamesmd.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep 2026-10-28: 483 in-stock singles, cur=USD
+  triadgroup: {
+    key: "triadgroup",
+    name: "Triad Cards and Gaming",
+    base: "https://triadgroup.shop",
+    collections: ["riftbound", "riftbound-all-product", "riftbound-pre-sale"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep 2026-10-28: 401 in-stock singles, cur=USD
+  pokecollect: {
+    key: "pokecollect",
+    name: "Poke-Collect",
+    base: "https://poke-collect.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep 2026-10-28: 72 in-stock singles, cur=USD
+  hastygoblingames: {
+    key: "hastygoblingames",
+    name: "Hasty Goblin Games",
+    base: "https://hastygoblingames.com",
+    collections: ["riftbound", "riftbound-origins", "riftbound-spiritforged", "riftbound-1"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep 2026-10-28: 64 in-stock singles, cur=USD
+  stupidgeeks: {
+    key: "stupidgeeks",
+    name: "Stupid Geeks",
+    base: "https://stupidgeeksinc.com",
+    collections: ["riftbound-singles-instock"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep 2026-10-28: 43 in-stock singles, cur=USD
+
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);

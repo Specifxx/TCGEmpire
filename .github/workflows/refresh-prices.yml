@@ -73,7 +73,7 @@ jobs:
     # pass visits every singles store too). A heavy eBay day on top would cross
     # 90 and kill the run before the snapshot and the daily release. A ceiling,
     # not a cost: a run only uses the minutes it needs.
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
