@@ -5,6 +5,10 @@ import {
   RATE_AFTER_MS,
   RATE_AFTER_PAGES,
   RATE_INTENT_PAGES,
+  RATING_DRIVE_LANDING_MS,
+  RATING_DRIVE_TARGET,
+  ratingDriveActive,
+  shouldAskRatingDrive,
   RATE_MAX_ASKS,
   RATE_SNOOZE_MS,
   RATE_VISIT_GAP_MS,
@@ -55,6 +59,28 @@ test("coming back from a store tab may bring the card early, but not on a first 
   assert.match(c, /visibilitychange/);
 });
 
+test("the rating drive: a pop-up for every visitor until 100 ratings, then off by itself (owner, 2026-10-28)", () => {
+  assert.equal(RATING_DRIVE_TARGET, 100);
+  assert.equal(ratingDriveActive(9), true);
+  assert.equal(ratingDriveActive(99), true);
+  assert.equal(ratingDriveActive(100), false, "switches itself off at the target");
+  assert.equal(ratingDriveActive(null), false, "unknown is off: never nag on an error");
+  const fresh = freshRateState(T0);
+  assert.equal(shouldAskRatingDrive(fresh, "/card/x", false), true, "a new visitor is asked too");
+  assert.equal(shouldAskRatingDrive({ ...fresh, rated: true }, "/card/x", false), false, "never someone who rated");
+  assert.equal(shouldAskRatingDrive(fresh, "/card/x", true), false, "once per visit");
+  for (const p of ["/login", "/premium", "/checkout", "/feedback"]) assert.equal(shouldAskRatingDrive(fresh, p, false), false, p);
+  assert.ok(RATING_DRIVE_LANDING_MS >= 30_000, "the landing page is read first (Google's intrusive-interstitial rule)");
+  const c = read("src/components/RateUsPrompt.tsx");
+  assert.match(c, /dismissOnBackdrop=\{false\}/, "a click on the page behind does not close it");
+  assert.match(c, /aria-label="Close"/);
+  assert.match(c, /Maybe later/, "always a visible way out");
+  assert.match(c, /fetch\("\/api\/rating-drive"\)/);
+  const route = read("src/app/api/rating-drive/route.ts");
+  assert.match(route, /s-maxage=21600/);
+  assert.match(route, /getSiteRating/);
+});
+
 test("a page view after a long gap is a new visit", () => {
   const a = countPageView(freshRateState(T0), T0);
   const b = countPageView(a, T0 + 60_000);
@@ -80,8 +106,9 @@ test("the prompt is a closable corner card, not a modal, and still posts a ratin
   const layout = read("src/app/layout.tsx");
   assert.match(layout, /<RateUsPrompt \/>/);
   const c = read("src/components/RateUsPrompt.tsx");
-  assert.doesNotMatch(c, /<Dialog\b/, "no modal: the page stays usable");
-  assert.match(c, /useEscapeLayer\(open, close\)/, "Escape closes it");
+  assert.equal(c.match(/<Dialog\b/g)?.length, 1, "a modal only during the rating drive");
+  assert.match(c, /if \(popup\) \{[\s\S]{0,120}<Dialog\b/, "outside the drive the page stays usable");
+  assert.match(c, /useEscapeLayer\(open && !popup, close\)/, "Escape closes it");
   assert.match(c, /aria-label="Close"/);
   assert.match(c, />\s*Not now\s*</);
   assert.match(c, /Don&apos;t ask again/);
