@@ -40,9 +40,11 @@ export const metadata: Metadata = {
 // plain name, which follows in muted text.
 //
 // TODO(pending reciprocal links, 2026-10-28): MTGStocks and Riftmana were
-// offered a reciprocal link and have not replied. Don't add MTGStocks until
-// they do. (RiftMana's guides entry below predates the offer, from the page's
-// launch, and stays as an ordinary listing.)
+// offered a reciprocal link and have not replied. Don't add either until they
+// do. RiftMana was listed under "Decks, meta and guides" from the page's
+// launch and was taken off on 2026-10-28 (owner) until it replies:
+//   { name: "RiftMana", url: "https://riftmana.com/",
+//     what: "Guides for new and returning players, including how to play Riftbound online." }
 
 type Resource = { name: string; url: string; what: string; anchor?: string };
 
@@ -95,11 +97,6 @@ const GROUPS: { title: string; items: Resource[] }[] = [
         name: "Mobalytics",
         url: "https://mobalytics.gg/riftbound/tier-list",
         what: "A regularly updated Riftbound tier list with deck guides.",
-      },
-      {
-        name: "RiftMana",
-        url: "https://riftmana.com/",
-        what: "Guides for new and returning players, including how to play Riftbound online.",
       },
     ],
   },
