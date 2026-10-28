@@ -15,7 +15,7 @@
 // look-alike sites cross-linked sitewide read as a link network.
 
 export interface SisterSite {
-  key: "op" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cam" | "empire";
+  key: "op" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "wargame" | "figure" | "cam" | "empire";
   name: string;
   url: string;
   /** The game, as a reader would say it: "One Piece", "Pokémon", "Magic". */
@@ -130,6 +130,31 @@ export const SISTER_SITES: SisterSite[] = [
       { label: "Yu-Gi-Oh! pre-orders", href: "https://ygocompare.com/preorders" },
     ],
     footerOnly: true,
+  },
+  {
+    key: "wargame",
+    name: "WargameCompare",
+    url: "https://wargamecompare.com",
+    game: "Wargames",
+    anchor: "Miniature wargame prices",
+    what: "miniature wargame kit and army box prices across independent hobby stores",
+    links: [{ label: "Wargame prices", href: "https://wargamecompare.com/" }],
+    footerOnly: true,
+    notTcg: true,
+  },
+  {
+    key: "figure",
+    name: "FigureCompare",
+    url: "https://figurecompare.com",
+    game: "Anime figures",
+    anchor: "Anime figure prices",
+    what: "Nendoroid, figma and POP UP PARADE prices across real figure stores, matched by barcode",
+    links: [
+      { label: "Nendoroid prices", href: "https://figurecompare.com/nendoroid" },
+      { label: "Figure deals", href: "https://figurecompare.com/deals" },
+    ],
+    footerOnly: true,
+    notTcg: true,
   },
   {
     key: "cam",
