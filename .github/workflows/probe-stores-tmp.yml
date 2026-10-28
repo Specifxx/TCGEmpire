@@ -1,0 +1,58 @@
+name: TEMP store sweep
+
+# Temporary (2026-10-28, store audit): sweeps the official UVS registry again
+# plus every store the sister sites track that this site doesn't, one runner
+# per market, and commits the results to this branch for review. Removed
+# before the branch is merged.
+
+on:
+  push:
+    branches: [claude/project-thread-y2202w]
+    paths: [probe-in/**, .github/workflows/probe-stores-tmp.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        market: [AU, CA, EU, SG, UK, US]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund --ignore-scripts
+      - run: npx prisma generate
+      - run: mkdir -p probe-out && npx tsx scripts/sweep-registry.ts --markets ${{ matrix.market }} --extra probe-in/sisters.json --out probe-out/${{ matrix.market }}.json --concurrency 6 > probe-out/${{ matrix.market }}.log 2>&1 || true
+      - run: tail -200 probe-out/${{ matrix.market }}.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sweep-${{ matrix.market }}
+          path: probe-out/
+          if-no-files-found: ignore
+
+  commit:
+    needs: sweep
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: probe-out
+          pattern: sweep-*
+          merge-multiple: true
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add probe-out
+          git commit -m "TEMP sweep results (run ${GITHUB_RUN_ID})"
+          for i in 1 2 3; do git pull --rebase -q origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && exit 0; sleep 5; done
+          exit 1
