@@ -218,6 +218,8 @@ async function core(): Promise<SitemapEntry[]> {
     // sitemap entry is what was wrong. The page keeps `follow`, and the footer
     // still links it, so it remains crawlable and the link graph is untouched.
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/about") },
+    // Every card game the family compares, one page for the generic query (2026-10-28).
+    { url: `${SITE_URL}/tcg-price-comparison`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/tcg-price-comparison") },
     { url: `${SITE_URL}/creators`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/creators") },
     { url: `${SITE_URL}/creators/apply`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/creators/apply") },
     // The widget directory. Submitted rather than left to the footer because it

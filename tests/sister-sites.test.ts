@@ -61,3 +61,18 @@ test("footer and article block: plain followed links, rendered from the one list
   }
   assert.match(read("src/components/ArticleView.tsx"), /<SisterSites sites=\{sisterSitesFor\(article\)\} \/>/);
 });
+
+test("search another game: every card-game sister site has a search link on its own host; no non-TCG site does", async () => {
+  const { familySearchLinks } = await import("../src/lib/sister-sites");
+  const links = familySearchLinks("Monkey D. Luffy");
+  assert.deepEqual(links.map((l) => l.key), ["op", "dex", "mtg", "gundam", "lorcana", "ygo"]);
+  for (const l of links) {
+    const site = SISTER_SITES.find((s) => s.key === l.key)!;
+    assert.equal(new URL(l.href).host, new URL(site.url).host, l.href);
+    assert.equal(new URL(l.href).searchParams.get("q"), "Monkey D. Luffy", l.href);
+  }
+  assert.deepEqual(familySearchLinks("   "), []);
+  const block = read("src/components/FamilySearch.tsx");
+  assert.match(block, /rel="noopener nofollow"/);
+  assert.match(read("src/app/browse/page.tsx"), /\{q && <FamilySearch q=\{q\}/);
+});
