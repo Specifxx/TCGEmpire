@@ -20778,3 +20778,28 @@ The registry goes from 224 to 267 stores. Postage was measured for every one (`p
 **What.** `src/lib/amazon.ts` decides which Amazon a market gets and which of the owner's IDs goes on it: Amazon US (`AMAZON_ASSOCIATE_TAG`, default `riftcompare-20`) and Amazon AU (`AMAZON_AU_TAG`, default `compareempire-22`, the owner's Australian account); the UK, Canada and the EU only once `AMAZON_UK_TAG` / `AMAZON_CA_TAG` / `AMAZON_DE_TAG` is set; never Singapore. `affiliateUrl` now tags each amazon.* host with its own store's ID. `/sealed` shows its Amazon button only where the market has one. The Pokémon section's price board (`buildBoard`, product page and quick view) gains a "Check price on Amazon US/AU" search under its eBay search: no price, never a listing or ranked, ascsubtag `rc-<market>-pkmn-<surface>`, retailer `pkmn_amazon_search`, surface `amazon_search`, with Amazon's own statement under the board.
 
 **Not.** No Amazon on Riftbound card or sealed product pages: Amazon has little Riftbound product, and a search that finds nothing is a bad click.
+
+## Rating drive: the pop-up was invisible; now it asks sooner and again — 2026-10-29
+
+The owner, the morning after "Rating drive: a pop-up until 100": "I still have
+gotten no ratings since - it needs to be a bit more intrusive".
+
+**Why nothing came in.** The pop-up's box carried `data-rate-prompt`, the
+corner card's hook that `globals.css` hides (`visibility: hidden`) whenever a
+Dialog is open, so it hid itself: visitors saw the page dim and nothing to
+tap. Found in a real browser (the earlier check only counted the element).
+The box now has its own `data-rating-drive` hook and a solid card
+background; `tests/pro-page.test.ts` fails if the pop-up wears the corner
+card's hook again. Lesson: check a pop-up is VISIBLE in a browser, not just in
+the DOM.
+
+**More insistent, still closable.**
+- The landing page waits 15 s (was 30 s; most search visitors read one page
+  and leave inside 30 s), later pages 4 s.
+- "Maybe later" brings it back 3 pages on, up to twice a visit, every visit,
+  until they rate.
+- An unknown count (an API error, a cold database) keeps the drive on; only a
+  real count of 100 ends it.
+- `?rate=1` opens it at once, so the owner can see it after rating.
+- Unchanged: ✕, "Maybe later" and Escape close it; never someone who rated;
+  never on sign-in, checkout, /premium, /feedback, admin, embeds or the arcade.

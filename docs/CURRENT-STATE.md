@@ -207,7 +207,8 @@ longer lands on its entry.
   trial below is superseded). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.
   `/premium` copies Collectr's page for non-members. Until the site has 100 ratings, a closable rating pop-up asks
-  every visitor who has not rated once per visit, then switches itself off
+  every visitor who has not rated (15 s in, again 3 pages after "Maybe later",
+  twice a visit at most), then switches itself off ([2026-10-29](../DECISIONS.md#L20782))
   ([2026-10-28](../DECISIONS.md#L20702)). After that, a rate-the-site corner card
   (not a modal) asks after 4 pages and 3 minutes, or on return from a store
   tab, at most three times 14 days apart, and is the one uninvited opinion ask;
