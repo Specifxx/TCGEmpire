@@ -20750,3 +20750,13 @@ model would only look more certain than it is.
 The registry goes from 224 to 267 stores. Postage was measured for every one (`probe-shipping-rates.ts --store=…`). Groovy Collectables quotes A$7.34 to some capitals and A$9.79 to others: the first AU store priced by state, so the AU postage picker now asks for the state (`marketHasZonePricing`, data-driven; `tests/shipping.test.ts` updated).
 
 **The job limit goes from 120 to 150 minutes.** The 2026-10-27 evening run took 90 (prices 68, sealed 22) for 224 stores read one after another; 43 more add about a fifth. As on 2026-10-16, the limit is a ceiling, not a cost.
+
+## TCGplayer card strip, the Gundam Compare design — 2026-10-29
+
+**Owner:** "every single site … also have the TCGplayer banners as well … as well as the eBay one", after seeing Gundam Compare's "Top Gundam cards on TCGplayer" strip. RiftCompare had been left out of the 2026-10-28 card ad strips; the owner now wants it here too.
+
+**What.** `TcgplayerPicks` (server) + `TcgplayerPicksLive` (client), the TCGplayer twin of `EbayPicks`: the set's chase cards (the same `getChaseCards` selection, US baseline), each with its own card art and TCGplayer's US market price (the `tcgplayer_market` row, else the buyable `tcgplayer` row, labelled "On TCGplayer"), on a boxed, horizontally scrolling strip with a price badge, "Shop TCGplayer" button and end tile, "Ad" label and the TCGplayer disclosure under it. Hidden for ad-free members. Prices stay US$; outside the US the line says it is the US marketplace.
+
+**Where.** Directly under `EbayPicks` on `/` and the region homes, the set hubs and articles that opt into eBay Picks, and on card pages under the eBay listings panel (that set's chase cards). Not on /browse, where it would push the results down. The text `TcgplayerAd` banners are unchanged.
+
+**Cost.** One small `RetailerPrice` read per set (`cardId in` ≤12, two retailer keys), inside a day-long `unstable_cache` tagged `CONTENT_TAG`, exactly as `EbayPicks`; no cookies, so the cached pages stay cached. Clicks: `buy_click` surface `tcg_strip`, retailer `tcgplayer_strip`, Impact sub-id `rc-<page>-tcg_strip`.

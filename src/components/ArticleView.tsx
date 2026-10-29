@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import Link from "next/link";
 import type { Article, ArticleCloseUp, ArticleEmbed } from "@/lib/articles";
 import { ARTICLES } from "@/lib/articles";
@@ -665,6 +666,13 @@ export async function ArticleView({ article }: { article: Article }) {
                 ...(article.ebayPicks.heading ? { heading: article.ebayPicks.heading } : {}),
               }
             : {})}
+        />
+      )}
+      {article.ebayPicks && (
+        <TcgplayerPicks
+          className="mt-6"
+          pageType="article"
+          {...(typeof article.ebayPicks === "object" && article.ebayPicks.setCode ? { setCode: article.ebayPicks.setCode } : {})}
         />
       )}
 

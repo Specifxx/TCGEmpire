@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import Link from "next/link";
 import { getPopularCards, getSetChaseTiles } from "@/lib/cheapest-cards";
 import { featuredSet } from "@/lib/constants";
@@ -346,6 +347,8 @@ export default async function HomePage() {
           2026-10-19: "ebay chase cards should be at the top above todays top
           deals"). HomeSections gets showEbayPicks={false} so it appears once. */}
       <EbayPicks pageType="homepage" />
+      {/* Its TCGplayer twin, the Gundam Compare card strip (owner, 2026-10-29). */}
+      <TcgplayerPicks pageType="homepage" />
 
       {/* Today's Top Deals, straight under the hero since 2026-10-19 (owner's
           tidy-up: the editorial band moved to the bottom of the page and the
