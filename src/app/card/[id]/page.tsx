@@ -1,4 +1,5 @@
 import { metalKindOf } from "@/lib/metal-cards";
+import { MiniPicks } from "@/components/MiniPicks";
 import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import { publicRead, routeRaw } from "@/lib/public-data/route";
 import { BanNotice } from "@/components/BanNotice";
@@ -1132,6 +1133,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               unpriced={priceState.isEmpty && !priceState.noRetailChannel}
               preorder={isPreorderSetCode(card.setCode)}
             />
+
+            {/* The small eBay + TCGplayer pair of this set's chase cards, near
+                the top under the price and alert (owner, 2026-10-29: "much
+                smaller … not intrusive"); the full strips stay further down. */}
+            <MiniPicks setCode={card.setCode} pageType="card_detail" className="mt-4" />
 
             {/* A revealed card from an unreleased set has no price to compare
                 yet; what its visitor came for is the rest of the reveal

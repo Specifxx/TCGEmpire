@@ -50,6 +50,14 @@ function defaultSet(): { code: string; name: string } {
   return s ? { code: s.code, name: s.name } : { code: "VEN", name: "Vendetta" };
 }
 
+/** The cached picks for one set, shared with /api/mini-picks (MiniPicks). */
+export function cachedTcgPicks(code: string, limit: number): Promise<TcgPick[]> {
+  return unstable_cache(() => loadTcgPicks(code, limit), ["tcg-picks", code, String(limit)], {
+    revalidate: 86400,
+    tags: [CONTENT_TAG],
+  })();
+}
+
 export async function TcgplayerPicks({
   setCode,
   limit = 12,
@@ -70,10 +78,7 @@ export async function TcgplayerPicks({
   try {
     // 86400, like EbayPicks: it renders inside the 86400 article routes, and an
     // inner cache's revalidate pulls the whole route down to its own.
-    picks = await unstable_cache(() => loadTcgPicks(code, limit), ["tcg-picks", code, String(limit)], {
-      revalidate: 86400,
-      tags: [CONTENT_TAG],
-    })();
+    picks = await cachedTcgPicks(code, limit);
   } catch {
     picks = [];
   }

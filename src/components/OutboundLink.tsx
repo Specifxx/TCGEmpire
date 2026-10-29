@@ -165,6 +165,7 @@ export function OutboundLink({
     | "ebay_banner"
     | "ebay_picks"
     | "tcg_strip"
+    | "mini_picks"
     | "ebay_carousel"
     | "ebay_graded"
     | "preorder_cta_ebay"
