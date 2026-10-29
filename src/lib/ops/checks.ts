@@ -407,6 +407,8 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   { file: "social-packs.yml", title: "Social packs job", staleH: 80 },
   // Daily (2026-10-27); a green no-op until the channel's secrets exist.
   { file: "telegram-deals.yml", title: "Telegram deals job", staleH: 36 },
+  // Weekly (2026-10-30): the private growth report the weekly growth review reads.
+  { file: "growth-report.yml", title: "Growth report job (weekly)", staleH: 200 },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {

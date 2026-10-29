@@ -8,3 +8,13 @@ export function ownerEmail(env: Record<string, string | undefined> = process.env
   const v = (env.OWNER_ALERT_EMAIL ?? "").trim();
   return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(v) ? v : DEFAULT_OWNER_EMAIL;
 }
+
+// The weekly growth report (lib/earnings/growth-report.ts) goes to the business inbox
+// the growth review reads, not the owner's personal one (2026-10-30). GROWTH_REPORT_EMAIL
+// overrides it; like ownerEmail, the recipient is never taken from a request.
+export const DEFAULT_GROWTH_REPORT_EMAIL = "riftcompare@gmail.com";
+
+export function growthReportEmail(env: Record<string, string | undefined> = process.env): string {
+  const v = (env.GROWTH_REPORT_EMAIL ?? "").trim();
+  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(v) ? v : DEFAULT_GROWTH_REPORT_EMAIL;
+}

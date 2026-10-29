@@ -1,0 +1,37 @@
+name: Growth report
+
+# Mails the private weekly growth report (earnings by site, placement and market,
+# week over week, plus outbound clicks) to the business inbox the weekly growth
+# review reads (src/app/api/cron/growth-report, DECISIONS.md "A private weekly
+# growth report for the growth review", 2026-10-30). Mondays 20:41 UTC, Tuesday
+# morning in Sydney, after the Monday digest. The site holds the reporting keys
+# and the amounts; this job only asks it to send, and its public log shows only
+# the HTTP status.
+
+on:
+  schedule:
+    - cron: "41 20 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: growth-report
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ask the site to send the report
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE: ${{ vars.SITE_URL || 'https://riftcompare.com' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "::error::CRON_SECRET is not set"; exit 1; fi
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/cron/growth-report")
+          echo "HTTP $code"
+          [ "$code" = "200" ] || { echo "::error::The site did not send the growth report (HTTP $code)"; exit 1; }
