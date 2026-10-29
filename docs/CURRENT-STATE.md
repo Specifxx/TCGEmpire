@@ -170,8 +170,9 @@ longer lands on its entry.
   A growth line sits under the columns; eBay's Today shows its latest reported
   day, dated, because EPN has no same-day data. [2026-10-28](../DECISIONS.md#L20647)
   A forecast panel projects this quarter and the next four (and this year and
-  next) from a straight line through the last 90 days, with an ~80% range.
-  [2026-10-28](../DECISIONS.md#L20702)
+  next) month by month: compounding growth from the log of weekly earnings,
+  fading toward a plateau, times a monthly season, with an ~80% range; never a
+  straight line. [2026-10-29](../DECISIONS.md#L20815)
 - **The Stores plan (2026-10-23, owner):** US$79.99/month (`STRIPE_STORE_PRICE_ID`,
   displayed amount `NEXT_PUBLIC_STORE_PLAN_AMOUNT`) for a retailer: the repricing
   report with "what buyers are searching for", a Verified mark with the store's own

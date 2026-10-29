@@ -11,6 +11,9 @@ import {
   inRange,
   dailyTotals,
   forecastQuarters,
+  fadedGrowth,
+  SEASON,
+  FORECAST_FADE_DAYS,
   latestDayFigure,
   latestReportDay,
   linearTrend,
@@ -350,41 +353,56 @@ test("growth line: running total and a least-squares trend", () => {
   assert.equal(linearTrend([5, 5, 5])?.slope, 0);
 });
 
-// Forecast (2026-10-28): a straight line through the last 90 complete days, per quarter.
-test("forecast: a perfect line projects itself, actual days count as earned, range collapses", () => {
+// Forecast (2026-10-28; non-linear since 2026-10-29): compounding growth through
+// the log of weekly earnings, fading toward a plateau, scaled by the season.
+const season = (day: string) => SEASON[Number(day.slice(5, 7)) - 1];
+const dayIndex = (day: string) => Math.round((Date.parse(day) - Date.parse("2026-07-01")) / 86_400_000);
+
+test("forecast: flat seasonal earnings project the season, not a line; actual days count as earned", () => {
   const daily: { label: string; cents: number }[] = [];
-  const line = (day: string) => 1000 + 10 * Math.round((Date.parse(day) - Date.parse("2026-07-01")) / 86_400_000);
-  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1)) daily.push({ label: d, cents: line(d) });
+  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1)) daily.push({ label: d, cents: 1000 * season(d) });
   const f = forecastQuarters(daily, "2026-10-28")!;
   assert.equal(f.from, "2026-10-26", "the last two days (eBay's lag) are projected, not counted as earned");
   assert.deepEqual(f.periods.map((p) => p.label), ["Q4 2026", "Q1 2027", "Q2 2027", "Q3 2027", "Q4 2027"]);
-  const sum = (from: string, to: string) => {
-    let n = 0;
-    for (let d = from; d <= to; d = addDays(d, 1)) n += line(d);
-    return n;
-  };
-  const q4 = f.periods[0];
-  assert.equal(q4.actualCents, sum("2026-10-01", "2026-10-25"));
-  assert.equal(q4.cents, sum("2026-10-01", "2026-12-31"));
-  assert.equal(f.periods[1].cents, sum("2027-01-01", "2027-03-31"));
-  assert.equal(f.periods[1].lowCents, f.periods[1].cents);
-  assert.equal(f.periods[1].highCents, f.periods[1].cents);
-  assert.equal(f.years[0].label, "2026");
-  assert.equal(f.years[0].cents, sum("2026-07-01", "2026-12-31"));
-  assert.equal(f.years[1].cents, sum("2027-01-01", "2027-12-31"));
-  assert.equal(f.per30Change, 300);
+  assert.equal(f.months.length, 15);
+  assert.equal(f.growthPct30, 0);
+  assert.equal(f.periods[0].actualCents, Math.round(25 * 1000 * season("2026-10-01")));
+  const jan = f.months.find((m) => m.label === "2027-01")!;
+  assert.equal(jan.cents, Math.round(31 * 1000 * SEASON[0]), "January is the lull");
+  assert.equal(jan.lowCents, jan.cents, "a perfect fit has no range");
+  const dec = f.months.find((m) => m.label === "2026-12")!;
+  assert.ok(dec.cents > jan.cents * 1.3, "December peak, January dip");
+  assert.equal(f.plateauPerDay, 1000);
 });
 
-test("forecast: noisy data gives a range around the line; a falling line never goes below 0; too little data is null", () => {
+test("forecast: compounding growth slows toward a plateau instead of running away", () => {
+  const daily: { label: string; cents: number }[] = [];
+  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1)) daily.push({ label: d, cents: 1000 * Math.exp(0.01 * dayIndex(d)) * season(d) });
+  const f = forecastQuarters(daily, "2026-10-28")!;
+  assert.ok(Math.abs(f.growthPct30 - 35) < 1, `about +35% a month, got ${f.growthPct30}`);
+  const perDay = (m: string) => {
+    const p = f.months.find((x) => x.label === m)!;
+    return p.cents / (Number(p.to.slice(8)) * season(p.from));
+  };
+  // Deseasonalised month-on-month growth shrinks: compounding that fades.
+  const early = perDay("2027-01") / perDay("2026-12");
+  const late = perDay("2027-12") / perDay("2027-11");
+  assert.ok(early > late && late > 1, `${early} then ${late}`);
+  assert.ok(f.plateauPerDay > perDay("2027-12"), "still below the plateau at the end of 2027");
+  assert.ok(Math.abs(fadedGrowth(0.01, 1e6) - 0.01 * FORECAST_FADE_DAYS) < 1e-9);
+});
+
+test("forecast: noisy data gives a range; a falling business shrinks but never below 0; too little data is null", () => {
   const noisy: { label: string; cents: number }[] = [];
   let i = 0;
-  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1), i++) noisy.push({ label: d, cents: 2000 + 5 * i + (i % 2 ? 400 : -400) });
+  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1), i++) noisy.push({ label: d, cents: (2000 + 5 * i) * (1 + (i % 9) / 20 - 0.2) });
   const f = forecastQuarters(noisy, "2026-10-28")!;
   for (const p of f.periods.slice(1)) assert.ok(p.lowCents < p.cents && p.cents < p.highCents, p.label);
-  const falling = noisy.map((d, k) => ({ label: d.label, cents: Math.max(1, 5000 - 60 * k) }));
+  const falling = noisy.map((d, k) => ({ label: d.label, cents: Math.max(1, 5000 - 45 * k) }));
   const g = forecastQuarters(falling, "2026-10-28")!;
-  assert.ok(g.periods.every((p) => p.lowCents >= 0 && p.cents >= 0));
-  assert.equal(g.periods[4].cents, 0);
+  assert.ok(g.months.every((p) => p.lowCents >= 0 && p.cents >= 0));
+  assert.ok(g.growthPct30 < 0);
+  assert.ok(g.periods[3].cents < g.periods[1].cents);
   assert.equal(forecastQuarters(noisy.slice(-20), "2026-10-28"), null);
   assert.deepEqual(dailyTotals([{ days: [{ day: "2026-10-01", currency: "AUD", cents: 5 }, { day: "2026-10-29", currency: "AUD", cents: 9 }] }], "2026-10-28", "AUD"), [{ label: "2026-10-01", cents: 5 }]);
 });
