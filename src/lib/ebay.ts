@@ -1090,13 +1090,19 @@ const SEALED_MIN_CENTS: Record<string, number> = {
   "Showdown Decks": 800,
   "Showdown Decks Display": 4000,
 };
+// "Champion Deck (Fiora) Display" carries the champion's name, so it has no key
+// above: a display of decks is held to the Showdown display's floor. L'Atelier
+// TCG (2026-10-29) titles ONE deck "Champion Deck Display: Fiora" at C$30.12;
+// under the 300c default that single deck would have priced the display.
+const CHAMPION_DECK_DISPLAY = /^Champion Deck\b.*\bDisplay$/;
+const CHAMPION_DECK_DISPLAY_MIN_CENTS = 4000;
 
 // The minimum price an eBay sealed listing must clear to be trusted: the larger of the
 // per-type floor and 50% of the known reference (when we have one) — a live store/
 // TCGplayer price where one exists, otherwise the published MSRP (see msrp.ts and
 // sealed-import.ts's trustedRef) for a product with no current stockist at all.
 export function sealedFloorCents(productType: string, referenceCents?: number | null): number {
-  const absolute = SEALED_MIN_CENTS[productType] ?? 300;
+  const absolute = SEALED_MIN_CENTS[productType] ?? (CHAMPION_DECK_DISPLAY.test(productType) ? CHAMPION_DECK_DISPLAY_MIN_CENTS : 300);
   const relative = referenceCents && referenceCents > 0 ? Math.round(referenceCents * 0.5) : 0;
   return Math.max(absolute, relative);
 }
