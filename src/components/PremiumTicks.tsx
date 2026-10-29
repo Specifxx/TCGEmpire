@@ -40,7 +40,6 @@ export const TICK_ROWS: { name: string; from: string | null; short?: string }[] 
   { name: "Graded price tracking", from: "Graded price tracking" },
   { name: "eBay auction alerts", from: "Auction alerts" },
   { name: "Demand Finder", from: "Demand Finder" },
-  { name: "RiftCompare Coins", from: "RiftCompare Coins" },
 ];
 
 function sourceRow(from: string): TierRow | undefined {

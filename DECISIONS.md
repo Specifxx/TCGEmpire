@@ -20827,3 +20827,11 @@ the DOM.
 **What the panel shows.** A monthly curve from this quarter to the end of the fifth (earned solid, projected dashed, the range as a band, "if growth stops" dotted), with the quarter and year table under it as before. The same model, at site level, is in the growth projections doc (project files `growth/projection-model.py`).
 
 **Not done.** No per-source or profit forecast, and no learned seasonality yet: re-fit `SEASON` from our own months once there is a full year.
+
+## RiftCompare Coins switched off — 2026-10-29
+
+**Owner:** "can we please get rid of the coins? … just completely get rid of the coins on the website". This turns off "RiftCompare Coins" (2026-10-16).
+
+**What.** One switch, `COINS_ENABLED = false` in `src/lib/coins.ts`. With it off, `/coins` is a 404, `coinsEnabledFor` is false for everyone (so `/api/coins` reports not eligible, pulls and claims are refused, and the watch and referral rewards pay nothing), and `earnCoin` sends no beacon from share buttons or store clicks. The row left the nav ("Your stuff"), the tier comparison table on `/premium` and the Pro ticks. Nothing else depended on coins: Pro's other perks, the referral's Premium days and the rating pop-up are unchanged.
+
+**Hidden, not deleted.** `CoinWallet`, `CoinTask` and `CoinOwned` and their rows stay, as do the page, the routes, the art and `tests/coins.test.ts`. Setting the switch back to true (and re-adding the nav, table and ticks rows) restores every member's collection as it was.

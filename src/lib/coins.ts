@@ -14,6 +14,15 @@
 // database-free, so the odds and the pity are testable. The server
 // (lib/coins-server.ts) owns the wallet; the page (components/coins/) draws.
 
+/**
+ * Off (owner, 2026-10-29: "just completely get rid of the coins"). Hidden, not
+ * deleted: the page 404s, the APIs and rewards refuse, and the nav, tier table
+ * and Pro ticks drop the row. The wallets, tasks and collections stay in the
+ * database untouched, so turning this back on restores everyone's coins.
+ * DECISIONS.md, "RiftCompare Coins switched off".
+ */
+export const COINS_ENABLED = false;
+
 export type Rarity = "common" | "rare" | "epic" | "legendary";
 
 export interface Coin {
