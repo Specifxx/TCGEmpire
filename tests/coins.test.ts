@@ -125,11 +125,24 @@ test("coins are private and never for sale", () => {
   assert.match(read("src/components/coins/CoinCollection.tsx"), /can&apos;t be bought or sold and have no cash value/);
 });
 
-test("/coins is a static shell cached a day, kept out of the index, in the nav and the Pro table", () => {
+test("/coins is a static shell cached a day and kept out of the index", () => {
   const page = read("src/app/coins/page.tsx");
   assert.match(page, /export const revalidate = 86400;/);
   assert.match(page, /robots: \{ index: false, follow: true \}/);
   assert.doesNotMatch(page, /prisma/, "no database read at render");
-  assert.match(read("src/components/nav-groups.ts"), /href: "\/coins", label: "RiftCompare Coins"/);
-  assert.match(read("src/components/TierComparisonTable.tsx"), /feature: "RiftCompare Coins — earn free pulls and collect twelve champion coins", account: false, plus: false, premium: true/);
+});
+
+// Switched off 2026-10-29 (owner): hidden everywhere, data kept. DECISIONS.md,
+// "RiftCompare Coins switched off".
+test("coins are switched off: no page, no rewards, nowhere in the nav or Pro tables", async () => {
+  const { COINS_ENABLED } = await import("../src/lib/coins");
+  assert.equal(COINS_ENABLED, false);
+  assert.match(read("src/app/coins/page.tsx"), /if \(!COINS_ENABLED\) notFound\(\);/);
+  assert.match(read("src/lib/coins-server.ts"), /return COINS_ENABLED && isPremium\(user, COIN_TIER\);/);
+  assert.match(read("src/lib/coins-client.ts"), /if \(!COINS_ENABLED\) return;/);
+  assert.doesNotMatch(read("src/components/nav-groups.ts"), /"\/coins"/);
+  assert.doesNotMatch(read("src/components/TierComparisonTable.tsx"), /feature: "RiftCompare Coins/);
+  assert.doesNotMatch(read("src/components/PremiumTicks.tsx"), /RiftCompare Coins/);
+  // Kept so the switch can come back: the tables stay in the schema.
+  for (const m of ["CoinWallet", "CoinTask", "CoinOwned"]) assert.match(read("prisma/schema.prisma"), new RegExp(`model ${m} \\{`));
 });

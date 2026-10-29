@@ -786,10 +786,9 @@ longer lands on its entry.
   ([2026-10-16](../DECISIONS.md#L18131)). Real anchor ads and the in-page ad cap are
   AdSense console settings (anchor "Top only" or off keeps a card page's Buy
   bar clear). [2026-10-16](../DECISIONS.md#L17916)
-- **RiftCompare Coins (`/coins`) are free and Premium-only:** tasks earn pulls,
-  a server-side roll reveals one of twelve coins (odds and pity printed on the
-  page), and nothing about them is ever sold. Every reward is idempotent on
-  `CoinTask`'s unique key. [2026-10-16](../DECISIONS.md#L17866)
+- **RiftCompare Coins are switched off** (`COINS_ENABLED = false`): `/coins` 404s,
+  no task pays, and they are out of the nav and the Pro tables. The coin tables
+  and rows are kept so they could come back. [2026-10-29](../DECISIONS.md#L20831)
 - **The arcade's line-up is chosen by data:** `games-report.yml` (dispatch-only)
   gives each game's search clicks and players; the two weakest (Card Rain,
   Pairs) were replaced by Seraphine's Piano, a Radiance rhythm game timed on
