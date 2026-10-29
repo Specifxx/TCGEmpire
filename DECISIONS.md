@@ -20845,3 +20845,11 @@ the DOM.
 **A display floor for champion decks.** It titles single decks "Champion Deck Display: Fiora" (C$30.12). "Champion Deck (Fiora) Display" had no floor key (the type carries the champion's name), so the 300c default would have let one deck price the display. A champion-deck display is now held to the Showdown display's 4000c floor in `sealedFloorCents`, which also guards eBay. Refuse-only.
 
 **CCC left out.** Its second storefront, CCC (ccctcg.ca, Dorval), was asked for too: every one of its 284 products is one of L'Atelier's, at the same price and availability. One stock shown as two stores would mislead buyers and inflate the store count.
+
+## A private weekly growth report for the growth review — 2026-10-30
+
+**Owner:** "I want significant jumps to our affiliate link revenue … you can see it's not growing these past week from the earnings dashboard." Growth is now a standing weekly review (a scheduled Claude session), ranked by affiliate revenue, and that review needs the money split finer than the Monday digest gives: which site, placement and market moved, week over week.
+
+**What.** `POST /api/cron/growth-report` (CRON_SECRET, fails closed) builds `lib/earnings/growth-report.ts`: the last four whole weeks ending yesterday (eBay's report lags a day), totals by source, eBay and TCGplayer by site, the top 25 placements (`site · placement · network`, the third segment of the tag, so a product slug after it never splits a placement) and top 15 markets, each with last week's sales and the change on the week before, plus RiftCompare's own outbound click counters per week so earnings per click can be read. Plain text in a `<pre>`, so the review can parse it.
+
+**Private, like the digest.** It is mailed to a fixed business inbox, `riftcompare@gmail.com` (`growthReportEmail`, `GROWTH_REPORT_EMAIL` overrides; never from the request), the inbox the review reads; the owner's personal inbox keeps the Monday digest. The response is only `ok`/`via`, and `.github/workflows/growth-report.yml` (Mondays 20:41 UTC, Tuesday morning in Sydney, and on dispatch) logs only the HTTP status. It is in the ops monitor's `JOBS` (weekly, 200 h).
