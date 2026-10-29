@@ -15,6 +15,7 @@
 import { COUNTRIES, COUNTRY_LIST, type Country } from "../country";
 import { convertCents } from "../fx";
 import { affiliateUrl, ebayLabel, ebaySearchUrl } from "../affiliate";
+import { amazonFor, amazonSearchUrl } from "../amazon";
 import { headlineOffer, offerStock, rankOffers } from "../sealed-offers";
 import { pokemonEbayQuery } from "./ebay-query";
 import type { PkBoard, PkListing, PkOfferRow, PkReference, PkTile } from "./types";
@@ -114,7 +115,16 @@ export function buildBoard(
       label: `Search ${ebayLabel(market)}`,
       href: ebaySearchUrl(market, pokemonEbayQuery(productName), `pkmn-${opts.surface}`),
     },
+    amazonSearch: amazonBoardSearch(productName, market, opts.surface),
   };
+}
+
+/** The board's Amazon search (owner, 2026-10-29): Pokémon sealed sells on Amazon. ascsubtag rc-<market>-pkmn-<surface>. */
+function amazonBoardSearch(productName: string, market: Country, surface: string): PkBoard["amazonSearch"] {
+  const a = amazonFor(market);
+  const q = /\bpok[eé]mon\b/i.test(productName) ? productName : `Pokemon TCG ${productName}`;
+  const href = a && amazonSearchUrl(market, q, `rc-${market}-pkmn-${surface}`);
+  return a && href ? { label: `Check price on ${a.label}`, href } : null;
 }
 
 /**
