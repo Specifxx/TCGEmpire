@@ -87,6 +87,19 @@ function defaultSet(): { code: string; name: string } {
   return s ? { code: s.code, name: s.name } : { code: "VEN", name: "Vendetta" };
 }
 
+/** The cached picks for one set, shared with /api/mini-picks (MiniPicks). */
+export function cachedEbayPicks(code: string, limit: number): Promise<PickListing[]> {
+  return unstable_cache(() => loadPicks(code, limit), ["ebay-picks", code, String(limit)], {
+    revalidate: 86400,
+    tags: [CONTENT_TAG],
+  })();
+}
+
+/** The set the strips follow when a page names none (the newest featured set). */
+export function defaultPicksSet(): string {
+  return defaultSet().code;
+}
+
 export async function EbayPicks({
   setCode,
   limit = 6,
@@ -122,10 +135,7 @@ export async function EbayPicks({
     // dynamic) and the homepage (3600) this value is harmless; only the 86400
     // article routes were undercut, so matching 86400 fixes them without changing
     // anything else.
-    listings = await unstable_cache(() => loadPicks(code, limit), ["ebay-picks", code, String(limit)], {
-      revalidate: 86400,
-      tags: [CONTENT_TAG],
-    })();
+    listings = await cachedEbayPicks(code, limit);
   } catch {
     // A database blip must not take down a content page for an ad unit; the
     // client half renders the generic eBay CTA when it gets nothing.

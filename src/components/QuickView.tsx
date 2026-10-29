@@ -1,5 +1,6 @@
 "use client";
 
+import { MiniPicks } from "./MiniPicks";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { sendCardView } from "@/lib/card-views";
@@ -430,6 +431,10 @@ function QuickViewModal({
                 </div>
               );
             })()}
+
+            {/* The small eBay + TCGplayer pair of this set's chase cards (owner,
+                2026-10-29: "much smaller … not intrusive"). */}
+            <MiniPicks setCode={card.setCode} pageType="quickview" className="mt-3" />
 
             {/* The card page's featured listing, here too (owner, 2026-10-19;
                 lib/featured-listings.ts). Labelled and above the comparison. */}

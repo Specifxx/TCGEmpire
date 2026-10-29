@@ -1,5 +1,6 @@
 "use client";
 
+import { MiniPicks } from "./MiniPicks";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import type { SealedGroup } from "@/lib/sealed-import";
@@ -161,6 +162,8 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
 
           {/* Price comparison — every tracked store, cheapest in-stock first */}
           <div className="p-4">
+            {/* The small eBay + TCGplayer pair (owner, 2026-10-29). */}
+            <MiniPicks setCode={group.setCode ?? ""} pageType="sealed_quickview" className="mb-3" />
             <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
             {listings.length === 0 ? (
               <div className="p-4 text-center text-sm text-slate-400">

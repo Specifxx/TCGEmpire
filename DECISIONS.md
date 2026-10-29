@@ -20760,3 +20760,13 @@ The registry goes from 224 to 267 stores. Postage was measured for every one (`p
 **Where.** Directly under `EbayPicks` on `/` and the region homes, the set hubs and articles that opt into eBay Picks, and on card pages under the eBay listings panel (that set's chase cards). Not on /browse, where it would push the results down. The text `TcgplayerAd` banners are unchanged.
 
 **Cost.** One small `RetailerPrice` read per set (`cardId in` ≤12, two retailer keys), inside a day-long `unstable_cache` tagged `CONTENT_TAG`, exactly as `EbayPicks`; no cookies, so the cached pages stay cached. Clicks: `buy_click` surface `tcg_strip`, retailer `tcgplayer_strip`, Impact sub-id `rc-<page>-tcg_strip`.
+
+## Small eBay + TCGplayer pair near the top and on every page — 2026-10-29
+
+**Owner:** the eBay and TCGplayer strips should also show on card pages and the quick views "near the top, but much smaller so it's not intrusive", and on every other page (pre-orders, lists…). Pro members see none of it.
+
+**What.** `MiniPicks`: a set's chase cards as 56px tiles in one slim box, with an eBay row (the cheapest live listing in the visitor's market, `selectPicks`) and a TCGplayer row (US market price). Each row has an "All →" link, and an "Ad" label and the disclosure sit inside the box. It is hidden for every paid tier (`usePremium`, and `data-ad-placement`). Clicks: surface `mini_picks`, retailers `ebay_mini` / `tcgplayer_mini`, sub-ids `mini_<market>` / `tcg_mini`.
+
+**Where.** Card pages under the price and alert button (that card's set). The card and sealed quick views. Above the footer banners on every page that shows them, except the homes, set hubs and card pages, which already carry strips (`miniPicksAllowed` in FooterAds.tsx).
+
+**Cost.** It reads nothing on the server. It fetches `/api/mini-picks?set=`, which reads the same day-long `cachedEbayPicks` / `cachedTcgPicks` caches the full strips use, and the CDN keeps each set's answer six hours. So no page gains a server read or a shorter cache life.
