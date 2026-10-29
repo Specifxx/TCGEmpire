@@ -17,6 +17,7 @@ import { COUNTRY_GUIDE_SLUGS, pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { getArticles } from "@/lib/articles";
 import { articleHref } from "@/lib/content/tool-guides";
 import { verifiedStoreProfile } from "@/lib/store-plan-db";
+import { CARD_SHOP_FINDER } from "@/lib/partners";
 
 export const revalidate = 86400;
 
@@ -306,6 +307,21 @@ export default async function StorePage({ params }: { params: { slug: string } }
           )}
         </div>
       </section>
+
+      {/* Partner link (2026-10-29, owner): reciprocal exchange with The Card
+          Shop Finder (lib/partners.ts). Quiet, below the store's prices and
+          the comparison, so it never competes with them. Followed link,
+          rel="noopener" only, no click tracking. Its directory is US-only,
+          which the muted line says for readers in other markets. */}
+      <aside aria-label={CARD_SHOP_FINDER.heading} className="rounded-xl border border-ink-800 px-5 py-4 text-sm">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{CARD_SHOP_FINDER.heading}</p>
+        <p className="mt-1 text-slate-400">
+          <a href={CARD_SHOP_FINDER.url} target="_blank" rel={CARD_SHOP_FINDER.rel} className="font-semibold text-brand-400 hover:underline">
+            {CARD_SHOP_FINDER.label}
+          </a>{" "}
+          <span className="text-slate-500">on {CARD_SHOP_FINDER.name}, a directory of US card shops.</span>
+        </p>
+      </aside>
 
       {/* The highest-intent B2B placement on the site: someone reading a page
           ABOUT a shop is far likelier to run one than the average visitor —

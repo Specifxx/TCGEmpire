@@ -10,7 +10,7 @@ import { FooterSiteMapDetails } from "./HomeFooterToggle";
 function FooterLink({ l, className }: { l: NavGroupLink; className: string }) {
   if (l.external) {
     return (
-      <a href={l.href} target="_blank" rel="noopener noreferrer" className={className}>
+      <a href={l.href} target="_blank" rel={l.rel ?? "noopener noreferrer"} className={className}>
         {l.label}
       </a>
     );
