@@ -20779,6 +20779,31 @@ The registry goes from 224 to 267 stores. Postage was measured for every one (`p
 
 **Not.** No Amazon on Riftbound card or sealed product pages: Amazon has little Riftbound product, and a search that finds nothing is a bad click.
 
+## Rating drive: the pop-up was invisible; now it asks sooner and again — 2026-10-29
+
+The owner, the morning after "Rating drive: a pop-up until 100": "I still have
+gotten no ratings since - it needs to be a bit more intrusive".
+
+**Why nothing came in.** The pop-up's box carried `data-rate-prompt`, the
+corner card's hook that `globals.css` hides (`visibility: hidden`) whenever a
+Dialog is open, so it hid itself: visitors saw the page dim and nothing to
+tap. Found in a real browser (the earlier check only counted the element).
+The box now has its own `data-rating-drive` hook and a solid card
+background; `tests/pro-page.test.ts` fails if the pop-up wears the corner
+card's hook again. Lesson: check a pop-up is VISIBLE in a browser, not just in
+the DOM.
+
+**More insistent, still closable.**
+- The landing page waits 15 s (was 30 s; most search visitors read one page
+  and leave inside 30 s), later pages 4 s.
+- "Maybe later" brings it back 3 pages on, up to twice a visit, every visit,
+  until they rate.
+- An unknown count (an API error, a cold database) keeps the drive on; only a
+  real count of 100 ends it.
+- `?rate=1` opens it at once, so the owner can see it after rating.
+- Unchanged: ✕, "Maybe later" and Escape close it; never someone who rated;
+  never on sign-in, checkout, /premium, /feedback, admin, embeds or the arcade.
+
 ## The Card Shop Finder: a reciprocal link on store pages and the footer — 2026-10-29
 
 **Owner:** a link exchange agreed with The Card Shop Finder's owner (Ben Gunther, eSEOspace): a "Prefer to buy local?" block with "Find a local card shop near you" on every store page, and "Local Card Shop Directory" once in the footer, both to `thecardshopfinder.com/browse/` with `utm_source=riftcompare&utm_medium=referral`.

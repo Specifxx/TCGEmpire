@@ -9,6 +9,7 @@ import { RatingReviewForm } from "./RatingReviewForm";
 import {
   RATE_SESSION_KEY,
   RATE_STORAGE_KEY,
+  RATING_DRIVE_ASKS_KEY,
   RATING_DRIVE_DELAY_MS,
   RATING_DRIVE_LANDING_MS,
   RATING_DRIVE_SESSION_KEY,
@@ -28,7 +29,7 @@ import {
 // times, never in the same visit as the Pricing callout. A small corner card, not a modal: the page stays usable under it,
 // and ✕, Escape and "Not now" all close it (snoozed), "Don't ask again" ends it.
 // DURING THE RATING DRIVE (2026-10-28, under 100 ratings: lib/rate-prompt.ts)
-// it is a centred pop-up for every visitor who has not rated, once per visit,
+// it is a centred pop-up for every visitor who has not rated, up to twice a visit (every visit),
 // with ✕, "Maybe later" and Escape but no "Don't ask again" and no closing by
 // a click on the page behind; after the drive, the corner card again.
 // Its body is the one rating-and-review form every surface uses
@@ -79,7 +80,8 @@ async function loadDrive(): Promise<Drive> {
   try {
     const res = await fetch("/api/rating-drive");
     const d = (await res.json()) as Partial<Drive>;
-    const drive: Drive = { active: res.ok && d.active === true, count: typeof d.count === "number" ? d.count : null };
+    // Only the API's own "off" (a real count of 100+) ends the drive; a failed answer keeps it on.
+    const drive: Drive = { active: !(res.ok && d.active === false), count: typeof d.count === "number" ? d.count : null };
     try {
       sessionStorage.setItem(RATING_DRIVE_SESSION_KEY, JSON.stringify(drive));
     } catch {
@@ -87,8 +89,18 @@ async function loadDrive(): Promise<Drive> {
     }
     return drive;
   } catch {
-    return { active: false, count: null }; // unknown is off: never nag on an error
+    return { active: true, count: null }; // unknown is on: only a real 100 ends it
   }
+}
+
+function readDriveAsks(): { shown: number; atPage: number } {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(RATING_DRIVE_ASKS_KEY) ?? "null");
+    if (v && typeof v.shown === "number" && typeof v.atPage === "number") return v;
+  } catch {
+    /* private mode or junk */
+  }
+  return { shown: 0, atPage: 0 };
 }
 
 export function RateUsPrompt() {
@@ -121,12 +133,20 @@ export function RateUsPrompt() {
     if (open || drive === null) return; // wait for the drive's answer
     const visitPages = countSessionView("rc_rate_views", path); // the same path is not counted twice
     if (drive.active) {
-      const ask = () => shouldAskRatingDrive(load(Date.now()), path, sessionFlag(RATE_SESSION_KEY));
+      const ask = () => {
+        const a = readDriveAsks();
+        return shouldAskRatingDrive(load(Date.now()), path, { shown: a.shown, pagesSince: visitPages - a.atPage });
+      };
+      // "?rate=1": open it now (to see it, even after rating in this browser).
+      if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("rate") === "1") {
+        show(true, visitPages);
+        return;
+      }
       if (!ask()) return;
       return armNudge({
         delayMs: visitPages >= 2 ? RATING_DRIVE_DELAY_MS : RATING_DRIVE_LANDING_MS,
         onFire: () => {
-          if (ask()) show(true);
+          if (ask()) show(true, visitPages);
         },
       });
     }
@@ -162,7 +182,8 @@ export function RateUsPrompt() {
         const here = window.location.pathname;
         const visitPages = countSessionView("rc_rate_views", here); // the page already counted: no double count
         if (driveRef.current?.active) {
-          if (shouldAskRatingDrive(load(Date.now()), here, sessionFlag(RATE_SESSION_KEY))) show(true);
+          const a = readDriveAsks();
+          if (shouldAskRatingDrive(load(Date.now()), here, { shown: a.shown, pagesSince: visitPages - a.atPage })) show(true, visitPages);
           return;
         }
         if (
@@ -186,8 +207,15 @@ export function RateUsPrompt() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function show(asPopup: boolean) {
+  function show(asPopup: boolean, visitPage = 0) {
     setPopup(asPopup);
+    if (asPopup) {
+      try {
+        sessionStorage.setItem(RATING_DRIVE_ASKS_KEY, JSON.stringify({ shown: readDriveAsks().shown + 1, atPage: visitPage }));
+      } catch {
+        /* private mode */
+      }
+    }
     const cur = load(Date.now());
     save({ ...cur, asks: cur.asks + 1 });
     try {
@@ -228,8 +256,8 @@ export function RateUsPrompt() {
   if (popup) {
     const count = drive?.count ?? null;
     return (
-      <Dialog open onClose={close} size="md" label="Rate RiftCompare" dismissOnBackdrop={false} className="px-5 pb-5 pt-6 text-center">
-        <div data-rate-prompt data-rating-drive>
+      <Dialog open onClose={close} size="md" label="Rate RiftCompare" dismissOnBackdrop={false} className="rounded-2xl border border-ink-700 bg-ink-900 px-5 pb-5 pt-6 text-center shadow-2xl">
+        <div data-rating-drive>
           <button
             type="button"
             onClick={close}
