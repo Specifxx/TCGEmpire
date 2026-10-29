@@ -20811,3 +20811,19 @@ the DOM.
 **What.** The URL and labels live in `src/lib/partners.ts` (`CARD_SHOP_FINDER`, `cardShopFinderUrl(path)`), so a per-state or per-city page (`/co/`, `/co/denver/`) can replace `/browse/` in one place. The store-page block sits below the prices and the "Is it the cheapest?" section, a quiet bordered aside. The footer link is added straight to `FOOTER_GROUPS` ("Learn & help", beside "Community sites & tools"), not to `NAV_GROUPS`: the agreement is one footer link, not a launcher or rail entry. `NavGroupLink.rel` lets this one external link render `rel="noopener"`; every other external footer link keeps `noopener noreferrer`.
 
 **Terms.** Followed (`rel="noopener"` only: no nofollow, sponsored or noreferrer), new tab, no outbound click tracking. The directory is US-only, so the block says "a directory of US card shops" for readers of the other markets' store pages. `tests/partners.test.ts` pins all of it.
+
+## Earnings forecast: compounding, fading and seasonal, not a straight line — 2026-10-29
+
+**Owner:** "our trend line, it shouldn't be linear, right? It could be like non-linear. So make sure you account for that". This replaces the straight line in "Earnings dashboard: a forecast by quarter" (2026-10-28).
+
+**Why not a line.** Search traffic, and the affiliate money that follows it, compounds while pages climb, slows as a game runs out of searches, and follows the hobby's calendar. A straight line gets all three wrong: it under-reads a business compounding at 20% a month, never levels off, and reads January's lull as a collapse.
+
+**How it projects now** (`forecastQuarters`, `lib/earnings/core.ts`):
+- Growth rate: a least-squares line through the LOG of weekly earnings over the last 90 complete days (from the first earning day if later; null under 30 days), each week first divided by its month's season. That is a compounding rate, clamped to ±10% a week (`FORECAST_MAX_WEEKLY`) so a short, spiky history cannot project a runaway.
+- The rate fades: on day k it is r·e^(−k/180) (`FORECAST_FADE_DAYS`), so half of it is gone after about four months and the curve levels off at a plateau (`plateauPerDay`, shown in the note) instead of running away.
+- Season: each projected day is multiplied by its month (`SEASON`: Jan 0.85, Feb 0.9, May and Jun 0.95, Oct 1.05, Nov 1.1, Dec 1.2, the rest 1). Assumed from the hobby calendar until a year of our own data can replace it.
+- Likely range: the weekly rate ± 1.28 standard errors (~80%), faded the same way. "If growth stops", the eBay two-day lag, the display currency and "never in any other figure" are unchanged.
+
+**What the panel shows.** A monthly curve from this quarter to the end of the fifth (earned solid, projected dashed, the range as a band, "if growth stops" dotted), with the quarter and year table under it as before. The same model, at site level, is in the growth projections doc (project files `growth/projection-model.py`).
+
+**Not done.** No per-source or profit forecast, and no learned seasonality yet: re-fit `SEASON` from our own months once there is a full year.
