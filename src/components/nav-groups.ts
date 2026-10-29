@@ -1,6 +1,7 @@
 import { DISCORD_URL } from "@/lib/site";
 import { SETS } from "@/lib/constants";
 import { pokemonSectionOn } from "@/lib/pokemon/flag";
+import { CARD_SHOP_FINDER } from "@/lib/partners";
 
 // The grouped site navigation, shared by the ⌘K command launcher
 // (CommandLauncher.tsx), the persistent desktop rail (SideNav.tsx), the footer
@@ -42,6 +43,12 @@ export interface NavGroupLink {
    * second copy in the site map would only repeat them.
    */
   hideInFooter?: boolean;
+  /**
+   * The rel for an `external` link, when it is not the default
+   * "noopener noreferrer": a partner link agreed as followed and with the
+   * referrer kept is "noopener" (lib/partners.ts).
+   */
+  rel?: string;
 }
 
 export interface NavGroup {
@@ -401,6 +408,13 @@ export const FOOTER_GROUPS: NavGroup[] = [
   },
   {
     title: "Learn & help",
-    links: [...(byTitle["Guides & News"] ?? []), ...(byTitle["Help"] ?? [])],
+    links: [
+      ...(byTitle["Guides & News"] ?? []),
+      ...(byTitle["Help"] ?? []),
+      // Footer only, not NAV_GROUPS (2026-10-29, owner): the reciprocal link
+      // agreed with The Card Shop Finder is one footer link, beside
+      // "Community sites & tools", not a launcher or rail entry.
+      { href: CARD_SHOP_FINDER.url, label: CARD_SHOP_FINDER.footerLabel, external: true, rel: CARD_SHOP_FINDER.rel },
+    ],
   },
 ];

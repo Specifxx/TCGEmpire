@@ -20803,3 +20803,11 @@ the DOM.
 - `?rate=1` opens it at once, so the owner can see it after rating.
 - Unchanged: ✕, "Maybe later" and Escape close it; never someone who rated;
   never on sign-in, checkout, /premium, /feedback, admin, embeds or the arcade.
+
+## The Card Shop Finder: a reciprocal link on store pages and the footer — 2026-10-29
+
+**Owner:** a link exchange agreed with The Card Shop Finder's owner (Ben Gunther, eSEOspace): a "Prefer to buy local?" block with "Find a local card shop near you" on every store page, and "Local Card Shop Directory" once in the footer, both to `thecardshopfinder.com/browse/` with `utm_source=riftcompare&utm_medium=referral`.
+
+**What.** The URL and labels live in `src/lib/partners.ts` (`CARD_SHOP_FINDER`, `cardShopFinderUrl(path)`), so a per-state or per-city page (`/co/`, `/co/denver/`) can replace `/browse/` in one place. The store-page block sits below the prices and the "Is it the cheapest?" section, a quiet bordered aside. The footer link is added straight to `FOOTER_GROUPS` ("Learn & help", beside "Community sites & tools"), not to `NAV_GROUPS`: the agreement is one footer link, not a launcher or rail entry. `NavGroupLink.rel` lets this one external link render `rel="noopener"`; every other external footer link keeps `noopener noreferrer`.
+
+**Terms.** Followed (`rel="noopener"` only: no nofollow, sponsored or noreferrer), new tab, no outbound click tracking. The directory is US-only, so the block says "a directory of US card shops" for readers of the other markets' store pages. `tests/partners.test.ts` pins all of it.
