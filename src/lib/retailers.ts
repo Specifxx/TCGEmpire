@@ -2432,6 +2432,18 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$8.00",
     country: "CA",
   },
+  // Laval QC; asked to be listed (suggest-a-store form and email, 2026-10-29).
+  // Free shipping in Canada over C$250 by its own site; postage not yet measured.
+  ultimacards: {
+    key: "ultimacards",
+    name: "Ultima Cards",
+    base: "https://ultimacards.ca",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 800,
+    freeOverCents: 25000,
+    shippingNote: "est. C$8.00 · free over C$250",
+    country: "CA",
+  },
   // Edmonton; 338 in stock, 94% matched.
   commonboxgames: {
     key: "commonboxgames",
