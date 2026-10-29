@@ -270,6 +270,329 @@ const PREMIUM_TRIAL_ARTICLE_BILLING = premiumTrialEnabled()
 
 export const ARTICLES: Article[] = [
   {
+    slug: "riftbound-gift-guide-2026",
+    category: "blog",
+    title: "Riftbound Gift Guide 2026: What to Buy at Every Budget",
+    seoTitle: "Riftbound Gift Guide 2026: Best Gifts From $5 to $150",
+    excerpt:
+      "What to buy a Riftbound player this holiday season, from a US$5 pack to a booster box, with real store prices and how to spot a real Black Friday deal.",
+    author: "RiftCompare",
+    date: "2026-10-29",
+    readMins: 7,
+    tags: ["gift guide", "black friday", "christmas", "sealed", "radiance", "buying", "beginners"],
+    hero: {
+      src: "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8cec0480427b3646cb48cb2e3fe3a02b629f7aeb-744x1039.png?accountingTag=RB",
+      alt: "Riven, The Exile, the Showcase Legend from Riftbound's newest set, Radiance",
+    },
+    summary: [
+      "**For someone new to Riftbound:** a two-player Showdown Decks box (US$34.99 MSRP, from US$19.91 at a US store on 28 October) or a Champion Deck (from about US$15).",
+      "**For a player who already has decks:** a Radiance Vault Bundle (US$34.99 MSRP) or the exact single cards on their wish list, which is almost always better value than packs.",
+      "**For a collector:** a Radiance booster box, from US$116.59 in the US, £100 in the UK, €97.99 in the EU, C$179.95 in Canada and A$239.99 in Australia on 28 October.",
+      "**On Black Friday, compare against today's price, not the MSRP.** Radiance boxes already sit at or under the US$120 MSRP at the cheapest stores, so a \"deal\" at MSRP is no deal.",
+    ],
+    faq: [
+      {
+        q: "What is a good Riftbound gift for a beginner?",
+        a: "A Showdown Decks box, which holds two ready-to-play decks so two people can learn together, or a single Champion Deck if they already have someone to play with. Both are cheaper than a booster box and need nothing else to start.",
+      },
+      {
+        q: "Should I buy booster packs or single cards as a gift?",
+        a: "For a player, single cards from their wish list are better value: a whole Radiance base set cost about US$113 in singles on 28 October, less than one booster box. Packs and boxes make sense for someone who enjoys opening them, or a collector chasing Showcase cards.",
+      },
+      {
+        q: "Will Riftbound be cheaper on Black Friday 2026?",
+        a: "Some stores will discount, but Radiance booster boxes were already selling at or below the US$120 MSRP at the cheapest stores in late October. Compare any Black Friday price with the live lowest price on RiftCompare rather than with the MSRP or a crossed-out 'was' price.",
+      },
+      {
+        q: "What Riftbound product comes out next?",
+        a: "Legacy, Riot's Set 6, releases on 29 January 2027 and is already on pre-order. Proving Grounds 2nd Edition, a US$39.99 boxed starter with four Champion decks for two to four new players, follows on 19 February 2027.",
+      },
+    ],
+    shop: [
+      { label: "Radiance Showdown Decks", query: "riftbound radiance showdown deck" },
+      { label: "Radiance booster boxes", query: "Riftbound Radiance booster box" },
+      { label: "Riftbound Champion Decks", query: "riftbound champion deck" },
+      { label: "Riftbound playmats", query: "riftbound playmat" },
+    ],
+    browseCta: {
+      href: "/sealed",
+      label: "Compare every sealed product →",
+      blurb: "Booster boxes, bundles, Showdown Decks and Champion Decks, with today's price at every store we track.",
+    },
+    body: `Riftbound turned one this year and Radiance, its fifth set, launched on 23 October, so this is the first holiday season with a full shelf of products to choose from. Here is what to buy at each budget, who each product suits, and what it actually costs. Every price below is the cheapest in-stock store price in our catalogue on 28 October 2026; the [sealed product page](/sealed) has today's numbers.
+
+## Under US$10: a booster pack or two
+
+A single Radiance booster pack is the classic stocking filler. On 28 October the cheapest were **US$5.74** in the US, **£4.99** in the UK, **C$7.95** in Canada and **A$10.99** in Australia. Older-set packs cost about the same (Vendetta from US$4.93), except Origins, the launch set, whose packs now start around US$13.
+
+A pack is a lottery ticket, not a deck. Buy one for the fun of opening it, not because the person needs cards.
+
+## US$15 to US$40: a ready-to-play deck
+
+This is the best range for someone new to the game, or a player you want to get a second deck.
+
+- **Showdown Decks (Radiance: Evelynn vs Seraphine).** Two complete decks in one box, built to play against each other, so it's a game for two out of the box. MSRP is US$34.99; on 28 October it was from **US$19.91** at a US store, £21.99, €18.99, C$29.99 and A$49.99. The Vendetta Showdown Decks are still around and slightly cheaper (from US$15.99).
+- **Champion Decks.** A single pre-built deck around one Legend. The Unleashed Vi deck was the easiest to find, from **US$15.08**, £15, C$17.99 and A$25.99, and the Spirit Forged decks (Rumble and Fiora) from about US$20.
+- **Proving Grounds.** The original boxed starter was from US$49.95 in the US but only £29 in the UK and €25.99 in the EU. If you can wait, [Proving Grounds 2nd Edition](/release-dates) arrives on 19 February 2027 at US$39.99, with four decks (Heimerdinger, Karma, Vladimir and Illaoi) for two to four new players.
+
+New players will also want sleeves and a deck box; [the card size guide](/guides/riftbound-card-size-sleeves-deck-boxes) lists what fits.
+
+## US$35 to US$70: the Radiance Vault Bundle
+
+The bundle is the middle option: a handful of packs plus extras in a gift-shaped box. MSRP is US$34.99, and on 28 October the cheapest were **US$35** in the US, £33.95, €28.90, C$57.99 and A$65. It's a good present for someone who already plays and likes opening packs, but per pack it costs more than a box.
+
+## For a player: buy their wish list
+
+If the person already plays, the most useful gift is the exact cards they want. It's also the cheapest way to get them: the whole 167-card [Radiance base set](/guides/whats-in-the-riftbound-radiance-set) cost about **US$113 in singles** on 28 October, less than a single booster box, and most playable cards cost under a dollar.
+
+Ask for their list (most players keep one), paste it into the [deck builder](/deck) and it prices every card at the cheapest store in your market. If you'd rather not guess, a store gift card from one of the shops on [our store list](/stores) does the same job.
+
+Not sure what they play? Ask which Legend their main deck is built around. Each Legend is a League of Legends champion, and the champion's page lists every card of theirs in every set with live prices, so you can pick a card for their deck, or a premium printing of their favourite, without knowing the meta. If they play one of Radiance's nine new Legends, the Epic numbered right after it (Blade of the Exile for Riven, The Ball for Orianna) is almost always on the list.
+
+## US$100 and up: a booster box
+
+A booster box (24 packs) is the big present for a collector or someone who loves opening packs. On 28 October the cheapest Radiance boxes were:
+
+| Market | Cheapest box | Typical store price |
+| --- | --- | --- |
+| US | US$116.59 | about US$140 |
+| UK | £100 | about £117 |
+| Eurozone | €97.99 | about €125 |
+| Canada | C$179.95 | about C$210 |
+| Australia | A$239.99 | about A$245 |
+
+Vendetta boxes cost about the same (from US$119.99, £109.95). Origins and Spirit Forged boxes are now much dearer outside the US, so they suit a collector more than a player.
+
+Before buying a box for value rather than fun, read [whether a box is worth opening](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles). For a collector who has everything, [Legacy pre-orders](/legacy-preorders) open the door to Set 6 on 29 January 2027.
+
+[[shop]]
+
+## Gifts that aren't cards
+
+Plenty of Riftbound players have more cards than they need. These are the presents they tend to want anyway:
+
+- **Sleeves.** Every serious player sleeves their deck, and sleeves wear out. Riftbound cards are standard TCG size, so any standard-size sleeve fits; [the card size guide](/guides/riftbound-card-size-sleeves-deck-boxes) covers which brands and how many to buy. A 100-pack of good sleeves costs about the same as two booster packs.
+- **A deck box.** One that holds a sleeved 40-card deck plus Runes, Battlefields and a Legend. Players who carry two or three decks to a store night will use a second one.
+- **A playmat.** Riot and many stores sell Riftbound playmats, and they're the one accessory people show off. Check the mat is the standard 24 by 14 inch size so it fits a store table.
+- **A binder.** For a collector, a side-loading binder for alt arts and Showcase cards. [How to store and protect your cards](/guides/how-to-store-and-protect-riftbound-cards) explains what's worth paying for.
+- **An event entry.** A local store's weekly Nexus Night usually costs little, and players can earn promo cards there. Bigger: Legacy's Pre-Rift events run 22 to 28 January 2027, a week before the set's release, and an entry makes a good Christmas IOU. [How Pre-Rift works](/guides/riftbound-pre-rift-rules-explained) explains the format.
+
+## Gifts for a collector who has everything
+
+If the person already owns the sets, think premium printings rather than more packs.
+
+- **A Showcase or Signature card of their favourite champion.** Every champion has a page listing all of their printings with live prices, from the base card to the Signature; [the champions index](/champions) is the place to start. Radiance's over-numbered Showcase Legends started at about US$54 on 28 October, and alt arts at under US$10.
+- **A graded card.** A PSA, BGS or CGC slab of a card they love is a display piece. [The grading guide](/guides/riftbound-psa-bgs-grading-guide) explains the grades, and each card page shows graded listings where they exist.
+- **A metal card.** The rarest Riftbound cards are metal Prize Wall and Best Of Legends, won or traded for at events. They run into thousands of dollars; [every metal card and its price](/blog/riftbound-metal-cards) is listed in one place.
+
+## What to avoid
+
+A few mistakes come up every holiday season:
+
+- **Resealed or "mystery" boxes.** Buy sealed product from a real store, not a marketplace seller with a stock photo. A box whose shrink wrap looks wrong, or a "repack" of unknown packs, is not the same product.
+- **The wrong language.** Riftbound is printed in English and Simplified Chinese, and the two look alike in small listing photos. If the person plays at an English-speaking store, check the listing says English.
+- **Paying double for a sold-out product.** Launch-week bundles and Showdown Decks sometimes sell out at stores and appear on marketplaces at twice the MSRP. Usually they return to store shelves within weeks; [the Radiance pre-order follow-up](/blog/riftbound-radiance-preorder-prices-two-weeks-later) showed marketplace premiums falling by a third or more within a fortnight.
+- **Buying the wrong game.** Riftbound is the League of Legends card game. If you're shopping for someone who plays Legends of Runeterra, the digital game, ask first: [is there a League of Legends card game?](/guides/is-there-a-league-of-legends-card-game) explains the difference.
+
+## Black Friday and Cyber Monday: what a real deal looks like
+
+Black Friday falls on 27 November this year. Some stores will discount Riftbound, but three things are worth knowing first:
+
+1. **Compare with today's price, not the MSRP.** The cheapest Radiance boxes were already at or under the US$120 MSRP a week after launch. A "Black Friday price" of US$120 is the normal price.
+2. **Ignore the crossed-out price.** A "was US$180" tag means nothing if five other stores sold it for US$125 last week. Check the live price on [the Radiance set page](/sets/radiance) or [the sealed page](/sealed) before you buy.
+3. **Add postage.** A box that's US$5 cheaper but costs US$15 more to ship isn't a deal, so check each store's postage before you pay.
+
+If you're waiting for a particular card to drop, a free [price alert](/alerts) emails you when it does, so you don't have to watch for it.
+
+## Ordering in time for Christmas
+
+Stores set their own Christmas postage cut-offs, usually in mid-December for domestic orders and earlier for international ones. Order from a store in your own country where you can: [are Riftbound cards cheaper in another country?](/blog/are-riftbound-cards-cheaper-in-another-country) shows why the saving abroad usually disappears once postage and import tax are added. Our buying guides cover the stores in [the US](/blog/buy-riftbound-cards-us), [the UK](/blog/buy-riftbound-cards-uk), [Canada](/blog/buy-riftbound-cards-canada), [Australia](/blog/buy-riftbound-cards-australia) and [Europe](/blog/buy-riftbound-cards-europe).`,
+  },
+  {
+    slug: "whats-in-the-riftbound-radiance-set",
+    category: "guide",
+    title: "What's in the Riftbound Radiance Set?",
+    seoTitle: "Riftbound Radiance Set Breakdown: Rarities, Legends & Costs",
+    excerpt:
+      "167 base cards, 62 Showcase printings and nine Legends, each paired with its own Epic: the full Radiance breakdown, counted from our catalogue.",
+    author: "RiftCompare",
+    date: "2026-10-29",
+    readMins: 8,
+    tags: ["sets", "guide", "radiance", "rad", "rarity", "collecting", "set 5"],
+    hero: {
+      src: "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8cec0480427b3646cb48cb2e3fe3a02b629f7aeb-744x1039.png?accountingTag=RB",
+      alt: "Riven, The Exile — the over-numbered Showcase Legend from the Riftbound Radiance set",
+    },
+    summary: [
+      "**167 base cards**, numbered 001/167 to 167/167 with no gaps: one card bigger than Vendetta and well short of the 200-plus-card sets before it.",
+      "**Rarity splits 48 Common / 46 Uncommon / 45 Rare / 28 Epic**, plus **62 Showcase-tier printings** on top: 18 alt arts, 17 over-numbered cards, 16 Signatures, 6 Showcase Runes and 5 SP specials.",
+      "**Nine Legends, and each one sits next to its own Epic** in the numbering (Riven at 149, Blade of the Exile at 150), so every champion arrives with a signature spell or Gear.",
+      "**The whole 167-card base set cost about US$113 in singles** at the cheapest US store prices on 28 October, five days after launch. Booster boxes started at US$116.59.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in Riftbound Radiance?",
+        a: "167 base cards, numbered 001/167 to 167/167. On top of those there are 62 Showcase-tier printings (alt arts, over-numbered cards, Signatures, Showcase Runes and five SP cards), so the main print run is 229 printings before promos and the 18 Runes.",
+      },
+      {
+        q: "What is the rarity breakdown of Radiance?",
+        a: "48 Common, 46 Uncommon, 45 Rare and 28 Epic across the 167 base cards. The nine Legends are all Rare and the ten Battlefields are all Uncommon.",
+      },
+      {
+        q: "Who are the Legends in Radiance?",
+        a: "Nine: Ekko, Ziggs and Mordekaiser (Fury), Orianna, K'Sante and Riven (Calm), Seraphine (Mind), and Evelynn and Jarvan IV (Body). There is no Chaos or Order Legend in the set.",
+      },
+      {
+        q: "How many Signature cards are in Radiance?",
+        a: "16. Each of the nine over-numbered Showcase Legends (168 to 176) has a Signature version, as do the six HEARTSTEEL Showcase Units (178 to 183), plus a Chinese-exclusive Seraphine Legend at 174a.",
+      },
+      {
+        q: "How much does a Radiance booster box cost?",
+        a: "On 28 October 2026, the cheapest in-stock Radiance booster box we tracked was US$116.59 in the US, £100 in the UK, €97.99 in the EU, C$179.95 in Canada and A$239.99 at an Australian store (A$200 on eBay). The live comparison is on the Radiance set page.",
+      },
+    ],
+    shop: [
+      { label: "Radiance booster boxes", query: "Riftbound Radiance booster box" },
+      { label: "Radiance Showcase Legends", query: "Riftbound Radiance showcase legend" },
+      { label: "Radiance Signature cards", query: "Riftbound Radiance signature" },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Browse every Radiance card →",
+      blurb: "All 167 base cards and every Showcase printing, with live prices across every store we track.",
+    },
+    body: `Radiance (set code RAD) is Riftbound's fifth set, released worldwide on 23 October 2026. Now that the whole set is out and priced, here is exactly what's in it (for the card-by-card list with live prices, see the [Radiance card list](/sets/radiance)), counted from our own catalogue rather than copied from a reveal schedule: rarity, card type, domain, the Showcase tier, and what it all costs a week in.
+
+## The headline number: 167 base cards
+
+Radiance's collector numbers run from 001/167 to 167/167 with no gaps. That's one card more than [Vendetta](/sets/vendetta) (166) and well under [Unleashed](/guides/whats-in-the-riftbound-unleashed-set) (219) or [Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set) (221). Riftbound sets have been getting smaller and tighter since the launch set, and Radiance continues that.
+
+On top of the base set there are **62 Showcase-tier printings**, in five groups:
+
+- **18 alternate-art Units** that keep their base number with an "a" after it (Riven, Broken Blade at 043a, for example). Every one is a champion Unit, two for each of the nine Legends.
+- **17 over-numbered cards** at 168/167 to 184/167: the nine Showcase Legends (168 to 176), seven Showcase Units (177 to 183: Ekko, then the six HEARTSTEEL band members K'Sante, Aphelios, Ezreal, Yone, Kayn and Sett) and one Showcase Battlefield, Packed Amphitheater at 184.
+- **16 Signatures**, with the artist's signature and a star in the number (173★/167): all nine Legends, the six HEARTSTEEL Units (178★ to 183★, signed with the band members' names), and a Chinese-exclusive Seraphine Legend at 174a★. [Every Radiance Signature](/blog/riftbound-radiance-signature-cards) has the full story.
+- **6 Showcase Runes**, one per domain (R01A to R06A).
+- **5 SP cards**, numbered SP1/005 to SP5/005: Ahri, Akali, Evelynn, Kai'Sa and Seraphine.
+
+New to Showcase, over-numbered and Signature? The [rarity and printings guide](/guides/understanding-riftbound-card-rarity) explains each one, and [the Radiance alt arts](/guides/riftbound-radiance-alt-art-cards) and [the Radiance Legends](/guides/riftbound-radiance-legends) show them side by side.
+
+## Rarity breakdown
+
+| Rarity | Cards |
+| --- | --- |
+| Common | 48 |
+| Uncommon | 46 |
+| Rare | 45 |
+| Epic | 28 |
+| **Base total** | **167** |
+| Showcase-tier printings (incl. 16 Signature) | 62 |
+
+The first three tiers are almost level, so a Radiance Rare isn't much scarcer than a Common. The real scarcity is at Epic (28 cards, 17% of the set) and in the Showcase tier. All 28 Epics are listed with prices in [every Radiance Epic](/guides/riftbound-radiance-epic-cards).
+
+By type, the Epics are 14 Units, 8 Gear and 6 Spells. By domain, Fury and Calm have 6 each, Body 5, Mind 4, Chaos and Order 3 each, and Colorless 1 (Neeko, Blending In, the set's last card at 167/167).
+
+## Every Legend comes with its own Epic
+
+This is the most interesting thing about how Radiance is laid out. The nine Legends sit at the odd numbers from 139 to 155, and the even number after each one is an Epic built for that champion:
+
+| # | Legend | Domain | Its Epic |
+| --- | --- | --- | --- |
+| 139 | [Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-139-167) | Fury | Chronobreak (Spell) |
+| 141 | [Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-141-167) | Fury | Hexplosive Minefield (Spell) |
+| 143 | [Mordekaiser, Iron Revenant](/card/mordekaiser-iron-revenant-rad-143-167) | Fury | Realm of Death (Spell) |
+| 145 | [Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167) | Calm | The Ball (Gear) |
+| 147 | [K'Sante, Pride of Nazumah](/card/k-sante-pride-of-nazumah-rad-147-167) | Calm | Ntofo Strikes (Spell) |
+| 149 | [Riven, The Exile](/card/riven-the-exile-rad-149-167) | Calm | Blade of the Exile (Gear) |
+| 151 | [Seraphine, Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-151-167) | Mind | Encore (Spell) |
+| 153 | [Evelynn, Agony's Embrace](/card/evelynn-agony-s-embrace-rad-153-167) | Body | Last Caress (Spell) |
+| 155 | [Jarvan IV, Exemplar of Demacia](/card/jarvan-iv-exemplar-of-demacia-rad-155-167) | Body | Demacian Standard (Gear) |
+
+So a player building around a Radiance Legend will usually want that Epic too, which is why these nine Epics are among the set's dearest base cards. On 28 October, [Blade of the Exile](/card/blade-of-the-exile-rad-150-167) was the most expensive base card in the set at US$35, ahead of The Ball (US$9.45) and Realm of Death (US$9.25).
+
+As in Spirit Forged, there is **no Chaos or Order Legend**. Every champion also has a hub page with all of their printings across sets: [Ekko](/champions/ekko), [Ziggs](/champions/ziggs), [Mordekaiser](/champions/mordekaiser), [Orianna](/champions/orianna), [K'Sante](/champions/k-sante), [Riven](/champions/riven), [Seraphine](/champions/seraphine), [Evelynn](/champions/evelynn) and [Jarvan IV](/champions/jarvan-iv).
+
+## Card type breakdown
+
+| Type | Common | Uncommon | Rare | Epic | Total |
+| --- | --- | --- | --- | --- | --- |
+| Unit | 26 | 20 | 24 | 14 | 84 |
+| Spell | 15 | 13 | 4 | 6 | 38 |
+| Gear | 7 | 3 | 8 | 8 | 26 |
+| Battlefield | — | 10 | — | — | 10 |
+| Legend | — | — | 9 | — | 9 |
+
+Units are about half the set. Gear is unusually top-heavy: 16 of the 26 Gear cards are Rare or Epic, so equipment from this set is more often a chase than filler. Spells go the other way, with only 10 of 38 at Rare or above. All ten Battlefields are Uncommon (157 to 166), so a full Radiance Battlefield set costs very little; each was about 10 US cents or less.
+
+## Domain breakdown
+
+| Domain | Cards |
+| --- | --- |
+| Fury | 29 |
+| Calm | 29 |
+| Body | 27 |
+| Mind | 25 |
+| Chaos | 23 |
+| Order | 23 |
+| Colorless | 11 |
+
+The spread is tighter than in Origins or Spirit Forged: just six cards between the biggest and smallest domain. Fury and Calm lead as they have in every set, and Chaos and Order sit at the bottom again.
+
+## The cost curve
+
+Across the 148 base-set Units, Spells and Gear (Legends and Battlefields have no cost):
+
+| Energy cost | Cards |
+| --- | --- |
+| 1 | 14 |
+| 2 | 26 |
+| 3 | 34 |
+| 4 | 26 |
+| 5 | 19 |
+| 6 | 11 |
+| 7 | 6 |
+| 8+ | 12 |
+
+Radiance is a heavier set than the ones before it. The average costed card is about **3.9 energy** (Spirit Forged was 3.4), only 27% cost 2 or less, and **12 cards cost 8 or 9**, including Supernova, Zero Point Inflection, Mordekaiser, Dominating and Party Crasher. Among Units, the most common might is 4 (21 Units), and the biggest body is Drakehound Packmaster, a 9-cost Fury Rare with 9 might.
+
+## Radiance next to Vendetta
+
+Radiance is built almost exactly like the set before it, which makes the two easy to compare:
+
+| | Vendetta | Radiance |
+| --- | --- | --- |
+| Base cards | 166 | 167 |
+| Common / Uncommon / Rare / Epic | 48 / 46 / 45 / 27 | 48 / 46 / 45 / 28 |
+| Units / Spells / Gear | 91 / 41 / 15 | 84 / 38 / 26 |
+| Legends / Battlefields | 9 / 10 | 9 / 10 |
+| Average cost (Units, Spells, Gear) | 3.7 | 3.9 |
+| Cards costing 8 or more | 7 | 12 |
+| Showcase-tier printings | 64 | 62 |
+| Signature printings | 9 | 16 |
+| Whole base set in singles, cheapest US price, 28 October | about US$73 | about US$113 |
+
+The rarity split is identical apart from one extra Epic, and both sets have nine Legends and ten Battlefields. The differences are in what the cards do and what the premium tier looks like. Radiance trades Units for Gear (26 Gear cards against Vendetta's 15), it is noticeably more expensive to cast, and it has nearly twice as many Signatures, because the six HEARTSTEEL Units get one as well as every Legend.
+
+That last point matters for collectors. In Vendetta the Signature chase was nine Legends. In Radiance it is sixteen cards, so a Signature is easier to pull in a box but each one is a smaller share of the set's value. If you want the history of how Vendetta's chase tiers priced out, [the Vendetta chase cards post](/blog/riftbound-vendetta-chase-cards-so-far) tracks them.
+
+## What it costs a week after launch
+
+Prices were taken from our catalogue on 28 October 2026, five days after release. They move daily, so the set page always has the live numbers.
+
+- **A complete base set (all 167 cards) came to about US$113** in singles at the cheapest US store price for each card. Blade of the Exile alone is almost a third of that.
+- **Booster boxes** started at US$116.59 in the US (TCGplayer), £100 in the UK, €97.99 in the EU, C$179.95 in Canada and A$239.99 at an Australian store. Single packs were from US$5.74, £4.99, C$7.95 and A$10.99.
+- **The Showcase tier is where the money is.** Over-numbered Showcase Legends ran from about US$54 (K'Sante) to US$230 (Riven). Their Signature versions start around US$300 and reach four figures: Riven's Signature was listed at US$1,450 and Seraphine's at US$1,250.
+- **Alt arts are the affordable premium.** The 18 alternate-art Units ran from US$1.50 to US$6.50, with Riven, Broken Blade the dearest at about US$9.
+
+So for most players, singles are far cheaper than chasing a playset from packs, and the [box value guide](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles) explains when opening a box still makes sense. For pull odds, see [Radiance pull rates](/blog/riftbound-radiance-pull-rates); for where each market is cheapest, see [where to buy Radiance](/blog/where-to-buy-riftbound-radiance).
+
+[[shop]]
+
+## See the actual cards
+
+[Browse the Radiance set](/sets/radiance) for every card with live prices across every store we track in your market. We've written the same breakdown for [Origins](/guides/whats-in-the-riftbound-origins-set), [Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set) and [Unleashed](/guides/whats-in-the-riftbound-unleashed-set), and [every Riftbound set in order](/guides/riftbound-sets-in-order) shows what comes next: [Legacy](/legacy-preorders), due 29 January 2027.`,
+  },
+  {
     slug: "riftbound-metal-cards",
     category: "blog",
     title: "Riftbound Metal Cards: Every Prize Wall and Best Of Card",
@@ -5277,6 +5600,8 @@ Head to the **[sealed products page](/sealed)** to see live prices for booster b
 - **Buy from reputable stockists** — we link straight to each store so you can check their returns and shipping policy.
 
 [[shop]]
+
+Buying one as a present? [Our 2026 Riftbound gift guide](/blog/riftbound-gift-guide-2026) covers every budget, from a single pack to a box, and what a real Black Friday deal looks like.
 
 Ready to buy? **[Compare Riftbound booster box prices now](/sealed)**, or if you only need a few cards, **[search the singles database](/browse)** instead.`,
     // A US-market sealed guide (marketData: "US") that had no buy path at all.
