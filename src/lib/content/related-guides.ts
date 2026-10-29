@@ -104,7 +104,7 @@ export const SET_GUIDES: Readonly<Record<string, readonly GuideRef[]>> = {
     { slug: "riftbound-flow-explained", reason: "Where Flow lets you play cards from, what it costs, and every Flow card in the set" },
   ],
   RAD: [
-    { slug: "riftbound-radiance-what-we-know", reason: "Radiance's release date, products and everything Riot has confirmed so far" },
+    { slug: "whats-in-the-riftbound-radiance-set", reason: "Radiance by rarity, domain and card type: nine Legends, each paired with its own Epic" },
     { slug: "riftbound-radiance-spoilers", reason: "Every Radiance card officially revealed so far, with a dated reveal log" },
     { slug: "where-to-buy-riftbound-radiance", reason: "Where to buy Radiance in each of the six markets we cover" },
   ],
