@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import type { Prisma } from "@prisma/client";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
@@ -908,6 +909,7 @@ export default async function SetPage({
         heading={`${set.name} singles on eBay right now`}
         fallbackQuery={`Riftbound ${set.name}`}
       />
+      <TcgplayerPicks pageType="set_hub" setCode={set.code} />
 
       {/* Internal links to the other sets (crawl + UX) */}
       <section>

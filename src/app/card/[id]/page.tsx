@@ -1,4 +1,5 @@
 import { metalKindOf } from "@/lib/metal-cards";
+import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import { publicRead, routeRaw } from "@/lib/public-data/route";
 import { BanNotice } from "@/components/BanNotice";
 import type { Metadata } from "next";
@@ -1622,6 +1623,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               className="mt-3"
             />
           </section>
+          {/* The set's top cards on TCGplayer, under the eBay panel: the
+              Gundam Compare card strip (owner, 2026-10-29). */}
+          <TcgplayerPicks pageType="card_detail" setCode={card.setCode} className="mt-6" />
         </div>
       </div>
 
