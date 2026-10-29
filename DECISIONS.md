@@ -20770,3 +20770,11 @@ The registry goes from 224 to 267 stores. Postage was measured for every one (`p
 **Where.** Card pages under the price and alert button (that card's set). The card and sealed quick views. Above the footer banners on every page that shows them, except the homes, set hubs and card pages, which already carry strips (`miniPicksAllowed` in FooterAds.tsx).
 
 **Cost.** It reads nothing on the server. It fetches `/api/mini-picks?set=`, which reads the same day-long `cachedEbayPicks` / `cachedTcgPicks` caches the full strips use, and the CDN keeps each set's answer six hours. So no page gains a server read or a shorter cache life.
+
+## Amazon: each store's own tag, and Amazon on the Pokémon boards — 2026-10-29
+
+**Why.** The owner: Amazon Associates commissions are coming in, and every site should carry Amazon where it sells the product. Riftbound barely sells on Amazon; Pokémon sealed does. Auditing RiftCompare's Amazon links found the one on `/sealed` earning nothing for most of its audience: every amazon.* link carried `riftcompare-20`, which is the US Associates account's ID and credits only on amazon.com, and `/sealed` sent Australian, Singaporean, Canadian and EU visitors to amazon.com.au (UK visitors to amazon.co.uk) with it.
+
+**What.** `src/lib/amazon.ts` decides which Amazon a market gets and which of the owner's IDs goes on it: Amazon US (`AMAZON_ASSOCIATE_TAG`, default `riftcompare-20`) and Amazon AU (`AMAZON_AU_TAG`, default `compareempire-22`, the owner's Australian account); the UK, Canada and the EU only once `AMAZON_UK_TAG` / `AMAZON_CA_TAG` / `AMAZON_DE_TAG` is set; never Singapore. `affiliateUrl` now tags each amazon.* host with its own store's ID. `/sealed` shows its Amazon button only where the market has one. The Pokémon section's price board (`buildBoard`, product page and quick view) gains a "Check price on Amazon US/AU" search under its eBay search: no price, never a listing or ranked, ascsubtag `rc-<market>-pkmn-<surface>`, retailer `pkmn_amazon_search`, surface `amazon_search`, with Amazon's own statement under the board.
+
+**Not.** No Amazon on Riftbound card or sealed product pages: Amazon has little Riftbound product, and a search that finds nothing is a bad click.

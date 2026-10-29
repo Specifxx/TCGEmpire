@@ -149,7 +149,9 @@ export function OutboundLink({
    *    pinned eBay/TCGplayer rows, its other rows and its pinned eBay search
    *    row (2026-10-27);
    *  - `deck_cart`: a published deck's "Buy all on TCGplayer" (one Mass Entry
-   *    cart for the whole list, 2026-10-27). */
+   *    cart for the whole list, 2026-10-27);
+   *  - `amazon_search`: a price board's "Check price on Amazon" search
+   *    (lib/amazon.ts, 2026-10-29). */
   surface?:
     | "deck_cart"
     | "table"
@@ -182,7 +184,8 @@ export function OutboundLink({
     | "featured_listing"
     | "sealed_pinned"
     | "sealed_row"
-    | "ebay_pinned";
+    | "ebay_pinned"
+    | "amazon_search";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
   // the signup popup (removed 2026-09-30) could stay off the buy path; kept as

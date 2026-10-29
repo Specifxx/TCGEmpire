@@ -72,6 +72,8 @@ export interface PkBoard {
   headline: PkListing | null;
   /** Always present: a search of this market's eBay for the product. */
   ebaySearch: PkEbaySearch;
+  /** A search of this market's Amazon (lib/amazon.ts), where it has an Associates tag; else null. No price, never a listing. */
+  amazonSearch: PkEbaySearch | null;
 }
 
 /** A product on a grid: identity plus one market's headline figures. */

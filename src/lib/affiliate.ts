@@ -2,6 +2,7 @@
 // outbound URLs and in the page HTML — so they're safe as code defaults (override
 // via env if you ever rotate them).
 
+import { amazonTagForHost } from "./amazon";
 import { SITE_URL } from "./site";
 import { normalizeCardmarketUrl } from "@/lib/cardmarket-url";
 import { partnerRefUrl } from "@/lib/store-partner-deals";
@@ -395,7 +396,8 @@ export function affiliateUrl(
       return ebayAffiliateUrl(url, affiliateSubId(subId, page));
     }
     if (/(?:^|\.)amazon\./i.test(u.hostname)) {
-      u.searchParams.set("tag", AMAZON_ASSOCIATE_TAG);
+      // The tag of THAT Amazon's account (lib/amazon.ts): riftcompare-20 earns only on amazon.com.
+      u.searchParams.set("tag", amazonTagForHost(u.hostname));
       // Amazon's own sub-tag field. Associates reports break it out per ascsubtag.
       u.searchParams.set("ascsubtag", affiliateSubId(subId, page));
       return u.toString();

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { amazonFor } from "@/lib/amazon";
 import Link from "next/link";
 import { getSealedGroups } from "@/lib/sealed-import";
 import { soldOutEverywhere } from "@/lib/sealed-offers";
@@ -48,17 +49,11 @@ const csvParam = (v?: string | string[]) => one(v).split(",").map((s) => s.trim(
 const isFilteredParams = (sp: SealedParams) =>
   Boolean(one(sp.q) || one(sp.type) || one(sp.set) || one(sp.min) || one(sp.max) || one(sp.instock) || one(sp.atmsrp));
 
-// Amazon hosts per site market. eBay is NOT in here any more (2026-09-26): it
-// goes through lib/affiliate.ts's ebaySearchUrl, the one map that knows all six
-// markets. This local copy only knew AU/US/UK, so Singapore, Canada and EU
-// visitors were sent to ebay.com.au. Amazon keeps its three hosts and the AU
-// fallback unchanged: an Associates tag is registered per Amazon locale, and
-// widening it is a question for whoever holds the Associates account.
-const AMAZON_HOSTS: Record<string, string> = {
-  AU: "amazon.com.au",
-  US: "amazon.com",
-  UK: "amazon.co.uk",
-};
+// Amazon per site market comes from lib/amazon.ts (2026-10-29): Amazon US and
+// Amazon AU, each with ITS account's tag (riftcompare-20 earns only on
+// amazon.com; Australians used to get amazon.com.au with it, and earned
+// nothing), the UK, Canada and the EU only once their tag is set. Nowhere
+// else, so a market without an Amazon account shows no Amazon button.
 // The first search follows the newest released set (2026-09-26, "Pushing eBay
 // clicks" in DECISIONS.md) instead of naming one: it read "Vendetta sealed"
 // and would have kept pointing at Vendetta after Radiance shipped. A function,
@@ -376,7 +371,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
         </p>
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {sealedSearches().map((x) => {
-            const amazonHost = AMAZON_HOSTS[country] ?? AMAZON_HOSTS.AU;
+            const amazon = amazonFor(country);
             return (
               <div key={x.q} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2.5">
                 <span className="text-sm font-semibold text-white">{x.label}</span>
@@ -390,15 +385,17 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
                   >
                     eBay →
                   </OutboundLink>
-                  <OutboundLink
-                    href={affiliateUrl(`https://www.${amazonHost}/s?k=${encodeURIComponent(x.q)}`, "amazon_sealed", "/sealed")}
-                    retailer="amazon_sealed_search"
-                    country={country}
-                    kind="sealed"
-                    className="btn-ghost px-2.5 py-1 text-xs"
-                  >
-                    Amazon →
-                  </OutboundLink>
+                  {amazon && (
+                    <OutboundLink
+                      href={affiliateUrl(`https://${amazon.host}/s?k=${encodeURIComponent(x.q)}`, "amazon_sealed", "/sealed")}
+                      retailer="amazon_sealed_search"
+                      country={country}
+                      kind="sealed"
+                      className="btn-ghost px-2.5 py-1 text-xs"
+                    >
+                      Amazon →
+                    </OutboundLink>
+                  )}
                 </span>
               </div>
             );
