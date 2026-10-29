@@ -28,28 +28,50 @@
 // visitors until we get like over 100 reviews. And then we can like turn it
 // off"). While the site has fewer than RATING_DRIVE_TARGET ratings
 // (/api/rating-drive), the ask is a centred pop-up instead of the corner card,
-// for EVERY visitor who has not rated, once per visit, until they rate: no
+// for EVERY visitor who has not rated, every visit, until they rate: no
 // "Don't ask again", and a click on the dimmed page does not close it (✕,
 // "Maybe later" and Escape do: a pop-up with no way out is what Google's
 // intrusive-interstitial rule punishes). Never on a visit's landing page
 // before RATING_DRIVE_LANDING_MS, so a visitor from search reads the page they
 // came for first. At the target it switches itself off and the corner card's
 // rules below apply again. DECISIONS.md, "Rating drive: a pop-up until 100".
+//
+// MORE INSISTENT (owner, 2026-10-29: "I still have gotten no ratings since - it
+// needs to be a bit more intrusive"). The landing page waits
+// RATING_DRIVE_LANDING_MS (15 s, was 30 s: most search visitors read one page
+// and leave inside 30 s, so they never saw it), later pages
+// RATING_DRIVE_DELAY_MS; closed with "Maybe later", it comes back
+// RATING_DRIVE_REASK_PAGES pages later, up to RATING_DRIVE_MAX_PER_VISIT times
+// a visit; and an unknown count (an error, a cold database) keeps the drive ON:
+// it stops only on a real count of 100. "?rate=1" opens it at once, to see it.
 export const RATING_DRIVE_TARGET = 100;
 /** On a visit's first page, the pop-up waits this long; from the second page, RATING_DRIVE_DELAY_MS. */
-export const RATING_DRIVE_LANDING_MS = 30_000;
-export const RATING_DRIVE_DELAY_MS = 6_000;
-/** sessionStorage: the drive's state for this visit ("1" on, "0" off), so it is asked once per visit. */
+export const RATING_DRIVE_LANDING_MS = 15_000;
+export const RATING_DRIVE_DELAY_MS = 4_000;
+export const RATING_DRIVE_MAX_PER_VISIT = 2;
+export const RATING_DRIVE_REASK_PAGES = 3;
+/** sessionStorage: the drive's answer for this visit ({ active, count }). */
 export const RATING_DRIVE_SESSION_KEY = "rc_rate_drive";
+/** sessionStorage: how often the pop-up showed this visit, and on which page of it ({ shown, atPage }). */
+export const RATING_DRIVE_ASKS_KEY = "rc_rate_drive_asks";
 
-/** Is the drive on for a site with this many ratings? (unknown = off: never nag on an error) */
+/** Is the drive on for a site with this many ratings? Only a real count of 100+ ends it. */
 export function ratingDriveActive(count: number | null | undefined): boolean {
-  return typeof count === "number" && Number.isFinite(count) && count >= 0 && count < RATING_DRIVE_TARGET;
+  return !(typeof count === "number" && Number.isFinite(count) && count >= RATING_DRIVE_TARGET);
+}
+
+export interface DriveVisit {
+  /** Times the pop-up showed this visit. */
+  shown: number;
+  /** Pages viewed this visit since it last showed. */
+  pagesSince: number;
 }
 
 /** During the drive: may the pop-up be armed on this page view? */
-export function shouldAskRatingDrive(s: RateState, path: string, shownThisVisit: boolean): boolean {
-  return !s.rated && !shownThisVisit && rateAllowedOn(path);
+export function shouldAskRatingDrive(s: RateState, path: string, v: DriveVisit): boolean {
+  if (s.rated || !rateAllowedOn(path)) return false;
+  if (v.shown >= RATING_DRIVE_MAX_PER_VISIT) return false;
+  return v.shown === 0 || v.pagesSince >= RATING_DRIVE_REASK_PAGES;
 }
 
 export const RATE_AFTER_PAGES = 4;

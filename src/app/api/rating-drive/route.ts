@@ -4,7 +4,7 @@ import { RATING_DRIVE_TARGET, ratingDriveActive } from "@/lib/rate-prompt";
 // Is the rating drive on? (lib/rate-prompt.ts, "THE RATING DRIVE".) The client
 // asks once per visit. One aggregate behind getSiteRating's six-hour memo, and
 // the CDN keeps the answer six hours, so a busy day costs a handful of reads.
-// The drive ends at most ~12 hours after the 100th rating. Any error is "off".
+// The drive ends at most ~12 hours after the 100th rating. Any error keeps it on.
 export const dynamic = "force-dynamic";
 
 export async function GET() {

@@ -64,15 +64,22 @@ test("the rating drive: a pop-up for every visitor until 100 ratings, then off b
   assert.equal(ratingDriveActive(9), true);
   assert.equal(ratingDriveActive(99), true);
   assert.equal(ratingDriveActive(100), false, "switches itself off at the target");
-  assert.equal(ratingDriveActive(null), false, "unknown is off: never nag on an error");
+  assert.equal(ratingDriveActive(null), true, "unknown stays on (owner, 2026-10-29): only a real 100 ends it");
   const fresh = freshRateState(T0);
-  assert.equal(shouldAskRatingDrive(fresh, "/card/x", false), true, "a new visitor is asked too");
-  assert.equal(shouldAskRatingDrive({ ...fresh, rated: true }, "/card/x", false), false, "never someone who rated");
-  assert.equal(shouldAskRatingDrive(fresh, "/card/x", true), false, "once per visit");
-  for (const p of ["/login", "/premium", "/checkout", "/feedback"]) assert.equal(shouldAskRatingDrive(fresh, p, false), false, p);
-  assert.ok(RATING_DRIVE_LANDING_MS >= 30_000, "the landing page is read first (Google's intrusive-interstitial rule)");
+  const first = { shown: 0, pagesSince: 0 };
+  assert.equal(shouldAskRatingDrive(fresh, "/card/x", first), true, "a new visitor is asked too");
+  assert.equal(shouldAskRatingDrive({ ...fresh, rated: true }, "/card/x", first), false, "never someone who rated");
+  assert.equal(shouldAskRatingDrive(fresh, "/card/x", { shown: 1, pagesSince: 2 }), false, "not straight back after Maybe later");
+  assert.equal(shouldAskRatingDrive(fresh, "/card/x", { shown: 1, pagesSince: 3 }), true, "back three pages later");
+  assert.equal(shouldAskRatingDrive(fresh, "/card/x", { shown: 2, pagesSince: 9 }), false, "at most twice a visit");
+  for (const p of ["/login", "/premium", "/checkout", "/feedback"]) assert.equal(shouldAskRatingDrive(fresh, p, first), false, p);
+  assert.ok(RATING_DRIVE_LANDING_MS >= 15_000, "never in a visitor's first seconds (Google's intrusive-interstitial rule)");
   const c = read("src/components/RateUsPrompt.tsx");
   assert.match(c, /dismissOnBackdrop=\{false\}/, "a click on the page behind does not close it");
+  // 2026-10-29: the pop-up shipped wearing data-rate-prompt, which globals.css
+  // hides whenever a Dialog is open, so it hid ITSELF: a dimmed page and no box.
+  assert.match(c, /<div data-rating-drive>/);
+  assert.doesNotMatch(c.slice(c.indexOf("if (popup) {"), c.indexOf("</Dialog>")), /data-rate-prompt/, "the pop-up must not carry the corner card's hide-under-a-dialog hook");
   assert.match(c, /aria-label="Close"/);
   assert.match(c, /Maybe later/, "always a visible way out");
   assert.match(c, /fetch\("\/api\/rating-drive"\)/);
