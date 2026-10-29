@@ -359,8 +359,15 @@ export async function discoverCollections(base: string): Promise<{ riftbound: st
  *  a big general collection sets its own `maxPages` (lib/sealed-stores.ts). */
 export const DEFAULT_COLLECTION_PAGES = 10;
 
+/** The collection handle that means "the store's whole catalogue": /products.json
+ *  rather than /collections/<handle>/products.json. For a store that serves
+ *  Shopify's feed format without Shopify's collections (L'Atelier TCG). Such a
+ *  store has no Shopify sitemap, so nothing is discovered for it, and its
+ *  catalogue holds every game: set `strictTitles` beside it. */
+export const WHOLE_CATALOGUE = "*";
+
 export async function fetchProducts(base: string, handle: string, country: Country, maxPages = DEFAULT_COLLECTION_PAGES): Promise<ShopifyProd[]> {
-  const path = `/collections/${handle}/products.json`;
+  const path = handle === WHOLE_CATALOGUE ? "/products.json" : `/collections/${handle}/products.json`;
   const allowed = await robotsAllows(base);
   if (!allowed(path)) return [];
   const all: ShopifyProd[] = [];
@@ -592,7 +599,7 @@ export async function importSealed(): Promise<number> {
       // Auto-discover from the sitemap, but fall back to the store's configured
       // collections (some stores' sitemaps don't expose their collection handles —
       // some sealed stores were being skipped). Mirrors price-import.ts.
-      const found = await discoverCollections(store.base);
+      const found = (store.collections ?? []).includes(WHOLE_CATALOGUE) ? { riftbound: [], preorder: [] } : await discoverCollections(store.base);
       const handles = Array.from(new Set([...found.riftbound, ...(store.collections ?? [])]));
       if (!handles.length) continue;
       // A configured collection on a sealed-only store may be a big general one

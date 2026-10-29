@@ -150,6 +150,27 @@ export const SEALED_ONLY_SHOPIFY: ShopifySealedStore[] = [
     country: "AU",
     currency: "AUD",
   },
+  {
+    // Laval QC; asked to be listed by email, 2026-10-29. Not Shopify: its own
+    // platform serves Shopify's feed format for its WHOLE catalogue at
+    // /products.json (1,716 products of every game, CAD, a `url` linking its
+    // own product page), so the collection is WHOLE_CATALOGUE ("*", read by
+    // fetchProducts in sealed-import.ts) and every title must name Riftbound.
+    // 22 Riftbound products that day (booster displays, vaults, champion and
+    // showdown decks, accessories). Its second storefront, ccctcg.ca, is a copy
+    // of the same stock at the same prices and is left out (DECISIONS.md).
+    key: "ateliertcg",
+    name: "L'Atelier TCG",
+    base: "https://ateliertcg.com",
+    collections: ["*"],
+    maxPages: 12,
+    strictTitles: true,
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "CA",
+    currency: "CAD",
+  },
   // ── Moved here from RETAILERS, 2026-10-16 (store audit) ───────────────────
   // Each one's Riftbound collections hold sealed product, accessories and
   // event tickets, and few or no matchable singles, so as a singles store each

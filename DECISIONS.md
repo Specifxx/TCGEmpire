@@ -20835,3 +20835,13 @@ the DOM.
 **What.** One switch, `COINS_ENABLED = false` in `src/lib/coins.ts`. With it off, `/coins` is a 404, `coinsEnabledFor` is false for everyone (so `/api/coins` reports not eligible, pulls and claims are refused, and the watch and referral rewards pay nothing), and `earnCoin` sends no beacon from share buttons or store clicks. The row left the nav ("Your stuff"), the tier comparison table on `/premium` and the Pro ticks. Nothing else depended on coins: Pro's other perks, the referral's Premium days and the rating pop-up are unchanged.
 
 **Hidden, not deleted.** `CoinWallet`, `CoinTask` and `CoinOwned` and their rows stay, as do the page, the routes, the art and `tests/coins.test.ts`. Setting the switch back to true (and re-adding the nav, table and ticks rows) restores every member's collection as it was.
+
+## L'Atelier TCG listed for Riftbound sealed, its second storefront left out — 2026-10-29
+
+**Store:** L'Atelier TCG (Laval, QC) asked by email to be listed on RiftCompare (it has been on DexCompare since 2026-10-26).
+
+**What.** It runs its own platform but serves Shopify's feed format for its whole catalogue at `/products.json` (1,716 products on 2026-10-29, every game, CAD, a `url` linking its own product page; 22 Riftbound, all sealed or accessories, no singles). So it is a `SEALED_ONLY_SHOPIFY` store, not a retailer, with the collection `WHOLE_CATALOGUE` (`"*"`, `fetchProducts` in `sealed-import.ts`): one feed read, no sitemap discovery (it has no Shopify sitemap, and the pre-order fallback would only 404), `strictTitles` because the feed holds every game. The French Origins display is refused by the usual language rule.
+
+**A display floor for champion decks.** It titles single decks "Champion Deck Display: Fiora" (C$30.12). "Champion Deck (Fiora) Display" had no floor key (the type carries the champion's name), so the 300c default would have let one deck price the display. A champion-deck display is now held to the Showdown display's 4000c floor in `sealedFloorCents`, which also guards eBay. Refuse-only.
+
+**CCC left out.** Its second storefront, CCC (ccctcg.ca, Dorval), was asked for too: every one of its 284 products is one of L'Atelier's, at the same price and availability. One stock shown as two stores would mislead buyers and inflate the store count.
