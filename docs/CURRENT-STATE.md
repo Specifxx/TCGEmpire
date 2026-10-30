@@ -693,7 +693,7 @@ longer lands on its entry.
   cheapest TCGplayer row, the cheaper of the two on top (TCGplayer on a tie,
   `tcgFirst`), then the stores by price (`pinMarketplaces`); with no eBay row,
   a live TCGplayer row leads, else eBay's search; outside the US TCGplayer's US market price is a
-  labelled reference row. "Shown first" + "Paid link" tags, the price rank in
+  labelled reference row. A "Paid link" tag (no "Shown first" chip since [2026-10-30](../DECISIONS.md#L20903)), the price rank in
   the number column, "+N% vs cheapest", and "Cheapest" on the real cheapest.
   The headline, `CardTopBuy`, the sticky bar and JSON-LD still read the price
   ranking. Policy pages name it as the one labelled exception; this replaces
@@ -709,7 +709,7 @@ longer lands on its entry.
   10-15 (owner):** the pre-order table (`PreorderPriceTable`, on
   `/radiance-preorders` and `/sets/radiance`) pins every OPEN eBay row first in
   each product (`orderPreorderRows`; stale or sold-out eBay rows are not
-  pinned), each tagged "Shown first" beside "Paid link", the table's top line
+  pinned), each tagged "Paid link" (no "Shown first" chip since 2026-10-30), the table's top line
   saying so. The headline stays the cheapest open offer from anyone and the
   "+N%" stays on the eBay row. "eBay may have a lower price" is on the
   per-product Search eBay line only — never on a listing, which is already the

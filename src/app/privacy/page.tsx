@@ -248,7 +248,7 @@ export default function PrivacyPage() {
             links. If you buy through them we may earn a commission at no extra cost to you. This
             never affects the prices we show, and it does not affect the order in which stores are
             ranked, with one exception we label where it happens: eBay and TCGplayer are shown first
-            in each price comparison, tagged &ldquo;Shown first&rdquo;.
+            in each price comparison, marked as paid links.
           </p>
           <p>
             We are a member of the eBay Partner Network, TCGplayer&rsquo;s affiliate programme (run

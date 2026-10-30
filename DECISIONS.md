@@ -20899,3 +20899,14 @@ site, and it needs the links more than a dead beta section on RiftCompare does.
 `/pokemon` to its region picker. Product pages are not mapped one to one: the two sites' slugs differ, and a guessed
 slug would 404. `POKEMON_PAUSED` stays true; the section's code stays removable in one commit
 (`docs/pokemon/README.md`).
+
+## No "Shown first" tag on pinned rows — 2026-10-30
+
+**Owner (2026-10-30, for every site):** the paid rows go first, tinted and labelled as paid links, with no wording
+about the order: no "Shown first" or "pinned first" chips or notes. K Young, Compare Empire and CamCompare dropped
+theirs the same day; this does the same here.
+
+**What.** `ShownFirstTag` is gone from the card comparison, the card and sealed QuickViews and the pre-order table. The
+pinned eBay and TCGplayer rows keep everything else that makes the pin honest: the "Paid link" tag, the price rank in
+the number column, "+N% vs cheapest", and "Cheapest" on the real cheapest. The policy pages still name the pin as the
+one exception to price order, now "marked as paid links" instead of "tagged Shown first".

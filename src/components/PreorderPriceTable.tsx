@@ -44,7 +44,8 @@ import {
 //    a dearer eBay row never moves the number the product is sold on;
 //  - the "+N%" over that cheapest offer still shows on the eBay row, so the page
 //    never hides that it is dearer;
-//  - every pinned row carries a "Shown first" tag beside its "Paid link" tag,
+//  - every pinned row carries its "Paid link" tag (the "Shown first" chip went
+//    on 2026-10-30: owner, no wording about the order),
 //    and the table's top line says open eBay listings come first — the pin is
 //    labelled WHERE IT HAPPENS, not only in the footnote below the last product;
 //  - the owner's "eBay may have a lower price" sits on the per-product "Search
@@ -281,12 +282,6 @@ export function PreorderPriceTable({
                           </span>
                           <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
                           {paid && <PaidLinkTag />}
-                          {pinned && (
-                            // The pin, labelled on the row it moved.
-                            <span data-shown-first className="rounded bg-sky-500/10 px-1.5 py-px font-semibold text-sky-300">
-                              Shown first
-                            </span>
-                          )}
                         </span>
                         {pinned && (
                           // What the row IS. Not "may be lower than this": it is
@@ -361,7 +356,7 @@ export function PreorderPriceTable({
       <p className="mt-2 text-[11px] leading-snug text-slate-400">
         Links marked &ldquo;Paid link&rdquo;, and the blue &ldquo;Search eBay&rdquo; row at the top of each product,
         earn us a commission if you buy through them, at no extra cost to you.
-        Open eBay listings are shown first in each product, tagged &ldquo;Shown first&rdquo;. They are paid links
+        Open eBay listings are shown first in each product. They are paid links
         and are often not the cheapest, so compare the price beside each one. Every other row is sorted purely by
         price, whether it pays us or not, and only offers open at our last check are listed. The &ldquo;Search
         eBay&rdquo; rows are searches of eBay, not ranked results.

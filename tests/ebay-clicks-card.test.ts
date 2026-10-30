@@ -51,7 +51,7 @@ test("the colour is the only thing that changed: both tables still rank by price
   // The row order is computeMarket's, untouched — no eBay-first sort anywhere.
   assert.match(section, /const m = useMemo\(\(\) => computeMarket\(rows, country\), \[rows, country\]\);/);
   const qv = read(QUICKVIEW);
-  assert.match(qv, /import \{ buyButtonClass, buyButtonLabel, ShownFirstTag \} from "\.\/CardMarketSection";/);
+  assert.match(qv, /import \{ buyButtonClass, buyButtonLabel \} from "\.\/CardMarketSection";/);
   assert.match(qv, /\.sort\(\(a, b\) => a\.priceCents - b\.priceCents \|\| a\.delivered - b\.delivered\);/);
   for (const src of [codeOnly(section), codeOnly(qv)]) {
     assert.doesNotMatch(src, /startsWith\("ebay"\)\s*\?\s*-1|sort\([^)]*ebay/i, "no comparison may put eBay first");
@@ -87,7 +87,7 @@ test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when ther
 test("a pinned row keeps its price rank, says it was moved, and says how much dearer it is", () => {
   const src = codeOnly(read(SECTION));
   assert.match(src, /const i = prices\.indexOf\(p\);/);
-  assert.match(src, /\{pinned && <ShownFirstTag \/>\}/);
+  assert.doesNotMatch(src, /ShownFirstTag/, "no wording about the order (owner, 2026-10-30)");
   assert.match(src, /% vs cheapest/);
   assert.match(src, /surface=\{pinned \? "table_pinned" : "table"\}/);
 });

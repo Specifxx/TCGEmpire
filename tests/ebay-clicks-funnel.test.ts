@@ -213,7 +213,7 @@ test("pre-order table: the footnote says what is paid and what is ranked, with t
   assert.match(html, /Links marked (?:&ldquo;|“)Paid link(?:&rdquo;|”), and the blue (?:&ldquo;|“)Search eBay(?:&rdquo;|”) row at the top of each product,\s+earn us a commission/);
   // The pinned eBay rows are disclosed as pinned, paid and often dearer; the
   // neutrality claim now covers only what is still neutral.
-  assert.match(html, /Open eBay listings are shown first in each product, tagged (?:&ldquo;|“)Shown first(?:&rdquo;|”)\. They are paid links\s+and are often not the cheapest/);
+  assert.match(html, /Open eBay listings are shown first in each product\. They are paid links\s+and are often not the cheapest/);
   assert.match(html, /Every other row is sorted purely by price, whether it pays us or not, and only offers open at our last check are listed\./);
   assert.doesNotMatch(html, /Every row above is sorted purely by price/, "no longer true of this table");
   assert.match(html, /rows are searches of eBay, not ranked results\./);
@@ -425,7 +425,7 @@ test("policy copy: the promise is the ORDER of a ranked comparison, and the eBay
   // survives in visible copy.
   const policy = code("src/app/editorial-policy/page.tsx");
   assert.match(policy, /None of it affects the prices we show\. It affects the order of a comparison in one labelled\s+way/);
-  assert.match(policy, /shows eBay and TCGplayer, our affiliate partners, first, tagged &ldquo;Shown first&rdquo;/);
+  assert.match(policy, /shows eBay and TCGplayer, our affiliate partners, first,\s+marked as paid links/);
   assert.match(policy, /Every store below them is ranked by item price, with known postage\s+breaking ties;/);
   assert.match(policy, /the headline price is always the\s+cheapest offer from anyone/);
   assert.match(policy, /eBay buttons use eBay&apos;s own colour/);

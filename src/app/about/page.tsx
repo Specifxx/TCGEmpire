@@ -235,8 +235,8 @@ export default async function AboutPage() {
           <p>
             With one labelled exception, none of that money buys a position. It never changes the prices we
             show, and among the stores the cheapest always comes first. The exception: eBay and TCGplayer,
-            our affiliate partners, are shown first in every price comparison, tagged &ldquo;Shown
-            first&rdquo; and marked as paid links, with the price beside them still showing how they
+            our affiliate partners, are shown first in every price comparison, marked as paid
+            links, with the price beside them still showing how they
             compare. We
             also link to eBay outside those lists, always labelled. No store can pay for its place in a
             comparison, including a store on the Stores plan. The details are in our{" "}
