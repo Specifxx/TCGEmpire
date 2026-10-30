@@ -24,6 +24,7 @@ import {
 } from "@/lib/earnings/core";
 import { EARNINGS_SINCE, loadEarnings } from "@/lib/earnings/sources";
 import { loadCosts } from "@/lib/earnings/costs";
+import { siteLedger } from "@/lib/earnings/sites";
 import { ManualEarningsForm } from "@/components/admin/ManualEarningsForm";
 import { CostEntriesForm } from "@/components/admin/CostEntriesForm";
 import { EarningsLineChart } from "@/components/admin/EarningsLineChart";
@@ -118,6 +119,9 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
       .map(([cur, c]) => formatMoney(c, cur))
       .join(" + ") || formatMoney(0, display);
   const checked = sources.filter((s) => s.checks?.length);
+  // Cost and earnings per site (2026-10-30): tags split the earnings, Vercel's billing API the hosting.
+  const vercelCost = costs.find((c) => c.key === "vercel");
+  const ledger = siteLedger(sources, vercelCost?.projects ?? [], costs.filter((c) => c.key !== "vercel").flatMap((c) => c.days), spanFrom, today, display);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -327,6 +331,44 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
           )}
         </section>
       ))}
+      {/* Every site: what it earned, what its Vercel project cost, and the difference */}
+      <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-site-ledger>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-extrabold text-white">By site: earned vs Vercel cost · {RANGES.find((r) => r.key === range)!.label}</h2>
+          <span className="text-xs text-slate-400">
+            {vercelCost?.status === "ok"
+              ? "Vercel per project from its billing API. Amazon and store programs have no API and are not in here."
+              : "Vercel per project is not connected yet (see Connections), so costs show only on the shared row."}
+          </span>
+        </div>
+        <div className="mt-3 overflow-x-auto rounded-xl border border-ink-700">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs text-slate-400">
+              <tr>
+                <th className="px-3 py-2 font-semibold">Site</th>
+                <th className="px-3 py-2 text-right font-semibold">Earned</th>
+                <th className="px-3 py-2 text-right font-semibold">Vercel</th>
+                <th className="px-3 py-2 text-right font-semibold">Net</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-800">
+              {ledger
+                .filter((r) => r.key !== "" || r.earned)
+                .map((r) => (
+                  <tr key={r.key || "none"}>
+                    <td className="px-3 py-2 text-white">{r.label}</td>
+                    <td className="num px-3 py-2 text-right text-slate-200">{money(r.earned)}</td>
+                    <td className="num px-3 py-2 text-right text-slate-400">
+                      {money(r.vercel)}
+                      {r.other ? <span className="ml-1 text-xs text-slate-500">+ {money(r.other)} other</span> : null}
+                    </td>
+                    <td className={`num px-3 py-2 text-right font-bold ${r.net < 0 ? "text-rose-400" : "text-white"}`}>{money(r.net)}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
       {/* Each network's pieces, to match against its own dashboard */}
       {checked.length > 0 && (
         <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-earnings-checks>

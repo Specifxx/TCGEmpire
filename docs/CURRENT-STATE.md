@@ -169,6 +169,10 @@ longer lands on its entry.
   monthly / yearly, stop-and-replace on a plan change; no billing API exists for
   them). Vercel and Anthropic are entered from their invoices month by month;
   only the US$200 of ads is pre-filled. [2026-10-25](../DECISIONS.md#L19446)
+  Vercel is automatic too once `VERCEL_BILLING_TOKEN` + `VERCEL_TEAM_ID` are set
+  (billing API, per project, last 120 days, domains still by hand), and a "By site"
+  table (also in the weekly growth report) shows each site's earnings minus its own
+  Vercel project, the plan and other costs on a shared row. [2026-10-30](../DECISIONS.md#L20960)
   A growth line sits under the columns; eBay's Today shows its latest reported
   day, dated, because EPN has no same-day data. [2026-10-28](../DECISIONS.md#L20647)
   A forecast panel projects this quarter and the next four (and this year and

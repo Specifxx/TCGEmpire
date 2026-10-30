@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
-import { anthropicCostDays, dayIn, expandCost, mergeDays, windows, type CostEntry, type CostRecurrence, type DayAmount } from "./core";
+import { addDays, anthropicCostDays, dayIn, expandCost, mergeDays, windows, type CostEntry, type CostRecurrence, type DayAmount } from "./core";
 import { EARNINGS_SINCE, scrubSecrets } from "./sources";
+import { projectDays, vercelCharges, type ProjectCharge } from "./sites";
 
 // The earnings dashboard's costs (2026-10-25, owner: "add costs on the website …
 // Vercel Pro plan … Anthropic plan … for as long as the site has been alive … an
@@ -11,15 +12,18 @@ import { EARNINGS_SINCE, scrubSecrets } from "./sources";
 //   • automatic — Anthropic API usage, from the Admin API's Cost report
 //     (ANTHROPIC_ADMIN_API_KEY). It covers API usage only; a claude.ai Pro/Max
 //     subscription is not in any API.
+//   • automatic — Vercel, from the team's FOCUS billing export (2026-10-30;
+//     VERCEL_BILLING_TOKEN + VERCEL_TEAM_ID), per project and day, so the
+//     dashboard can show cost per site (lib/earnings/sites.ts). It covers the
+//     last VERCEL_DAYS days; before that, the "Vercel invoice" entries count.
 //   • entries — the ManualCost table: once, or monthly/yearly from a start date
 //     to an optional end date (a plan change is "Stop" on the old entry and a new
-//     one). Vercel has no billing API for a team's own plan, so Vercel Pro is an
-//     entry too.
+//     one). Domains bought through Vercel stay entries.
 //
 // One entry is pre-filled once (SEEDS): the ~US$200 of Reddit/Meta ads the owner
-// mentioned. Vercel and Anthropic are entered from their real invoices, month by
-// month (the owner fills them with a Claude in Chrome prompt; docs/
-// earnings-dashboard-setup.md), so no estimate is seeded for them. A removed
+// mentioned. Anthropic plans, domains and Vercel before the API's window are
+// entered from their real invoices (the owner fills them with a Claude in Chrome
+// prompt; docs/earnings-dashboard-setup.md), so no estimate is seeded for them. A removed
 // entry keeps its row (removedAt), so a seed is never re-added once deleted.
 
 export interface CostLine {
@@ -30,6 +34,8 @@ export interface CostLine {
   detail?: string;
   days: DayAmount[];
   entry?: CostEntry & { note: string | null };
+  /** Vercel only: the same charges per project, for cost per site. */
+  projects?: ProjectCharge[];
 }
 
 const SEEDS: { seedKey: string; label: string; category: string; amountCents: number; currency: string; startDay: string; recurrence: CostRecurrence; note: string }[] = [
@@ -94,12 +100,60 @@ async function anthropicLine(fresh: boolean): Promise<CostLine> {
   }
 }
 
-/** Every cost line: the automatic one, then each live entry (oldest start first). */
+// ── Vercel usage and plan, per project ──────────────────────────────────────
+// GET /v1/billing/charges (FOCUS v1.3 JSONL, one line per SKU, project and day;
+// at most a year per request). 120 days in 31-day requests keeps each response
+// a few MB. The token needs only a Billing (or Viewer-like) role on the team.
+export const VERCEL_DAYS = 120;
+let vercelMemo: { at: number; line: CostLine } | null = null;
+
+async function vercelLine(fresh: boolean): Promise<CostLine> {
+  const base = { key: "vercel", label: "Vercel (per project)", category: "Hosting" };
+  const token = process.env.VERCEL_BILLING_TOKEN;
+  const team = process.env.VERCEL_TEAM_ID;
+  if (!token || !team) {
+    return {
+      ...base,
+      status: "not-configured",
+      detail: "Set VERCEL_BILLING_TOKEN (Vercel → Account Settings → Tokens, scoped to the team) and VERCEL_TEAM_ID for Vercel cost per site.",
+      days: [],
+    };
+  }
+  if (!fresh && vercelMemo && Date.now() - vercelMemo.at < TTL_MS) return vercelMemo.line;
+  try {
+    const today = dayIn(Date.now(), "UTC");
+    const from = addDays(today, -(VERCEL_DAYS - 1));
+    const projects: ProjectCharge[] = [];
+    for (const [a, b] of windows(from, today, 31)) {
+      const q = new URLSearchParams({ teamId: team, from: `${a}T00:00:00Z`, to: `${addDays(b, 1)}T00:00:00Z` });
+      const r = await fetch(`https://api.vercel.com/v1/billing/charges?${q}`, {
+        headers: { Authorization: `Bearer ${token}`, "Accept-Encoding": "gzip" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(25_000),
+      });
+      const text = await r.text();
+      if (!r.ok) throw new Error(`${r.status} ${text.slice(0, 160).replace(/\s+/g, " ")}`);
+      projects.push(...vercelCharges(text));
+    }
+    const line: CostLine = { ...base, status: "ok", days: projectDays(projects), projects, detail: `Last ${VERCEL_DAYS} days from the billing API (domains excluded: enter those by hand).` };
+    vercelMemo = { at: Date.now(), line };
+    return line;
+  } catch (e) {
+    console.error("[costs] vercel failed:", e);
+    return { ...base, status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed", days: vercelMemo?.line.days ?? [], projects: vercelMemo?.line.projects ?? [] };
+  }
+}
+
+/** A hand-entered Vercel invoice (not a domain) that the billing API now covers from `from` on. */
+export const isVercelInvoice = (label: string) => /\bvercel\b/i.test(label) && !/domain/i.test(label);
+
+/** Every cost line: the automatic ones, then each live entry (oldest start first). */
 export async function loadCosts(fresh = false): Promise<CostLine[]> {
   await ensureSeeded();
   const today = dayIn(Date.now());
-  const [auto, rows] = await Promise.all([
+  const [auto, vercel, rows] = await Promise.all([
     anthropicLine(fresh),
+    vercelLine(fresh),
     prisma.manualCost
       .findMany({
         where: { removedAt: null },
@@ -109,19 +163,25 @@ export async function loadCosts(fresh = false): Promise<CostLine[]> {
       })
       .catch(() => []),
   ]);
+  // Once the API answers, it is the record of Vercel's plan and usage for the days it
+  // covers; a "Vercel invoice" entry then counts only for the days before it.
+  const apiFrom = vercel.status === "ok" ? addDays(dayIn(Date.now(), "UTC"), -(VERCEL_DAYS - 1)) : null;
   const entries: CostLine[] = rows.map((r) => {
     const entry = { ...r, recurrence: (["once", "monthly", "yearly"].includes(r.recurrence) ? r.recurrence : "once") as CostRecurrence };
-    return { key: `entry:${r.id}`, label: r.label, category: r.category, status: "ok" as const, days: expandCost(entry, today), entry };
+    let days = expandCost(entry, today);
+    if (apiFrom && isVercelInvoice(r.label)) days = days.filter((d) => d.day < apiFrom);
+    return { key: `entry:${r.id}`, label: r.label, category: r.category, status: "ok" as const, days, entry };
   });
-  return [auto, ...entries];
+  return [auto, vercel, ...entries];
 }
 
-/** For the ops monitor: the automatic cost source's status only. */
-export async function costsHealth(): Promise<{ key: string; status: CostLine["status"]; detail?: string }> {
-  const a = await anthropicLine(false);
-  return { key: "anthropic-api", status: a.status, detail: a.status === "error" ? a.detail : undefined };
+/** For the ops monitor: the automatic cost sources' status only. */
+export async function costsHealth(): Promise<{ key: string; status: CostLine["status"]; detail?: string }[]> {
+  const lines = await Promise.all([anthropicLine(false), vercelLine(false)]);
+  return lines.map((a) => ({ key: a.key, status: a.status, detail: a.status === "error" ? a.detail : undefined }));
 }
 
 export function forgetCosts(): void {
   anthropicMemo = null;
+  vercelMemo = null;
 }

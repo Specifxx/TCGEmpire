@@ -1,5 +1,6 @@
 import { formatMoney } from "../format";
-import { addDays, SOURCE_LABELS, tagGroup, toDisplay, type SourceResult, type TagDay } from "./core";
+import { addDays, SOURCE_LABELS, tagGroup, toDisplay, type DayAmount, type SourceResult, type TagDay } from "./core";
+import { siteLedger, type ProjectCharge, type SiteRow } from "./sites";
 
 // THE WEEKLY GROWTH REPORT (2026-10-30, owner: "I want significant jumps to our
 // affiliate link revenue … it's not growing these past week"). DECISIONS.md,
@@ -71,9 +72,22 @@ export interface GrowthReport {
   byMarket: Line[];
   clicks: { group: string; weeks: number[] }[];
   off: string[];
+  /** Per site, last week and all four weeks: earned, Vercel cost, net (2026-10-30). */
+  sites: { lastWeek: SiteRow[]; fourWeeks: SiteRow[]; vercelConnected: boolean };
 }
 
-export function buildGrowthReport(sources: readonly SourceResult[], clicks: Map<string, Partial<Record<string, number>>>, today: string): GrowthReport {
+/** Costs for the per-site table: Vercel per project (null when not connected) and every other cost line's days. */
+export interface ReportCosts {
+  vercel: ProjectCharge[] | null;
+  other: DayAmount[];
+}
+
+export function buildGrowthReport(
+  sources: readonly SourceResult[],
+  clicks: Map<string, Partial<Record<string, number>>>,
+  today: string,
+  costs: ReportCosts = { vercel: null, other: [] },
+): GrowthReport {
   const weeks = reportWeeks(today);
   const n = weeks.length;
   const src = new Map<string, Line>();
@@ -118,6 +132,11 @@ export function buildGrowthReport(sources: readonly SourceResult[], clicks: Map<
     byMarket: [...market.values()].sort(byLatest).slice(0, 15),
     clicks: clickLines,
     off: sources.filter((s) => s.status === "not-configured" && !s.days.length).map((s) => SOURCE_LABELS[s.key]),
+    sites: {
+      lastWeek: siteLedger(sources, costs.vercel ?? [], costs.other, weeks[n - 1].start, weeks[n - 1].end, DISPLAY),
+      fourWeeks: siteLedger(sources, costs.vercel ?? [], costs.other, weeks[0].start, weeks[n - 1].end, DISPLAY),
+      vercelConnected: costs.vercel !== null,
+    },
   };
 }
 
@@ -143,12 +162,30 @@ export function growthReportText(r: GrowthReport): string {
     head,
     `TOTAL: ${totals.map(money).join(" | ")} ${change(totals)}`.trimEnd(),
     table("BY SOURCE", r.sources, false),
+    siteTable(r, money),
     table("AFFILIATE BY SITE", r.bySite, true),
     table("TOP PLACEMENTS (site · placement · network)", r.byPlacement, true),
     table("TOP MARKETS (site · market)", r.byMarket, true),
     ["RIFTCOMPARE OUTBOUND CLICKS (our /api/click counters)", ...r.clicks.map((c) => `  ${c.group}: ${c.weeks.join(" | ")} ${change(c.weeks)}`.trimEnd())].join("\n"),
     ...(r.off.length ? [`Not connected: ${r.off.join(", ")}.`] : []),
   ].join("\n\n");
+}
+
+/** Each site's earned / Vercel / net, last week then the four weeks, losers visible (every site is listed). */
+function siteTable(r: GrowthReport, money: (c: number) => string): string {
+  const four = new Map(r.sites.fourWeeks.map((x) => [x.key, x]));
+  const lines = r.sites.lastWeek
+    .filter((x) => x.key !== "" || x.earned || four.get(x.key)?.earned)
+    .map((x) => {
+      const f = four.get(x.key)!;
+      const cell = (y: SiteRow) => `${money(y.earned)} - ${money(y.vercel + y.other)} = ${money(y.net)}`;
+      return `  ${x.label}: last week ${cell(x)} | 4 weeks ${cell(f)}`;
+    });
+  return [
+    "COST AND EARNINGS BY SITE (earned - Vercel cost = net; the shared row carries the Vercel plan, AI and hand-entered costs)",
+    ...lines,
+    ...(r.sites.vercelConnected ? [] : ["  Vercel per project is not connected (VERCEL_BILLING_TOKEN + VERCEL_TEAM_ID), so site costs read 0."]),
+  ].join("\n");
 }
 
 export function growthReportHtml(text: string): string {
