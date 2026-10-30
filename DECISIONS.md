@@ -20910,3 +20910,29 @@ theirs the same day; this does the same here.
 pinned eBay and TCGplayer rows keep everything else that makes the pin honest: the "Paid link" tag, the price rank in
 the number column, "+N% vs cheapest", and "Cheapest" on the real cheapest. The policy pages still name the pin as the
 one exception to price order, now "marked as paid links" instead of "tagged Shown first".
+
+## The Card Hive: a store read from its own Firebase shop — 2026-10-30
+
+**Why.** A UK Riftbound singles shop (thecardhive.co.uk, ~1,000 singles) came in through the suggest-a-store form,
+recommended by a buyer. It is neither Shopify nor WooCommerce: a custom React app on Google Firebase, so
+`/products.json` and the Woo Store API both answer with the app's home page. Asked whether to ask the shop for a feed,
+build a reader or decline, the owner chose to build the reader.
+
+**What.** `platform: "cardhive"` in `lib/retailers.ts`, read by `lib/cardhive.ts`:
+- **Source.** The shop page itself loads its whole stock, signed out, from one Firestore collection, `shop`, with the
+  web API key its bundle ships. The importer makes the same read through Firestore's public REST endpoint (four pages
+  of 300). Nothing signs in and no other collection is read.
+- **Matching by Riot's picture, not the title.** The shop's own set and number fields are hand-entered and wrong for
+  the printings that matter (alt arts under the base number, "r02" for r02a, the K/DA Special Art Akali as "RAD 2"),
+  and 39 rows have none. Every row hotlinks its card picture from Riot's gallery, and the gallery page (one plain GET,
+  as `backfill-card-text.ts` already makes) names each picture's printing (`publicCode`). A row is matched only when
+  its picture is in the gallery, that code names exactly one non-promo printing of ours, and the shop's card name
+  agrees. The title matcher is never asked (`ShopifyProduct.cardId`). Probe, 2026-10-30: of 1,004 singles, every
+  picture-resolved row agreed on name and set.
+- **Not covered.** Its sealed (a few boxes, packs and decks): the sealed importer skips the store. The price verifier
+  skips it too (no `/products/` URL); a link opens `/shop?item=<id>`, the shop's own deep link.
+- **Postage.** Not cart-probed (the probe is Shopify-only); the labelled estimate is its checkout's own rule from its
+  bundle, Royal Mail Tracked 48 at £2.90 for up to 10 singles, UK only.
+
+If either read fails the store keeps yesterday's rows, and store-health's stale alert fires if that lasts. If the shop
+moves to Shopify or changes its app, drop the platform and read it like any other store.
