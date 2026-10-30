@@ -9,9 +9,10 @@ import { partnerRefUrl } from "@/lib/store-partner-deals";
 
 // eBay Partner Network campaign id. Passed to the Browse API so listing URLs come
 // back already affiliate-tagged (itemAffiliateWebUrl). See lib/ebay.ts.
-// NOTE: `||` (not `??`) so a var accidentally set to an EMPTY string still falls
-// back to this id — an empty value emits `campid=` and silently untracks clicks.
-export const EBAY_CAMPAIGN_ID = process.env.EBAY_AFFILIATE_CAMPAIGN || "5339155912";
+// One campaign for every Compare site, hard-coded (owner, 2026-10-30: "make all
+// of them use this exact campaign"): no variable overrides it, and each site's
+// customid prefix (`rc-` here) tells the sites apart in EPN's reports.
+export const EBAY_CAMPAIGN_ID = "5339155912";
 
 // Amazon Associates store/tracking id, appended to amazon.* product links.
 // `||` (not `??`) so an empty-string env var still falls back to the default.

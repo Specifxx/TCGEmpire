@@ -3,7 +3,7 @@
 // To switch on, set in .env:
 //   EBAY_CLIENT_ID=...     (App ID / Client ID from developer.ebay.com)
 //   EBAY_CLIENT_SECRET=... (Cert ID / Client Secret)
-//   EBAY_AFFILIATE_CAMPAIGN=... (optional, eBay Partner Network campaign id for commission)
+//   (the eBay Partner Network campaign is hard-coded in lib/affiliate.ts)
 //
 // Until those are set, isEbayEnabled() is false and searchEbayLowest() returns null,
 // so nothing breaks. eBay listings are free-text and noisier than store feeds, so
