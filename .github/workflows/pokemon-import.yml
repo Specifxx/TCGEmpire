@@ -73,7 +73,6 @@ jobs:
         env:
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           # eBay only on the late schedule, or a manual run that asks for it.
           POKEMON_EBAY: ${{ ((github.event_name == 'schedule' && github.event.schedule == '47 21 * * *') || (github.event_name == 'workflow_dispatch' && inputs.with_ebay)) && '1' || '0' }}
           POKEMON_EBAY_MAX_CALLS: ${{ vars.POKEMON_EBAY_MAX_CALLS }}

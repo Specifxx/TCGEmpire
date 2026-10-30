@@ -20,7 +20,7 @@ Pokémon section as a home for Pokémon sealed", both 2026-10-01.
 1. **Create the database.** A new Neon project (free tier is plenty). Copy its
    **pooled** connection string.
 2. **GitHub → Settings → Secrets → Actions:** add `POKEMON_DATABASE_URL`.
-   (`EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, `EBAY_AFFILIATE_CAMPAIGN` and
+   (`EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` and
    `CRON_SECRET` already exist and are reused.)
 3. **Run the import once:** Actions → "Pokemon sealed import" → Run workflow.
    The first run creates the tables (`prisma db push`), loads ~1,000 products

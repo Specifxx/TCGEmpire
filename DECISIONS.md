@@ -20859,3 +20859,13 @@ the DOM.
 **Why (the first weekly growth review).** The private growth report (entry above) showed affiliate earnings flat week on week after three weeks of doubling, and why: the Radiance pre-order placements (TCGplayer `preorders`, eBay `rc-*-preorders`) fell about 80% after the 23 October street date, while the new eBay strips and picks made up the difference. Legacy is three months away, so November's buying moment is Black Friday (27 November) and Cyber Monday. DexCompare and MTG Compare already have a Black Friday page; RiftCompare, the biggest earner, had only a gift-guide article. A page needs a few weeks to be crawled before the searches arrive, so it ships now.
 
 **What.** `/black-friday`, one URL kept all year (in the sitemap, nav label "Black Friday": a bare "deals" keyword would take the Deal Finder's nav-search rank). It lists `lib/black-friday.ts` `sealedDeals`: in-stock sealed products whose cheapest store is at least 10% under the median of three or more in-stock stores, or 5% under the US MSRP, biggest saving first, top 12, drawn with the pre-order pages' `PreorderPriceTable` (`page="/black-friday"`, `page_type` `black_friday`, eBay search source `black-friday-product`) and an "Also on eBay" panel. eBay rows never count as a store or a deal. No "was" price, countdown or "ends soon", like DexCompare's page. Six-hour revalidate; reads `getSealedGroups` only.
+
+## One eBay campaign for every Compare site, hard-coded — 2026-10-30
+
+**Decided (owner).** Every Compare site now sends eBay clicks to ONE EPN campaign, 5339155912 (RiftCompare's,
+already set up), hard-coded in the code: no variable overrides it any more, so a forgotten secret or Vercel
+value can't split the sites again. The sites are told apart by the `customid` prefix alone, which comes first
+in every tag; this site's is `rc-<market>`. The Pokémon section shares the same constant.
+Replaced: 5339155911 (WargameCompare, FigureCompare, Compare Empire, K Young), 5339231473 (Lorcana),
+5339231474 (Gundam), 5339234013 (YGO). Old secrets/variables (`EBAY_AFFILIATE_CAMPAIGN`,
+`NEXT_PUBLIC_EBAY_CAMPAIGN_ID`, `EBAY_CAMPAIGN_ID`) are no longer read and can be deleted.

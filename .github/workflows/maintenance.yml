@@ -5470,7 +5470,6 @@ jobs:
           # top of the daily run) for new-market rollouts.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           EBAY_REFRESH: ${{ inputs.ebay_sg && 'true' || 'false' }}
           EBAY_FORCE: ${{ inputs.ebay_sg && '1' || '' }}
           EBAY_ONLY_MARKET: ${{ inputs.ebay_sg && 'SG' || '' }}
@@ -5507,7 +5506,6 @@ jobs:
         env:
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           EBAY_FORCE: ${{ inputs.apply && '1' || '' }}
         run: npx tsx scripts/import-sealed.ts
 

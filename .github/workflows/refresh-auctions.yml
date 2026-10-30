@@ -84,7 +84,6 @@ jobs:
           # eBay is optional — the sweep exits cleanly if these aren't set.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
         run: npx tsx scripts/import-ebay-auctions.ts
 
       - name: Premium auction alerts
