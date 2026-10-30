@@ -20888,3 +20888,14 @@ failure is the signal that the database answers again.
 means a new `POKEMON_DATABASE_URL` in GitHub and Vercel and a first import run), set `POKEMON_PAUSED` to false and
 delete the redirect. Whether to keep the section at all, or make the redirect permanent, stays the owner's call
 (CURRENT-STATE, "Pokémon section (off, or 301 to DexCompare)").
+
+## The Pokémon section redirects to DexCompare for good — 2026-10-30
+
+**Why.** The owner chose "Redirect to DexCompare" for the paused section (above): DexCompare is the Pokémon sealed
+site, and it needs the links more than a dead beta section on RiftCompare does.
+
+**What.** The 302 became 301s in `next.config.js`: `/pokemon/booster-boxes`, `/elite-trainer-boxes` and
+`/booster-bundles` go to DexCompare's US type pages, `/pokemon/sets/*` to its US set list, and everything else under
+`/pokemon` to its region picker. Product pages are not mapped one to one: the two sites' slugs differ, and a guessed
+slug would 404. `POKEMON_PAUSED` stays true; the section's code stays removable in one commit
+(`docs/pokemon/README.md`).

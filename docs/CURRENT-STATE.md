@@ -1188,10 +1188,11 @@ longer lands on its entry.
 
 ## Pokémon section (beta)
 
-- **PAUSED since 2026-10-30:** its database stopped answering on 2026-10-23 and every
-  page was a 500. `POKEMON_PAUSED` (`lib/pokemon/flag.ts`) keeps it off and a 302 in
-  `next.config.js` sends `/pokemon` to DexCompare; undo both together once the database
-  is back. [2026-10-30](../DECISIONS.md#L20873)
+- **Gone to DexCompare since 2026-10-30 (owner):** its database stopped answering on
+  2026-10-23 and every page was a 500. `POKEMON_PAUSED` (`lib/pokemon/flag.ts`) keeps it
+  off and 301s in `next.config.js` send `/pokemon/*` to DexCompare (type pages to its US
+  type pages, sets to its US sets, the rest to its region picker).
+  [2026-10-30](../DECISIONS.md#L20873), [2026-10-30](../DECISIONS.md#L20892)
 - **Self-contained, removable, off by default (2026-10-01, owner: "if there is
   an issue, I can just completely remove all the Pokemon"):** `/pokemon` prices
   English Pokémon sealed (Sword & Shield onward) in all six markets from its OWN
