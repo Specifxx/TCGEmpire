@@ -1,5 +1,5 @@
 /**
- * Closes the inbox items worked on 2026-10-27, and ONLY those — every row is
+ * Closes the inbox items worked on 2026-10-30, and ONLY those — every row is
  * named by id (a contact message, which has no id in the audit, by its exact
  * date and subject), with the status it actually earned.
  *
@@ -36,18 +36,18 @@ const APPLY = process.argv.includes("--apply");
 type Close = { id: string; from: string; to: string; what: string; why: string };
 
 // ── Store suggestions ────────────────────────────────────────────────────────
-const SUGGESTIONS: Close[] = [];
-
-// ── Wrong-price / wrong-card reports ─────────────────────────────────────────
-const REPORTS: Close[] = [
+const SUGGESTIONS: Close[] = [
   {
-    id: "cmvp949350000322wbt970mgx",
-    from: "NEW",
-    to: "FIXED",
-    what: "Kayn, Unleashed (Heartsteel Signature) RAD 182*/167, TCGplayer CA: we said CA$157.55, they said CA$875",
-    why: "every Rare, Epic and Showcase TCGplayer row quoted market price, because TCGplayer marks no Riftbound product foilOnly and the printing filter wanted a Normal listing (DECISIONS.md, 2026-10-26; #171). Verified in the 2026-10-27 snapshot: Kayn's US row is the cheapest English NM listing, $490.00 (CA$671.30), not market ($388.66)",
+    id: "cmvv1ftfc0000bbjvtwwivspw",
+    from: "pending",
+    to: "added",
+    what: "The Card Hive (UK), https://thecardhive.co.uk",
+    why: "a Firebase shop, not Shopify: read by lib/cardhive.ts and listed as thecardhive in lib/retailers.ts (DECISIONS.md, 2026-10-30)",
   },
 ];
+
+// ── Wrong-price / wrong-card reports ─────────────────────────────────────────
+const REPORTS: Close[] = [];
 
 const FEEDBACK: Close[] = [];
 
