@@ -114,3 +114,23 @@ STEP 5. Report
 
 Going forward, add each new month's invoices the same way (or re-run the prompt
 and tell it to add only invoices newer than the latest entry).
+
+---
+
+## Part 6. Vercel cost per site (2026-10-30)
+
+The dashboard's "By site" table and the weekly growth report read Vercel's
+billing API (`GET /v1/billing/charges`, per project and day). It needs two
+server-only variables in the riftcompare project (Production):
+
+- `VERCEL_TEAM_ID`: Vercel → the team → Settings → General → Team ID (`team_…`).
+- `VERCEL_BILLING_TOKEN`: Vercel → Account Settings → Tokens → Create, scope:
+  the team that holds the sites, no expiry or a year. Never paste it anywhere
+  but the Vercel variable form.
+
+They are read by the next production build (the daily release). Then
+`/admin/earnings` → Connections shows "Vercel (per project) (cost) Connected",
+and the "Vercel invoice …" entries stop counting for the last 120 days (the API
+covers them; domain entries keep counting). A project the table lists as
+"Vercel project <name>" is one `SITES` in `src/lib/earnings/sites.ts` does not
+recognise: add its name pattern there.

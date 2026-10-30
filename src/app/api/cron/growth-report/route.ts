@@ -3,6 +3,7 @@ import { sendEmail, sendEmailBrevo, isBrevoEnabled, getLastEmailError } from "@/
 import { growthReportEmail } from "@/lib/ops/owner";
 import { liveRoute } from "@/lib/public-data/live-route";
 import { loadEarnings } from "@/lib/earnings/sources";
+import { loadCosts } from "@/lib/earnings/costs";
 import { addDays, dayIn } from "@/lib/earnings/core";
 import { readClickCounts } from "@/lib/click-counter";
 import { buildGrowthReport, growthReportHtml, growthReportText, WEEKS } from "@/lib/earnings/growth-report";
@@ -23,11 +24,18 @@ function authorized(req: Request): boolean {
 async function handlePOST(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const today = dayIn(Date.now());
-  const [sources, clicks] = await Promise.all([
+  const [sources, clicks, costs] = await Promise.all([
     loadEarnings(true),
     readClickCounts(addDays(today, -7 * WEEKS - 1)).catch(() => new Map()),
+    loadCosts(true).catch(() => []),
   ]);
-  const text = growthReportText(buildGrowthReport(sources, clicks, today));
+  const vercel = costs.find((c) => c.key === "vercel");
+  const text = growthReportText(
+    buildGrowthReport(sources, clicks, today, {
+      vercel: vercel?.status === "ok" ? vercel.projects ?? [] : null,
+      other: costs.filter((c) => c.key !== "vercel").flatMap((c) => c.days),
+    }),
+  );
   const subject = `Growth report ${today}`;
   const to = growthReportEmail();
   if (await sendEmail(to, subject, growthReportHtml(text), { text })) return NextResponse.json({ ok: true, via: "resend" });

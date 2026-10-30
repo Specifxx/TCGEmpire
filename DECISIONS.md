@@ -20956,3 +20956,30 @@ the wrong mailbox, and the site's own inbox never saw what its forms collected.
   me emails for every single … rating") stands for ratings, and the 8/h, 25/day cap covers everything.
 - The same change was made on every sister site that has forms (OP Compare, CamCompare, Compare Empire AU); the
   static sites have no forms and send visitors straight to their own address from the footer and `/contact`.
+
+## Vercel cost per site from the billing API — 2026-10-30
+
+**Why.** The owner: "we have so many websites now … an easy centralized way of looking at the costs that each website
+costs to run on Vercel, and the amount of earnings this brings". Earnings were already split by site (every eBay and
+TCGplayer link carries the site's tag prefix), but costs were one lump of hand-entered invoices. The 2026-10-25 entry
+said Vercel has no billing API; it now has one: `GET /v1/billing/charges` returns the team's charges as FOCUS v1.3
+JSONL, one line per SKU, day and project (`Tags.ProjectName`), for Pro teams.
+
+**What.**
+- A second automatic cost line, "Vercel (per project)" (`lib/earnings/costs.ts`), reads the last 120 days in 31-day
+  requests with `VERCEL_BILLING_TOKEN` + `VERCEL_TEAM_ID` (Vercel env, server-only; a token on a Billing role is enough),
+  memoised 30 minutes like the other sources. Not set → "Not connected" and nothing else changes.
+- Domain charges are skipped in the export: domains stay hand entries (setup doc, Part 5), so they are never counted
+  twice. A hand entry whose label names Vercel and not a domain ("Vercel invoice 2026-09") now counts only for the days
+  before the API's 120-day window.
+- `lib/earnings/sites.ts` (pure) maps each Vercel project to its site's tag prefix (`SITES`; an unknown project is
+  listed under its own name, a charge with no project, i.e. the plan, seats or tax, is "Shared") and builds one row
+  per site: earned − Vercel = net. Stripe, AdSense and Mediavine are RiftCompare's; Anthropic and every hand entry sit
+  on the shared row, so the rows add up to the dashboard's profit. Every site is listed, even at zero, so a site that
+  costs and earns nothing shows.
+- Shown on `/admin/earnings` ("By site: earned vs Vercel cost", for the chosen range) and in the weekly growth report
+  email (last week and four weeks). Amounts stay out of every log, as before.
+- Not covered: Amazon Associates and store programs (no reporting API), Neon (free tier), and invoice timing (the API
+  dates usage by the day it ran, an invoice by the day it was billed).
+- The ops monitor's earnings check already reports any automatic cost source that errors; `costsHealth` now returns
+  both.
