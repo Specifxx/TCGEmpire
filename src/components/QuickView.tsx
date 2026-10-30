@@ -29,7 +29,7 @@ import { EbayTabs, type EbayTab } from "./EbayTabs";
 import { EbayGradedLive, type GradedRow } from "./EbayGradedLive";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { timeAgo } from "@/lib/format";
-import { buyButtonClass, buyButtonLabel, ShownFirstTag } from "./CardMarketSection";
+import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
 import type { PricePoint } from "@/lib/price-history";
@@ -636,7 +636,6 @@ function QuickViewModal({
                               Cheapest
                             </span>
                           )}
-                          {pinned && <ShownFirstTag />}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500">
                           {p.isFoil && <span className="font-semibold text-gold">✦ Foil</span>}

@@ -347,7 +347,7 @@ export default function MethodologyPage() {
           <h2 className="text-lg font-bold text-white">How a comparison is ordered</h2>
           <p>
             A card&rsquo;s comparison starts with eBay and TCGplayer, our two affiliate partners: the cheapest
-            listing of each in your market, tagged &ldquo;Shown first&rdquo; and marked as paid links, whatever
+            listing of each in your market, marked as paid links, whatever
             their price (an eBay search, or TCGplayer&rsquo;s US market price as a labelled reference, where we
             have no listing). The number beside each row is its rank by item price, the &ldquo;Cheapest&rdquo;
             badge stays on the cheapest copy wherever it sits, and a pinned row that costs more says by how

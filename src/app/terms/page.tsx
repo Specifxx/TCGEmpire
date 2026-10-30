@@ -101,7 +101,7 @@ export default function TermsPage() {
             are marked and disclosed next to the link. None of these affects the prices we show,
             and none affects the order in which stores are ranked. One exception is labelled where it
             happens: eBay and TCGplayer, our affiliate partners, are shown first in each price
-            comparison, tagged &ldquo;Shown first&rdquo;, whatever their price. See our{" "}
+            comparison, marked as paid links, whatever their price. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">Privacy Policy</Link> for how
             advertising and cookies are handled.
           </p>

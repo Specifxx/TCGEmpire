@@ -17,7 +17,6 @@ import { CheckedAgo } from "./CheckedAgo";
 import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/sealed-offers";
 import { isPreorderSetCode } from "@/lib/constants";
 import { SealedWatchButton } from "./SealedWatchButton";
-import { ShownFirstTag } from "./CardMarketSection";
 import { PaidLinkTag } from "./AffiliateDisclosure";
 import { pinMarketplaces } from "@/lib/market-rows";
 
@@ -179,7 +178,6 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-center gap-1.5">
                         <span className="truncate text-sm font-semibold text-white">eBay</span>
-                        <ShownFirstTag />
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500">
                         <span>Search current listings</span>
@@ -201,7 +199,6 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-1.5">
                           <span className="truncate text-sm font-semibold text-white">{l.retailerName}</span>
-                          {pinned && <ShownFirstTag />}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
                           <span className={isOpen ? "text-up" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>

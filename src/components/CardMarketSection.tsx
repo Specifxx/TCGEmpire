@@ -48,18 +48,6 @@ export type EbaySearchMap = Record<string, { url: string; label: string } | null
 export function buyButtonClass(retailer: string): string {
   return retailer.startsWith("ebay") ? "btn-ebay" : "btn-buy";
 }
-/** The tag on a row pinned to the top of a comparison (pinMarketplaces). */
-export function ShownFirstTag() {
-  return (
-    <span
-      data-shown-first
-      title="eBay and TCGplayer are shown first, whatever their price. Every other row is sorted by price."
-      className="chip shrink-0 bg-sky-500/10 text-[10px] font-semibold text-sky-300"
-    >
-      Shown first
-    </span>
-  );
-}
 
 export function buyButtonLabel(retailer: string): string {
   if (retailer.startsWith("ebay")) return "Buy on eBay →";
@@ -458,7 +446,6 @@ export function CardPriceComparison({
                         Cheapest
                       </span>
                     )}
-                    {pinned && <ShownFirstTag />}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                     {/* Foil is a per-row BADGE, never a filter: a foil listing
@@ -615,7 +602,6 @@ export function CardPriceComparison({
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="min-w-0 truncate font-semibold text-white">{ebay.label}</span>
-                        <ShownFirstTag />
                       </div>
                       <p className="mt-0.5 text-xs text-slate-500">
                         {preRelease
@@ -649,7 +635,6 @@ export function CardPriceComparison({
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="min-w-0 truncate font-semibold text-white">TCGplayer</span>
                         <span className="chip shrink-0 bg-ink-800 text-[10px] text-slate-400">US market price</span>
-                        <ShownFirstTag />
                       </div>
                       <p className="mt-0.5 text-xs text-slate-500">
                         A reference, converted at an approximate rate. TCGplayer may not ship to your country.{" "}

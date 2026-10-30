@@ -31,6 +31,6 @@ test("the sealed QuickView pins eBay and TCGplayer the same way, open rows only,
   assert.match(src, /pinMarketplaces\(listings\.filter\(\(l\) => offerStock\(l\) === "open"\)\)/);
   assert.match(src, /pin\.tcgFirst \? \[pin\.tcgplayer, pin\.ebay\] : \[pin\.ebay, pin\.tcgplayer\]/);
   assert.match(src, /\{!pin\.ebay && \(/);
-  assert.match(src, /\{pinned && <ShownFirstTag \/>\}/);
+  assert.doesNotMatch(src, /Shown ?First/, "no wording about the order (owner, 2026-10-30)");
   assert.match(src, /const isBest = l === best;/, "Best price stays on the real cheapest");
 });
