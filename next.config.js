@@ -186,6 +186,13 @@ const nextConfig = {
       // /pricing → /premium (2026-10-22, owner: "Redirect /pricing to /premium
       // (301)"). statusCode, not `permanent`, which would answer 308.
       { source: "/pricing", destination: "/premium", statusCode: 301 },
+      // The Pokémon section is paused (src/lib/pokemon/flag.ts POKEMON_PAUSED,
+      // 2026-10-30: its database stopped answering and every page was a 500).
+      // Its visitors go to DexCompare, the owner's Pokémon sealed site; 302 so
+      // the URLs keep their place for when the section returns. ":path*" also
+      // matches /pokemon itself. Delete this line when POKEMON_PAUSED goes back
+      // to false.
+      { source: "/pokemon/:path*", destination: "https://dexcompare.app/", statusCode: 302 },
       // /decks is a live route again (2026-09-26, DECISIONS.md "Public decks"):
       // the PLAYER-PUBLISHED deck library. The 2026-09-12 redirects that sent
       // every /decks URL to /deck (after the hand-copied meta decks were
