@@ -24,7 +24,6 @@
       "CA": 22995,
       "EU": 11900,
       "SG": 20000,
-      "UK": 9000,
       "US": 15999
     },
     "LGC|Booster Case": {
@@ -72,6 +71,9 @@
     },
     "LGC|Champion Deck Display": {
       "CA": 8995
+    },
+    "LGC|Pre-Rift Kit": {
+      "CA": 4999
     },
     "LGC|Sealed": {
       "EU": 71400
@@ -237,7 +239,7 @@
       "AU": 5500,
       "CA": 4295,
       "EU": 12962,
-      "US": 7795
+      "US": 7793
     },
     "RAD|Sleeved Booster": {
       "EU": 3750,
@@ -323,7 +325,7 @@
     "SFD|Nexus Night Pack": {
       "SG": 2791,
       "UK": 1185,
-      "US": 795
+      "US": 675
     },
     "SFD|Pre-Rift Event Kit": {
       "AU": 8789,
@@ -346,7 +348,7 @@
       "US": 1145
     },
     "SFD|Sleeved Booster (Art Set)": {
-      "US": 4499
+      "US": 3200
     },
     "SFD|Starter Set": {
       "CA": 11202,
@@ -550,7 +552,7 @@
       "CA": 7099
     },
     "giftoftheriftbundle": {
-      "US": 27487
+      "US": 27485
     },
     "leagueoflegendsbundle24popvinyls": {
       "AU": 8396
