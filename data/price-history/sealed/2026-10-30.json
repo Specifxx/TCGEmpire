@@ -29,7 +29,7 @@
     },
     "LGC|Booster Case": {
       "CA": 129999,
-      "US": 137878
+      "US": 137867
     },
     "LGC|Booster Pack": {
       "CA": 2400
@@ -37,6 +37,7 @@
     "LGC|Bundle": {
       "CA": 6499,
       "EU": 4000,
+      "SG": 6000,
       "UK": 3495,
       "US": 4999
     },
@@ -77,7 +78,7 @@
     },
     "OGN|Booster Box": {
       "AU": 40000,
-      "CA": 27999,
+      "CA": 29995,
       "EU": 6173,
       "UK": 13999,
       "US": 6000
@@ -150,7 +151,7 @@
       "AU": 6080,
       "EU": 3500,
       "UK": 2999,
-      "US": 4294
+      "US": 3945
     },
     "OGN|Sealed": {
       "EU": 485
@@ -191,13 +192,13 @@
       "CA": 112024,
       "EU": 62000,
       "UK": 59781,
-      "US": 71779
+      "US": 69299
     },
     "RAD|Booster Pack": {
       "AU": 1099,
       "CA": 795,
       "UK": 499,
-      "US": 498
+      "US": 499
     },
     "RAD|Bundle": {
       "AU": 6495,
@@ -240,10 +241,10 @@
     },
     "RAD|Sleeved Booster": {
       "EU": 3750,
-      "US": 1010
+      "US": 772
     },
     "RAD|Sleeved Booster (Art Set)": {
-      "US": 3899
+      "US": 3500
     },
     "SFD|Booster Box": {
       "AU": 32000,
@@ -267,10 +268,10 @@
       "US": 575
     },
     "SFD|Bulk Runes": {
-      "US": 1460
+      "US": 1623
     },
     "SFD|Bulk Runes Case": {
-      "US": 10000
+      "US": 7492
     },
     "SFD|Bundle": {
       "EU": 6171
@@ -327,7 +328,7 @@
     "SFD|Pre-Rift Event Kit": {
       "AU": 8789,
       "CA": 220000,
-      "EU": 4999,
+      "EU": 5498,
       "US": 157199
     },
     "SFD|Pre-Rift Kit": {
@@ -457,15 +458,15 @@
     "VEN|Booster Box": {
       "AU": 21500,
       "CA": 16553,
-      "EU": 9900,
+      "EU": 9000,
       "SG": 19000,
       "UK": 10470,
-      "US": 11999
+      "US": 11799
     },
     "VEN|Booster Case": {
       "AU": 135000,
       "CA": 119999,
-      "EU": 65500,
+      "EU": 62200,
       "UK": 71000,
       "US": 76696
     },
@@ -475,12 +476,12 @@
       "EU": 795,
       "SG": 800,
       "UK": 499,
-      "US": 484
+      "US": 470
     },
     "VEN|Bundle": {
       "AU": 6000,
       "CA": 4999,
-      "EU": 2990,
+      "EU": 2795,
       "SG": 3491,
       "UK": 1615,
       "US": 3995
@@ -496,7 +497,7 @@
     },
     "VEN|Nexus Night Pack": {
       "CA": 1399,
-      "US": 542
+      "US": 642
     },
     "VEN|Pre-Rift Event Kit": {
       "CA": 5976,
@@ -540,7 +541,7 @@
       "EU": 24905
     },
     "arcaneimmersivemusicexperiencebooster": {
-      "EU": 6900
+      "EU": 6500
     },
     "championdeckjinxriftboundleagueoflegends": {
       "CA": 2379
@@ -577,7 +578,7 @@
       "EU": 1000
     },
     "replacementcardbooster": {
-      "EU": 3499
+      "EU": 3299
     },
     "riftboundarcaneboxset": {
       "UK": 10000
