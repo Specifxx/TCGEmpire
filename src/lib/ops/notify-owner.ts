@@ -1,6 +1,7 @@
 // An email to the owner the moment something lands in the inbox, so nobody has to
-// remember to look. Called by the five public forms (contact, feedback, wrong-price
-// report, store suggestion, support ticket) after the row is saved.
+// remember to look. Called by the public forms (contact, written feedback, wrong-price
+// report, store suggestion, support ticket) after the row is saved. It goes to the
+// site's own inbox (inboxEmail), not the owner's personal address.
 //
 // NEVER LETS A NOTIFICATION BREAK A SUBMISSION: it catches everything, and callers
 // bound it with a timeout. The submission is already saved; the email is a courtesy.
@@ -13,7 +14,7 @@
 import { prisma } from "../db";
 import { sendEmail, emailShell, escapeHtml } from "../email";
 import { SITE_URL } from "../site";
-import { ownerEmail } from "./owner";
+import { inboxEmail } from "./owner";
 
 export const MAX_PER_HOUR = 8;
 export const MAX_PER_DAY = 25;
@@ -76,7 +77,7 @@ export function buildInboxEmail(item: InboxItem): { subject: string; html: strin
   ]
     .filter(Boolean)
     .join("\n");
-  const footer = `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">Sent to the site owner when something is submitted. Reply to the sender from your own mail.</td></tr>`;
+  const footer = `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">Sent to the RiftCompare inbox when something is submitted. Reply to answer the sender.</td></tr>`;
   return { subject, html: emailShell(`New ${escapeHtml(label.toLowerCase())}`, inner, footer, clip(oneLine(item.body ?? item.headline), 120)), text };
 }
 
@@ -98,11 +99,20 @@ async function withinCap(now: Date): Promise<boolean> {
   }
 }
 
+/** The sender's address from "Name <a@b.co>" or "a@b.co", for Reply-To; null when there isn't a clean one. */
+export function replyAddress(from: string | null | undefined): string | null {
+  const m = /<([^\s@<>]+@[^\s@<>]+\.[^\s@<>]+)>\s*$/.exec(from ?? "") ?? /^([^\s@<>]+@[^\s@<>]+\.[^\s@<>]+)$/.exec((from ?? "").trim());
+  return m ? m[1] : null;
+}
+
 export async function notifyOwnerOfInboxItem(item: InboxItem, now = new Date()): Promise<boolean> {
   try {
     if (!(await withinCap(now))) return false;
     const m = buildInboxEmail(item);
-    return await sendEmail(ownerEmail(), m.subject, m.html, { text: m.text });
+    // To the site's own inbox (riftcompare@gmail.com), with Reply-To set to the visitor
+    // so answering is one click.
+    const reply = replyAddress(item.from);
+    return await sendEmail(inboxEmail(), m.subject, m.html, { text: m.text, ...(reply ? { headers: { "Reply-To": reply } } : {}) });
   } catch {
     return false;
   }
