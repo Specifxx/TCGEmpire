@@ -20927,8 +20927,9 @@ build a reader or decline, the owner chose to build the reader.
   and 39 rows have none. Every row hotlinks its card picture from Riot's gallery, and the gallery page (one plain GET,
   as `backfill-card-text.ts` already makes) names each picture's printing (`publicCode`). A row is matched only when
   its picture is in the gallery, that code names exactly one non-promo printing of ours, and the shop's card name
-  agrees. The title matcher is never asked (`ShopifyProduct.cardId`). Probe, 2026-10-30: of 1,004 singles, every
-  picture-resolved row agreed on name and set.
+  agrees. The title matcher is never asked (`ShopifyProduct.cardId`). Dry run from a runner, 2026-10-30: 985 of
+  1,004 singles matched (981 printings, 975 in stock), no name or set disagreement; the 19 left out are runes and two
+  cards whose pictures the gallery does not carry.
 - **Not covered.** Its sealed (a few boxes, packs and decks): the sealed importer skips the store. The price verifier
   skips it too (no `/products/` URL); a link opens `/shop?item=<id>`, the shop's own deep link.
 - **Postage.** Not cart-probed (the probe is Shopify-only); the labelled estimate is its checkout's own rule from its
