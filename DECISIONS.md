@@ -20869,3 +20869,22 @@ in every tag; this site's is `rc-<market>`. The Pokémon section shares the same
 Replaced: 5339155911 (WargameCompare, FigureCompare, Compare Empire, K Young), 5339231473 (Lorcana),
 5339231474 (Gundam), 5339234013 (YGO). Old secrets/variables (`EBAY_AFFILIATE_CAMPAIGN`,
 `NEXT_PUBLIC_EBAY_CAMPAIGN_ID`, `EBAY_CAMPAIGN_ID`) are no longer read and can be deleted.
+
+## The Pokémon section is paused — 2026-10-30
+
+**Why.** The Pokémon Neon project (`POKEMON_DATABASE_URL`) has refused every connection since 2026-10-23: each
+`pokemon-import.yml` run since then fails at `prisma db push` with P1001 "Can't reach database server". The section's
+pages throw on a read error by design (fail-open, no cached copy), so every `/pokemon` URL answered HTTP 500 for a week
+while the "Pokémon (beta)" nav link, the homepage promo and `sitemaps/pokemon.xml` still sent visitors and Google to it.
+The ops monitor did not notice: its only Pokémon check reads DexCompare's index, not the section's own pages.
+
+**What.** `POKEMON_PAUSED = true` in `src/lib/pokemon/flag.ts` turns the section off whatever
+`NEXT_PUBLIC_POKEMON_SECTION` says (nav link, promo and sitemap section disappear, every route is gated), and a 302
+redirect in `next.config.js` sends `/pokemon` and everything under it to DexCompare, the owner's Pokémon sealed site.
+302, not 301, so the URLs keep their place if the section comes back. The import workflow is left as it is: its daily
+failure is the signal that the database answers again.
+
+**To undo.** Once the owner restores the database (Neon console: the project may be suspended or deleted; a new one
+means a new `POKEMON_DATABASE_URL` in GitHub and Vercel and a first import run), set `POKEMON_PAUSED` to false and
+delete the redirect. Whether to keep the section at all, or make the redirect permanent, stays the owner's call
+(CURRENT-STATE, "Pokémon section (off, or 301 to DexCompare)").

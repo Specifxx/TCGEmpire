@@ -11,8 +11,18 @@
 // Turned off, every Pokémon route 404s (app/pokemon/layout.tsx), the nav entry,
 // homepage promo and sitemap section disappear, and the import workflow exits
 // early. docs/pokemon/README.md has the full kill-switch and removal runbook.
+//
+// PAUSED (2026-10-30): the Pokémon Neon project has refused every connection
+// since 2026-10-23 (each pokemon-import run fails with P1001), so every /pokemon
+// page answered HTTP 500 while the nav and homepage promo still linked to it.
+// Paused, the section is off whatever the variable says, and next.config.js
+// sends /pokemon visitors to DexCompare. To bring it back once the database
+// answers: set this to false AND delete the "/pokemon" redirect in
+// next.config.js (DECISIONS.md, "The Pokémon section is paused", 2026-10-30).
+export const POKEMON_PAUSED = true;
+
 export function pokemonSectionOn(): boolean {
-  return process.env.NEXT_PUBLIC_POKEMON_SECTION === "1";
+  return !POKEMON_PAUSED && process.env.NEXT_PUBLIC_POKEMON_SECTION === "1";
 }
 
 /**
