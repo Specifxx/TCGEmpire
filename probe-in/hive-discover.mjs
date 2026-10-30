@@ -1,32 +1,34 @@
-// Temporary: read The Card Hive's public `shop` collection the way its own page does. Removed before merge.
+// Temporary: how many Card Hive singles map to one of our printings through Riot's gallery image. Removed before merge.
 import fs from "node:fs";
-const KEY = "AIzaSyDVHxlVwOVjmwTiZhCq2KwXUyMoOgzuIjg";
-const URL0 = "https://firestore.googleapis.com/v1/projects/cardhive-c9eed/databases/(default)/documents/shop";
 const out = []; const log = (...a) => out.push(a.join(" "));
-const robots = await (await fetch("https://thecardhive.co.uk/robots.txt")).text();
-log("== robots.txt\n" + robots.slice(0, 1500));
-const plain = (v) => v == null ? null : "stringValue" in v ? v.stringValue : "integerValue" in v ? Number(v.integerValue) : "doubleValue" in v ? v.doubleValue : "booleanValue" in v ? v.booleanValue : "nullValue" in v ? null : "timestampValue" in v ? v.timestampValue : "mapValue" in v ? Object.fromEntries(Object.entries(v.mapValue.fields ?? {}).map(([k, x]) => [k, plain(x)])) : "arrayValue" in v ? (v.arrayValue.values ?? []).map(plain) : JSON.stringify(v);
-const docs = []; let token = ""; let pages = 0;
-do {
-  const r = await fetch(`${URL0}?pageSize=300&key=${KEY}${token ? "&pageToken=" + encodeURIComponent(token) : ""}`);
-  log("page", pages, "status", r.status);
-  const j = await r.json(); if (!r.ok) { log(JSON.stringify(j).slice(0, 800)); break; }
-  for (const d of j.documents ?? []) docs.push({ id: d.name.split("/").pop(), ...Object.fromEntries(Object.entries(d.fields ?? {}).map(([k, v]) => [k, plain(v)])) });
-  token = j.nextPageToken; pages++;
-} while (token && pages < 50);
-log("docs", docs.length);
-const fieldCount = {}; for (const d of docs) for (const k of Object.keys(d)) fieldCount[k] = (fieldCount[k] ?? 0) + 1;
-log("== fields", JSON.stringify(fieldCount));
-const by = (k) => { const c = {}; for (const d of docs) { const v = String(d[k]); c[v] = (c[v] ?? 0) + 1; } return JSON.stringify(Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 30)); };
-for (const k of ["game", "category", "condition", "set", "set_id", "rarity", "foil", "printing", "language", "currency"]) log("by", k, by(k));
-log("in stock", docs.filter((d) => (d.stock ?? 0) > 0).length);
-log("== samples");
-const singles = docs.filter((d) => d.game === "riftbound" && (d.category === "Single" || d.cardId || d.rarity));
-log("riftbound singles", singles.length, "in stock", singles.filter((d) => (d.stock ?? 0) > 0).length);
-for (const d of singles.slice(0, 25)) log(JSON.stringify(d).slice(0, 700));
-log("== non-single riftbound");
-for (const d of docs.filter((d) => d.game === "riftbound" && !singles.includes(d)).slice(0, 10)) log(JSON.stringify(d).slice(0, 700));
-fs.mkdirSync("probe-out", { recursive: true });
-fs.writeFileSync("probe-out/hive-discover.txt", out.join("\n"));
-fs.writeFileSync("probe-out/hive-shop.json", JSON.stringify(docs));
-fs.rmSync("probe-out/hive-bundle.js.txt", { force: true });
+const html = await (await fetch("https://playriftbound.com/en-us/card-gallery/", { headers: { "user-agent": "Mozilla/5.0 (RiftCompare probe)" } })).text();
+const nd = JSON.parse(html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)[1]);
+const gallery = new Map(); // hash -> {id,name,publicCode}
+const walk = (n) => { if (Array.isArray(n)) return n.forEach(walk); if (!n || typeof n !== "object") return;
+  if (typeof n.id === "string" && typeof n.name === "string" && n.cardImage?.url && n.set?.value?.id) {
+    const h = /game_data_live\/([0-9a-f]{40})/.exec(n.cardImage.url)?.[1];
+    if (h && !gallery.has(h)) gallery.set(h, { id: n.id.toLowerCase(), name: n.subtitle ? `${n.name}, ${n.subtitle}` : n.name, publicCode: n.publicCode, url: n.cardImage.url });
+  }
+  for (const v of Object.values(n)) walk(v); };
+walk(nd);
+log("gallery images", gallery.size);
+const cards = JSON.parse(fs.readFileSync("data/public/cards.json", "utf8"));
+const byExt = new Map(cards.filter((c) => c.externalId).map((c) => [c.externalId.toLowerCase(), c]));
+const hive = JSON.parse(fs.readFileSync("probe-out/hive-shop.json", "utf8")).filter((d) => d.category === "Single");
+const norm = (s) => String(s ?? "").replace(/\([^)]*\)/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+const st = { singles: hive.length, noHash: 0, notInGallery: 0, noCard: 0, nameDiff: 0, setDiff: 0, ok: 0 };
+const samples = { notInGallery: [], noCard: [], nameDiff: [], setDiff: [], ok: [] };
+for (const d of hive) {
+  const h = /game_data_live\/([0-9a-f]{40})/.exec(d.image ?? "")?.[1];
+  if (!h) { st.noHash++; continue; }
+  const g = gallery.get(h);
+  if (!g) { st.notInGallery++; samples.notInGallery.push(`${d.set_id} ${d.collector_number} ${d.rarity} ${d.displayName ?? d.name}`); continue; }
+  const c = byExt.get(g.id);
+  if (!c) { st.noCard++; samples.noCard.push(`${g.id} ${g.publicCode} ${g.name} <- ${d.displayName ?? d.name}`); continue; }
+  if (norm(c.name) !== norm(d.name)) { st.nameDiff++; samples.nameDiff.push(`${c.name} [${c.externalId}] vs hive ${d.name}`); continue; }
+  if (d.set_id && d.set_id !== c.setCode) { st.setDiff++; samples.setDiff.push(`${c.setCode} ${c.collectorNumber} ${c.name} vs hive ${d.set_id} ${d.collector_number}`); continue; }
+  st.ok++; samples.ok.push(`${c.externalId} ${c.collectorNumber} ${c.rarity} ${c.variant ?? ""} ${c.isOvernumbered ? "OVER" : ""} <- ${d.set_id} ${d.collector_number} ${d.rarity} ${d.displayName ?? d.name} £${d.price}`);
+}
+log(JSON.stringify(st));
+for (const [k, v] of Object.entries(samples)) { log("==", k, v.length); for (const s of (k === "ok" ? v.filter((x) => /OVER| a | b |Showcase|Alternate/.test(x)) : v).slice(0, 60)) log("  ", s); }
+fs.writeFileSync("probe-out/hive-match.txt", out.join("\n"));
