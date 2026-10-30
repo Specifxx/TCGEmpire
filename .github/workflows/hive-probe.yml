@@ -1,0 +1,19 @@
+# Temporary probe for The Card Hive; removed before merge.
+name: Hive probe
+on:
+  push:
+    branches: [claude/project-thread-h0g5p0]
+    paths: [probe-in/**]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node probe-in/hive-discover.mjs
+      - run: |
+          git config user.name "hive-probe"; git config user.email "actions@users.noreply.github.com"
+          git add probe-out && git commit -m "probe-out: hive" && git push origin HEAD:claude/project-thread-h0g5p0
