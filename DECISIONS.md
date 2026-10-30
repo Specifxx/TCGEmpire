@@ -20937,3 +20937,22 @@ build a reader or decline, the owner chose to build the reader.
 
 If either read fails the store keeps yesterday's rows, and store-health's stale alert fires if that lasts. If the shop
 moves to Shopify or changes its app, drop the platform and read it like any other store.
+
+## Visitor messages go to the site's own inbox — 2026-10-30
+
+**Why.** The owner: "make sure that contact information is really clear on all of our websites so that any feedback
+feeds into the respective emails". RiftCompare's instant inbox emails (contact, wrong-price reports, store
+suggestions, support tickets, creator applications) went to the owner's personal address, while `/contact`, the
+footer and every policy page tell visitors to write to riftcompare@gmail.com. Replies to visitors therefore came from
+the wrong mailbox, and the site's own inbox never saw what its forms collected.
+
+**What.**
+- `notifyOwnerOfInboxItem` sends to `inboxEmail()` (`lib/ops/owner.ts`): `CONTACT_EMAIL` unless `INBOX_EMAIL` names
+  one valid address. Ops-monitor alerts, the Sunday digest and the cron route still go to `ownerEmail()`.
+- Each inbox email carries `Reply-To:` the visitor's address when they gave a clean one (`replyAddress`), so a reply
+  answers the visitor from the RiftCompare inbox.
+- Written feedback (a message of 10+ characters from `/feedback`, the widget or Riftle) is emailed too. Star ratings
+  and the few words a rater adds (`rating`, `rating-review` sources) still are not: the 2026-10-27 rule ("stop sending
+  me emails for every single … rating") stands for ratings, and the 8/h, 25/day cap covers everything.
+- The same change was made on every sister site that has forms (OP Compare, CamCompare, Compare Empire AU); the
+  static sites have no forms and send visitors straight to their own address from the footer and `/contact`.

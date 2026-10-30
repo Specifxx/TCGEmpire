@@ -107,7 +107,9 @@ longer lands on its entry.
   jobs, the live site, Stripe, email and the inbox, stores the result for
   `/admin/health`, and emails the owner only when something needs a look. Its
   memory is the Actions cache, not the database it watches. Every new public form
-  calls `notifyOwnerBounded` (capped 8/h, 25/day); a new job, API or limit gets a
+  calls `notifyOwnerBounded` (capped 8/h, 25/day), which emails the SITE inbox
+  (`CONTACT_EMAIL`, Reply-To the visitor), not the owner, written feedback included
+  and ratings excluded [2026-10-30](../DECISIONS.md#L20941); a new job, API or limit gets a
   check in `lib/ops/checks.ts`. The Neon rows need the `NEON_API_KEY` Actions secret.
   `docs/ops-monitor.md`. [2026-10-14](../DECISIONS.md#L16978)
 - **Live names** (since 2026-10-25; `src/lib/db-chains.ts` is the source of
