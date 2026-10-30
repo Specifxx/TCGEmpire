@@ -20983,3 +20983,12 @@ JSONL, one line per SKU, day and project (`Tags.ProjectName`), for Pro teams.
   dates usage by the day it ran, an invoice by the day it was billed).
 - The ops monitor's earnings check already reports any automatic cost source that errors; `costsHealth` now returns
   both.
+
+## Pending creators: entered before they reply, shown only once confirmed (2026-10-30)
+
+**Owner:** onboarding Runeterra Bound (Instagram @runeterrabound), offered a profile, free Premium, a 20% creator code and a Reels cross-promo, "do not invent" his name, bio, avatar or links, and "only render him once status is confirmed".
+
+- `Creator.status` (`"pending" | "confirmed"`, absent = confirmed) in `lib/content/creators.ts`. `ALL_CREATORS` is the whole list; `CREATORS` is `ALL_CREATORS.filter(isListedCreator)`, so every reader that already used `CREATORS` (/creators, the homepage teaser, the share image, `/go/<slug>`, buy clicks, edit links, the weekly rotation, code matching) leaves a pending entry out with no change of its own. Nothing outside `creators.ts` reads `ALL_CREATORS` (`tests/creators-pending.test.ts`).
+- A confirmed creator must have a non-empty blurb, so flipping a pending entry without his own words fails the tests rather than showing an empty card.
+- Runeterra Bound is entered pending with only the facts we had: name as offered, the Instagram link, `blurb: ""` and TODOs. No avatar is taken from Instagram: he sends one.
+- His code and Premium are not code changes: the code is an `Affiliate` row made in `/admin/affiliates` (which also makes its Stripe promotion code on the shared `rc-creator-20-forever` coupon), and Premium is `/admin/accounts`' grant form (`/api/admin/grant-premium`), once he has an account.

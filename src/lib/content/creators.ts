@@ -18,8 +18,16 @@
 // not affiliate. "Creators" throughout instead.
 //
 // HOW TO ADD ONE: append an entry once a creator has agreed. Anything here is
-// live and public on the next release. Use the creator's own spelling and handle,
-// and only links they gave us.
+// live and public on the next release, unless it says `status: "pending"`. Use the
+// creator's own spelling and handle, and only links they gave us.
+//
+// PENDING CREATORS (owner, 2026-10-30). A creator we have made an offer to but who
+// has not yet sent their name, bio and avatar is entered with `status: "pending"`.
+// ALL_CREATORS holds every entry; CREATORS is only the confirmed ones, and it is
+// what every page, route, share image, edit link and the weekly rotation reads, so
+// a pending entry appears nowhere on the site. To publish one, fill in what they
+// sent and set `status: "confirmed"` (or delete the line): tests/creators-pending.test.ts
+// refuses a confirmed creator without a blurb.
 
 export type CreatorPlatform = "YouTube" | "Twitch" | "TikTok" | "Instagram" | "X" | "Discord" | "Website" | "Email";
 
@@ -30,7 +38,11 @@ export interface CreatorLink {
   handle?: string;
 }
 
+export type CreatorStatus = "pending" | "confirmed";
+
 export interface Creator {
+  /** "pending" keeps the entry off the site (see PENDING CREATORS above). Absent means confirmed. */
+  status?: CreatorStatus;
   /** Stable id, used in analytics: lowercase, hyphens. */
   slug: string;
   name: string;
@@ -76,7 +88,7 @@ export interface Creator {
 //   },
 // Creators with a creator code (2026-10-19, owner: "add the creators we have
 // onboarded with a creator code to the public creators page").
-export const CREATORS: Creator[] = [
+export const ALL_CREATORS: Creator[] = [
   {
     slug: "keishun",
     name: "Keishun",
@@ -181,7 +193,32 @@ export const CREATORS: Creator[] = [
     tags: ["Strategy", "Competitive"],
     since: "2026-10-23",
   },
+  // Offered a profile, free Premium, a 20% creator code and a Reels cross-promo
+  // (owner, 2026-10-30). Not yet replied: only his Instagram handle is known, so
+  // nothing else is filled in. Hidden until `status` is "confirmed".
+  {
+    status: "pending",
+    slug: "runeterrabound",
+    // TODO: his display name as he gives it; "Runeterra Bound" is a placeholder from the offer.
+    name: "Runeterra Bound",
+    // TODO: his own one-line bio. Required before confirming (tests/creators-pending.test.ts).
+    blurb: "",
+    links: [{ platform: "Instagram", url: "https://www.instagram.com/runeterrabound/", handle: "@runeterrabound" }],
+    // TODO: any other links he sends (YouTube, TikTok...), and a tipUrl if he has one.
+    // TODO: avatar: "/creators/runeterrabound.jpg", a square image HE sends (never one taken from Instagram).
+    // TODO: code: set by its Affiliate row in /admin/affiliates (attachCreatorCodes), nothing to type here.
+    // TODO: since: the date he goes live, when confirmed.
+    since: "2026-10-30",
+  },
 ];
+
+/** Whether a creator is shown on the site: everyone except a pending entry. */
+export function isListedCreator(c: Creator): boolean {
+  return c.status !== "pending";
+}
+
+/** The creators the site shows. Every page and route reads this, never ALL_CREATORS. */
+export const CREATORS: Creator[] = ALL_CREATORS.filter(isListedCreator);
 
 // ── Creator of the week: a random weekly rotation (owner, 2026-10-24) ─────────
 // "they should rotate every week on a Wednesday … just make it like rotate
