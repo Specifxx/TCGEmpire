@@ -151,7 +151,7 @@ export function PreorderPriceTable({
    *  customid) and buy_click's page_type: without it every click from this
    *  table — eBay included — reported as the HOMEPAGE ("<retailer>-home"),
    *  which hid the pre-order page's earnings inside the homepage's. */
-  page?: "/radiance-preorders" | "/sets/radiance" | "/legacy-preorders";
+  page?: "/radiance-preorders" | "/sets/radiance" | "/legacy-preorders" | "/black-friday";
   /** Injected for tests; the page renders at request/ISR time. */
   now?: number;
   /** After the set's street date (2026-10-24): the same rows, but an open row
@@ -161,9 +161,10 @@ export function PreorderPriceTable({
   const taking = released ? "in stock" : "taking pre-orders";
   // /legacy-preorders (2026-10-25) reports as its own page; the EPN customid
   // already separates it (affiliateUrl takes the path's first segment).
-  const pageType = page === "/sets/radiance" ? "set_hub" : page === "/legacy-preorders" ? "legacy_preorders" : "radiance_preorders";
+  const pageType =
+    page === "/sets/radiance" ? "set_hub" : page === "/legacy-preorders" ? "legacy_preorders" : page === "/black-friday" ? "black_friday" : "radiance_preorders";
   // EPN customid segment for the per-product search line, one per page.
-  const searchSource = page === "/sets/radiance" ? "set-hub-product" : "preorders-product";
+  const searchSource = page === "/sets/radiance" ? "set-hub-product" : page === "/black-friday" ? "black-friday-product" : "preorders-product";
   const label = ebayLabel(country);
   const shown = preorderTableGroups(groups);
   if (shown.length === 0) return null;

@@ -209,6 +209,8 @@ async function core(): Promise<SitemapEntry[]> {
     // /sets/legacy: it carries real content (Riot's product list, the
     // distributor's contents, the FAQ) even before a store lists a pre-order.
     { url: `${SITE_URL}/legacy-preorders`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/legacy-preorders") },
+    // Black Friday sealed deals (2026-10-30), one URL kept year round so it builds history.
+    { url: `${SITE_URL}/black-friday`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/black-friday") },
     // /feedback is NOT submitted: src/app/feedback/page.tsx sets
     // robots: { index: false, follow: true } (AdSense remediation § Phase 7 —
     // /contact already covers the same intent with real content). Submitting a
