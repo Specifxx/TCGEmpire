@@ -38,7 +38,7 @@ const ALL: Country[] = ["US", "UK", "AU", "CA", "EU", "SG"];
 export const BOT_GAMES: BotGame[] = [
   { key: "riftbound", label: "Riftbound", siteName: "RiftCompare", site: "https://riftcompare.com", search: "riftbound", ebayWord: "Riftbound", tcgSlug: "riftbound-league-of-legends-trading-card-game", tcgLine: RIFTBOUND_TCG_LINE, markets: ALL },
   { key: "onepiece", label: "One Piece", siteName: "OP Compare", site: "https://opcompare.app", search: "opcompare", ebayWord: "One Piece TCG", tcgSlug: "one-piece-card-game", tcgLine: "One Piece Card Game", markets: ALL },
-  { key: "pokemon", label: "Pokémon (sealed)", siteName: "DexCompare", site: "https://www.dexcompare.app", search: "none", ebayWord: "Pokemon TCG", tcgSlug: "pokemon", tcgLine: "Pokemon", markets: ALL },
+  { key: "pokemon", label: "Pokémon (sealed)", siteName: "DexCompare", site: "https://dexcompare.app", search: "none", ebayWord: "Pokemon TCG", tcgSlug: "pokemon", tcgLine: "Pokemon", markets: ALL },
   { key: "mtg", label: "Magic (sealed)", siteName: "MTG Compare", site: "https://mtgcompare.app", search: "none", ebayWord: "MTG", tcgSlug: "magic", tcgLine: "Magic", markets: ALL },
   { key: "gundam", label: "Gundam", siteName: "Gundam Compare", site: "https://gundamcompare.com", search: "engine", ebayWord: "Gundam Card Game", tcgSlug: "gundam-card-game", tcgLine: "Gundam Card Game", markets: ["US"] },
   { key: "lorcana", label: "Lorcana", siteName: "Lorcana Compare", site: "https://lorcanacompare.com", search: "engine", ebayWord: "Lorcana", tcgSlug: "lorcana-tcg", tcgLine: "Lorcana TCG", markets: ["US"] },

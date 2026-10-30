@@ -36,7 +36,7 @@ const ALL = [
 const pick = (process.env.SITES ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const SITES = pick.length ? ALL.filter((o) => pick.some((p) => o.includes(p))) : ALL;
 const SAMPLE = Number(process.env.SAMPLE ?? 25);
-const CRAWL = Number(process.env.CRAWL ?? 250);
+const CRAWL = Number(process.env.CRAWL ?? 200);
 const UA =
   "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 
@@ -47,7 +47,7 @@ const norm = (u: string) => {
 };
 const locs = (xml: string) => [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map((m) => m[1].replace(/&amp;/g, "&"));
 
-async function get(url: string, timeout = 30_000) {
+async function get(url: string, timeout = 15_000) {
   const t0 = Date.now();
   const r = await fetch(url, { redirect: "manual", headers: { "user-agent": UA, accept: "text/html,application/xml" }, signal: AbortSignal.timeout(timeout) });
   const body = await r.text();

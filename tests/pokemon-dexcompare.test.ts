@@ -124,13 +124,13 @@ test("tile figures and the open rule follow DexCompare's own (a store in stock, 
 test("links go to the visitor's market on DexCompare, tagged by surface", () => {
   assert.equal(
     dexHref("UK", { kind: "product", slug: "x-booster-box", cents: 1, inStock: 1, listed: 1, marketplace: false, checkedAt: null }, "product"),
-    "https://www.dexcompare.app/uk/p/x-booster-box?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-product",
+    "https://dexcompare.app/uk/p/x-booster-box?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-product",
   );
   assert.equal(
     dexHref("EU", { kind: "set", setSlug: "surging-sparks", setName: "Surging Sparks" }, "quickview"),
-    "https://www.dexcompare.app/eu/sets/surging-sparks?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-quickview",
+    "https://dexcompare.app/eu/sets/surging-sparks?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-quickview",
   );
-  assert.equal(dexHomeHref("SG", "subnav"), "https://www.dexcompare.app/sg?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-subnav");
+  assert.equal(dexHomeHref("SG", "subnav"), "https://dexcompare.app/sg?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-subnav");
   assert.deepEqual(Object.keys(DEX_REGION).sort(), ["AU", "CA", "EU", "SG", "UK", "US"]);
 });
 
