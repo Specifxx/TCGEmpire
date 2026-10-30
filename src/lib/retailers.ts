@@ -50,7 +50,11 @@ export interface RetailerInfo {
   // Verify a store's platform with the matching probe before setting this —
   // scripts/probe-eu-stores.ts for Shopify, scripts/probe-woocommerce-stores.ts
   // for Woo — rather than inferring it from the domain or the theme.
-  platform?: "shopify" | "woocommerce";
+  //
+  // "cardhive" is ONE store's own Firebase shop (The Card Hive), read from its
+  // public Firestore `shop` list and matched by Riot's card picture — see
+  // lib/cardhive.ts. Singles only: the sealed importer skips it.
+  platform?: "shopify" | "woocommerce" | "cardhive";
   // The currency the storefront actually CHARGES, when it is not the market's
   // own. Omitted = currencyOf(country). Shopify Markets converts for most
   // stores, but not all: Sky Fox Games returned the same CAD prices for
@@ -1420,6 +1424,21 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingFlatCents: 250,
     freeOverCents: 0,
     shippingNote: "est. £2.50",
+    country: "UK",
+  },
+  // Suggested through the suggest-a-store form (2026-10-30). Not Shopify or Woo:
+  // a custom Firebase shop, read by lib/cardhive.ts. Its checkout's own rules
+  // (in its page bundle): Royal Mail Tracked 48 large letter £2.90 for up to
+  // 10 singles, UK addresses only. Not cart-probed (the probe is Shopify-only).
+  thecardhive: {
+    key: "thecardhive",
+    name: "The Card Hive",
+    base: "https://thecardhive.co.uk",
+    collections: [],
+    platform: "cardhive",
+    shippingFlatCents: 290,
+    freeOverCents: 0,
+    shippingNote: "est. £2.90 (Royal Mail Tracked 48)",
     country: "UK",
   },
 
