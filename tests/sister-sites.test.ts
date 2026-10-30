@@ -17,7 +17,7 @@ const published = ARTICLES.filter((a) => !a.draft);
 test("the ten sister sites, each linking only its own https host", () => {
   assert.deepEqual(
     SISTER_SITES.map((s) => s.url),
-    ["https://opcompare.app", "https://www.dexcompare.app", "https://mtgcompare.app", "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://wargamecompare.com", "https://figurecompare.com", "https://www.camcompare.app", "https://www.compareempire.com"],
+    ["https://opcompare.app", "https://dexcompare.app", "https://mtgcompare.app", "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://wargamecompare.com", "https://figurecompare.com", "https://www.camcompare.app", "https://compareempire.com"],
   );
   for (const s of SISTER_SITES) {
     assert.ok(s.links.length > 0, s.name);

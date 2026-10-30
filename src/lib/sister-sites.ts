@@ -55,16 +55,16 @@ export const SISTER_SITES: SisterSite[] = [
   },
   {
     key: "dex",
-    search: "https://www.dexcompare.app/us/sealed?q={q}",
+    search: "https://dexcompare.app/us/sealed?q={q}",
     name: "DexCompare",
-    url: "https://www.dexcompare.app",
+    url: "https://dexcompare.app",
     game: "Pokémon",
     anchor: "Pokémon TCG sealed prices",
     what: "Pokémon booster box, Elite Trainer Box and bundle prices across independent stores in seven markets",
     links: [
-      { label: "Pick your country", href: "https://www.dexcompare.app/" },
-      { label: "Pokémon booster boxes in Australia", href: "https://www.dexcompare.app/au/type/booster-boxes" },
-      { label: "Pokémon release calendar", href: "https://www.dexcompare.app/au/releases" },
+      { label: "Pick your country", href: "https://dexcompare.app/" },
+      { label: "Pokémon booster boxes in Australia", href: "https://dexcompare.app/au/type/booster-boxes" },
+      { label: "Pokémon release calendar", href: "https://dexcompare.app/au/releases" },
     ],
   },
   {
@@ -173,13 +173,13 @@ export const SISTER_SITES: SisterSite[] = [
   {
     key: "empire",
     name: "Compare Empire",
-    url: "https://www.compareempire.com",
+    url: "https://compareempire.com",
     game: "Tech",
     anchor: "Australian tech prices",
     what: "phone, TV and laptop prices across Australian stores",
     links: [
-      { label: "Phone prices", href: "https://www.compareempire.com/phones" },
-      { label: "Today's deals", href: "https://www.compareempire.com/deals" },
+      { label: "Phone prices", href: "https://compareempire.com/phones" },
+      { label: "Today's deals", href: "https://compareempire.com/deals" },
     ],
     footerOnly: true,
     notTcg: true,

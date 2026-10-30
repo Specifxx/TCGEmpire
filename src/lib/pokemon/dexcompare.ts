@@ -22,7 +22,7 @@
 import type { Country } from "../country";
 
 /** The site, as a link prefix. */
-export const DEX_ORIGIN = "https://www.dexcompare.app";
+export const DEX_ORIGIN = "https://dexcompare.app";
 
 /** This section's market → DexCompare's region path. DexCompare also has NZ, which this site does not. */
 export const DEX_REGION: Record<Country, string> = { US: "us", AU: "au", UK: "uk", CA: "ca", EU: "eu", SG: "sg" };

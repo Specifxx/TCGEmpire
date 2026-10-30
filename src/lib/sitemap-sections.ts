@@ -490,32 +490,22 @@ async function champions(): Promise<SitemapEntry[]> {
   // Only champions that actually have cards — the hub page calls notFound() for
   // an empty one, and submitting a URL that 404s is worse than omitting it.
   const counts = await Promise.all(CHAMPIONS.map((c) => prisma.card.count({ where: championCardWhere(c) })));
-  // PER-CHAMPION freshness — same fix as cards()/stores() above, applied here
-  // via a relation filter (RetailerPrice → Card) rather than a groupBy, since
-  // "which champion" isn't a plain column to group by. One aggregate query per
-  // champion, matching the `counts` query above's own shape (CHAMPIONS is a
-  // few dozen entries, not the ~1,400-card scale a groupBy exists to spare).
-  const lastSeens = await Promise.all(
-    CHAMPIONS.map((c) =>
-      prisma.retailerPrice
-        .aggregate({ where: { card: championCardWhere(c) }, _max: { lastSeen: true } })
-        .then((r) => r._max.lastSeen)
-        .catch(() => null)
-    )
-  );
+  // No per-champion lastmod (2026-10-30): the one aggregate per champion that
+  // computed it joined RetailerPrice to Card through a name filter, and the few
+  // dozen of them together ran past 30 seconds on a cache miss, so a crawler
+  // asking for champions.xml timed out (crawl-audit-sites) and the hubs fell out
+  // of the sitemap. The price day is accurate enough for a hub of many cards.
   // Hubs under the threshold carry robots: noindex (see app/champions/[slug]),
   // so submitting them here would ask Google to index URLs we're telling it not
   // to — the contradiction that fills the "Excluded by noindex tag" bucket.
-  // Index into `counts`/`lastSeens` BEFORE filtering — filtering first (as the
-  // facets() function above does) would silently shift the two arrays out of
-  // sync with the filtered CHAMPIONS list.
-  return CHAMPIONS.map((c, i) => ({ c, count: counts[i], lastSeen: lastSeens[i] }))
+  // Index into `counts` BEFORE filtering, so it stays in step with CHAMPIONS.
+  return CHAMPIONS.map((c, i) => ({ c, count: counts[i] }))
     .filter(({ count }) => count >= CHAMPION_THIN_THRESHOLD)
-    .map(({ c, lastSeen }) => ({
+    .map(({ c }) => ({
       url: `${SITE_URL}/champions/${c.slug}`,
       changeFrequency: "daily" as const,
       priority: 0.8,
-      lastModified: lastSeen ?? day,
+      lastModified: day,
     }));
 }
 
