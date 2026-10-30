@@ -593,6 +593,8 @@ export async function importSealed(): Promise<number> {
     // `own` marks the store's own configured/Riftbound collections: a read of one
     // licenses the replace below even when it is read strictly (strictTitles).
     const batches: { products: ShopifyProd[]; strict: boolean; own?: boolean }[] = [];
+    // The Card Hive's own shop (lib/cardhive.ts) is read for singles only.
+    if (store.platform === "cardhive") continue;
     if (store.platform === "woocommerce") {
       batches.push({ products: await fetchWooSealedProducts(store), strict: false });
     } else {

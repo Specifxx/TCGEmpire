@@ -24,6 +24,7 @@ import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DA
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO, convertCents } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
+import { fetchCardHiveProducts } from "./cardhive";
 import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
@@ -38,6 +39,11 @@ export interface ShopifyProduct {
   // …), so the Shopify shape would produce a 404 on every outbound buy link —
   // the click that earns the site money, pointed at a dead page.
   url?: string;
+  // The printing, when the store's adapter has already decided it from
+  // something better than the title (lib/cardhive.ts: Riot's own card picture).
+  // null = the adapter could not match it; the title matcher is NOT asked then.
+  // Absent = the normal title matcher decides.
+  cardId?: string | null;
 }
 
 
@@ -1781,7 +1787,9 @@ export async function importPrices(): Promise<ImportSummary> {
     const products =
       store.platform === "woocommerce"
         ? await fetchWooStoreProducts(store)
-        : await fetchShopifyStoreProducts(store);
+        : store.platform === "cardhive"
+          ? await fetchCardHiveProducts(store.base, allCardRows)
+          : await fetchShopifyStoreProducts(store);
     if (!products.length) {
       // Keeping the rows is right for ONE bad run and wrong for a store that has
       // stopped selling Riftbound: E4 Cards' 138 listings were still on card
@@ -1811,7 +1819,7 @@ export async function importPrices(): Promise<ImportSummary> {
     // reason; this gives the Shopify path the same diagnostic.
     const unmatchedSample: string[] = [];
     for (const p of products) {
-      const cardId = resolveCardId(p, idx);
+      const cardId = p.cardId !== undefined ? p.cardId : resolveCardId(p, idx);
       if (!cardId) {
         unmatched++;
         if (unmatchedSample.length < 5) unmatchedSample.push(p.title.slice(0, 70));
