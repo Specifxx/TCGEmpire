@@ -21028,3 +21028,18 @@ POST only, 503 until the token is set) still holds.
   comment. Those issues are public, so they link to each report's file and never quote a note. It fails (and
   GitHub emails the owner) when a site has no `reports` branch, or the token stops working or expires within 14
   days (checked only when the token is also a TCGEmpire Actions secret). The ops monitor's job list watches it.
+
+## The auction sweep spends from the reserve, and runs off the top of the hour — 2026-10-31
+
+**Owner:** "The eBay auction sweep has stopped." The ops monitor flagged `/auctions` as not refreshed for 16 hours.
+
+* **Why it stopped.** Every run was green, but the 04:43 UTC sweep found 600 of 5,000 calls left, and
+  `primeEbayBudget` held it to the same 600 reserve the price import spends down to: a budget of 0, nothing stored.
+  The import had run twice after the last good sweep (the 21:31 push run and the 22:45 scheduled one), each
+  spending to the line. The quota day resets at 07:00 UTC (08:00 in northern winter), so any sweep between the
+  evening import and the reset could get nothing.
+* **Fix.** `primeEbayBudget({ reserve })` takes a per-caller line; the sweep uses `AUCTION_QUOTA_RESERVE` (100,
+  `EBAY_AUCTION_QUOTA_RESERVE` env). The 500 calls between the two lines are about 40 sweeps, and 100 still keeps
+  eBay's hard limit out of reach. The import's 600 is unchanged, so nothing else gets more.
+* **Schedule.** The cron was `0 */4 * * *`, and GitHub dropped about half of those runs (28 to 31 Oct: three
+  sweeps a day, not six). It is now minute 23. `tests/ebay-auctions.test.ts` pins both.

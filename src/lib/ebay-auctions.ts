@@ -29,7 +29,7 @@ import { withLiveData } from "./public-data/mode";
 //
 // ── THE QUOTA ARITHMETIC (the owner's actual question: does this fit?) ───────
 // eBay allows 5,000 Browse calls/day; lib/ebay.ts holds back a 600 reserve, so
-// ~4,400 are spendable and the price/sealed importers already use ~2,850.
+// ~4,400 are spendable (the sweep itself may dip to AUCTION_QUOTA_RESERVE) and the price/sealed importers already use ~2,850.
 //
 //   MARKETS (6) × AUCTION_PAGE_CAP (1) = 6 calls per sweep
 //   6 × 6 sweeps a day (every 4h)      = 36 calls/day
@@ -295,13 +295,22 @@ export async function sweepAuctionMarket(market: Country): Promise<AuctionSweepS
   return { market, found: seen.size, ok: true };
 }
 
+/**
+ * The quota line the sweep stops at. Lower than lib/ebay.ts's 600 on purpose:
+ * the price import spends down to 600, so a sweep held to the same line gets a
+ * budget of 0 whenever it runs after an import (2026-10-31: the 04:43 sweep saw
+ * 600 left and stored nothing, and the board went 16 hours stale). A sweep is
+ * 12 calls, so 100 still keeps a margin before eBay's hard limit.
+ */
+export const AUCTION_QUOTA_RESERVE = Number(process.env.EBAY_AUCTION_QUOTA_RESERVE ?? 100);
+
 /** Sweep every market. Returns one summary per market for the run log. */
 export async function refreshAuctions(): Promise<AuctionSweepSummary[]> {
   if (!isEbayEnabled()) {
     console.log("eBay auctions: EBAY_CLIENT_ID/SECRET not set — nothing to do.");
     return [];
   }
-  await primeEbayBudget();
+  await primeEbayBudget({ reserve: AUCTION_QUOTA_RESERVE });
   console.log(
     `eBay auctions: sweeping ${AUCTION_MARKETS.length} markets for lots ending within ` +
       `${AUCTION_WINDOW_HOURS}h at or above US$${(AUCTION_MIN_USD_CENTS / 100).toFixed(0)} ` +

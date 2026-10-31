@@ -587,7 +587,7 @@ const STORE_IMPORT_MIN = 30;
 // JOB_TIMEOUT_MIN above: a raised page cap, an added market or a tightened cron
 // must move this number, not silently diverge from it.
 const AUCTION_SWEEPS_PER_DAY = (() => {
-  const cron = /- cron: "0 \*\/(\d+) \* \* \*"/.exec(
+  const cron = /- cron: "\d+ \*\/(\d+) \* \* \*"/.exec(
     readFileSync(".github/workflows/refresh-auctions.yml", "utf8"),
   );
   assert.ok(cron, "refresh-auctions.yml must keep an every-N-hours cron this model can read");
