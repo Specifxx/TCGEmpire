@@ -112,10 +112,10 @@ longer lands on its entry.
   and ratings excluded [2026-10-30](../DECISIONS.md#L20941); a new job, API or limit gets a
   check in `lib/ops/checks.ts`. The Neon rows need the `NEON_API_KEY` Actions secret.
   `docs/ops-monitor.md`. [2026-10-14](../DECISIONS.md#L16978)
-- **Price reports and store suggestions are also filed in GitHub (2026-10-31):** the private
-  `Specifxx/compare-reports` repo, one JSON file per report, shared by every Compare Empire site
-  (`lib/reports-github.ts`, `REPORTS_GITHUB_TOKEN`); no user id, email or IP. Its daily `triage.yml` keeps one
-  issue per site. [2026-10-31](../DECISIONS.md#L20987)
+- **Price reports and store suggestions are also filed in GitHub (2026-10-31):** each site's own
+  repo, on a `reports` branch that never deploys or merges, one JSON file per report
+  (`lib/reports-github.ts`, `REPORTS_GITHUB_TOKEN`); no user id, email or IP, and no page reads it. The daily
+  `reports-triage.yml` here keeps one issue per site. [2026-10-31](../DECISIONS.md#L21011)
 - **Live names** (since 2026-10-25; `src/lib/db-chains.ts` is the source of
   truth): operational `RM10`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.

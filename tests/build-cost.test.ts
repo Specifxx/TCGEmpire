@@ -39,8 +39,9 @@ test("PRODUCTION deployment is never disabled by these rules", () => {
   const map = rules as Record<string, boolean>;
   for (const [pattern, enabled] of Object.entries(map)) {
     if (enabled) continue;
+    // `reports` holds visitor reports only (src/lib/reports-github.ts), never site code.
     assert.ok(
-      pattern.startsWith("claude/"),
+      pattern.startsWith("claude/") || pattern === "reports",
       `"${pattern}": false disables a branch that is not an automation branch — production must keep deploying`,
     );
   }
