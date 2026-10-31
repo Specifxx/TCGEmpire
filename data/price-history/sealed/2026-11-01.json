@@ -94,7 +94,7 @@
       "AU": 1900,
       "CA": 1199,
       "UK": 700,
-      "US": 1298
+      "US": 1297
     },
     "OGN|Box Set": {
       "UK": 10500
@@ -444,9 +444,6 @@
     "UNL|Sealed": {
       "EU": 400
     },
-    "UNL|Showdown Decks": {
-      "US": 3499
-    },
     "UNL|Sleeved Booster": {
       "EU": 1299,
       "US": 932
@@ -531,7 +528,7 @@
     },
     "VEN|Sleeved Booster": {
       "EU": 1125,
-      "US": 400
+      "US": 849
     },
     "VEN|Sleeved Booster (Art Set)": {
       "US": 2250
