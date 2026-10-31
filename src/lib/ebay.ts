@@ -30,6 +30,53 @@ const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
 export const EBAY_MARKETPLACE: Record<string, string> = { AU: "EBAY_AU", US: "EBAY_US", UK: "EBAY_GB", SG: "EBAY_SG", CA: "EBAY_CA", EU: "EBAY_ES" };
 const DEFAULT_MARKETPLACE = "EBAY_AU";
 
+// ---- Local sellers, stated postage (visitor feedback, 2026-10-31) -------------
+// A WargameCompare visitor found eBay rows from overseas sellers whose postage made "a lot of wasted clicks". Every
+// search now asks for items DELIVERED to the market's country; on the four single-country marketplaces it also asks
+// for items LOCATED there. eBay Spain stands for the whole EU, so its search keeps any EU seller (sellerIsLocal drops
+// the rest), and eBay Singapore has almost no local Riftbound sellers, so SG keeps any seller who ships there, priced
+// delivered. A regional (Chinese/Korean) printing is only sold from its own region: it keeps any seller too. The buyer's
+// country and a central postcode go in contextualLocation so shippingOptions carry the real postage, and the price path
+// keeps no listing whose postage eBay does not state.
+export const EBAY_BUYER: Record<string, { country: string; zip: string }> = {
+  EBAY_AU: { country: "AU", zip: "2000" },
+  EBAY_US: { country: "US", zip: "64101" },
+  EBAY_GB: { country: "GB", zip: "B1 1AA" },
+  EBAY_SG: { country: "SG", zip: "238801" },
+  EBAY_CA: { country: "CA", zip: "M5V 2T6" },
+  EBAY_ES: { country: "ES", zip: "28013" },
+};
+const LOCAL_ONLY = new Set(["EBAY_AU", "EBAY_US", "EBAY_GB", "EBAY_CA"]);
+const EU_COUNTRIES = new Set(["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"]);
+
+/** The Browse filter terms that keep a search to sellers who deliver to (and, where it applies, are in) the market. */
+export function locationFilters(marketplace: string, anySeller = false): string[] {
+  const b = EBAY_BUYER[marketplace];
+  if (!b) return [];
+  return [`deliveryCountry:${b.country}`, ...(!anySeller && LOCAL_ONLY.has(marketplace) ? [`itemLocationCountry:${b.country}`] : [])];
+}
+
+/** Is the listing's seller local to the marketplace's buyer? (A listing that names no location passes: the search asked.) */
+export function sellerIsLocal(it: any, marketplace: string, anySeller = false): boolean {
+  const c = String(it?.itemLocation?.country ?? "").toUpperCase();
+  if (!c || anySeller) return true;
+  if (marketplace === "EBAY_ES") return EU_COUNTRIES.has(c);
+  if (LOCAL_ONLY.has(marketplace)) return c === EBAY_BUYER[marketplace]?.country;
+  return true;
+}
+
+/** X-EBAY-C-ENDUSERCTX: our campaign (when set) and the buyer's location, so eBay quotes postage to it. */
+export function endUserContext(marketplace: string): string {
+  const b = EBAY_BUYER[marketplace];
+  return [
+    ...(EBAY_CAMPAIGN_ID ? [`affiliateCampaignId=${EBAY_CAMPAIGN_ID}`] : []),
+    ...(b ? [`contextualLocation=${encodeURIComponent(`country=${b.country},zip=${b.zip}`)}`] : []),
+  ].join(",");
+}
+
+/** Does eBay state the listing's postage (free counts)? A "calculated" or missing one is a cost the row would hide. */
+export const postageStated = (it: any): boolean => shippingFromItem(it) != null;
+
 // eBay image renditions (B3-17, 2026-09-23). The Browse API hands back .../s-l225.jpg, and s-lNNN sizes the LONGEST edge,
 // so a portrait card photo is 169px wide - upscaled in every tile and 3x short on a retina phone. Measured live:
 // s-l225 169x225, s-l300 225x300, s-l500 375x500. Widths assume a portrait photo; a landscape one only errs toward a
@@ -802,6 +849,7 @@ export async function searchEbayLowest(
   // extra Browse call on exactly the cards that would otherwise be unpriced, and
   // nothing at all on the ones already working.
   const queries = [buildQuery(card, true), buildQuery(card, false)];
+  const marketplace = card.marketplace ?? DEFAULT_MARKETPLACE;
   const params = new URLSearchParams({
     // Include the collector number so the exact card ranks into the result window —
     // otherwise expensive chase cards (e.g. overnumbered) get pushed past the limit
@@ -818,17 +866,16 @@ export async function searchEbayLowest(
     // name + "signature" is enough to find it; identity is still enforced by the
     // filters below.
     q: queries[0],
-    filter: "buyingOptions:{FIXED_PRICE}",
+    filter: ["buyingOptions:{FIXED_PRICE}", ...locationFilters(marketplace, !!card.regional)].join(","),
     sort: "price",
     limit: "100",
   });
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
-    "X-EBAY-C-MARKETPLACE-ID": card.marketplace ?? DEFAULT_MARKETPLACE,
+    "X-EBAY-C-MARKETPLACE-ID": marketplace,
   };
-  if (EBAY_CAMPAIGN_ID) {
-    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
-  }
+  const ctx = endUserContext(marketplace);
+  if (ctx) headers["X-EBAY-C-ENDUSERCTX"] = ctx;
 
   if (!spend()) return null; // budget exhausted — don't make the call
 
@@ -948,6 +995,7 @@ export async function searchEbayLowest(
   // Sanity guard: a single can legitimately cost a bit more on eBay than in a
   // store, but not 8×+. A listing that far above the card's store value (and over
   // an absolute floor so cheap-card noise isn't over-filtered) is a mismatch.
+  cur = drop("local seller, postage stated", cur.filter((it) => sellerIsLocal(it, marketplace, !!card.regional) && postageStated(it)), cur);
   cur = drop(
     "not absurdly above store value",
     cur.filter((it) => {
@@ -1149,7 +1197,7 @@ export async function searchEbaySealed(
 
   const params = new URLSearchParams({
     q: `Riftbound ${name}`,
-    filter: "buyingOptions:{FIXED_PRICE}",
+    filter: ["buyingOptions:{FIXED_PRICE}", ...locationFilters(marketplace, !!language)].join(","),
     sort: "price",
     limit: "50",
   });
@@ -1157,9 +1205,8 @@ export async function searchEbaySealed(
     Authorization: `Bearer ${token}`,
     "X-EBAY-C-MARKETPLACE-ID": marketplace,
   };
-  if (EBAY_CAMPAIGN_ID) {
-    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
-  }
+  const ctx = endUserContext(marketplace);
+  if (ctx) headers["X-EBAY-C-ENDUSERCTX"] = ctx;
 
   if (!spend()) return null; // budget exhausted — don't make the call
 
@@ -1181,6 +1228,7 @@ export async function searchEbaySealed(
   const floor = sealedFloorCents(productType, referenceCents);
   const valid = items
     .filter((it) => it?.price?.value)
+    .filter((it) => sellerIsLocal(it, marketplace, !!language) && postageStated(it))
     // "Riftbound" is required in every other search, but a CN/KR reseller's title
     // very often keeps the Latin-script team name ("T1") while dropping or
     // translating the English game name — so a language search also accepts a
@@ -1344,6 +1392,8 @@ export async function searchEbayAuctions(opts: {
   // Values are comma-separated in one `filter` parameter. URLSearchParams
   // percent-encodes them, which is what the reference asks for.
   const filters = ["buyingOptions:{AUCTION}"];
+  // Sellers who deliver to (and, on the single-country sites, are in) the market (visitor feedback, 2026-10-31).
+  filters.push(...locationFilters(opts.marketplace));
   if (opts.endsWithinHours != null) {
     // Both bounds given explicitly. The reference documents the two-bound form
     // and an open-ended one; spelling out `now` costs nothing and says exactly
@@ -1367,9 +1417,8 @@ export async function searchEbayAuctions(opts: {
     Authorization: `Bearer ${token}`,
     "X-EBAY-C-MARKETPLACE-ID": opts.marketplace,
   };
-  if (EBAY_CAMPAIGN_ID) {
-    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
-  }
+  const ctx = endUserContext(opts.marketplace);
+  if (ctx) headers["X-EBAY-C-ENDUSERCTX"] = ctx;
 
   if (!spend()) return { items: [], ok: false }; // budget exhausted — don't call
 
