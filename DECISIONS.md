@@ -21043,3 +21043,19 @@ POST only, 503 until the token is set) still holds.
   eBay's hard limit out of reach. The import's 600 is unchanged, so nothing else gets more.
 * **Schedule.** The cron was `0 */4 * * *`, and GitHub dropped about half of those runs (28 to 31 Oct: three
   sweeps a day, not six). It is now minute 23. `tests/ebay-auctions.test.ts` pins both.
+
+## eBay rows: local sellers, postage stated — 2026-10-31
+
+**Owner** (passing on a WargameCompare visitor's feedback for every sister site): eBay rows from overseas sellers
+carried postage that made "a lot of wasted clicks".
+
+* **Search.** RiftCompare's Browse searches asked for no location at all, so a row could be a seller who does not
+  even ship to the buyer. Every search (singles, sealed, auctions) now asks for `deliveryCountry:<market>`, and on the
+  four single-country sites (AU, US, UK, CA) `itemLocationCountry:<market>` too (`locationFilters`). eBay Spain stands
+  for the whole EU, so it keeps any EU seller and `sellerIsLocal` drops the rest. eBay Singapore has almost no local
+  Riftbound sellers, so SG keeps any seller who ships there, priced delivered. A regional printing (Chinese, Korean)
+  is only sold from its own region, so it keeps any seller too.
+* **Postage.** The buyer's country and a central postcode go in `contextualLocation` (`endUserContext`), so eBay
+  quotes real postage, and the price path and sealed search keep no listing whose postage eBay does not state
+  (`postageStated`; the funnel stage "local seller, postage stated"). Ranking was already by delivered price.
+* Rows stored before this are replaced as the import reaches them.
