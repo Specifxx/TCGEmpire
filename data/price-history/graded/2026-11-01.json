@@ -4,8 +4,8 @@
   "basis": "Cheapest live eBay listing for each grader and grade of the card (PSA 10, BGS 9.5, ...) across the markets searched that day, converted to US cents. Keyed by card id, then by grade.",
   "prices": {
     "cmsmrj4xu000ckx4m6e3ar8f0": {
-      "BGS 9.5": 175000,
-      "PSA 10": 165665
+      "BGS 9.5": 150000,
+      "PSA 10": 165000
     },
     "cmsmrj4y3000dkx4mgouifnir": {
       "BGS 9.5": 99999,
@@ -50,7 +50,7 @@
     },
     "cmsmrsovr00202ouxlmory4y2": {
       "PSA 10": 10000,
-      "PSA 8": 5216,
+      "PSA 8": 5214,
       "PSA 9": 4999
     },
     "cmsmrsp1g00212ouxmnrpn9il": {
@@ -72,21 +72,21 @@
     },
     "cmsmrsyd5003o2ouxei04skox": {
       "PSA 10": 23658,
-      "PSA 9": 4655
+      "PSA 9": 4644
     },
     "cmsmrsyzs003s2oux68v50tse": {
       "CGC 10": 20922,
       "PSA 10": 19489
     },
     "cmsmrsz5f003t2ouxz5zhuzw9": {
-      "PSA 10": 14480,
+      "PSA 10": 14445,
       "PSA 9": 3300
     },
     "cmsmrt5hm004x2ouxqut3mbps": {
-      "PSA 10": 8345
+      "PSA 10": 8343
     },
     "cmsmrt5yq00502ouxqbw8swhc": {
-      "PSA 10": 15000
+      "PSA 10": 14446
     },
     "cmsmrt64e00512ouxsyt6xjmr": {
       "PSA 10": 7500
@@ -99,10 +99,16 @@
       "CGC 10": 10356
     },
     "cmsmrtk0o007h2oux7z3z1g7l": {
-      "PSA 9": 10343
+      "PSA 9": 10427
     },
     "cmsmrtknb007l2ouxpinsi6m2": {
       "PSA 10": 21438
+    },
+    "cmsmrtl9x007p2ouxr7a6a2ik": {
+      "PSA 10": 12500
+    },
+    "cmsmrtos2008b2oux52zd9m3z": {
+      "PSA 10": 7500
     },
     "cmsmrttcl00942ouxh15yk5pt": {
       "BGS 9.5": 47333,
@@ -125,7 +131,7 @@
     },
     "cmsmrtu4v00992ouxwfg7mqo9": {
       "BGS 10": 997914,
-      "PSA 10": 320000
+      "PSA 10": 300000
     },
     "cmsmrtuaj009a2oux1mrguo97": {
       "PSA 10": 16299
@@ -233,7 +239,7 @@
       "PSA 10": 9999
     },
     "cmsmrv51o00hi2ouxn930i3tc": {
-      "BGS 10": 300000,
+      "BGS 10": 249999,
       "BGS 9": 79422,
       "BGS 9.5": 84993,
       "PSA 10": 97467,
@@ -306,10 +312,11 @@
     },
     "cmsmrv8cf00i32ouxsrqneich": {
       "BGS 10": 390000,
-      "PSA 10": 216529
+      "PSA 10": 172500
     },
     "cmsmrv8i300i42ouxnkkhvang": {
       "CGC 9.5": 18925,
+      "PSA 10": 19000,
       "PSA 9": 7999
     },
     "cmsmrv8nq00i52ouxwkqihi2v": {
@@ -351,7 +358,7 @@
       "CGC 10": 15466
     },
     "cmsmrw1w000na2oux76shzubi": {
-      "PSA 10": 36510
+      "PSA 10": 36500
     },
     "cmsmrw80p00od2ouxaar33nbl": {
       "PSA 10": 14649
@@ -391,7 +398,7 @@
     },
     "cmsmrwg3400ps2ouxyp7yylq6": {
       "BGS 10": 1829044,
-      "PSA 9": 61309
+      "PSA 9": 55095
     },
     "cmsmrwgeh00pu2oux8x4useb3": {
       "BGS 9": 138866,
@@ -403,7 +410,7 @@
     },
     "cmsmrwhnu00q22ouxk2n47iqd": {
       "BGS 9.5": 80000,
-      "PSA 10": 116452
+      "PSA 10": 80000
     },
     "cmsmrwhtj00q32oux4nwg8i96": {
       "PSA 10": 38979
@@ -445,8 +452,8 @@
       "PSA 10": 267985
     },
     "cmsms3552000211ehab5le80n": {
-      "BGS 9.5": 18619,
-      "CGC 9.5": 10344,
+      "BGS 9.5": 18573,
+      "CGC 9.5": 10319,
       "PSA 10": 23657
     },
     "cmsms38f6000p11ehgo86y1yq": {
@@ -457,7 +464,7 @@
       "BGS 9.5": 10000
     },
     "cmsms3djr001p11ehlyrzr8p1": {
-      "PSA 10": 10000
+      "PSA 10": 11356
     },
     "cmsms3eos001x11eh8808z4pz": {
       "PSA 10": 37853
@@ -470,7 +477,7 @@
       "PSA 10": 33122
     },
     "cmsms3ifj002n11ehc7exb7jo": {
-      "BGS 10": 39856,
+      "BGS 10": 39760,
       "PSA 10": 18927
     },
     "cmsms3ipu002p11ehtfrqtrc2": {
@@ -489,7 +496,7 @@
       "PSA 10": 94634
     },
     "cmsms3s15004i11eh3pihhjwm": {
-      "BGS 9.5": 10000,
+      "BGS 9.5": 11356,
       "PSA 10": 28390
     },
     "cmsms3tgi004s11ehvccqoy26": {
@@ -502,7 +509,7 @@
       "PSA 10": 14999
     },
     "cmsms3xg8005k11ehpa56g07t": {
-      "PSA 10": 10000,
+      "PSA 10": 11356,
       "PSA 9": 10000
     },
     "cmsms3xle005l11ehpb0voqv7": {
@@ -517,7 +524,11 @@
     },
     "cmsms40ay006411eh2gqz2ljy": {
       "BGS 9.5": 11500,
+      "PSA 10": 25500,
       "PSA 9": 10000
+    },
+    "cmsms40vj006811ehdw8duqi1": {
+      "PSA 10": 22500
     },
     "cmsms9c4t002dhnqmeepyfhdd": {
       "BGS 9.5": 47316
