@@ -87,14 +87,23 @@ async function fetchRemaining(): Promise<number | null> {
 
 // Call once at the start of an eBay pass. Sets how many calls we may spend so we
 // stop with QUOTA_RESERVE to spare, regardless of how often the importer runs.
-export async function primeEbayBudget(): Promise<{ remaining: number | null; budget: number }> {
+//
+// `reserve` overrides QUOTA_RESERVE for one caller. Only the auction sweep uses
+// it (AUCTION_QUOTA_RESERVE in lib/ebay-auctions.ts): the price import spends
+// down to the full reserve by design, and a sweep held to the same line found
+// a budget of 0 and stored nothing (2026-10-31, DECISIONS.md "The auction sweep
+// spends from the reserve").
+export async function primeEbayBudget(
+  opts: { reserve?: number } = {},
+): Promise<{ remaining: number | null; budget: number }> {
   rateLimited = false;
   spentThisRun = 0;
+  const reserve = opts.reserve ?? QUOTA_RESERVE;
   const remaining = await fetchRemaining();
-  spendable = remaining == null ? FALLBACK_BUDGET : Math.max(0, remaining - QUOTA_RESERVE);
+  spendable = remaining == null ? FALLBACK_BUDGET : Math.max(0, remaining - reserve);
   if (spendable <= 0) rateLimited = true;
   console.log(
-    `eBay quota: ${remaining ?? "unknown"}/5000 remaining today → budget ${spendable} calls this run (reserve ${QUOTA_RESERVE}).`
+    `eBay quota: ${remaining ?? "unknown"}/5000 remaining today → budget ${spendable} calls this run (reserve ${reserve}).`
   );
   return { remaining, budget: spendable };
 }

@@ -9,7 +9,11 @@ name: Refresh auctions
 # schedule — and keeping them separate means a long price import can never delay
 # the board, and a failed sweep can never fail the price run.
 #
-# QUOTA: 12 eBay Browse calls per sweep — two per market (everything at the
+# QUOTA: the sweep stops at its own line, AUCTION_QUOTA_RESERVE (100), not the
+# price import's 600: the import spends down to 600, so a sweep held to that line
+# had a budget of 0 after every import (2026-10-31).
+#
+# 12 eBay Browse calls per sweep — two per market (everything at the
 # $500 bar, then graded slabs from $100, added 2026-10-05), one page each — so
 # 12 × 6 runs = 72 calls/day against eBay's 5,000/day limit, on top of the price
 # importer's ~2,850. Under 1% of the allowance. The per-card auction pass deleted
@@ -26,11 +30,11 @@ name: Refresh auctions
 
 on:
   schedule:
-    # Every 4 hours. Minute 0 is anchored by GitHub's own cron drift (see the note
-    # in refresh-prices.yml — a few hours of drift on a schedule is expected and
-    # is not a fault), which is harmless here: the board's freshness requirement
-    # is "within a few hours", not a wall-clock time.
-    - cron: "0 */4 * * *"
+    # Every 4 hours, at minute 23. It was minute 0 until 2026-10-31, and GitHub
+    # dropped about half of those runs (the top of the hour is its busiest slot):
+    # 28-31 Oct saw three sweeps a day, not six, so one empty sweep left the board
+    # 16 hours stale. A quiet minute is GitHub's own advice for scheduled jobs.
+    - cron: "23 */4 * * *"
   workflow_dispatch: # manual "Run workflow" button
 
 # Never run two sweeps at once — they upsert the same rows.

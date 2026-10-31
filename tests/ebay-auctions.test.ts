@@ -12,6 +12,7 @@ import {
   AUCTION_GRADED_MIN_USD_CENTS,
   AUCTION_GRADED_QUERY,
   AUCTION_QUERIES_PER_MARKET,
+  AUCTION_QUOTA_RESERVE,
 } from "../src/lib/ebay-auctions";
 import { EBAY_MAX_LIMIT, EBAY_MARKETPLACE, AUCTION_JUNK } from "../src/lib/ebay";
 import { COUNTRY_LIST } from "../src/lib/country";
@@ -164,7 +165,7 @@ test("lots and sealed product are NOT filtered out — that exclusion belongs to
 
 test("the sweep's worst-case cost is a small, flat share of the daily Browse quota", () => {
   const perSweep = AUCTION_MARKETS.length * AUCTION_PAGE_CAP * AUCTION_QUERIES_PER_MARKET;
-  const cron = /- cron: "0 \*\/(\d+) \* \* \*"/.exec(read(WORKFLOW));
+  const cron = /- cron: "\d+ \*\/(\d+) \* \* \*"/.exec(read(WORKFLOW));
   assert.ok(cron, "the workflow must keep an every-N-hours cron");
   const perDay = perSweep * (24 / Number(cron[1]));
   // 5,000/day limit, 600 reserve, ~2,850 already spent by the price and sealed
@@ -454,4 +455,21 @@ test("graded slabs get their own lower floor and their own search, deduped with 
   assert.match(code, /usdCentsToCountry\(AUCTION_GRADED_MIN_USD_CENTS, market\)/);
   assert.match(code, /if \(pass\.gradedOnly && !\(it\.grader \|\| isGradedListing\(it\.title\)\)\) continue;/, "raw lots never ride in under the lower bar");
   assert.match(code, /seen\.set\(it\.itemId,/, "one row per lot across both searches");
+});
+
+// 2026-10-31: the price import spends down to lib/ebay.ts's reserve by design, so a
+// sweep held to the same line found a budget of 0 after every import and the board
+// went 16 hours stale. The sweep keeps its own, lower line.
+test("the sweep stops at its own quota line, below the price import's reserve", () => {
+  const importReserve = Number(/EBAY_QUOTA_RESERVE \?\? (\d+)/.exec(read("src/lib/ebay.ts"))?.[1]);
+  assert.ok(importReserve > 0);
+  assert.ok(AUCTION_QUOTA_RESERVE > 0, "never zero: eBay's hard limit must stay out of reach");
+  // Room for several full sweeps between the import's line and the sweep's.
+  assert.ok(importReserve - AUCTION_QUOTA_RESERVE >= AUCTION_MARKETS.length * AUCTION_QUERIES_PER_MARKET * 6);
+  assert.match(read("src/lib/ebay-auctions.ts"), /primeEbayBudget\(\{ reserve: AUCTION_QUOTA_RESERVE \}\)/);
+});
+
+test("the sweep's schedule is off the top of the hour, where GitHub drops runs", () => {
+  const cron = /cron: "([^"]+)"/.exec(read(".github/workflows/refresh-auctions.yml"))?.[1] ?? "";
+  assert.notEqual(cron.split(" ")[0], "0");
 });
