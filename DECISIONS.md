@@ -21114,3 +21114,16 @@ reason to come back that search rankings alone don't. `/forum` (docs/forum.md):
   DiscussionForumPosting JSON-LD.
 - **Moderation:** the owner asks Claude; a post is removed by an edit to
   `forum.json` (`removeFromForum` in `src/lib/forum/core.ts`).
+
+## 2026-11-01: Search Console demand for the sister sites' eBay passes
+
+Compare Empire's eBay key (about 4,950 Browse calls a day) covers fewer than a fifth of its ~29,500 products
+over A$10 each day, so the owner asked that the calls go to what people search for and to expensive products.
+Search Console is the only demand signal Compare Empire has (it has no database of views), and the service
+account (`GSC_SA_KEY`) lives here. So `.github/workflows/sister-demand.yml` (daily 17:40 UTC, before Compare
+Empire's 19:10 price job) runs `scripts/sister-demand-export.mjs`: page-level clicks and impressions for 56 days,
+aggregated by path, written as `gsc-pages.json` to the `demand` branch of the site's own repo with
+`REPORTS_GITHUB_TOKEN` (the visitor-reports token, Contents read/write on the twelve site repos; nothing else
+writes with it here). The branch is an orphan with its own no-deploy `vercel.json`. Only page numbers leave
+Search Console, never a query. Watched in `JOBS` (`src/lib/ops/checks.ts`). Another sister site joins by adding
+a row to `SITES` and reading the file in its own eBay script.
