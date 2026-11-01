@@ -1203,17 +1203,18 @@ longer lands on its entry.
 
 ## Pokémon section (beta)
 
-- **Gone to DexCompare since 2026-10-30 (owner):** its database stopped answering on
-  2026-10-23 and every page was a 500. `POKEMON_PAUSED` (`lib/pokemon/flag.ts`) keeps it
-  off and 301s in `next.config.js` send `/pokemon/*` to DexCompare (type pages to its US
-  type pages, sets to its US sets, the rest to its region picker).
-  [2026-10-30](../DECISIONS.md#L20873), [2026-10-30](../DECISIONS.md#L20892)
+- **Back since 2026-11-01 (owner), with no database:** its data is committed JSON in
+  `data/pokemon/` (`lib/pokemon/store.ts`), written by `pokemon-import.yml` and committed
+  to main without the deploy marker (`scripts/pokemon/publish-data.sh`); traced into the
+  `/pokemon` functions only. On when the build carries `data/pokemon/products.json`
+  (`POKEMON_DATA_BUILT`, `next.config.js`) unless `NEXT_PUBLIC_POKEMON_SECTION=0`. The
+  2026-10-30 pause and its DexCompare 301s are gone; the import is in the ops monitor's jobs.
+  [2026-10-30](../DECISIONS.md#L20873), [2026-11-01](../DECISIONS.md#L21224)
 - **Self-contained, removable, off by default (2026-10-01, owner: "if there is
   an issue, I can just completely remove all the Pokemon"):** `/pokemon` prices
-  English Pokémon sealed (Sword & Shield onward) in all six markets from its OWN
-  Neon project (`POKEMON_DATABASE_URL`, `prisma/pokemon/schema.prisma`, its own
-  client) — never RM5 or history. On only when `NEXT_PUBLIC_POKEMON_SECTION=1`
-  AND the database is set; off, every route 404s and the nav link, homepage
+  English Pokémon sealed (Sword & Shield onward) in all six markets from its own
+  files (`data/pokemon/`, above; its own Neon project until 2026-10-23) — never
+  RM5 or history. Off, every route 404s and the nav link, homepage
   promo, sitemap section, robots.txt and llms.txt entries vanish. Six Riftbound
   files know it exists, pinned by `tests/pokemon-isolation.test.ts`; the
   removal table is in `docs/pokemon/README.md`. Daily import

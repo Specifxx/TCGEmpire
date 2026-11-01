@@ -1,26 +1,21 @@
-// The Pokémon section's request-path reads: TWO self-cached loaders, nothing
-// else touches the database while serving a page (egress rules 1-6, lib/db.ts).
+// The Pokémon section's request-path reads: TWO loaders over the committed
+// files in data/pokemon (lib/pokemon/store.ts). No database since 2026-11-01.
 //
 //   getPokemonCatalog(market)  every active product with ONE market's headline
-//                              figures, plus the set list. ~1,000 products ×
-//                              ~200 bytes, far under the ~1.2 MB cache ceiling.
+//                              figures, plus the set list.
 //   getPokemonProduct(slug)    one product with every market's offers and its
 //                              price series. A few KB.
 //
-// Both are cachedOrDirect (unstable_cache) under POKEMON_TAG with POKEMON_TTL,
-// purged by /api/pokemon/revalidate after each daily import. Never wrap either
-// in another unstable_cache, and never call one from inside one (egress rule 6,
-// tests/nested-cache.test.ts lists them as self-cached). A page reading them
-// must not export a `revalidate` ABOVE POKEMON_TTL: the loader's shorter TTL
-// would become the whole segment's (egress rule 5, the segment-TTL inversion
-// tests/segment-ttl-inversion.test.ts fails). The product page uses exactly
-// POKEMON_TTL; the grid pages are force-dynamic.
+// The files change only with a deploy, so both are memoised per warm function
+// (and per request through React's cache()); nothing is written to the Data
+// Cache. Never wrap either in an unstable_cache (tests/nested-cache.test.ts).
+// The product page keeps its `revalidate` of POKEMON_TTL; the grid pages are
+// force-dynamic.
 
-import { cache } from "react";
-import { cachedOrDirect } from "../price-history";
+import * as React from "react";
 import { OFFER_STALE_MS } from "../sealed-offers";
 import { COUNTRIES, type Country } from "../country";
-import { pokemonDb } from "./db";
+import { clearPokemonStore, pokemonData, productHistory } from "./store";
 import { tileFigures } from "./board";
 import { kindOrder, type PkKind } from "./kinds";
 import { perPackCents } from "./packs";
@@ -29,38 +24,22 @@ import type { PkCatalog, PkOfferRow, PkProductDetail, PkSetSummary, PkSource, Pk
 import { POKEMON_TAG, POKEMON_TTL } from "./cache-keys";
 export { POKEMON_TAG, POKEMON_TTL };
 
+// React's server `cache` exists only under Next's module resolution; tests
+// import this file outside Next, so fall back to a passthrough there (as
+// lib/riftboundstocks.ts does).
+const cache: <T extends (...args: never[]) => unknown>(fn: T) => T =
+  typeof (React as { cache?: unknown }).cache === "function" ? (React as unknown as { cache: typeof cache }).cache : (fn) => fn;
+
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
-const day = (d: Date | null | undefined) => (d ? d.toISOString().slice(0, 10) : null);
 
 // ── Catalogue ─────────────────────────────────────────────────────────────────
-async function computeCatalog(market: Country): Promise<PkCatalog> {
-  const db = pokemonDb();
-  const [products, offers, sets, sourceGroups] = await Promise.all([
-    db.pokemonProduct.findMany({
-      where: { active: true },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        kind: true,
-        series: true,
-        imageUrl: true,
-        releasedOn: true,
-        presale: true,
-        firstSeenAt: true,
-        setId: true,
-        packCount: true,
-        packCountFrom: true,
-      },
-    }),
-    // This market's rows plus the US market price every market references.
-    db.pokemonOffer.findMany({
-      where: { OR: [{ market }, { source: "tcgplayer_market" }] },
-      select: { productId: true, market: true, source: true, priceCents: true, currency: true, inStock: true, checkedAt: true },
-    }),
-    db.pokemonSet.findMany({ select: { id: true, slug: true, name: true, code: true, series: true, releasedOn: true } }),
-    db.pokemonOffer.groupBy({ by: ["source"] }),
-  ]);
+function computeCatalog(market: Country): PkCatalog {
+  const store = pokemonData();
+  const products = store.products.filter((p) => p.active);
+  // This market's rows plus the US market price every market references.
+  const offers = store.offers.filter((o) => o.market === market || o.source === "tcgplayer_market");
+  const sets = store.sets;
+  const sourceGroups = [...new Set(store.offers.map((o) => o.source))].map((source) => ({ source }));
 
   const rowsByProduct = new Map<number, PkOfferRow[]>();
   const now = Date.now();
@@ -70,7 +49,8 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
   // them look newer). Without a live listing, the newest TCGplayer market price.
   let oldestListing: Date | null = null;
   let newestReference: Date | null = null;
-  for (const o of offers) {
+  for (const stored of offers) {
+    const o = { ...stored, checkedAt: new Date(stored.checkedAt) };
     const row: PkOfferRow = {
       market: o.market,
       source: o.source as PkSource,
@@ -105,9 +85,9 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
       setName: set?.name ?? null,
       series: p.series,
       imageUrl: p.imageUrl,
-      releasedOn: day(p.releasedOn),
+      releasedOn: p.releasedOn,
       presale: p.presale,
-      firstSeenAt: p.firstSeenAt.toISOString(),
+      firstSeenAt: p.firstSeenAt,
       ...figures,
       packCount: p.packCount,
       packCountFrom: (p.packCountFrom as "contents" | "name" | null) ?? null,
@@ -130,7 +110,7 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
         name: s.name,
         code: s.code,
         series: s.series,
-        releasedOn: day(s.releasedOn),
+        releasedOn: s.releasedOn,
         productCount: list.length,
         imageUrl: face?.imageUrl ?? null,
       };
@@ -147,111 +127,82 @@ async function computeCatalog(market: Country): Promise<PkCatalog> {
   };
 }
 
-// One warm lambda answers repeat requests from memory, as getSealedGroups does
-// (lib/sealed-import.ts): Vercel's fan-out makes the data cache the real layer,
-// this only saves its round trip.
-type CatalogMemo = Map<Country, { at: number; data: PkCatalog }>;
+// The files change only with a deploy, so one warm function computes each
+// market's catalogue once and answers every later request from memory. No
+// unstable_cache: there is no database read to save, and a Data Cache entry
+// would only add writes.
+type CatalogMemo = Map<Country, PkCatalog>;
 const memo: CatalogMemo = ((globalThis as unknown as { __pokemonCatalog?: CatalogMemo }).__pokemonCatalog ??= new Map());
-const MEMO_TTL_MS = 15 * 60_000;
 
 export function clearPokemonMemo(): void {
   memo.clear();
+  productMemo.clear();
+  clearPokemonStore();
 }
 
-// React's cache() de-duplicates within one request: a page's generateMetadata
-// and its body both ask, and on a cold entry both used to miss and compute.
+// React's cache() de-duplicates within one request (generateMetadata and the body both ask).
 export const getPokemonCatalog = cache(async (market: Country): Promise<PkCatalog> => {
   const hit = memo.get(market);
-  if (hit && Date.now() - hit.at < MEMO_TTL_MS) return hit.data;
-  const data = await cachedOrDirect(() => computeCatalog(market), ["pokemon-catalog-v4", market], {
-    revalidate: POKEMON_TTL,
-    tags: [POKEMON_TAG],
-  });
-  memo.set(market, { at: Date.now(), data });
+  if (hit) return hit;
+  const data = computeCatalog(market);
+  memo.set(market, data);
   return data;
 });
 
 // ── One product ───────────────────────────────────────────────────────────────
-async function computeProduct(slug: string): Promise<PkProductDetail | null> {
-  const db = pokemonDb();
-  const p = await db.pokemonProduct.findUnique({
-    where: { slug },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      kind: true,
-      series: true,
-      imageUrl: true,
-      tcgplayerUrl: true,
-      releasedOn: true,
-      presale: true,
-      contents: true,
-      upc: true,
-      packCount: true,
-      packCountFrom: true,
-      active: true,
-      setId: true,
-      set: { select: { slug: true, name: true, code: true, releasedOn: true } },
-      offers: {
-        select: {
-          market: true,
-          source: true,
-          priceCents: true,
-          currency: true,
-          shippingCents: true,
-          url: true,
-          title: true,
-          inStock: true,
-          checkedAt: true,
-        },
-      },
-    },
-  });
+function computeProduct(slug: string): PkProductDetail | null {
+  const store = pokemonData();
+  const p = store.products.find((x) => x.slug === slug);
   if (!p || !p.active) return null;
-  const since = new Date(Date.now() - 365 * 86400_000);
-  const [history, siblings] = await Promise.all([
-    db.pokemonPricePoint.findMany({
-      where: { productId: p.id, series: "tcgplayer_market", day: { gte: since } },
-      orderBy: { day: "asc" },
-      select: { day: true, cents: true },
-      take: 400,
-    }),
+  const set = p.setId != null ? store.sets.find((s) => s.id === p.setId) : undefined;
+  const since = new Date(Date.now() - 365 * 86400_000).toISOString().slice(0, 10);
+  const history = productHistory(p.id, since).slice(-400);
+  const siblings =
     p.setId != null
-      ? db.pokemonProduct.findMany({
-          where: { setId: p.setId, active: true, id: { not: p.id } },
-          select: { slug: true, name: true, kind: true, imageUrl: true, packCount: true },
-          take: 80,
-        })
-      : Promise.resolve([]),
-  ]);
+      ? store.products
+          .filter((s) => s.setId === p.setId && s.active && s.id !== p.id)
+          .slice(0, 80)
+          .map((s) => ({ slug: s.slug, name: s.name, kind: s.kind, imageUrl: s.imageUrl, packCount: s.packCount }))
+      : [];
   return {
     id: p.id,
     slug: p.slug,
     name: p.name,
     kind: p.kind as PkKind,
     series: p.series,
-    set: p.set ? { slug: p.set.slug, name: p.set.name, code: p.set.code, releasedOn: day(p.set.releasedOn) } : null,
+    set: set ? { slug: set.slug, name: set.name, code: set.code, releasedOn: set.releasedOn } : null,
     imageUrl: p.imageUrl,
     tcgplayerUrl: p.tcgplayerUrl,
-    releasedOn: day(p.releasedOn),
+    releasedOn: p.releasedOn,
     presale: p.presale,
     contents: p.contents,
     upc: p.upc,
     packCount: p.packCount,
     packCountFrom: (p.packCountFrom as "contents" | "name" | null) ?? null,
-    offers: p.offers.map((o) => ({ ...o, source: o.source as PkSource, checkedAt: o.checkedAt.toISOString() })),
-    history: history.map((h) => ({ day: h.day.toISOString().slice(0, 10), cents: h.cents })),
+    offers: store.offers
+      .filter((o) => o.productId === p.id)
+      .map((o) => ({
+        market: o.market,
+        source: o.source as PkSource,
+        priceCents: o.priceCents,
+        currency: o.currency,
+        shippingCents: o.shippingCents,
+        url: o.url,
+        title: o.title,
+        inStock: o.inStock,
+        checkedAt: o.checkedAt,
+      })),
+    history,
     siblings: siblings
       .map((s) => ({ ...s, kind: s.kind as PkKind }))
       .sort((a, b) => kindOrder(a.kind) - kindOrder(b.kind) || a.name.localeCompare(b.name)),
   };
 }
 
-export const getPokemonProduct = cache(
-  async (slug: string): Promise<PkProductDetail | null> =>
-    cachedOrDirect(() => computeProduct(slug), ["pokemon-product-v2", slug], {
-      revalidate: POKEMON_TTL,
-      tags: [POKEMON_TAG],
-    }),
-);
+type ProductMemo = Map<string, PkProductDetail | null>;
+const productMemo: ProductMemo = ((globalThis as unknown as { __pokemonProducts?: ProductMemo }).__pokemonProducts ??= new Map());
+
+export const getPokemonProduct = cache(async (slug: string): Promise<PkProductDetail | null> => {
+  if (!productMemo.has(slug)) productMemo.set(slug, computeProduct(slug));
+  return productMemo.get(slug) ?? null;
+});

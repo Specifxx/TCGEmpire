@@ -13,9 +13,8 @@ const LANDING = ["/pokemon/booster-boxes", "/pokemon/elite-trainer-boxes", "/pok
 // kind hubs, price per pack, the grid, the set index and each set; product
 // pages only once the owner turns on POKEMON_INDEX_PRODUCTS, and then only
 // those passing the stage-1 gate (lib/pokemon/index-gate.ts), so the sitemap
-// never lists a page that answers noindex. A direct narrow read of the Pokémon
-// database, NOT lib/pokemon/data.ts's cached catalogue: that loader's six-hour
-// TTL would become this 24-hour route's (egress rule 5). lastmod is the last
+// never lists a page that answers noindex. Read from the committed files
+// (lib/pokemon/store.ts), not through lib/pokemon/data.ts. lastmod is the last
 // import that finished, the day the prices on these pages last changed.
 //
 // The gate is imported from ./index-gate, never ./seo: this module is on the
@@ -23,25 +22,20 @@ const LANDING = ["/pokemon/booster-boxes", "/pokemon/elite-trainer-boxes", "/pok
 // the page-metadata helpers that path has no business loading.
 export async function pokemonSitemapEntries(): Promise<SitemapEntry[]> {
   if (!pokemonEnabled()) return [];
-  // Loaded only when the section is on: lib/sitemap-sections.ts is imported by
-  // every Riftbound importer, whose workflows never generate this client.
-  const { pokemonDb } = await import("./db");
+  // Loaded only when the section is on, and dynamically: lib/sitemap-sections.ts
+  // is imported by every Riftbound importer, which has no business reading these files.
+  const { pokemonData } = await import("./store");
   // The blog registry, dynamically too: this module must load nothing beyond
   // ./index-gate statically (tests/pokemon-isolation.test.ts). Only published
   // posts are listed, and the index only once one exists (it 404s before).
   const { getPokemonPosts, pokemonPostSitemapEntries } = await import("./blog/index");
-  const db = pokemonDb();
-  const [lastRun, sets, products] = await Promise.all([
-    db.pokemonImportRun.findFirst({ where: { ok: true }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
-    db.pokemonSet.findMany({ where: { products: { some: { active: true } } }, select: { slug: true } }),
-    pokemonIndexProducts()
-      ? db.pokemonProduct.findMany({
-          where: { active: true, kind: { in: [...INDEX_STAGE1_KINDS] } },
-          select: { slug: true, imageUrl: true, kind: true, packCount: true },
-          take: 5000,
-        })
-      : Promise.resolve([] as { slug: string; imageUrl: string | null; kind: string; packCount: number | null }[]),
-  ]);
+  const store = pokemonData();
+  const lastRun = store.lastRun?.ok && store.lastRun.finishedAt ? { finishedAt: new Date(store.lastRun.finishedAt) } : null;
+  const activeSetIds = new Set(store.products.filter((p) => p.active && p.setId != null).map((p) => p.setId));
+  const sets = store.sets.filter((s) => activeSetIds.has(s.id));
+  const products = pokemonIndexProducts()
+    ? store.products.filter((p) => p.active && (INDEX_STAGE1_KINDS as readonly string[]).includes(p.kind))
+    : [];
   const lastModified = lastRun?.finishedAt ?? undefined;
   return [
     { url: `${SITE_URL}/pokemon`, changeFrequency: "daily" as const, priority: 0.7, lastModified },

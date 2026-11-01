@@ -7,8 +7,8 @@ import { getPokemonPosts } from "@/lib/pokemon/blog/index";
 // The Pokémon section's gate and frame (docs/pokemon/README.md).
 //
 // OFF → every /pokemon URL is the site's 404, rendered here before any page
-// reads anything: NEXT_PUBLIC_POKEMON_SECTION="1" and POKEMON_DATABASE_URL
-// must both be set (lib/pokemon/gate.ts pokemonEnabled). No middleware (a test
+// reads anything: the build must carry the section's files (data/pokemon) and
+// NEXT_PUBLIC_POKEMON_SECTION must not be "0" (lib/pokemon/gate.ts pokemonEnabled). No middleware (a test
 // forbids it) and no loading.tsx anywhere under this folder: adsense-guard
 // fails a loading.tsx above a page that calls notFound().
 //
