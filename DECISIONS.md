@@ -21306,6 +21306,32 @@ row here, there are tons of Origins boxes on eBay".
   `available` check held six hours, and picks the deals again from what is still open. The other five AU "In stock"
   stores answered `available: true`; their pages' text shows a hidden "Sold out" badge, which is theme markup, not stock.
 
+## 2026-11-01: The earnings forecast is three stated scenarios, not a fitted curve
+
+**Owner:** "the growth is a bit too ambitious … I highly doubt I'm going to be earning $250K next year … that's I would
+have generated 5 million dollars in sales, which is kind of crazy." This replaces the fitted, fading curve of
+"Earnings forecast: compounding, fading and seasonal, not a straight line" (2026-10-29).
+
+**Why the old one ran away.** It fitted a compounding rate to the log of weekly earnings, and our whole history was
+about six weeks of a young business doubling (much of it Radiance pre-orders). The fit hit the +10%-a-week clamp, and
+even fading over 180 days that compounds to ~13× the run rate: the "$250K next year". The clamp was a bound on noise, not on what is plausible for a business.
+
+**How it projects now** (`forecastQuarters`, `lib/earnings/core.ts`):
+- Run rate: the last 28 complete days (`FORECAST_RUN_DAYS`) per day, each day divided by its month's `SEASON`. AdSense
+  is left out of it (switched on and off three times since 10-26; back on 2026-11-01) and added instead as an assumed
+  amount a day per scenario.
+- Growth: a fixed monthly rate per scenario (`SCENARIOS`), compounding, never above `FORECAST_MAX_MONTHLY` (8%, ~2.5× a
+  year): Conservative −4% a month (Google traffic sliding after the Radiance release, as Search Console shows),
+  Base +2% (~+27% a year), Optimistic +6% (~2× a year). AdSense A$1.00 / 1.50 / 2.50 a day, grown the same way.
+- The observed change (last 28 days vs the 28 before) is shown for reference and never extrapolated.
+- Implied store sales: the eBay + TCGplayer part ÷ `ASSUMED_COMMISSION` (4.5%, the owner's ~4–5%), shown under every
+  figure, so a projection that needs an absurd sales volume is visible. Stripe, AdSense and Mediavine imply none.
+- Season, the two-day eBay lag and "a projection, never a figure anywhere else" are unchanged. "If growth stops" and
+  the ±1.28 SE band are gone: the band is now Conservative to Optimistic.
+
+On October's shape next year's three scenarios come out at roughly 0.7×, 1.2× and 1.7× the current annual run rate,
+instead of ~13×. Revisit the three rates with a full quarter of data (February 2027), and re-fit `SEASON` after a year.
+`growth/projection-model.py` in the project files (site-level visitors) is not this model and was not changed.
 ## 2026-11-01 — Admin analytics page from Vercel's Web Analytics API
 
 The owner: "another page on an admin called analytics … the line graph that compares the last seven days, 30 days, and

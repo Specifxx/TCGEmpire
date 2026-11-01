@@ -11,9 +11,11 @@ import {
   inRange,
   dailyTotals,
   forecastQuarters,
-  fadedGrowth,
+  growthFactor,
   SEASON,
-  FORECAST_FADE_DAYS,
+  SCENARIOS,
+  ASSUMED_COMMISSION,
+  FORECAST_MAX_MONTHLY,
   latestDayFigure,
   latestReportDay,
   linearTrend,
@@ -353,56 +355,55 @@ test("growth line: running total and a least-squares trend", () => {
   assert.equal(linearTrend([5, 5, 5])?.slope, 0);
 });
 
-// Forecast (2026-10-28; non-linear since 2026-10-29): compounding growth through
-// the log of weekly earnings, fading toward a plateau, scaled by the season.
+// Forecast (2026-10-28; scenarios with stated assumptions since 2026-11-01, owner:
+// "$250K next year … that's 5 million dollars in sales, which is kind of crazy").
 const season = (day: string) => SEASON[Number(day.slice(5, 7)) - 1];
-const dayIndex = (day: string) => Math.round((Date.parse(day) - Date.parse("2026-07-01")) / 86_400_000);
+const src = (key: SourceResult["key"], daily: { label: string; cents: number }[]) => ({ key, days: daily.map((d) => ({ day: d.label, currency: "AUD", cents: d.cents })) });
+const series = (from: string, to: string, f: (d: string, i: number) => number) => {
+  const out: { label: string; cents: number }[] = [];
+  let i = 0;
+  for (let d = from; d <= to; d = addDays(d, 1), i++) out.push({ label: d, cents: f(d, i) });
+  return out;
+};
+const NO_ADS = SCENARIOS.map((s) => ({ ...s, adsenseAudCentsPerDay: 0 }));
 
-test("forecast: flat seasonal earnings project the season, not a line; actual days count as earned", () => {
-  const daily: { label: string; cents: number }[] = [];
-  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1)) daily.push({ label: d, cents: 1000 * season(d) });
-  const f = forecastQuarters(daily, "2026-10-28")!;
+test("forecast: flat seasonal earnings project the season; actual days count as earned; scenarios are ordered", () => {
+  const f = forecastQuarters([src("ebay", series("2026-07-01", "2026-10-27", (d) => 1000 * season(d)))], "2026-10-28", "AUD", NO_ADS)!;
   assert.equal(f.from, "2026-10-26", "the last two days (eBay's lag) are projected, not counted as earned");
   assert.deepEqual(f.periods.map((p) => p.label), ["Q4 2026", "Q1 2027", "Q2 2027", "Q3 2027", "Q4 2027"]);
   assert.equal(f.months.length, 15);
-  assert.equal(f.growthPct30, 0);
+  assert.equal(f.perDayNow, 1000);
+  assert.equal(f.observedPct28, 0);
   assert.equal(f.periods[0].actualCents, Math.round(25 * 1000 * season("2026-10-01")));
-  const jan = f.months.find((m) => m.label === "2027-01")!;
-  assert.equal(jan.cents, Math.round(31 * 1000 * SEASON[0]), "January is the lull");
-  assert.equal(jan.lowCents, jan.cents, "a perfect fit has no range");
   const dec = f.months.find((m) => m.label === "2026-12")!;
-  assert.ok(dec.cents > jan.cents * 1.3, "December peak, January dip");
-  assert.equal(f.plateauPerDay, 1000);
+  const jan = f.months.find((m) => m.label === "2027-01")!;
+  assert.ok(dec.scenarios.base.cents > jan.scenarios.base.cents * 1.3, "December peak, January dip");
+  for (const p of [...f.periods.slice(1), ...f.years])
+    assert.ok(p.scenarios.conservative.cents < p.scenarios.base.cents && p.scenarios.base.cents < p.scenarios.optimistic.cents, p.label);
 });
 
-test("forecast: compounding growth slows toward a plateau instead of running away", () => {
-  const daily: { label: string; cents: number }[] = [];
-  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1)) daily.push({ label: d, cents: 1000 * Math.exp(0.01 * dayIndex(d)) * season(d) });
-  const f = forecastQuarters(daily, "2026-10-28")!;
-  assert.ok(Math.abs(f.growthPct30 - 35) < 1, `about +35% a month, got ${f.growthPct30}`);
-  const perDay = (m: string) => {
-    const p = f.months.find((x) => x.label === m)!;
-    return p.cents / (Number(p.to.slice(8)) * season(p.from));
-  };
-  // Deseasonalised month-on-month growth shrinks: compounding that fades.
-  const early = perDay("2027-01") / perDay("2026-12");
-  const late = perDay("2027-12") / perDay("2027-11");
-  assert.ok(early > late && late > 1, `${early} then ${late}`);
-  assert.ok(f.plateauPerDay > perDay("2027-12"), "still below the plateau at the end of 2027");
-  assert.ok(Math.abs(fadedGrowth(0.01, 1e6) - 0.01 * FORECAST_FADE_DAYS) < 1e-9);
+test("forecast: a business that doubled in six weeks is NOT extrapolated; growth is the scenario's, capped", () => {
+  // A business that doubled in six weeks (the shape that made the old fit say ~13× a year).
+  const daily = series("2026-09-01", "2026-10-30", (d, i) => Math.round(2000 * Math.exp(0.02 * i)));
+  const f = forecastQuarters([src("ebay", daily)], "2026-11-01", "AUD", NO_ADS)!;
+  assert.ok(f.observedPct28! > 50, "the doubling is reported…");
+  const runRate = f.perDayNow * 365;
+  const next = f.years[1].scenarios;
+  assert.ok(next.optimistic.cents < runRate * 2.5, `…but the optimistic year is ${next.optimistic.cents} vs run rate ${runRate}`);
+  assert.ok(next.base.cents < runRate * 1.4 && next.base.cents > runRate * 0.9);
+  assert.ok(next.conservative.cents < runRate);
+  // Implied sales = affiliate earnings ÷ commission.
+  assert.equal(next.base.salesCents, Math.round(next.base.cents / ASSUMED_COMMISSION));
+  assert.ok(SCENARIOS.every((s) => s.monthly <= FORECAST_MAX_MONTHLY));
+  assert.ok(Math.abs(growthFactor(1, 30) - (1 + FORECAST_MAX_MONTHLY)) < 1e-9, "a scenario cannot exceed the cap");
 });
 
-test("forecast: noisy data gives a range; a falling business shrinks but never below 0; too little data is null", () => {
-  const noisy: { label: string; cents: number }[] = [];
-  let i = 0;
-  for (let d = "2026-07-01"; d <= "2026-10-27"; d = addDays(d, 1), i++) noisy.push({ label: d, cents: (2000 + 5 * i) * (1 + (i % 9) / 20 - 0.2) });
-  const f = forecastQuarters(noisy, "2026-10-28")!;
-  for (const p of f.periods.slice(1)) assert.ok(p.lowCents < p.cents && p.cents < p.highCents, p.label);
-  const falling = noisy.map((d, k) => ({ label: d.label, cents: Math.max(1, 5000 - 45 * k) }));
-  const g = forecastQuarters(falling, "2026-10-28")!;
-  assert.ok(g.months.every((p) => p.lowCents >= 0 && p.cents >= 0));
-  assert.ok(g.growthPct30 < 0);
-  assert.ok(g.periods[3].cents < g.periods[1].cents);
-  assert.equal(forecastQuarters(noisy.slice(-20), "2026-10-28"), null);
+test("forecast: only eBay and TCGplayer imply sales; AdSense is an assumption, not the run rate; too little data is null", () => {
+  const daily = series("2026-08-01", "2026-10-30", () => 1000);
+  const f = forecastQuarters([src("ebay", daily), src("stripe", daily), src("adsense", daily)], "2026-11-01", "AUD")!;
+  assert.ok(Math.abs(f.affiliatePerDayNow * 2 - f.perDayNow) <= 1, "AdSense's history is left out of the run rate");
+  const y = f.years[1].scenarios.base;
+  assert.ok(y.salesCents < (y.cents / ASSUMED_COMMISSION) * 0.6, "Stripe and AdSense imply no store sales");
+  assert.equal(forecastQuarters([src("ebay", daily.slice(-20))], "2026-11-01", "AUD"), null);
   assert.deepEqual(dailyTotals([{ days: [{ day: "2026-10-01", currency: "AUD", cents: 5 }, { day: "2026-10-29", currency: "AUD", cents: 9 }] }], "2026-10-28", "AUD"), [{ label: "2026-10-01", cents: 5 }]);
 });
