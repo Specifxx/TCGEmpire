@@ -6301,11 +6301,16 @@ Once you have a list, **[Best Basket](/guides/best-basket-cheapest-riftbound-dec
     slug: "how-a-riftbound-deck-is-built",
     category: "guide",
     title: "How a Riftbound Deck Is Built",
+    // Intent pass 2026-11-01: "riftbound deck size" (rising, ~520 impressions in
+    // 90 days at position 9) was landing on the CARD-size guide, which answers a
+    // different question. This page owns deck size; the numbers lead the title
+    // and the snippet so Google can tell the two apart.
+    seoTitle: "Riftbound Deck Size: 40 Cards, 12 Runes, 3 Battlefields",
     excerpt:
-      "Legend, Champion, main deck, runes, battlefields and the 10-card side deck — the anatomy of a Riftbound deck, explained with real examples.",
+      "A Riftbound deck is a Legend, a 40-card main deck, 12 runes and 3 battlefields, plus a 10-card side deck: 66 cards. Each part explained.",
     author: "RiftCompare",
     date: "2026-06-06",
-    updated: "2026-08-04",
+    updated: "2026-11-01",
     readMins: 4,
     tags: ["beginner", "deckbuilding"],
     faq: [
