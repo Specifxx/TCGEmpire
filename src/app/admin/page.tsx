@@ -62,6 +62,12 @@ const TOOLS: Tool[] = [
     desc: "Google clicks, card views, eBay link clicks and earnings: 28 days a bar each, and this week against last week.",
   },
   {
+    href: "/admin/analytics",
+    title: "Analytics",
+    icon: "📉",
+    desc: "Visitors, page views and buy clicks for every site on one chart: 7 and 30 days, 90 days and 12 months, with an all-sites line and a running total.",
+  },
+  {
     href: "/admin/earnings",
     title: "Earnings",
     icon: "💰",

@@ -21305,3 +21305,29 @@ row here, there are tons of Origins boxes on eBay".
   runs its likely deals (twice the shown count) through `withLiveStock`, the pre-order pages' one-way Shopify
   `available` check held six hours, and picks the deals again from what is still open. The other five AU "In stock"
   stores answered `available: true`; their pages' text shows a hidden "Sold out" badge, which is theme markup, not stock.
+
+## 2026-11-01 — Admin analytics page from Vercel's Web Analytics API
+
+The owner: "another page on an admin called analytics … the line graph that compares the last seven days, 30 days, and
+90 days, 12 months of all of the websites on that one graph … a line to show the cumulative total … it can also focus
+on … the buy_click events, and compare that". The visit numbers were only in Vercel's dashboard, one project at a
+time, and the only way a session had read them was the dashboard's internal endpoint, which rides a browser login.
+
+- **Source.** Vercel's public Web Analytics API (`GET /v1/query/web-analytics/visits/aggregate` and
+  `events/aggregate`, bearer token + `teamId` + `projectId`), never the internal endpoint
+  (`tests/admin-analytics.test.ts`). Token `VERCEL_ANALYTICS_TOKEN`, falling back to `VERCEL_BILLING_TOKEN` (both are
+  team-scoped Vercel tokens), with `VERCEL_TEAM_ID`; Production env of `riftcompare`, server-only. Not set → the page
+  says what to add and nothing else changes.
+- **Every site without a list to keep.** The team's projects come from `GET /v10/projects` and map to sites through the
+  earnings dashboard's `siteForProject`, so a new site shows up by itself and a project with Web Analytics off is
+  listed as such. Four requests a project (visits and `buy_click`, by day for 90 days and by week for 12 months, each
+  under the API's 100-row limit), four projects at a time, memoised 30 minutes; "Refresh" bypasses it. No database.
+- **What it draws** (`/admin/analytics`, `lib/analytics/series.ts`, pure): one line per site for visitors, page views,
+  buy clicks or buy clicks per 100 visitors; 7 / 30 / 90 days (daily) or 12 months (weekly); an all-sites line (always
+  every site, even ones hidden from the chart) and a running total. A running rate is clicks so far ÷ visitors so far,
+  never a sum of percentages. The table under it totals each site for the range, with the change against the period
+  before for 7 and 30 days.
+- **Visitors are summed per bucket**, so a visitor who returns on three days counts three times; Vercel's dashboard
+  counts unique visitors per range and reads lower. The page says so rather than spend a fifth request per project.
+- A separate page, not a section of `/admin/earnings`: the owner moved it there, and it keeps clear of the earnings
+  page's own rework.
