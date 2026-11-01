@@ -21332,6 +21332,7 @@ even fading over 180 days that compounds to ~13× the run rate: the "$250K next 
 On October's shape next year's three scenarios come out at roughly 0.7×, 1.2× and 1.7× the current annual run rate,
 instead of ~13×. Revisit the three rates with a full quarter of data (February 2027), and re-fit `SEASON` after a year.
 `growth/projection-model.py` in the project files (site-level visitors) is not this model and was not changed.
+
 ## 2026-11-01 — Admin analytics page from Vercel's Web Analytics API
 
 The owner: "another page on an admin called analytics … the line graph that compares the last seven days, 30 days, and
