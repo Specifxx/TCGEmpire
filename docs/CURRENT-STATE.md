@@ -1322,13 +1322,15 @@ longer lands on its entry.
   for OG images and email.
   [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713)
 - **Seasons and scroll motion (2026-10-16):** a season is a local-date window
-  (`lib/season.ts`; Halloween 16-31 Oct) stamped as `data-season` on `<html>`
-  before paint, so it starts and ends with no deploy; `?season=halloween|off`
-  previews it. Anything a boot script stamps outside React's props needs an
+  (`lib/season.ts`; Halloween 16-31 Oct, Christmas 1 Nov to 26 Dec) stamped
+  as `data-season` on `<html>` before paint, so it starts and ends with no
+  deploy; `?season=halloween|christmas|off` previews it. Anything a boot script stamps outside React's props needs an
   observer to survive a failed hydration, which resets `<html>`/`<body>`
   attributes ([2026-10-16](../DECISIONS.md#L17916)). Season markup lives in
-  its own components (`NocturneComing`, `HalloweenDecor`), so a season comes
-  out by deleting them.
+  its own components (`NocturneComing`, `HalloweenDecor`, `ChristmasDecor`,
+  `ChristmasGifts`), so a season comes out by deleting them. Christmas
+  decoration is shared CSS ("xmas-common", the same block on every sister
+  site) and art in `public/xmas/` ([2026-11-01](../DECISIONS.md#L21063)).
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired

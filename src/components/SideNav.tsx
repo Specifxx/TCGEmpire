@@ -199,6 +199,9 @@ export function SideNav() {
       {/* Halloween: a cobweb in the rail's top corner, on every page while the
           season lasts (globals.css .rb-rail-web; lib/season.ts). */}
       <span aria-hidden="true" className="rb-rail-web" />
+      {/* Christmas: a stocking hung from the same corner (globals.css
+          .rb-rail-stocking; until Boxing Day). */}
+      <span aria-hidden="true" className="rb-rail-stocking" />
       {/* ── Brand ─────────────────────────────────────────────────────────
           The rail owns the brand from lg up, because it runs the full page
           height and reaches the top-left corner the header's own mark used to
