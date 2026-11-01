@@ -789,24 +789,30 @@ test("the rotating market is never the one dropped", () => {
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
     const rotatingAt = codes.findIndex((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
-    assert.equal(rotatingAt, 0, `day ${day}: the rotating market must search FIRST, got ${codes.join("→")}`);
+    // Since 2026-11-01 the US searches first (owner: "prioritise the US"); the
+    // rotating market comes straight after it, ahead of every other daily market.
+    const usFirst = EBAY_ALWAYS_MARKETS.some((m) => m.country === "US") ? 1 : 0;
+    assert.equal(rotatingAt, usFirst, `day ${day}: the rotating market must search right after the US, got ${codes.join("→")}`);
+    assert.ok(rotatingAt < codes.length - 1, `day ${day}: the rotating market sits last`);
   }
 });
 
-test("every always-market takes the position most exposed to starvation", () => {
-  // The mirror of the test above, and the one that actually matters: giving the
-  // rotating market first claim is only fair if the trailing slot it no longer
-  // occupies is SHARED among the daily markets rather than handed to one of them
-  // permanently. A fixed [AU, US] order meant AU was never once dropped and US
-  // always was — the 2026-08-05 bug this alternation was introduced to fix, and
-  // which is easy to reintroduce by "simplifying" ebayMarketsForDay.
+test("the US searches first every day; the other daily markets share the last slot", () => {
+  // Owner, 2026-11-01: "the eBay API for all websites should also prioritise the
+  // US". Until then the US shared the trailing slot with AU (the 2026-08-05 fix
+  // for the US always being dropped). It now never sits there: it searches first,
+  // so a latched budget discards another market's pass, never the US's. The
+  // trailing slot rotates among the OTHER daily markets, so none of them is the
+  // permanent casualty (with AU the only other one today, AU always carries it).
   const trailers = new Set<string>();
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
+    assert.equal(codes[0], "US", `day ${day}: the US must search first, got ${codes.join("→")}`);
     trailers.add(codes[codes.length - 1]);
   }
   for (const m of EBAY_ALWAYS_MARKETS) {
-    assert.ok(trailers.has(m.country), `${m.country} never sits last — every other always-market carries its risk`);
+    if (m.country === "US") assert.ok(!trailers.has("US"), "the US must never sit last");
+    else assert.ok(trailers.has(m.country), `${m.country} never sits last — every other daily market carries its risk`);
   }
   for (const m of EBAY_ROTATING_MARKETS) {
     assert.ok(!trailers.has(m.country), `${m.country} rotates but still sits last — see the test above`);

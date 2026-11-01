@@ -804,13 +804,24 @@ export function ebayDayIndex(): number {
 }
 
 export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
-  const n = EBAY_ALWAYS_MARKETS.length;
+  // ── THE US SEARCHES FIRST, EVERY DAY (owner, 2026-11-01) ───────────────────
+  // "The eBay API for all websites should also prioritise the US." The US is the
+  // default market and the largest EPN payout, so it now has first claim on the
+  // quota every day, ahead of even the rotating market, and is never the market
+  // a latched budget discards. The other daily markets (AU today) still rotate
+  // among themselves for the trailing slot below, and the rotating market keeps
+  // the place straight after the US, so it is still never last (the 2026-08-23
+  // reasoning below holds for everything after the US).
+  const us = EBAY_ALWAYS_MARKETS.filter((m) => m.country === "US");
+  const rest = EBAY_ALWAYS_MARKETS.filter((m) => m.country !== "US");
+  const n = rest.length;
   // `% n` twice with an added n: dayIndex is derived from a clock and is always
   // positive today, but a negative index would otherwise produce a negative
   // slice offset and silently return a SHORTER market list — a dropped market,
   // not an error.
   const offset = n === 0 ? 0 : ((dayIndex % n) + n) % n;
-  const always = [...EBAY_ALWAYS_MARKETS.slice(offset), ...EBAY_ALWAYS_MARKETS.slice(0, offset)];
+  const others = [...rest.slice(offset), ...rest.slice(0, offset)];
+  const always = [...us, ...others];
   // No rotating markets today. Indexing an empty array here would yield
   // `undefined` and append it, and the pass would crash on `mkt.marketplace`
   // rather than simply searching the always-markets.
@@ -838,7 +849,7 @@ export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
   // casualty is always one of the daily markets, which lose the least by being
   // skipped, and which one it is still alternates by day via `offset` above —
   // the 2026-08-05 fix, intact.
-  return [today, ...always];
+  return [...us, today, ...others];
 }
 
 // EBAY_CA_RETAILER moved to constants.ts (2026-08-20) so sealed-import.ts can
