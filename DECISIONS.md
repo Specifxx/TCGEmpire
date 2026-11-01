@@ -21286,3 +21286,22 @@ US → today's rotating market → AU. The US has first claim on the quota every
 market keeps the place ahead of every other daily market (the 2026-08-23 reasoning still holds for everything after the
 US); AU, also daily, now carries the trailing slot alone and loses at most a day when a run overspends. Which markets run
 each day, and the chase pass that follows the same list, are unchanged (`tests/affiliate-priority.test.ts`).
+
+## 2026-11-01 — eBay sealed searches ask for the floor; Black Friday re-checks stock at the store
+
+The owner, on the AU Origins Booster Box on /black-friday: "some prices are out of stock … eBay should have a price
+row here, there are tons of Origins boxes on eBay".
+
+- **No eBay box row in any market.** `searchEbaySealed` sorts by price, reads 50 results, and applied the price floor
+  (half the store reference, or the per-type minimum) only afterwards. Origins has a large cheap halo on eBay (packs,
+  singles, protectors that all say "Origins Booster Box"), so the 50 cheapest were all under the floor and the search
+  came back empty every day in AU, US and UK. The floor now goes into the query as `price:[floor]` with the
+  marketplace's `priceCurrency` (`EBAY_MARKETPLACE_CURRENCY`), so the 50 read are the cheapest plausible listings; the
+  post-filter is unchanged. Second cause: `\bcard\b` in the sealed exclusion threw out every title that spells out
+  "Trading Card Game". `sealedExclusionText` blanks that phrase (and "card game") before the test; a single, code or
+  art card is still excluded (`tests/ebay-sealed-floor.test.ts`).
+- **Stale stock.** The page reads the daily snapshot, so a store that sold its last box after the export kept its "In
+  stock" badge for up to a day (Eternal Magic's A$350 box, checked at the store: `available: false`). /black-friday now
+  runs its likely deals (twice the shown count) through `withLiveStock`, the pre-order pages' one-way Shopify
+  `available` check held six hours, and picks the deals again from what is still open. The other five AU "In stock"
+  stores answered `available: true`; their pages' text shows a hidden "Sold out" badge, which is theme markup, not stock.
