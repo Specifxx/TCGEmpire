@@ -13,17 +13,27 @@ import { SEASON_BOOT_SCRIPT, seasonAt, seasonMarkupLive } from "../src/lib/seaso
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const at = (y: number, m: number, d: number) => new Date(y, m - 1, d, 12);
 
-test("Halloween runs 16-31 October, and is gone on 1 November", () => {
+test("Halloween runs 16-31 October, and Christmas takes over on 1 November", () => {
   assert.equal(seasonAt(at(2026, 10, 15)), null);
   assert.equal(seasonAt(at(2026, 10, 16)), "halloween");
   assert.equal(seasonAt(at(2026, 10, 31)), "halloween");
-  assert.equal(seasonAt(at(2026, 11, 1)), null);
+  assert.equal(seasonAt(at(2026, 11, 1)), "christmas");
   assert.equal(seasonAt(at(2027, 10, 20)), "halloween", "it comes back every year");
   // The markup is in the HTML from a day before to a day after, for the page cache.
   assert.equal(seasonMarkupLive("halloween", at(2026, 10, 15)), true);
   assert.equal(seasonMarkupLive("halloween", at(2026, 11, 1)), true);
   assert.equal(seasonMarkupLive("halloween", at(2026, 11, 2)), false);
   assert.equal(seasonMarkupLive("halloween", at(2026, 10, 14)), false);
+});
+
+test("Christmas runs 1 November to Boxing Day, and is gone on 27 December", () => {
+  assert.equal(seasonAt(at(2026, 11, 1)), "christmas");
+  assert.equal(seasonAt(at(2026, 12, 25)), "christmas");
+  assert.equal(seasonAt(at(2026, 12, 26)), "christmas");
+  assert.equal(seasonAt(at(2026, 12, 27)), null);
+  assert.equal(seasonAt(at(2027, 1, 2)), null);
+  assert.equal(seasonMarkupLive("christmas", at(2026, 12, 27)), true, "a day of slack for the page cache");
+  assert.equal(seasonMarkupLive("christmas", at(2026, 12, 28)), false);
 });
 
 function boot(date: Date, search = ""): string | null {
@@ -42,11 +52,13 @@ function boot(date: Date, search = ""): string | null {
 }
 
 test("the boot script agrees with seasonAt(), takes a ?season= override, and never throws", () => {
-  for (const d of [at(2026, 10, 15), at(2026, 10, 16), at(2026, 10, 31), at(2026, 11, 1), at(2026, 3, 3)]) {
+  for (const d of [at(2026, 10, 15), at(2026, 10, 16), at(2026, 10, 31), at(2026, 11, 1), at(2026, 12, 26), at(2026, 12, 27), at(2026, 3, 3)]) {
     assert.equal(boot(d), seasonAt(d), d.toDateString());
   }
   assert.equal(boot(at(2026, 3, 3), "?season=halloween"), "halloween", "preview it out of season");
   assert.equal(boot(at(2026, 10, 20), "?a=1&season=off"), null, "switch it off in season");
+  assert.equal(boot(at(2026, 3, 3), "?season=christmas"), "christmas", "preview Christmas out of season");
+  assert.equal(boot(at(2026, 11, 20), "?season=bogus"), null, "an unknown season is off");
   assert.doesNotThrow(() => vm.runInContext(SEASON_BOOT_SCRIPT, vm.createContext({})));
 });
 
@@ -153,5 +165,45 @@ test("the Halloween set dressing is season-gated decoration: hidden by default, 
   for (const f of ["public/brand/cobweb.svg", "public/brand/pumpkin.svg"]) {
     const svg = read(f);
     assert.ok(svg.startsWith("<svg") && svg.length < 4000, `${f} stays a small vector file`);
+  }
+});
+
+test("the Christmas night keeps every 4.5:1 text guarantee of the dark palette", () => {
+  const css = read("src/app/globals.css");
+  const vars = (sel: string) => {
+    const i = css.indexOf(`${sel} {`);
+    assert.ok(i >= 0, `expected a "${sel} {" block`);
+    const out: Record<string, string> = {};
+    for (const m of css.slice(i, css.indexOf("\n}", i)).matchAll(/--(c-[a-z0-9-]+):\s*([^;]+);/g)) out[m[1]] = m[2].trim();
+    return out;
+  };
+  const dark = vars(":root");
+  const night = { ...dark, ...vars(':root[data-season="christmas"]:not([data-theme="light"])') };
+  for (const surface of ["c-ink-950", "c-ink-900", "c-ink-850"]) {
+    for (const text of ["c-white", "c-slate-300", "c-slate-400", "c-slate-500", "c-slate-600", "c-accent", "c-brand-400", "c-up", "c-down", "c-gold", "c-rose-300", "c-rose-400", "c-red-400", "c-emerald-400", "c-amber-300", "c-sky-300", "c-sky-400"]) {
+      const ratio = contrast(night[text], night[surface]);
+      assert.ok(ratio >= 4.5, `christmas: ${text} on ${surface} is ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.ok(lum(night["c-ink-950"]) < 0.01 && lum(night["c-ink-900"]) < 0.01, "still a dark theme");
+});
+
+test("the Christmas set dressing is season-gated decoration that never takes a tap", () => {
+  const css = read("src/app/globals.css");
+  assert.match(css, /\.xmas-only \{\s*display: none !important;/);
+  assert.match(css, /:root\[data-season="christmas"\] \.xmas-only \{\s*display: block !important;/);
+  for (const sel of [".xmas-snow {", ".xmas-lights {", ".xmas-art {", ".rb-xmas {"]) {
+    const i = css.indexOf(sel);
+    assert.ok(i >= 0, sel);
+    assert.match(css.slice(i, css.indexOf("}", i)), /pointer-events: none;/, `${sel} must not take taps`);
+  }
+  const decor = read("src/components/home/ChristmasDecor.tsx");
+  assert.match(decor, /if \(!seasonMarkupLive\("christmas"\)\) return null;/);
+  assert.match(decor, /aria-hidden="true"/);
+  assert.match(read("src/components/home/CinematicHero.tsx"), /<ChristmasDecor \/>/);
+  assert.match(read("src/components/home/ChristmasGifts.tsx"), /if \(!seasonMarkupLive\("christmas"\)\) return null;/);
+  for (const f of ["lights", "santa-hat", "xmas-tree", "stocking", "candy-cane", "gift", "snowflake", "holly"]) {
+    const svg = read(`public/xmas/${f}.svg`);
+    assert.ok(svg.startsWith("<svg") && svg.length < 4000, `${f}.svg stays a small vector file`);
   }
 });

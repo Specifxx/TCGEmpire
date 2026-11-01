@@ -16,6 +16,12 @@ import { useEffect, useRef } from "react";
 // spider hangs from each corner cobweb (HalloweenDecor), scuttling up its
 // thread when the pointer comes near and creeping back down after.
 //
+// Christmas (html[data-season="christmas"], 1 November to Boxing Day; owner,
+// 2026-11-01: "all of those lights and orange dots … can be snowflakes or
+// snow going down"): the embers become snow falling through the hero, the big
+// ones six-armed flakes that turn as they fall. It still parts around the
+// pointer, and a click throws white, red and gold sparkles.
+//
 // Built so it costs the page nothing it cares about:
 //   - pure decoration on a <canvas> behind the content, aria-hidden and
 //     pointer-events:none; the pointer listeners sit on the hero section,
@@ -65,7 +71,7 @@ interface Eyes {
 }
 
 // [rgb, weight] per palette entry; weights pick a mote's colour.
-const PALETTES: Record<"rift" | "halloween", Record<Theme, [string, number][]>> = {
+const PALETTES: Record<"rift" | "halloween" | "christmas", Record<Theme, [string, number][]>> = {
   rift: {
     dark: [["239,125,0", 0.68], ["242,180,90", 0.22], ["56,189,248", 0.1]],
     light: [["224,111,0", 0.68], ["184,134,42", 0.22], ["3,105,161", 0.1]],
@@ -73,6 +79,13 @@ const PALETTES: Record<"rift" | "halloween", Record<Theme, [string, number][]>> 
   halloween: {
     dark: [["239,125,0", 0.4], ["167,139,250", 0.32], ["125,211,252", 0.14], ["242,180,90", 0.14]],
     light: [["224,111,0", 0.42], ["109,40,217", 0.34], ["3,105,161", 0.12], ["184,134,42", 0.12]],
+  },
+  // Christmas: the embers are snow. Mostly white flakes with a few icy blue
+  // ones; the last two entries (red, gold) are only for the sparks a click
+  // throws, so they carry no weight in the drift.
+  christmas: {
+    dark: [["255,255,255", 0.78], ["186,230,253", 0.22], ["248,113,113", 0], ["253,224,71", 0]],
+    light: [["120,160,200", 0.7], ["56,120,180", 0.3], ["200,30,50", 0], ["190,140,20", 0]],
   },
 };
 
@@ -90,6 +103,35 @@ function sprite(rgb: string): HTMLCanvasElement {
   return c;
 }
 
+// A six-armed snowflake, drawn once per colour and stamped for the big flakes.
+function flakeSprite(rgb: string): HTMLCanvasElement {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const g = c.getContext("2d")!;
+  g.translate(32, 32);
+  g.strokeStyle = `rgba(${rgb},0.95)`;
+  g.lineWidth = 3;
+  g.lineCap = "round";
+  g.shadowColor = `rgba(${rgb},0.8)`;
+  g.shadowBlur = 6;
+  for (let i = 0; i < 6; i++) {
+    g.rotate(Math.PI / 3);
+    g.beginPath();
+    g.moveTo(0, 0);
+    g.lineTo(0, -26);
+    g.moveTo(0, -12);
+    g.lineTo(-7, -19);
+    g.moveTo(0, -12);
+    g.lineTo(7, -19);
+    g.moveTo(0, -20);
+    g.lineTo(-5, -25);
+    g.moveTo(0, -20);
+    g.lineTo(5, -25);
+    g.stroke();
+  }
+  return c;
+}
+
 export function RiftEmbers() {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -103,13 +145,17 @@ export function RiftEmbers() {
     const root = document.documentElement;
     let theme: Theme = "dark";
     let halloween = false;
+    let christmas = false;
     let palette: [string, number][] = [];
     let sprites: HTMLCanvasElement[] = [];
+    let flakes: HTMLCanvasElement[] = [];
     const readMode = () => {
       theme = root.getAttribute("data-theme") === "light" ? "light" : "dark";
       halloween = root.getAttribute("data-season") === "halloween";
-      palette = PALETTES[halloween ? "halloween" : "rift"][theme];
+      christmas = root.getAttribute("data-season") === "christmas";
+      palette = PALETTES[halloween ? "halloween" : christmas ? "christmas" : "rift"][theme];
       sprites = palette.map(([rgb]) => sprite(rgb));
+      flakes = palette.map(([rgb]) => flakeSprite(rgb));
     };
     readMode();
 
@@ -135,11 +181,13 @@ export function RiftEmbers() {
       }
       return 0;
     };
+    // In the Christmas season an "ember" is a snowflake: it starts above the
+    // hero and falls, swaying, instead of rising from below.
     const ember = (spawnBelow: boolean): Mote => ({
       x: Math.random() * w,
-      y: spawnBelow ? h + Math.random() * 40 : Math.random() * h,
-      vx: (Math.random() - 0.5) * 0.12,
-      vy: -(0.18 + Math.random() * 0.5),
+      y: christmas ? (spawnBelow ? -20 - Math.random() * 40 : Math.random() * h) : spawnBelow ? h + Math.random() * 40 : Math.random() * h,
+      vx: (Math.random() - 0.5) * (christmas ? 0.3 : 0.12),
+      vy: christmas ? 0.25 + Math.random() * 0.55 : -(0.18 + Math.random() * 0.5),
       // One in twelve is a big, bright ember; the rest are fine sparks.
       r: Math.random() < 0.08 ? 2.6 + Math.random() * 1.4 : 0.7 + Math.random() * 1.9,
       kind: pickKind(),
@@ -158,7 +206,7 @@ export function RiftEmbers() {
         vx: Math.cos(a) * v,
         vy: Math.sin(a) * v - 0.4,
         r: 0.6 + Math.random() * 1.4,
-        kind: halloween ? (Math.random() < 0.5 ? 0 : 1) : Math.random() < 0.75 ? 0 : 1,
+        kind: christmas ? [0, 2, 3][Math.floor(Math.random() * 3)] : halloween ? (Math.random() < 0.5 ? 0 : 1) : Math.random() < 0.75 ? 0 : 1,
         phase: Math.random() * Math.PI * 2,
         sway: 0,
         life,
@@ -437,11 +485,20 @@ export function RiftEmbers() {
 
         let alpha: number;
         if (m.life === Infinity) {
-          // Fade in over the bottom 60px, out over the top third, and flicker.
-          const fromBottom = Math.max(0, Math.min(1, (h - m.y) / 60));
-          const fromTop = Math.max(0, Math.min(1, m.y / (h * 0.33)));
-          alpha = fromBottom * fromTop * (0.55 + 0.45 * Math.sin(t * 0.05 + m.phase * 3));
-          if (m.y < -20 || m.x < -30 || m.x > w + 30) Object.assign(m, ember(true));
+          if (christmas) {
+            // Snow: in over the top 40px, settling out over the bottom 60px,
+            // with a slow shimmer rather than a flicker.
+            const fromTop = Math.max(0, Math.min(1, (m.y + 20) / 40));
+            const fromBottom = Math.max(0, Math.min(1, (h - m.y) / 60));
+            alpha = fromTop * fromBottom * (0.75 + 0.25 * Math.sin(t * 0.02 + m.phase * 3));
+            if (m.y > h + 20 || m.x < -30 || m.x > w + 30) Object.assign(m, ember(true));
+          } else {
+            // Fade in over the bottom 60px, out over the top third, and flicker.
+            const fromBottom = Math.max(0, Math.min(1, (h - m.y) / 60));
+            const fromTop = Math.max(0, Math.min(1, m.y / (h * 0.33)));
+            alpha = fromBottom * fromTop * (0.55 + 0.45 * Math.sin(t * 0.05 + m.phase * 3));
+            if (m.y < -20 || m.x < -30 || m.x > w + 30) Object.assign(m, ember(true));
+          }
         } else {
           m.vy += 0.004 * dt; // sparks slow, then fall back a little
           m.vx *= 0.985;
@@ -452,9 +509,19 @@ export function RiftEmbers() {
             continue;
           }
         }
-        const size = m.r * 8;
         ctx.globalAlpha = alpha * (theme === "dark" ? 1 : 0.75);
-        ctx.drawImage(sprites[m.kind % sprites.length], m.x - size / 2, m.y - size / 2, size, size);
+        if (christmas && m.life === Infinity && m.r > 2.4) {
+          // The big ones are real six-armed flakes, turning as they fall.
+          const size = m.r * 6;
+          ctx.save();
+          ctx.translate(m.x, m.y);
+          ctx.rotate(t * 0.004 + m.phase);
+          ctx.drawImage(flakes[m.kind % flakes.length], -size / 2, -size / 2, size, size);
+          ctx.restore();
+        } else {
+          const size = m.r * (christmas && m.life === Infinity ? 5 : 8);
+          ctx.drawImage(sprites[m.kind % sprites.length], m.x - size / 2, m.y - size / 2, size, size);
+        }
       }
 
       if (halloween) {
@@ -535,10 +602,10 @@ export function RiftEmbers() {
     });
     const onVisibility = () => (document.hidden ? stop() : start());
     const mo = new MutationObserver(() => {
-      const before = `${theme}/${halloween}`;
+      const before = `${theme}/${halloween}/${christmas}`;
       readMode();
-      if (`${theme}/${halloween}` !== before) {
-        for (const m of motes) m.kind = pickKind();
+      if (`${theme}/${halloween}/${christmas}` !== before) {
+        motes = motes.filter((m) => m.life === Infinity).map(() => ember(false));
         if (reduced) draw(1);
       }
     });

@@ -21059,3 +21059,30 @@ carried postage that made "a lot of wasted clicks".
   quotes real postage, and the price path and sealed search keep no listing whose postage eBay does not state
   (`postageStated`; the funnel stage "local seller, postage stated"). Ranking was already by delivered price.
 * Rows stored before this are replaced as the import reaches them.
+
+## Christmas on every site: snow for embers, 1 November to Boxing Day — 2026-11-01
+
+**Owner:** "Now that it's November, we want to make all of the sites Christmas themed. I really like the Halloween
+theme … for Rift Compare, all of those lights and orange dots … can be snowflakes or snow going down … Christmas
+trees, maybe a Santa hat … stockings … candy canes … K Young … less gamified, professional Christmas." Screenshots of
+every site go to the owner before anything is deployed.
+
+* **Window.** `lib/season.ts` gains `christmas: 1 Nov to 26 Dec`, by the visitor's own date like Halloween, so it
+  ends on 27 December with no deploy. To end it early, change `to` (or delete the entry). `?season=christmas`
+  previews it any day; `?season=off` hides it. The boot script now reads the window table instead of naming
+  Halloween, so a later season is one entry.
+* **What it looks like here.** The hero's embers become snow falling through it (`RiftEmbers`: white and ice-blue
+  flakes, the big ones drawn as six-armed flakes that turn; the pointer still parts them, a click throws white, red
+  and gold sparkles). The dark night is midnight blue on the same lightness ramp (`tests/season.test.ts` measures
+  every 4.5:1 pair, as for Halloween). A strand of twinkling lights runs along the hero's top, trees, a present and a
+  candy cane stand in its bottom corners (`ChristmasDecor`), a stocking hangs from the rail where the cobweb was,
+  Santa's hat sits on the R mark everywhere `BrandLogo` is, and a "Christmas gifts" line under the hero's logo goes to
+  `/sealed` (`ChristmasGifts`).
+* **Cost and safety.** Art is eight small SVGs in `public/xmas/` (cached once). The snow outside the canvas is two
+  CSS layers moved by transform only. Every piece is `aria-hidden`, `pointer-events: none` and under the content, so
+  it never covers a price or takes a tap, and reduced motion stills it. Season markup is in the HTML only around the
+  window (`seasonMarkupLive`); the hat is one empty span, hidden by CSS out of season.
+* **Shared across the family.** The decoration classes (`xmas-*`) are one CSS block, marked `xmas-common`, that is
+  byte-for-byte the same on every sister site, with each site's own colours and copy in a `xmas-site` block after it.
+  K Young is the exception by the owner's ask: no hats, lights or trees, only a quiet "Holiday Edit" line and sparse
+  rose-and-gold snow.
