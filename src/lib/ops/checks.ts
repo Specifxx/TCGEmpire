@@ -411,6 +411,8 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   { file: "growth-report.yml", title: "Growth report job (weekly)", staleH: 200 },
   // Daily (2026-10-31): visitor reports from all twelve sites' `reports` branches.
   { file: "reports-triage.yml", title: "Reports triage job", staleH: 36 },
+  // Daily (2026-11-01): Search Console demand for Compare Empire's eBay pass (its `demand` branch).
+  { file: "sister-demand.yml", title: "Sister-site search demand job", staleH: 36 },
   // Twice a day (2026-11-01): the Pokémon section's only data source, its files
   // in data/pokemon. Missing from this list before, so its week of failures
   // while its Neon project was gone (2026-10-23) went unnoticed.

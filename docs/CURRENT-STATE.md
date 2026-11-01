@@ -588,12 +588,16 @@ longer lands on its entry.
   [2026-10-17](../DECISIONS.md#L18273)
 - **Legacy is coming soon (2026-10-25):** LGC is `comingSoon` with
   `releasedOn` 2027-01-29 and Riot's 239 cards (93 Showcase) as
-  `announcedCards`. It has no `totalCards`, `newFrom` or `hubReady`, so
-  /sets/legacy stays noindex while it has no cards. In a store title "legacy"
+  `announcedCards`. It has no `totalCards` or `newFrom`. Since 2026-11-01 it is
+  `hubReady` (LegacyHub, facts in `lib/sets/legacy.ts`), so /sets/legacy is
+  indexed with zero cards, and `previewFrom` 2026-12-13 keeps the nav and
+  homepage off its empty gallery until previews start (`hasSetGallery`).
+  Every legacy-tagged post carries `LegacyPreorderCta` until release. Proving
+  Grounds 2nd Edition files under LGC as its own type, never OGS. In a store title "legacy"
   names the set only beside "Riftbound"/"League of Legends", or as the bare code
   LGC. `/legacy-preorders` holds its pre-orders. Release alerts take the
   pre-order link from the calendar row and run for RAD and LGC.
-  [2026-10-25](../DECISIONS.md#L19536)
+  [2026-10-25](../DECISIONS.md#L19536) · [2026-11-01](../DECISIONS.md#L21158)
 - **Radiance is released (2026-10-22):** RAD is no longer `comingSoon` (Legacy
   is, since 10-25); RAD is `recentlyReleased`. Every release check uses `streetDateStartMs()` (midnight
   AEDT on the street date), never midnight UTC. `/radiance-preorders` stays live
@@ -601,14 +605,15 @@ longer lands on its entry.
   cheapest first, same URL, no redirect ([2026-10-24](../DECISIONS.md#L19340)). All 219 official printings plus 16
   Signatures are in the catalogue; all nine Legends are named everywhere
   (`RADIANCE_LEGENDS_CONFIRMED`). [2026-10-22](../DECISIONS.md#L18959)
-- **AdSense off; Journey on articles only (owner, 2026-10-27):**
-  AdSense was switched off, back on "for now", and off again for good the
-  next day because the ads were too annoying:
+- **AdSense on; Journey on articles only (owner, 2026-11-01):**
+  AdSense was switched off, back on "for now", off again the next day because
+  the ads were too annoying, and back on 2026-11-01 because having it off was
+  not doing much (paid members stay ad-free):
   `ADSENSE_SERVING` (`lib/adsense.ts`) is the one switch for the loader and
   every unit. Mediavine's script loads only on `/blog/[slug]` and
   `/guides/[slug]`, never for an ad-free member, and links off an article do a
   full page load so it never reaches card, set, sealed or price pages.
-  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20023), [2026-10-27](../DECISIONS.md#L20039)
+  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20023), [2026-10-27](../DECISIONS.md#L20039), [2026-11-01](../DECISIONS.md#L21131)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket
@@ -1204,7 +1209,7 @@ longer lands on its entry.
   `/pokemon` functions only. On when the build carries `data/pokemon/products.json`
   (`POKEMON_DATA_BUILT`, `next.config.js`) unless `NEXT_PUBLIC_POKEMON_SECTION=0`. The
   2026-10-30 pause and its DexCompare 301s are gone; the import is in the ops monitor's jobs.
-  [2026-10-30](../DECISIONS.md#L20873), [2026-11-01](../DECISIONS.md#L21118)
+  [2026-10-30](../DECISIONS.md#L20873), [2026-11-01](../DECISIONS.md#L21224)
 - **Self-contained, removable, off by default (2026-10-01, owner: "if there is
   an issue, I can just completely remove all the Pokemon"):** `/pokemon` prices
   English Pokémon sealed (Sword & Shield onward) in all six markets from its own

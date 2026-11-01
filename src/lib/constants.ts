@@ -346,6 +346,14 @@ export interface SetInfo {
    * Radiance did: build the hub first, then flip this.
    */
   hubReady?: boolean;
+  /**
+   * ISO date the set's first official previews land (Legacy: 13 Dec 2026,
+   * Convergence Fest). A hubReady set before this day has a hub but no cards,
+   * so its /sets/<slug>/gallery would be an empty, noindexed page: the nav, the
+   * homepage tile and the other galleries link the hub instead until then
+   * (hasSetGallery). Unset means "no wait" (Radiance never needed it).
+   */
+  previewFrom?: string;
 }
 export const SETS: SetInfo[] = [
   { code: "OGN", name: "Origins", slug: "origins" },
@@ -413,9 +421,10 @@ export const SETS: SetInfo[] = [
   //     would mis-route real listings the day one appears.
   //   • newFrom / sealedAvailable — nothing is out yet. (Sealed PRE-ORDERS are
   //     already listed; they go to /legacy-preorders, not /sealed.)
-  //   • hubReady — /sets/legacy has no content hub, so it stays noindex while it
-  //     has zero cards (the documented rule; see hubReady's own comment). Build
-  //     a sourced hub first, then flip it, the way Radiance did.
+  //
+  // hubReady since 2026-11-01: /sets/legacy has its sourced hub
+  // (lib/sets/legacy.ts, components/sets/LegacyHub.tsx), so it is indexable
+  // with zero cards, the way /sets/radiance was through its preview season.
   {
     code: "LGC",
     name: "Legacy",
@@ -425,6 +434,8 @@ export const SETS: SetInfo[] = [
     // kind of figure as Radiance's 180. Never used for price matching.
     announcedCards: 239,
     releasedOn: "2027-01-29",
+    hubReady: true,
+    previewFrom: "2026-12-13",
   },
 ];
 
@@ -627,6 +638,18 @@ export function isCurrentSetCode(code: string | null | undefined, now: Date = ne
  */
 export function hasSetHub(s: SetInfo): boolean {
   return !s.comingSoon || !!s.hubReady;
+}
+
+/**
+ * Does this set have a card gallery worth linking? A set hub, and for an
+ * unreleased set, its preview season has begun (previewFrom). Before that the
+ * gallery is empty, so surfaces that would link it link /sets/<slug> instead.
+ */
+export function hasSetGallery(s: SetInfo, now: Date = new Date()): boolean {
+  if (!hasSetHub(s)) return false;
+  if (!s.comingSoon || !s.previewFrom) return true;
+  const from = Date.parse(`${s.previewFrom}T00:00:00Z`);
+  return Number.isNaN(from) || from <= now.getTime();
 }
 
 export interface RarityInfo {

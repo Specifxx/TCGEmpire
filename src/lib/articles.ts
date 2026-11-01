@@ -7,6 +7,7 @@ import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
+import { LEGACY_SEASON_ARTICLES } from "./content/legacy-season-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
 import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE } from "./alert-limits";
@@ -6300,11 +6301,16 @@ Once you have a list, **[Best Basket](/guides/best-basket-cheapest-riftbound-dec
     slug: "how-a-riftbound-deck-is-built",
     category: "guide",
     title: "How a Riftbound Deck Is Built",
+    // Intent pass 2026-11-01: "riftbound deck size" (rising, ~520 impressions in
+    // 90 days at position 9) was landing on the CARD-size guide, which answers a
+    // different question. This page owns deck size; the numbers lead the title
+    // and the snippet so Google can tell the two apart.
+    seoTitle: "Riftbound Deck Size: 40 Cards, 12 Runes, 3 Battlefields",
     excerpt:
-      "Legend, Champion, main deck, runes, battlefields and the 10-card side deck — the anatomy of a Riftbound deck, explained with real examples.",
+      "A Riftbound deck is a Legend, a 40-card main deck, 12 runes and 3 battlefields, plus a 10-card side deck: 66 cards. Each part explained.",
     author: "RiftCompare",
     date: "2026-06-06",
-    updated: "2026-08-04",
+    updated: "2026-11-01",
     readMins: 4,
     tags: ["beginner", "deckbuilding"],
     faq: [
@@ -10186,7 +10192,7 @@ Each set on this calendar gets its own tracker as Riot shows it: **[the Radiance
     author: "RiftCompare",
     date: "2026-08-04",
     readMins: 8,
-    tags: ["news", "rules", "mechanics", "gameplay", "set"],
+    tags: ["news", "rules", "mechanics", "gameplay", "set", "legacy"],
     hero: {
       src: "/blog/riftbound-legacy-pack-changes-and-card-templating.png",
       alt: "Riftbound Legacy pack composition and card templating changes explained on RiftCompare",
@@ -12653,6 +12659,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
   },
   ...SEO_PACK_ARTICLES,
   ...RADIANCE_TIER_GUIDES,
+  ...LEGACY_SEASON_ARTICLES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",
     category: "blog",

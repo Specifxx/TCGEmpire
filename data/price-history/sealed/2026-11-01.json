@@ -43,9 +43,6 @@
     "LGC|Bundle Case": {
       "US": 139999
     },
-    "LGC|Champion Deck": {
-      "CA": 8994
-    },
     "LGC|Champion Deck (Ashe)": {
       "EU": 2000,
       "SG": 3000,
@@ -72,14 +69,21 @@
     "LGC|Champion Deck Display": {
       "CA": 8995
     },
+    "LGC|Champion Deck Set (4)": {
+      "CA": 8994
+    },
     "LGC|Pre-Rift Kit": {
       "CA": 4999
+    },
+    "LGC|Proving Grounds 2nd Edition": {
+      "CA": 4795,
+      "EU": 4000
     },
     "LGC|Sealed": {
       "EU": 71400
     },
     "OGN|Booster Box": {
-      "AU": 35000,
+      "AU": 40000,
       "CA": 29995,
       "EU": 6173,
       "UK": 13999,
@@ -88,7 +92,7 @@
     "OGN|Booster Case": {
       "AU": 190429,
       "EU": 75000,
-      "US": 140000
+      "US": 142999
     },
     "OGN|Booster Pack": {
       "AU": 1900,
@@ -154,7 +158,7 @@
       "EU": 3500,
       "SG": 5596,
       "UK": 2999,
-      "US": 4291
+      "US": 4200
     },
     "OGN|Sealed": {
       "EU": 485
@@ -188,20 +192,20 @@
       "EU": 9450,
       "SG": 22000,
       "UK": 9500,
-      "US": 10999
+      "US": 8000
     },
     "RAD|Booster Case": {
       "AU": 130000,
       "CA": 112024,
       "EU": 60000,
       "UK": 56026,
-      "US": 68299
+      "US": 68899
     },
     "RAD|Booster Pack": {
       "AU": 1099,
-      "CA": 795,
+      "CA": 664,
       "UK": 499,
-      "US": 499
+      "US": 498
     },
     "RAD|Bundle": {
       "AU": 6495,
@@ -244,7 +248,7 @@
       "US": 7291
     },
     "RAD|Sleeved Booster": {
-      "EU": 3750,
+      "EU": 500,
       "US": 760
     },
     "RAD|Sleeved Booster (Art Set)": {
@@ -328,7 +332,7 @@
       "AU": 3140,
       "SG": 2796,
       "UK": 1185,
-      "US": 675
+      "US": 774
     },
     "SFD|Pre-Rift Event Kit": {
       "AU": 8859,
@@ -419,7 +423,7 @@
       "EU": 799,
       "SG": 2155,
       "UK": 1500,
-      "US": 900
+      "US": 899
     },
     "UNL|Champion Deck (Vi) Display": {
       "AU": 4000,
@@ -462,22 +466,22 @@
     },
     "VEN|Booster Box": {
       "AU": 21000,
-      "CA": 15456,
-      "EU": 9000,
+      "CA": 17000,
+      "EU": 9200,
       "SG": 19000,
       "UK": 10470,
-      "US": 11399
+      "US": 11099
     },
     "VEN|Booster Case": {
       "AU": 133000,
       "CA": 119999,
       "EU": 62200,
       "UK": 71000,
-      "US": 73994
+      "US": 73899
     },
     "VEN|Booster Pack": {
       "AU": 999,
-      "CA": 708,
+      "CA": 799,
       "EU": 795,
       "UK": 499,
       "US": 470
@@ -524,7 +528,7 @@
       "EU": 904,
       "SG": 2952,
       "UK": 1899,
-      "US": 1350
+      "US": 1175
     },
     "VEN|Showdown Decks Display": {
       "AU": 4500,

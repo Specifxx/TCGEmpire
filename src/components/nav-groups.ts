@@ -1,5 +1,5 @@
 import { DISCORD_URL } from "@/lib/site";
-import { SETS } from "@/lib/constants";
+import { SETS, hasSetGallery } from "@/lib/constants";
 import { pokemonSectionOn } from "@/lib/pokemon/flag";
 import { CARD_SHOP_FINDER } from "@/lib/partners";
 
@@ -198,7 +198,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // from its set page and card pages; a sitewide link is what gets a new
       // page crawled during a preview season. Derived from SETS, so the next
       // set's gallery takes the slot when its hub goes live.
-      ...SETS.filter((s) => s.comingSoon && s.hubReady).map((s) => {
+      ...SETS.filter((s) => s.comingSoon && s.hubReady && hasSetGallery(s)).map((s) => {
         const n = s.name.toLowerCase();
         return { href: `/sets/${s.slug}/gallery`, label: `${s.name} card gallery`, keywords: [`${n} gallery`, `${n} card gallery`, `${n} cards`, `${n} card images`] };
       }),

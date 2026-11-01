@@ -21115,6 +21115,112 @@ reason to come back that search rankings alone don't. `/forum` (docs/forum.md):
 - **Moderation:** the owner asks Claude; a post is removed by an edit to
   `forum.json` (`removeFromForum` in `src/lib/forum/core.ts`).
 
+## 2026-11-01: Search Console demand for the sister sites' eBay passes
+
+Compare Empire's eBay key (about 4,950 Browse calls a day) covers fewer than a fifth of its ~29,500 products
+over A$10 each day, so the owner asked that the calls go to what people search for and to expensive products.
+Search Console is the only demand signal Compare Empire has (it has no database of views), and the service
+account (`GSC_SA_KEY`) lives here. So `.github/workflows/sister-demand.yml` (daily 17:40 UTC, before Compare
+Empire's 19:10 price job) runs `scripts/sister-demand-export.mjs`: page-level clicks and impressions for 56 days,
+aggregated by path, written as `gsc-pages.json` to the `demand` branch of the site's own repo with
+`REPORTS_GITHUB_TOKEN` (the visitor-reports token, Contents read/write on the twelve site repos; nothing else
+writes with it here). The branch is an orphan with its own no-deploy `vercel.json`. Only page numbers leave
+Search Console, never a query. Watched in `JOBS` (`src/lib/ops/checks.ts`). Another sister site joins by adding
+a row to `SITES` and reading the file in its own eBay script.
+
+## AdSense back on, again — 2026-11-01
+
+The owner turned AdSense back on: "I think it's not worth it having it off the
+whole time. I don't think it's doing anything much." `ADSENSE_SERVING = true`
+in `lib/adsense.ts`, exactly as in "AdSense back on" (2026-10-26): the loader,
+the pagead2 and Funding Choices preconnects and (under `AD_STRATEGY=manual`)
+the units return on every page, so Auto ads and the EEA consent message come
+back. Paid members stay ad-free (`lib/ad-free-boot.ts` pauses ad requests),
+Journey still loads only on blog and guide articles, and the AdSense console
+settings (Auto ads, vignette off, anchor) are untouched. The 2026-11-23 review
+keeps AdSense in the comparison against affiliate earnings per visit.
+Deployed immediately on the owner's standing authorisation.
+
+## 2026-11-01: Creators, "How to work with us"
+
+Creators kept asking the owner how we'd like the site promoted, so /creators
+now answers it in a "How to work with us" section (`#work-with-us`). Owner's
+terms: flexible, low expectations, no contract, script or quota; any one of
+three is plenty: link the site (plus their creator code where the site has
+codes, RiftCompare only), a shout-out in their normal content, or a
+walkthrough/review of the site. They call us their **partner**, never
+"sponsor": we don't pay them for a mention. On our own pages they stay
+"featured creators" ("partners" here still means affiliate links). The
+section asks them to say it's a partnership (FTC/ASA), lightly. The
+owner's ready-to-send replies live in the project's creators playbook, not
+in the repo.
+
+## 2026-11-01: Legacy season starts: a set hub, a banner on every Legacy post, four posts
+
+The owner: "let's get Legacy set up … all the guides, everything we did right for
+Radiance … as soon as possible." Legacy (LGC) ships 29 January 2027 and Riot has
+shown no card; the first previews are at Convergence Fest from 13 December. What
+Radiance had at this stage, and Legacy did not:
+
+- **An indexable set hub.** `/sets/legacy` was noindex (zero cards, no hub).
+  `components/sets/LegacyHub.tsx` now renders Riot's facts, the eight named
+  Legends (each linked to its champion hub), the products with US MSRPs, a live
+  cross-store pre-order table, the timeline and an FAQ that also feeds the
+  page's FAQPage JSON-LD (`lib/sets/legacy.ts`, one array). That earns
+  `hubReady`. With zero cards the page's title is "Riftbound Legacy: Legends,
+  Products & Card List", not "Card List & Price Guide", which would promise
+  prices it does not have.
+- **`previewFrom` and `hasSetGallery()`.** `hubReady` also sent the nav, the
+  homepage's "By set" tile and every other gallery to `/sets/legacy/gallery`,
+  an empty noindexed page until a card exists. `previewFrom: "2026-12-13"` holds
+  those links back (the tile opens the hub instead) and lets them through on
+  the first preview day with no edit. Radiance never needed it.
+- **A pre-order banner on every legacy-tagged post** (`LegacyPreorderCta`), the
+  cheapest open box pre-order in the reader's market, as Radiance's posts had.
+  Guides included: Legacy has no guide with its own release capture to protect.
+  It retires on release day.
+- **Three posts** for queries nobody owned (docs/seo-keyword-map.md), each
+  over the 1,500-word policy: where to buy, the pre-order sell-out snapshot
+  (12 of 17 box listings sold out on 31 Oct, the cheapest first: the Reddit
+  link), and all eight 2027 precons (Legacy's Champion Decks with Proving
+  Grounds 2nd Edition: one post, since two short deck posts would split one
+  buyer and miss the word floor). Prices are from the 31 Oct public sealed
+  export, dated in the copy; card prices are TCGplayer market, never the
+  cheapest listing, which had outliers.
+
+**Reversed: Proving Grounds 2nd Edition is not OGS.** On 2026-10-25 a store
+title "Legacy - Proving Grounds Box Set (2nd Edition)" was deliberately kept
+under OGS. But PG2 is a new box (Heimerdinger, Karma, Vladimir, Illaoi;
+US$40, 19 Feb 2027), and filed as OGS it sat in Origins' Proving Grounds group as
+its cheapest "in-stock" offer (C$47.95 at 401 Games). It now maps to LGC with
+its own type, "Proving Grounds 2nd Edition", so it is compared on
+`/legacy-preorders`; a "(REPRINT)" first edition stays OGS. The four Legacy
+Champion Decks sold as one ("Set of 4", or one store's "Showdown Decks (Set of
+4)": Legacy has no Showdown Decks) are "Champion Deck Set (4)", never a single
+deck's group.
+
+Next, when previews start on 13 December: reveals into the spoilers post and the
+gallery (as Radiance's importer did), and the four unnamed Legends into
+`LEGACY_LEGENDS_CONFIRMED`.
+
+## 2026-11-01 — The decline is the Radiance wave fading; deck size moves to its own page
+
+Bill: RiftCompare is declining while the sister sites grow. Search Console (90 days to 31 Oct, `gsc-queries` and
+`impact-report`): impressions fell from about 11–12k a day in late September to 4.6–6k by 28–30 October and average
+position slipped from 7.1 to about 8.6. Clicks averaged 194 a day from 28 Sep to 8 Oct and 180 from 9 to 31 Oct, with
+spikes on 16, 17 and 23 October from the Radiance release and 112 on 30 October. So the drop is mostly the end of the
+Radiance spoiler and release searches, on top of a slow slide in position. It is not a crawl or indexing fault.
+
+What was not done, on purpose: no new title pass on the low-CTR guides (card size, Deploy, Empower, ban list, rotation,
+HEARTSTEEL overnumbered). Each already had a CTR pass on 2026-09-24 or 2026-10-23, and changing them again with no new
+evidence is churn. No new hubs either: champions, keywords, types and printings already exist, and more pages on the same
+queries would split them ("Pages competing in Google"). The Ahri blog/guide pair was already folded by a 301. The one
+fix with clear evidence: "riftbound deck size" (rising, about 520 impressions at position 9) was landing on the
+card-size guide, which answers a different question. `how-a-riftbound-deck-is-built` now owns it with
+`seoTitle` "Riftbound Deck Size: 40 Cards, 12 Runes, 3 Battlefields" and a snippet that leads with the numbers. The
+next lever is the Legacy preview season (13 December), which another thread is preparing. Re-check `gsc-queries` around
+17 November.
+
 ## 2026-11-01: The Pokémon section returns, served from files in the repository
 
 The owner asked for the Pokémon section back ("bring it back exactly how it
