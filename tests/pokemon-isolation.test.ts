@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { pokemonSectionOn, pokemonIndexProducts } from "../src/lib/pokemon/flag";
-import { pokemonDbConfigured, pokemonEnabled } from "../src/lib/pokemon/gate";
+import { pokemonEnabled } from "../src/lib/pokemon/gate";
 import { POKEMON_TTL } from "../src/lib/pokemon/cache-keys";
 
 // THE POKÉMON SECTION MUST STAY REMOVABLE (owner, 2026-10-01: "if there is an
@@ -21,7 +21,6 @@ const HOST_TOUCHPOINTS = [
   "src/components/FooterAds.tsx", // OFF_TOPIC_ROUTES: no Riftbound banners on /pokemon
   "src/components/home/HomeSections.tsx", // <PokemonHomePromo />
   "src/components/nav-groups.ts", // the gated "Pokémon (beta)" link
-  "src/lib/db-chains.ts", // POKEMON_VARS
   "src/lib/nudge-gate.ts", // no Premium slide-in on /pokemon
   "src/lib/ops/checks.ts", // dexcompareIndex: the section's DexCompare index check, skipped while /pokemon 404s
   "src/lib/sitemap-sections.ts", // the gated "pokemon" section
@@ -90,11 +89,19 @@ test("every host touchpoint that renders or lists something is behind the switch
   }
 });
 
-test("the switch is OFF by default: nothing Pokémon shows until the owner turns it on", () => {
-  // npm test runs with .env.production only, which never sets these.
+test("the switch follows the build: on only when next.config.js saw data/pokemon", () => {
+  // npm test runs outside a Next build, so POKEMON_DATA_BUILT is never set.
   assert.equal(pokemonSectionOn(), false);
-  assert.equal(pokemonDbConfigured(), false);
   assert.equal(pokemonEnabled(), false);
+  const config = readFileSync(join(ROOT, "next.config.js"), "utf8");
+  assert.match(config, /const POKEMON_DATA_BUILT = require\("node:fs"\)\.existsSync\(.*"data", "pokemon", "products\.json"\)\)/);
+  assert.match(config, /env: \{ POKEMON_DATA_BUILT \}/);
+  assert.match(readFileSync(join(ROOT, "src/lib/pokemon/flag.ts"), "utf8"), /process\.env\.NEXT_PUBLIC_POKEMON_SECTION !== "0" && process\.env\.POKEMON_DATA_BUILT === "1"/);
+  // The section's files go only into its own functions, never every route.
+  assert.match(config, /"\/pokemon\/\*\*": \["\.\/data\/pokemon\/\*\*\/\*\.json"\]/);
+  assert.doesNotMatch(config, /"\/\*\*": \[[^\]]*data\/pokemon/);
+  // No redirect away from the section while it is live.
+  assert.doesNotMatch(config, /source: "\/pokemon/);
   assert.equal(pokemonIndexProducts(), false);
   assert.doesNotMatch(readFileSync(join(ROOT, ".env.production"), "utf8"), /POKEMON/);
 });
@@ -122,17 +129,15 @@ test("the Pokémon code never touches the Riftbound databases, importers or eBay
     for (const [re, what] of banned) if (re.test(src)) bad.push(`${relative(ROOT, f)} imports ${what}`);
   }
   assert.deepEqual(bad, []);
-  assert.match(readFileSync(join(ROOT, "src/lib/pokemon/db.ts"), "utf8"), /from "\.prisma\/pokemon-client"/);
 });
 
-test("nothing a Riftbound importer loads pulls in the Pokémon Prisma client", () => {
+test("nothing a Riftbound importer loads pulls in the Pokémon loaders", () => {
   // lib/sitemap-sections.ts is reached from lib/revalidate-content.ts, which
   // refresh-prices.yml's scripts load; those jobs generate only the main client.
   for (const rel of ["src/lib/sitemap-sections.ts", "src/lib/pokemon/sitemap.ts", "src/lib/pokemon/gate.ts", "src/lib/pokemon/flag.ts"]) {
     const src = stripComments(readFileSync(join(ROOT, rel), "utf8"));
-    const pokemonDb = rel.startsWith("src/lib/pokemon/") ? /^import[^;]*from ["']\.\/db["']/m : /^import[^;]*from ["'][^"']*pokemon\/db["']/m;
-    assert.doesNotMatch(src, pokemonDb, `${rel} statically imports the Pokémon client`);
-    assert.doesNotMatch(src, /\.prisma\/pokemon-client/, rel);
+    const loaders = rel.startsWith("src/lib/pokemon/") ? /^import[^;]*from ["']\.\/data["']/m : /^import[^;]*from ["'][^"']*pokemon\/data["']/m;
+    assert.doesNotMatch(src, loaders, `${rel} statically imports the Pokémon loaders`);
   }
   // sitemap.ts reaches the gate and the blog registry; both must stay as bare
   // as the importers need. index-gate.ts imports nothing; the registry imports
@@ -158,13 +163,16 @@ test("nothing a Riftbound importer loads pulls in the Pokémon Prisma client", (
   }
 });
 
-test("its own database: a separate schema, client and variable", () => {
-  const schema = readFileSync(join(ROOT, "prisma/pokemon/schema.prisma"), "utf8");
-  assert.match(schema, /url\s*=\s*env\("POKEMON_DATABASE_URL"\)/);
-  assert.match(schema, /output\s*=\s*"\.\.\/\.\.\/node_modules\/\.prisma\/pokemon-client"/);
+test("no database: the section's data is files in data/pokemon", () => {
+  assert.equal(existsSync(join(ROOT, "prisma/pokemon")), false, "no Pokémon Prisma schema");
   const main = readFileSync(join(ROOT, "prisma/schema.prisma"), "utf8");
   assert.doesNotMatch(main, /model Pokemon/, "no Pokémon table in the Riftbound schema");
-  assert.match(readFileSync(join(ROOT, "src/lib/db-chains.ts"), "utf8"), /export const POKEMON_VARS = \["POKEMON_DATABASE_URL"\] as const;/);
+  const files = POKEMON_DIRS.filter((d) => existsSync(join(ROOT, d))).flatMap((d) => walk(join(ROOT, d)));
+  files.push(join(ROOT, "scripts/pokemon/import.ts"));
+  for (const f of files) {
+    const src = stripComments(readFileSync(f, "utf8"));
+    assert.doesNotMatch(src, /PrismaClient|\.prisma\/|POKEMON_DATABASE_URL/, `${relative(ROOT, f)} reaches for a database`);
+  }
 });
 
 test("no loading.tsx under /pokemon (adsense-guard fails one above a notFound page)", () => {
@@ -207,17 +215,20 @@ test("caching: the product page's TTL is the loaders' TTL, and the grids are per
   assert.match(revalidate, /revalidatePath\("\/pokemon", "layout"\)/);
 });
 
-test("the import workflow: schedule only, its own database, its own purge", () => {
+test("the import workflow: schedule only, no database, commits its files without deploying", () => {
   // YAML comments explain the rules (they name RM5 to say it is never used); test the config.
   const wf = readFileSync(join(ROOT, ".github/workflows/pokemon-import.yml"), "utf8").replace(/^\s*#.*$/gm, "");
   const on = wf.slice(wf.indexOf("\non:"), wf.indexOf("\nconcurrency:"));
   assert.match(on, /schedule:/);
   assert.doesNotMatch(on, /\bpush:|pull_request/, "landing code never starts an import");
-  assert.match(wf, /POKEMON_DATABASE_URL: \$\{\{ secrets\.POKEMON_DATABASE_URL \}\}/);
-  assert.doesNotMatch(wf, /\bRM\d+\b|HISTORY_DATABASE_URL|(?<!POKEMON_)DATABASE_URL: /, "never a Riftbound database");
-  assert.match(wf, /\/api\/pokemon\/revalidate/);
+  assert.doesNotMatch(wf, /\bRM\d+\b|HISTORY_DATABASE_URL|DATABASE_URL|prisma/, "no database at all");
   assert.doesNotMatch(wf, /\/api\/revalidate\b/, "never the Riftbound purge");
-  assert.match(wf, /prisma db push --schema prisma\/pokemon\/schema\.prisma/);
+  assert.match(wf, /contents: write/);
+  assert.match(wf, /bash scripts\/pokemon\/publish-data\.sh/);
+  const publish = readFileSync(join(ROOT, "scripts/pokemon/publish-data.sh"), "utf8");
+  assert.match(publish, /DIR="data\/pokemon"/);
+  assert.match(publish, /refusing to publish/);
+  assert.doesNotMatch(publish.replace(/^\s*#.*$/gm, ""), /SUBJECT="[^"]*\[deploy\]/i);
 });
 
 /** Scripts outside scripts/pokemon/ allowed to mention the section: the audit registrations. */

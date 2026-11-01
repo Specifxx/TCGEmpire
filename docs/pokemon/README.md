@@ -17,23 +17,19 @@ Pokémon section as a home for Pokémon sealed", both 2026-10-01.
 
 ## 1. Going live (owner checklist)
 
-1. **Create the database.** A new Neon project (free tier is plenty). Copy its
-   **pooled** connection string.
-2. **GitHub → Settings → Secrets → Actions:** add `POKEMON_DATABASE_URL`.
-   (`EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` and
-   `CRON_SECRET` already exist and are reused.)
-3. **Run the import once:** Actions → "Pokemon sealed import" → Run workflow.
-   The first run creates the tables (`prisma db push`), loads ~1,000 products
-   and their TCGplayer prices in a few seconds (tick "with_ebay" to also spend
-   the small eBay slice). After that it runs at 05:17 UTC (no eBay) and 21:47
-   UTC (with eBay, after Riftbound's runs; §4).
-4. **Vercel → Settings → Environment Variables** (Production, and Preview if
-   wanted):
-   - `POKEMON_DATABASE_URL` = the same connection string
-   - `NEXT_PUBLIC_POKEMON_SECTION` = `1`
-5. **Deploy** (the 08:00 UTC daily release, or "Run workflow" on
-   production-deploy if it should go out sooner). `NEXT_PUBLIC_*` variables are
-   baked in at build time, so the switch only takes effect on a build.
+Since 2026-11-01 the section has **no database**: its data is JSON committed in
+`data/pokemon/` (`src/lib/pokemon/store.ts`; DECISIONS.md, "The Pokémon section
+returns, served from files in the repository"). Nothing to create or pay for.
+
+1. **Run the import:** Actions → "Pokemon sealed import" → Run workflow. It
+   reads TCGCSV, writes `data/pokemon/` and commits it to `main` without the
+   deploy marker (`scripts/pokemon/publish-data.sh`). After that it runs at
+   05:17 UTC (no eBay) and 21:47 UTC (with eBay, after Riftbound's runs; §4).
+   `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` already exist and are reused.
+2. **Deploy** (the daily release, or "Run workflow" on production-deploy if it
+   should go out sooner). The section switches itself on in the first build
+   that carries `data/pokemon/products.json` (`next.config.js`
+   `POKEMON_DATA_BUILT`); `NEXT_PUBLIC_POKEMON_SECTION=0` in Vercel keeps it off.
 
 Optional switches:
 
@@ -42,7 +38,7 @@ Optional switches:
 | GitHub repo **variable** | `POKEMON_CARDMARKET=1` | Adds Cardmarket (EU lowest listing + trend). **Off until the owner confirms Cardmarket is happy with Pokémon data use**: the 2026-09-04 permission in `src/lib/cardmarket.ts` was asked for Riftbound. |
 | GitHub repo variable | `POKEMON_EBAY_MAX_CALLS` (default 60) / `POKEMON_EBAY_RESERVE` (default 2500) | The daily eBay slice and the floor it never spends below (see §4). Riftbound comes first; raise the cap only if Riftbound's runs leave room. |
 | Vercel | `POKEMON_INDEX_PRODUCTS=1` | Lets the product pages that pass the stage-1 gate be indexed and sitemapped: booster boxes, ETBs, Pokémon Center ETBs and booster bundles with a known pack count (`src/lib/pokemon/index-gate.ts`, ~160 products). Off by default; flip it only after the audit in §6. |
-| Vercel **Preview** | `NEXT_PUBLIC_POKEMON_SECTION=1`, `POKEMON_DATABASE_URL`, `POKEMON_INDEX_PRODUCTS=1` | Lets you read the blog drafts and run the audits on a preview deployment. |
+| Vercel **Preview** | `POKEMON_INDEX_PRODUCTS=1` | Lets you read the blog drafts and run the audits on a preview deployment. |
 
 ### Publish a blog post
 
@@ -64,14 +60,12 @@ the log's verdict line into the session that plans the backfill.
 
 ## 2. Turning it off
 
-**Fast (one variable):** set `NEXT_PUBLIC_POKEMON_SECTION` to anything but `1`
-(or delete it) in Vercel and redeploy. Every `/pokemon` URL 404s, and the nav
-entry, homepage promo, sitemap section and robots.txt line disappear. Removing
-`POKEMON_DATABASE_URL` from Vercel does the same on the server side. Removing
-the GitHub secret makes the daily import a no-op.
+**Fast (one variable):** set `NEXT_PUBLIC_POKEMON_SECTION` to `0` in Vercel
+and redeploy. Every `/pokemon` URL 404s, and the nav entry, homepage promo,
+sitemap section and robots.txt line disappear.
 
 **Pausing data only:** disable the "Pokemon sealed import" workflow in GitHub.
-Pages keep serving the last import.
+Pages keep serving the last committed files.
 
 ## 3. Removing it completely
 
@@ -80,7 +74,7 @@ Everything lives in:
 ```
 src/app/pokemon/            src/app/api/pokemon/
 src/components/pokemon/     src/lib/pokemon/
-prisma/pokemon/             scripts/pokemon/
+data/pokemon/               scripts/pokemon/
 docs/pokemon/               .github/workflows/pokemon-import.yml
 tests/pokemon-*.test.ts     .github/workflows/pokemon-archive-probe.yml
 tests/fixtures/pokemon-*    tests/helpers/pokemon-copy.ts
@@ -97,33 +91,35 @@ by `tests/pokemon-isolation.test.ts`:
 | `src/components/FooterAds.tsx` | `OFF_TOPIC_ROUTES` (harmless if left) |
 | `src/lib/nudge-gate.ts` | `"/pokemon"` in `PREMIUM_SKIP_PATHS` (harmless if left) |
 | `src/lib/ops/checks.ts` | `dexcompareIndex` and its `runChecks` line, its test in `tests/ops-monitor.test.ts`, and the DexCompare row in `docs/ops-monitor.md` (harmless if left: it goes grey while `/pokemon` 404s) |
-| `src/lib/db-chains.ts` | `POKEMON_VARS` (harmless if left) |
 | `scripts/adsense-audit.ts` | the four `pokemon-*` rows at the top of `TEMPLATES` (harmless if left) |
 | `scripts/template-seo-check.ts` | the six `pokemon-*` rows at the top of `SPECS` (harmless if left) |
 
 The two scripts are pinned as `SCRIPT_TOUCHPOINTS` in the same test.
 
-Also: the two `generate --schema prisma/pokemon/...` additions in `package.json`
-(`build`, `db:generate`, and the three `pokemon:*` scripts) and in
-`.github/workflows/ci.yml`; `getPokemonCatalog`/`getPokemonProduct`/`getDexMarket`/`getDexMarkets` in
+Also: the `pokemon:import` script in `package.json`; the `POKEMON_DATA_BUILT`
+lines and the three `data/pokemon` tracing rows in `next.config.js`; the
+`pokemon-import.yml` row in `src/lib/ops/checks.ts` `JOBS`;
+`getPokemonCatalog`/`getPokemonProduct`/`getDexMarket`/`getDexMarkets` in
 `tests/nested-cache.test.ts`; the Pokémon note in `CLAUDE.md`; the rows in
 `docs/seo-keyword-map.md`; the bullet in `docs/CURRENT-STATE.md`. The shared
 `SealedFilters`/`SealedSort` keep their new optional props (defaults are the
-Riftbound behaviour). Then delete the Neon project.
+Riftbound behaviour).
 
 ## 4. Architecture
 
 ```
                      ┌───── GitHub Actions, 05:17 UTC (no eBay) + 21:47 UTC ─────┐
 TCGCSV (TCGplayer) ─▶│ scripts/pokemon/import.ts → src/lib/pokemon/import.ts    │
-Cardmarket files  ─▶│   catalog.ts  kinds.ts  cardmarket-match.ts  ebay-match  │──▶ Neon "Pokémon" project
-eBay Browse API   ─▶│   (writes ONLY to POKEMON_DATABASE_URL)                  │      (POKEMON_DATABASE_URL)
-                     └──────────────── POST /api/pokemon/revalidate ────────────┘              │
+Cardmarket files  ─▶│   catalog.ts  kinds.ts  cardmarket-match.ts  ebay-match  │──▶ data/pokemon/*.json
+eBay Browse API   ─▶│   (reads and writes ONLY data/pokemon, store.ts)        │    committed to main
+                     └──────────── scripts/pokemon/publish-data.sh ─────────────┘    (no deploy marker)
+                                                                                               │
+                                                     the next daily release bundles it ────────┤
                                                                                                ▼
   /pokemon, the kind hubs, /pokemon/price-per-pack,
-  /pokemon/sealed, /pokemon/sets, /pokemon/sets/[set]            ◀── getPokemonCatalog(market)  (unstable_cache, tag "pokemon", 6h)
-  /pokemon/sealed/[slug] (ISR 6h, + the US catalogue)             ◀── getPokemonProduct(slug)
-  /pokemon/blog/[slug] (ISR 6h)  ·  share cards                  ◀── the same two loaders, nothing else
+  /pokemon/sealed, /pokemon/sets, /pokemon/sets/[set]            ◀── getPokemonCatalog(market)  (memoised per function)
+  /pokemon/sealed/[slug] (ISR, + the US catalogue)                ◀── getPokemonProduct(slug)
+  /pokemon/blog/[slug] (ISR)  ·  share cards                     ◀── the same two loaders, nothing else
 ```
 
 **Pages** (all titles absolute and ≤60 through `src/lib/pokemon/seo.ts`
@@ -152,7 +148,7 @@ since 2026-10-14, 60s after a read error, a brand card instead of a 500); "Copy 
 Discord" (`CopyPrices`, `src/lib/pokemon/share-text.ts`: a table or bullets,
 no link unless asked).
 
-**Failure behaviour.** A read error throws: force-dynamic pages answer 500,
+**Failure behaviour.** A file that exists but does not parse throws: force-dynamic pages answer 500,
 ISR pages keep the last good copy, share cards fall back to the brand card.
 Only an unknown product or set is a 404. Every page body checks the switch
 itself as well as the layout.
@@ -214,13 +210,10 @@ picks one (the card-page pattern). The UK "show in EUR" preference is honoured.
 `pokemonEbayQuery` puts "Pokemon" in every query exactly once and never uses
 `riftboundEbayQuery` (a test forbids it).
 
-**Egress.** Its own Neon project with its own 5 GB/month. The request path reads
-two self-cached loaders: the catalogue (~455 KB per market, under the ~1.2 MB
-ceiling) and one product (~5 KB). Both are tagged `pokemon`, TTL 6h, purged by
-the import, deduped per request, listed in `tests/nested-cache.test.ts`. The
-sitemap reads the DB directly (narrow selects) so the catalogue's 6h TTL never
-undercuts the sitemap route's 24h (egress rule 5). Estimated steady state: well
-under 50 MB/day.
+**Cost.** No database. The files are traced into the `/pokemon/**`,
+`/api/pokemon/**` and sitemap functions only (`next.config.js`), parsed once
+per warm function, and never written to the Data Cache. About 1 MB of current
+files plus ~20 KB of history a day.
 
 ## 5. Measuring the POC
 

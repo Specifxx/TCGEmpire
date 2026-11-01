@@ -113,9 +113,19 @@ const PUBLIC_DATA_BUNDLED = ["files", "fallback"].includes((process.env.PUBLIC_D
 const PUBLIC_DATA_PACKED = require("node:fs").existsSync(require("node:path").join(__dirname, ".public-data-pack", "pack.json"));
 const PUBLIC_DATA_FILES = !PUBLIC_DATA_BUNDLED ? [] : PUBLIC_DATA_PACKED ? ["./.public-data-pack/**/*"] : ["./data/public/**/*.json"];
 
+// The Pokémon section (2026-11-01, DECISIONS.md "The Pokémon section returns,
+// served from files in the repository") is on when this build carries its
+// catalogue, data/pokemon/products.json, written by pokemon-import.yml. The
+// answer is inlined into client and server code as POKEMON_DATA_BUILT
+// (src/lib/pokemon/flag.ts), so a build without the files shows no nav link,
+// homepage promo or sitemap section. NEXT_PUBLIC_POKEMON_SECTION="0" in Vercel
+// still turns it off.
+const POKEMON_DATA_BUILT = require("node:fs").existsSync(require("node:path").join(__dirname, "data", "pokemon", "products.json")) ? "1" : "0";
+
 const CARD_CDN_CACHE = "public, s-maxage=86400, stale-while-revalidate=86400";
 
 const nextConfig = {
+  env: { POKEMON_DATA_BUILT },
   // Public data as files (src/lib/public-data/, DECISIONS.md 2026-10-09): the
   // router and mode modules import node:fs / node:crypto / node:async_hooks, and
   // lib/db.ts (which imports them) is reachable from a few client components via
@@ -147,6 +157,13 @@ const nextConfig = {
       // packed when the packer ran (PUBLIC_DATA_FILES above). In "db" mode no
       // function needs it, so it stays out of all ~300 function bundles.
       "/**": ["./data/price-history/**/*.json", ...PUBLIC_DATA_FILES],
+      // The Pokémon section's files only where they are read: its pages, its
+      // API routes and the child sitemaps (src/lib/pokemon/store.ts). Never "/**":
+      // ~300 Riftbound functions have no use for them.
+      "/pokemon/**": ["./data/pokemon/**/*.json"],
+      "/api/pokemon/**": ["./data/pokemon/**/*.json"],
+      "/sitemaps/**": ["./data/pokemon/**/*.json"],
+      "/sitemap.xml": ["./data/pokemon/**/*.json"],
     },
     // With the pack bundled, data/public/ never is, even if the tracer follows
     // the reader's path.join(process.cwd(), "data", "public") on its own.
@@ -186,15 +203,6 @@ const nextConfig = {
       // /pricing → /premium (2026-10-22, owner: "Redirect /pricing to /premium
       // (301)"). statusCode, not `permanent`, which would answer 308.
       { source: "/pricing", destination: "/premium", statusCode: 301 },
-      // The Pokémon section is gone to DexCompare (owner, 2026-10-30: "Redirect to
-      // DexCompare"): its database stopped answering and every page was a 500
-      // (src/lib/pokemon/flag.ts POKEMON_PAUSED). 301s, so the links and visitors
-      // go to the owner's Pokémon sealed site: the type pages to DexCompare's US
-      // type pages, set lists to its US sets, everything else to its region
-      // picker. ":path*" also matches /pokemon itself, so it comes last.
-      ...["booster-boxes", "elite-trainer-boxes", "booster-bundles"].map((t) => ({ source: `/pokemon/${t}`, destination: `https://dexcompare.app/us/type/${t}`, statusCode: 301 })),
-      { source: "/pokemon/sets/:path*", destination: "https://dexcompare.app/us/sets", statusCode: 301 },
-      { source: "/pokemon/:path*", destination: "https://dexcompare.app/", statusCode: 301 },
       // /decks is a live route again (2026-09-26, DECISIONS.md "Public decks"):
       // the PLAYER-PUBLISHED deck library. The 2026-09-12 redirects that sent
       // every /decks URL to /deck (after the hand-copied meta decks were

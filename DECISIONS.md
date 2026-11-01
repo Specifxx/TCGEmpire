@@ -21114,3 +21114,48 @@ reason to come back that search rankings alone don't. `/forum` (docs/forum.md):
   DiscussionForumPosting JSON-LD.
 - **Moderation:** the owner asks Claude; a post is removed by an edit to
   `forum.json` (`removeFromForum` in `src/lib/forum/core.ts`).
+
+## 2026-11-01: The Pokémon section returns, served from files in the repository
+
+The owner asked for the Pokémon section back ("bring it back exactly how it
+looked before, and exactly where it was on the homepage … we're not using a
+Neon database anymore, we're using the actual repository"). It had been off
+since 2026-10-30 (above): its Neon project stopped answering on 2026-10-23 and
+every page was a 500, and the paused section 301'd to DexCompare.
+
+- **No database.** Everything the section stored is public (TCGplayer,
+  Cardmarket and eBay prices the pages print anyway), so it now lives as JSON
+  in `data/pokemon/` (`src/lib/pokemon/store.ts`): `sets.json`,
+  `products.json`, `offers.json` (current price per product, market and
+  source), `ebay-checks.json` (the eBay rotation), `last-run.json` and one
+  `history/YYYY-MM-DD.json` per UTC day. `prisma/pokemon/`, `lib/pokemon/db.ts`,
+  `POKEMON_VARS` and the second `prisma generate` are gone.
+- **The import** (`pokemon-import.yml`, same two runs, same eBay rules) reads
+  the files, changes them in memory and writes them back once, then
+  `scripts/pokemon/publish-data.sh` commits them to `main` without the deploy
+  marker, like the Riftbound price history. A failed TCGCSV read writes
+  nothing; an empty catalogue is never written. The 05:17 UTC run lands before
+  the morning release, so pages carry the day's TCGplayer prices; the 21:47 eBay
+  run rides the next one. The page purge step is gone: data changes only with a
+  deploy, and a deploy starts with a fresh page cache.
+- **Reads.** The two loaders (`getPokemonCatalog`, `getPokemonProduct`) read
+  the files once per warm function and memoise; no `unstable_cache`, because
+  there is no database read to save and a Data Cache entry would only add
+  writes. The sitemap reads the files directly. Page TTLs are unchanged.
+- **Bundle and cost.** `next.config.js` traces `data/pokemon` into the
+  `/pokemon/**`, `/api/pokemon/**` and sitemap functions only, never `/**`, so
+  the ~300 Riftbound functions do not grow. Size: about 1 MB of current files
+  and ~20 KB of history a day (~7 MB a year), one row per line so a day's diff
+  is the rows that changed.
+- **The switch follows the files.** `next.config.js` inlines
+  `POKEMON_DATA_BUILT` ("1" when the build has `data/pokemon/products.json`),
+  and `pokemonSectionOn()` is that AND `NEXT_PUBLIC_POKEMON_SECTION` not "0".
+  So the nav link, the homepage promo (unchanged, still in `HomeSections.tsx`
+  where it was) and the sitemap section come back with the first build that
+  carries the files, and a build without them shows nothing rather than an
+  empty section. `POKEMON_PAUSED` and the DexCompare 301s are removed.
+- **Watched.** `pokemon-import.yml` joins the ops monitor's scheduled jobs
+  (36 h): it was missing, which is why a week of failed imports went unseen.
+- Lost with the old project: the market-price history before 2026-11-01 (the
+  charts start again from the first import) and the original product slugs,
+  which the importer re-derives from the same names, so most come back the same.

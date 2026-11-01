@@ -1,5 +1,6 @@
 // The Pokémon sealed import, run once a day by .github/workflows/pokemon-import.yml
-// (scripts/pokemon/import.ts). Writes ONLY to the Pokémon database.
+// (scripts/pokemon/import.ts). Writes ONLY the section's files in data/pokemon
+// (lib/pokemon/store.ts), which the workflow then commits to main.
 //
 //   1. TCGCSV  → the catalogue (sets, products) and TCGplayer's US prices
 //   2. Cardmarket (POKEMON_CARDMARKET=1 only) → EU lowest + trend prices
@@ -7,12 +8,12 @@
 //
 // Each stage fails alone and keeps yesterday's rows: a group that did not
 // download keeps its products and prices exactly as they were, and a failed
-// stage never deletes anything. Whole-table reads are fine here (egress rule 4:
-// they belong in scripts); the request path reads two cached loaders only.
+// stage never deletes anything. The whole store is read into memory, changed
+// stage by stage, and written back once at the end of the run.
 
 import { convertCents, convertUsdCents } from "../fx";
 import { COUNTRIES, type Country } from "../country";
-import { pokemonDb } from "./db";
+import { readPokemonData, writeHistorySeries, writePokemonData, type PokemonData, type StoredOffer } from "./store";
 import {
   TCGCSV_BASE,
   assignSetSlugs,
@@ -72,14 +73,7 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R
   return out;
 }
 
-const utcDay = (d = new Date()) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-const asDate = (day: string | null) => (day ? new Date(`${day}T00:00:00Z`) : null);
-
-function chunk<T>(arr: T[], n: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
-  return out;
-}
+const utcDayIso = (d = new Date()) => d.toISOString().slice(0, 10);
 
 export interface PokemonImportSummary {
   groups: { inScope: number; fetched: number; failed: string[] };
@@ -90,8 +84,7 @@ export interface PokemonImportSummary {
 }
 
 // ── 1. TCGCSV ─────────────────────────────────────────────────────────────────
-async function importTcgcsv(summary: PokemonImportSummary): Promise<void> {
-  const db = pokemonDb();
+async function importTcgcsv(store: PokemonData, summary: PokemonImportSummary, now: Date): Promise<void> {
   const all = (await getJson<{ results: TcgcsvGroup[] }>(`${TCGCSV_BASE}/groups`)).results;
   const groups = all.filter((g) => groupRole(g));
   summary.groups.inScope = groups.length;
@@ -117,85 +110,82 @@ async function importTcgcsv(summary: PokemonImportSummary): Promise<void> {
   summary.catalog.skipped = build.skipped;
 
   // Sets: a set keeps its slug once written, like a product.
-  const existingSets = new Map((await db.pokemonSet.findMany({ select: { id: true, slug: true } })).map((s) => [s.id, s.slug]));
+  const setById = new Map(store.sets.map((s) => [s.id, s]));
+  const existingSets = new Map(store.sets.map((s) => [s.id, s.slug]));
   const freshSetSlugs = assignSetSlugs(build.sets.filter((s) => !existingSets.has(s.id)).map((s) => s));
   const takenSetSlugs = new Set(existingSets.values());
   for (const s of build.sets) {
     let slug = existingSets.get(s.id) ?? freshSetSlugs.get(s.id) ?? s.slug;
     if (!existingSets.has(s.id) && takenSetSlugs.has(slug)) slug = `${slug}-${s.id}`;
     takenSetSlugs.add(slug);
-    const data = { name: s.name, code: s.code, series: s.series, releasedOn: asDate(s.releasedOn) };
-    await db.pokemonSet.upsert({ where: { id: s.id }, create: { id: s.id, slug, ...data }, update: data });
+    const row = { id: s.id, slug, name: s.name, code: s.code, series: s.series, releasedOn: s.releasedOn };
+    if (!setById.has(s.id)) store.sets.push(row);
+    else Object.assign(setById.get(s.id) as object, row);
   }
   summary.catalog.sets = build.sets.length;
 
-  const existing = new Map((await db.pokemonProduct.findMany({ select: { id: true, slug: true } })).map((p) => [p.id, p.slug]));
+  const productById = new Map(store.products.map((p) => [p.id, p]));
+  const existing = new Map(store.products.map((p) => [p.id, p.slug]));
   const slugs = assignSlugs(build.products, existing);
-  for (const batch of chunk(build.products, 100)) {
-    await db.$transaction(
-      batch.map((p) => {
-        const data = {
-          name: p.name,
-          setId: p.setId,
-          groupId: p.groupId,
-          kind: p.kind,
-          series: p.series,
-          imageUrl: p.imageUrl,
-          tcgplayerUrl: p.tcgplayerUrl,
-          releasedOn: asDate(p.releasedOn),
-          presale: p.presale,
-          contents: p.contents,
-          upc: p.upc,
-          packCount: p.packCount,
-          packCountFrom: p.packCountFrom,
-          active: true,
-        };
-        return db.pokemonProduct.upsert({
-          where: { id: p.id },
-          create: { id: p.id, slug: slugs.get(p.id) as string, ...data },
-          update: data,
-        });
-      }),
-    );
+  for (const p of build.products) {
+    const data = {
+      name: p.name,
+      setId: p.setId,
+      groupId: p.groupId,
+      kind: p.kind,
+      series: p.series,
+      imageUrl: p.imageUrl,
+      tcgplayerUrl: p.tcgplayerUrl,
+      releasedOn: p.releasedOn,
+      presale: p.presale,
+      contents: p.contents,
+      upc: p.upc,
+      packCount: p.packCount,
+      packCountFrom: p.packCountFrom,
+      active: true,
+    };
+    const row = productById.get(p.id);
+    if (row) Object.assign(row, data);
+    else {
+      const created = { id: p.id, slug: slugs.get(p.id) as string, ...data, cardmarketId: null, firstSeenAt: now.toISOString() };
+      store.products.push(created);
+      productById.set(p.id, created);
+    }
   }
   summary.catalog.products = build.products.length;
 
   // Gone from a group that DID download: no longer listed, so no longer shown.
-  const seen = build.products.map((p) => p.id);
-  const deactivated = await db.pokemonProduct.updateMany({
-    where: { groupId: { in: fetchedGroups.map((g) => g.groupId) }, id: { notIn: seen }, active: true },
-    data: { active: false },
-  });
-  summary.catalog.deactivated = deactivated.count;
+  const seen = new Set(build.products.map((p) => p.id));
+  const fetchedIds = new Set(fetchedGroups.map((g) => g.groupId));
+  let deactivated = 0;
+  for (const p of store.products) {
+    if (p.active && fetchedIds.has(p.groupId) && !seen.has(p.id)) {
+      p.active = false;
+      deactivated++;
+    }
+  }
+  summary.catalog.deactivated = deactivated;
 
   // TCGplayer prices: replaced only for products in groups that downloaded.
-  const now = new Date();
-  const productById = new Map(build.products.map((p) => [p.id, p]));
-  const rows = build.prices.flatMap((pr) => {
-    const p = productById.get(pr.productId);
+  const built = new Map(build.products.map((p) => [p.id, p]));
+  const checkedAt = now.toISOString();
+  const rows: StoredOffer[] = build.prices.flatMap((pr) => {
+    const p = built.get(pr.productId);
     if (!p) return [];
-    const base = { productId: pr.productId, market: "US", currency: "USD", url: p.tcgplayerUrl, checkedAt: now, inStock: true };
+    const base = { productId: pr.productId, market: "US", currency: "USD", url: p.tcgplayerUrl, checkedAt, inStock: true, shippingCents: null, title: null };
     return [
       ...(pr.lowCents != null ? [{ ...base, source: "tcgplayer", priceCents: pr.lowCents }] : []),
       ...(pr.marketCents != null ? [{ ...base, source: "tcgplayer_market", priceCents: pr.marketCents }] : []),
     ];
   });
-  await db.$transaction([
-    db.pokemonOffer.deleteMany({ where: { productId: { in: seen }, source: { in: ["tcgplayer", "tcgplayer_market"] } } }),
-    db.pokemonOffer.createMany({ data: rows }),
-  ]);
+  store.offers = [...store.offers.filter((o) => !(seen.has(o.productId) && (o.source === "tcgplayer" || o.source === "tcgplayer_market"))), ...rows];
   summary.tcgplayer.listings = rows.filter((r) => r.source === "tcgplayer").length;
   summary.tcgplayer.market = rows.filter((r) => r.source === "tcgplayer_market").length;
 
   // One point a day: a re-run the same day replaces it.
-  const day = utcDay(now);
-  const points = build.prices
-    .filter((pr) => pr.marketCents != null)
-    .map((pr) => ({ productId: pr.productId, series: "tcgplayer_market", day, cents: pr.marketCents as number }));
-  await db.$transaction([
-    db.pokemonPricePoint.deleteMany({ where: { series: "tcgplayer_market", day, productId: { in: points.map((p) => p.productId) } } }),
-    db.pokemonPricePoint.createMany({ data: points }),
-  ]);
+  const points: Record<string, number> = {};
+  for (const pr of build.prices) if (pr.marketCents != null && built.has(pr.productId)) points[String(pr.productId)] = pr.marketCents;
+  if (Object.keys(points).length) writeHistorySeries(utcDayIso(now), "tcgplayer_market", points);
 }
 
 // ── 2. Cardmarket ─────────────────────────────────────────────────────────────
@@ -203,44 +193,37 @@ export function pokemonCardmarketEnabled(): boolean {
   return process.env.POKEMON_CARDMARKET === "1";
 }
 
-async function importCardmarket(summary: PokemonImportSummary): Promise<void> {
-  const db = pokemonDb();
+async function importCardmarket(store: PokemonData, summary: PokemonImportSummary, now: Date): Promise<void> {
   const [catalogue, guide] = await Promise.all([
     getJson<{ products: CmProduct[] }>(process.env.POKEMON_CARDMARKET_PRODUCTS_URL || CM_NONSINGLES_URL),
     getJson<{ priceGuides: CmPrice[] }>(process.env.POKEMON_CARDMARKET_PRICES_URL || CM_PRICEGUIDE_URL),
   ]);
-  const ours = await db.pokemonProduct.findMany({ where: { active: true }, select: { id: true, name: true, kind: true } });
-  const matches = matchCardmarket(
-    ours.map((o) => ({ ...o, kind: o.kind as PkKind })),
-    catalogue.products,
-  );
+  const ours = store.products.filter((p) => p.active).map((p) => ({ id: p.id, name: p.name, kind: p.kind as PkKind }));
+  const matches = matchCardmarket(ours, catalogue.products);
   summary.cardmarket.matched = matches.size;
   if (matches.size === 0) {
     summary.cardmarket.error = "0 matches — keeping existing rows";
     return;
   }
   const priceById = new Map(guide.priceGuides.map((p) => [p.idProduct, p]));
-  const now = new Date();
-  const rows: { productId: number; market: string; source: string; priceCents: number; currency: string; url: string; checkedAt: Date; inStock: boolean }[] = [];
-  const points: { productId: number; series: string; day: Date; cents: number }[] = [];
-  const day = utcDay(now);
+  const checkedAt = now.toISOString();
+  const rows: StoredOffer[] = [];
+  const points: Record<string, number> = {};
   for (const [productId, cmId] of matches) {
     const { lowCents, trendCents } = cmFigures(priceById.get(cmId));
-    const base = { productId, market: "EU", currency: "EUR", url: cardmarketPokemonUrl(cmId), checkedAt: now, inStock: true };
+    const base = { productId, market: "EU", currency: "EUR", url: cardmarketPokemonUrl(cmId), checkedAt, inStock: true, shippingCents: null, title: null };
     if (lowCents != null) rows.push({ ...base, source: "cardmarket", priceCents: lowCents });
     if (trendCents != null) {
       rows.push({ ...base, source: "cardmarket_trend", priceCents: trendCents });
-      points.push({ productId, series: "cardmarket_trend", day, cents: trendCents });
+      points[String(productId)] = trendCents;
     }
   }
-  await db.$transaction([
-    db.pokemonOffer.deleteMany({ where: { source: { in: ["cardmarket", "cardmarket_trend"] } } }),
-    db.pokemonOffer.createMany({ data: rows }),
-    db.pokemonPricePoint.deleteMany({ where: { series: "cardmarket_trend", day } }),
-    db.pokemonPricePoint.createMany({ data: points }),
-  ]);
-  for (const batch of chunk([...matches], 200)) {
-    await db.$transaction(batch.map(([id, cmId]) => db.pokemonProduct.update({ where: { id }, data: { cardmarketId: cmId } })));
+  store.offers = [...store.offers.filter((o) => o.source !== "cardmarket" && o.source !== "cardmarket_trend"), ...rows];
+  writeHistorySeries(utcDayIso(now), "cardmarket_trend", points);
+  const byId = new Map(store.products.map((p) => [p.id, p]));
+  for (const [id, cmId] of matches) {
+    const p = byId.get(id);
+    if (p) p.cardmarketId = cmId;
   }
   summary.cardmarket.written = rows.length;
 }
@@ -263,8 +246,7 @@ export const POKEMON_EBAY_RESERVE = 2500;
  */
 export const POKEMON_EBAY_MONTHS = 12;
 
-async function importEbay(summary: PokemonImportSummary): Promise<void> {
-  const db = pokemonDb();
+async function importEbay(store: PokemonData, summary: PokemonImportSummary): Promise<void> {
   const remaining = await ebayRemainingToday();
   const budget = pokemonEbayBudget(
     remaining,
@@ -277,30 +259,27 @@ async function importEbay(summary: PokemonImportSummary): Promise<void> {
 
   const since = new Date();
   since.setUTCMonth(since.getUTCMonth() - envInt("POKEMON_EBAY_MONTHS", POKEMON_EBAY_MONTHS));
-  const products = await db.pokemonProduct.findMany({
-    where: {
-      active: true,
-      setId: { not: null },
-      kind: { in: [...EBAY_TRACKED_KINDS] },
-      OR: [{ presale: true }, { releasedOn: { gte: since } }],
-    },
-    select: { id: true, name: true, kind: true, releasedOn: true, set: { select: { name: true } } },
-  });
-  const setNames = (await db.pokemonSet.findMany({ select: { name: true } })).map((s) => s.name);
-  const usMarket = new Map(
-    (
-      await db.pokemonOffer.findMany({
-        where: { source: "tcgplayer_market", productId: { in: products.map((p) => p.id) } },
-        select: { productId: true, priceCents: true },
-      })
-    ).map((o) => [o.productId, o.priceCents]),
-  );
-  const checks = new Map(
-    (await db.pokemonEbayCheck.findMany({ select: { productId: true, market: true, checkedAt: true } })).map((c) => [
-      `${c.productId}|${c.market}`,
-      c.checkedAt.getTime(),
-    ]),
-  );
+  const sinceDay = since.toISOString().slice(0, 10);
+  const setById = new Map(store.sets.map((x) => [x.id, x]));
+  const products = store.products
+    .filter(
+      (p) =>
+        p.active &&
+        p.setId != null &&
+        (EBAY_TRACKED_KINDS as ReadonlySet<string>).has(p.kind) &&
+        (p.presale || (p.releasedOn != null && p.releasedOn >= sinceDay)),
+    )
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      kind: p.kind,
+      releasedOn: p.releasedOn ? new Date(`${p.releasedOn}T00:00:00Z`) : null,
+      set: p.setId != null && setById.has(p.setId) ? { name: (setById.get(p.setId) as { name: string }).name } : null,
+    }));
+  const setNames = store.sets.map((x) => x.name);
+  const tracked = new Set(products.map((p) => p.id));
+  const usMarket = new Map(store.offers.filter((o) => o.source === "tcgplayer_market" && tracked.has(o.productId)).map((o) => [o.productId, o.priceCents]));
+  const checks = new Map(store.ebayChecks.map((c) => [`${c.productId}|${c.market}`, new Date(c.checkedAt).getTime()]));
   const byNewest = [...products].sort((a, b) => (b.releasedOn?.getTime() ?? 0) - (a.releasedOn?.getTime() ?? 0));
   const priority = new Map(byNewest.map((p, i) => [p.id, i]));
   const pairs: EbayPair[] = products.flatMap((p) =>
@@ -336,36 +315,33 @@ async function importEbay(summary: PokemonImportSummary): Promise<void> {
       floorCents: convertUsdCents(KIND_FLOOR_USD_CENTS[p.kind as PkKind] ?? 0, currency),
       currency,
     });
-    const now = new Date();
-    const key = { productId_market_source: { productId: p.id, market, source: "ebay" } };
+    const checkedAt = new Date().toISOString();
+    const isPair = (o: { productId: number; market: string }) => o.productId === p.id && o.market === market;
+    // Nothing matched today: yesterday's listing is not evidence of today's.
+    store.offers = store.offers.filter((o) => !(isPair(o) && o.source === "ebay"));
     if (best) {
       summary.ebay.matched++;
-      const data = {
+      store.offers.push({
+        productId: p.id,
+        market,
+        source: "ebay",
         priceCents: best.priceCents,
         currency,
         shippingCents: best.shippingCents,
         url: best.url,
         title: best.title.slice(0, 200),
         inStock: true,
-        checkedAt: now,
-      };
-      await db.pokemonOffer.upsert({ where: key, create: { productId: p.id, market, source: "ebay", ...data }, update: data });
-    } else {
-      // Nothing matched today: yesterday's listing is not evidence of today's.
-      await db.pokemonOffer.deleteMany({ where: { productId: p.id, market, source: "ebay" } });
+        checkedAt,
+      });
     }
-    await db.pokemonEbayCheck.upsert({
-      where: { productId_market: { productId: p.id, market } },
-      create: { productId: p.id, market, checkedAt: now, matched: Boolean(best) },
-      update: { checkedAt: now, matched: Boolean(best) },
-    });
+    store.ebayChecks = [...store.ebayChecks.filter((c) => !isPair(c)), { productId: p.id, market, checkedAt, matched: Boolean(best) }];
     await sleep(150);
   }
 }
 
 // ── The run ───────────────────────────────────────────────────────────────────
 export async function importPokemon(): Promise<PokemonImportSummary> {
-  const db = pokemonDb();
+  const store = readPokemonData();
   const summary: PokemonImportSummary = {
     groups: { inScope: 0, fetched: 0, failed: [] },
     catalog: { sets: 0, products: 0, deactivated: 0, skipped: {} },
@@ -373,31 +349,31 @@ export async function importPokemon(): Promise<PokemonImportSummary> {
     cardmarket: { enabled: pokemonCardmarketEnabled(), matched: 0, written: 0 },
     ebay: { enabled: pokemonEbayEnabled(), remaining: null, budget: 0, searched: 0, matched: 0 },
   };
-  const run = await db.pokemonImportRun.create({ data: {} });
+  const now = new Date();
   let ok = true;
   try {
-    await importTcgcsv(summary);
+    await importTcgcsv(store, summary, now);
   } catch (e) {
     ok = false;
     summary.groups.failed.push(`TCGCSV stage: ${(e as Error).message}`);
   }
   if (summary.cardmarket.enabled) {
     try {
-      await importCardmarket(summary);
+      await importCardmarket(store, summary, now);
     } catch (e) {
       summary.cardmarket.error = (e as Error).message;
     }
   }
   if (summary.ebay.enabled) {
     try {
-      await importEbay(summary);
+      await importEbay(store, summary);
     } catch (e) {
       summary.ebay.error = (e as Error).message;
     }
   }
-  await db.pokemonImportRun.update({
-    where: { id: run.id },
-    data: { finishedAt: new Date(), ok, summary: JSON.parse(JSON.stringify(summary)) },
-  });
+  store.lastRun = { startedAt: now.toISOString(), finishedAt: new Date().toISOString(), ok, summary: JSON.parse(JSON.stringify(summary)) };
+  // Never write an empty catalogue: products.json existing is what turns the
+  // section on at the next build (next.config.js POKEMON_DATA_BUILT).
+  if (store.products.length > 0) writePokemonData(store);
   return summary;
 }
