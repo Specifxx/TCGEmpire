@@ -30,6 +30,8 @@ import { ScrollDepthTracker } from "./ScrollDepthTracker";
 import { ArticleSignupCta } from "./ArticleSignupCta";
 import { carriesRadiancePreorderCta, isBeforeRadianceRelease, RADIANCE_CALLOUT_SLUGS } from "@/lib/sets/radiance";
 import { RadiancePreorderCta } from "./RadiancePreorderCta";
+import { LegacyPreorderCta } from "./LegacyPreorderCta";
+import { carriesLegacyPreorderCta } from "@/lib/sets/legacy";
 import { BanListTable } from "./BanListTable";
 import { BANLIST_SLUG } from "@/lib/banlist";
 import { EbayCardSearchRow, EbayCountryLink } from "./EbayCountryLink";
@@ -320,6 +322,9 @@ export async function ArticleView({ article }: { article: Article }) {
   // The block itself switches to "see Radiance prices" on release day, so the
   // rule does not expire.
   const preorderCta = carriesRadiancePreorderCta(article);
+  // Every legacy-tagged post until Legacy's street date (lib/sets/legacy.ts).
+  // Never both: a post tagged for both sets keeps Radiance's block.
+  const legacyCta = !preorderCta && carriesLegacyPreorderCta(article);
   const radianceAlertOpen = !!setByCode(RADIANCE_SET_CODE)?.comingSoon;
   // Radiance posts lead with "Follow the chase cards" instead of the email box
   // (2026-10-16 growth pass, components/ChaseWatchCta.tsx): their readers came
@@ -534,6 +539,7 @@ export async function ArticleView({ article }: { article: Article }) {
       {/* Radiance pre-order CTA, first placement: above the TL;DR, so it is on
           the first screen of the site's highest-traffic post. */}
       {preorderCta && <RadiancePreorderCta placement="top" />}
+      {legacyCta && <LegacyPreorderCta placement="top" />}
 
       {/* Answer-first TL;DR — the block a featured snippet or an AI answer engine
           lifts. Above the fold, above the first ad. */}
@@ -574,6 +580,7 @@ export async function ArticleView({ article }: { article: Article }) {
                 )}
                 {firstSection.trim() ? <Markdown content={firstSection} cards={cards} /> : null}
                 {preorderCta && <RadiancePreorderCta placement="section" withSignup />}
+                {legacyCta && <LegacyPreorderCta placement="section" />}
                 {afterFirst.trim() ? <Markdown content={afterFirst} cards={cards} /> : null}
               </Fragment>
             );

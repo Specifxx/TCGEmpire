@@ -21154,3 +21154,51 @@ walkthrough/review of the site. They call us their **partner**, never
 section asks them to say it's a partnership (FTC/ASA), lightly. The
 owner's ready-to-send replies live in the project's creators playbook, not
 in the repo.
+
+## 2026-11-01: Legacy season starts: a set hub, a banner on every Legacy post, four posts
+
+The owner: "let's get Legacy set up … all the guides, everything we did right for
+Radiance … as soon as possible." Legacy (LGC) ships 29 January 2027 and Riot has
+shown no card; the first previews are at Convergence Fest from 13 December. What
+Radiance had at this stage, and Legacy did not:
+
+- **An indexable set hub.** `/sets/legacy` was noindex (zero cards, no hub).
+  `components/sets/LegacyHub.tsx` now renders Riot's facts, the eight named
+  Legends (each linked to its champion hub), the products with US MSRPs, a live
+  cross-store pre-order table, the timeline and an FAQ that also feeds the
+  page's FAQPage JSON-LD (`lib/sets/legacy.ts`, one array). That earns
+  `hubReady`. With zero cards the page's title is "Riftbound Legacy: Legends,
+  Products & Card List", not "Card List & Price Guide", which would promise
+  prices it does not have.
+- **`previewFrom` and `hasSetGallery()`.** `hubReady` also sent the nav, the
+  homepage's "By set" tile and every other gallery to `/sets/legacy/gallery`,
+  an empty noindexed page until a card exists. `previewFrom: "2026-12-13"` holds
+  those links back (the tile opens the hub instead) and lets them through on
+  the first preview day with no edit. Radiance never needed it.
+- **A pre-order banner on every legacy-tagged post** (`LegacyPreorderCta`), the
+  cheapest open box pre-order in the reader's market, as Radiance's posts had.
+  Guides included: Legacy has no guide with its own release capture to protect.
+  It retires on release day.
+- **Three posts** for queries nobody owned (docs/seo-keyword-map.md), each
+  over the 1,500-word policy: where to buy, the pre-order sell-out snapshot
+  (12 of 17 box listings sold out on 31 Oct, the cheapest first: the Reddit
+  link), and all eight 2027 precons (Legacy's Champion Decks with Proving
+  Grounds 2nd Edition: one post, since two short deck posts would split one
+  buyer and miss the word floor). Prices are from the 31 Oct public sealed
+  export, dated in the copy; card prices are TCGplayer market, never the
+  cheapest listing, which had outliers.
+
+**Reversed: Proving Grounds 2nd Edition is not OGS.** On 2026-10-25 a store
+title "Legacy - Proving Grounds Box Set (2nd Edition)" was deliberately kept
+under OGS. But PG2 is a new box (Heimerdinger, Karma, Vladimir, Illaoi;
+US$40, 19 Feb 2027), and filed as OGS it sat in Origins' Proving Grounds group as
+its cheapest "in-stock" offer (C$47.95 at 401 Games). It now maps to LGC with
+its own type, "Proving Grounds 2nd Edition", so it is compared on
+`/legacy-preorders`; a "(REPRINT)" first edition stays OGS. The four Legacy
+Champion Decks sold as one ("Set of 4", or one store's "Showdown Decks (Set of
+4)": Legacy has no Showdown Decks) are "Champion Deck Set (4)", never a single
+deck's group.
+
+Next, when previews start on 13 December: reveals into the spoilers post and the
+gallery (as Radiance's importer did), and the four unnamed Legends into
+`LEGACY_LEGENDS_CONFIRMED`.

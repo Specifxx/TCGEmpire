@@ -8,7 +8,7 @@ import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { PokemonHomePromo } from "@/components/pokemon/PokemonHomePromo";
-import { SETS, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
+import { SETS, hasSetGallery, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
 import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import type { Country } from "@/lib/country";
@@ -280,16 +280,18 @@ export function HomeSections({
             // 12 Oct, its full list out) is shown like a released set, badged New.
             s.comingSoon && !s.sealedAvailable && !showsAsNew(s) ? (
               hasSetHub(s) ? (
+                // Before its previews (Legacy until 13 Dec 2026) the gallery is
+                // empty, so the tile opens the set's hub instead.
                 <Link
                   key={s.code}
-                  href={`/sets/${s.slug}/gallery`}
+                  href={hasSetGallery(s) ? `/sets/${s.slug}/gallery` : `/sets/${s.slug}`}
                   className="card-surface flex flex-col gap-1 p-4 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
                 >
                   <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
                     {s.code}
                     <span className="chip bg-gold/20 text-gold">Coming soon</span>
                   </span>
-                  <span className="text-xs text-slate-400">{s.name} · card gallery →</span>
+                  <span className="text-xs text-slate-400">{s.name} · {hasSetGallery(s) ? "card gallery" : "what's confirmed"} →</span>
                 </Link>
               ) : (
                 <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
@@ -326,7 +328,7 @@ export function HomeSections({
             there is one (its gallery is the page people are looking for, and
             it has no complete count to quote yet), else the newest released
             set, which is Radiance again from 23 October. */}
-        {nextSet && hasSetHub(nextSet) ? (
+        {nextSet && hasSetGallery(nextSet) ? (
           <p className="mt-3 text-sm">
             <Link
               href={`/sets/${nextSet.slug}/gallery`}

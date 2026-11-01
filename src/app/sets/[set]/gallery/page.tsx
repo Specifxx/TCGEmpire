@@ -11,7 +11,7 @@ import { CardTile } from "@/components/CardTile";
 import { cardTileSelect, trimTileArtFallback } from "@/lib/cards";
 import type { CardTileData } from "@/components/CardTile";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { DOMAIN_KEYS, hasSetHub, isPreorderSetCode, setBySlug, SETS, singlesLive } from "@/lib/constants";
+import { DOMAIN_KEYS, hasSetGallery, isPreorderSetCode, setBySlug, SETS, singlesLive } from "@/lib/constants";
 import { preordersHrefForSet, releaseDateLabel as calendarDateLabel, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -536,9 +536,9 @@ export default async function SetGalleryPage({ params }: { params: { set: string
               {set.name} pre-order prices →
             </Link>
           )}
-          {/* hasSetHub, not !comingSoon: a set in its preview season has a real
+          {/* hasSetGallery, not !comingSoon: a set in its preview season has a real
               gallery, and every other set's gallery should lead to it. */}
-          {SETS.filter((s) => s.slug !== set.slug && hasSetHub(s)).map((s) => (
+          {SETS.filter((s) => s.slug !== set.slug && hasSetGallery(s)).map((s) => (
             <Link key={s.slug} href={`/sets/${s.slug}/gallery`} className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
               {s.name} gallery
             </Link>

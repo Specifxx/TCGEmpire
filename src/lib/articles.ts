@@ -7,6 +7,7 @@ import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
+import { LEGACY_SEASON_ARTICLES } from "./content/legacy-season-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
 import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE } from "./alert-limits";
@@ -10186,7 +10187,7 @@ Each set on this calendar gets its own tracker as Riot shows it: **[the Radiance
     author: "RiftCompare",
     date: "2026-08-04",
     readMins: 8,
-    tags: ["news", "rules", "mechanics", "gameplay", "set"],
+    tags: ["news", "rules", "mechanics", "gameplay", "set", "legacy"],
     hero: {
       src: "/blog/riftbound-legacy-pack-changes-and-card-templating.png",
       alt: "Riftbound Legacy pack composition and card templating changes explained on RiftCompare",
@@ -12653,6 +12654,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
   },
   ...SEO_PACK_ARTICLES,
   ...RADIANCE_TIER_GUIDES,
+  ...LEGACY_SEASON_ARTICLES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",
     category: "blog",
