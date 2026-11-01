@@ -21140,3 +21140,17 @@ Journey still loads only on blog and guide articles, and the AdSense console
 settings (Auto ads, vignette off, anchor) are untouched. The 2026-11-23 review
 keeps AdSense in the comparison against affiliate earnings per visit.
 Deployed immediately on the owner's standing authorisation.
+
+## 2026-11-01: Creators, "How to work with us"
+
+Creators kept asking the owner how we'd like the site promoted, so /creators
+now answers it in a "How to work with us" section (`#work-with-us`). Owner's
+terms: flexible, low expectations, no contract, script or quota; any one of
+three is plenty: link the site (plus their creator code where the site has
+codes, RiftCompare only), a shout-out in their normal content, or a
+walkthrough/review of the site. They call us their **partner**, never
+"sponsor": we don't pay them for a mention. On our own pages they stay
+"featured creators" ("partners" here still means affiliate links). The
+section asks them to say it's a partnership (FTC/ASA), lightly. The
+owner's ready-to-send replies live in the project's creators playbook, not
+in the repo.
