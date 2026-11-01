@@ -21127,3 +21127,16 @@ aggregated by path, written as `gsc-pages.json` to the `demand` branch of the si
 writes with it here). The branch is an orphan with its own no-deploy `vercel.json`. Only page numbers leave
 Search Console, never a query. Watched in `JOBS` (`src/lib/ops/checks.ts`). Another sister site joins by adding
 a row to `SITES` and reading the file in its own eBay script.
+
+## AdSense back on, again — 2026-11-01
+
+The owner turned AdSense back on: "I think it's not worth it having it off the
+whole time. I don't think it's doing anything much." `ADSENSE_SERVING = true`
+in `lib/adsense.ts`, exactly as in "AdSense back on" (2026-10-26): the loader,
+the pagead2 and Funding Choices preconnects and (under `AD_STRATEGY=manual`)
+the units return on every page, so Auto ads and the EEA consent message come
+back. Paid members stay ad-free (`lib/ad-free-boot.ts` pauses ad requests),
+Journey still loads only on blog and guide articles, and the AdSense console
+settings (Auto ads, vignette off, anchor) are untouched. The 2026-11-23 review
+keeps AdSense in the comparison against affiliate earnings per visit.
+Deployed immediately on the owner's standing authorisation.

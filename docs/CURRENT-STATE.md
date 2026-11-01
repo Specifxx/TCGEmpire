@@ -601,14 +601,15 @@ longer lands on its entry.
   cheapest first, same URL, no redirect ([2026-10-24](../DECISIONS.md#L19340)). All 219 official printings plus 16
   Signatures are in the catalogue; all nine Legends are named everywhere
   (`RADIANCE_LEGENDS_CONFIRMED`). [2026-10-22](../DECISIONS.md#L18959)
-- **AdSense off; Journey on articles only (owner, 2026-10-27):**
-  AdSense was switched off, back on "for now", and off again for good the
-  next day because the ads were too annoying:
+- **AdSense on; Journey on articles only (owner, 2026-11-01):**
+  AdSense was switched off, back on "for now", off again the next day because
+  the ads were too annoying, and back on 2026-11-01 because having it off was
+  not doing much (paid members stay ad-free):
   `ADSENSE_SERVING` (`lib/adsense.ts`) is the one switch for the loader and
   every unit. Mediavine's script loads only on `/blog/[slug]` and
   `/guides/[slug]`, never for an ad-free member, and links off an article do a
   full page load so it never reaches card, set, sealed or price pages.
-  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20023), [2026-10-27](../DECISIONS.md#L20039)
+  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20023), [2026-10-27](../DECISIONS.md#L20039), [2026-11-01](../DECISIONS.md#L21131)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket
