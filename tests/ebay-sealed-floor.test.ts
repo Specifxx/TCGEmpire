@@ -26,6 +26,8 @@ test("single and code cards are still excluded", () => {
     "Riftbound Origins Booster Box single card Ahri",
     "Riftbound Origins Booster Box Chinese Trading Card Game",
     "Riftbound Origins Booster Box EMPTY box only",
+    // eBay ES, 2026-11-01: a Slim box in Spanish ("delgada") priced the EU Origins box at EUR 61.73.
+    "Riftbound League of Legends Origins Pantalla Booster Box Delgada 24 Paquetes Nuevo Sellado",
   ]) {
     assert.equal(SEALED_EXCLUDE_EBAY.test(sealedExclusionText(t)), true, t);
   }

@@ -1102,7 +1102,7 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
 // against every real sealed title in the database on the day (~200 across six
 // markets): not one legitimate English listing uses either word.
 const SEALED_EXCLUDE_EBAY_BASE =
-  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card|\bjumbo\b|\bslim\b/i;
+  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card|\bjumbo\b|\bslim\b|\bdelgad[ao]s?\b/i;
 // A listing calling itself Chinese/Japanese/Korean is (almost always) a foreign
 // printing of an English product being searched for — excluded by default. The T1
 // Signature Edition's CN/KR seeds are the one deliberate exception: for those two
