@@ -36,3 +36,11 @@ test("findSplitQueries keeps queries our own pages share, folding #fragments int
   assert.equal(out[0].impr, 510);
   assert.deepEqual(out[0].pages.map((p) => p.page), ["/sets/radiance", "/sets/radiance/gallery"]);
 });
+
+test("onePropertyPerHost keeps one property per site, the Domain property first", async () => {
+  const { onePropertyPerHost } = await import("../src/lib/ops/gsc-daily");
+  assert.deepEqual(
+    onePropertyPerHost(["https://www.opcompare.app/", "https://riftcompare.com/", "sc-domain:riftcompare.com", "http://riftcompare.com/", "https://opcompare.app/", "https://mtgcompare.app/"]),
+    ["https://mtgcompare.app/", "https://opcompare.app/", "sc-domain:riftcompare.com"],
+  );
+});

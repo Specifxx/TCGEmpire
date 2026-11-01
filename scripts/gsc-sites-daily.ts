@@ -81,7 +81,26 @@ async function main() {
     }
   }
 }
-main().catch((e) => {
+// DETAIL=<property>: which pages gained or lost impressions, the last 4 settled days against the 4 before.
+async function detail(property: string) {
+  const tok = await token();
+  const e = Date.now() - 3 * DAY;
+  const a = await query(tok, property, { startDate: ymd(e - 3 * DAY), endDate: ymd(e), dimensions: ["page"], rowLimit: 25000 });
+  const b = await query(tok, property, { startDate: ymd(e - 7 * DAY), endDate: ymd(e - 4 * DAY), dimensions: ["page"], rowLimit: 25000 });
+  const m = new Map<string, { now: number; before: number; posNow: number; posBefore: number }>();
+  for (const r of a) m.set(r.keys[0], { now: r.impressions, before: 0, posNow: r.position, posBefore: 0 });
+  for (const r of b) {
+    const x = m.get(r.keys[0]) ?? { now: 0, before: 0, posNow: 0, posBefore: 0 };
+    x.before = r.impressions;
+    x.posBefore = r.position;
+    m.set(r.keys[0], x);
+  }
+  const rows = [...m.entries()].sort((x, y) => Math.abs(y[1].now - y[1].before) - Math.abs(x[1].now - x[1].before)).slice(0, 40);
+  console.log(`\n== DETAIL ${property}: impressions ${ymd(e - 3 * DAY)}..${ymd(e)} vs the 4 days before (pages ${a.length} vs ${b.length})`);
+  for (const [u, x] of rows) console.log(`${u.slice(0, 90).padEnd(90)} ${String(x.before).padStart(7)} -> ${String(x.now).padStart(7)}  pos ${x.posBefore.toFixed(1)} -> ${x.posNow.toFixed(1)}`);
+}
+
+(process.env.DETAIL ? Promise.all(process.env.DETAIL.split(",").map((p) => p.trim()).filter(Boolean)).then(async (ps) => { for (const p of ps) await detail(p); }) : main()).catch((e) => {
   console.log(`failed: ${(e as Error).message}`);
   process.exit(1);
 });

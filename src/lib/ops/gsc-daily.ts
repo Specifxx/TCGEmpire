@@ -40,6 +40,32 @@ async function token(raw: string): Promise<string> {
   return tok;
 }
 
+/** Every property the service account can read. Throws on any failure. */
+export async function listGscProperties(raw: string): Promise<string[]> {
+  const tok = await token(raw);
+  const r = await fetch("https://www.googleapis.com/webmasters/v3/sites", { headers: { Authorization: `Bearer ${tok}` } });
+  if (!r.ok) throw new Error(`sites ${r.status}`);
+  const j = (await r.json()) as { siteEntry?: { siteUrl: string; permissionLevel: string }[] };
+  return (j.siteEntry ?? []).filter((e) => e.permissionLevel !== "siteUnverifiedUser").map((e) => e.siteUrl);
+}
+
+/** The bare host a property covers: "sc-domain:x.com", "https://www.x.com/" and "https://x.com/" are all "x.com". */
+export function propertyHost(p: string): string {
+  return p.replace(/^sc-domain:/, "").replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "").toLowerCase();
+}
+
+/** One property per site, so a site with both a Domain and a URL-prefix property is not counted twice. The Domain property wins (it covers every host and protocol); among URL prefixes, https before http, bare before www. */
+export function onePropertyPerHost(props: readonly string[]): string[] {
+  const rank = (p: string) => (p.startsWith("sc-domain:") ? 0 : p.startsWith("https://") && !p.includes("://www.") ? 1 : p.startsWith("https://") ? 2 : 3);
+  const best = new Map<string, string>();
+  for (const p of props) {
+    const h = propertyHost(p);
+    const cur = best.get(h);
+    if (!cur || rank(p) < rank(cur) || (rank(p) === rank(cur) && p < cur)) best.set(h, p);
+  }
+  return [...best.values()].sort((a, b) => propertyHost(a).localeCompare(propertyHost(b)));
+}
+
 /** Clicks, impressions and average position per day for one property. Throws on any failure. */
 export async function fetchGscDaily(raw: string, property: string, start: string, end: string): Promise<GscDay[]> {
   const tok = await token(raw);

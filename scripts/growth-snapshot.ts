@@ -2,10 +2,13 @@
 // and the queries our own pages compete for, read by /admin/growth (2026-10-27). Runs after the ops monitor every three hours.
 // PUBLIC LOGS: this prints only which properties answered, never a number.
 import { prisma } from "../src/lib/db";
-import { fetchGscDaily, fetchGscQueryPages, findSplitQueries, type GscDay, type SplitQuery } from "../src/lib/ops/gsc-daily";
+import { fetchGscDaily, fetchGscQueryPages, findSplitQueries, listGscProperties, onePropertyPerHost, type GscDay, type SplitQuery } from "../src/lib/ops/gsc-daily";
 
 const DAYS = 90;
-const PROPERTIES = (process.env.GSC_PROPERTIES || "https://riftcompare.com/,https://opcompare.app/")
+// Every site the service account can read (2026-11-02, "Family growth target" in
+// DECISIONS.md): one property per host, the Domain property first, since it also
+// counts www and http. GSC_PROPERTIES (comma list) still overrides it.
+const FIXED = (process.env.GSC_PROPERTIES || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -22,6 +25,7 @@ async function main() {
   // Competing pages over the last 28 settled days (Search Console's newest two are provisional).
   const splitEnd = new Date(end.getTime() - 3 * 86400_000);
   const splitStart = new Date(splitEnd.getTime() - 27 * 86400_000);
+  const PROPERTIES = FIXED.length ? FIXED : onePropertyPerHost(await listGscProperties(raw));
   const sites: Record<string, { status: "ok" | "error"; detail?: string; days: GscDay[]; splits?: SplitQuery[] }> = {};
   for (const p of PROPERTIES) {
     try {

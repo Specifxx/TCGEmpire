@@ -5746,6 +5746,8 @@ jobs:
         if: inputs.task == 'gsc-sites-daily'
         env:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          # `url` = comma list of properties: per-page impression changes instead of the pulse
+          DETAIL: ${{ inputs.url }}
         run: npx tsx scripts/gsc-sites-daily.ts
 
       - name: Search Console query report (read-only)
