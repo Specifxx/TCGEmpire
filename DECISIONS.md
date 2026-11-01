@@ -21276,3 +21276,13 @@ retailer, the pre-order table's eBay row is `btn-ghost` like its neighbours, and
 loses its blue tint. The "Paid link" tag and EPN disclosure stay; rows keep their price position. This reverses the
 eBay-blue buttons of 2026-09-26 for price rows only: eBay ad strips, panels, the price guide's per-card eBay button
 and the Pokémon section keep `.btn-ebay`/`.btn-ebay-ghost`.
+
+## 2026-11-01 — The US searches first in the eBay pass
+
+Owner, 2026-11-01: "the eBay API for all websites should also prioritise the US." `ebayMarketsForDay` used to put the
+rotating market first and alternate AU and US behind it, so every other day the US was last: the market whose whole pass
+is discarded when the Browse budget latches (and CA, derived from the US pass, with it). It now returns
+US → today's rotating market → AU. The US has first claim on the quota every day and is never the casualty; the rotating
+market keeps the place ahead of every other daily market (the 2026-08-23 reasoning still holds for everything after the
+US); AU, also daily, now carries the trailing slot alone and loses at most a day when a run overspends. Which markets run
+each day, and the chase pass that follows the same list, are unchanged (`tests/affiliate-priority.test.ts`).
