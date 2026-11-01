@@ -111,7 +111,11 @@ async function main() {
   for (const r of [...pages].sort((a, b) => b.clicks - a.clicks).slice(0, 50)) console.log(line({ ...r, keys: [path(r.keys[0])] }, 70));
 
   // Split queries: query x page, fragments (#heading) folded into their page.
-  const split = findSplitQueries(await query(tok, ymd(start), ymd(end), ["query", "page"], 25000));
+  const qp = await query(tok, ymd(start), ymd(end), ["query", "page"], 25000);
+  console.log("\nTOP QUERY -> PAGE BY IMPRESSIONS (which page Google shows for each big query)");
+  for (const r of [...qp].sort((a, b) => b.impressions - a.impressions).slice(0, 80))
+    console.log(`${r.keys[0].slice(0, 44).padEnd(44)} ${path(r.keys[1]).slice(0, 52).padEnd(52)} ${String(r.clicks).padStart(4)} ${String(r.impressions).padStart(6)} ${r.position.toFixed(1).padStart(5)}`);
+  const split = findSplitQueries(qp);
   console.log("\nSPLIT QUERIES (100+ impressions, two or more of our pages with 15%+ of them each)");
   for (const x of split) {
     console.log(`${x.query.slice(0, 60)}  (${x.impr} impr.)`);
