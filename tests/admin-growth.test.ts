@@ -37,10 +37,16 @@ test("findSplitQueries keeps queries our own pages share, folding #fragments int
   assert.deepEqual(out[0].pages.map((p) => p.page), ["/sets/radiance", "/sets/radiance/gallery"]);
 });
 
-test("onePropertyPerHost keeps one property per site, the Domain property first", async () => {
-  const { onePropertyPerHost } = await import("../src/lib/ops/gsc-daily");
-  assert.deepEqual(
-    onePropertyPerHost(["https://www.opcompare.app/", "https://riftcompare.com/", "sc-domain:riftcompare.com", "http://riftcompare.com/", "https://opcompare.app/", "https://mtgcompare.app/"]),
-    ["https://mtgcompare.app/", "https://opcompare.app/", "sc-domain:riftcompare.com"],
-  );
+test("propertiesByHost groups a site's Domain, https, http and www properties", async () => {
+  const { propertiesByHost } = await import("../src/lib/ops/gsc-daily");
+  const m = propertiesByHost(["https://www.opcompare.app/", "https://riftcompare.com/", "sc-domain:riftcompare.com", "http://riftcompare.com/", "sc-domain:opcompare.app"]);
+  assert.deepEqual([...m.keys()], ["opcompare.app", "riftcompare.com"]);
+  assert.equal(m.get("riftcompare.com")?.length, 3);
+});
+
+test("mergeGscDays takes each day from the property that saw the most, never adds them", async () => {
+  const { mergeGscDays } = await import("../src/lib/ops/gsc-daily");
+  const prefix = [{ d: "2026-10-20", clicks: 5, impr: 100, pos: 9 }, { d: "2026-10-26", clicks: 8, impr: 200, pos: 9 }];
+  const domain = [{ d: "2026-10-26", clicks: 9, impr: 230, pos: 9 }];
+  assert.deepEqual(mergeGscDays([prefix, domain]).map((d) => [d.d, d.clicks]), [["2026-10-20", 5], ["2026-10-26", 9]]);
 });

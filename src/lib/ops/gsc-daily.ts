@@ -54,16 +54,29 @@ export function propertyHost(p: string): string {
   return p.replace(/^sc-domain:/, "").replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "").toLowerCase();
 }
 
-/** One property per site, so a site with both a Domain and a URL-prefix property is not counted twice. The Domain property wins (it covers every host and protocol); among URL prefixes, https before http, bare before www. */
-export function onePropertyPerHost(props: readonly string[]): string[] {
-  const rank = (p: string) => (p.startsWith("sc-domain:") ? 0 : p.startsWith("https://") && !p.includes("://www.") ? 1 : p.startsWith("https://") ? 2 : 3);
-  const best = new Map<string, string>();
-  for (const p of props) {
+/** Properties grouped by the site they cover, so a site with a Domain and a URL-prefix property is counted once. */
+export function propertiesByHost(props: readonly string[]): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  for (const p of [...props].sort()) {
     const h = propertyHost(p);
-    const cur = best.get(h);
-    if (!cur || rank(p) < rank(cur) || (rank(p) === rank(cur) && p < cur)) best.set(h, p);
+    out.set(h, [...(out.get(h) ?? []), p]);
   }
-  return [...best.values()].sort((a, b) => propertyHost(a).localeCompare(propertyHost(b)));
+  return new Map([...out.entries()].sort((a, b) => a[0].localeCompare(b[0])));
+}
+
+/**
+ * One series per site from several properties of it: per day, the property that
+ * saw the most (a Domain property counts every host, but only from the day it
+ * was verified, so the URL-prefix property is the longer history).
+ */
+export function mergeGscDays(series: readonly GscDay[][]): GscDay[] {
+  const best = new Map<string, GscDay>();
+  for (const days of series)
+    for (const d of days) {
+      const cur = best.get(d.d);
+      if (!cur || d.impr > cur.impr || (d.impr === cur.impr && d.clicks > cur.clicks)) best.set(d.d, d);
+    }
+  return [...best.values()].sort((a, b) => a.d.localeCompare(b.d));
 }
 
 /** Clicks, impressions and average position per day for one property. Throws on any failure. */

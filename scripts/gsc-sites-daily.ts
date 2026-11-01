@@ -53,7 +53,7 @@ async function main() {
   const pageStart = Date.now() - 31 * DAY;
   const pageEnd = Date.now() - 3 * DAY;
   console.log(`Properties: ${sites.length}. Days ${ymd(start)}..${ymd(end)} (last 2 provisional).\n`);
-  for (const { siteUrl } of sites.sort((a, b) => a.siteUrl.localeCompare(b.siteUrl))) {
+  for (const { siteUrl, permissionLevel } of sites.sort((a, b) => a.siteUrl.localeCompare(b.siteUrl))) {
     try {
       const days = (await query(tok, siteUrl, { startDate: ymd(start), endDate: ymd(end), dimensions: ["date"], rowLimit: 100 })).sort((a, b) => a.keys[0].localeCompare(b.keys[0]));
       const pages = await query(tok, siteUrl, { startDate: ymd(pageStart), endDate: ymd(pageEnd), dimensions: ["page"], rowLimit: 25000 });
@@ -73,8 +73,16 @@ async function main() {
         weeks.push({ c: rows.reduce((a, r) => a + r.clicks, 0), i: rows.reduce((a, r) => a + r.impressions, 0) });
       }
       const wow = weeks[1].c ? (((weeks[0].c - weeks[1].c) / weeks[1].c) * 100).toFixed(0) + "%" : "n/a";
-      console.log(`== ${siteUrl}: 35d clicks ${clicks}; pages with impressions (28d) ${pages.length}, with clicks ${pages.filter((p) => p.clicks > 0).length}`);
+      console.log(`== ${siteUrl} (${permissionLevel}): 35d clicks ${clicks}; pages with impressions (28d) ${pages.length}, with clicks ${pages.filter((p) => p.clicks > 0).length}`);
       console.log(`   weekly clicks (newest first) ${weeks.map((w) => w.c).join(" / ")}  impr ${weeks.map((w) => w.i).join(" / ")}  WoW ${wow}`);
+      try {
+        const sm = ((await (await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/sitemaps`, { headers: { Authorization: `Bearer ${tok}` } })).json()) as {
+          sitemap?: { path: string; lastSubmitted?: string; lastDownloaded?: string; isPending?: boolean; errors?: string; warnings?: string; contents?: { submitted?: string }[] }[];
+        }).sitemap ?? [];
+        console.log(`   sitemaps ${sm.length ? sm.map((x) => `${x.path.replace(/^https?:\/\/[^/]+/, "")} sub ${x.lastSubmitted?.slice(0, 10) ?? "-"} read ${x.lastDownloaded?.slice(0, 10) ?? "-"} urls ${x.contents?.reduce((a, c) => a + Number(c.submitted ?? 0), 0) ?? 0} err ${x.errors ?? 0}${x.isPending ? " pending" : ""}`).join("; ") : "none submitted"}`);
+      } catch {
+        console.log("   sitemaps unreadable");
+      }
       console.log(`   daily ${days.slice(-14).map((r) => `${r.keys[0].slice(5)}:${r.clicks}/${r.impressions}@${r.position.toFixed(1)}`).join(" ")}`);
     } catch (e) {
       console.log(`== ${siteUrl}: unavailable (${(e as Error).message})`);
