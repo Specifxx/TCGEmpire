@@ -75,7 +75,7 @@ const cspReportOnly = [
   // img-src must stay open to https: — narrowing it would blank creatives.
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://cdn.riftscribe.gg ${ADS_CONNECT_SRC.join(" ")} ${GA_CONNECT_SRC.join(" ")}`,
+  `connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://*.vercel-insights.com https://vitals.vercel-insights.com https://cdn.riftscribe.gg ${ADS_CONNECT_SRC.join(" ")} ${GA_CONNECT_SRC.join(" ")}`,
   // Ads render inside cross-origin iframes; the consent message does too.
   `frame-src 'self' https: ${ADS_FRAME_SRC.join(" ")}`,
   "frame-ancestors 'self'",
