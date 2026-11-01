@@ -613,7 +613,7 @@ longer lands on its entry.
   every unit. Mediavine's script loads only on `/blog/[slug]` and
   `/guides/[slug]`, never for an ad-free member, and links off an article do a
   full page load so it never reaches card, set, sealed or price pages.
-  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20023), [2026-10-27](../DECISIONS.md#L20039), [2026-11-01](../DECISIONS.md#L21158)
+  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20023), [2026-10-27](../DECISIONS.md#L20039), [2026-11-01](../DECISIONS.md#L21131)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket
@@ -1335,7 +1335,7 @@ longer lands on its entry.
   its own components (`NocturneComing`, `HalloweenDecor`, `ChristmasDecor`,
   `ChristmasGifts`), so a season comes out by deleting them. Christmas
   decoration is shared CSS ("xmas-common", the same block on every sister
-  site) and art in `public/xmas/` ([2026-11-01](../DECISIONS.md#L21158)).
+  site) and art in `public/xmas/` ([2026-11-01](../DECISIONS.md#L21063)).
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired
