@@ -5745,7 +5745,9 @@ jobs:
         if: inputs.task == 'gsc-queries'
         env:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
-          DAYS: "28"
+          # `url` picks another property (e.g. sc-domain:compareempire.com); empty = riftcompare.com
+          GSC_PROPERTY: ${{ inputs.url }}
+          DAYS: ${{ inputs.url && '90' || '28' }}
         run: npx tsx scripts/gsc-queries.ts
 
       - name: Promo art from TCGplayer (report unless apply)
