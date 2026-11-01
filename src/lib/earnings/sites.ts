@@ -68,7 +68,7 @@ export const SITES: { key: string; label: string; project: RegExp }[] = [
   { key: "ygo", label: "YGO Compare", project: /ygo|yugioh/ },
   { key: "wgc", label: "WargameCompare", project: /wargame/ },
   { key: "figure", label: "FigureCompare", project: /figure/ },
-  { key: "ky", label: "K Young", project: /kaeyoung|kyoung|k-young/ },
+  { key: "ky", label: "KaeYoung", project: /kaeyoung|kyoung|k-young/ },
   { key: "cc", label: "CamCompare", project: /cam/ },
   { key: "ce", label: "Compare Empire", project: /compareempire|compare-empire/ },
 ];

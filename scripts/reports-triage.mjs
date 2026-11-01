@@ -52,7 +52,7 @@ const SITE_NAMES = {
   camcompare: "CamCompare",
   wargamecompare: "WargameCompare",
   figurecompare: "FigureCompare",
-  kaeyoung: "K Young",
+  kaeyoung: "KaeYoung",
 };
 const SITE_URLS = {
   riftcompare: "https://riftcompare.com",
