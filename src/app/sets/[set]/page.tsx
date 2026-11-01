@@ -33,6 +33,8 @@ import { SETS, isPreorderSetCode, setBySlug, singlesLive } from "@/lib/constants
 import { getSetRevealCount } from "@/lib/set-reveal-count";
 import { preordersHrefForSet, releaseDateLabel as calendarDateLabel } from "@/lib/release-calendar";
 import { RadianceHub } from "@/components/sets/RadianceHub";
+import { LegacyHub } from "@/components/sets/LegacyHub";
+import { LEGACY_FAQ } from "@/lib/sets/legacy";
 import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
 import { RadiancePreorderCta } from "@/components/RadiancePreorderCta";
 import { SetPriceGuide } from "@/components/sets/SetPriceGuide";
@@ -87,6 +89,8 @@ const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
   legacy: [
     { href: "/legacy-preorders", label: "Pre-order prices, every store" },
     { href: "/blog/riftbound-legacy-spoilers-set-6", label: "Spoilers: what Riot has shown" },
+    { href: "/blog/where-to-buy-riftbound-legacy", label: "Where to buy, by country" },
+    { href: "/blog/riftbound-legacy-champion-decks", label: "Champion Decks & Proving Grounds 2" },
     { href: "/blog/riftbound-legacy-pack-changes-and-card-templating", label: "How Legacy packs change" },
     { href: "/release-dates", label: "Countdown & release calendar" },
     { href: "/guides/riftbound-pre-rift-rules-explained", label: "Pre-Rift event rules" },
@@ -222,7 +226,13 @@ export async function generateMetadata({
         `Riftbound ${set.name} Card List So Far`,
         `${set.name} Card List So Far`,
       ]
-    : [
+    : cardCount === 0 && set.hubReady
+      ? // A pre-release hub with no cards yet (Legacy from 2026-11-01): the
+        // released ladder would promise a list and prices the page does not
+        // have. It names what the hub holds instead; "card list" stays last so
+        // the page keeps the query it will own once cards import.
+        [`Riftbound ${set.name}: Legends, Products & Card List`, `Riftbound ${set.name}: Legends & Products`]
+      : [
         // 2026-10-23 CTR pass (owner-approved): brand-free, the count and the
         // "cheapest first" hook up front. The "+ Prices" rung stays next.
         ...(cardCount > 0 ? [`${set.name} Card List: All ${cardCount} Cards, Cheapest First`] : []),
@@ -283,6 +293,11 @@ export async function generateMetadata({
     ? previewDescCandidates
     : cardCount === 0
       ? [
+          // The hub's own description (hubReady, Legacy 2026-11-01): what the
+          // page shows today, then the date live prices start.
+          ...(set.hubReady && releaseDateLabel && set.announcedCards
+            ? [`Riftbound ${set.name} releases ${releaseDateLabel}: ${set.announcedCards} cards, the confirmed Legends, every product and live pre-order prices by store.`]
+            : []),
           releaseDateLabel
             ? `Riftbound ${set.name} releases ${releaseDateLabel} — this page will list every card with live prices from launch day.`
             : `Riftbound ${set.name} hasn't released yet — this page will list every card with live prices from launch day.`,
@@ -537,7 +552,7 @@ export default async function SetPage({
   // FAQPage JSON-LD only where a real, visible FAQ backs it (RadianceHub renders
   // the identical RADIANCE_FAQ array via HubFaq) — Google only honours FAQPage
   // when the answer text is actually on the page, and every other set has none.
-  const faqLd = set.slug === "radiance" ? faqPage(RADIANCE_FAQ) : null;
+  const faqLd = set.slug === "radiance" ? faqPage(RADIANCE_FAQ) : set.slug === "legacy" ? faqPage(LEGACY_FAQ) : null;
 
   return (
     <SetOwnedProvider setCode={set.code} enabled={trackerOpen}>
@@ -674,6 +689,9 @@ export default async function SetPage({
       {set.slug === "radiance" && <RadianceReveals data={radianceReveals} />}
       {set.slug === "radiance" && <RadiancePreorderCta placement="section" />}
       {set.slug === "radiance" && <RadianceHub country={country} />}
+      {/* Legacy's hub (2026-11-01), the same role RadianceHub played before
+          Radiance's cards imported: it is what earns LGC's hubReady. */}
+      {set.slug === "legacy" && <LegacyHub country={country} />}
 
       {/* Card grid — shown whenever cards EXIST, even for a comingSoon set: through
           spoiler season the official-gallery importer populates revealed cards early

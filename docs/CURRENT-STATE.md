@@ -588,12 +588,16 @@ longer lands on its entry.
   [2026-10-17](../DECISIONS.md#L18273)
 - **Legacy is coming soon (2026-10-25):** LGC is `comingSoon` with
   `releasedOn` 2027-01-29 and Riot's 239 cards (93 Showcase) as
-  `announcedCards`. It has no `totalCards`, `newFrom` or `hubReady`, so
-  /sets/legacy stays noindex while it has no cards. In a store title "legacy"
+  `announcedCards`. It has no `totalCards` or `newFrom`. Since 2026-11-01 it is
+  `hubReady` (LegacyHub, facts in `lib/sets/legacy.ts`), so /sets/legacy is
+  indexed with zero cards, and `previewFrom` 2026-12-13 keeps the nav and
+  homepage off its empty gallery until previews start (`hasSetGallery`).
+  Every legacy-tagged post carries `LegacyPreorderCta` until release. Proving
+  Grounds 2nd Edition files under LGC as its own type, never OGS. In a store title "legacy"
   names the set only beside "Riftbound"/"League of Legends", or as the bare code
   LGC. `/legacy-preorders` holds its pre-orders. Release alerts take the
   pre-order link from the calendar row and run for RAD and LGC.
-  [2026-10-25](../DECISIONS.md#L19536)
+  [2026-10-25](../DECISIONS.md#L19536) · [2026-11-01](../DECISIONS.md#L21158)
 - **Radiance is released (2026-10-22):** RAD is no longer `comingSoon` (Legacy
   is, since 10-25); RAD is `recentlyReleased`. Every release check uses `streetDateStartMs()` (midnight
   AEDT on the street date), never midnight UTC. `/radiance-preorders` stays live

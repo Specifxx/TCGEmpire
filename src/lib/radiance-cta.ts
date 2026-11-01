@@ -18,14 +18,24 @@ import { isPreorderSetCode } from "./constants";
 export type RadianceBoxPrices = Partial<Record<Country, number>>;
 
 export async function getRadianceBoxPrices(): Promise<RadianceBoxPrices> {
+  return getSetBoxPrices("RAD");
+}
+
+/**
+ * The same read for any set: the cheapest OPEN Booster Box per market, from the
+ * pre-order side while the set is still a pre-order, the shipped side after.
+ * Legacy's pre-order banner (components/LegacyPreorderCta.tsx, 2026-11-01)
+ * reads it for LGC.
+ */
+export async function getSetBoxPrices(setCode: string): Promise<RadianceBoxPrices> {
   const out: RadianceBoxPrices = {};
-  const preorder = isPreorderSetCode("RAD");
+  const preorder = isPreorderSetCode(setCode);
   await Promise.all(
     COUNTRY_LIST.map(async ({ code }) => {
       const groups = await (preorder ? getPreorderGroups(code) : getSealedGroups(code)).catch(() => []);
       // lowestPriceCents is already the cheapest OPEN offer (lib/sealed-offers.ts):
       // a sold-out store can never be the number this CTA advertises.
-      const box = groups.find((g) => g.setCode === "RAD" && g.productType === "Booster Box");
+      const box = groups.find((g) => g.setCode === setCode && g.productType === "Booster Box");
       if (box?.lowestPriceCents != null) out[code] = box.lowestPriceCents;
     }),
   );

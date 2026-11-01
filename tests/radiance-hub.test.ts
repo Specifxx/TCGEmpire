@@ -109,12 +109,17 @@ test("the FAQ has exactly 7 entries, each self-consistent with the data module",
 });
 
 // ── Indexability guard ──────────────────────────────────────────────────────
-test("Radiance is flagged hubReady, and it is the only comingSoon set that is", () => {
+test("only sets with a built hub are hubReady: Radiance, and Legacy since 2026-11-01", () => {
   const radiance = SETS.find((s) => s.slug === "radiance");
   assert.ok(radiance);
   assert.equal(radiance!.hubReady, true);
-  const otherComingSoonWithHub = SETS.filter((s) => s.slug !== "radiance" && s.comingSoon && s.hubReady);
-  assert.deepEqual(otherComingSoonWithHub, [], "no other set should be indexable-while-empty by accident");
+  // Each comingSoon hubReady set must have its hub component rendered by the set page.
+  const page = read("src/app/sets/[set]/page.tsx");
+  const withHub: Record<string, RegExp> = { legacy: /set\.slug === "legacy" && <LegacyHub country=\{country\} \/>/ };
+  for (const s of SETS.filter((x) => x.slug !== "radiance" && x.comingSoon && x.hubReady)) {
+    assert.ok(withHub[s.slug], `${s.name} is hubReady without a hub: it would be indexable while empty`);
+    assert.match(page, withHub[s.slug]);
+  }
 });
 
 test("the noindex guard flips ONLY for a hubReady set — every other empty set stays noindexed", () => {
@@ -126,9 +131,10 @@ test("the noindex guard flips ONLY for a hubReady set — every other empty set 
   );
 });
 
-test("FAQPage JSON-LD is emitted only for radiance, from the same RADIANCE_FAQ array the visible FAQ renders", () => {
+test("FAQPage JSON-LD is emitted only for the hub sets, from the same arrays the visible FAQs render", () => {
   const src = read("src/app/sets/[set]/page.tsx");
-  assert.match(src, /set\.slug === "radiance" \? faqPage\(RADIANCE_FAQ\) : null/);
+  assert.match(src, /set\.slug === "radiance" \? faqPage\(RADIANCE_FAQ\) : set\.slug === "legacy" \? faqPage\(LEGACY_FAQ\) : null/);
+  assert.match(read("src/components/sets/LegacyHub.tsx"), /<HubFaq faqs=\{LEGACY_FAQ\}/);
   assert.match(src, /breadcrumb, collection, \.\.\.\(faqLd \? \[faqLd\] : \[\]\)/);
 });
 
