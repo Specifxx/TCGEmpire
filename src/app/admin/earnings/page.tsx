@@ -7,7 +7,6 @@ import { formatMoney } from "@/lib/format";
 import {
   RANGES,
   SOURCE_LABELS,
-  dailyTotals,
   dayIn,
   forecastQuarters,
   isRangeKey,
@@ -92,7 +91,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
   const trendSeries = range !== "all" && lineSeries.at(-1)?.label === today ? lineSeries.slice(0, -1) : lineSeries;
   const trend = linearTrend(trendSeries.map((b) => b.cents));
   // Forecast (2026-10-28): every range sees the same projection, fitted on all days.
-  const forecast = forecastQuarters(dailyTotals(live, today, display), today);
+  const forecast = forecastQuarters(live, today, display);
   const lagged = sources.map((s) => ({ s, latest: latestDayFigure(s, today, display) })).filter((x) => x.latest);
   const sel = combined(range);
   // Costs and profit (2026-10-25): every cost line converted like the earnings.

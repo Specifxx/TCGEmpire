@@ -195,31 +195,79 @@ export function linearTrend(values: readonly number[]): { start: number; end: nu
 
 // FORECAST (2026-10-28, owner: "projected forecasts … by the end of this year,
 // quarter 1 next year, quarter 2, quarter 3, quarter 4 … easy to visualize
-// where we're heading"). NOT a straight line (owner, 2026-10-29: "it shouldn't
-// be linear"): search traffic compounds, slows as a niche runs out of searches,
-// and follows the hobby's calendar. So:
-//  1. Growth rate: a least-squares line through the LOG of weekly earnings
-//     (the last 90 complete days, each week first divided by its month's
-//     season), i.e. a compounding rate per week, clamped to ±FORECAST_MAX_WEEKLY.
-//  2. That rate fades: on day k it is r·e^(−k/FORECAST_FADE_DAYS), so growth
-//     compounds at first and flattens toward a plateau instead of running away.
-//  3. Each projected day is multiplied by its month's SEASON (gifting and Black
-//     Friday peak in Nov/Dec, the January lull).
-// The range is the growth rate moved by ±1.28 standard errors (an ~80% band), the
-// part of a long projection that is genuinely uncertain. The last
-// FORECAST_LAG_DAYS are left out of the fit and projected instead, because eBay
-// adds a day's sales up to 48 hours late. A projection, never a figure anywhere
-// else on the dashboard.
-export const FORECAST_FIT_DAYS = 90;
+// where we're heading"). Not a straight line (owner, 2026-10-29): growth
+// compounds and follows the hobby's calendar.
+//
+// SCENARIOS, NOT A FITTED CURVE (owner, 2026-11-01: "the growth is a bit too
+// ambitious … if I do 250K next year, that's … 5 million dollars in sales").
+// The 2026-10-29 model fitted a compounding rate to ~6 weeks of a young
+// business doubling, hit the +10%/week clamp and projected ~13× in a year.
+// Now every number comes from plainly stated assumptions:
+//  1. RUN RATE: the last FORECAST_RUN_DAYS complete days per source, each day
+//     divided by its month's SEASON (so a December peak isn't read as growth).
+//     AdSense is left out of it and added as an assumed amount a day, because
+//     it was switched on and off (back on 2026-11-01) and has no steady history.
+//  2. GROWTH: a fixed, capped monthly rate per scenario (SCENARIOS), compounding.
+//     The observed change (last 28 days vs the 28 before) is shown beside it,
+//     never extrapolated: a few weeks of pre-order spikes are not a trend.
+//  3. SEASON: each projected day times its month's multiplier.
+//  4. IMPLIED SALES: affiliate earnings (eBay + TCGplayer) ÷ ASSUMED_COMMISSION,
+//     the store sales those earnings would take, so a forecast that needs an
+//     absurd sales volume is visible at a glance.
+// The last FORECAST_LAG_DAYS are projected, not counted, because eBay adds a
+// day's sales up to 48 hours late. A projection, never a figure anywhere else.
+export const FORECAST_RUN_DAYS = 28;
 export const FORECAST_LAG_DAYS = 2;
-/** Growth fades with this time constant: half the rate is gone after ~125 days. */
-export const FORECAST_FADE_DAYS = 180;
-/** A weekly growth rate (log) beyond this is noise from a short history, not a trend. */
-export const FORECAST_MAX_WEEKLY = 0.1;
+/** No scenario may assume more than this compounding growth a month (~2.5× a year). */
+export const FORECAST_MAX_MONTHLY = 0.08;
+/** Blended affiliate commission on store sales (eBay EPN and TCGplayer, ~4–5%). */
+export const ASSUMED_COMMISSION = 0.045;
+/** Earnings that come from a commission on a store sale. */
+export const AFFILIATE_SOURCES: readonly EarningsSourceKey[] = ["ebay", "tcgplayer"];
 /** Month multipliers (Jan … Dec), mean 1: hobby gifting peak, January lull.
  *  Assumed from the hobby calendar until a year of our own data replaces it. */
 export const SEASON = [0.85, 0.9, 1, 1, 0.95, 0.95, 1, 1, 1, 1.05, 1.1, 1.2] as const;
-const Z80 = 1.28;
+
+export type ScenarioKey = "conservative" | "base" | "optimistic";
+export interface Scenario {
+  key: ScenarioKey;
+  label: string;
+  /** Compounding growth a month, seasonally adjusted. */
+  monthly: number;
+  /** AdSense assumed per day at today's traffic, AUD cents (grows with the scenario). */
+  adsenseAudCentsPerDay: number;
+  why: string;
+}
+export const SCENARIOS: readonly Scenario[] = [
+  {
+    key: "conservative",
+    label: "Conservative",
+    monthly: -0.04,
+    adsenseAudCentsPerDay: 100,
+    why: "Google traffic keeps sliding after the Radiance release, as Search Console shows now, and nothing new replaces it",
+  },
+  {
+    key: "base",
+    label: "Base",
+    monthly: 0.02,
+    adsenseAudCentsPerDay: 150,
+    why: "slow, steady SEO and sister-site growth; Legacy pre-orders roughly replace the lost Radiance ones",
+  },
+  {
+    key: "optimistic",
+    label: "Optimistic",
+    monthly: 0.06,
+    adsenseAudCentsPerDay: 250,
+    why: "the SEO fixes land and Legacy sells like Radiance did",
+  },
+];
+
+export interface ScenarioValue {
+  /** Earned so far + projected. */
+  cents: number;
+  /** Store sales the affiliate part implies (earned and projected), ÷ ASSUMED_COMMISSION. */
+  salesCents: number;
+}
 
 export interface ForecastPeriod {
   label: string;
@@ -227,25 +275,24 @@ export interface ForecastPeriod {
   to: string;
   /** Already earned (days before the projection starts). */
   actualCents: number;
-  /** actual + projected on the fitted growth; low/high on the rate's ±1.28 SE. */
-  cents: number;
-  lowCents: number;
-  highCents: number;
-  /** The same period at the last 30 complete days' average, with no growth. */
-  flatCents: number;
+  /** Store sales the affiliate part of actualCents implies. */
+  actualSalesCents: number;
+  /** One per SCENARIOS key. */
+  scenarios: Record<ScenarioKey, ScenarioValue>;
 }
 
 export interface Forecast {
   /** First projected day; days before it are actual. */
   from: string;
-  fitFrom: string;
-  fitTo: string;
-  /** Fitted earnings per day at fitTo (display cents, in that month's season). */
+  runFrom: string;
+  runTo: string;
+  /** Run rate a day, seasonally adjusted, AdSense excluded (display cents). */
   perDayNow: number;
-  /** Fitted growth now, % per 30 days (compounding, before it fades). */
-  growthPct30: number;
-  /** Where growth levels off on the fitted rate: per-day earnings, seasonally average. */
-  plateauPerDay: number;
+  /** The affiliate (commission) part of perDayNow. */
+  affiliatePerDayNow: number;
+  /** The last 28 days against the 28 before, seasonally adjusted, %; null without both. */
+  observedPct28: number | null;
+  scenarios: readonly Scenario[];
   /** This quarter and the four after it. */
   periods: ForecastPeriod[];
   /** The same span month by month, for the curve. */
@@ -269,63 +316,72 @@ export function dailyTotals(sources: readonly Pick<SourceResult, "days">[], toda
   return [...m.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([label, cents]) => ({ label, cents }));
 }
 
-/** Cumulative log growth after k days at an initial daily rate r that fades. */
-export function fadedGrowth(r: number, k: number): number {
-  return r * FORECAST_FADE_DAYS * (1 - Math.exp(-k / FORECAST_FADE_DAYS));
+/** Compounding growth factor `k` days into a projection at `monthly` a month. */
+export function growthFactor(monthly: number, k: number): number {
+  return Math.pow(1 + Math.max(-0.5, Math.min(FORECAST_MAX_MONTHLY, monthly)), k / 30);
 }
 
-/** The quarter `today` is in and the four after it, projected. `daily` is combined
- *  earnings per day in the display currency (seriesFor's daily buckets). Null with
- *  under 30 days of earnings to fit. */
-export function forecastQuarters(daily: readonly { label: string; cents: number }[], today: string): Forecast | null {
-  const byDay = new Map(daily.map((d) => [d.label, d.cents]));
+/** The quarter `today` is in and the four after it, projected under each of
+ *  SCENARIOS. `sources` are the live sources (key + days). Null with under
+ *  FORECAST_RUN_DAYS days since the first earning. */
+export function forecastQuarters(
+  sources: readonly Pick<SourceResult, "key" | "days">[],
+  today: string,
+  display: string,
+  scenarios: readonly Scenario[] = SCENARIOS,
+): Forecast | null {
   const start = addDays(today, -FORECAST_LAG_DAYS); // first projected day
-  const fitTo = addDays(start, -1);
-  const fitFrom = addDays(fitTo, -(FORECAST_FIT_DAYS - 1));
-  const days: string[] = [];
-  for (let d = fitFrom; d <= fitTo; d = addDays(d, 1)) days.push(d);
-  // Before the first earning day there was no business to measure: fit from it.
-  const first = days.findIndex((d) => (byDay.get(d) ?? 0) > 0);
-  if (first < 0 || days.length - first < 30) return null;
-  const fitDays = days.slice(first);
-  // Whole weeks, counted back from fitTo, each de-seasonalised by its days' months.
-  const weeks: number[] = [];
-  for (let end = fitDays.length; end - 7 >= 0; end -= 7) {
+  const runTo = addDays(start, -1);
+  const runFrom = addDays(runTo, -(FORECAST_RUN_DAYS - 1));
+  const total = new Map<string, number>();
+  const affiliate = new Map<string, number>();
+  const counted = new Map<string, number>(); // the run rate's sources: all but AdSense
+  for (const s of sources)
+    for (const d of s.days) {
+      if (d.day > today) continue;
+      const c = toDisplay(d.cents, d.currency, display);
+      total.set(d.day, (total.get(d.day) ?? 0) + c);
+      if (AFFILIATE_SOURCES.includes(s.key)) affiliate.set(d.day, (affiliate.get(d.day) ?? 0) + c);
+      if (s.key !== "adsense") counted.set(d.day, (counted.get(d.day) ?? 0) + c);
+    }
+  const firstDay = [...total.entries()].filter(([, c]) => c > 0).map(([d]) => d).sort()[0];
+  if (!firstDay || firstDay > runFrom) return null;
+  const deseason = (m: Map<string, number>, from: string, to: string) => {
     let sum = 0;
-    for (const d of fitDays.slice(end - 7, end)) sum += (byDay.get(d) ?? 0) / seasonOf(d);
-    weeks.unshift(Math.log(Math.max(sum, 1)));
-  }
-  const n = weeks.length;
-  const t = linearTrend(weeks)!;
-  const mx = (n - 1) / 2;
-  const sxx = weeks.reduce((a, _, x) => a + (x - mx) ** 2, 0);
-  const sse = weeks.reduce((a, y, x) => a + (y - (t.start + t.slope * x)) ** 2, 0);
-  const se = n > 2 ? Math.sqrt(sse / (n - 2) / sxx) : 0;
-  const clamp = (w: number) => Math.min(FORECAST_MAX_WEEKLY, Math.max(-FORECAST_MAX_WEEKLY, w)) / 7;
-  const rate = clamp(t.slope);
-  const lowRate = clamp(t.slope - Z80 * se);
-  const highRate = clamp(t.slope + Z80 * se);
-  // De-seasonalised earnings per day at the end of the fit (the fitted last week).
-  const level = Math.exp(t.end) / 7;
-  const flat = fitDays.slice(-30).reduce((a, d) => a + (byDay.get(d) ?? 0), 0) / 30;
-  // Value on day d, k days after fitTo, for a starting daily growth rate r.
-  const at = (d: string, k: number, r: number) => level * Math.exp(fadedGrowth(r, k)) * seasonOf(d);
+    for (let d = from; d <= to; d = addDays(d, 1)) sum += (m.get(d) ?? 0) / seasonOf(d);
+    return sum / FORECAST_RUN_DAYS;
+  };
+  const level = deseason(counted, runFrom, runTo);
+  const affLevel = deseason(affiliate, runFrom, runTo);
+  const priorTo = addDays(runFrom, -1);
+  const priorFrom = addDays(priorTo, -(FORECAST_RUN_DAYS - 1));
+  const prior = firstDay <= priorFrom ? deseason(counted, priorFrom, priorTo) : 0;
+  const observedPct28 = prior > 0 ? Math.round((level / prior - 1) * 1000) / 10 : null;
 
   const period = (label: string, from: string, to: string): ForecastPeriod => {
-    const p: ForecastPeriod = { label, from, to, actualCents: 0, cents: 0, lowCents: 0, highCents: 0, flatCents: 0 };
+    let actualCents = 0;
+    let actualAff = 0;
+    const proj = Object.fromEntries(scenarios.map((s) => [s.key, { cents: 0, aff: 0 }])) as Record<ScenarioKey, { cents: number; aff: number }>;
     for (let d = from; d <= to; d = addDays(d, 1)) {
       if (d < start) {
-        p.actualCents += byDay.get(d) ?? 0;
+        actualCents += total.get(d) ?? 0;
+        actualAff += affiliate.get(d) ?? 0;
         continue;
       }
-      const k = Math.round((Date.parse(d) - Date.parse(fitTo)) / 86_400_000);
-      p.cents += at(d, k, rate);
-      p.lowCents += at(d, k, lowRate);
-      p.highCents += at(d, k, highRate);
-      p.flatCents += flat;
+      const k = Math.round((Date.parse(d) - Date.parse(runTo)) / 86_400_000);
+      for (const s of scenarios) {
+        const f = growthFactor(s.monthly, k) * seasonOf(d);
+        proj[s.key].cents += (level + toDisplay(s.adsenseAudCentsPerDay, "AUD", display)) * f;
+        proj[s.key].aff += affLevel * f;
+      }
     }
-    for (const key of ["cents", "lowCents", "highCents", "flatCents"] as const) p[key] = Math.round(p[key] + p.actualCents);
-    return p;
+    const out = Object.fromEntries(
+      scenarios.map((s) => [
+        s.key,
+        { cents: Math.round(actualCents + proj[s.key].cents), salesCents: Math.round((actualAff + proj[s.key].aff) / ASSUMED_COMMISSION) },
+      ]),
+    ) as Record<ScenarioKey, ScenarioValue>;
+    return { label, from, to, actualCents: Math.round(actualCents), actualSalesCents: Math.round(actualAff / ASSUMED_COMMISSION), scenarios: out };
   };
   const { y, q } = quarterOf(today);
   const periods: ForecastPeriod[] = [];
@@ -344,11 +400,12 @@ export function forecastQuarters(daily: readonly { label: string; cents: number 
   const years = [y, y + 1].map((yy) => period(String(yy), `${yy}-01-01`, `${yy}-12-31`));
   return {
     from: start,
-    fitFrom: fitDays[0],
-    fitTo,
-    perDayNow: Math.round(level * seasonOf(fitTo)),
-    growthPct30: Math.round((Math.exp(rate * 30) - 1) * 1000) / 10,
-    plateauPerDay: Math.round(level * Math.exp(rate * FORECAST_FADE_DAYS)),
+    runFrom,
+    runTo,
+    perDayNow: Math.round(level),
+    affiliatePerDayNow: Math.round(affLevel),
+    observedPct28,
+    scenarios,
     periods,
     months,
     years,
