@@ -29,6 +29,15 @@ const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
 // buyer lands on, not which listings exist.
 export const EBAY_MARKETPLACE: Record<string, string> = { AU: "EBAY_AU", US: "EBAY_US", UK: "EBAY_GB", SG: "EBAY_SG", CA: "EBAY_CA", EU: "EBAY_ES" };
 const DEFAULT_MARKETPLACE = "EBAY_AU";
+/** Each marketplace's own currency, for Browse's `price` filter (which is invalid without `priceCurrency`). */
+export const EBAY_MARKETPLACE_CURRENCY: Record<string, string> = {
+  EBAY_AU: "AUD",
+  EBAY_US: "USD",
+  EBAY_GB: "GBP",
+  EBAY_SG: "SGD",
+  EBAY_CA: "CAD",
+  EBAY_ES: "EUR",
+};
 
 // ---- Local sellers, stated postage (visitor feedback, 2026-10-31) -------------
 // A WargameCompare visitor found eBay rows from overseas sellers whose postage made "a lot of wasted clicks". Every
@@ -1099,7 +1108,15 @@ const SEALED_EXCLUDE_EBAY_BASE =
 // Signature Edition's CN/KR seeds are the one deliberate exception: for those two
 // searches, THIS is the listing being searched for, not noise. See `language` below.
 const SEALED_EXCLUDE_LANGUAGE_WORDS = /chinese|japanese|korean/i;
-const SEALED_EXCLUDE_EBAY = new RegExp(
+// The game's own name is not a "card" listing. `\\bcard\\b` exists to drop a single
+// card or an art/code card titled with a box's words, but sellers very often
+// spell the game out: "Riftbound League of Legends Trading Card Game Origins
+// Booster Box" was thrown away for saying "Card" (2026-11-01, the AU Origins box
+// with no eBay row). Only the phrase is blanked; every other word is still tested.
+export function sealedExclusionText(title: string): string {
+  return title.replace(/\b(?:trading\s+)?card\s+game\b/gi, " ");
+}
+export const SEALED_EXCLUDE_EBAY = new RegExp(
   `${SEALED_EXCLUDE_EBAY_BASE.source}|${SEALED_EXCLUDE_LANGUAGE_WORDS.source}`,
   "i",
 );
@@ -1195,9 +1212,23 @@ export async function searchEbaySealed(
   if (!token) return null;
   const kw = SEALED_TYPE_KW[productType];
 
+  // THE FLOOR GOES INTO THE QUERY (2026-11-01, owner: "eBay should have a price
+  // row here, there are tons of Origins boxes on eBay"). The search is sorted
+  // cheapest first and reads 50 results, and the floor below was applied only
+  // AFTER them: for a product with a big cheap halo (Origins: packs, singles and
+  // accessories that all say "Origins Booster Box") the 50 cheapest were all under
+  // the floor, so no market ever got an Origins box row while dozens of real boxes
+  // sat on the next pages. Asking eBay for item prices at or above the same floor
+  // makes those 50 the cheapest PLAUSIBLE listings. The post-filter stays.
+  const floor = sealedFloorCents(productType, referenceCents);
+  const currency = EBAY_MARKETPLACE_CURRENCY[marketplace];
   const params = new URLSearchParams({
     q: `Riftbound ${name}`,
-    filter: ["buyingOptions:{FIXED_PRICE}", ...locationFilters(marketplace, !!language)].join(","),
+    filter: [
+      "buyingOptions:{FIXED_PRICE}",
+      ...locationFilters(marketplace, !!language),
+      ...(currency && floor > 0 ? [`price:[${(floor / 100).toFixed(2)}]`, `priceCurrency:${currency}`] : []),
+    ].join(","),
     sort: "price",
     limit: "50",
   });
@@ -1225,7 +1256,6 @@ export async function searchEbaySealed(
   const items: any[] = data.itemSummaries ?? [];
 
   const setName = setCode ? (SET_NAMES[setCode] ?? setCode) : null;
-  const floor = sealedFloorCents(productType, referenceCents);
   const valid = items
     .filter((it) => it?.price?.value)
     .filter((it) => sellerIsLocal(it, marketplace, !!language) && postageStated(it))
@@ -1240,7 +1270,7 @@ export async function searchEbaySealed(
     // Every OTHER exclusion in SEALED_EXCLUDE_EBAY_BASE still applies for a
     // language search (proxy/sleeve/empty/accessory/…) — only the language-word
     // branch is dropped, since that's exactly what CN/KR are searching for.
-    .filter((it) => !(language ? SEALED_EXCLUDE_EBAY_BASE : SEALED_EXCLUDE_EBAY).test(it.title ?? ""))
+    .filter((it) => !(language ? SEALED_EXCLUDE_EBAY_BASE : SEALED_EXCLUDE_EBAY).test(sealedExclusionText(it.title ?? "")))
     .filter((it) => (language ? LANGUAGE_SIGNAL[language].test(it.title ?? "") : !isForeignListing(it)))
     // Price-sanity: drop anything below the per-type / reference floor (the $22
     // "booster box" accessory class).

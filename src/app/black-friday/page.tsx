@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSealedGroups } from "@/lib/sealed-import";
+import { withLiveStock } from "@/lib/preorder-live-stock";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -83,7 +84,14 @@ export default async function BlackFridayPage() {
   const { year, bf, cm } = season();
   // Caches itself; never wrap it in another cache (CLAUDE.md).
   const groups = await getSealedGroups(country).catch(() => []);
-  const deals = sealedDeals(groups);
+  // The snapshot's stock is up to a day old, and a deal is usually a store's last
+  // few boxes: Eternal Magic's A$350 Origins box led this page for AU after it
+  // sold out (owner, 2026-11-01). The likely deals' open offers are re-checked at
+  // the store (Shopify's own `available`, held six hours, one-way: it can only
+  // close an offer), then the deals are picked again from what is still open.
+  const candidates = sealedDeals(groups).slice(0, SHOWN * 2).map((d) => d.group);
+  const checked = await withLiveStock(candidates).catch(() => candidates);
+  const deals = sealedDeals(checked);
   const shown = deals.slice(0, SHOWN);
   const ebay = ebayLabel(country);
   const qa = faqs(bf, cm);
@@ -111,7 +119,8 @@ export default async function BlackFridayPage() {
           <h1 className="font-display text-2xl font-extrabold text-white sm:text-4xl">Riftbound Black Friday deals</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
             Sealed Riftbound products whose cheapest {info.adjective} store is well under the other stores or the MSRP
-            today, in {currency}, biggest saving first. We re-read every store daily; sold-out stores are left out. No
+            today, in {currency}, biggest saving first. We re-read every store daily and re-check the cheapest stores
+            every few hours; sold-out stores are left out. No
             &ldquo;was&rdquo; prices: only what stores are asking now.
           </p>
         </div>
