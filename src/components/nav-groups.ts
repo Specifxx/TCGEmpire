@@ -159,6 +159,8 @@ export const NAV_GROUPS: NavGroup[] = [
       // you on a page headed something else. The `keywords` below already carry
       // news/articles/announcements, so ⌘K still finds it by any of the old words.
       { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "posts", "updates", "announcements", "analysis"] },
+      // The beta community forum (owner, 2026-11-01): no accounts, posts on the repo's forum branch.
+      { href: "/forum", label: "Community forum", keywords: ["forum", "community", "discussion", "talk", "chat", "questions", "ask"] },
       // hideInFooter: the footer's four columns are already at the top of their
       // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
       // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page

@@ -1982,6 +1982,20 @@ ins.adsbygoogle[data-ad-status="unfilled"],
   }
 }
 
+/* The beta forum (src/components/forum/forum.css) in this site's colours. */
+.fm {
+  --fm-card: rgb(var(--c-ink-900));
+  --fm-sunk: rgb(var(--c-ink-950));
+  --fm-line: rgb(var(--c-ink-700));
+  --fm-ink: rgb(var(--c-slate-100));
+  --fm-muted: rgb(var(--c-slate-400));
+  --fm-accent: rgb(var(--c-brand-400));
+  --fm-on-accent: rgb(var(--c-ink-950));
+  --fm-accent-soft: rgb(var(--c-brand-400) / 0.14);
+  --fm-radius: 12px;
+}
+
+
 /* The header's "Try Premium" callout (PricingNudge, 2026-10-25): slides in under
    the Pricing link a few seconds into a visit, its arrow bobbing towards it. */
 @keyframes pricing-nudge-in {
