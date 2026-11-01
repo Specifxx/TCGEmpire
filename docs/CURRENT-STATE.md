@@ -735,8 +735,8 @@ longer lands on its entry.
   "cheapest first". [2026-10-15](../DECISIONS.md#L17284). Elsewhere
   no comparison is re-ranked
   and no true figure (the "+N%" on a dearer eBay row) is hidden; eBay rows keep
-  their price position but wear eBay blue (`.btn-ebay`, or `.btn-ebay-ghost` in
-  a list of ghost buttons). Everything else is a labelled "Search …" beside the
+  their price position and wear the stores' own button, so they blend in
+  ([2026-11-01](../DECISIONS.md#L21269)). Everything else is a labelled "Search …" beside the
   list (`EbaySearchPanel`, Paid link tag + EPN disclosure) that claims no price,
   stock or listing; cross-sells (`promo`) hide for ad-free members and carry
   `data-ad-placement`. `/editorial-policy`, `/about` and `/privacy` disclose

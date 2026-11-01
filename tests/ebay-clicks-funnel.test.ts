@@ -161,10 +161,10 @@ test("pre-order table: open eBay rows lead each product; stores follow in price-
   assert.match(ebayRow, />\+46%</);
 });
 
-test("pre-order table: an open eBay row reads 'View on eBay' at ghost weight in eBay blue; stores unchanged", () => {
+test("pre-order table: an open eBay row reads 'View on eBay' with the stores' ghost button (owner, 2026-11-01); stores unchanged", () => {
   const box = section(render(), "RAD|Booster Box");
   const li = (store: string) => box.match(new RegExp(`<li data-stock="\\w+"[^>]*>(?:(?!</li>)[\\s\\S])*?>${store}<[\\s\\S]*?</li>`))?.[0] ?? "";
-  assert.match(li("ebay_us"), /class="btn-ebay-ghost px-2\.5 py-1 text-xs[^"]*"[^>]*>View on eBay</);
+  assert.match(li("ebay_us"), /class="btn-ghost px-2\.5 py-1 text-xs[^"]*"[^>]*>View on eBay</);
   assert.doesNotMatch(li("ebay_us"), /class="btn-ebay /, "never the one FILLED button in a ghost list");
   assert.match(li("gamenerdz"), /class="btn-ghost px-2\.5 py-1 text-xs[^"]*"[^>]*>Pre-order</);
   assert.doesNotMatch(li("manyrealms"), /btn-/, "sold-out rows keep no button emphasis");

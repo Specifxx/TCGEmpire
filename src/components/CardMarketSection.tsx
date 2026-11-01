@@ -45,8 +45,12 @@ export type EbaySearchMap = Record<string, { url: string; label: string } | null
 // the primary button orange and kept every purchase button as it was.
 // Reuses the shared `.btn` base (layout/sizing) from globals.css. Exported so
 // QuickView's compact price list uses the exact same treatment.
-export function buyButtonClass(retailer: string): string {
-  return retailer.startsWith("ebay") ? "btn-ebay" : "btn-buy";
+// 2026-11-01 (owner): "the ebay and amazon links should blend in and look exactly
+// the same as the other price rows": every row, eBay's included, wears the one
+// green again. The function stays so the card table, the quick view and the
+// mobile buy bar keep sharing one rule.
+export function buyButtonClass(_retailer: string): string {
+  return "btn-buy";
 }
 
 export function buyButtonLabel(retailer: string): string {
@@ -618,7 +622,7 @@ export function CardPriceComparison({
                       cardName={displayName}
                       pageType="card_detail"
                       surface="ebay_fallback"
-                      className="btn-ebay order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                      className="btn-buy order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
                     >
                       Search {ebay.label} →
                     </OutboundLink>
