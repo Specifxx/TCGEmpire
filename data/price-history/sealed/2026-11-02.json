@@ -141,7 +141,7 @@
     },
     "OGN|Champion Deck (Viktor)": {
       "AU": 3500,
-      "CA": 8999,
+      "CA": 5997,
       "EU": 699,
       "SG": 6853,
       "UK": 1500,
@@ -197,7 +197,7 @@
       "AU": 139999,
       "CA": 144995,
       "EU": 60000,
-      "US": 68899
+      "US": 71488
     },
     "RAD|Booster Pack": {
       "AU": 1099,
@@ -241,7 +241,7 @@
     "RAD|Showdown Decks Display": {
       "AU": 5500,
       "CA": 4499,
-      "US": 7289
+      "US": 7090
     },
     "RAD|Sleeved Booster": {
       "EU": 500,
@@ -542,7 +542,7 @@
       "CA": 10000
     },
     "giftoftheriftbundle": {
-      "US": 27390
+      "US": 27387
     },
     "jinxchampiondeckriftboundleagueoflegends": {
       "EU": 6399
