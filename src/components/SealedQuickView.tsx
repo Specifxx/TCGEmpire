@@ -184,7 +184,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                         <PaidLinkTag />
                       </div>
                     </div>
-                    <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_pinned" className="btn-ebay px-3 py-1.5 text-xs">
+                    <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_pinned" className="btn-buy px-3 py-1.5 text-xs">
                       Search →
                     </OutboundLink>
                   </li>

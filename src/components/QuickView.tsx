@@ -599,7 +599,7 @@ function QuickViewModal({
                         cardName={cardDisplayName(card.name, card)}
                         pageType="quickview"
                         surface="ebay_fallback"
-                        className="btn-ebay mt-3 inline-flex text-xs"
+                        className="btn-buy mt-3 inline-flex text-xs"
                       >
                         Search {ebayMkt.label} →
                       </OutboundLink>
@@ -775,7 +775,7 @@ function QuickViewModal({
                 cardName={cardDisplayName(card.name, card)}
                 pageType="quickview"
                 surface="ebay_fallback"
-                className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-3 transition-colors hover:border-[#0064d2]/70"
+                className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-ink-800 p-3 transition-colors hover:border-ink-600"
               >
                 <span className="min-w-0 flex-1 basis-44 text-xs text-slate-300">
                   <span className="block font-semibold text-white">Search {ebayMkt.label} for {cardDisplayName(card.name, card)}</span>
@@ -785,7 +785,7 @@ function QuickViewModal({
                       : `We have no ${ebayMkt.label} price on file for this card right now — eBay sellers may still list it.`}
                   </span>
                 </span>
-                <span className="shrink-0 text-xs font-semibold text-sky-300">Search {ebayMkt.label} →</span>
+                <span className="shrink-0 text-xs font-semibold text-slate-300">Search {ebayMkt.label} →</span>
               </OutboundLink>
             )}
             {ebaySearchUrl && ebayMkt && <AffiliateDisclosure partner="ebay" tight />}

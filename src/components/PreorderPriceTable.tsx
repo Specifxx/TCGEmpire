@@ -313,13 +313,11 @@ export function PreorderPriceTable({
                           // A sold-out or unconfirmed offer keeps its link (the store
                           // may restock) but loses the button: no emphasis on a
                           // purchase that probably cannot be made. An open eBay row
-                          // is the same size and weight in eBay blue (2026-09-26).
+                          // is the same button as every store (owner, 2026-11-01: "blend in").
                           className={
                             !isOpen
                               ? "px-2.5 py-1 text-xs text-slate-500 underline-offset-2 hover:underline"
-                              : isEbay
-                                ? "btn-ebay-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
-                                : "btn-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
+                              : "btn-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
                           }
                         >
                           {!isOpen ? "View" : isEbay ? "View on eBay" : released ? "Buy" : "Pre-order"}

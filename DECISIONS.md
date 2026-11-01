@@ -21265,3 +21265,14 @@ every page was a 500, and the paused section 301'd to DexCompare.
 - Lost with the old project: the market-price history before 2026-11-01 (the
   charts start again from the first import) and the original product slugs,
   which the importer re-derives from the same names, so most come back the same.
+
+## 2026-11-01: eBay rows in the price lists wear the stores' button again
+
+The owner, across every site: "the ebay and amazon links should blend in and look exactly the same as the other price
+rows … reflect that change on the other sites that require it". Inside a price list (the card table and its quick
+view, the sealed quick view's pinned eBay search, the card page's and quick view's "no eBay price" search row, the
+pre-order table), an eBay row now uses the same button as a store: `buyButtonClass` returns `btn-buy` for every
+retailer, the pre-order table's eBay row is `btn-ghost` like its neighbours, and the quick view's eBay fallback box
+loses its blue tint. The "Paid link" tag and EPN disclosure stay; rows keep their price position. This reverses the
+eBay-blue buttons of 2026-09-26 for price rows only: eBay ad strips, panels, the price guide's per-card eBay button
+and the Pokémon section keep `.btn-ebay`/`.btn-ebay-ghost`.
