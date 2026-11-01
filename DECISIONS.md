@@ -21202,3 +21202,21 @@ deck's group.
 Next, when previews start on 13 December: reveals into the spoilers post and the
 gallery (as Radiance's importer did), and the four unnamed Legends into
 `LEGACY_LEGENDS_CONFIRMED`.
+
+## 2026-11-01 — The decline is the Radiance wave fading; deck size moves to its own page
+
+Bill: RiftCompare is declining while the sister sites grow. Search Console (90 days to 31 Oct, `gsc-queries` and
+`impact-report`): impressions fell from about 11–12k a day in late September to 4.6–6k by 28–30 October and average
+position slipped from 7.1 to about 8.6. Clicks averaged 194 a day from 28 Sep to 8 Oct and 180 from 9 to 31 Oct, with
+spikes on 16, 17 and 23 October from the Radiance release and 112 on 30 October. So the drop is mostly the end of the
+Radiance spoiler and release searches, on top of a slow slide in position. It is not a crawl or indexing fault.
+
+What was not done, on purpose: no new title pass on the low-CTR guides (card size, Deploy, Empower, ban list, rotation,
+HEARTSTEEL overnumbered). Each already had a CTR pass on 2026-09-24 or 2026-10-23, and changing them again with no new
+evidence is churn. No new hubs either: champions, keywords, types and printings already exist, and more pages on the same
+queries would split them ("Pages competing in Google"). The Ahri blog/guide pair was already folded by a 301. The one
+fix with clear evidence: "riftbound deck size" (rising, about 520 impressions at position 9) was landing on the
+card-size guide, which answers a different question. `how-a-riftbound-deck-is-built` now owns it with
+`seoTitle` "Riftbound Deck Size: 40 Cards, 12 Runes, 3 Battlefields" and a snippet that leads with the numbers. The
+next lever is the Legacy preview season (13 December), which another thread is preparing. Re-check `gsc-queries` around
+17 November.
