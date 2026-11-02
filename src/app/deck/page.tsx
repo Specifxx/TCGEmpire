@@ -84,6 +84,8 @@ export async function generateMetadata({ searchParams }: { searchParams: { list?
 
     return {
       ...base,
+      // A shared list is someone's own: out of the index (2026-11-02, "Share buttons and shared lists").
+      robots: { index: false, follow: true },
       openGraph: { title: `This Riftbound deck costs ${stat}`, description: sub, images: [{ url: img, width: 1200, height: 630 }] },
       twitter: { card: "summary_large_image", title: `This Riftbound deck costs ${stat}`, description: sub, images: [img] },
     };

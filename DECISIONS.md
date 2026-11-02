@@ -21535,3 +21535,23 @@ rolls over a week after the event) and the intro are pure in `src/lib/sale-seaso
 (`tests/sale-seasons.test.ts`); Lunar New Year is a published-date table to 2040 (6 February 2027).
 Six-hour revalidate, the floor for pages buyers act on. In the Prices menu beside Black Friday and in
 the sitemap. Never a "was" price, a countdown or an invented sale.
+
+
+## 2026-11-02 — Share buttons and shared lists
+
+The owner wants word of mouth to be a big growth driver across every site. The on-site part, the same shape on all
+twelve sites (each repo's DECISIONS has its own entry):
+
+- **The Share button opens the phone's share sheet** (`navigator.share`), else copies the link with the message. No
+  pop-up and no new reward (the existing Coins task for a share stays). The card page and the quick view pass their
+  rows, so the message names the real gap in the visitor's market: cheapest and dearest in-stock item price from two
+  different sellers (`lib/share-link.ts` `priceGap`, never converted). The card's share image already shows the
+  lowest live price in each market (`card/[id]/opengraph-image.tsx`); it was left as it is rather than add a
+  per-store query to an image route.
+- **Shared decks stay URL-only**: the deck builder's link (`/deck?list=`) now goes through the share sheet too, and a
+  `/deck` page carrying a list is `noindex` (someone's own list, not a page to rank).
+- **Counting**: every shared link carries `utm_source=share&utm_medium=<card|deck|…>`. The button sends a Vercel
+  `share` event; `ShareArrival` (root layout) sends one `share_visit` per tab when a shared link brings someone. The
+  weekly growth report reads both for every project from the Web Analytics API (`loadShareCounts`, the analytics
+  page's credentials) as "WORD OF MOUTH": share taps / visits per site and week. robots.txt allows
+  `/*utm_source=share` because X's and Reddit's preview fetchers obey it and every other query string is disallowed.

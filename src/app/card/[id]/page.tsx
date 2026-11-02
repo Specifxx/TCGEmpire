@@ -1109,7 +1109,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   are 48px icon squares; from sm they carry their labels. */}
               <div className="flex shrink-0 items-start gap-2">
                 <PriceWatchButton cardId={card.id} variant="responsive" />
-                <ShareButton responsive />
+                <ShareButton responsive name={displayName} rows={rows} medium="card" />
               </div>
             </div>
 
