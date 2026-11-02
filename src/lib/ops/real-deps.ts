@@ -72,8 +72,13 @@ function githubApi(token: string, repo: string): NonNullable<OpsDeps["github"]> 
   };
   return {
     runs: async (file): Promise<WorkflowRun[]> => {
-      const j = await get<{ workflow_runs?: { status: string; conclusion: string | null; created_at: string }[] }>(`/repos/${repo}/actions/workflows/${file}/runs?per_page=6`);
-      return (j.workflow_runs ?? []).map((r) => ({ status: r.status, conclusion: r.conclusion, createdAt: new Date(r.created_at) }));
+      const j = await get<{ workflow_runs?: { status: string; conclusion: string | null; created_at: string; head_branch?: string | null }[] }>(`/repos/${repo}/actions/workflows/${file}/runs?per_page=20`);
+      // A test run on a session branch (claude/*, ccr-*) is not the job: only runs on the
+      // real branches count, or a red trial run on a branch pages the owner (2026-11-02).
+      return (j.workflow_runs ?? [])
+        .filter((r) => !/^(claude\/|ccr-)/.test(r.head_branch ?? ""))
+        .slice(0, 6)
+        .map((r) => ({ status: r.status, conclusion: r.conclusion, createdAt: new Date(r.created_at) }));
     },
     productionDeploy: async () => {
       const deps = await get<{ id: number; created_at: string }[]>(`/repos/${repo}/deployments?environment=Production&per_page=1`);
