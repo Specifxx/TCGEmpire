@@ -10,7 +10,7 @@
       "why": "The daily Bluesky job is built and dry-running: two link cards a day across all 13 sites, no recurring work, once the account exists.",
       "added": "2026-11-02",
       "prompt": "social/chrome-prompt-bluesky-finish.md",
-      "done": null
+      "done": "2026-11-02"
     },
     {
       "id": "cam-vercel-bot-challenge",
