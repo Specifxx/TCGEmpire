@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ROTATION, blackFridaySeason, parseOg, pickPosts, postText, tagFacets } from "../src/lib/bluesky-post";
+import { ROTATION, blackFridaySeason, parseOg, pickPosts, postCandidates, postText, tagFacets } from "../src/lib/bluesky-post";
 
 test("two different sites a day, and every site within a week", () => {
   const seen = new Set<string>();
@@ -59,5 +59,14 @@ test("every site has one or two plain hashtags", () => {
   for (const s of ROTATION) {
     assert.ok(s.tags.length >= 1 && s.tags.length <= 2, s.name);
     for (const t of s.tags) assert.match(t, /^[A-Za-z][A-Za-z0-9]*$/);
+  }
+});
+
+test("stand-ins follow today's picks, cover every other site once, and never change the picks", () => {
+  for (const day of ["2026-11-02", "2026-12-20"]) {
+    const c = postCandidates(day);
+    assert.deepEqual(c.slice(0, 2), pickPosts(day));
+    assert.equal(new Set(c.map((x) => x.site.name)).size, ROTATION.length);
+    assert.equal(c.length, ROTATION.length);
   }
 });

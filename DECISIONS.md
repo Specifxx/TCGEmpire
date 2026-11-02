@@ -21471,6 +21471,11 @@ custom hobby feeds pick them up. Never more than two, never a trending tag unrel
 developer guidelines count automated likes, follows, replies and anything that notifies a user as spam; the job does
 none of them, and the profile says the posts are automated.
 
+**Stand-ins and no repeats (2026-11-02, later).** The first real run posted one card: CamCompare's bot challenge
+answered the fetch with 429. A pick that can't be read, or whose link the account already posted in the last six days
+(read from its own feed, so a manual re-run never repeats a card), now gives way to the next site in rotation
+(`postCandidates`); the run fails only when nothing at all could be posted.
+
 ## 2026-11-02 — One price alert service for the sister sites
 
 The owner chose "Yes, one shared service" on the card "Add email price alerts to the sister sites, through one shared

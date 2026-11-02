@@ -52,6 +52,22 @@ export function pickPosts(day: string, n = 2, rotation: SitePages[] = ROTATION):
   return out;
 }
 
+/** Today's picks, then every other site in rotation order as stand-ins (its first page; Black Friday in season), for
+ *  when a pick can't be read or was posted this week. The picks themselves are exactly `pickPosts(day, n)`. */
+export function postCandidates(day: string, n = 2, rotation: SitePages[] = ROTATION): { site: SitePages; url: string }[] {
+  const picks = pickPosts(day, n, rotation);
+  const used = new Set(picks.map((p) => p.site.name));
+  const last = rotation.indexOf(picks[picks.length - 1].site);
+  const rest: { site: SitePages; url: string }[] = [];
+  for (let i = 1; i <= rotation.length; i++) {
+    const site = rotation[(last + i) % rotation.length];
+    if (used.has(site.name)) continue;
+    used.add(site.name);
+    rest.push({ site, url: site.url + (blackFridaySeason(day) ? site.blackFriday : site.pages[0]) });
+  }
+  return [...picks, ...rest];
+}
+
 const decode = (s: string) => s.replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 
 /** og:title / og:description / og:image (falling back to <title> and the meta description) from a page's HTML. */
