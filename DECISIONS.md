@@ -21383,6 +21383,87 @@ the family's growth had no one number.
   DexCompare's apex property has three pages with impressions: its sitemap was first read on 30 Oct, so it is new to
   Google, not broken.
 
+## 2026-11-02 — Family links name no single country
+
+The owner: "Riftcompare says 'Australian tech prices on compareempire' … when I switch to US it still says Australian
+tech prices when compareempire has US stores." Compare Empire's root has been the US home since 2026-11-01 (AU at
+`/au`, UK at `/uk`), but every family footer still called it Australian.
+
+- **Every family list, all twelve sites that have one** (KaeYoung keeps none): Compare Empire is "Tech and appliance
+  prices"; its RiftCompare blurb names all three markets and its two deep links go to the US edition (`/us/phones`,
+  `/us/deals`), from which Compare Empire's region script moves an AU or UK visitor to their own. DexCompare's
+  "Pokémon booster boxes in Australia" link became "Pokémon booster boxes" on `/us/` for the same reason.
+- **Cyberpunk Compare joined every list** it was missing from (RiftCompare, OP, MTG, Dex, Wargame, Figure, Cam,
+  Compare Empire); the engine sites already had it.
+- **A test in each repo** fails on a country adjective in a family anchor or blurb (and, here, on a deep link into a
+  non-US edition), so the wording cannot drift back.
+## Store clicks per month — 2026-11-02
+
+Thread "Win exclusive store partner codes" (owner, 2026-11-02: "implement now"). A week after the 26 Oct partner-code
+emails no store had answered, and the one store that did engage (Plenty of Games, AU) asked first for "data to
+support how many customers you've directed to the store". The daily counts ("Click counts by day") lump every store
+into one `store` number, so the only per-store evidence we could quote was "cards where you are cheapest".
+
+- `/api/click` now also adds one to `storeclick:<Sydney month>:<retailer>` (a `Counter` row) when the beacon's
+  retailer is a key in `RETAILERS`. Unknown values are ignored, so a forged beacon cannot mint rows; at ~150 stores
+  that is at most ~150 rows a month. One extra single-row upsert per store click, no read on the request path.
+- `/admin/store-partners` shows this month and last month per store. It is the number to quote in a pitch, next to
+  the store's own `utm_source=riftcompare` traffic. Like the daily counts it is a trend, never a payout.
+- Not done on purpose: no per-card or per-day breakdown, no visitor identifiers.
+## 2026-11-02 — Empire HQ and the one Monday report
+
+The owner approved the consolidation plan's control tower ("Sure go ahead with this plan"): thirteen sites, nine
+monitors and two weekly emails each mailed separately, and every thread sent its own Chrome prompt. Now:
+
+- **Only red mails, on every site.** `decide` (`src/lib/ops/state.ts`) never plans a warning: amber is shown on
+  `/admin/health`, Empire HQ and in the Monday report. A red is mailed when it appears (or rises from amber), again
+  every 24 h while it lasts, and its recovery is announced. The sister monitors do the same: a run fails (GitHub's
+  email) only on a failed check, and OP Compare's watchdog mails failures only and dropped its own Monday summary.
+- **One status file per site.** Each sister monitor writes `ops-status.json` and its workflow force-pushes it as
+  `status.json`, one orphan commit, to the repo's public `ops-status` branch (never deployed). Format in
+  `src/lib/hq/status.ts`; status and the monitor's own sentences only, the same as the public Actions log. No new
+  secret is needed: each repo writes its own branch with its Actions token.
+- **RiftCompare's monitor collects them** (`src/lib/hq/collect.ts`, every three hours) into the OpsSnapshot row
+  `hq:sites`. For a site without a monitor (DexCompare, MTG Compare, CamCompare, Compare Empire) it probes the home
+  page and its import workflows' latest runs instead. Red that cannot mail itself joins its own checks (area
+  `sites`, `hqChecks`): a sister monitor silent for a day (GitHub pauses idle schedules), or a site without a monitor
+  down. Compare Empire's repository is private, so only its home page is probed.
+- **Empire HQ** (`/admin/hq`, linked first on `/admin` with a dot per site): one row per site with Google clicks for
+  the last 7 settled days against the week's target (sisters +15%, RiftCompare hold, from `GROWTH_TARGETS`),
+  earnings for the last 7 full days by affiliate tag (`siteLedger`; `pkmn` counts to RiftCompare), Vercel cost once
+  the billing token exists, health, and the owner's open steps. Admin only, uncached, a few small rows.
+- **The one Monday report** (`/api/cron/weekly-report`, `src/lib/hq/weekly-email.ts`) replaces the Sunday digest and
+  the separate growth report: targets, the owner's steps, every site's row, RiftCompare's flagged checks, the money
+  section and the growth review's detail, to the owner AND the business inbox the weekly growth review reads
+  (subject `Empire weekly <date>`). The ops monitor's Sunday 21:00 UTC run asks the site to send it (the site alone
+  holds the reporting keys, so no amount reaches a public log) and sends its own plain digest if that fails, so a
+  Monday without email still means the monitor stopped. `growth-report.yml` lost its schedule; dispatch it for an
+  extra copy.
+- **The owner's queue** is `data/hq/owner-steps.json` on main: a public file of titles, reasons and the
+  project-files path of each prompt (the prompt text stays private). A thread adds a row and commits to main; HQ
+  reads the file from GitHub at request time (bundled copy as fallback), so no deploy is needed. Done is the row's
+  `done` day or the owner's Done button (OpsSnapshot `hq:steps-done`). The steps still open are joined into one
+  Chrome batch each Monday (project files, `chrome-queue/<date>.md`) instead of a prompt per thread, unless a step is
+  urgent. `tests/hq.test.ts` keeps the file free of addresses and keys.
+
+## 2026-11-02 — Bluesky auto-posting
+
+**Decision.** One Bluesky account for the whole family (not thirteen), posted by `bluesky-post.yml` once a day:
+two link cards, each to one sister site's self-updating page (the price or market report; its Black Friday page from
+1 November to a week after Cyber Monday), rotating so every site appears about once a week. Each card uses the page's
+own title, description and share image, read at post time, so a post never says anything the page doesn't.
+
+**Why.** The owner wants growth that runs without him (2026-11-02: no Reddit posts, no recurring Chrome prompts).
+Bluesky has a free, open posting API with no app review; one account means one setup and one app password, and the
+pages it links already update themselves. X, Threads and Pinterest need paid tiers or app review; Pinterest
+(KaeYoung, FigureCompare, CamCompare) is the next candidate once there is a reason to ask for review.
+
+**Rules.** The job is a green dry run until `BLUESKY_HANDLE` (variable) and `BLUESKY_APP_PASSWORD` (secret, an app
+password, never the login) exist; the owner's one-time setup is a row in `data/hq/owner-steps.json`. A page that
+fails to load is skipped; all failing, or Bluesky refusing a post, fails the run, and the ops monitor watches the job
+(`JOBS`, 36 h). Rotation and text are pure (`src/lib/bluesky-post.ts`, `tests/bluesky-post.test.ts`). Never post a
+price, a claim or a deal the linked page doesn't show, and never reply to or follow people automatically.
+
 ## 2026-11-02 — One price alert service for the sister sites
 
 The owner chose "Yes, one shared service" on the card "Add email price alerts to the sister sites, through one shared

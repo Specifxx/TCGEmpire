@@ -64,7 +64,6 @@ export interface AlertPlan {
 }
 
 export const REMIND_CRIT_HOURS = 24;
-export const REMIND_WARN_HOURS = 72;
 
 const HOUR_MS = 3_600_000;
 
@@ -95,21 +94,23 @@ export function decide(prev: OpsState, results: readonly CheckResult[], now: Dat
     next.checks[r.id] = state;
 
     if (cur === "ok") {
-      if (told) plan.recoveries.push({ id: r.id, title: r.title, since: before?.since ?? now.toISOString() });
+      // Only a red the owner was emailed about is announced as recovered.
+      if (told === "crit") plan.recoveries.push({ id: r.id, title: r.title, since: before?.since ?? now.toISOString() });
+      else state.emailedSev = null;
       continue;
     }
 
+    // ONLY RED MAILS (owner, 2026-11-02, the control tower): amber is shown on
+    // /admin/health, Empire HQ and the one Monday report, never emailed on its own.
+    if (cur === "warn") continue;
+
     if (!told) {
       plan.problems.push(r);
-    } else if (SEVERITY_RANK[cur] > SEVERITY_RANK[told]) {
+    } else if (told === "warn") {
       plan.escalations.push(r);
-    } else if (SEVERITY_RANK[cur] < SEVERITY_RANK[told]) {
-      // crit → warn: they were told it was worse; no new mail, and the next escalation is measured from here.
-      state.emailedSev = cur;
     } else {
-      const every = (cur === "crit" ? REMIND_CRIT_HOURS : REMIND_WARN_HOURS) * HOUR_MS;
       const last = state.lastEmailedAt ? Date.parse(state.lastEmailedAt) : 0;
-      if (now.getTime() - last >= every) plan.reminders.push(r);
+      if (now.getTime() - last >= REMIND_CRIT_HOURS * HOUR_MS) plan.reminders.push(r);
     }
   }
   return { next, plan };

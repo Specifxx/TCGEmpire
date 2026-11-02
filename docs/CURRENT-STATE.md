@@ -103,9 +103,12 @@ longer lands on its entry.
   a `where: { retailer }` query reads the `retailer` index, not every listing;
   the 226 store pages were most of the build's prerender. [2026-10-26](../DECISIONS.md#L19878)
 - **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
-  3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
+  3 h) checks Neon transfer limits, eBay, price imports, scheduled
   jobs, the live site, Stripe, email and the inbox, stores the result for
-  `/admin/health`, and emails the owner only when something needs a look. Its
+  `/admin/health`, and emails the owner only when something is RED; amber waits for
+  Empire HQ (`/admin/hq`, every site in one row, sisters' `ops-status` files) and the
+  one Monday report, which replaced the Sunday digest and the growth report email
+  [2026-11-02](../DECISIONS.md#L21386). Its
   memory is the Actions cache, not the database it watches. Every new public form
   calls `notifyOwnerBounded` (capped 8/h, 25/day), which emails the SITE inbox
   (`CONTACT_EMAIL`, Reply-To the visitor), not the owner, written feedback included

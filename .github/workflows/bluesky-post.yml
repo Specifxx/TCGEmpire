@@ -1,0 +1,35 @@
+name: Bluesky posts
+
+# Two link cards a day on the family's Bluesky account, each to one sister site's self-updating page
+# (scripts/bluesky-post.ts, DECISIONS.md "Bluesky auto-posting", 2026-11-02). 15:41 UTC: morning in the US,
+# evening in the UK and Europe. A green dry run until BLUESKY_HANDLE and BLUESKY_APP_PASSWORD exist.
+# Reads only public pages; no database.
+
+on:
+  schedule:
+    - cron: "41 15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bluesky-post
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Post today's link cards
+        env:
+          BLUESKY_HANDLE: ${{ vars.BLUESKY_HANDLE || secrets.BLUESKY_HANDLE }}
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+        run: npx tsx scripts/bluesky-post.ts
