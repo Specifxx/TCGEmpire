@@ -884,7 +884,7 @@ longer lands on its entry.
 - **Pre-order pages:** every coming-soon set in `SETS` without a hand-built
   page gets `/preorders/<slug>` automatically, from data only; a calendar
   row's `preordersHref` wins and links go through `preorderRouteForSet`.
-  [2026-11-02](../DECISIONS.md#L21448)
+  [2026-11-02](../DECISIONS.md#L21467)
 - **One page, one phrase:** add the `docs/seo-keyword-map.md` row before
   publishing, and publish fewer pages than feels natural (13 of ~24 Vendetta
   posts were 301'd, 7 after an AdSense low-value rejection).
