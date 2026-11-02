@@ -21382,3 +21382,18 @@ the family's growth had no one number.
   (rank trackers or a Google test) and no fix was made; the site's real level is a few hundred impressions a day.
   DexCompare's apex property has three pages with impressions: its sitemap was first read on 30 Oct, so it is new to
   Google, not broken.
+
+## 2026-11-02 — Family links name no single country
+
+The owner: "Riftcompare says 'Australian tech prices on compareempire' … when I switch to US it still says Australian
+tech prices when compareempire has US stores." Compare Empire's root has been the US home since 2026-11-01 (AU at
+`/au`, UK at `/uk`), but every family footer still called it Australian.
+
+- **Every family list, all twelve sites that have one** (KaeYoung keeps none): Compare Empire is "Tech and appliance
+  prices"; its RiftCompare blurb names all three markets and its two deep links go to the US edition (`/us/phones`,
+  `/us/deals`), from which Compare Empire's region script moves an AU or UK visitor to their own. DexCompare's
+  "Pokémon booster boxes in Australia" link became "Pokémon booster boxes" on `/us/` for the same reason.
+- **Cyberpunk Compare joined every list** it was missing from (RiftCompare, OP, MTG, Dex, Wargame, Figure, Cam,
+  Compare Empire); the engine sites already had it.
+- **A test in each repo** fails on a country adjective in a family anchor or blurb (and, here, on a deep link into a
+  non-US edition), so the wording cannot drift back.
