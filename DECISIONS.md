@@ -21397,3 +21397,16 @@ tech prices when compareempire has US stores." Compare Empire's root has been th
   Compare Empire); the engine sites already had it.
 - **A test in each repo** fails on a country adjective in a family anchor or blurb (and, here, on a deep link into a
   non-US edition), so the wording cannot drift back.
+## Store clicks per month — 2026-11-02
+
+Thread "Win exclusive store partner codes" (owner, 2026-11-02: "implement now"). A week after the 26 Oct partner-code
+emails no store had answered, and the one store that did engage (Plenty of Games, AU) asked first for "data to
+support how many customers you've directed to the store". The daily counts ("Click counts by day") lump every store
+into one `store` number, so the only per-store evidence we could quote was "cards where you are cheapest".
+
+- `/api/click` now also adds one to `storeclick:<Sydney month>:<retailer>` (a `Counter` row) when the beacon's
+  retailer is a key in `RETAILERS`. Unknown values are ignored, so a forged beacon cannot mint rows; at ~150 stores
+  that is at most ~150 rows a month. One extra single-row upsert per store click, no read on the request path.
+- `/admin/store-partners` shows this month and last month per store. It is the number to quote in a pitch, next to
+  the store's own `utm_source=riftcompare` traffic. Like the daily counts it is a trend, never a payout.
+- Not done on purpose: no per-card or per-day breakdown, no visitor identifiers.
