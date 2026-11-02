@@ -961,6 +961,55 @@ model AlertMute {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SISTER-SITE PRICE ALERTS (2026-11-02, owner: "one shared service").
+// ─────────────────────────────────────────────────────────────────────────────
+// The other Compare Empire sites (MTG Compare, DexCompare, the card engine
+// sites, WargameCompare, FigureCompare, Compare Empire) have no database and no
+// mail key. Their "Email me when it drops below" form posts to
+// riftcompare.com/api/sister-alerts; these two tables are the only place their
+// visitors' addresses are kept. PRIVATE: never in PUBLIC_MODELS or an export.
+// lib/sister-alerts/ owns them; the daily check (/api/cron/sister-alerts) reads
+// each site's own public feed (<site>/alert-feed.json), never its repo or data.
+//
+// One row per address: double opt-in (nothing is sent but the confirmation
+// until confirmedAt is set) and the unguessable token every link carries.
+model SisterAlertAddress {
+  email         String    @id
+  token         String    @unique
+  confirmedAt   DateTime?
+  // Last confirmation email sent (at most one a day per address).
+  confirmSentAt DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+// One alert: a product on a sister site, in one region, below a price the
+// visitor picked. name/path come from the site's own feed at the first check,
+// never from the form (a stranger's text must never reach an inbox).
+model SisterAlert {
+  id                String    @id @default(cuid())
+  email             String
+  site              String
+  productId         String
+  region            String
+  targetCents       Int
+  name              String?
+  path              String?
+  lastPriceCents    Int?
+  lastCheckedAt     DateTime?
+  // The price we last emailed: the next email needs a lower one, until the
+  // price climbs back above the target (then it re-arms).
+  lastNotifiedCents Int?
+  lastNotifiedAt    DateTime?
+  // First check the product had no price in the region; gone 90 days → removed.
+  missingSince      DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@unique([email, site, productId, region])
+  @@index([site])
+  @@index([lastNotifiedAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // DECK PRICE WATCH — Premium (2026-09-29, "Premium works while you're away").
 // ─────────────────────────────────────────────────────────────────────────────
 // A saved list (the same text /deck and /tools/best-basket?list= carry) that

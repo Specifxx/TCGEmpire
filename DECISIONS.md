@@ -21464,6 +21464,48 @@ fails to load is skipped; all failing, or Bluesky refusing a post, fails the run
 (`JOBS`, 36 h). Rotation and text are pure (`src/lib/bluesky-post.ts`, `tests/bluesky-post.test.ts`). Never post a
 price, a claim or a deal the linked page doesn't show, and never reply to or follow people automatically.
 
+## 2026-11-02 — One price alert service for the sister sites
+
+The owner chose "Yes, one shared service" on the card "Add email price alerts to the sister sites, through one shared
+alert service?" (a single RiftCompare alert email sold A$67 in October). These sister sites have no database, no mail key
+and no accounts (the engine sites since 2026-10-25), so their alerts run here, on what RiftCompare already pays for.
+
+- **Who.** DexCompare, MTG Compare, Gundam, Lorcana, YGO and Cyberpunk Compare, WargameCompare and FigureCompare
+  (`lib/sister-alerts/sites.ts`). Not RiftCompare or OP Compare (their own account alerts), not CamCompare or
+  Compare Empire (their own alert tables and mailers), not KaeYoung (left out by the owner unless he asks).
+- **The form** on each site posts `{site, productId, region, email, targetCents}` to `POST /api/sister-alerts`
+  (CORS for each site's exact origin and its www twin, never `*`; a site may add alerts only for itself; 8 a minute per
+  IP, 10 an hour per address, 25 alerts per address). Nothing else is taken from the form: the product's name and link
+  come from the site's own feed at the daily check, so no text a stranger types ever reaches an inbox.
+- **Double opt-in.** A new address gets one confirmation email (at most one a day per address) and nothing else until
+  it presses the button on the confirm page; unconfirmed addresses and their alerts go after a week. A confirmed
+  address's new alerts start at once. Confirm, manage and stop are pages whose GET never changes anything (mail
+  scanners open links); only their buttons' POSTs do. One-click List-Unsubscribe POSTs stop every alert. Links carry
+  a random 24-byte per-address token, the same unguessable-token pattern as RiftCompare's `unsubToken`.
+- **The prices: each site's own static feed, not its repo or a database.** Every site's build writes
+  `/alert-feed.json` (format at the top of `lib/sister-alerts/feed.ts`) from the loaders its pages read: the lowest
+  IN-STOCK STORE price per region in that region's currency, never eBay, Amazon or a conversion, plus a few of its own
+  real deals. The check fetches it from the site's CDN once a day, so the feed is exactly what a visitor saw, costs the
+  sister no function call, and a format change happens in the repo that owns the format. A feed for the wrong site, of
+  another version, or older than four days fires nothing.
+- **When it emails** (`evaluate.ts`, pinned by `tests/sister-alerts.test.ts`): at or below the target; then only after
+  a further 5% drop, at most once in three days, re-armed when the price climbs back above the target. A product with
+  no price in its region for 90 days, or an alert six months old, is removed. One email per (address, site) per run.
+- **Mail budget.** Sent through Resend (RiftCompare's verified domain, the sister's name as the sender's display
+  name), counted in the shared alert budget (`recentlyEmailedAddresses` now reads `SisterAlert.lastNotifiedAt`, so
+  RiftCompare's runs see these sends and this run sees theirs), plus the service's own cap of 30 emails a UTC day,
+  confirmations included (`mail-cap.ts`, fails closed). A deferred alert keeps its state and fires the next day.
+- **Each email** names the sister site, links to its product page (utm_source=alert-email), has "Send this to a
+  friend" (a `mailto:` with the link) and "Stop this alert" per row, and ends with one real deal from another site of
+  the same group (cards, hobby), taken from that site's feed in the same region, rotating by day. No eBay links
+  in email (EPN).
+- **Runs** daily at 14:20 UTC: `.github/workflows/sister-alerts.yml` calls `/api/cron/sister-alerts` with
+  `CRON_SECRET` (the send needs Vercel's mail key). It answers 500 when a site that has alerts could not be checked,
+  so the job fails; `sister-alerts.yml` is in the ops monitor's `JOBS`. A first signup from a new address calls
+  `notifyOwnerBounded` (kind `sister-alert`, no address in it).
+- **Privacy:** both tables are private (never in `PUBLIC_MODELS`); `/privacy#sister-alerts` says what is kept, and
+  each sister's privacy page points to it.
+
 ## 2026-11-02 — Pre-order pages build themselves for every coming-soon set
 
 Pre-order landings were the family's top pages in October (`/radiance-preorders` here), but each one was a

@@ -65,6 +65,8 @@ async function noteProviderFailure(provider: string, res: Response): Promise<voi
 export interface SendEmailExtras {
   text?: string;
   headers?: Record<string, string>;
+  /** A different display name on the verified sender (the sister-site alerts, lib/sister-alerts/email.ts). */
+  from?: string;
 }
 
 export async function sendEmail(to: string, subject: string, html: string, extras: SendEmailExtras = {}): Promise<boolean> {
@@ -78,7 +80,7 @@ export async function sendEmail(to: string, subject: string, html: string, extra
   // delivery to ANY recipient (the old onboarding@resend.dev fallback is Resend's
   // shared test sender and can only email the Resend account owner). Override with
   // EMAIL_FROM if you want a different address on the verified domain.
-  const from = process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`;
+  const from = extras.from ?? process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`;
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
