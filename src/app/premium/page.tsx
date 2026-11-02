@@ -189,7 +189,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   const landingCta = { checkoutLive, signedIn: !!user, trialEligible, trialAvailable, trialDays: PREMIUM_TRIAL_DAYS, trialFeeCents: PREMIUM_TRIAL_FEE_CENTS };
 
   return (
-    <div className={`mx-auto ${landing ? "max-w-6xl" : "max-w-4xl"}`}>
+    <div className={`mx-auto ${landing ? "max-w-5xl" : "max-w-4xl"}`}>
       <PremiumRecoveryBeacon />
       <Breadcrumbs trail={[{ name: "Pro", href: "/premium" }]} />
       <script

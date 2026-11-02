@@ -21715,3 +21715,20 @@ when the newest `ops-state-` Actions cache (saved after every real check) is 150
 the database reads stay about every three hours, with three chances per slot instead of one. A manual run and
 the Sunday report always go through, and a gate that cannot read the cache runs the checks (fail open). The
 8-hour stale line stays: a real stop should still show. `tests/ops-wiring.test.ts` pins the schedule and gate.
+
+## 2026-11-02 — The Pro page, in the site's own theme
+
+**Why.** The owner: "noone's buying pro for riftcompare. It might look too gimmicky. We gotta make it look more
+professional and themed like the website with the website colours." The 2026-10-26 Collectr copy wore its own
+look: a gold "PRO" tag, a huge gold-gradient headline, a gold pill button, emoji feature icons and a made-up
+"$1,284.50" portfolio mock-up with floating badges. None of it is how any other RiftCompare page looks.
+
+**What.** `ProLanding` / `ProPricePicker` redrawn with the site's own parts; the plan, prices and terms are unchanged
+($6.99 a month or $47.88 a year, no trial):
+- Hero: an orange eyebrow, a plain Cinzel headline, one sentence on what Pro does, four ticks; beside it (on a
+  phone, straight after the headline) one `card-surface` plan card with a Monthly / Annual segmented control, the
+  price and the site's flat orange `btn-primary` "Upgrade to Pro" (`PremiumCta`'s `pro` prop, replacing `gold`).
+- What Pro adds: nine flat panels with line icons, no emoji. The mock-up is gone.
+- Free and Pro: one table with the real limits (90 days vs every day, 3 plans a month vs unlimited...), replacing the
+  two plan cards, with "Sign up free" and "Get Pro" (back to the plan card) under the columns.
+- `PREMIUM_COPY_VERSION` is `pro-theme-2026-11-02`, so the funnel can compare before and after.

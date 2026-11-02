@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { PremiumCta } from "@/components/PremiumCta";
 
-// Monthly / Annual, one switch, one price, one button (2026-10-26, the
-// Collectr-style Pro page; see ProLanding). Annual is selected first: it is the
+// Monthly / Annual, a segmented control, one price, one button (2026-10-26;
+// restyled in the site's theme 2026-11-02, see ProLanding). Annual is selected first: it is the
 // price the page leads with ("$3.99/mo"), with the monthly price struck beside
 // it. Every figure arrives from the server page, computed from lib/site.ts.
 
@@ -25,37 +25,34 @@ export interface ProCtaProps {
   trialFeeCents: number;
 }
 
-export function ProPricePicker({ prices, cta, size = "hero" }: { prices: ProPriceFigures; cta: ProCtaProps; size?: "hero" | "card" }) {
+export function ProPricePicker({ prices, cta }: { prices: ProPriceFigures; cta: ProCtaProps }) {
   const [annual, setAnnual] = useState(prices.annualLive);
-  const big = size === "hero" ? "text-6xl" : "text-5xl";
+  const opt = (on: boolean) =>
+    `flex flex-1 items-center justify-center gap-1.5 rounded px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 ${
+      on ? "bg-ink-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
+    }`;
   return (
     <div data-pro-price={annual ? "annual" : "monthly"}>
-      <div className="flex items-baseline gap-2">
-        <span className={`${big} font-extrabold tracking-tight text-white [font-feature-settings:'lnum'_1]`}>{annual ? prices.perMonth : prices.monthly}</span>
-        {annual && <span className="text-xl font-semibold text-slate-500 line-through decoration-2">{prices.monthly}</span>}
-        <span className="text-base font-semibold text-slate-400">/mo</span>
-      </div>
-      <p className="mt-1 text-sm text-slate-400">
-        {annual ? `Billed ${prices.annual} yearly · save ${prices.save}%` : prices.annualLive ? `Billed monthly · save ${prices.save}% with annual` : "Billed monthly"}
-      </p>
       {prices.annualLive && (
-        <div className="mt-4 flex items-center gap-3 text-sm font-semibold">
-          <span className={annual ? "text-slate-400" : "text-white"}>Monthly</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={annual}
-            aria-label="Pay yearly"
-            onClick={() => setAnnual((a) => !a)}
-            className={`relative h-7 w-12 rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold ${annual ? "bg-gold" : "bg-ink-700"}`}
-          >
-            <span className={`absolute top-1 h-5 w-5 rounded-full bg-ink-950 transition-all ${annual ? "left-6" : "left-1 bg-white"}`} />
+        <div role="radiogroup" aria-label="Billing period" className="mb-5 flex gap-1 rounded-md border border-ink-700 bg-ink-950 p-1">
+          <button type="button" role="radio" aria-checked={!annual} onClick={() => setAnnual(false)} className={opt(!annual)}>
+            Monthly
           </button>
-          <span className={annual ? "text-white" : "text-slate-400"}>Annual</span>
-          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-emerald-300">Save {prices.save}%</span>
+          <button type="button" role="radio" aria-checked={annual} onClick={() => setAnnual(true)} className={opt(annual)}>
+            Annual
+            <span className="rounded bg-buy/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-emerald-300">Save {prices.save}%</span>
+          </button>
         </div>
       )}
-      <div className="mt-5 max-w-md">
+      <div className="flex items-baseline gap-2">
+        <span className="text-4xl font-bold tabular-nums tracking-tight text-white">{annual ? prices.perMonth : prices.monthly}</span>
+        <span className="text-sm font-medium text-slate-400">USD / month</span>
+        {annual && <span className="ml-auto text-sm tabular-nums text-slate-500 line-through">{prices.monthly}</span>}
+      </div>
+      <p className="mt-1 text-sm text-slate-400">
+        {annual ? `${prices.annual} billed once a year` : prices.annualLive ? `Billed monthly · save ${prices.save}% with annual` : "Billed monthly"}
+      </p>
+      <div className="mt-5">
         <PremiumCta
           key={annual ? "annual" : "monthly"}
           {...cta}
@@ -63,7 +60,7 @@ export function ProPricePicker({ prices, cta, size = "hero" }: { prices: ProPric
           plan={annual ? "annual" : "monthly"}
           priceLabel={annual ? `${prices.annual}/year` : `${prices.monthly}/month`}
           compact
-          gold
+          pro
         />
       </div>
     </div>
