@@ -14,10 +14,6 @@ import { partnerRefUrl } from "@/lib/store-partner-deals";
 // customid prefix (`rc-` here) tells the sites apart in EPN's reports.
 export const EBAY_CAMPAIGN_ID = "5339155912";
 
-// Amazon Associates store/tracking id, appended to amazon.* product links.
-// `||` (not `??`) so an empty-string env var still falls back to the default.
-export const AMAZON_ASSOCIATE_TAG = process.env.AMAZON_ASSOCIATE_TAG || "riftcompare-20";
-
 // Impact (TCGplayer affiliate) site-ownership verification token. Rendered as a
 // <meta> in the document <head>.
 export const IMPACT_SITE_VERIFICATION = "ebb0400c-dec0-45ae-a56e-e7bb1596e965";
