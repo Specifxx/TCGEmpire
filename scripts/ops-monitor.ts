@@ -4,7 +4,11 @@
  * Checks the things that quietly break a site nobody is watching (database transfer
  * limits, eBay, store prices, scheduled jobs, the live site, Stripe, email, the
  * inbox), stores the result for /admin/health, and emails the owner only when
- * something needs attention, plus a short weekly "all healthy" digest.
+ * something is RED. It also reads every sister site's status for Empire HQ
+ * (lib/hq/collect.ts) and, on Sunday evening (Monday in Sydney), asks the site to
+ * send the ONE Monday report (/api/cron/weekly-report), falling back to its own
+ * plain digest so silence is never ambiguous. Owner, 2026-11-02; DECISIONS.md,
+ * "Empire HQ and the one Monday report".
  *
  * WHERE IT RUNS, AND WHY. In GitHub Actions, not on Vercel: it has to keep working
  * when the database has run out of transfer or the deploy is broken, which are
@@ -39,6 +43,9 @@ import { EARNINGS_MARKER } from "../src/lib/earnings/digest";
 import { ownerEmail } from "../src/lib/ops/owner";
 import { decide, digestDue, markDelivered, parseState, planIsEmpty, planIsUrgent, type OpsState } from "../src/lib/ops/state";
 import { countBy, emptyInbox, type OpsReport } from "../src/lib/ops/types";
+import { collectSisters } from "../src/lib/hq/collect";
+import { hqChecks, type HqSnapshot, type SiteHealth } from "../src/lib/hq/status";
+import { HQ_SNAPSHOT_KEY } from "../src/lib/hq/load";
 
 const STATE_FILE = process.env.OPS_STATE_FILE || ".ops-state/state.json";
 const DRY_RUN = process.env.DRY_RUN === "1";
@@ -81,6 +88,25 @@ async function deliver(mail: BuiltOpsEmail): Promise<Delivery> {
   }
 }
 
+/** Ask the site to send the one Monday report (lib/hq/weekly-email.ts). The response carries no amounts. */
+async function weeklyReport(): Promise<Delivery> {
+  if (DRY_RUN) {
+    console.log("\n[dry run] would ask the site to send the Monday report\n");
+    return "sent";
+  }
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return "unavailable";
+  try {
+    const res = await fetch(`${SITE}/api/cron/weekly-report`, { method: "POST", headers: { Authorization: `Bearer ${secret}` }, signal: AbortSignal.timeout(90_000) });
+    if (res.ok) return "sent";
+    console.warn(`The site did not send the Monday report: HTTP ${res.status}`);
+    return res.status === 404 ? "unavailable" : "failed";
+  } catch (e) {
+    console.warn(`Could not reach the site for the Monday report: ${e instanceof Error ? e.message : e}`);
+    return "failed";
+  }
+}
+
 function loadState(): OpsState {
   try {
     return parseState(fs.readFileSync(STATE_FILE, "utf8"));
@@ -101,6 +127,16 @@ async function main() {
   const deps = realDeps(state, process.env, now);
 
   const results = await withLiveData(() => runChecks(deps));
+
+  // Empire HQ: every sister's own status file, or a probe of a site without a monitor. Red that
+  // cannot mail itself (a silent monitor, a site with no monitor down) joins this monitor's checks.
+  let sisters: SiteHealth[] = [];
+  try {
+    sisters = await collectSisters({ fetch: (u, i) => fetch(u, i), now, githubToken: process.env.GITHUB_TOKEN });
+    results.push(...hqChecks(sisters, now));
+  } catch (e) {
+    console.warn(`(Empire HQ: sister sites not collected: ${e instanceof Error ? e.message : e})`);
+  }
   const inbox = await deps.db!.inbox().catch(() => emptyInbox());
   const report: OpsReport = { version: 1, generatedAt: now.toISOString(), results, inbox };
 
@@ -130,6 +166,16 @@ async function main() {
     }
   }
 
+  if (!DRY_RUN && sisters.length) {
+    try {
+      const json = { v: 1, at: now.toISOString(), sites: sisters } satisfies HqSnapshot as unknown as Prisma.InputJsonValue;
+      await prisma.opsSnapshot.upsert({ where: { key: HQ_SNAPSHOT_KEY }, create: { key: HQ_SNAPSHOT_KEY, json }, update: { json } });
+    } catch (e) {
+      console.warn(`(Empire HQ snapshot not stored: ${e instanceof Error ? e.message.split("\n").pop() : e})`);
+    }
+  }
+  for (const h of sisters) console.log(`  HQ [${h.severity.padEnd(7)}] ${h.key.padEnd(10)} ${h.summary}`);
+
   let urgentUndelivered = false;
   if (!planIsEmpty(plan)) {
     const outcome = await deliver(buildAlertEmail(plan));
@@ -143,9 +189,12 @@ async function main() {
   // The Sunday schedule forces the digest (OPS_DIGEST=1); a skipped Sunday is caught up once the last one is
   // 6.5 days old. The very first run only starts the clock, so nothing arrives as a surprise on day one.
   if (digestDue(saved, now, FORCE_DIGEST)) {
-    const outcome = await deliver(buildDigestEmail(report));
+    // The one Monday report is built by the site (it alone holds the reporting keys); this
+    // monitor's own digest is the fallback, so a Monday without any email still means "stopped".
+    const weekly = await weeklyReport();
+    const outcome = weekly === "sent" ? "sent" : await deliver(buildDigestEmail(report));
+    console.log(`Monday report: ${weekly}${weekly === "sent" ? "" : ` (fallback digest: ${outcome})`}`);
     if (outcome === "sent") saved = { ...saved, lastDigestAt: now.toISOString() };
-    console.log(`Weekly digest: ${outcome}`);
   } else if (!saved.lastDigestAt) {
     saved = { ...saved, lastDigestAt: now.toISOString() };
   }

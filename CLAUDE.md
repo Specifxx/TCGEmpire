@@ -83,8 +83,11 @@ and keep any cron or alert reader inside `liveRoute` / `withLiveData`.
 ## The site watches itself
 
 `.github/workflows/ops-monitor.yml` runs `scripts/ops-monitor.ts` every three hours and
-emails the owner when something needs a look (Neon transfer limits, eBay, price imports,
+emails the owner only when something is RED (Neon transfer limits, eBay, price imports,
 scheduled jobs, the live site, Stripe, email, the inbox); `/admin/health` shows the same.
+It also collects every sister site's status for Empire HQ (`/admin/hq`) and sends the ONE
+Monday report (`src/lib/hq/`). A step only the owner can do goes in
+`data/hq/owner-steps.json` (his weekly queue), not in a separate prompt.
 It runs in GitHub Actions on purpose, so it works when the database or the deploy is what
 broke. **When you add a scheduled job, an external API or anything with a limit, add a check
 for it** in `src/lib/ops/checks.ts` (see `docs/ops-monitor.md`). Every new public form

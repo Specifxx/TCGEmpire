@@ -3,14 +3,15 @@ name: Growth report
 # Mails the private weekly growth report (earnings by site, placement and market,
 # week over week, plus outbound clicks) to the business inbox the weekly growth
 # review reads (src/app/api/cron/growth-report, DECISIONS.md "A private weekly
-# growth report for the growth review", 2026-10-30). Mondays 20:41 UTC, Tuesday
-# morning in Sydney, after the Monday digest. The site holds the reporting keys
+# growth report for the growth review", 2026-10-30). The site holds the reporting keys
 # and the amounts; this job only asks it to send, and its public log shows only
 # the HTTP status.
 
+# Since 2026-11-02 the same detail rides in the ONE Monday report (Empire HQ,
+# /api/cron/weekly-report, sent by the ops monitor's Sunday-evening run to the owner
+# and this inbox), so this job no longer runs on a schedule: dispatch it for an
+# extra copy mid-week.
 on:
-  schedule:
-    - cron: "41 20 * * 1"
   workflow_dispatch:
 
 permissions:
