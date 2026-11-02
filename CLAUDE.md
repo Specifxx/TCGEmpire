@@ -2,6 +2,12 @@
 
 ## Deploys are gated — do not add `[deploy]` to commit messages
 
+**One production build per 12 hours, and production only (owner, 2026-11-02: Vercel spend capped at $5–6 a
+day).** `scripts/vercel-ignore-build.sh` skips a `[deploy]` commit within 12 hours of the last production
+deployment (it rides the next release); `[urgent]` in the subject overrides that, only when the owner says
+so. `vercel.json` disables every branch except production (`"**": false`), so no preview is ever built.
+Never dispatch a manual release just to ship a merge. DECISIONS.md, 2026-11-02.
+
 Production does **not** build on every push. `vercel.json`'s `ignoreCommand`
 (`scripts/vercel-ignore-build.sh`) skips any commit whose SUBJECT LINE lacks
 the literal marker `[deploy]`, and `.github/workflows/production-deploy.yml`

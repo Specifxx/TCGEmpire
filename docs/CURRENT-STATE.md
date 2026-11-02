@@ -29,6 +29,12 @@ longer lands on its entry.
   (schema push, Singapore import, ~475 prerendered database-backed pages); an
   unreadable message builds no preview. Production is unchanged.
   [2026-10-14](../DECISIONS.md#L17091)
+- **At most one production build every 12 hours, and production only (owner, 2026-11-02):**
+  Vercel spend is capped at $5–6 a day; 1 November cost $11.82 after 14 `[deploy]` builds here. The
+  ignore script skips a `[deploy]` commit within 12 hours of the last production deployment
+  (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject overrides, only on the owner's word.
+  `vercel.json` sets `"**": false` with `"main": true`, so no branch or pull request builds a
+  preview, `[preview]` included. [2026-11-02](../DECISIONS.md#L21673)
 - **One release a day, after the snapshot (2026-10-15):** the morning import
   (`refresh-prices.yml`) exports and commits the public data snapshot, then
   dispatches `production-deploy.yml`, which lands an empty `[deploy]` commit;

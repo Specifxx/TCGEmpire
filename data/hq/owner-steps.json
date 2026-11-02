@@ -61,6 +61,16 @@
       "added": "2026-11-02",
       "prompt": "seo/chrome-prompt-compareempire-www-2026-11-02.md",
       "done": "2026-11-02"
+    },
+    {
+      "id": "vercel-cost-cap",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Vercel: spend alerts at $170 a month, Standard build machines, scraper-bot firewall rule on every project",
+      "why": "1 November cost $11.82 against a $5-6 a day ceiling; the code side (one build per 12 hours, no previews) is merged, these are dashboard-only.",
+      "added": "2026-11-02",
+      "prompt": "vercel-cost/chrome-prompt-vercel-cost-2026-11-02.md",
+      "done": null
     }
   ]
 }
