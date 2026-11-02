@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ROTATION, blackFridaySeason, parseOg, pickPosts, postText } from "../src/lib/bluesky-post";
+import { ROTATION, blackFridaySeason, parseOg, pickPosts, postText, tagFacets } from "../src/lib/bluesky-post";
 
 test("two different sites a day, and every site within a week", () => {
   const seen = new Set<string>();
@@ -40,4 +40,24 @@ test("post text stays under Bluesky's limit and cuts on a word", () => {
   assert.ok([...t].length <= 290);
   assert.match(t, /word…$/);
   assert.equal(postText("Title", "Short."), "Title\n\nShort.");
+});
+
+test("hashtags close the post, survive the cut and become facets on the right bytes", () => {
+  const t = postText("Prix £ é", "word ".repeat(100), 290, ["PokemonTCG", "TCG"]);
+  assert.ok([...t].length <= 290);
+  assert.match(t, /word…\n\n#PokemonTCG #TCG$/);
+  const bytes = new TextEncoder().encode(t);
+  const f = tagFacets(t, ["PokemonTCG", "TCG"]);
+  assert.equal(f.length, 2);
+  const slice = (x: (typeof f)[number]) => new TextDecoder().decode(bytes.slice(x.index.byteStart, x.index.byteEnd));
+  assert.equal(slice(f[0]), "#PokemonTCG");
+  assert.equal(slice(f[1]), "#TCG");
+  assert.equal(postText("T", "Short.", 290, ["MTG"]), "T\n\nShort.\n\n#MTG");
+});
+
+test("every site has one or two plain hashtags", () => {
+  for (const s of ROTATION) {
+    assert.ok(s.tags.length >= 1 && s.tags.length <= 2, s.name);
+    for (const t of s.tags) assert.match(t, /^[A-Za-z][A-Za-z0-9]*$/);
+  }
 });

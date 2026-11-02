@@ -6,7 +6,7 @@
 //
 // Either missing is a green no-op that prints what it would post. A page that can't be read is skipped (logged);
 // Bluesky refusing a post, or every page failing, fails the run so the ops monitor sees it.
-import { parseOg, pickPosts, postText } from "../src/lib/bluesky-post";
+import { parseOg, pickPosts, postText, tagFacets } from "../src/lib/bluesky-post";
 
 const PDS = "https://bsky.social/xrpc";
 const UA = { "User-Agent": "CompareEmpire-bluesky/1 (+https://compareempire.com)" };
@@ -63,7 +63,7 @@ async function main() {
       console.log(`Skipped ${url}: no title.`);
       continue;
     }
-    const text = postText(og.title, og.description);
+    const text = postText(og.title, og.description, 290, site.tags);
     if (!session) {
       console.log(`[dry run: BLUESKY_HANDLE / BLUESKY_APP_PASSWORD not set] ${site.name}: ${url}\n${text}\n`);
       continue;
@@ -75,6 +75,7 @@ async function main() {
       record: {
         $type: "app.bsky.feed.post",
         text,
+        facets: tagFacets(text, site.tags),
         langs: ["en"],
         createdAt: new Date().toISOString(),
         embed: { $type: "app.bsky.embed.external", external: { uri: url, title: og.title, description: og.description ?? "", ...(image ? { thumb: image } : {}) } },

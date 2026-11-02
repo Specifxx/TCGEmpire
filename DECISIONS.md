@@ -21464,6 +21464,13 @@ fails to load is skipped; all failing, or Bluesky refusing a post, fails the run
 (`JOBS`, 36 h). Rotation and text are pure (`src/lib/bluesky-post.ts`, `tests/bluesky-post.test.ts`). Never post a
 price, a claim or a deal the linked page doesn't show, and never reply to or follow people automatically.
 
+**Hashtags (2026-11-02, later).** The account starts with no followers, so a link card alone reaches nobody; each
+post now ends with one or two hashtags people already follow for that hobby (`ROTATION[].tags`: #PokemonTCG,
+#MTG, #KBeauty…), sent as real rich-text tag facets (UTF-8 byte offsets, `tagFacets`) so Bluesky's tag feeds and
+custom hobby feeds pick them up. Never more than two, never a trending tag unrelated to the page. Bluesky's
+developer guidelines count automated likes, follows, replies and anything that notifies a user as spam; the job does
+none of them, and the profile says the posts are automated.
+
 ## 2026-11-02 — One price alert service for the sister sites
 
 The owner chose "Yes, one shared service" on the card "Add email price alerts to the sister sites, through one shared

@@ -34,7 +34,7 @@ longer lands on its entry.
   ignore script skips a `[deploy]` commit within 12 hours of the last production deployment
   (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject overrides, only on the owner's word.
   `vercel.json` sets `"**": false` with `"main": true`, so no branch or pull request builds a
-  preview, `[preview]` included. [2026-11-02](../DECISIONS.md#L21673)
+  preview, `[preview]` included. [2026-11-02](../DECISIONS.md#L21680)
 - **One release a day, after the snapshot (2026-10-15):** the morning import
   (`refresh-prices.yml`) exports and commits the public data snapshot, then
   dispatches `production-deploy.yml`, which lands an empty `[deploy]` commit;
@@ -128,7 +128,7 @@ longer lands on its entry.
 - **Stores are vetted before listing and checked weekly (2026-11-02):** criteria in `docs/store-vetting.md`;
   `store-vetting.yml` checks every site's store domains from outside (red: banned, dead, parked, new domain with no
   contact); `data/store-vetting/banned.json` is the shared ban list; Rift store singles under a quarter of
-  TCGplayer's US market are dropped (`lib/price-sanity.ts`). [2026-11-02](../DECISIONS.md#L21630)
+  TCGplayer's US market are dropped (`lib/price-sanity.ts`). [2026-11-02](../DECISIONS.md#L21637)
 - **The sister sites' price alerts run here (2026-11-02):** one shared service (`lib/sister-alerts/`): their form
   posts to `/api/sister-alerts` (exact-origin CORS, double opt-in), the daily `sister-alerts.yml` reads each site's own
   static `/alert-feed.json` from its CDN (never its repo or a database) and emails under the shared alert budget plus a
@@ -181,7 +181,7 @@ longer lands on its entry.
   labelled beside it, and goes to one specific product (never a category search
   or a pop-up/quick view); every page's footer carries Amazon's statement and its
   trademark notice; no Amazon colours, logo, prices in alerts or tracking, and no
-  Amazon link or trademark in any email. [2026-11-02](../DECISIONS.md#L21591)
+  Amazon link or trademark in any email. [2026-11-02](../DECISIONS.md#L21598)
 - **Earnings dashboard (2026-10-24):** `/admin/earnings` shows Stripe, TCGplayer
   (Impact API), eBay Partner Network (Performance by Day report), AdSense
   (Management API) and Mediavine (entered by hand) for today / 7 / 30 / 90 days /
@@ -834,7 +834,7 @@ longer lands on its entry.
   the Web Audio clock and drawn on one rAF canvas. Retired game routes 301 to
   it. [2026-10-16](../DECISIONS.md#L17753)
 - **Sister sites:** the footer is one line: the other card-game sites by name, then
-  "A Compare Empire site" to compareempire.com/network ([2026-11-02](../DECISIONS.md#L21560);
+  "A Compare Empire site" to compareempire.com/network ([2026-11-02](../DECISIONS.md#L21567);
   was the whole family, [2026-10-27](../DECISIONS.md#L20126)) (`SISTER_SITES`, `lib/sister-sites.ts`). The deals,
   pre-order and set pages carry one "Other card games on sale" block with the sisters' real prices
   from their daily feeds (`lib/family-network.ts`, `lib/family.ts`, six-hour cache; a day on
@@ -907,7 +907,7 @@ longer lands on its entry.
 - **Pre-order pages:** every coming-soon set in `SETS` without a hand-built
   page gets `/preorders/<slug>` automatically, from data only; a calendar
   row's `preordersHref` wins and links go through `preorderRouteForSet`.
-  [2026-11-02](../DECISIONS.md#L21467)
+  [2026-11-02](../DECISIONS.md#L21474)
 - **One page, one phrase:** add the `docs/seo-keyword-map.md` row before
   publishing, and publish fewer pages than feels natural (13 of ~24 Vendetta
   posts were 301'd, 7 after an AdSense low-value rejection).

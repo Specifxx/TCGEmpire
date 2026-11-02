@@ -10,22 +10,24 @@ export interface SitePages {
   /** Pages that update themselves every day. Black Friday paths are used only in season. */
   pages: string[];
   blackFriday: string;
+  /** One or two hashtags people on Bluesky already follow for this hobby (no "#", no spaces). Discovery only. */
+  tags: string[];
 }
 
 export const ROTATION: SitePages[] = [
-  { name: "RiftCompare", url: "https://riftcompare.com", pages: ["/market/report"], blackFriday: "/black-friday" },
-  { name: "OP Compare", url: "https://opcompare.app", pages: ["/market"], blackFriday: "/black-friday" },
-  { name: "KaeYoung", url: "https://kaeyoung.com", pages: ["/price-report"], blackFriday: "/black-friday" },
-  { name: "MTG Compare", url: "https://mtgcompare.app", pages: ["/us"], blackFriday: "/us/black-friday" },
-  { name: "Compare Empire", url: "https://compareempire.com", pages: ["/price-report"], blackFriday: "/black-friday" },
-  { name: "Gundam Compare", url: "https://gundamcompare.com", pages: ["/price-report"], blackFriday: "/black-friday" },
-  { name: "FigureCompare", url: "https://figurecompare.com", pages: ["/price-report"], blackFriday: "/black-friday" },
-  { name: "DexCompare", url: "https://dexcompare.app", pages: ["/us"], blackFriday: "/us/black-friday" },
-  { name: "Lorcana Compare", url: "https://lorcanacompare.com", pages: ["/price-report"], blackFriday: "/black-friday" },
-  { name: "CamCompare", url: "https://www.camcompare.app", pages: ["/price-report"], blackFriday: "/black-friday" },
-  { name: "YGO Compare", url: "https://ygocompare.com", pages: ["/price-report"], blackFriday: "/black-friday" },
-  { name: "WargameCompare", url: "https://wargamecompare.com", pages: ["/price-report"], blackFriday: "/us/black-friday" },
-  { name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com", pages: ["/price-report"], blackFriday: "/black-friday" },
+  { name: "RiftCompare", url: "https://riftcompare.com", pages: ["/market/report"], blackFriday: "/black-friday", tags: ["Riftbound", "TCG"] },
+  { name: "OP Compare", url: "https://opcompare.app", pages: ["/market"], blackFriday: "/black-friday", tags: ["OnePieceTCG", "TCG"] },
+  { name: "KaeYoung", url: "https://kaeyoung.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["KBeauty", "Skincare"] },
+  { name: "MTG Compare", url: "https://mtgcompare.app", pages: ["/us"], blackFriday: "/us/black-friday", tags: ["MTG", "MagicTheGathering"] },
+  { name: "Compare Empire", url: "https://compareempire.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["Deals"] },
+  { name: "Gundam Compare", url: "https://gundamcompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["GundamCardGame", "TCG"] },
+  { name: "FigureCompare", url: "https://figurecompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["AnimeFigures", "Nendoroid"] },
+  { name: "DexCompare", url: "https://dexcompare.app", pages: ["/us"], blackFriday: "/us/black-friday", tags: ["PokemonTCG"] },
+  { name: "Lorcana Compare", url: "https://lorcanacompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["Lorcana", "DisneyLorcana"] },
+  { name: "CamCompare", url: "https://www.camcompare.app", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["Photography", "Cameras"] },
+  { name: "YGO Compare", url: "https://ygocompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["YuGiOh", "TCG"] },
+  { name: "WargameCompare", url: "https://wargamecompare.com", pages: ["/price-report"], blackFriday: "/us/black-friday", tags: ["Warhammer", "Miniatures"] },
+  { name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["CyberpunkTCG", "TCG"] },
 ];
 
 /** Black Friday pages are posted from 1 November to the week after Cyber Monday (US Thanksgiving + 4 days + 7). */
@@ -67,11 +69,34 @@ export function parseOg(html: string): { title: string | null; description: stri
   return { title, description: meta("og:description") ?? meta("description"), image: meta("og:image") };
 }
 
-/** Bluesky's limit is 300 graphemes; we stay under it in code points and cut on a word. */
-export function postText(title: string, description: string | null, max = 290): string {
+/** Bluesky's limit is 300 graphemes; we stay under it in code points and cut on a word. Hashtags, when given, go on
+ *  their own last line and are never cut: the description gives way to them. */
+export function postText(title: string, description: string | null, max = 290, tags: string[] = []): string {
+  const tail = tags.length ? `\n\n${tags.map((t) => `#${t}`).join(" ")}` : "";
+  const room = max - [...tail].length;
   const full = description ? `${title}\n\n${description}` : title;
   const cps = [...full];
-  if (cps.length <= max) return full;
-  const cut = cps.slice(0, max - 1).join("");
-  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), title.length)).trimEnd()}…`;
+  if (cps.length <= room) return full + tail;
+  const cut = cps.slice(0, room - 1).join("");
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), title.length)).trimEnd()}…${tail}`;
+}
+
+export interface TagFacet {
+  index: { byteStart: number; byteEnd: number };
+  features: { $type: "app.bsky.richtext.facet#tag"; tag: string }[];
+}
+
+/** Rich-text facets that make each `#tag` in the text a real Bluesky hashtag. Offsets are UTF-8 bytes, as the
+ *  protocol requires (the text holds "…", "é" and "£", so code-point offsets would land in the wrong place). */
+export function tagFacets(text: string, tags: string[]): TagFacet[] {
+  const enc = new TextEncoder();
+  const out: TagFacet[] = [];
+  for (const tag of tags) {
+    const needle = `#${tag}`;
+    const at = text.lastIndexOf(needle);
+    if (at < 0) continue;
+    const byteStart = enc.encode(text.slice(0, at)).length;
+    out.push({ index: { byteStart, byteEnd: byteStart + enc.encode(needle).length }, features: [{ $type: "app.bsky.richtext.facet#tag", tag }] });
+  }
+  return out;
 }
