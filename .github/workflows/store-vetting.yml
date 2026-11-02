@@ -1,0 +1,47 @@
+# Weekly store vetting for every Compare Empire site (scripts/store-vetting.mjs,
+# criteria in docs/store-vetting.md). Reads each site's store registry from its
+# repo, checks every store domain from the outside (answers, not parked or moved,
+# domain age, Trustpilot, contact details, the banned list) and keeps one
+# "Store vetting" issue here. A banned, dead, parked or moved store fails the run,
+# so GitHub emails the owner.
+name: Store vetting
+on:
+  push: # TEMP: first run from the branch, removed before merge
+    branches: [claude/project-thread-37phwo]
+  schedule:
+    - cron: "41 3 * * 1" # Mondays, before the weekly report
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Comma-separated site keys (blank = all; a partial run never touches the issue)"
+        required: false
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: store-vetting
+  cancel-in-progress: false
+jobs:
+  vet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts
+            data/store-vetting
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/store-vetting.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ONLY: ${{ inputs.only }}
+          DRY_RUN: ${{ github.event_name == 'push' && '1' || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: store-vetting
+          path: store-vetting.json
+          retention-days: 30
