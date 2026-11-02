@@ -1,4 +1,4 @@
-import { SETS, isPreorderSetCode, streetDateStartMs } from "./constants";
+import { SETS, isPreorderSetCode, streetDateStartMs, type SetInfo } from "./constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE RIFTBOUND RELEASE CALENDAR — every release Riot has announced, in order.
@@ -325,9 +325,55 @@ export function cardCountLabel(entry: ReleaseEntry): string | null {
  */
 export function preordersHrefForSet(code: string | undefined, now: Date = new Date()): string | null {
   if (!code) return null;
-  const entry = RELEASES.find((r) => r.code === code);
-  if (!entry?.preordersHref) return null;
-  return isPreorderSetCode(code, now) ? entry.preordersHref : null;
+  const href = preorderRouteForSet(code);
+  return href && isPreorderSetCode(code, now) ? href : null;
+}
+
+// ── Automatic pre-order pages (2026-11-02) ───────────────────────────────────
+// A set with a hand-built page (/radiance-preorders, /legacy-preorders) keeps it
+// through its calendar row's `preordersHref`. Every OTHER coming-soon set in SETS
+// gets /preorders/<slug> (app/preorders/[slug]) with no further edit: adding the
+// set to SETS, which the sealed import needs anyway to file its listings, is the
+// whole job. The page retires itself like the hand-built ones: pre-order prices
+// until the street date, in-stock prices for AUTO_PREORDER_WINDOW_DAYS, then a
+// 308 to the set page.
+export const AUTO_PREORDER_WINDOW_DAYS = 45;
+
+/** The pre-order page a set has, ungated by date: its calendar row's own page, else /preorders/<slug> for a set in SETS. */
+export function preorderRouteForSet(code: string | undefined): string | null {
+  if (!code) return null;
+  const own = RELEASES.find((r) => r.code === code)?.preordersHref;
+  if (own) return own;
+  const set = SETS.find((s) => s.code === code);
+  return set ? `/preorders/${set.slug}` : null;
+}
+
+export type AutoPreorderState =
+  | { kind: "page"; set: SetInfo; upcoming: boolean }
+  | { kind: "redirect"; to: string }
+  | { kind: "missing" };
+
+/**
+ * What /preorders/<slug> serves: the page (upcoming, or released within the
+ * window), a redirect (to the set's hand-built page, or to its set page once the
+ * window has passed or for a set that never had a pre-order), or a 404.
+ */
+export function autoPreorderState(slug: string, now: Date = new Date()): AutoPreorderState {
+  const set = SETS.find((s) => s.slug === slug);
+  if (!set) return { kind: "missing" };
+  const own = RELEASES.find((r) => r.code === set.code)?.preordersHref;
+  if (own) return { kind: "redirect", to: own };
+  if (isPreorderSetCode(set.code, now)) return { kind: "page", set, upcoming: true };
+  const out = streetDateStartMs(set.releasedOn);
+  if (!Number.isNaN(out) && out <= now.getTime() && now.getTime() - out <= AUTO_PREORDER_WINDOW_DAYS * 86_400_000) {
+    return { kind: "page", set, upcoming: false };
+  }
+  return { kind: "redirect", to: `/sets/${set.slug}` };
+}
+
+/** Every set whose automatic page is taking pre-orders now (the sitemap's list). */
+export function openAutoPreorderSets(now: Date = new Date()): SetInfo[] {
+  return SETS.filter((s) => !RELEASES.find((r) => r.code === s.code)?.preordersHref && isPreorderSetCode(s.code, now));
 }
 
 /**

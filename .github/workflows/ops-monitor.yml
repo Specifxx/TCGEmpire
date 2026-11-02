@@ -3,8 +3,10 @@ name: Ops monitor
 # The site watches itself. Every three hours this checks the things that quietly break
 # a site nobody is looking at (database transfer limits, eBay, store prices, scheduled
 # jobs, the live site, Stripe, email, the inbox), stores the result for /admin/health,
-# and emails the owner ONLY when something needs attention. Sundays it also sends a short
-# "all healthy" digest, so silence is never ambiguous: no Monday email means this has stopped.
+# and emails the owner ONLY when something is RED. It also reads every sister site's status
+# for Empire HQ (/admin/hq), and Sundays it asks the site to send the ONE Monday report
+# (every site, earnings, the owner's steps; its own digest is the fallback), so silence is
+# never ambiguous: no Monday email means this has stopped.
 # scripts/ops-monitor.ts has the full account; DECISIONS.md, "The site watches itself", 2026-10-14.
 #
 # WHY HERE AND NOT ON VERCEL. It has to keep working when the database has run out of
@@ -21,11 +23,11 @@ name: Ops monitor
 on:
   schedule:
     - cron: "17 */3 * * *"
-    - cron: "0 21 * * 0" # Sunday 21:00 UTC = Monday morning in Sydney: the weekly digest
+    - cron: "0 21 * * 0" # Sunday 21:00 UTC = Monday morning in Sydney: the one Monday report
   workflow_dispatch:
     inputs:
       digest:
-        description: "Send the weekly digest now"
+        description: "Send the Monday report now"
         type: boolean
         default: false
       dry_run:

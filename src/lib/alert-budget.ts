@@ -25,6 +25,8 @@ export type AlertBudgetDb = {
   // Optional so older fakes in tests still fit; production passes prisma.
   gradedWatch?: Pick<typeof prisma.gradedWatch, "groupBy">;
   auctionAlertSent?: Pick<typeof prisma.auctionAlertSent, "groupBy">;
+  // 2026-11-02: the sister sites' alerts (lib/sister-alerts) ride the same Resend quota.
+  sisterAlert?: Pick<typeof prisma.sisterAlert, "groupBy">;
 };
 
 /** Distinct addresses emailed by any alert run since `now − windowMs`. Throws on a failed read. */
@@ -58,6 +60,10 @@ export async function recentlyEmailedAddresses(db: AlertBudgetDb, now: Date, win
   if (db.auctionAlertSent) {
     const auctions = await db.auctionAlertSent.groupBy({ by: ["email"], where: { sentAt: { gte: since } }, orderBy: { email: "asc" }, take: 1000 });
     for (const r of auctions) out.add(r.email);
+  }
+  if (db.sisterAlert) {
+    const sister = await db.sisterAlert.groupBy({ by: ["email"], where: { lastNotifiedAt: { gte: since } }, orderBy: { email: "asc" }, take: 1000 });
+    for (const r of sister) out.add(r.email);
   }
   return out;
 }

@@ -17,6 +17,7 @@ import { SITE_URL } from "./site";
 import { cardImageSrc } from "./card-image-url";
 import { getArticles } from "./articles";
 import { SETS } from "./constants";
+import { openAutoPreorderSets } from "./release-calendar";
 import { DOMAIN_PAGES } from "./domains";
 import { KEYWORDS, KEYWORD_THIN_THRESHOLD, keywordCardWhere } from "./keywords";
 import { CHAMPIONS, championCardWhere, CHAMPION_THIN_THRESHOLD } from "./champions";
@@ -209,8 +210,15 @@ async function core(): Promise<SitemapEntry[]> {
     // /sets/legacy: it carries real content (Riot's product list, the
     // distributor's contents, the FAQ) even before a store lists a pre-order.
     { url: `${SITE_URL}/legacy-preorders`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/legacy-preorders") },
+    // Every coming-soon set without a hand-built page has the automatic /preorders/<slug> (2026-11-02), listed only
+    // while it is taking pre-orders, so a retired (redirecting) one never lingers here.
+    ...openAutoPreorderSets().map((s) => ({ url: `${SITE_URL}/preorders/${s.slug}`, changeFrequency: "daily" as const, priority: 0.8 })),
     // Black Friday sealed deals (2026-10-30), one URL kept year round so it builds history.
     { url: `${SITE_URL}/black-friday`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/black-friday") },
+    // The seasonal sale pages (2026-11-02), one URL each kept year round like /black-friday.
+    { url: `${SITE_URL}/boxing-day`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/boxing-day") },
+    { url: `${SITE_URL}/january-sales`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/january-sales") },
+    { url: `${SITE_URL}/lunar-new-year`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/lunar-new-year") },
     // /feedback is NOT submitted: src/app/feedback/page.tsx sets
     // robots: { index: false, follow: true } (AdSense remediation § Phase 7 —
     // /contact already covers the same intent with real content). Submitting a

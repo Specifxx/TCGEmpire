@@ -21410,6 +21410,132 @@ into one `store` number, so the only per-store evidence we could quote was "card
 - `/admin/store-partners` shows this month and last month per store. It is the number to quote in a pitch, next to
   the store's own `utm_source=riftcompare` traffic. Like the daily counts it is a trend, never a payout.
 - Not done on purpose: no per-card or per-day breakdown, no visitor identifiers.
+## 2026-11-02 — Empire HQ and the one Monday report
+
+The owner approved the consolidation plan's control tower ("Sure go ahead with this plan"): thirteen sites, nine
+monitors and two weekly emails each mailed separately, and every thread sent its own Chrome prompt. Now:
+
+- **Only red mails, on every site.** `decide` (`src/lib/ops/state.ts`) never plans a warning: amber is shown on
+  `/admin/health`, Empire HQ and in the Monday report. A red is mailed when it appears (or rises from amber), again
+  every 24 h while it lasts, and its recovery is announced. The sister monitors do the same: a run fails (GitHub's
+  email) only on a failed check, and OP Compare's watchdog mails failures only and dropped its own Monday summary.
+- **One status file per site.** Each sister monitor writes `ops-status.json` and its workflow force-pushes it as
+  `status.json`, one orphan commit, to the repo's public `ops-status` branch (never deployed). Format in
+  `src/lib/hq/status.ts`; status and the monitor's own sentences only, the same as the public Actions log. No new
+  secret is needed: each repo writes its own branch with its Actions token.
+- **RiftCompare's monitor collects them** (`src/lib/hq/collect.ts`, every three hours) into the OpsSnapshot row
+  `hq:sites`. For a site without a monitor (DexCompare, MTG Compare, CamCompare, Compare Empire) it probes the home
+  page and its import workflows' latest runs instead. Red that cannot mail itself joins its own checks (area
+  `sites`, `hqChecks`): a sister monitor silent for a day (GitHub pauses idle schedules), or a site without a monitor
+  down. Compare Empire's repository is private, so only its home page is probed.
+- **Empire HQ** (`/admin/hq`, linked first on `/admin` with a dot per site): one row per site with Google clicks for
+  the last 7 settled days against the week's target (sisters +15%, RiftCompare hold, from `GROWTH_TARGETS`),
+  earnings for the last 7 full days by affiliate tag (`siteLedger`; `pkmn` counts to RiftCompare), Vercel cost once
+  the billing token exists, health, and the owner's open steps. Admin only, uncached, a few small rows.
+- **The one Monday report** (`/api/cron/weekly-report`, `src/lib/hq/weekly-email.ts`) replaces the Sunday digest and
+  the separate growth report: targets, the owner's steps, every site's row, RiftCompare's flagged checks, the money
+  section and the growth review's detail, to the owner AND the business inbox the weekly growth review reads
+  (subject `Empire weekly <date>`). The ops monitor's Sunday 21:00 UTC run asks the site to send it (the site alone
+  holds the reporting keys, so no amount reaches a public log) and sends its own plain digest if that fails, so a
+  Monday without email still means the monitor stopped. `growth-report.yml` lost its schedule; dispatch it for an
+  extra copy.
+- **The owner's queue** is `data/hq/owner-steps.json` on main: a public file of titles, reasons and the
+  project-files path of each prompt (the prompt text stays private). A thread adds a row and commits to main; HQ
+  reads the file from GitHub at request time (bundled copy as fallback), so no deploy is needed. Done is the row's
+  `done` day or the owner's Done button (OpsSnapshot `hq:steps-done`). The steps still open are joined into one
+  Chrome batch each Monday (project files, `chrome-queue/<date>.md`) instead of a prompt per thread, unless a step is
+  urgent. `tests/hq.test.ts` keeps the file free of addresses and keys.
+
+## 2026-11-02 — Bluesky auto-posting
+
+**Decision.** One Bluesky account for the whole family (not thirteen), posted by `bluesky-post.yml` once a day:
+two link cards, each to one sister site's self-updating page (the price or market report; its Black Friday page from
+1 November to a week after Cyber Monday), rotating so every site appears about once a week. Each card uses the page's
+own title, description and share image, read at post time, so a post never says anything the page doesn't.
+
+**Why.** The owner wants growth that runs without him (2026-11-02: no Reddit posts, no recurring Chrome prompts).
+Bluesky has a free, open posting API with no app review; one account means one setup and one app password, and the
+pages it links already update themselves. X, Threads and Pinterest need paid tiers or app review; Pinterest
+(KaeYoung, FigureCompare, CamCompare) is the next candidate once there is a reason to ask for review.
+
+**Rules.** The job is a green dry run until `BLUESKY_HANDLE` (variable) and `BLUESKY_APP_PASSWORD` (secret, an app
+password, never the login) exist; the owner's one-time setup is a row in `data/hq/owner-steps.json`. A page that
+fails to load is skipped; all failing, or Bluesky refusing a post, fails the run, and the ops monitor watches the job
+(`JOBS`, 36 h). Rotation and text are pure (`src/lib/bluesky-post.ts`, `tests/bluesky-post.test.ts`). Never post a
+price, a claim or a deal the linked page doesn't show, and never reply to or follow people automatically.
+
+## 2026-11-02 — One price alert service for the sister sites
+
+The owner chose "Yes, one shared service" on the card "Add email price alerts to the sister sites, through one shared
+alert service?" (a single RiftCompare alert email sold A$67 in October). These sister sites have no database, no mail key
+and no accounts (the engine sites since 2026-10-25), so their alerts run here, on what RiftCompare already pays for.
+
+- **Who.** DexCompare, MTG Compare, Gundam, Lorcana, YGO and Cyberpunk Compare, WargameCompare and FigureCompare
+  (`lib/sister-alerts/sites.ts`). Not RiftCompare or OP Compare (their own account alerts), not CamCompare or
+  Compare Empire (their own alert tables and mailers), not KaeYoung (left out by the owner unless he asks).
+- **The form** on each site posts `{site, productId, region, email, targetCents}` to `POST /api/sister-alerts`
+  (CORS for each site's exact origin and its www twin, never `*`; a site may add alerts only for itself; 8 a minute per
+  IP, 10 an hour per address, 25 alerts per address). Nothing else is taken from the form: the product's name and link
+  come from the site's own feed at the daily check, so no text a stranger types ever reaches an inbox.
+- **Double opt-in.** A new address gets one confirmation email (at most one a day per address) and nothing else until
+  it presses the button on the confirm page; unconfirmed addresses and their alerts go after a week. A confirmed
+  address's new alerts start at once. Confirm, manage and stop are pages whose GET never changes anything (mail
+  scanners open links); only their buttons' POSTs do. One-click List-Unsubscribe POSTs stop every alert. Links carry
+  a random 24-byte per-address token, the same unguessable-token pattern as RiftCompare's `unsubToken`.
+- **The prices: each site's own static feed, not its repo or a database.** Every site's build writes
+  `/alert-feed.json` (format at the top of `lib/sister-alerts/feed.ts`) from the loaders its pages read: the lowest
+  IN-STOCK STORE price per region in that region's currency, never eBay, Amazon or a conversion, plus a few of its own
+  real deals. The check fetches it from the site's CDN once a day, so the feed is exactly what a visitor saw, costs the
+  sister no function call, and a format change happens in the repo that owns the format. A feed for the wrong site, of
+  another version, or older than four days fires nothing.
+- **When it emails** (`evaluate.ts`, pinned by `tests/sister-alerts.test.ts`): at or below the target; then only after
+  a further 5% drop, at most once in three days, re-armed when the price climbs back above the target. A product with
+  no price in its region for 90 days, or an alert six months old, is removed. One email per (address, site) per run.
+- **Mail budget.** Sent through Resend (RiftCompare's verified domain, the sister's name as the sender's display
+  name), counted in the shared alert budget (`recentlyEmailedAddresses` now reads `SisterAlert.lastNotifiedAt`, so
+  RiftCompare's runs see these sends and this run sees theirs), plus the service's own cap of 30 emails a UTC day,
+  confirmations included (`mail-cap.ts`, fails closed). A deferred alert keeps its state and fires the next day.
+- **Each email** names the sister site, links to its product page (utm_source=alert-email), has "Send this to a
+  friend" (a `mailto:` with the link) and "Stop this alert" per row, and ends with one real deal from another site of
+  the same group (cards, hobby), taken from that site's feed in the same region, rotating by day. No eBay links
+  in email (EPN).
+- **Runs** daily at 14:20 UTC: `.github/workflows/sister-alerts.yml` calls `/api/cron/sister-alerts` with
+  `CRON_SECRET` (the send needs Vercel's mail key). It answers 500 when a site that has alerts could not be checked,
+  so the job fails; `sister-alerts.yml` is in the ops monitor's `JOBS`. A first signup from a new address calls
+  `notifyOwnerBounded` (kind `sister-alert`, no address in it).
+- **Privacy:** both tables are private (never in `PUBLIC_MODELS`); `/privacy#sister-alerts` says what is kept, and
+  each sister's privacy page points to it.
+
+## 2026-11-02 — Pre-order pages build themselves for every coming-soon set
+
+Pre-order landings were the family's top pages in October (`/radiance-preorders` here), but each one was a
+hand-built route, so a set only had one if a session wrote it in time. Now every coming-soon set in `SETS` without a
+hand-built page gets `/preorders/<slug>` (`src/app/preorders/[slug]`) with no other edit: adding the set to `SETS`,
+which the sealed import needs anyway to file its listings, is the whole job.
+
+- **Hand-built pages win.** A calendar row's `preordersHref` (Radiance, Legacy) stays the set's page, and
+  `/preorders/<its slug>` 308s there, so writing one later never leaves two pages on "<set> pre-order".
+  `preorderRouteForSet` / `preordersHrefForSet` (`src/lib/release-calendar.ts`) are the one answer for every link: the
+  set page and gallery, card pages, the homepage countdown, `/release-dates` and the restock email.
+- **Only data.** The automatic page shows the name, the street date when `SETS` has one, and the stores' listings
+  (`getPreorderGroups`, the same table as Legacy's). No list price, contents or card count: those need a source and
+  belong on a hand-built page.
+- **Self-retiring** (`autoPreorderState`): pre-order prices until the street date, in-stock prices for 45 days, then
+  a 308 to `/sets/<slug>`. It is in the sitemap only while it takes pre-orders (`openAutoPreorderSets`).
+- Clicks report as `page_type` `preorders`; EPN's customid already carries the path.
+
+## 2026-11-02 — Seasonal sale pages
+
+`/boxing-day`, `/january-sales` and `/lunar-new-year` (owner-approved growth plan, 2026-11-02): one URL
+each, kept every year like `/black-friday`, built weeks ahead so they are indexed before the day. They
+list exactly what `/black-friday` lists (`sealedDeals` in the visitor's market, live-stock re-checked),
+from one component, `src/components/SaleSeasonPage.tsx`. The visitor's market decides the rows, so the
+opening sentence names every market we cover, never one country. Dates, the year a page is about (it
+rolls over a week after the event) and the intro are pure in `src/lib/sale-seasons.ts`
+(`tests/sale-seasons.test.ts`); Lunar New Year is a published-date table to 2040 (6 February 2027).
+Six-hour revalidate, the floor for pages buyers act on. In the Prices menu beside Black Friday and in
+the sitemap. Never a "was" price, a countdown or an invented sale.
+
 
 ## 2026-11-02 — Share buttons and shared lists
 

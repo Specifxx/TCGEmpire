@@ -150,7 +150,9 @@ test("the release page's pre-order promise now points somewhere real", () => {
   // the calendar entry, so it retires with the set instead of outliving it), so
   // assert the wiring: the tile renders the upcoming set's own preordersHref.
   const page = read("src/app/release-dates/page.tsx");
-  assert.match(page, /href=\{next\.preordersHref\}/, "the pre-order tile must link to the upcoming set's comparison page");
+  // Since 2026-11-02 through preorderRouteForSet: the row's own page, else the set's automatic /preorders/<slug>.
+  assert.match(page, /const nextPreorders = next \? preorderRouteForSet\(next\.code\) : null/);
+  assert.match(page, /href=\{nextPreorders\}/, "the pre-order tile must link to the upcoming set's comparison page");
   const calendar = read("src/lib/release-calendar.ts");
   assert.match(calendar, /preordersHref: "\/radiance-preorders"/, "the upcoming set must declare its pre-order page");
   assert.match(calendar, /preordersHref: "\/legacy-preorders"/, "Legacy, the next set, declares its pre-order page");

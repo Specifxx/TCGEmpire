@@ -97,6 +97,9 @@ jobs:
           cp "$DIR"/{video.mp4,cover.jpg,CHECK.md,POST-with-claude-in-chrome.md,tiktok.txt,instagram.txt,youtube.txt} "$pub/$name/"
           cp "$DIR"/s*.png "$pub/$name/"
           printf '# Social packs\n\nMade by `.github/workflows/social-packs.yml` from `social/` on main. One commit, force-pushed; the last 14 days.\nOpen a pack, read CHECK.md, then post with POST-with-claude-in-chrome.md.\n' > "$pub/README.md"
+          # Vercel reads vercel.json from the deployed commit, not from main: without
+          # this file every push here starts a preview build that fails (2026-11-02).
+          printf '%s\n' '{ "git": { "deploymentEnabled": false }, "ignoreCommand": "exit 0" }' > "$pub/vercel.json"
           cd "$pub"
           git init -q -b social-packs
           git config user.name "github-actions[bot]"

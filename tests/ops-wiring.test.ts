@@ -28,6 +28,7 @@ test("every public form tells the owner as soon as something is saved", () => {
     ["src/app/api/price-report/route.ts", /kind: "price-report"/],
     ["src/app/api/stores/suggest/route.ts", /kind: "store-suggestion"/],
     ["src/app/api/support/route.ts", /kind: "support"/],
+    ["src/app/api/sister-alerts/route.ts", /kind: "sister-alert"/],
   ];
   for (const [file, kind] of forms) {
     const src = code(file);
