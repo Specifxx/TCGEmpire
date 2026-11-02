@@ -8,6 +8,7 @@ import { RETAILER_LIST } from "@/lib/retailers";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { StorePartnerForm } from "@/components/admin/StorePartnerForm";
 import { guessRetailerKey, storePlanStatus } from "@/lib/store-plan";
+import { readStoreClicks, sydneyMonth } from "@/lib/click-counter";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,9 @@ export default async function AdminStorePartnersPage({ searchParams }: { searchP
   const user = await getCurrentUser();
   if (!(keyOk || user?.isAdmin)) notFound(); // don't reveal the page exists
 
-  const [partners, listingCounts, unlinkedPlans] = await Promise.all([
+  const thisMonth = sydneyMonth(Date.now());
+  const lastMonth = sydneyMonth(Date.parse(`${thisMonth}-01T00:00:00Z`) - 5 * 86400_000);
+  const [partners, listingCounts, unlinkedPlans, clicksNow, clicksLast] = await Promise.all([
     prisma.storePartner.findMany({ orderBy: { createdAt: "desc" }, take: 300 }),
     // One grouped aggregate rather than a count per store — 168 retailers would
     // otherwise be 168 round trips on an uncached force-dynamic page (egress
@@ -55,6 +58,10 @@ export default async function AdminStorePartnersPage({ searchParams }: { searchP
       take: 50,
       select: { id: true, userId: true, storeName: true, storeUrl: true, activeUntil: true, createdAt: true },
     }),
+    // Per-store monthly click counts (lib/click-counter.ts), the number a store
+    // partner pitch quotes. Counting began 2026-11-02.
+    readStoreClicks(thisMonth).catch(() => new Map<string, number>()),
+    readStoreClicks(lastMonth).catch(() => new Map<string, number>()),
   ]);
   const buyers = unlinkedPlans.length
     ? await prisma.user.findMany({ where: { id: { in: unlinkedPlans.map((p) => p.userId) } }, select: { id: true, email: true } })
@@ -138,6 +145,46 @@ export default async function AdminStorePartnersPage({ searchParams }: { searchP
         adminKey={keyOk ? searchParams.key : undefined}
         retailers={retailers.map(({ key, name, listings }) => ({ key, name, listings }))}
       />
+
+      <section className="card-surface overflow-hidden">
+        <h2 className="border-b border-ink-800 px-4 py-3 text-sm font-extrabold text-white">
+          Buy clicks by store ({thisMonth} and {lastMonth})
+        </h2>
+        <p className="px-4 pt-3 text-xs text-slate-500">
+          Clicks on a store&apos;s buy links, per Sydney month, counted since 2 November 2026. Quote these in a partner
+          code pitch: the store can check them against utm_source=riftcompare in its own analytics. A trend, not a payout.
+        </p>
+        {clicksNow.size === 0 && clicksLast.size === 0 ? (
+          <p className="px-4 py-6 text-sm text-slate-500">No store clicks counted yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="text-slate-500">
+                <tr className="border-b border-ink-800">
+                  <th className="px-4 py-2 font-semibold">Store</th>
+                  <th className="px-4 py-2 font-semibold">Market</th>
+                  <th className="px-4 py-2 font-semibold">{thisMonth}</th>
+                  <th className="px-4 py-2 font-semibold">{lastMonth}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {retailers
+                  .filter((r) => clicksNow.has(r.key) || clicksLast.has(r.key))
+                  .sort((a, b) => (clicksNow.get(b.key) ?? 0) - (clicksNow.get(a.key) ?? 0) || (clicksLast.get(b.key) ?? 0) - (clicksLast.get(a.key) ?? 0))
+                  .slice(0, 60)
+                  .map((r) => (
+                    <tr key={r.key} className="border-b border-ink-900">
+                      <td className="px-4 py-2 font-semibold text-white">{r.name}</td>
+                      <td className="px-4 py-2 text-slate-400">{`${COUNTRIES[r.country].flag} ${r.country}`}</td>
+                      <td className="num px-4 py-2 text-slate-300">{(clicksNow.get(r.key) ?? 0).toLocaleString()}</td>
+                      <td className="num px-4 py-2 text-slate-500">{(clicksLast.get(r.key) ?? 0).toLocaleString()}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <section className="card-surface overflow-hidden">
         <h2 className="border-b border-ink-800 px-4 py-3 text-sm font-extrabold text-white">Links already created</h2>
