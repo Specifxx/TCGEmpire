@@ -23,6 +23,7 @@ import { conditionRank, listingCondition } from "./condition";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO, convertCents } from "./fx";
+import { implausiblyCheap } from "./price-sanity";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { fetchCardHiveProducts } from "./cardhive";
 import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
@@ -1785,6 +1786,11 @@ export async function importPrices(): Promise<ImportSummary> {
     if (purged.count) console.log(`Purged ${purged.count} card rows from stores now tracked for sealed only (${SINGLES_RETIRED_RETAILERS.join(", ")}).`);
   }
 
+  // TCGplayer's US market per card (yesterday's), for the too-cheap guard
+  // (lib/price-sanity.ts). Unreadable = no guard this run, never no import.
+  const tcgUs = await tcgplayerUsValues().catch(() => new Map<string, number>());
+  let tooCheap = 0;
+
   for (const store of RETAILER_LIST) {
     const cc = store.country ?? "AU";
     if (onlyCountry && cc !== onlyCountry) continue;
@@ -1857,6 +1863,10 @@ export async function importPrices(): Promise<ImportSummary> {
       // The variant's label, or a played/damaged label from the PRODUCT title
       // when the variant names none (lib/condition.ts listingCondition).
       const condition = listingCondition(p.title, best.title);
+      if (implausiblyCheap(priceCents, currencyOf(cc), tcgUs.get(cardId), condition)) {
+        tooCheap++;
+        continue;
+      }
       const prev = rows.get(cardId);
       // Keep the best listing per store+card: in-stock beats out-of-stock, then
       // better condition, then cheaper beats dearer — a store's separate
@@ -1900,6 +1910,7 @@ export async function importPrices(): Promise<ImportSummary> {
     summary.totalMatched += matched;
     summary.totalUnmatched += unmatched;
   }
+  if (tooCheap) console.log(`Too-cheap guard: dropped ${tooCheap} store listings under a quarter of TCGplayer's market (lib/price-sanity.ts).`);
 
   // Confirm each card's displayed (cheapest) price against the live product page,
   // since the collection feed can lag it. In single-market mode only that market's
