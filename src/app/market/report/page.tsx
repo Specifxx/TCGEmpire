@@ -7,6 +7,8 @@ import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { getFamilyFeeds } from "@/lib/family";
+import { clusterSisters, familyMoney } from "@/lib/family-network";
 
 // The monthly market report (DECISIONS.md, "Becoming the cited price outside the
 // US", 2026-10-26): every market's RiftCompare Index side by side, in its own
@@ -48,6 +50,7 @@ function movers(idx: MarketIndex, dir: 1 | -1, n = 3): IndexConstituent[] {
 }
 
 export default async function MarketReportPage() {
+  const family = await getFamilyFeeds("1d");
   const results = await Promise.all(
     COUNTRY_LIST.map(async (c) => ({ info: c, idx: await getMarketIndex(c.code as Country).catch(() => null) })),
   );
@@ -142,6 +145,37 @@ export default async function MarketReportPage() {
           </div>
         </>
       )}
+
+      {/* The family section (DECISIONS.md "Sites that grow each other", 2026-11-02): one row per card-game
+          sister, linking its own monthly report, with its best US store deal today from its public feed
+          (lib/family.ts, the day-long cache: this page is held a day). A linkable page that sends authority
+          to every sister, so the outreach can cite one report for the whole family. */}
+      <section className="mt-10" aria-labelledby="family-markets">
+        <h2 id="family-markets" className="text-xl font-extrabold text-white">Other card game markets</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          Our sister sites track other card games the same way, store by store. Each has its own price report.
+        </p>
+        <ul className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+          {clusterSisters("rift", "cards").map((site) => {
+            const feed = family.find((f) => f.site === site.id);
+            const deals = feed?.items.filter((i) => i.kind === "deal" && i.region === "US") ?? [];
+            const top = deals[0];
+            return (
+              <li key={site.id} className="card-surface p-4 text-sm">
+                <a href={`${site.url}${site.report ?? ""}`} target="_blank" rel="noopener" className="font-bold text-brand-400 hover:underline">
+                  {site.topic} {site.report ? "price report" : "prices"}
+                </a>{" "}
+                <span className="text-slate-500">on {site.name}</span>
+                {top ? (
+                  <p className="mt-1 text-slate-400">
+                    Best US store deal today: {top.title}, <span className="num text-slate-200">{familyMoney(top.cents, top.currency)}</span> at {top.store} ({top.savingPct}% under the {top.refLabel}).
+                  </p>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       <section className="card-surface mt-10 p-5 text-sm leading-relaxed text-slate-400">
         <h2 className="font-bold text-white">Quote these numbers</h2>

@@ -13,6 +13,7 @@ import { ebayLabel, ebaySealedQuery, ebaySearchUrl } from "@/lib/affiliate";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { blackFriday, cyberMonday, sealedDeals, UNDER_MEDIAN_PCT, UNDER_MSRP_PCT } from "@/lib/black-friday";
+import { FamilyDeals } from "@/components/FamilyDeals";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /black-friday — Riftbound sealed deals through Black Friday and Cyber Monday.
@@ -176,6 +177,8 @@ export default async function BlackFridayPage() {
         <Link href="/legacy-preorders" className="btn-ghost">Legacy pre-orders</Link>
         <Link href="/release-dates" className="btn-ghost">Release dates</Link>
       </div>
+
+      <FamilyDeals kind="deal" country={country} />
 
       <HubFaq faqs={qa} />
     </div>

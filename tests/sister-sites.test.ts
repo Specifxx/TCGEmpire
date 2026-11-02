@@ -59,7 +59,9 @@ test("footer and article block: plain followed links, rendered from the one list
   const layout = read("src/app/layout.tsx");
   const footer = layout.slice(layout.indexOf("<footer"), layout.indexOf("</footer>"));
   assert.match(footer, /SISTER_SITES\.filter\(\(s\) => !s\.notTcg\)\.map/);
-  assert.match(footer, /SISTER_SITES\.filter\(\(s\) => s\.notTcg\)\.map/);
+  // Short footer (owner, 2026-11-02): the card-game sisters only, plus one link to the network page.
+  assert.doesNotMatch(footer, /SISTER_SITES\.filter\(\(s\) => s\.notTcg\)\.map/);
+  assert.match(footer, /NETWORK_PAGE/);
   const block = read("src/components/SisterSites.tsx");
   for (const src of [footer.slice(footer.indexOf("SISTER_SITES.filter")), block]) {
     const anchors = [...src.matchAll(/<a\b[^>]*>/g)].map((m) => m[0]);

@@ -20,6 +20,7 @@ import { setByCode, isPreorderSetCode } from "@/lib/constants";
 import { isBeforeRadianceRelease, RADIANCE_PRODUCTS, RADIANCE_MERCH_DRAW } from "@/lib/sets/radiance";
 import { SITE_URL } from "@/lib/site";
 import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
+import { FamilyDeals } from "@/components/FamilyDeals";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /radiance-preorders — the same box, at every store, before it ships.
@@ -529,6 +530,8 @@ export default async function RadiancePreordersPage() {
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>
         <Link href="/tools/box-ev" className="btn-ghost">Is a box worth opening?</Link>
       </div>
+
+      <FamilyDeals kind="preorder" country={country} />
 
       <HubFaq faqs={faqs} />
     </div>
