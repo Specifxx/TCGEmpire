@@ -6,6 +6,10 @@ import { getLatestReport, SNAPSHOT_STALE_HOURS } from "@/lib/ops/snapshot";
 import { getInboxCounts } from "@/lib/ops/inbox-counts";
 import { countBy, worst } from "@/lib/ops/types";
 import { humanAge } from "@/lib/ops/thresholds";
+import { prisma } from "@/lib/db";
+import { HQ_SITES } from "@/lib/hq/sites";
+import { healthFromReport, parseHqSnapshot } from "@/lib/hq/status";
+import { HQ_SNAPSHOT_KEY } from "@/lib/hq/load";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +29,12 @@ type Tool = { href: string; title: string; icon: string; desc: string };
 // ClickEvent or StorePartner changed. Re-add a tile here if either comes back
 // into regular use.
 const TOOLS: Tool[] = [
+  {
+    href: "/admin/hq",
+    title: "Empire HQ",
+    icon: "🏰",
+    desc: "Every site in one row: Google clicks against the week's target, earnings by tag, health, and the steps waiting for you. The same view is the one Monday email.",
+  },
   {
     href: "/admin/health",
     title: "Health & limits",
@@ -134,7 +144,14 @@ export default async function AdminHome({ searchParams }: { searchParams: { key?
   const suffix = keyOk && !user?.isAdmin ? `?key=${encodeURIComponent(token!)}` : "";
 
   // One cheap row (the monitor's last report) and five count queries. Both degrade to "nothing to show".
-  const [report, inbox] = await Promise.all([getLatestReport(), getInboxCounts().catch(() => null)]);
+  const [report, inbox, hqRow] = await Promise.all([
+    getLatestReport(),
+    getInboxCounts().catch(() => null),
+    prisma.opsSnapshot.findUnique({ where: { key: HQ_SNAPSHOT_KEY } }).catch(() => null),
+  ]);
+  // Empire HQ at a glance: one dot per site (the collector's snapshot, one small row).
+  const hqHealth = [healthFromReport(report, new Date(), SNAPSHOT_STALE_HOURS), ...(parseHqSnapshot(hqRow?.json)?.sites ?? [])];
+  const HQ_DOT = { ok: "bg-brand-400", warn: "bg-gold", crit: "bg-rose-500", unknown: "bg-slate-600" } as const;
   const ageH = report ? (Date.now() - Date.parse(report.generatedAt)) / 3_600_000 : null;
   const counts = report ? countBy(report.results) : null;
   const overall = report ? worst(report.results) : "unknown";
@@ -161,7 +178,24 @@ export default async function AdminHome({ searchParams }: { searchParams: { key?
         {user?.email && <> Signed in as <span className="text-slate-300">{user.email}</span>.</>}
       </p>
 
-      <Link href={`/admin/health${suffix}`} className={`mt-5 flex items-center gap-3 rounded-xl border bg-ink-850 px-4 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 ${strip.tone}`}>
+      <Link href={`/admin/hq${suffix}`} className="mt-5 block rounded-xl border border-ink-700 bg-ink-850 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-brand-500/60">
+        <div className="flex items-center gap-2 text-sm font-bold text-white">
+          🏰 Empire HQ <span className="ml-auto text-slate-600">→</span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+          {HQ_SITES.map((s) => {
+            const h = hqHealth.find((x) => x.key === s.key);
+            return (
+              <span key={s.key} className="flex items-center gap-1.5 text-xs text-slate-300" title={h?.summary ?? "Not collected yet"}>
+                <span aria-hidden className={`inline-block h-2 w-2 rounded-full ${HQ_DOT[h?.severity ?? "unknown"]}`} />
+                {s.label}
+              </span>
+            );
+          })}
+        </div>
+      </Link>
+
+      <Link href={`/admin/health${suffix}`} className={`mt-3 flex items-center gap-3 rounded-xl border bg-ink-850 px-4 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 ${strip.tone}`}>
         <span aria-hidden className={`inline-block h-2.5 w-2.5 rounded-full ${strip.dot}`} />
         {strip.text}
         {inbox && inbox.total > 0 && <span className="ml-auto rounded-full bg-rose-500 px-2.5 py-0.5 text-xs font-bold text-white">{inbox.total} new in the inbox</span>}

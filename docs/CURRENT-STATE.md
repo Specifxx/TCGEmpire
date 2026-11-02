@@ -103,9 +103,12 @@ longer lands on its entry.
   a `where: { retailer }` query reads the `retailer` index, not every listing;
   the 226 store pages were most of the build's prerender. [2026-10-26](../DECISIONS.md#L19878)
 - **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
-  3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
+  3 h) checks Neon transfer limits, eBay, price imports, scheduled
   jobs, the live site, Stripe, email and the inbox, stores the result for
-  `/admin/health`, and emails the owner only when something needs a look. Its
+  `/admin/health`, and emails the owner only when something is RED; amber waits for
+  Empire HQ (`/admin/hq`, every site in one row, sisters' `ops-status` files) and the
+  one Monday report, which replaced the Sunday digest and the growth report email
+  [2026-11-02](../DECISIONS.md#L21386). Its
   memory is the Actions cache, not the database it watches. Every new public form
   calls `notifyOwnerBounded` (capped 8/h, 25/day), which emails the SITE inbox
   (`CONTACT_EMAIL`, Reply-To the visitor), not the owner, written feedback included
@@ -116,6 +119,11 @@ longer lands on its entry.
   repo, on a `reports` branch that never deploys or merges, one JSON file per report
   (`lib/reports-github.ts`, `REPORTS_GITHUB_TOKEN`); no user id, email or IP, and no page reads it. The daily
   `reports-triage.yml` here keeps one issue per site. [2026-10-31](../DECISIONS.md#L21011)
+- **The sister sites' price alerts run here (2026-11-02):** one shared service (`lib/sister-alerts/`): their form
+  posts to `/api/sister-alerts` (exact-origin CORS, double opt-in), the daily `sister-alerts.yml` reads each site's own
+  static `/alert-feed.json` from its CDN (never its repo or a database) and emails under the shared alert budget plus a
+  30-a-day cap. Private tables `SisterAlert`, `SisterAlertAddress`. KaeYoung, OP Compare, CamCompare and Compare Empire are not in it.
+  [2026-11-02](../DECISIONS.md#L21386)
 - **Live names** (since 2026-10-25; `src/lib/db-chains.ts` is the source of
   truth): operational `RM10`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
@@ -811,7 +819,7 @@ longer lands on its entry.
   the Web Audio clock and drawn on one rAF canvas. Retired game routes 301 to
   it. [2026-10-16](../DECISIONS.md#L17753)
 - **Sister sites:** the footer is one line: the other card-game sites by name, then
-  "A Compare Empire site" to compareempire.com/network ([2026-11-02](../DECISIONS.md#L21401);
+  "A Compare Empire site" to compareempire.com/network ([2026-11-02](../DECISIONS.md#L21560);
   was the whole family, [2026-10-27](../DECISIONS.md#L20126)) (`SISTER_SITES`, `lib/sister-sites.ts`). The deals,
   pre-order and set pages carry one "Other card games on sale" block with the sisters' real prices
   from their daily feeds (`lib/family-network.ts`, `lib/family.ts`, six-hour cache; a day on
@@ -881,6 +889,10 @@ longer lands on its entry.
 
 ## Content & SEO
 
+- **Pre-order pages:** every coming-soon set in `SETS` without a hand-built
+  page gets `/preorders/<slug>` automatically, from data only; a calendar
+  row's `preordersHref` wins and links go through `preorderRouteForSet`.
+  [2026-11-02](../DECISIONS.md#L21467)
 - **One page, one phrase:** add the `docs/seo-keyword-map.md` row before
   publishing, and publish fewer pages than feels natural (13 of ~24 Vendetta
   posts were 301'd, 7 after an AdSense low-value rejection).

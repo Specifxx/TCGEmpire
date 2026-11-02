@@ -41,3 +41,13 @@ test("the route mails a fixed business inbox and never returns the report", () =
   assert.doesNotMatch(route, /NextResponse\.json\([^)]*\btext\b/);
   assert.doesNotMatch(route, /searchParams|req\.json\(/);
 });
+
+test("the word-of-mouth section counts share taps and shared-link visits per site and week", () => {
+  const r = buildGrowthReport([], new Map(), "2026-11-30", undefined, [
+    { label: "Gundam Compare", days: [{ day: "2026-11-28", shares: 3, visits: 7 }, { day: "2026-11-01", shares: 9, visits: 9 }] },
+    { label: "Quiet site", days: [] },
+  ]);
+  assert.deepEqual(r.wordOfMouth, [{ site: "Gundam Compare", shares: [0, 0, 0, 3], visits: [0, 0, 0, 7] }]);
+  assert.match(growthReportText(r), /WORD OF MOUTH[^\n]*\n  Gundam Compare: 0\/0 \| 0\/0 \| 0\/0 \| 3\/7 new/);
+  assert.match(growthReportText(buildGrowthReport([], new Map(), "2026-11-30")), /WORD OF MOUTH[^\n]*\n  Not connected/);
+});

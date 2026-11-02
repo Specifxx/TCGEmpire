@@ -83,12 +83,23 @@ and keep any cron or alert reader inside `liveRoute` / `withLiveData`.
 ## The site watches itself
 
 `.github/workflows/ops-monitor.yml` runs `scripts/ops-monitor.ts` every three hours and
-emails the owner when something needs a look (Neon transfer limits, eBay, price imports,
+emails the owner only when something is RED (Neon transfer limits, eBay, price imports,
 scheduled jobs, the live site, Stripe, email, the inbox); `/admin/health` shows the same.
+It also collects every sister site's status for Empire HQ (`/admin/hq`) and sends the ONE
+Monday report (`src/lib/hq/`). A step only the owner can do goes in
+`data/hq/owner-steps.json` (his weekly queue), not in a separate prompt.
 It runs in GitHub Actions on purpose, so it works when the database or the deploy is what
 broke. **When you add a scheduled job, an external API or anything with a limit, add a check
 for it** in `src/lib/ops/checks.ts` (see `docs/ops-monitor.md`). Every new public form
 must call `notifyOwnerBounded` after saving. The owner is not watching.
+
+## The sister sites' price alerts live here
+
+The other Compare Empire sites (DexCompare, MTG, Gundam, Lorcana, YGO, Cyberpunk, Wargame, Figure)
+have no database or mail key, so their "Email me when it drops below" form posts to
+`/api/sister-alerts` and `sister-alerts.yml` checks each site's own static `/alert-feed.json` daily
+(`src/lib/sister-alerts/`, DECISIONS.md 2026-11-02). Keep it double opt-in, exact-origin CORS, inside
+the shared alert budget and its 30-a-day cap, and never take a product name from the form.
 
 ## Checks
 

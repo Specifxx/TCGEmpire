@@ -35,6 +35,7 @@ import { PriceChart } from "./PriceChart";
 import type { PricePoint } from "@/lib/price-history";
 import { lastKnownLabel, lastKnownPrice, lastKnownTitle, type LastKnownPrice } from "@/lib/last-known-price";
 import { hasAnyMarketPrice, pinMarketplaces } from "@/lib/market-rows";
+import { ShareButton } from "@/components/ShareButton";
 import { Dialog } from "./ui/Dialog";
 import { Spinner } from "./ui/Skeleton";
 import { pushRecentCard } from "@/lib/recently-viewed";
@@ -402,7 +403,10 @@ function QuickViewModal({
                 <p className="font-mono text-xs text-slate-500">{card.setName} ({card.setCode}) · {card.collectorNumber}</p>
                 <BanNotice name={card.name} compact />
               </div>
-              <PriceWatchButton cardId={card.id} variant="responsive" limitInline />
+              <div className="flex shrink-0 items-start gap-2">
+                <PriceWatchButton cardId={card.id} variant="responsive" limitInline />
+                <ShareButton responsive name={cardDisplayName(card.name, card)} prices={inStock} path={href} medium="card" />
+              </div>
             </div>
 
             {/* LAST KNOWN PRICE (2026-10-18, lib/last-known-price.ts): where this

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { clickGroup, countClick } from "@/lib/click-counter";
+import { clickGroup, countClick, countStoreClick } from "@/lib/click-counter";
+import { RETAILERS } from "@/lib/retailers";
 
 export const dynamic = "force-dynamic";
 
@@ -12,5 +13,9 @@ export async function POST(req: Request) {
   const retailer = new URL(req.url).searchParams.get("r") ?? "";
   const group = clickGroup(retailer);
   if (group) await countClick(group).catch(() => {});
+  // Per-store monthly count for the partner pitch, known stores only.
+  if (group === "store" && Object.prototype.hasOwnProperty.call(RETAILERS, retailer)) {
+    await countStoreClick(retailer).catch(() => {});
+  }
   return new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 }

@@ -34,6 +34,7 @@ import { FeedbackLink } from "@/components/FeedbackLink";
 import { RadianceSeasonBanner } from "@/components/RadianceSeasonBanner";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
+import { ShareArrival } from "@/components/ShareArrival";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED, ADSENSE_SERVING } from "@/lib/adsense";
 import NextTopLoader from "nextjs-toploader";
@@ -640,6 +641,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Outside the consent message's scope this mounts after a short grace
             period, so non-EEA measurement is unaffected. */}
         <ConsentGatedAnalytics />
+        <ShareArrival />
         </PremiumDialogProvider>
         </PremiumProvider>
       </body>
