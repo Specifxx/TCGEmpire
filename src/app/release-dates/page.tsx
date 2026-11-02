@@ -17,6 +17,7 @@ import {
   releaseWhenLabel,
   splitCalendar,
   type ReleaseEntry,
+  preorderRouteForSet,
 } from "@/lib/release-calendar";
 
 // Six hours (hourly until 2026-10-14, DECISIONS.md, "Cached pages refresh every
@@ -130,7 +131,7 @@ function buildFaqs(now: Date): { q: string; a: string }[] {
         )}. The full card list has not been revealed.`,
       });
     }
-    if (next.preordersHref) {
+    if (preorderRouteForSet(next.code)) {
       faqs.push({
         q: `Can I pre-order ${next.name} yet?`,
         // Not "Yes — stores are already taking pre-orders" (the copy until
@@ -218,6 +219,8 @@ export default function ReleaseDatesPage() {
   const nextLabel = next ? releaseDateLabel(next.date) : null;
   const nextInstant = next ? assumedStreetInstant(next.date) : null;
   const nextHref = next ? releaseHref(next) : null;
+  // The hand-built page, else the automatic /preorders/<slug> once the set is in SETS (2026-11-02).
+  const nextPreorders = next ? preorderRouteForSet(next.code) : null;
   const upcomingSet = new Set(upcoming);
 
   return (
@@ -324,9 +327,9 @@ export default function ReleaseDatesPage() {
           {/* Points at the pre-order comparison, not /sealed — /sealed drops
               unreleased-set listings, so it could never show one. Only rendered
               when the upcoming set actually has a pre-order page. */}
-          {next.preordersHref ? (
+          {nextPreorders ? (
             <Link
-              href={next.preordersHref}
+              href={nextPreorders}
               className="card-surface p-3 text-center text-sm font-semibold text-white transition-colors hover:border-brand-500"
             >
               Pre-order prices
