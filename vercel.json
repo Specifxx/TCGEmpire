@@ -5,7 +5,9 @@
       "claude/*": false,
       "claude/**": false,
       "reports": false,
-      "forum": false
+      "forum": false,
+      "ops-status": false,
+      "social-packs": false
     }
   },
   "ignoreCommand": "bash scripts/vercel-ignore-build.sh",
