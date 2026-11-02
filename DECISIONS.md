@@ -21386,12 +21386,12 @@ the family's growth had no one number.
 ## 2026-11-02 — One price alert service for the sister sites
 
 The owner chose "Yes, one shared service" on the card "Add email price alerts to the sister sites, through one shared
-alert service?" (a single RiftCompare alert email sold A$67 in October). The sister sites have no database, no mail key
+alert service?" (a single RiftCompare alert email sold A$67 in October). These sister sites have no database, no mail key
 and no accounts (the engine sites since 2026-10-25), so their alerts run here, on what RiftCompare already pays for.
 
-- **Who.** DexCompare, MTG Compare, Gundam, Lorcana, YGO and Cyberpunk Compare, WargameCompare, FigureCompare and
-  Compare Empire (`lib/sister-alerts/sites.ts`). Not RiftCompare or OP Compare (their own account alerts), not
-  CamCompare (its own `price_alerts`), not KaeYoung (left out by the owner unless he asks).
+- **Who.** DexCompare, MTG Compare, Gundam, Lorcana, YGO and Cyberpunk Compare, WargameCompare and FigureCompare
+  (`lib/sister-alerts/sites.ts`). Not RiftCompare or OP Compare (their own account alerts), not CamCompare or
+  Compare Empire (their own alert tables and mailers), not KaeYoung (left out by the owner unless he asks).
 - **The form** on each site posts `{site, productId, region, email, targetCents}` to `POST /api/sister-alerts`
   (CORS for each site's exact origin and its www twin, never `*`; a site may add alerts only for itself; 8 a minute per
   IP, 10 an hour per address, 25 alerts per address). Nothing else is taken from the form: the product's name and link
@@ -21416,7 +21416,7 @@ and no accounts (the engine sites since 2026-10-25), so their alerts run here, o
   confirmations included (`mail-cap.ts`, fails closed). A deferred alert keeps its state and fires the next day.
 - **Each email** names the sister site, links to its product page (utm_source=alert-email), has "Send this to a
   friend" (a `mailto:` with the link) and "Stop this alert" per row, and ends with one real deal from another site of
-  the same group (cards, hobby, tech), taken from that site's feed in the same region, rotating by day. No eBay links
+  the same group (cards, hobby), taken from that site's feed in the same region, rotating by day. No eBay links
   in email (EPN).
 - **Runs** daily at 14:20 UTC: `.github/workflows/sister-alerts.yml` calls `/api/cron/sister-alerts` with
   `CRON_SECRET` (the send needs Vercel's mail key). It answers 500 when a site that has alerts could not be checked,

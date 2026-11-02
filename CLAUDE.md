@@ -92,8 +92,8 @@ must call `notifyOwnerBounded` after saving. The owner is not watching.
 
 ## The sister sites' price alerts live here
 
-The other Compare Empire sites (DexCompare, MTG, Gundam, Lorcana, YGO, Cyberpunk, Wargame, Figure,
-Compare Empire) have no database or mail key, so their "Email me when it drops below" form posts to
+The other Compare Empire sites (DexCompare, MTG, Gundam, Lorcana, YGO, Cyberpunk, Wargame, Figure)
+have no database or mail key, so their "Email me when it drops below" form posts to
 `/api/sister-alerts` and `sister-alerts.yml` checks each site's own static `/alert-feed.json` daily
 (`src/lib/sister-alerts/`, DECISIONS.md 2026-11-02). Keep it double opt-in, exact-origin CORS, inside
 the shared alert budget and its 30-a-day cap, and never take a product name from the form.

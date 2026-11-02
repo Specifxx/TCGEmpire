@@ -119,7 +119,7 @@ longer lands on its entry.
 - **The sister sites' price alerts run here (2026-11-02):** one shared service (`lib/sister-alerts/`): their form
   posts to `/api/sister-alerts` (exact-origin CORS, double opt-in), the daily `sister-alerts.yml` reads each site's own
   static `/alert-feed.json` from its CDN (never its repo or a database) and emails under the shared alert budget plus a
-  30-a-day cap. Private tables `SisterAlert`, `SisterAlertAddress`. KaeYoung, OP Compare and CamCompare are not in it.
+  30-a-day cap. Private tables `SisterAlert`, `SisterAlertAddress`. KaeYoung, OP Compare, CamCompare and Compare Empire are not in it.
   [2026-11-02](../DECISIONS.md#L21386)
 - **Live names** (since 2026-10-25; `src/lib/db-chains.ts` is the source of
   truth): operational `RM10`, one variable, never a chain, because

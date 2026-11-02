@@ -312,8 +312,8 @@ export default function PrivacyPage() {
           </p>
           <p id="sister-alerts" className="scroll-mt-header">
             <strong className="text-white">Price alerts on our sister sites.</strong> DexCompare, MTG
-            Compare, Gundam Compare, Lorcana Compare, YGO Compare, Cyberpunk Compare, WargameCompare,
-            FigureCompare and Compare Empire have no database of their own: their &ldquo;Email me when
+            Compare, Gundam Compare, Lorcana Compare, YGO Compare, Cyberpunk Compare, WargameCompare
+            and FigureCompare have no database of their own: their &ldquo;Email me when
             it drops below&rdquo; form sends your email address, the product, your region and your price
             to this service, which keeps them in the same database as RiftCompare&rsquo;s alerts and
             uses them only for those alerts. Nothing is sent until you click the link in the

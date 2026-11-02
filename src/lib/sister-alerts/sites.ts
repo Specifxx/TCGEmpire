@@ -6,11 +6,11 @@
 // site's CDN: no sister database, repo token or data branch is read.
 //
 // Not here, on purpose: RiftCompare itself and OP Compare (their own account
-// alerts), CamCompare (its own price_alerts), KaeYoung (left out, owner
+// alerts), CamCompare and Compare Empire (their own alert tables), KaeYoung (left out, owner
 // 2026-11-02, unless the owner asks).
 
-export type SisterAlertSiteKey = "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "wargame" | "figure" | "empire";
-export type SisterGroup = "cards" | "hobby" | "tech";
+export type SisterAlertSiteKey = "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "wargame" | "figure";
+export type SisterGroup = "cards" | "hobby";
 
 export interface SisterAlertSite {
   key: SisterAlertSiteKey;
@@ -32,7 +32,6 @@ export const SISTER_ALERT_SITES: SisterAlertSite[] = [
   { key: "cyberpunk", name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com", group: "cards", color: "#0891b2" },
   { key: "wargame", name: "WargameCompare", url: "https://wargamecompare.com", group: "hobby", color: "#b91c1c" },
   { key: "figure", name: "FigureCompare", url: "https://figurecompare.com", group: "hobby", color: "#dc2626" },
-  { key: "empire", name: "Compare Empire", url: "https://compareempire.com", group: "tech", color: "#0f766e" },
 ];
 
 export const SISTER_ALERT_KEYS = SISTER_ALERT_SITES.map((s) => s.key) as [SisterAlertSiteKey, ...SisterAlertSiteKey[]];
