@@ -21626,3 +21626,46 @@ no flags, placed last in the hero under the Premium link).
   many times on a page. The header switcher, its menu and `RegionToggle` use it too; the emoji stay only in
   text-only places (select options, admin tables). The same file is in every Compare Empire repo that has a
   region switcher; keep the copies identical.
+
+## 2026-11-02 — Every store is vetted before it is listed, and checked every week after
+
+A visitor asked how we stop "pointing everyone to the cheapest place on the internet" from sending them to scam shops.
+Owner: valid, fix it and say what we do. The audit: all thirteen sites list only hand-picked stores (a registry per
+repo, added in PRs after a runner probe, from official store locators, sister lists, store emails and visitor
+suggestions), and twelve already drop implausible prices at import. Missing: written criteria, any check after a
+store is listed, a way for visitors to report a store, and a too-cheap guard on RiftCompare's store singles.
+
+- **Criteria written down** (`docs/store-vetting.md`): established domain (RDAP age; under a year needs a second
+  sign, under three months waits), a reachable business with its own policies (public registers where they exist),
+  reviews or community standing, readable prices in its own currency, never marketplace sellers, drop-shippers,
+  copycats or banned stores. Each site has a public `/how-we-pick-stores` page (`components/HowWePickStores.tsx`,
+  the same file in every repo; KaeYoung's says nothing about the Compare family).
+- **Weekly outside check, run here for every site** (`scripts/store-vetting.mjs`, `store-vetting.yml`): it reads
+  each site's registry FILE from its repo (`SITES`), not a database, so one job covers all thirteen and keeps
+  working when a site is down. Red fails the run (banned, dead, parked, or a young domain with no contact link);
+  everything else is one "Store vetting" issue. A store that blocks the check is unknown, never failed (we never
+  work around bot protection). **Trustpilot was dropped from the automatic check**: it refuses Actions runners
+  (1,929 of 1,930 unreadable on the first run), so reviews stay a hand check. A redirect to another domain is a
+  look, not a failure: most are renames, and the first run had 50.
+- **Shared banned list** `data/store-vetting/banned.json` (TCG Synergy, 2026-10-31); MTG and Dex keep their code
+  `BLOCKED_STORES` too.
+- **RiftCompare store singles under a quarter of TCGplayer's US market are dropped** (`lib/price-sanity.ts`; from
+  US$2, damaged and heavily played exempt), the engine sites' rule. `tcgplayerUsValues()` is read once more, before
+  the store loop (`tests/ebay-value-floor.test.ts` counts three reads now).
+- **Report a store:** "I don't trust this store / had a problem ordering" on every report form (`store-problem`;
+  `STORE_UNTRUSTED` here and on OP, whose forms are their own), and a "Report a store" form on each
+  `/how-we-pick-stores`, which here posts to the new `/api/report` (the sister sites' shared handler, plus
+  `notifyOwnerBounded`). `reports-triage.mjs` ranks them first.
+- Cyberpunk Compare has no `reports` branch yet, so the triage still lists twelve sites; its forms file in its own
+  repo once the branch exists.
+- **First run (2026-11-02), 1,930 store domains across the thirteen sites.** No banned, dead or parked store (two
+  "parked" hits were real shops whose big pages mention "unavailable"; the parked test now only reads small pages).
+  Removed in each site's repo the same day: **Fox and Fable Games** (Rift, OP, MTG, Dex: a domain under a year old
+  with no contact details, no readable policies and no footprint anywhere; `DECOMMISSIONED_RETAILERS` here);
+  **one shop listed twice** under an old domain that now redirects to a listed one (Games Capital → Good Games,
+  eToys World → Side Quest Games, Norton TCG → TCG Group, Cosmic Bham → Cosmic Games, board-game.co.uk → Zatu,
+  Pokemonwinkel → PKM Winkel, Plenty of Games' myshopify address, Abyss Game Store's .com and L'Abyss, Derpy
+  Cards .ca, Mulligan Merchant → Fan of the Sport); and **domains under three months old with no second sign**
+  (Ballers TCG, JJasper TCG, Wayward City Games, TCG Card Depot, Unifig Shop), which can come back after a re-check.
+  SephiGames (70 days, a seller with thousands of Cardmarket sales who asked to be listed) and The Card Hive
+  (a custom shop verified by email) are on `data/store-vetting/verified.json`.

@@ -21,6 +21,9 @@
 // we never work around bot protection. Anything this job cannot read is unknown,
 // never a false OK and never a false alarm.
 //
+// A store a person has checked by hand goes on data/store-vetting/verified.json with
+// the reason; its domain age is then not flagged again.
+//
 //   node scripts/store-vetting.mjs              (in Actions: GITHUB_TOKEN, GITHUB_REPOSITORY)
 //   DRY_RUN=1 node scripts/store-vetting.mjs    (prints the issue body, writes nothing)
 //   ONLY=riftcompare,opcompare node scripts/store-vetting.mjs
@@ -94,6 +97,7 @@ const CONTACT = /(mailto:|tel:|\/contact|\/policies\/|\/pages\/(about|faq|shippi
 
 /** What one home page response says about the store. Pure, for tests. */
 export function judgePage({ status, finalHost, host, body }) {
+  const small = (body ?? "").length < 60_000; // a parked or closed page is small; a real shop is not
   // A bot challenge is a short page; a real shop that merely loads Cloudflare's
   // beacon or a captcha script on its forms is not blocked.
   const challenge = (body ?? "").length < 30_000 && /(just a moment|attention required|cf-chl-|verify you are human|captcha-delivery)/i.test(body ?? "");
@@ -101,7 +105,7 @@ export function judgePage({ status, finalHost, host, body }) {
   if (status >= 500 || status === 404 || status === 410) return { state: "error", detail: `HTTP ${status}` };
   const flags = [];
   if (finalHost && domainOf(finalHost) !== domainOf(host) && !/myshopify\.com$/.test(finalHost)) flags.push({ kind: "moved", red: false, detail: `now redirects to ${finalHost} (a rename, a sale or a takeover: check who runs it now)` });
-  if (body && PARKED.test(body)) flags.push({ kind: "parked", red: true, detail: "the page says it is parked, for sale or closed" });
+  if (body && small && PARKED.test(body)) flags.push({ kind: "parked", red: true, detail: "the page says it is parked, for sale or closed" });
   if (body && body.length > 2000 && !CONTACT.test(body)) flags.push({ kind: "no-contact", red: false, detail: "no email, phone, contact or policy link on the home page" });
   return { state: "ok", flags };
 }
@@ -173,7 +177,7 @@ async function rdapFor(domain) {
 }
 
 /** Check one host. Returns { host, domain, state, flags[], age }. */
-export async function vetHost(host, banned) {
+export async function vetHost(host, banned, verified = new Set()) {
   const domain = domainOf(host);
   const out = { host, domain, state: "unknown", flags: [], age: null };
   if (banned.has(domain) || banned.has(host)) {
@@ -206,7 +210,7 @@ export async function vetHost(host, banned) {
   // blocks our page read too.
   const rdap = await rdapFor(domain);
   out.age = ageDays(rdap);
-  if (out.age != null && out.age < 365) {
+  if (out.age != null && out.age < 365 && !verified.has(domain)) {
     // A new shop is normal; a new shop that also hides who it is is the
     // classic fake-store pattern, and is red.
     const hidden = out.flags.some((f) => f.kind === "no-contact");
@@ -284,7 +288,9 @@ async function main() {
   }
   const hosts = [...new Set(Object.values(siteHosts).flat())].sort();
   console.log(`${hosts.length} unique hosts`);
-  const results = await pool(hosts, 8, (h) => vetHost(h, banned));
+  // Stores a person checked by hand (data/store-vetting/verified.json): their domain age is not flagged again.
+  const verified = new Set(JSON.parse(readFileSync(new URL("../data/store-vetting/verified.json", import.meta.url), "utf8")).map((v) => v.domain));
+  const results = await pool(hosts, 8, (h) => vetHost(h, banned, verified));
   const body = issueBody(results, siteHosts);
   writeFileSync("store-vetting.json", JSON.stringify({ at: new Date().toISOString(), siteHosts, results }, null, 1));
   console.log(body);

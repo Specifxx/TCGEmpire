@@ -74,3 +74,13 @@ test("a store-trust report is flagged ahead of everything", () => {
   assert.equal(out[0].store, "Shady");
   assert.ok(out[0].attention);
 });
+
+test("a big real shop page that mentions 'store unavailable' somewhere is not parked", () => {
+  const body = "x".repeat(80_000) + "this store is unavailable";
+  assert.equal(judgePage({ status: 200, host: "a.com", finalHost: "a.com", body: body + '<a href="/pages/contact">' }).flags!.length, 0);
+});
+
+test("every hand-verified store says why", () => {
+  const v = JSON.parse(readFileSync("data/store-vetting/verified.json", "utf8")) as { domain: string; why: string; checked: string }[];
+  for (const e of v) assert.ok(e.domain && e.why.length > 20 && /^\d{4}-\d{2}-\d{2}$/.test(e.checked), e.domain);
+});

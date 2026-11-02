@@ -6,8 +6,6 @@
 # so GitHub emails the owner.
 name: Store vetting
 on:
-  push: # TEMP: first run from the branch, removed before merge
-    branches: [claude/project-thread-37phwo]
   schedule:
     - cron: "41 3 * * 1" # Mondays, before the weekly report
   workflow_dispatch:
@@ -38,7 +36,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           ONLY: ${{ inputs.only }}
-          DRY_RUN: ${{ github.event_name == 'push' && '1' || '' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
