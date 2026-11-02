@@ -4,9 +4,11 @@ import { useRef, useState } from "react";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { useDismiss } from "@/lib/use-dismiss";
 import { useCountry } from "./CountryProvider";
+import { Flag } from "./Flag";
 
-// Market chooser: 🇦🇺 Australia / 🇺🇸 United States / 🇬🇧 United Kingdom / 🇸🇬
-// Singapore / 🇨🇦 Canada. Switching reloads prices + store lists for the chosen
+// Market chooser: Australia / United States / United Kingdom / Singapore /
+// Canada / Europe, each with its drawn flag (Flag.tsx: inline SVG, since the
+// emoji flags show as two letters on Windows; owner, 2026-11-02). Switching reloads prices + store lists for the chosen
 // country and persists via cookie. Hidden entirely while INTL_ENABLED is off
 // (the site is US-only then).
 // `anchored`: the panel always hangs off the button's right edge. The menu
@@ -61,7 +63,7 @@ export function CountrySwitcher({ className = "", anchored = false }: { classNam
         // stays for the box model and turns ink-700 from sm.
         className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg border border-transparent px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:min-w-0 sm:justify-start sm:gap-1.5 sm:border-ink-700 sm:px-2.5 sm:[@media(pointer:fine)]:min-h-0"
       >
-        <span className="text-base leading-none">{current.flag}</span>
+        <Flag code={current.code} className="text-base" />
         <span className="hidden sm:inline">{current.code}{isEurDisplay && " · €"}</span>
         {/* Chevron hidden below sm. The flag alone already reads as "tap to
             change market", the whole control is one button either way, and this
@@ -111,7 +113,7 @@ export function CountrySwitcher({ className = "", anchored = false }: { classNam
                 c.code === country ? "bg-ink-800" : ""
               }`}
             >
-              <span className="text-lg leading-none">{c.flag}</span>
+              <Flag code={c.code} className="text-lg" />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-white">{c.label}</div>
                 <div className="text-xs text-slate-500">

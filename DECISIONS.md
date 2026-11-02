@@ -21609,3 +21609,20 @@ The rules we keep, on every Compare Empire site:
 - Here: the footer gained the statement and trademark line; the Amazon disclosure beside /sealed and
   the Pokémon boards now carries the trademark line too; the Pokémon quick view drops its Amazon search;
   /sealed's marketplace block is headed "Search the big marketplaces too" (it offered searches, not deals).
+
+## 2026-11-02 — The hero's region chooser is prominent, with drawn flags
+
+Owner: "the region switcher must be more prevalent on all sites, on the main home page hero etc … and have
+the flags as well". This reverses the hero toggle's "deliberately quiet" styling (9px label, slate-500 chips,
+no flags, placed last in the hero under the Premium link).
+
+- `CountryHeroToggle` now sits straight under the hero search (under the intro on phones, where the hero has
+  no search), with an 11px "Shopping from" label, white flag + code chips and a brand outline on the active
+  one; three by two on phones, one row from sm. The header's `CountrySwitcher` stays as it was, so both
+  controls can be above the fold at once (`scripts/homepage-audit.mjs` reports it; that is now intended).
+- **Flags are inline SVG (`src/components/Flag.tsx`), not the `COUNTRIES[].flag` emoji and not image files.**
+  The emoji render as the letters "AU"/"US" on Windows, which is why the hero dropped flags before; image
+  files would be new requests and hosting. No ids or clip paths, so a flag works inside a closed menu and
+  many times on a page. The header switcher, its menu and `RegionToggle` use it too; the emoji stay only in
+  text-only places (select options, admin tables). The same file is in every Compare Empire repo that has a
+  region switcher; keep the copies identical.
