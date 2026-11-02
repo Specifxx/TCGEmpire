@@ -13,6 +13,16 @@
       "done": null
     },
     {
+      "id": "cam-vercel-bot-challenge",
+      "site": "cc",
+      "kind": "chrome",
+      "title": "Turn off CamCompare's Vercel bot challenge again",
+      "why": "Since about 2 Nov it answers non-browser clients with 429 (fixed 30 Oct, back again): it blocks link previews, IndexNow and the Bluesky poster's CamCompare cards.",
+      "added": "2026-11-02",
+      "prompt": "camcompare/chrome-prompt-vercel-bot-challenge.md",
+      "done": null
+    },
+    {
       "id": "github-org-step1",
       "site": "all",
       "kind": "chrome",
