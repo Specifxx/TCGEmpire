@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { hostsIn, domainOf, judgePage, ageDays, trustpilotFrom, vetHost, issueBody, SITES } from "../scripts/store-vetting.mjs";
+import { hostsIn, domainOf, judgePage, ageDays, vetHost, issueBody, SITES } from "../scripts/store-vetting.mjs";
 import { flag } from "../scripts/reports-triage.mjs";
 
 test("hostsIn takes store bases and site values, never marketplaces or CDNs", () => {
@@ -18,24 +18,22 @@ test("domainOf keeps two-label suffixes", () => {
   assert.equal(domainOf("store.example.com"), "example.com");
 });
 
-test("judgePage: blocked is never dead; parked and moved are red; no contact is a look", () => {
+test("judgePage: blocked is never dead; parked is red; moved and no contact are a look", () => {
   assert.equal(judgePage({ status: 403, host: "a.com", finalHost: null, body: "" }).state, "blocked");
   assert.equal(judgePage({ status: 200, host: "a.com", finalHost: null, body: "<p>Just a moment</p><script src=/cdn-cgi/challenge-platform/x>" }).state, "blocked");
   const parked = judgePage({ status: 200, host: "a.com", finalHost: "a.com", body: "This domain is for sale! Buy this domain" });
   assert.ok(parked.flags!.some((f) => f.kind === "parked" && f.red));
   const moved = judgePage({ status: 200, host: "a.com", finalHost: "b.net", body: '<a href="mailto:x@b.net">' });
-  assert.ok(moved.flags!.some((f) => f.kind === "moved" && f.red));
+  assert.ok(moved.flags!.some((f) => f.kind === "moved" && !f.red));
   assert.equal(judgePage({ status: 200, host: "a.com", finalHost: "shop.a.com", body: "<a href=\"mailto:x@a.com\">" }).flags!.length, 0);
   const bare = judgePage({ status: 200, host: "a.com", finalHost: "a.com", body: "x".repeat(3000) });
   assert.ok(bare.flags!.some((f) => f.kind === "no-contact" && !f.red));
 });
 
-test("ageDays and trustpilotFrom read what they can and null the rest", () => {
+test("ageDays reads what it can and nulls the rest", () => {
   const now = Date.parse("2026-11-02T00:00:00Z");
   assert.equal(ageDays({ events: [{ eventAction: "registration", eventDate: "2026-10-03T00:00:00Z" }] }, now), 30);
   assert.equal(ageDays(null, now), null);
-  assert.deepEqual(trustpilotFrom('{"ratingValue":"1.8","reviewCount":"240"}'), { rating: 1.8, reviews: 240 });
-  assert.equal(trustpilotFrom("<html>no reviews</html>"), null);
 });
 
 test("a banned store is red without any network call", async () => {

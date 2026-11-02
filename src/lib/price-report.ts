@@ -40,6 +40,15 @@ export const ISSUES = [
     wantsPrice: false,
     noun: "link",
   },
+  {
+    // A possible scam shop (docs/store-vetting.md): checked first, and a store
+    // that turns out unsafe is removed from every site.
+    code: "STORE_UNTRUSTED",
+    label: "I don't trust this store",
+    hint: "It looks fake, never shipped, or I had a problem ordering.",
+    wantsPrice: false,
+    noun: "store",
+  },
   { code: "OTHER", label: "Something else", hint: "Tell us below.", wantsPrice: false, noun: "listing" },
 ] as const;
 

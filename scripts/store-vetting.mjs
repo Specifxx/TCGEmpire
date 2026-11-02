@@ -10,10 +10,10 @@
 //     banned      on data/store-vetting/banned.json (a known scam, on any site)
 //     dead        the domain does not resolve or answer at all
 //     parked      the page says the domain is for sale or parked
-//     moved       the home page now redirects to a different domain
+//     new+hidden  the domain is under a year old AND the home page shows no contact
 //   LOOK (listed in the "Store vetting" issue, checked by hand):
+//     moved       the home page now redirects to a different domain
 //     young       the domain was registered under a year ago (RDAP)
-//     trustpilot  rated under 2.5 on Trustpilot with 10+ reviews
 //     no-contact  the home page shows no email, phone, contact or policy page
 //     no-domain   the store has no domain of its own (a *.myshopify.com address)
 //
@@ -89,7 +89,8 @@ export function domainOf(host) {
 }
 
 const PARKED = /(this domain (name )?(is|may be) for sale|buy this domain|domain is parked|parked free|courtesy of godaddy|hugedomains|dan\.com\/|sedo\.com|afternic|domain has expired|this domain has expired|account (has been )?suspended|store (is )?unavailable|this store does not exist|opening soon[^<]{0,40}password)/i;
-const CONTACT = /(mailto:|tel:|href="[^"]*(contact|policies\/refund|refund-policy|returns|shipping-policy|about)[^"]*")/i;
+// Lenient on purpose: any sign of a way to reach the shop or its policies.
+const CONTACT = /(mailto:|tel:|\/contact|\/policies\/|\/pages\/(about|faq|shipping|returns|refund)|contact us|refund policy|returns policy|return policy|shipping policy|privacy policy|terms of service)/i;
 
 /** What one home page response says about the store. Pure, for tests. */
 export function judgePage({ status, finalHost, host, body }) {
@@ -99,7 +100,7 @@ export function judgePage({ status, finalHost, host, body }) {
   if (status === 403 || status === 429 || status === 503 || challenge) return { state: "blocked" };
   if (status >= 500 || status === 404 || status === 410) return { state: "error", detail: `HTTP ${status}` };
   const flags = [];
-  if (finalHost && domainOf(finalHost) !== domainOf(host) && !/myshopify\.com$/.test(finalHost)) flags.push({ kind: "moved", red: true, detail: `now redirects to ${finalHost}` });
+  if (finalHost && domainOf(finalHost) !== domainOf(host) && !/myshopify\.com$/.test(finalHost)) flags.push({ kind: "moved", red: false, detail: `now redirects to ${finalHost} (a rename, a sale or a takeover: check who runs it now)` });
   if (body && PARKED.test(body)) flags.push({ kind: "parked", red: true, detail: "the page says it is parked, for sale or closed" });
   if (body && body.length > 2000 && !CONTACT.test(body)) flags.push({ kind: "no-contact", red: false, detail: "no email, phone, contact or policy link on the home page" });
   return { state: "ok", flags };
@@ -112,21 +113,13 @@ export function ageDays(rdap, now = Date.now()) {
   return Number.isFinite(t) ? Math.floor((now - t) / DAY) : null;
 }
 
-/** Trustpilot's rating and count from its review page, or null when it has none. Pure. */
-export function trustpilotFrom(html) {
-  const rating = html.match(/"ratingValue"\s*:\s*"?([\d.]+)/);
-  const count = html.match(/"reviewCount"\s*:\s*"?(\d+)/);
-  if (!rating || !count) return null;
-  return { rating: Number(rating[1]), reviews: Number(count[1]) };
-}
-
 // ---- network (never throws: anything unreadable is "unknown") ---------------
 
 async function get(url, { timeout = 15_000, redirect = "follow", headers = {} } = {}) {
   try {
     const r = await fetch(url, { redirect, signal: AbortSignal.timeout(timeout), headers: { "User-Agent": UA, Accept: "text/html,application/json;q=0.9,*/*;q=0.5", ...headers } });
     const body = await r.text().catch(() => "");
-    return { status: r.status, url: r.url, body: body.slice(0, 400_000) };
+    return { status: r.status, url: r.url, body: body.slice(0, 5_000_000) };
   } catch (e) {
     return { status: 0, error: String(e?.cause?.code || e?.name || e) };
   }
@@ -179,10 +172,10 @@ async function rdapFor(domain) {
   }
 }
 
-/** Check one host. Returns { host, domain, state, flags[], age, trustpilot }. */
+/** Check one host. Returns { host, domain, state, flags[], age }. */
 export async function vetHost(host, banned) {
   const domain = domainOf(host);
-  const out = { host, domain, state: "unknown", flags: [], age: null, trustpilot: null };
+  const out = { host, domain, state: "unknown", flags: [], age: null };
   if (banned.has(domain) || banned.has(host)) {
     out.state = "ok";
     out.flags.push({ kind: "banned", red: true, detail: "on the banned list (a known scam)" });
@@ -219,13 +212,6 @@ export async function vetHost(host, banned) {
     const hidden = out.flags.some((f) => f.kind === "no-contact");
     out.flags.push({ kind: "young", red: hidden, detail: `domain registered ${out.age} days ago${hidden ? ", with no contact details" : ""}` });
   }
-  const tp = await get(`https://www.trustpilot.com/review/${domain}`, { timeout: 12_000 });
-  if (tp.status === 200) {
-    out.trustpilot = trustpilotFrom(tp.body) ?? "none";
-    if (out.trustpilot !== "none" && out.trustpilot.reviews >= 10 && out.trustpilot.rating < 2.5) {
-      out.flags.push({ kind: "trustpilot", red: false, detail: `Trustpilot ${out.trustpilot.rating} from ${out.trustpilot.reviews} reviews` });
-    }
-  } else if (tp.status === 404) out.trustpilot = "none";
   return out;
 }
 
@@ -251,8 +237,6 @@ export function issueBody(results, siteHosts, now = new Date()) {
   const look = results.filter((r) => !r.flags.some((f) => f.red) && r.flags.length);
   const blocked = results.filter((r) => r.state === "blocked").length;
   const aged = results.filter((r) => r.age != null).length;
-  const tpRated = results.filter((r) => r.trustpilot && r.trustpilot !== "none").length;
-  const tpNone = results.filter((r) => r.trustpilot === "none").length;
   const unknown = results.filter((r) => r.state === "unknown").length;
   const line = (r) => `- [ ] \`${r.host}\` (${sitesOf(r.host)}): ${r.flags.map((f) => f.detail).join("; ")}`;
   return [
@@ -264,7 +248,7 @@ export function issueBody(results, siteHosts, now = new Date()) {
     `### Check by hand (${look.length})`,
     look.length ? look.map(line).join("\n") : "None.",
     "",
-    `Domain age known for ${aged}; Trustpilot: ${tpRated} rated, ${tpNone} with no page, ${results.length - tpRated - tpNone} not readable.`,
+    `Domain age known for ${aged} of ${results.length}. Reviews (Trustpilot, Google) are checked by hand for new stores: Trustpilot refuses automated checks.`,
     "",
     `${blocked} stores blocked our check (normal for bot protection; never worked around) and ${unknown} could not be read this time. They are not flagged.`,
     "",
