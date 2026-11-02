@@ -753,11 +753,19 @@ export const TAG_NAMES: Record<string, string> = {
   cc: "CamCompare",
 };
 
+// RiftCompare's own TCGplayer sub-ids start with the network, not the site
+// (`tcgplayer-card-…`, `tcgplayer-preorders-radiance`; lib/affiliate.ts), so they
+// formed a "TCGPLAYER" group of their own and RiftCompare's row missed its
+// TCGplayer money (2026-11-03, weekly growth review). Every sister site prefixes
+// its own key (oc-, dex-, mtg-, ygo- …), so only RiftCompare sends these.
+export const TAG_ALIASES: Record<string, string> = { tcgplayer: "rc" };
+
 export function tagGroup(tag: string): { key: string; label: string } {
   const t = tag.trim().toLowerCase();
   if (!t) return { key: "", label: "No tag" };
   const m = /^([a-z0-9]+)[-_.\s/:|]/.exec(t);
-  const key = m ? m[1] : t.slice(0, 3);
+  const raw = m ? m[1] : t.slice(0, 3);
+  const key = TAG_ALIASES[raw] ?? raw;
   return { key, label: TAG_NAMES[key] ?? key.toUpperCase() };
 }
 
