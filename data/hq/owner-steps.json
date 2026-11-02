@@ -61,6 +61,16 @@
       "added": "2026-10-27",
       "prompt": "discord-bot/chrome-prompt-telegram-channel.md",
       "done": null
+    },
+    {
+      "id": "amazon-uk-ca-de",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Join Amazon Associates UK, Canada and Germany, and set the new tags on every site",
+      "why": "UK, CA and EU visitors see no Amazon link today; every site's code is already wired for the tags.",
+      "added": "2026-11-02",
+      "prompt": "amazon/chrome-prompt-amazon-uk-ca-de-2026-11-02.md",
+      "done": null
     }
   ]
 }
