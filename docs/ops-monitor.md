@@ -9,9 +9,10 @@ reasoning.
 
 | | |
 | --- | --- |
-| **Alert email** | Sent when a check turns amber or red (once), gets worse, stays open for a day (red) or three (amber), or recovers. Each item says what is wrong and what to do; most end with a sentence to paste to Claude. |
+| **Alert email** | Sent only for RED: when a check turns red, stays red for another day, or recovers from red. Amber is shown on `/admin/health`, Empire HQ and the Monday report, never mailed on its own. Each item says what is wrong and what to do; most end with a sentence to paste to Claude. |
 | **Instant inbox email** | Every contact message, feedback, wrong-price report, store suggestion and support ticket is emailed the moment it is submitted, as is every Stores plan purchase and every edit a paying store makes to its store page text. At most 8 an hour and 25 a day, so spam cannot use up the email allowance; the rest still land in the inbox. |
-| **Weekly email** (Monday, Sydney morning) | "All healthy" or what is flagged, plus the inbox count. **If it does not arrive, the monitor has stopped.** |
+| **The one Monday report** (Monday, Sydney morning) | Every site in one row (Google clicks vs target, earnings, health), the steps waiting for you, RiftCompare's flagged checks, money and the growth detail (`src/lib/hq/weekly-email.ts`). It replaced the weekly digest and the growth report. **If it does not arrive, the monitor has stopped.** |
+| **/admin/hq** | Empire HQ: the Monday report's rows, live, with a Done button for each step. |
 | **/admin** | A status strip at the top and a red "N new" on the Inbox tile. |
 | **/admin/health** | Every check, with bars for the Neon limits and the eBay allowance. |
 

@@ -1,0 +1,76 @@
+{
+  "v": 1,
+  "note": "Bill's weekly queue (Empire HQ, riftcompare.com/admin/hq). One row per step that needs Bill's hands. PUBLIC FILE: a title, a reason and the project-files path of the prompt only; never a key, a token, an address or a private name. Add a row and commit to main (no deploy needed: HQ reads this file from GitHub). Set done to the day you verified it, or Bill presses Done on HQ. The prompt text itself stays in project files; each Monday the steps still open are joined into one Chrome batch, chrome-queue/<date>.md.",
+  "steps": [
+    {
+      "id": "github-org-step1",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Create the free Compare Empire GitHub organization (moves nothing)",
+      "why": "Step 1 of the approved consolidation plan: shared secrets and one place for every repo.",
+      "added": "2026-11-02",
+      "prompt": "consolidation/chrome-prompt-github-org-step1.md",
+      "done": null
+    },
+    {
+      "id": "vercel-billing-token",
+      "site": "rc",
+      "kind": "chrome",
+      "title": "Let the earnings dashboard read Vercel's cost per site",
+      "why": "Without it HQ and the Monday report show earnings per site but no cost, so no profit per site.",
+      "added": "2026-10-30",
+      "prompt": "earnings/chrome-prompt-vercel-billing-token.md",
+      "done": null
+    },
+    {
+      "id": "amazon-tracking-ids",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Create Amazon tracking IDs for DexCompare, MTG Compare and OP Compare",
+      "why": "Their Amazon sales are counted under RiftCompare's tag today, so HQ cannot credit them per site.",
+      "added": "2026-10-29",
+      "prompt": "amazon/chrome-prompt-amazon-tracking-ids.md",
+      "done": null
+    },
+    {
+      "id": "cyberpunk-setup",
+      "site": "cyberpunk",
+      "kind": "chrome",
+      "title": "Finish Cyberpunk Compare's account setup (check first: eBay keys, Search Console)",
+      "why": "The site is live; eBay prices stay off until its own keys exist, and Google needs the property.",
+      "added": "2026-11-01",
+      "prompt": "cyberpunk-compare/chrome-prompt-setup.md",
+      "done": null
+    },
+    {
+      "id": "discord-bot-setup",
+      "site": "rc",
+      "kind": "chrome",
+      "title": "Set up and list the Discord price bot (one time, about 45 minutes)",
+      "why": "Built in October (TCGEmpire #185); it answers price lookups in Discord servers once its keys exist.",
+      "added": "2026-10-27",
+      "prompt": "discord-bot/chrome-prompt-discord-bot.md",
+      "done": null
+    },
+    {
+      "id": "telegram-deals-channel",
+      "site": "rc",
+      "kind": "chrome",
+      "title": "Create the RiftCompare Deals Telegram channel (one time)",
+      "why": "Built in October (TCGEmpire #189); the daily eBay deals post goes out once the bot token and channel exist.",
+      "added": "2026-10-27",
+      "prompt": "discord-bot/chrome-prompt-telegram-channel.md",
+      "done": null
+    },
+    {
+      "id": "amazon-uk-ca-de",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Join Amazon Associates UK, Canada and Germany, and set the new tags on every site",
+      "why": "UK, CA and EU visitors see no Amazon link today; every site's code is already wired for the tags.",
+      "added": "2026-11-02",
+      "prompt": "amazon/chrome-prompt-amazon-uk-ca-de-2026-11-02.md",
+      "done": null
+    }
+  ]
+}

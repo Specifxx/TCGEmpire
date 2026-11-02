@@ -21410,3 +21410,38 @@ into one `store` number, so the only per-store evidence we could quote was "card
 - `/admin/store-partners` shows this month and last month per store. It is the number to quote in a pitch, next to
   the store's own `utm_source=riftcompare` traffic. Like the daily counts it is a trend, never a payout.
 - Not done on purpose: no per-card or per-day breakdown, no visitor identifiers.
+## 2026-11-02 — Empire HQ and the one Monday report
+
+The owner approved the consolidation plan's control tower ("Sure go ahead with this plan"): thirteen sites, nine
+monitors and two weekly emails each mailed separately, and every thread sent its own Chrome prompt. Now:
+
+- **Only red mails, on every site.** `decide` (`src/lib/ops/state.ts`) never plans a warning: amber is shown on
+  `/admin/health`, Empire HQ and in the Monday report. A red is mailed when it appears (or rises from amber), again
+  every 24 h while it lasts, and its recovery is announced. The sister monitors do the same: a run fails (GitHub's
+  email) only on a failed check, and OP Compare's watchdog mails failures only and dropped its own Monday summary.
+- **One status file per site.** Each sister monitor writes `ops-status.json` and its workflow force-pushes it as
+  `status.json`, one orphan commit, to the repo's public `ops-status` branch (never deployed). Format in
+  `src/lib/hq/status.ts`; status and the monitor's own sentences only, the same as the public Actions log. No new
+  secret is needed: each repo writes its own branch with its Actions token.
+- **RiftCompare's monitor collects them** (`src/lib/hq/collect.ts`, every three hours) into the OpsSnapshot row
+  `hq:sites`. For a site without a monitor (DexCompare, MTG Compare, CamCompare, Compare Empire) it probes the home
+  page and its import workflows' latest runs instead. Red that cannot mail itself joins its own checks (area
+  `sites`, `hqChecks`): a sister monitor silent for a day (GitHub pauses idle schedules), or a site without a monitor
+  down. Compare Empire's repository is private, so only its home page is probed.
+- **Empire HQ** (`/admin/hq`, linked first on `/admin` with a dot per site): one row per site with Google clicks for
+  the last 7 settled days against the week's target (sisters +15%, RiftCompare hold, from `GROWTH_TARGETS`),
+  earnings for the last 7 full days by affiliate tag (`siteLedger`; `pkmn` counts to RiftCompare), Vercel cost once
+  the billing token exists, health, and the owner's open steps. Admin only, uncached, a few small rows.
+- **The one Monday report** (`/api/cron/weekly-report`, `src/lib/hq/weekly-email.ts`) replaces the Sunday digest and
+  the separate growth report: targets, the owner's steps, every site's row, RiftCompare's flagged checks, the money
+  section and the growth review's detail, to the owner AND the business inbox the weekly growth review reads
+  (subject `Empire weekly <date>`). The ops monitor's Sunday 21:00 UTC run asks the site to send it (the site alone
+  holds the reporting keys, so no amount reaches a public log) and sends its own plain digest if that fails, so a
+  Monday without email still means the monitor stopped. `growth-report.yml` lost its schedule; dispatch it for an
+  extra copy.
+- **The owner's queue** is `data/hq/owner-steps.json` on main: a public file of titles, reasons and the
+  project-files path of each prompt (the prompt text stays private). A thread adds a row and commits to main; HQ
+  reads the file from GitHub at request time (bundled copy as fallback), so no deploy is needed. Done is the row's
+  `done` day or the owner's Done button (OpsSnapshot `hq:steps-done`). The steps still open are joined into one
+  Chrome batch each Monday (project files, `chrome-queue/<date>.md`) instead of a prompt per thread, unless a step is
+  urgent. `tests/hq.test.ts` keeps the file free of addresses and keys.
