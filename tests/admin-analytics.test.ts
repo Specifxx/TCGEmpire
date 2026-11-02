@@ -103,3 +103,32 @@ test("the analytics page uses Vercel's public Web Analytics API, never the dashb
   const chart = readFileSync("src/components/admin/AnalyticsChart.tsx", "utf8");
   assert.doesNotMatch(chart, /analytics\/vercel|process\.env/);
 });
+
+test("ranges are read in windows under Vercel's caps (62 days by day, 26 weeks by week), with no gap or overlap", async () => {
+  const { queryWindows, dedupeRows } = await import("../src/lib/analytics/series");
+  const days = queryWindows("2026-08-05", "2026-11-02", 60);
+  assert.deepEqual(days, [
+    ["2026-08-05", "2026-10-03"],
+    ["2026-10-04", "2026-11-02"],
+  ]);
+  const weeks = queryWindows("2025-11-03", "2026-11-02", 168);
+  assert.equal(weeks.length, 3);
+  assert.equal(weeks[0][0], "2025-11-03");
+  assert.equal(weeks[2][1], "2026-11-02");
+  for (let i = 1; i < weeks.length; i++) {
+    const prev = new Date(`${weeks[i - 1][1]}T00:00:00Z`).getTime();
+    assert.equal(new Date(`${weeks[i][0]}T00:00:00Z`).getTime() - prev, 86_400_000);
+  }
+  // A week both windows return is counted once.
+  assert.deepEqual(
+    dedupeRows([
+      { t: "2026-05-04", pageviews: 10, visitors: 4, count: 0 },
+      { t: "2026-05-04", pageviews: 30, visitors: 9, count: 2 },
+      { t: "2026-04-27", pageviews: 5, visitors: 1, count: 0 },
+    ]),
+    [
+      { t: "2026-04-27", pageviews: 5, visitors: 1, count: 0 },
+      { t: "2026-05-04", pageviews: 30, visitors: 9, count: 2 },
+    ],
+  );
+});

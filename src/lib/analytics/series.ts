@@ -213,3 +213,33 @@ export function siteTotals(sites: readonly SiteSeries[], range: Range, today: st
   rows.push({ key: "total", label: "All sites", ...all, rate: all.visitors ? (all.clicks / all.visitors) * 100 : null });
   return rows;
 }
+
+/**
+ * The API caps one query's span by granularity (2026-11-02, live: "Can only query
+ * up to 62 days" by day, "up to 26 weeks" by week), so a range is read in windows:
+ * consecutive, non-overlapping [since, until] pairs of at most `maxDays` days,
+ * oldest first. Weekly windows stay well under 26 weeks because the API widens
+ * each end to a whole week.
+ */
+export function queryWindows(from: string, to: string, maxDays: number): [string, string][] {
+  const out: [string, string][] = [];
+  for (let a = from; a <= to; a = addDays(a, maxDays)) {
+    const b = addDays(a, maxDays - 1);
+    out.push([a, b < to ? b : to]);
+  }
+  return out;
+}
+
+/**
+ * Rows from several windows of ONE project, one per bucket. Two weekly windows
+ * can both return the week they meet in (each widened to a whole week), so a
+ * repeated bucket keeps its larger figures instead of being counted twice.
+ */
+export function dedupeRows<T extends { t: string; pageviews: number; visitors: number; count: number }>(rows: readonly T[]): T[] {
+  const m = new Map<string, T>();
+  for (const r of rows) {
+    const p = m.get(r.t);
+    m.set(r.t, p ? { ...r, pageviews: Math.max(p.pageviews, r.pageviews), visitors: Math.max(p.visitors, r.visitors), count: Math.max(p.count, r.count) } : r);
+  }
+  return [...m.values()].sort((a, b) => a.t.localeCompare(b.t));
+}
