@@ -1,6 +1,6 @@
 import { SITES, siteForProject } from "@/lib/earnings/sites";
 import { scrubSecrets } from "@/lib/earnings/sources";
-import { addDays, joinPoints, parseTimeRows, type Point, type SiteSeries } from "./series";
+import { addDays, dedupeRows, joinPoints, parseTimeRows, queryWindows, type Point, type SiteSeries } from "./series";
 
 // The admin analytics page's data (2026-11-01): every Vercel project's visits and
 // buy_click events from Vercel's PUBLIC Web Analytics API
@@ -14,11 +14,19 @@ import { addDays, joinPoints, parseTimeRows, type Point, type SiteSeries } from 
 // • Projects are listed from the team (GET /v10/projects) and mapped to sites with
 //   the earnings dashboard's own mapping (siteForProject), so a new site appears by
 //   itself; a project with Web Analytics off is listed as such and drawn as nothing.
-// • Four requests a project: visits and buy_click, by day for 90 days and by week
-//   for 12 months (each under the API's 100-row limit). Memoised 30 minutes; the
+// • Visits and buy_click per project, by day for 90 days (two 60-day windows) and
+//   by week for 12 months (three 24-week windows): the API caps a query at 62 days
+//   by day and 26 weeks by week. Memoised 30 minutes; the
 //   page's "Refresh" link bypasses it. No database is touched.
 
 export const DAILY_DAYS = 90;
+// The API's caps are 62 days by day and 26 weeks by week; these leave room for its widening to whole buckets.
+const DAY_WINDOW = 60;
+const WEEK_WINDOW = 168;
+
+// RiftboundStocks is its own site with its own visitors; the earnings mapping files
+// its (shared) costs under RiftCompare, but its traffic gets its own line here.
+const analyticsSite = (project: string) => (/riftboundstocks/i.test(project) ? `project:${project.toLowerCase()}` : siteForProject(project));
 const TTL_MS = 30 * 60_000;
 const API = "https://api.vercel.com";
 
@@ -117,34 +125,51 @@ export async function loadAnalytics(fresh = false): Promise<AnalyticsData> {
   if (!fresh && memo && Date.now() - memo.at < TTL_MS) return memo.data;
   try {
     const projects = await listProjects(cred.token, cred.team);
-    const dayFrom = addDays(today, -(DAILY_DAYS - 1));
-    const weekFrom = addDays(today, -364);
+    const dayWins = queryWindows(addDays(today, -(DAILY_DAYS - 1)), today, DAY_WINDOW);
+    const weekWins = queryWindows(addDays(today, -364), today, WEEK_WINDOW);
     const notes: ProjectNote[] = [];
     const perProject = await pool(projects, 4, async (p) => {
-      const site = siteForProject(p.name);
-      const q = (since: string, by: "day" | "week", extra: Record<string, string> = {}) => ({
+      const site = analyticsSite(p.name);
+      const q = (since: string, until: string, by: "day" | "week", extra: Record<string, string> = {}) => ({
         teamId: cred.team,
         projectId: p.id,
         since,
-        until: today,
+        until,
         by,
         limit: "100",
         ...extra,
       });
       const click = { filter: "eventName eq 'buy_click'" };
+      // Each window on its own: one refused window (older than the plan keeps, say) leaves the others standing.
+      let firstError: unknown = null;
+      let answered = 0;
+      const read = async (path: string, by: "day" | "week", wins: [string, string][], extra?: Record<string, string>, visits = false) => {
+        const rows = await Promise.all(
+          wins.map(([a, b]) =>
+            get(path, q(a, b, by, extra), cred.token).then(
+              (j) => {
+                if (visits) answered++;
+                return parseTimeRows(j);
+              },
+              (e) => {
+                if (visits) firstError ??= e;
+                return [];
+              },
+            ),
+          ),
+        );
+        return dedupeRows(rows.flat());
+      };
       try {
-        const [vd, vw] = await Promise.all([
-          get("/v1/query/web-analytics/visits/aggregate", q(dayFrom, "day"), cred.token),
-          get("/v1/query/web-analytics/visits/aggregate", q(weekFrom, "week"), cred.token),
-        ]);
+        const VISITS = "/v1/query/web-analytics/visits/aggregate";
+        const EVENTS = "/v1/query/web-analytics/events/aggregate";
+        const [vd, vw] = await Promise.all([read(VISITS, "day", dayWins, undefined, true), read(VISITS, "week", weekWins, undefined, true)]);
+        if (!answered) throw firstError ?? new Error("No answer");
         // A site that never sent a buy_click (or has custom events off) still shows its visits.
-        const [cd, cw] = await Promise.all([
-          get("/v1/query/web-analytics/events/aggregate", q(dayFrom, "day", click), cred.token).catch(() => null),
-          get("/v1/query/web-analytics/events/aggregate", q(weekFrom, "week", click), cred.token).catch(() => null),
-        ]);
-        const daily = joinPoints(parseTimeRows(vd), parseTimeRows(cd));
-        const weekly = joinPoints(parseTimeRows(vw), parseTimeRows(cw));
-        const any = weekly.some((w) => w.visitors || w.pageviews);
+        const [cd, cw] = await Promise.all([read(EVENTS, "day", dayWins, click), read(EVENTS, "week", weekWins, click)]);
+        const daily = joinPoints(vd, cd);
+        const weekly = joinPoints(vw, cw);
+        const any = [...daily, ...weekly].some((w) => w.visitors || w.pageviews);
         notes.push({ project: p.name, site, status: any ? "ok" : "no-analytics", detail: any ? undefined : "No visits in the last 12 months (Web Analytics may be off)." });
         return any ? { site, project: p.name, daily, weekly } : null;
       } catch (e) {
