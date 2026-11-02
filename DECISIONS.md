@@ -21523,3 +21523,15 @@ which the sealed import needs anyway to file its listings, is the whole job.
 - **Self-retiring** (`autoPreorderState`): pre-order prices until the street date, in-stock prices for 45 days, then
   a 308 to `/sets/<slug>`. It is in the sitemap only while it takes pre-orders (`openAutoPreorderSets`).
 - Clicks report as `page_type` `preorders`; EPN's customid already carries the path.
+
+## 2026-11-02 — Seasonal sale pages
+
+`/boxing-day`, `/january-sales` and `/lunar-new-year` (owner-approved growth plan, 2026-11-02): one URL
+each, kept every year like `/black-friday`, built weeks ahead so they are indexed before the day. They
+list exactly what `/black-friday` lists (`sealedDeals` in the visitor's market, live-stock re-checked),
+from one component, `src/components/SaleSeasonPage.tsx`. The visitor's market decides the rows, so the
+opening sentence names every market we cover, never one country. Dates, the year a page is about (it
+rolls over a week after the event) and the intro are pure in `src/lib/sale-seasons.ts`
+(`tests/sale-seasons.test.ts`); Lunar New Year is a published-date table to 2040 (6 February 2027).
+Six-hour revalidate, the floor for pages buyers act on. In the Prices menu beside Black Friday and in
+the sitemap. Never a "was" price, a countdown or an invented sale.
