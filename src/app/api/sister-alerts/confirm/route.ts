@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { badLink, hidden, page } from "@/lib/sister-alerts/pages";
 import { sisterSite } from "@/lib/sister-alerts/sites";
+import { resolvePath } from "@/lib/sister-alerts/feed";
 
 export const dynamic = "force-dynamic";
 
@@ -33,8 +34,8 @@ export async function POST(req: Request) {
   const a = await lookup(token);
   if (!a) return badLink();
   if (!a.confirmedAt) await prisma.sisterAlertAddress.update({ where: { token }, data: { confirmedAt: new Date() } });
-  const last = await prisma.sisterAlert.findFirst({ where: { email: a.email }, orderBy: { createdAt: "desc" }, select: { site: true, path: true } });
+  const last = await prisma.sisterAlert.findFirst({ where: { email: a.email }, orderBy: { createdAt: "desc" }, select: { site: true, path: true, region: true } });
   const site = last ? sisterSite(last.site) : null;
-  const back = site ? `<p><a href="${new URL(last?.path ?? "/", site.url).toString()}">Back to ${site.name}</a></p>` : "";
+  const back = site ? `<p><a href="${new URL(last?.path ? resolvePath(last.path, last.region) : "/", site.url).toString()}">Back to ${site.name}</a></p>` : "";
   return page("Price alerts confirmed", `<h1>You're all set</h1><p>Your price alerts are on. We check prices once a day and email you when one reaches your price. New alerts you set on any of our sites start straight away.</p>${back}`);
 }

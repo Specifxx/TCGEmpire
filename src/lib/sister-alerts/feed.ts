@@ -9,7 +9,8 @@
 //     "items": {                           // every product with a price
 //       "<productId>": {
 //         "n": "Foundations Play Booster Box",
-//         "u": "/us/sealed/foundations-play-booster-box",   // path on the site
+//         "u": "/{r}/p/foundations-play-booster-box",  // path on the site;
+//                                         // "{r}" = the alert's region, lowercase
 //         "p": { "US": 13999, "UK": 11999 }  // lowest IN-STOCK STORE price per
 //       }                                    // region, in that region's own
 //     },                                     // currency's cents (never eBay,
@@ -51,6 +52,11 @@ export const FEED_MAX_BYTES = 40 * 1024 * 1024;
 export const FEED_MAX_AGE_MS = 4 * 24 * 60 * 60 * 1000;
 
 const REGIONS = new Set<string>(SISTER_REGIONS);
+
+/** A feed path for one region: "{r}" becomes the region's code, lowercase ("/us/p/box"). */
+export function resolvePath(u: string, region: string): string {
+  return u.split("{r}").join(region.toLowerCase());
+}
 const isCents = (x: unknown): x is number => typeof x === "number" && Number.isInteger(x) && x > 0 && x < 1e9;
 const isPath = (x: unknown): x is string => typeof x === "string" && x.startsWith("/") && !x.startsWith("//") && x.length <= 300 && !/[\s<>"']/.test(x);
 const isName = (x: unknown): x is string => typeof x === "string" && x.trim().length > 0 && x.length <= 300;

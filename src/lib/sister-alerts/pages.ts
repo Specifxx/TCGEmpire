@@ -4,6 +4,7 @@
 // confirm or stop an alert by doing so.
 import { escapeHtml } from "../email";
 import { money } from "./email";
+import { resolvePath } from "./feed";
 import { sisterSite, type SisterRegion } from "./sites";
 
 export function page(title: string, body: string, status = 200): Response {
@@ -28,7 +29,7 @@ export interface ListedAlert {
 export function alertLabel(a: ListedAlert): string {
   const site = sisterSite(a.site);
   const name = a.name ?? `Product ${a.productId}`;
-  const link = site && a.path ? `<a href="${escapeHtml(new URL(a.path, site.url).toString())}">${escapeHtml(name)}</a>` : escapeHtml(name);
+  const link = site && a.path ? `<a href="${escapeHtml(new URL(resolvePath(a.path, a.region), site.url).toString())}">${escapeHtml(name)}</a>` : escapeHtml(name);
   return `${link}<br><small>${escapeHtml(site?.name ?? a.site)} · ${escapeHtml(a.region)} · ${escapeHtml(money(a.targetCents, a.region as SisterRegion))} or less</small>`;
 }
 

@@ -6,7 +6,7 @@
 import { escapeHtml } from "../email";
 import { SITE_URL } from "../site";
 import { REGION_CURRENCY, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
-import type { FeedDeal } from "./feed";
+import { resolvePath, type FeedDeal } from "./feed";
 
 const LOCALE: Record<SisterRegion, string> = { US: "en-US", UK: "en-GB", CA: "en-CA", AU: "en-AU", NZ: "en-NZ", EU: "en-IE", SG: "en-SG" };
 const REGION_LABEL: Record<SisterRegion, string> = { US: "US", UK: "UK", CA: "Canadian", AU: "Australian", NZ: "NZ", EU: "EU", SG: "Singapore" };
@@ -26,8 +26,8 @@ export function money(cents: number, region: SisterRegion): string {
 export const serviceUrl = (path: string, token: string) => `${SITE_URL}/api/sister-alerts/${path}?t=${encodeURIComponent(token)}`;
 
 /** A site link with the alert's attribution. */
-export function siteLink(site: SisterAlertSite, path: string, campaign: string): string {
-  const u = new URL(path, site.url);
+export function siteLink(site: SisterAlertSite, path: string, campaign: string, region = "us"): string {
+  const u = new URL(resolvePath(path, region), site.url);
   u.searchParams.set("utm_source", "alert-email");
   u.searchParams.set("utm_medium", "email");
   u.searchParams.set("utm_campaign", campaign);
@@ -86,7 +86,7 @@ export interface DealPick {
 
 function friendLink(site: SisterAlertSite, a: FiredAlert): string {
   const subject = `${a.name} is down to ${money(a.priceCents, a.region)}`;
-  const body = `Thought you'd want this: ${a.name} is ${money(a.priceCents, a.region)} on ${site.name}.\n\n${siteLink(site, a.path, "alert-share")}`;
+  const body = `Thought you'd want this: ${a.name} is ${money(a.priceCents, a.region)} on ${site.name}.\n\n${siteLink(site, a.path, "alert-share", a.region)}`;
   return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
@@ -101,7 +101,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
       : `${rows.length} of your ${site.name} price alerts hit their target`;
   const items = rows
     .map((a) => {
-      const link = siteLink(site, a.path, "sister-alert");
+      const link = siteLink(site, a.path, "sister-alert", a.region);
       return `<tr><td style="padding:10px 28px 4px">
         <div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px">
           <div style="font-size:15px;font-weight:700;color:#111827">${escapeHtml(a.name)}</div>
@@ -115,7 +115,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
     ? `<tr><td style="padding:14px 28px 4px">
         <div style="background:#f9fafb;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.55;color:#374151">
           <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">A deal on ${escapeHtml(deal.site.name)}, our sister site</div>
-          <a href="${escapeHtml(siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`))}" style="color:#111827;font-weight:700;text-decoration:none">${escapeHtml(deal.deal.n)}</a>
+          <a href="${escapeHtml(siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`, deal.deal.r))}" style="color:#111827;font-weight:700;text-decoration:none">${escapeHtml(deal.deal.n)}</a>
           · ${escapeHtml(money(deal.deal.p, deal.deal.r))}${deal.deal.ref && deal.deal.refLabel ? ` (${escapeHtml(deal.deal.refLabel)} ${escapeHtml(money(deal.deal.ref, deal.deal.r))})` : ""}
         </div></td></tr>`
     : "";
@@ -124,8 +124,8 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
   const text = [
     subject,
     "",
-    ...rows.map((a) => `${a.name}: now ${money(a.priceCents, a.region)} (your alert: ${money(a.targetCents, a.region)} or less)\n${siteLink(site, a.path, "sister-alert")}`),
-    deal ? `\nA deal on ${deal.site.name}: ${deal.deal.n}, ${money(deal.deal.p, deal.deal.r)}\n${siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`)}` : "",
+    ...rows.map((a) => `${a.name}: now ${money(a.priceCents, a.region)} (your alert: ${money(a.targetCents, a.region)} or less)\n${siteLink(site, a.path, "sister-alert", a.region)}`),
+    deal ? `\nA deal on ${deal.site.name}: ${deal.deal.n}, ${money(deal.deal.p, deal.deal.r)}\n${siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`, deal.deal.r)}` : "",
     `\nManage or stop your alerts: ${serviceUrl("manage", token)}`,
   ].join("\n");
   const heading = rows.length === 1 ? "Your price alert hit its target" : `${rows.length} price alerts hit their target`;

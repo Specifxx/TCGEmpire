@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { allowedOrigin, corsHeaders, SISTER_ALERT_SITES, sisterSite } from "../src/lib/sister-alerts/sites";
-import { parseFeed, feedIsFresh, type AlertFeed } from "../src/lib/sister-alerts/feed";
+import { parseFeed, feedIsFresh, resolvePath, type AlertFeed } from "../src/lib/sister-alerts/feed";
 import { evaluateAlert, MIN_GAP_MS, MAX_AGE_MS, MISSING_TTL_MS, suggestedTarget } from "../src/lib/sister-alerts/evaluate";
 import { buildAlertEmail, buildConfirmEmail, fromFor, listUnsubscribeHeaders, money } from "../src/lib/sister-alerts/email";
 import { pickDeal, runSisterAlerts, runHasSiteFailure } from "../src/lib/sister-alerts/run";
@@ -104,6 +104,10 @@ test("the confirmation email carries no text from the form, and alerts carry uns
   assert.equal(listUnsubscribeHeaders("t")["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
   assert.equal(fromFor(sisterSite("mtg")!, { EMAIL_FROM: "RiftCompare <noreply@riftcompare.com>" }), "MTG Compare alerts <noreply@riftcompare.com>");
   assert.equal(money(4999, "AU"), "A$49.99");
+  assert.equal(resolvePath("/{r}/p/box", "UK"), "/uk/p/box");
+  const regional = buildAlertEmail("mtg", [{ id: "x2", site: "mtg", name: "Box", path: "/{r}/p/box", region: "AU", priceCents: 100, targetCents: 200 }], "t", null);
+  assert.match(regional.html, /mtgcompare\.app\/au\/p\/box\?utm_source/);
+  assert.ok(!regional.html.includes("{r}"));
   assert.equal(money(4999, "UK"), "£49.99");
 });
 
