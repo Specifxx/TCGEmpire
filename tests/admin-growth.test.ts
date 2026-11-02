@@ -50,3 +50,11 @@ test("mergeGscDays takes each day from the property that saw the most, never add
   const domain = [{ d: "2026-10-26", clicks: 9, impr: 230, pos: 9 }];
   assert.deepEqual(mergeGscDays([prefix, domain]).map((d) => [d.d, d.clicks]), [["2026-10-20", 5], ["2026-10-26", 9]]);
 });
+
+test("targetRow: the sister sites need +15% on the week before, RiftCompare only to hold", async () => {
+  const { targetRow } = await import("../src/lib/admin-growth");
+  assert.equal(targetRow("sisters", { last7: 115, prev7: 100 }).met, true);
+  assert.equal(targetRow("sisters", { last7: 114, prev7: 100 }).met, false);
+  assert.equal(targetRow("rift", { last7: 1300, prev7: 1300 }).met, true);
+  assert.equal(targetRow("family", { last7: null, prev7: 100 }).met, null);
+});

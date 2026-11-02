@@ -17,6 +17,36 @@ import { addDays, dayIn, toDisplay, SOURCE_LABELS, type EarningsSourceKey } from
 
 export const GROWTH_DAYS = 28;
 
+// ── The family's growth target (2026-11-02, "Family growth target" in DECISIONS.md) ──
+// Bill: "strong weekly if not daily growth". Measured on Google clicks (the one
+// signal every site has, read the same way), week against week, never day
+// against day. RiftCompare is mature and between sets (Legacy previews from
+// 13 Dec), so its target is to hold; the sister sites are new to Google and can
+// compound, so they carry the growth. +15% a week doubles in five weeks.
+export const GROWTH_TARGETS = {
+  sisters: { label: "Sister sites, Google clicks", pct: 15 },
+  rift: { label: "RiftCompare, Google clicks", pct: 0 },
+  family: { label: "Every site, Google clicks", pct: 5 },
+} as const;
+
+export interface TargetRow {
+  key: keyof typeof GROWTH_TARGETS;
+  label: string;
+  last7: number | null;
+  prev7: number | null;
+  pct: number;
+  /** null when a week lacks data. */
+  met: boolean | null;
+}
+
+export function targetRow(key: keyof typeof GROWTH_TARGETS, s: Pick<Series, "last7" | "prev7">): TargetRow {
+  const t = GROWTH_TARGETS[key];
+  const met = s.last7 == null || s.prev7 == null ? null : s.last7 >= s.prev7 * (1 + t.pct / 100);
+  return { key, label: t.label, last7: s.last7, prev7: s.prev7, pct: t.pct, met };
+}
+
+const RIFT_HOST = "riftcompare.com";
+
 export interface Series {
   key: string;
   label: string;
@@ -47,7 +77,7 @@ function series(key: string, label: string, unit: Series["unit"], note: string, 
   return { key, label, unit, note, points, ...weekCompare(points) };
 }
 
-export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource: Series[]; gscUpdatedAt: string | null; splits: { site: string; queries: SplitQuery[] }[]; errors: string[] }> {
+export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource: Series[]; targets: TargetRow[]; gscUpdatedAt: string | null; splits: { site: string; queries: SplitQuery[] }[]; errors: string[] }> {
   const today = dayIn(Date.now());
   const days = daysEnding(today, GROWTH_DAYS);
   const since = new Date(Date.now() - (GROWTH_DAYS + 2) * 86400_000);
@@ -57,16 +87,37 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
   // Google (Search Console's own day; the last two days are not final).
   let gscUpdatedAt: string | null = null;
   const splits: { site: string; queries: SplitQuery[] }[] = [];
+  const targets: TargetRow[] = [];
   try {
     const row = await prisma.opsSnapshot.findUnique({ where: { key: "growth:gsc" } });
     const j = row?.json as { updatedAt?: string; sites?: Record<string, { status: string; days: { d: string; clicks: number }[]; splits?: SplitQuery[] }> } | undefined;
     gscUpdatedAt = j?.updatedAt ?? null;
+    const perSite: Series[] = [];
+    const sisters = new Map<string, number>();
+    const all = new Map<string, number>();
+    const note = "Search Console; the newest 2 days are still filling in.";
+    const pending = (d: string) => d >= addDays(today, -2);
     for (const [prop, site] of Object.entries(j?.sites ?? {})) {
       if (site.status !== "ok") continue;
       const m = new Map(site.days.map((x) => [x.d, x.clicks]));
-      const name = prop.replace(/^https?:\/\//, "").replace(/^sc-domain:/, "").replace(/\/$/, "");
+      const name = prop.replace(/^https?:\/\//, "").replace(/^sc-domain:/, "").replace(/\/$/, "").replace(/^www\./, "");
+      for (const [d, c] of m) {
+        all.set(d, (all.get(d) ?? 0) + c);
+        if (name !== RIFT_HOST) sisters.set(d, (sisters.get(d) ?? 0) + c);
+      }
       if (site.splits?.length) splits.push({ site: name, queries: site.splits });
-      out.push(series(`gsc:${name}`, `Google clicks · ${name}`, "count", "Search Console; the newest 2 days are still filling in.", days, (d) => m.get(d) ?? (d >= addDays(today, -2) ? null : 0)));
+      perSite.push(series(`gsc:${name}`, `Google clicks · ${name}`, "count", note, days, (d) => m.get(d) ?? (pending(d) ? null : 0)));
+    }
+    if (perSite.length) {
+      const fam = series("gsc:family", "Google clicks · every site", "count", note, days, (d) => (pending(d) && !all.has(d) ? null : all.get(d) ?? 0));
+      const sis = series("gsc:sisters", "Google clicks · sister sites (all but RiftCompare)", "count", note, days, (d) => (pending(d) && !sisters.has(d) ? null : sisters.get(d) ?? 0));
+      const rift = perSite.find((x) => x.key === `gsc:${RIFT_HOST}`);
+      targets.push(targetRow("sisters", sis));
+      if (rift) targets.push(targetRow("rift", rift));
+      targets.push(targetRow("family", fam));
+      // Biggest site first, so the page reads in order of what matters.
+      perSite.sort((a, b) => (b.last7 ?? 0) - (a.last7 ?? 0));
+      out.push(fam, sis, ...perSite);
     }
     if (!row) errors.push("Google clicks: no snapshot yet (it is stored every 3 hours by the ops monitor).");
   } catch {
@@ -132,5 +183,5 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
     errors.push("Earnings: could not load the sources.");
   }
 
-  return { series: out, earningsBySource, gscUpdatedAt, splits, errors };
+  return { series: out, earningsBySource, targets, gscUpdatedAt, splits, errors };
 }
