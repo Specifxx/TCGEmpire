@@ -370,6 +370,12 @@ export function CinematicHero({
           </Suspense>
         </div>
 
+        {/* The region chooser, with flags, straight under the search box
+            (owner, 2026-11-02: make it prominent). It was last in the hero,
+            under the Premium link. On phones, where the hero has no search,
+            it sits right under the intro. */}
+        <CountryHeroToggle />
+
         {/* Trending search chips — an instant path in for a visitor who doesn't
             know what to type yet. Server-rendered (real data, real hrefs); only
             the click beacon is client-side. */}
@@ -378,6 +384,7 @@ export function CinematicHero({
         {/* One thin stat line, directly under the search field — was 4 bordered
             boxes. */}
         <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} freshness={freshness} freshnessAt={freshnessAt} lockCountry={region?.code} />
+
 
         {/* EXACTLY ONE secondary action below the search box, per the redesign
             brief: "the search box is the hero", so nothing here competes with
@@ -424,7 +431,6 @@ export function CinematicHero({
             full
             className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-lg px-4 text-sm font-semibold"
           />
-          <CountryHeroToggle />
         </div>
       </div>
       </div>
