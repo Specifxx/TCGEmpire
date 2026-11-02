@@ -696,16 +696,7 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$2.50 · free over US$50",
     country: "US",
   },
-  foxandfable: {
-    key: "foxandfable",
-    name: "Fox and Fable Games",
-    base: "https://foxandfablegames.com",
-    collections: ["riftbound-singles"],
-    shippingFlatCents: 250,
-    freeOverCents: 5000,
-    shippingNote: "est. US$2.50 · free over US$50",
-    country: "US",
-  },
+
   // Also carries several set-specific/sealed/accessory collections (boxes, champion
   // decks, packs, playmats, sleeves, a Vendetta-specific collection) — omitted below
   // since this field is singles-only fallback; sealed-import.ts discovers those
@@ -3431,6 +3422,9 @@ export const RETAILER_LIST = Object.values(RETAILERS);
 //            Four of the 109 ghosts are back in the registry and are not here:
 //            fireanddice (EU), onecollectiblestcg, manapro and sccollection (SG).
 export const DECOMMISSIONED_RETAILERS: readonly string[] = [
+  // Failed store vetting 2026-11-02 (docs/store-vetting.md): a domain under a year
+  // old with no contact details, policies or footprint anywhere.
+  "foxandfable",
   "e4cards",
   "knightlygaming",
   "obsidiangames",

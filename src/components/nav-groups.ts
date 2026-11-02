@@ -313,6 +313,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/contact", label: "Contact", keywords: ["contact", "email", "get in touch", "reach us"] },
       { href: "/feedback", label: "Rate & review", keywords: ["feedback", "rate", "review", "rating", "suggest", "idea", "feature request"] },
       { href: "/stores/suggest", label: "Suggest a store", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
+      { href: "/how-we-pick-stores", label: "How we pick stores", keywords: ["scam", "fake store", "trusted stores", "report a store", "how we pick stores", "vetting"] },
       { href: "/about", label: "About RiftCompare", keywords: ["about", "who we are", "riftcompare", "compare"] },
       // The two policies (2026-09-26, "Blog and tools, joined up" in
       // DECISIONS.md). They were linked only from the footer's link row, so the

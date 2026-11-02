@@ -247,6 +247,7 @@ async function core(): Promise<SitemapEntry[]> {
     // submitted rather than left to be discovered from the footer.
     { url: `${SITE_URL}/editorial-policy`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/editorial-policy") },
     { url: `${SITE_URL}/methodology`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/methodology") },
+    { url: `${SITE_URL}/how-we-pick-stores`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/how-we-pick-stores") },
     { url: `${SITE_URL}/authors`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/authors") },
     // Each author page lists only that author's articles (authors/[slug]), so its
     // lastmod is the newest of THEM — guides included — not the newest blog post

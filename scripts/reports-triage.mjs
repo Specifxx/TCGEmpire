@@ -119,9 +119,12 @@ export function flag(reports, now = NOW) {
       } else if (r.kind === "unreadable") {
         (why.push("unreadable file"), (score += 5));
       } else score += 1;
+      // "I don't trust this store / had a problem ordering", from either form: a
+      // possible scam shop, ahead of everything else (docs/store-vetting.md).
+      if (r.issue === "store-problem" || r.issue === "STORE_UNTRUSTED") (why.unshift("store trust: check the store now"), (score += 8));
       if (age >= 7) (why.push(`open ${Math.floor(age)} days`), (score += 2));
       if (r.at && age < 1) why.push("new");
-      return { ...r, why, score, age, attention: r.kind === "wrong-price" || r.kind === "unreadable" || score >= 3 };
+      return { ...r, why, score, age, attention: r.kind === "wrong-price" || r.kind === "unreadable" || r.issue === "store-problem" || r.issue === "STORE_UNTRUSTED" || score >= 3 };
     })
     .sort((a, b) => b.score - a.score || String(b.at).localeCompare(String(a.at)));
 }
