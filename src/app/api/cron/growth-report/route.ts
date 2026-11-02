@@ -6,6 +6,7 @@ import { loadEarnings } from "@/lib/earnings/sources";
 import { loadCosts } from "@/lib/earnings/costs";
 import { addDays, dayIn } from "@/lib/earnings/core";
 import { readClickCounts } from "@/lib/click-counter";
+import { loadShareCounts } from "@/lib/analytics/vercel";
 import { buildGrowthReport, growthReportHtml, growthReportText, WEEKS } from "@/lib/earnings/growth-report";
 
 export const dynamic = "force-dynamic";
@@ -24,17 +25,18 @@ function authorized(req: Request): boolean {
 async function handlePOST(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const today = dayIn(Date.now());
-  const [sources, clicks, costs] = await Promise.all([
+  const [sources, clicks, costs, shares] = await Promise.all([
     loadEarnings(true),
     readClickCounts(addDays(today, -7 * WEEKS - 1)).catch(() => new Map()),
     loadCosts(true).catch(() => []),
+    loadShareCounts(addDays(today, -7 * WEEKS - 1), today).catch(() => null),
   ]);
   const vercel = costs.find((c) => c.key === "vercel");
   const text = growthReportText(
     buildGrowthReport(sources, clicks, today, {
       vercel: vercel?.status === "ok" ? vercel.projects ?? [] : null,
       other: costs.filter((c) => c.key !== "vercel").flatMap((c) => c.days),
-    }),
+    }, shares?.status === "ok" ? shares.sites : null),
   );
   const subject = `Growth report ${today}`;
   const to = growthReportEmail();

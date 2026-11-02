@@ -52,7 +52,8 @@ const BLOCKED_BOTS = [
 // Twitterbot obeys robots.txt) and the icons. The longest matching rule wins,
 // so each Allow beats "/*?".
 const QUERY_DISALLOW = "/*?";
-const QUERY_ALLOWS = ["/_next/", "/*opengraph-image", "/*twitter-image", "/icon", "/apple-icon"];
+// A shared link (utm_source=share, lib/share-link.ts) too: X and Reddit fetch its preview and obey robots.txt.
+const QUERY_ALLOWS = ["/_next/", "/*opengraph-image", "/*twitter-image", "/icon", "/apple-icon", "/*utm_source=share"];
 
 export default function robots(): MetadataRoute.Robots {
   return {

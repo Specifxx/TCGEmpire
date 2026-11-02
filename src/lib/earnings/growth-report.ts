@@ -72,6 +72,8 @@ export interface GrowthReport {
   byMarket: Line[];
   clicks: { group: string; weeks: number[] }[];
   off: string[];
+  /** Word of mouth per site (2026-11-02): share taps and visits shared links brought, per week; null when not connected. */
+  wordOfMouth: { site: string; shares: number[]; visits: number[] }[] | null;
   /** Per site, last week and all four weeks: earned, Vercel cost, net (2026-10-30). */
   sites: { lastWeek: SiteRow[]; fourWeeks: SiteRow[]; vercelConnected: boolean };
 }
@@ -82,11 +84,18 @@ export interface ReportCosts {
   other: DayAmount[];
 }
 
+/** One site's share days, as lib/analytics/vercel.ts loadShareCounts returns them. */
+export interface ShareSite {
+  label: string;
+  days: { day: string; shares: number; visits: number }[];
+}
+
 export function buildGrowthReport(
   sources: readonly SourceResult[],
   clicks: Map<string, Partial<Record<string, number>>>,
   today: string,
   costs: ReportCosts = { vercel: null, other: [] },
+  shares: readonly ShareSite[] | null = null,
 ): GrowthReport {
   const weeks = reportWeeks(today);
   const n = weeks.length;
@@ -132,6 +141,22 @@ export function buildGrowthReport(
     byMarket: [...market.values()].sort(byLatest).slice(0, 15),
     clicks: clickLines,
     off: sources.filter((s) => s.status === "not-configured" && !s.days.length).map((s) => SOURCE_LABELS[s.key]),
+    wordOfMouth: shares
+      ? shares
+          .map((x) => {
+            const sh = Array(n).fill(0) as number[];
+            const vi = Array(n).fill(0) as number[];
+            for (const d of x.days) {
+              const wi = weekIndex(d.day, weeks);
+              if (wi < 0) continue;
+              sh[wi] += d.shares;
+              vi[wi] += d.visits;
+            }
+            return { site: x.label, shares: sh, visits: vi };
+          })
+          .filter((x) => x.shares.some(Boolean) || x.visits.some(Boolean))
+          .sort((a, b) => b.visits[n - 1] - a.visits[n - 1] || b.shares[n - 1] - a.shares[n - 1] || a.site.localeCompare(b.site))
+      : null,
     sites: {
       lastWeek: siteLedger(sources, costs.vercel ?? [], costs.other, weeks[n - 1].start, weeks[n - 1].end, DISPLAY),
       fourWeeks: siteLedger(sources, costs.vercel ?? [], costs.other, weeks[0].start, weeks[n - 1].end, DISPLAY),
@@ -166,9 +191,24 @@ export function growthReportText(r: GrowthReport): string {
     table("AFFILIATE BY SITE", r.bySite, true),
     table("TOP PLACEMENTS (site · placement · network)", r.byPlacement, true),
     table("TOP MARKETS (site · market)", r.byMarket, true),
+    wordOfMouthTable(r),
     ["RIFTCOMPARE OUTBOUND CLICKS (our /api/click counters)", ...r.clicks.map((c) => `  ${c.group}: ${c.weeks.join(" | ")} ${change(c.weeks)}`.trimEnd())].join("\n"),
     ...(r.off.length ? [`Not connected: ${r.off.join(", ")}.`] : []),
   ].join("\n\n");
+}
+
+/** Share taps and the visits shared links (utm_source=share) brought, per site and week (Vercel events). */
+function wordOfMouthTable(r: GrowthReport): string {
+  const title = "WORD OF MOUTH (share taps / visits from shared links, Vercel share + share_visit events)";
+  if (!r.wordOfMouth) return `${title}\n  Not connected (VERCEL_ANALYTICS_TOKEN + VERCEL_TEAM_ID).`;
+  const total = r.weeks.map((_, i) => r.wordOfMouth!.reduce((a, x) => a + x.visits[i], 0));
+  return [
+    title,
+    ...(r.wordOfMouth.length
+      ? r.wordOfMouth.map((x) => `  ${x.site}: ${x.shares.map((s, i) => `${s}/${x.visits[i]}`).join(" | ")} ${change(x.visits)}`.trimEnd())
+      : ["  (no shares yet)"]),
+    `  All sites, visits: ${total.join(" | ")} ${change(total)}`.trimEnd(),
+  ].join("\n");
 }
 
 /** Each site's earned / Vercel / net, last week then the four weeks, losers visible (every site is listed). */

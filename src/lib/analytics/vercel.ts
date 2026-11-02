@@ -190,3 +190,50 @@ export async function loadAnalytics(fresh = false): Promise<AnalyticsData> {
     return { ...base, status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed" };
   }
 }
+
+// WORD OF MOUTH (2026-11-02, DECISIONS.md "Share buttons and shared lists"):
+// every site's share button sends a `share` event and a visit a shared link
+// (utm_source=share) brings sends one `share_visit`. The weekly growth report
+// counts both per site, by day, from the same public API and credentials. Two
+// requests a project; a project with no events (or custom events off) is zero.
+export interface ShareDay {
+  day: string;
+  shares: number;
+  visits: number;
+}
+
+export interface ShareCounts {
+  status: AnalyticsStatus;
+  detail?: string;
+  sites: { key: string; label: string; days: ShareDay[] }[];
+}
+
+export async function loadShareCounts(since: string, until: string): Promise<ShareCounts> {
+  const cred = credentials();
+  if (!cred) return { status: "not-configured", sites: [] };
+  try {
+    const projects = await listProjects(cred.token, cred.team);
+    const per = await pool(projects, 4, async (p) => {
+      const q = (name: string) => ({ teamId: cred.team, projectId: p.id, since, until, by: "day", limit: "100", filter: `eventName eq '${name}'` });
+      const [s, v] = await Promise.all([
+        get("/v1/query/web-analytics/events/aggregate", q("share"), cred.token).catch(() => null),
+        get("/v1/query/web-analytics/events/aggregate", q("share_visit"), cred.token).catch(() => null),
+      ]);
+      return { site: siteForProject(p.name), project: p.name, shares: parseTimeRows(s), visits: parseTimeRows(v) };
+    });
+    const bySite = new Map<string, Map<string, ShareDay>>();
+    for (const r of per) {
+      const days = bySite.get(r.site) ?? new Map<string, ShareDay>();
+      const at = (t: string) => days.get(t) ?? days.set(t, { day: t, shares: 0, visits: 0 }).get(t)!;
+      for (const x of r.shares) at(x.t).shares += x.count;
+      for (const x of r.visits) at(x.t).visits += x.count;
+      bySite.set(r.site, days);
+    }
+    return {
+      status: "ok",
+      sites: [...bySite.entries()].map(([key, days]) => ({ key, label: label(key, key), days: [...days.values()].sort((a, b) => a.day.localeCompare(b.day)) })),
+    };
+  } catch (e) {
+    return { status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed", sites: [] };
+  }
+}

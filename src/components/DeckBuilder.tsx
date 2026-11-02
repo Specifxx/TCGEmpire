@@ -10,6 +10,8 @@ import { cardImageAlt } from "@/lib/image-alt";
 import { cardImageSrc, cardImageSrcSet } from "@/lib/card-image-url";
 import { formatDeckLine } from "@/lib/deck";
 import { trackEvent } from "@/lib/analytics";
+import { track } from "@vercel/analytics";
+import { shareUrl } from "@/lib/share-link";
 import { CardSearch, type SearchCard } from "./CardSearch";
 import { QtyInput } from "./QtyInput";
 import { cardThumbProps } from "@/lib/card-image-url";
@@ -323,7 +325,21 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
 
   async function share() {
     if (!listText.trim()) return;
-    const url = `${window.location.origin}/deck?list=${encodeURIComponent(encodeList(listText))}`;
+    // utm_source=share (lib/share-link.ts): the growth report counts the visits a shared deck brings.
+    const url = shareUrl(window.location.origin, `/deck?list=${encodeURIComponent(encodeList(listText))}`, "deck");
+    try {
+      track("share", { medium: "deck" });
+    } catch {
+      /* analytics never gets in the way */
+    }
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: "My Riftbound deck, priced", text: `This Riftbound deck costs ${fmt(totals.totalCents)} buying each card where it's cheapest. Compare every store on RiftCompare:`, url });
+        return;
+      } catch (e) {
+        if ((e as Error)?.name === "AbortError") return;
+      }
+    }
     try {
       await navigator.clipboard.writeText(url);
       setShared("copied");
