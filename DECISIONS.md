@@ -21505,3 +21505,21 @@ and no accounts (the engine sites since 2026-10-25), so their alerts run here, o
   `notifyOwnerBounded` (kind `sister-alert`, no address in it).
 - **Privacy:** both tables are private (never in `PUBLIC_MODELS`); `/privacy#sister-alerts` says what is kept, and
   each sister's privacy page points to it.
+
+## 2026-11-02 — Pre-order pages build themselves for every coming-soon set
+
+Pre-order landings were the family's top pages in October (`/radiance-preorders` here), but each one was a
+hand-built route, so a set only had one if a session wrote it in time. Now every coming-soon set in `SETS` without a
+hand-built page gets `/preorders/<slug>` (`src/app/preorders/[slug]`) with no other edit: adding the set to `SETS`,
+which the sealed import needs anyway to file its listings, is the whole job.
+
+- **Hand-built pages win.** A calendar row's `preordersHref` (Radiance, Legacy) stays the set's page, and
+  `/preorders/<its slug>` 308s there, so writing one later never leaves two pages on "<set> pre-order".
+  `preorderRouteForSet` / `preordersHrefForSet` (`src/lib/release-calendar.ts`) are the one answer for every link: the
+  set page and gallery, card pages, the homepage countdown, `/release-dates` and the restock email.
+- **Only data.** The automatic page shows the name, the street date when `SETS` has one, and the stores' listings
+  (`getPreorderGroups`, the same table as Legacy's). No list price, contents or card count: those need a source and
+  belong on a hand-built page.
+- **Self-retiring** (`autoPreorderState`): pre-order prices until the street date, in-stock prices for 45 days, then
+  a 308 to `/sets/<slug>`. It is in the sitemap only while it takes pre-orders (`openAutoPreorderSets`).
+- Clicks report as `page_type` `preorders`; EPN's customid already carries the path.

@@ -152,7 +152,7 @@ export function PreorderPriceTable({
    *  customid) and buy_click's page_type: without it every click from this
    *  table — eBay included — reported as the HOMEPAGE ("<retailer>-home"),
    *  which hid the pre-order page's earnings inside the homepage's. */
-  page?: "/radiance-preorders" | "/sets/radiance" | "/sets/legacy" | "/legacy-preorders" | "/black-friday";
+  page?: "/radiance-preorders" | "/sets/radiance" | "/sets/legacy" | "/legacy-preorders" | "/black-friday" | `/preorders/${string}`;
   /** Injected for tests; the page renders at request/ISR time. */
   now?: number;
   /** After the set's street date (2026-10-24): the same rows, but an open row
@@ -163,7 +163,15 @@ export function PreorderPriceTable({
   // /legacy-preorders (2026-10-25) reports as its own page; the EPN customid
   // already separates it (affiliateUrl takes the path's first segment).
   const pageType =
-    page === "/sets/radiance" || page === "/sets/legacy" ? "set_hub" : page === "/legacy-preorders" ? "legacy_preorders" : page === "/black-friday" ? "black_friday" : "radiance_preorders";
+    page === "/sets/radiance" || page === "/sets/legacy"
+      ? "set_hub"
+      : page === "/legacy-preorders"
+        ? "legacy_preorders"
+        : page === "/black-friday"
+          ? "black_friday"
+          : page?.startsWith("/preorders/")
+            ? "preorders" // the automatic pages (2026-11-02); EPN's customid already carries the path
+            : "radiance_preorders";
   // EPN customid segment for the per-product search line, one per page.
   const searchSource = page === "/sets/radiance" || page === "/sets/legacy" ? "set-hub-product" : page === "/black-friday" ? "black-friday-product" : "preorders-product";
   const label = ebayLabel(country);
