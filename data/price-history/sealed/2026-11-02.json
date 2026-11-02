@@ -28,7 +28,7 @@
     },
     "LGC|Booster Case": {
       "CA": 129999,
-      "US": 137866
+      "US": 137667
     },
     "LGC|Booster Pack": {
       "CA": 2400
@@ -84,7 +84,7 @@
       "EU": 71400
     },
     "OGN|Booster Box": {
-      "AU": 40000,
+      "AU": 35000,
       "CA": 29995,
       "EU": 6173,
       "UK": 13437,
@@ -99,20 +99,20 @@
       "AU": 1900,
       "CA": 1199,
       "UK": 700,
-      "US": 1297
+      "US": 1296
     },
     "OGN|Box Set": {
       "UK": 10500
     },
     "OGN|Bulk Runes": {
-      "EU": 800
+      "EU": 795
     },
     "OGN|Bundle": {
       "EU": 39990
     },
     "OGN|Champion Deck": {
       "AU": 3300,
-      "CA": 4499,
+      "CA": 1395,
       "SG": 3101,
       "US": 3299
     },
@@ -145,7 +145,7 @@
       "EU": 699,
       "SG": 6853,
       "UK": 1500,
-      "US": 1749
+      "US": 6000
     },
     "OGN|Champion Deck (Viktor) Display": {
       "US": 27296
@@ -156,7 +156,7 @@
       "EU": 3300,
       "SG": 5596,
       "UK": 2999,
-      "US": 4240
+      "US": 3890
     },
     "OGN|Sealed": {
       "EU": 485
@@ -174,7 +174,7 @@
       "EU": 7999
     },
     "OGS|Proving Grounds": {
-      "AU": 9995,
+      "AU": 2700,
       "CA": 905,
       "EU": 895,
       "SG": 3550,
@@ -188,22 +188,22 @@
     "RAD|Booster Box": {
       "AU": 20000,
       "CA": 16995,
-      "EU": 9450,
-      "SG": 22000,
+      "EU": 8999,
+      "SG": 20000,
       "UK": 9900,
       "US": 8000
     },
     "RAD|Booster Case": {
       "AU": 139999,
       "CA": 144995,
-      "EU": 60000,
-      "US": 70988
+      "EU": 59000,
+      "US": 71397
     },
     "RAD|Booster Pack": {
       "AU": 1099,
       "CA": 664,
       "UK": 499,
-      "US": 498
+      "US": 499
     },
     "RAD|Bundle": {
       "AU": 5795,
@@ -225,10 +225,10 @@
       "CA": 4999,
       "EU": 3199,
       "UK": 2500,
-      "US": 2979
+      "US": 2999
     },
     "RAD|Sealed": {
-      "EU": 399
+      "EU": 477
     },
     "RAD|Showdown Decks": {
       "AU": 4999,
@@ -272,13 +272,13 @@
       "US": 575
     },
     "SFD|Bulk Runes": {
-      "US": 1621
+      "US": 1623
     },
     "SFD|Bulk Runes Case": {
       "US": 7492
     },
     "SFD|Bundle": {
-      "EU": 13900
+      "EU": 14500
     },
     "SFD|Champion Deck": {
       "AU": 2299,
@@ -296,7 +296,7 @@
     "SFD|Champion Deck (Fiora)": {
       "AU": 2299,
       "CA": 2294,
-      "EU": 1200,
+      "EU": 2400,
       "SG": 3914,
       "UK": 1000,
       "US": 1999
@@ -350,7 +350,7 @@
       "SG": 11144
     },
     "T1S|T1 Signature Edition": {
-      "EU": 130000
+      "EU": 129500
     },
     "T1S|T1 Signature Edition|EN": {
       "AU": 1141070,
@@ -360,7 +360,7 @@
       "US": 350000
     },
     "UNL|Booster Box": {
-      "AU": 22000,
+      "AU": 24000,
       "CA": 20000,
       "EU": 9499,
       "SG": 22000,
@@ -408,7 +408,7 @@
       "EU": 799,
       "SG": 2155,
       "UK": 1500,
-      "US": 899
+      "US": 1329
     },
     "UNL|Champion Deck (Vi) Display": {
       "AU": 4000,
@@ -454,14 +454,14 @@
       "EU": 9200,
       "SG": 19000,
       "UK": 10470,
-      "US": 11099
+      "US": 11299
     },
     "VEN|Booster Case": {
       "AU": 133000,
       "CA": 119999,
       "EU": 62200,
       "UK": 69999,
-      "US": 73899
+      "US": 75499
     },
     "VEN|Booster Pack": {
       "AU": 999,
@@ -479,7 +479,7 @@
       "US": 2499
     },
     "VEN|Bundle Case": {
-      "US": 44898
+      "US": 50141
     },
     "VEN|Champion Deck": {
       "CA": 5395
@@ -489,7 +489,7 @@
     },
     "VEN|Nexus Night Pack": {
       "CA": 1500,
-      "US": 623
+      "US": 600
     },
     "VEN|Pre-Rift Event Kit": {
       "CA": 110000,
@@ -512,7 +512,7 @@
       "EU": 904,
       "SG": 2952,
       "UK": 1899,
-      "US": 1388
+      "US": 1432
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -530,7 +530,7 @@
       "EU": 3995
     },
     "arcaneboxset": {
-      "EU": 45000
+      "EU": 44898
     },
     "arcaneimmersivemusicexperiencebooster": {
       "EU": 6500
@@ -564,7 +564,7 @@
       "EU": 12499
     },
     "legacyvault": {
-      "EU": 3988
+      "EU": 3850
     },
     "orginsboosterboxriftboundleagueoflegends": {
       "CA": 39999
@@ -731,10 +731,10 @@
       "CA": 3235
     },
     "secretgardenbox": {
-      "US": 24999
+      "US": 23901
     },
     "secretgardenboxset": {
-      "EU": 7000
+      "EU": 6999
     },
     "t1worldschampionsignatureeditionbundle": {
       "US": 500000
