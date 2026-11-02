@@ -167,6 +167,11 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
+- **Amazon Associates rules (2026-11-02, owner):** every Amazon link is tagged,
+  labelled beside it, and goes to one specific product (never a category search
+  or a pop-up/quick view); every page's footer carries Amazon's statement and its
+  trademark notice; no Amazon colours, logo, prices in alerts or tracking, and no
+  Amazon link or trademark in any email. [2026-11-02](../DECISIONS.md#L21591)
 - **Earnings dashboard (2026-10-24):** `/admin/earnings` shows Stripe, TCGplayer
   (Impact API), eBay Partner Network (Performance by Day report), AdSense
   (Management API) and Mediavine (entered by hand) for today / 7 / 30 / 90 days /

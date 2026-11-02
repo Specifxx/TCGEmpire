@@ -39,7 +39,7 @@ const TEXT: Record<Partner, string> = {
   both: "Affiliate links: as an eBay Partner Network affiliate and a TCGplayer affiliate, RiftCompare earns from qualifying purchases — at no extra cost to you.",
   // Amazon's required wording, unaltered (Associates Program Operating
   // Agreement): no prefix and no paraphrase.
-  amazon: "As an Amazon Associate, RiftCompare earns from qualifying purchases.",
+  amazon: "As an Amazon Associate, RiftCompare earns from qualifying purchases. Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.",
 };
 
 export function AffiliateDisclosure({

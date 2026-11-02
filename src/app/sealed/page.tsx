@@ -360,7 +360,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       {/* High-AOV marketplace searches: sealed boxes are the biggest baskets on the
           site, and eBay/Amazon both carry them. Affiliate-tagged per market. */}
       <section className="card-surface mt-8 p-5">
-        <h2 className="text-lg font-extrabold text-white">More sealed deals on the big marketplaces</h2>
+        <h2 className="text-lg font-extrabold text-white">Search the big marketplaces too</h2>
         {/* Reworded 2026-09-26: it said eBay and Amazon "often have stock (or
             better prices) when stores don't". Nothing here measures either
             against the stores, or knows what they list today, so the copy

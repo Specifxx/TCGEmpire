@@ -243,7 +243,7 @@ test("/sealed names no set in code, states its real fallback and carries Amazon'
 test("the Amazon disclosure is Amazon's own wording, and the other partners' lines are unchanged", () => {
   const text = (partner?: "ebay" | "tcgplayer" | "both" | "amazon") =>
     (AffiliateDisclosure({ partner }) as { props: { children: string } }).props.children;
-  assert.equal(text("amazon"), "As an Amazon Associate, RiftCompare earns from qualifying purchases.");
+  assert.equal(text("amazon"), "As an Amazon Associate, RiftCompare earns from qualifying purchases. Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.");
   assert.equal(text(), text("ebay"), "eBay stays the default");
   assert.equal(text("ebay"), "Affiliate link: as an eBay Partner Network affiliate, RiftCompare earns from qualifying purchases — at no extra cost to you.");
   assert.equal(text("tcgplayer"), "Affiliate link: RiftCompare earns a commission from qualifying TCGplayer purchases — at no extra cost to you.");

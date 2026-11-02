@@ -628,6 +628,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             policy using assets owned by Riot Games. Riot Games does not endorse or
             sponsor this project.
           </p>
+          {/* Amazon Associates (Operating Agreement "Dos and Don'ts", owner 2026-11-02): the
+              programme's statement and Amazon's trademark notice, on every page. */}
+          <p className="mt-2">
+            As an Amazon Associate, RiftCompare earns from qualifying purchases. Amazon and the Amazon logo
+            are trademarks of Amazon.com, Inc. or its affiliates.
+          </p>
           <p className="mt-2">&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
         </div>
         </footer>
