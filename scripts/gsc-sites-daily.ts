@@ -103,6 +103,17 @@ async function detail(property: string) {
     x.posBefore = r.position;
     m.set(r.keys[0], x);
   }
+  const page = process.env.PAGE;
+  if (page) {
+    // One page's days and searches over the last 14 days (PAGE = a substring of its URL).
+    const f = { dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "contains", expression: page }] }] };
+    const days = await query(tok, property, { startDate: ymd(Date.now() - 15 * DAY), endDate: ymd(Date.now() - DAY), dimensions: ["date"], rowLimit: 100, ...f });
+    console.log(`\n== PAGE ~${page} on ${property}, per day`);
+    for (const r of days.sort((x, y) => x.keys[0].localeCompare(y.keys[0]))) console.log(`${r.keys[0]} clicks ${r.clicks} impr ${r.impressions} pos ${r.position.toFixed(1)}`);
+    const qs = await query(tok, property, { startDate: ymd(Date.now() - 15 * DAY), endDate: ymd(Date.now() - DAY), dimensions: ["query", "date"], rowLimit: 2000, ...f });
+    console.log("top searches by day:");
+    for (const r of qs.sort((x, y) => y.impressions - x.impressions).slice(0, 30)) console.log(`${r.keys[1]} ${r.keys[0].slice(0, 60).padEnd(60)} ${String(r.impressions).padStart(6)} pos ${r.position.toFixed(1)}`);
+  }
   const rows = [...m.entries()].sort((x, y) => Math.abs(y[1].now - y[1].before) - Math.abs(x[1].now - x[1].before)).slice(0, 40);
   console.log(`\n== DETAIL ${property}: impressions ${ymd(e - 3 * DAY)}..${ymd(e)} vs the 4 days before (pages ${a.length} vs ${b.length})`);
   for (const [u, x] of rows) console.log(`${u.slice(0, 90).padEnd(90)} ${String(x.before).padStart(7)} -> ${String(x.now).padStart(7)}  pos ${x.posBefore.toFixed(1)} -> ${x.posNow.toFixed(1)}`);
