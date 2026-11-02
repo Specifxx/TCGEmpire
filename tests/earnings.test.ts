@@ -208,6 +208,7 @@ test("eBay by tag: grouped by the tag's site prefix, then each full tag, within 
   assert.deepEqual(tagGroup("gd_au_kit"), { key: "gd", label: "GD" });
   assert.equal(tagGroup("lorcana").key, "lor", "no separator: the first three characters");
   assert.equal(tagGroup("pkmn-kindhub").key, "pkmn");
+  assert.equal(tagGroup("tcgplayer-preorders-radiance").key, "rc", "RiftCompare's TCGplayer sub-ids count to RiftCompare");
   assert.equal(tagGroup("").label, "No tag");
   assert.deepEqual(tagGroup("zz-thing"), { key: "zz", label: "ZZ" });
   const t = (day: string, tag: string, cents: number) => ({ id: tag + day, day, tag, pending: false, currency: "AUD", cents, updated: "" });
