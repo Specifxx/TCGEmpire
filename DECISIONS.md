@@ -21383,6 +21383,33 @@ the family's growth had no one number.
   DexCompare's apex property has three pages with impressions: its sitemap was first read on 30 Oct, so it is new to
   Google, not broken.
 
+## 2026-11-02 — Family links name no single country
+
+The owner: "Riftcompare says 'Australian tech prices on compareempire' … when I switch to US it still says Australian
+tech prices when compareempire has US stores." Compare Empire's root has been the US home since 2026-11-01 (AU at
+`/au`, UK at `/uk`), but every family footer still called it Australian.
+
+- **Every family list, all twelve sites that have one** (KaeYoung keeps none): Compare Empire is "Tech and appliance
+  prices"; its RiftCompare blurb names all three markets and its two deep links go to the US edition (`/us/phones`,
+  `/us/deals`), from which Compare Empire's region script moves an AU or UK visitor to their own. DexCompare's
+  "Pokémon booster boxes in Australia" link became "Pokémon booster boxes" on `/us/` for the same reason.
+- **Cyberpunk Compare joined every list** it was missing from (RiftCompare, OP, MTG, Dex, Wargame, Figure, Cam,
+  Compare Empire); the engine sites already had it.
+- **A test in each repo** fails on a country adjective in a family anchor or blurb (and, here, on a deep link into a
+  non-US edition), so the wording cannot drift back.
+## Store clicks per month — 2026-11-02
+
+Thread "Win exclusive store partner codes" (owner, 2026-11-02: "implement now"). A week after the 26 Oct partner-code
+emails no store had answered, and the one store that did engage (Plenty of Games, AU) asked first for "data to
+support how many customers you've directed to the store". The daily counts ("Click counts by day") lump every store
+into one `store` number, so the only per-store evidence we could quote was "cards where you are cheapest".
+
+- `/api/click` now also adds one to `storeclick:<Sydney month>:<retailer>` (a `Counter` row) when the beacon's
+  retailer is a key in `RETAILERS`. Unknown values are ignored, so a forged beacon cannot mint rows; at ~150 stores
+  that is at most ~150 rows a month. One extra single-row upsert per store click, no read on the request path.
+- `/admin/store-partners` shows this month and last month per store. It is the number to quote in a pitch, next to
+  the store's own `utm_source=riftcompare` traffic. Like the daily counts it is a trend, never a payout.
+- Not done on purpose: no per-card or per-day breakdown, no visitor identifiers.
 ## 2026-11-02 — Empire HQ and the one Monday report
 
 The owner approved the consolidation plan's control tower ("Sure go ahead with this plan"): thirteen sites, nine

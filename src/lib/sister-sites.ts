@@ -15,7 +15,7 @@
 // look-alike sites cross-linked sitewide read as a link network.
 
 export interface SisterSite {
-  key: "op" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "wargame" | "figure" | "cam" | "empire";
+  key: "op" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "wargame" | "figure" | "cam" | "empire";
   name: string;
   url: string;
   /** The game, as a reader would say it: "One Piece", "Pokémon", "Magic". */
@@ -63,8 +63,8 @@ export const SISTER_SITES: SisterSite[] = [
     what: "Pokémon booster box, Elite Trainer Box and bundle prices across independent stores in seven markets",
     links: [
       { label: "Pick your country", href: "https://dexcompare.app/" },
-      { label: "Pokémon booster boxes in Australia", href: "https://dexcompare.app/au/type/booster-boxes" },
-      { label: "Pokémon release calendar", href: "https://dexcompare.app/au/releases" },
+      { label: "Pokémon booster boxes", href: "https://dexcompare.app/us/type/booster-boxes" },
+      { label: "Pokémon release calendar", href: "https://dexcompare.app/us/releases" },
     ],
   },
   {
@@ -132,6 +132,20 @@ export const SISTER_SITES: SisterSite[] = [
     footerOnly: true,
   },
   {
+    key: "cyberpunk",
+    search: "https://cyberpunkcompare.com/cards?q={q}",
+    name: "Cyberpunk Compare",
+    url: "https://cyberpunkcompare.com",
+    game: "Cyberpunk TCG",
+    anchor: "Cyberpunk TCG prices",
+    what: "Cyberpunk TCG singles and sealed prices across stores, Beta and Retail kept apart",
+    links: [
+      { label: "Cyberpunk TCG sealed prices", href: "https://cyberpunkcompare.com/sealed" },
+      { label: "Cyberpunk TCG pre-orders", href: "https://cyberpunkcompare.com/preorders" },
+    ],
+    footerOnly: true,
+  },
+  {
     key: "wargame",
     name: "WargameCompare",
     url: "https://wargamecompare.com",
@@ -175,11 +189,13 @@ export const SISTER_SITES: SisterSite[] = [
     name: "Compare Empire",
     url: "https://compareempire.com",
     game: "Tech",
-    anchor: "Australian tech prices",
-    what: "phone, TV and laptop prices across Australian stores",
+    anchor: "Tech and appliance prices",
+    what: "phone, TV, laptop and appliance prices across stores in the US, Australia and the UK",
+    // US URLs (the root is the US home): a visitor from Australia or the UK is
+    // moved to their own edition by Compare Empire's region script.
     links: [
-      { label: "Phone prices", href: "https://compareempire.com/phones" },
-      { label: "Today's deals", href: "https://compareempire.com/deals" },
+      { label: "Phone prices", href: "https://compareempire.com/us/phones" },
+      { label: "Today's deals", href: "https://compareempire.com/us/deals" },
     ],
     footerOnly: true,
     notTcg: true,
