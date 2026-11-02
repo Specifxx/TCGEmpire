@@ -105,8 +105,10 @@ test("the steps queue: the public file is valid, safe and parsed defensively", (
   // Public file: no secret, token or personal address.
   assert.doesNotMatch(raw, /@gmail|@[a-z0-9-]+\.[a-z]{2,}|sk_live|ghp_|github_pat_|re_[A-Za-z0-9]{20}|Bearer /i);
   assert.deepEqual(parseSteps({ steps: [{ id: "Bad id", title: "x" }, { id: "ok-1", title: "" }, { id: "ok-2", title: "T", prompt: "../etc/passwd.md" }] }).map((s) => [s.id, s.prompt]), [["ok-2", null]]);
-  const v = stepViews([...steps, { id: "z-done", site: "rc", kind: "chrome", title: "Z", why: "", added: "2026-10-01", prompt: null, done: "2026-10-02" }], parseDone({ done: { [steps[0].id]: "2026-11-03" } }));
-  assert.equal(v.find((s) => s.id === steps[0].id)!.doneAt, "2026-11-03");
+  // A step the file has not closed itself, so the separate done list decides it (the file's own `done` wins).
+  const openStep = { id: "z-open", site: "rc", kind: "chrome", title: "O", why: "", added: "2026-10-01", prompt: null, done: null } as (typeof steps)[number];
+  const v = stepViews([...steps, openStep, { id: "z-done", site: "rc", kind: "chrome", title: "Z", why: "", added: "2026-10-01", prompt: null, done: "2026-10-02" }], parseDone({ done: { "z-open": "2026-11-03" } }));
+  assert.equal(v.find((s) => s.id === "z-open")!.doneAt, "2026-11-03");
   assert.ok(v.findIndex((s) => s.doneAt) > v.findIndex((s) => !s.doneAt) || v.every((s) => s.doneAt));
 });
 
