@@ -33,26 +33,6 @@
       "done": null
     },
     {
-      "id": "vercel-billing-token",
-      "site": "rc",
-      "kind": "chrome",
-      "title": "Let the earnings dashboard read Vercel's cost per site",
-      "why": "Without it HQ and the Monday report show earnings per site but no cost, so no profit per site.",
-      "added": "2026-10-30",
-      "prompt": "earnings/chrome-prompt-vercel-billing-token.md",
-      "done": null
-    },
-    {
-      "id": "amazon-tracking-ids",
-      "site": "all",
-      "kind": "chrome",
-      "title": "Create Amazon tracking IDs for DexCompare, MTG Compare and OP Compare",
-      "why": "Their Amazon sales are counted under RiftCompare's tag today, so HQ cannot credit them per site.",
-      "added": "2026-10-29",
-      "prompt": "amazon/chrome-prompt-amazon-tracking-ids.md",
-      "done": null
-    },
-    {
       "id": "cyberpunk-setup",
       "site": "cyberpunk",
       "kind": "chrome",
@@ -63,33 +43,13 @@
       "done": null
     },
     {
-      "id": "discord-bot-setup",
-      "site": "rc",
-      "kind": "chrome",
-      "title": "Set up and list the Discord price bot (one time, about 45 minutes)",
-      "why": "Built in October (TCGEmpire #185); it answers price lookups in Discord servers once its keys exist.",
-      "added": "2026-10-27",
-      "prompt": "discord-bot/chrome-prompt-discord-bot.md",
-      "done": null
-    },
-    {
-      "id": "telegram-deals-channel",
-      "site": "rc",
-      "kind": "chrome",
-      "title": "Create the RiftCompare Deals Telegram channel (one time)",
-      "why": "Built in October (TCGEmpire #189); the daily eBay deals post goes out once the bot token and channel exist.",
-      "added": "2026-10-27",
-      "prompt": "discord-bot/chrome-prompt-telegram-channel.md",
-      "done": null
-    },
-    {
       "id": "amazon-uk-ca-de",
       "site": "all",
       "kind": "chrome",
-      "title": "Join Amazon Associates UK, Canada and Germany, and set the new tags on every site",
-      "why": "UK, CA and EU visitors see no Amazon link today; every site's code is already wired for the tags.",
+      "title": "Amazon in one sitting: tracking IDs for Dex, MTG and OP, then join UK, Canada and Germany",
+      "why": "UK, CA and EU visitors see no Amazon link today, and Dex/MTG/OP sales count under RiftCompare's tag; every site's code is already wired.",
       "added": "2026-11-02",
-      "prompt": "amazon/chrome-prompt-amazon-uk-ca-de-2026-11-02.md",
+      "prompt": "amazon/chrome-prompt-amazon-all-2026-11-02.md",
       "done": null
     }
   ]
