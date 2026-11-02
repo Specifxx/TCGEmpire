@@ -21703,6 +21703,19 @@ every three-hourly price commit, because neither had the gate.
   request, `[preview]` included; the older per-branch `false` entries stay for orphan commits' own copies.
 - So "push to prod" means land on the production branch; the release reaches visitors within a day.
 
+## 2026-11-02 — The ops monitor asks every hour and runs about every three
+
+**Why.** /admin/health said the monitor had not reported for 10 hours. Nothing was broken: every run had
+passed, GitHub simply never started the scheduled ones. This repo has ~50 scheduled workflows and GitHub
+drops many of their runs under load (Keep warm, every five minutes, got two or three runs a day). With one
+`17 */3` slot, the monitor's real gaps were 6–10 hours, past the page's 8-hour stale line.
+
+**What.** `ops-monitor.yml` is scheduled `17 * * * *`, and a small `gate` job lets a scheduled run through only
+when the newest `ops-state-` Actions cache (saved after every real check) is 150+ minutes old. The cadence and
+the database reads stay about every three hours, with three chances per slot instead of one. A manual run and
+the Sunday report always go through, and a gate that cannot read the cache runs the checks (fail open). The
+8-hour stale line stays: a real stop should still show. `tests/ops-wiring.test.ts` pins the schedule and gate.
+
 ## 2026-11-02 — The Pro page, in the site's own theme
 
 **Why.** The owner: "noone's buying pro for riftcompare. It might look too gimmicky. We gotta make it look more

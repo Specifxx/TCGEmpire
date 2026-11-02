@@ -168,7 +168,11 @@ test("the monitor workflow runs on the live database, every few hours, and diges
   const wf = read(".github/workflows/ops-monitor.yml");
   assert.match(wf, /DATABASE_URL: \$\{\{ secrets\.RM10 \|\| vars\.RM10 \}\}/, "tests/db-chain.test.ts keeps this on the chain head");
   assert.match(wf, /DB_SOURCE_NAME: \$\{\{ \(secrets\.RM10 \|\| vars\.RM10\) && 'RM10' \|\| 'UNSET' \}\}/);
-  assert.match(wf, /cron: "17 \*\/3 \* \* \*"/);
+  // Asked hourly, run about every three hours: GitHub drops many scheduled runs (2026-11-02, 10-hour gap).
+  assert.match(wf, /cron: "17 \* \* \* \*"/);
+  assert.match(wf, /actions\/caches\?key=ops-state-&sort=created_at&direction=desc/, "the gate reads when the last real check saved its memory");
+  assert.match(wf, /if \[ "\$age" -lt 150 \]/);
+  assert.match(wf, /if: \$\{\{ needs\.gate\.outputs\.run == '1' \}\}/);
   assert.match(wf, /cron: "0 21 \* \* 0"/);
   assert.match(wf, /OPS_DIGEST: \$\{\{ \(github\.event\.schedule == '0 21 \* \* 0' \|\| inputs\.digest\) && '1' \|\| '' \}\}/);
   assert.match(wf, /DRY_RUN: \$\{\{ inputs\.dry_run && '1' \|\| '' \}\}/);
