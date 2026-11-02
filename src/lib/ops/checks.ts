@@ -419,6 +419,9 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   // in data/pokemon. Missing from this list before, so its week of failures
   // while its Neon project was gone (2026-10-23) went unnoticed.
   { file: "pokemon-import.yml", title: "Pokémon import job", staleH: 36 },
+  // Daily (2026-11-02): the sister sites' price alerts (lib/sister-alerts). Fails when a site
+  // that has alerts could not be checked, so a broken feed shows here.
+  { file: "sister-alerts.yml", title: "Sister-site price alerts job", staleH: 36 },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {
