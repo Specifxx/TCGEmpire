@@ -21587,3 +21587,25 @@ that grow each other" in https://claude.ai/artifact/QjrWGrfBqH4sKctwdjwptK.
   is the pattern it can read as a link scheme. The price blocks are what a reader has a reason to click.
 - **Watched.** `data:family-feeds` (ops monitor) reads every site's feed the way the blocks do and
   warns on a missing or stale one (after a rollout grace to 2026-11-06).
+
+## 2026-11-02 — Amazon Associates: following the Operating Agreement's Dos and Don'ts
+
+The owner sent Amazon's own "Operating Agreement: Top Dos and Don'ts" page (2026-11-02: "make sure you
+are following these instructions for all amazon affiliates"), and every site was audited against it.
+The rules we keep, on every Compare Empire site:
+
+- **Disclosure beside every Amazon link** ("Ad" / "Paid link"), and Amazon's statement "As an Amazon
+  Associate I (we) earn from qualifying purchases." in the footer of every page.
+- **Amazon's trademark notice** in the footer of every page: "Amazon and the Amazon logo are trademarks
+  of Amazon.com, Inc. or its affiliates." No Amazon logo, screenshot, review or Amazon's own colours
+  (its orange): the page "Don't use style or color of Amazon site which may cause confusion".
+- **Links lead to a specific product** (an ASIN, or a search for that exact product's name), never a
+  category or generic search: "All the links or buttons on your site should take customers to specific
+  products on Amazon."
+- **No Amazon link in a pop-up or layer**: the quick views show none; product pages carry the row.
+- **Never Amazon prices in price tracking or alerts** ("Don't track prices or set price alerts"), and no
+  Amazon link or trademark in any email, SMS or printed material.
+- Every link tagged, rel="sponsored nofollow"; no incentive (cashback, discount) for buying through it.
+- Here: the footer gained the statement and trademark line; the Amazon disclosure beside /sealed and
+  the Pokémon boards now carries the trademark line too; the Pokémon quick view drops its Amazon search;
+  /sealed's marketplace block is headed "Search the big marketplaces too" (it offered searches, not deals).

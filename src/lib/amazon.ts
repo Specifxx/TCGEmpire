@@ -18,6 +18,8 @@ export const AMAZON_US_DEFAULT_TAG = "riftcompare-20";
 export const AMAZON_AU_DEFAULT_TAG = "compareempire-22";
 /** The Associates programme's required statement, word for word. */
 export const AMAZON_STATEMENT = "As an Amazon Associate I earn from qualifying purchases.";
+/** The trademark notice Amazon's Operating Agreement asks every site that uses its marks to carry (2026-11-02). */
+export const AMAZON_TRADEMARK = "Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.";
 
 type Env = Record<string, string | undefined>;
 interface Store {
