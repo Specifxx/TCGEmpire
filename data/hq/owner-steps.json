@@ -60,7 +60,7 @@
       "why": "www has had no DNS since 26 Oct and Google still files most pages under www; impressions fell from about 25K a day to about 200.",
       "added": "2026-11-02",
       "prompt": "seo/chrome-prompt-compareempire-www-2026-11-02.md",
-      "done": null
+      "done": "2026-11-02"
     }
   ]
 }
