@@ -89,6 +89,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/legacy-preorders", label: "Legacy pre-orders", keywords: ["legacy", "set 6", "legacy booster box", "legacy preorder", "preorder", "pre-order", "upcoming set"] },
       // Black Friday sealed deals (2026-10-30, the weekly growth review). No "prices" or bare "deals" in the label: "deals" belongs to the Deal Finder (tests/nav-search.test.ts).
       { href: "/black-friday", label: "Black Friday", keywords: ["black friday", "cyber monday", "black friday deals", "sale", "discount", "cheap booster box", "christmas", "holiday"] },
+      // The seasonal sale pages (2026-11-02, DECISIONS.md "Seasonal sale pages"): same no-"deals"/"prices" label rule.
+      { href: "/boxing-day", label: "Boxing Day", keywords: ["boxing day", "boxing day sale", "boxing day sales", "boxing day deals", "end of year sale"] },
+      { href: "/january-sales", label: "January sales", keywords: ["january sale", "january sales", "new year sale", "after christmas sale"] },
+      { href: "/lunar-new-year", label: "Lunar New Year", keywords: ["lunar new year", "chinese new year", "cny sale", "lunar new year sale"] },
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
       { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "most searched", "popular cards"] },
       { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },
