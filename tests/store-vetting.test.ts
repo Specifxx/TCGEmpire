@@ -19,15 +19,15 @@ test("domainOf keeps two-label suffixes", () => {
 });
 
 test("judgePage: blocked is never dead; parked and moved are red; no contact is a look", () => {
-  assert.equal(judgePage({ status: 403, host: "a.com", body: "" }).state, "blocked");
-  assert.equal(judgePage({ status: 200, host: "a.com", body: "<p>Just a moment</p><script src=/cdn-cgi/challenge-platform/x>" }).state, "blocked");
+  assert.equal(judgePage({ status: 403, host: "a.com", finalHost: null, body: "" }).state, "blocked");
+  assert.equal(judgePage({ status: 200, host: "a.com", finalHost: null, body: "<p>Just a moment</p><script src=/cdn-cgi/challenge-platform/x>" }).state, "blocked");
   const parked = judgePage({ status: 200, host: "a.com", finalHost: "a.com", body: "This domain is for sale! Buy this domain" });
-  assert.ok(parked.flags.some((f) => f.kind === "parked" && f.red));
+  assert.ok(parked.flags!.some((f) => f.kind === "parked" && f.red));
   const moved = judgePage({ status: 200, host: "a.com", finalHost: "b.net", body: '<a href="mailto:x@b.net">' });
-  assert.ok(moved.flags.some((f) => f.kind === "moved" && f.red));
-  assert.equal(judgePage({ status: 200, host: "a.com", finalHost: "shop.a.com", body: '<a href="mailto:x@a.com">' }).flags.length, 0);
+  assert.ok(moved.flags!.some((f) => f.kind === "moved" && f.red));
+  assert.equal(judgePage({ status: 200, host: "a.com", finalHost: "shop.a.com", body: "<a href=\"mailto:x@a.com\">" }).flags!.length, 0);
   const bare = judgePage({ status: 200, host: "a.com", finalHost: "a.com", body: "x".repeat(3000) });
-  assert.ok(bare.flags.some((f) => f.kind === "no-contact" && !f.red));
+  assert.ok(bare.flags!.some((f) => f.kind === "no-contact" && !f.red));
 });
 
 test("ageDays and trustpilotFrom read what they can and null the rest", () => {

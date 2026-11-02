@@ -118,11 +118,10 @@ export function flag(reports, now = NOW) {
         if (n > 1) (why.push(`suggested ${n} times`), (score += 2));
       } else if (r.kind === "unreadable") {
         (why.push("unreadable file"), (score += 5));
-      } else if (r.issue === "store-problem" || r.issue === "STORE_UNTRUSTED") {
-        // "This store looks untrustworthy / I had a problem ordering": a possible
-        // scam shop, ahead of everything else (docs/store-vetting.md).
-        (why.push("store trust: check the store now"), (score += 8));
       } else score += 1;
+      // "I don't trust this store / had a problem ordering", from either form: a
+      // possible scam shop, ahead of everything else (docs/store-vetting.md).
+      if (r.issue === "store-problem") (why.unshift("store trust: check the store now"), (score += 8));
       if (age >= 7) (why.push(`open ${Math.floor(age)} days`), (score += 2));
       if (r.at && age < 1) why.push("new");
       return { ...r, why, score, age, attention: r.kind === "wrong-price" || r.kind === "unreadable" || r.issue === "store-problem" || score >= 3 };

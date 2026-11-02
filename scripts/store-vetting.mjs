@@ -77,7 +77,7 @@ export function hostsIn(text) {
   for (const m of text.matchAll(/\b(?:site|base|host|domain)"?\s*:\s*["'`]([a-z0-9][a-z0-9.-]*\.[a-z]{2,})(?:\/[^"'`]*)?["'`]/gi)) out.add(m[1]);
   return [...out]
     .map((h) => h.toLowerCase().replace(/^www\./, "").replace(/\.$/, ""))
-    .filter((h) => !NOT_A_STORE.test(h) && !/^(cdn|images?|static|assets|media|img)\./.test(h));
+    .filter((h) => !NOT_A_STORE.test(h) && !/^(cdn|images?|static|assets|media|img|api|searchapi)\./.test(h));
 }
 
 /** The registrable domain of a host ("shop.example.com.au" -> "example.com.au"). Pure. */
@@ -93,7 +93,10 @@ const CONTACT = /(mailto:|tel:|href="[^"]*(contact|policies\/refund|refund-polic
 
 /** What one home page response says about the store. Pure, for tests. */
 export function judgePage({ status, finalHost, host, body }) {
-  if (status === 403 || status === 429 || status === 503 || /cf-chl|challenge-platform|captcha/i.test(body ?? "")) return { state: "blocked" };
+  // A bot challenge is a short page; a real shop that merely loads Cloudflare's
+  // beacon or a captcha script on its forms is not blocked.
+  const challenge = (body ?? "").length < 30_000 && /(just a moment|attention required|cf-chl-|verify you are human|captcha-delivery)/i.test(body ?? "");
+  if (status === 403 || status === 429 || status === 503 || challenge) return { state: "blocked" };
   if (status >= 500 || status === 404 || status === 410) return { state: "error", detail: `HTTP ${status}` };
   const flags = [];
   if (finalHost && domainOf(finalHost) !== domainOf(host) && !/myshopify\.com$/.test(finalHost)) flags.push({ kind: "moved", red: true, detail: `now redirects to ${finalHost}` });
@@ -199,16 +202,23 @@ export async function vetHost(host, banned) {
     finalHost = new URL(home.url).host.replace(/^www\./, "");
   } catch {}
   const page = judgePage({ status: home.status, finalHost, host, body: home.body });
-  out.state = page.state === "ok" ? "ok" : page.state === "blocked" ? "blocked" : "ok";
+  out.state = page.state === "blocked" ? "blocked" : "ok";
   if (page.state === "error") out.flags.push({ kind: "dead", red: true, detail: `home page answers ${page.detail}` });
   if (page.flags) out.flags.push(...page.flags);
   if (/\.myshopify\.com$/.test(host)) {
     out.flags.push({ kind: "no-domain", red: false, detail: "no domain of its own (myshopify.com address)" });
     return out;
   }
+  // Domain age and reviews are about the domain, so they run for a store that
+  // blocks our page read too.
   const rdap = await rdapFor(domain);
   out.age = ageDays(rdap);
-  if (out.age != null && out.age < 365) out.flags.push({ kind: "young", red: false, detail: `domain registered ${out.age} days ago` });
+  if (out.age != null && out.age < 365) {
+    // A new shop is normal; a new shop that also hides who it is is the
+    // classic fake-store pattern, and is red.
+    const hidden = out.flags.some((f) => f.kind === "no-contact");
+    out.flags.push({ kind: "young", red: hidden, detail: `domain registered ${out.age} days ago${hidden ? ", with no contact details" : ""}` });
+  }
   const tp = await get(`https://www.trustpilot.com/review/${domain}`, { timeout: 12_000 });
   if (tp.status === 200) {
     out.trustpilot = trustpilotFrom(tp.body) ?? "none";
@@ -240,6 +250,9 @@ export function issueBody(results, siteHosts, now = new Date()) {
   const red = results.filter((r) => r.flags.some((f) => f.red));
   const look = results.filter((r) => !r.flags.some((f) => f.red) && r.flags.length);
   const blocked = results.filter((r) => r.state === "blocked").length;
+  const aged = results.filter((r) => r.age != null).length;
+  const tpRated = results.filter((r) => r.trustpilot && r.trustpilot !== "none").length;
+  const tpNone = results.filter((r) => r.trustpilot === "none").length;
   const unknown = results.filter((r) => r.state === "unknown").length;
   const line = (r) => `- [ ] \`${r.host}\` (${sitesOf(r.host)}): ${r.flags.map((f) => f.detail).join("; ")}`;
   return [
@@ -250,6 +263,8 @@ export function issueBody(results, siteHosts, now = new Date()) {
     "",
     `### Check by hand (${look.length})`,
     look.length ? look.map(line).join("\n") : "None.",
+    "",
+    `Domain age known for ${aged}; Trustpilot: ${tpRated} rated, ${tpNone} with no page, ${results.length - tpRated - tpNone} not readable.`,
     "",
     `${blocked} stores blocked our check (normal for bot protection; never worked around) and ${unknown} could not be read this time. They are not flagged.`,
     "",
