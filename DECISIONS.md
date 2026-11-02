@@ -21669,3 +21669,24 @@ store is listed, a way for visitors to report a store, and a too-cheap guard on 
   (Ballers TCG, JJasper TCG, Wayward City Games, TCG Card Depot, Unifig Shop), which can come back after a re-check.
   SephiGames (70 days, a seller with thousands of Cardmarket sales who asked to be listed) and The Card Hive
   (a custom shop verified by email) are on `data/store-vetting/verified.json`.
+
+## 2026-11-02 — At most one production build every 12 hours, and no branch but production deploys
+
+**Why.** The owner capped Vercel spend at $5–6 a day across every site. 1 November cost $11.82 (normally
+$2–4), and Build CPU was the largest line ($4.26), followed by CDN requests and ISR writes, which every
+build multiplies (a deploy empties the page cache, so the next crawl re-renders and re-writes every page).
+The `[deploy]` gate itself held; its premise did not: sessions landed 7–14 `[deploy]` commits a day per site
+(manual "release now" runs and `[deploy]` in merge subjects), RiftCompare, OP, MTG and DexCompare alike.
+Compare Empire's site built on every push to its production branch (84 commits that day) and CamCompare on
+every three-hourly price commit, because neither had the gate.
+
+**What.**
+- `scripts/vercel-ignore-build.sh` skips a production `[deploy]` commit when the last production
+  deployment (`VERCEL_GIT_PREVIOUS_SHA`, set by Vercel in that step) is under 12 hours old; the commit
+  rides the next release. `[urgent]` in the SUBJECT overrides it, and only when the owner says a release
+  cannot wait. An unset or unreadable last deployment builds (fail open). `tests/deploy-gap.test.ts` pins it,
+  and the file is the same in every Compare Empire repo.
+- `vercel.json` `git.deploymentEnabled` starts with `"**": false` and enables only the production branch
+  (Vercel: when a branch matches several rules, any `true` wins). No preview is built for any branch or pull
+  request, `[preview]` included; the older per-branch `false` entries stay for orphan commits' own copies.
+- So "push to prod" means land on the production branch; the release reaches visitors within a day.
