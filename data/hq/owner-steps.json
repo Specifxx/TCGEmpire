@@ -33,16 +33,6 @@
       "done": "2026-11-02"
     },
     {
-      "id": "card-engine-repo",
-      "site": "all",
-      "kind": "chrome",
-      "title": "Create the empty card-engine repo in the organization",
-      "why": "Unblocks merging Gundam, Lorcana, YGO and Cyberpunk Compare into one repo (approved plan).",
-      "added": "2026-11-02",
-      "prompt": "card-engine/chrome-prompt-create-repo.md",
-      "done": "2026-11-02"
-    },
-    {
       "id": "cyberpunk-setup",
       "site": "cyberpunk",
       "kind": "chrome",
