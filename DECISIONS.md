@@ -21358,3 +21358,27 @@ time, and the only way a session had read them was the dashboard's internal endp
   counts unique visitors per range and reads lower. The page says so rather than spend a fifth request per project.
 - A separate page, not a section of `/admin/earnings`: the owner moved it there, and it keeps clear of the earnings
   page's own rework.
+
+## 2026-11-02 — Family growth target, measured on every site's Google clicks
+
+The owner: "I can see that our websites are growing but I'm not happy with the pace. I want strong weekly if not daily
+growth." `/admin/growth` showed Google clicks for RiftCompare and OP Compare only (`GSC_PROPERTIES` was never set), so
+the family's growth had no one number.
+
+- **Every property, one series per site.** `scripts/growth-snapshot.ts` now lists every property `GSC_SA_KEY` reads and
+  groups them by host (`propertiesByHost`): a Domain property only has data from the day it was verified (most from
+  25 Oct) while the URL-prefix property holds the longer history, so each day takes the property that saw the most
+  (`mergeGscDays`), never the sum. `GSC_PROPERTIES` still overrides the list.
+- **The target is weekly, on Google clicks.** One day against the next swings with the weekday and a post, so the
+  target is the last 7 settled days against the 7 before (`targetRow`, `GROWTH_TARGETS`): the sister sites together
+  +15% a week (doubling in five weeks: they are new to Google, sitemaps submitted 22 Oct to 1 Nov, and doubled the week
+  to 29 Oct), RiftCompare holds (it is between sets; the Legacy previews from 13 Dec are its next wave), every site
+  together +5%. Shown at the top of `/admin/growth`; per-site cards follow, biggest first.
+- **Read-only diagnosis task** `gsc-sites-daily` (maintenance): every property's daily clicks, weekly totals, pages with
+  impressions, permission and sitemaps; with `url` (properties) the pages that gained or lost impressions, and with
+  `set_slug` one page's days and searches. Counts and search terms only, never money.
+- **Found on the first run:** Compare Empire's "collapse" on 29 Oct was one search, "robot vacuum price comparison",
+  showing the US robot vacuum page 22,000 times in three days with no click, then nothing. That is not real demand
+  (rank trackers or a Google test) and no fix was made; the site's real level is a few hundred impressions a day.
+  DexCompare's apex property has three pages with impressions: its sitemap was first read on 30 Oct, so it is new to
+  Google, not broken.

@@ -974,6 +974,10 @@ longer lands on its entry.
   Six competing posts were folded into one page each the same day. Before
   splitting an intent across two pages, check "Pages competing in Google" on
   `/admin/growth` (or `gsc-queries`' SPLIT QUERIES); a pair there gets folded. [2026-10-27](../DECISIONS.md#L20384)
+- **Growth target (every site):** Google clicks, week against week, on
+  `/admin/growth`: sister sites +15% a week, RiftCompare holds until the
+  Legacy previews, every site +5%. Every Search Console property is read
+  (one series per site). [2026-11-02](../DECISIONS.md#L21362)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)

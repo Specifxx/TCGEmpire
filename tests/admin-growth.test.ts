@@ -36,3 +36,25 @@ test("findSplitQueries keeps queries our own pages share, folding #fragments int
   assert.equal(out[0].impr, 510);
   assert.deepEqual(out[0].pages.map((p) => p.page), ["/sets/radiance", "/sets/radiance/gallery"]);
 });
+
+test("propertiesByHost groups a site's Domain, https, http and www properties", async () => {
+  const { propertiesByHost } = await import("../src/lib/ops/gsc-daily");
+  const m = propertiesByHost(["https://www.opcompare.app/", "https://riftcompare.com/", "sc-domain:riftcompare.com", "http://riftcompare.com/", "sc-domain:opcompare.app"]);
+  assert.deepEqual([...m.keys()], ["opcompare.app", "riftcompare.com"]);
+  assert.equal(m.get("riftcompare.com")?.length, 3);
+});
+
+test("mergeGscDays takes each day from the property that saw the most, never adds them", async () => {
+  const { mergeGscDays } = await import("../src/lib/ops/gsc-daily");
+  const prefix = [{ d: "2026-10-20", clicks: 5, impr: 100, pos: 9 }, { d: "2026-10-26", clicks: 8, impr: 200, pos: 9 }];
+  const domain = [{ d: "2026-10-26", clicks: 9, impr: 230, pos: 9 }];
+  assert.deepEqual(mergeGscDays([prefix, domain]).map((d) => [d.d, d.clicks]), [["2026-10-20", 5], ["2026-10-26", 9]]);
+});
+
+test("targetRow: the sister sites need +15% on the week before, RiftCompare only to hold", async () => {
+  const { targetRow } = await import("../src/lib/admin-growth");
+  assert.equal(targetRow("sisters", { last7: 115, prev7: 100 }).met, true);
+  assert.equal(targetRow("sisters", { last7: 114, prev7: 100 }).met, false);
+  assert.equal(targetRow("rift", { last7: 1300, prev7: 1300 }).met, true);
+  assert.equal(targetRow("family", { last7: null, prev7: 100 }).met, null);
+});

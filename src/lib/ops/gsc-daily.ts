@@ -40,6 +40,45 @@ async function token(raw: string): Promise<string> {
   return tok;
 }
 
+/** Every property the service account can read. Throws on any failure. */
+export async function listGscProperties(raw: string): Promise<string[]> {
+  const tok = await token(raw);
+  const r = await fetch("https://www.googleapis.com/webmasters/v3/sites", { headers: { Authorization: `Bearer ${tok}` } });
+  if (!r.ok) throw new Error(`sites ${r.status}`);
+  const j = (await r.json()) as { siteEntry?: { siteUrl: string; permissionLevel: string }[] };
+  return (j.siteEntry ?? []).filter((e) => e.permissionLevel !== "siteUnverifiedUser").map((e) => e.siteUrl);
+}
+
+/** The bare host a property covers: "sc-domain:x.com", "https://www.x.com/" and "https://x.com/" are all "x.com". */
+export function propertyHost(p: string): string {
+  return p.replace(/^sc-domain:/, "").replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "").toLowerCase();
+}
+
+/** Properties grouped by the site they cover, so a site with a Domain and a URL-prefix property is counted once. */
+export function propertiesByHost(props: readonly string[]): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  for (const p of [...props].sort()) {
+    const h = propertyHost(p);
+    out.set(h, [...(out.get(h) ?? []), p]);
+  }
+  return new Map([...out.entries()].sort((a, b) => a[0].localeCompare(b[0])));
+}
+
+/**
+ * One series per site from several properties of it: per day, the property that
+ * saw the most (a Domain property counts every host, but only from the day it
+ * was verified, so the URL-prefix property is the longer history).
+ */
+export function mergeGscDays(series: readonly GscDay[][]): GscDay[] {
+  const best = new Map<string, GscDay>();
+  for (const days of series)
+    for (const d of days) {
+      const cur = best.get(d.d);
+      if (!cur || d.impr > cur.impr || (d.impr === cur.impr && d.clicks > cur.clicks)) best.set(d.d, d);
+    }
+  return [...best.values()].sort((a, b) => a.d.localeCompare(b.d));
+}
+
 /** Clicks, impressions and average position per day for one property. Throws on any failure. */
 export async function fetchGscDaily(raw: string, property: string, start: string, end: string): Promise<GscDay[]> {
   const tok = await token(raw);
