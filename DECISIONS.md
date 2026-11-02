@@ -21555,3 +21555,35 @@ twelve sites (each repo's DECISIONS has its own entry):
   weekly growth report reads both for every project from the Web Analytics API (`loadShareCounts`, the analytics
   page's credentials) as "WORD OF MOUTH": share taps / visits per site and week. robots.txt allows
   `/*utm_source=share` because X's and Reddit's preview fetchers obey it and every other query string is disallowed.
+
+
+## 2026-11-02 — Sites that grow each other: family feed, "Other card games on sale", short footer
+
+Owner, 2026-11-02: "We need each site to help each other grow as a team effort and to lean on each
+other", then, of the footers: "a bit convoluted … I'm wondering if it actually helps". Plan: "Sites
+that grow each other" in https://claude.ai/artifact/QjrWGrfBqH4sKctwdjwptK.
+
+- **Clusters.** `src/lib/family-network.ts` is the same file in every Compare Empire repo: card games
+  (Rift, OP, Dex, MTG, Gundam, Lorcana, YGO, Cyberpunk), hobby (Wargame, Figure, Gunpla on Gundam
+  Compare), tech (Compare Empire, CamCompare). KaeYoung stays out.
+- **Out.** `scripts/family-feed.ts` runs in refresh-prices.yml right after the morning export and
+  writes `data/public/family/family-feed.json` from the exported `sealed-listings.json` (no Neon read):
+  per market, sealed products whose cheapest in-stock store is 10%+ under the median of 3+ stores (the
+  /black-friday bar; eBay, TCGplayer and Cardmarket never count), and the next set's booster box
+  pre-order. It rides the snapshot commit to main.
+- **In.** The card sisters' feeds are read from raw.githubusercontent.com through one `unstable_cache`
+  entry per TTL (six hours for the buyer pages, a day for /market/report so the report keeps its day;
+  plain `no-store` fetches inside, nothing nested). `validFeed` drops a feed from the wrong site, older
+  than four days, or with an item whose link leaves its own host or whose saving isn't its two prices'
+  arithmetic, so a block shows less, never a guess.
+- **Where.** One `FamilyDeals` block per page: /black-friday (deals), /legacy-preorders and
+  /radiance-preorders (pre-orders), every set page (pre-orders for a coming set, else deals). One tile
+  per sister, in the visitor's market, else its US price in US$. /market/report gets "Other card game
+  markets": each card sister's own report, with its best US store deal today.
+- **Footer: one line.** The card-game sisters by name, then "A Compare Empire site" to
+  https://compareempire.com/network (which lists every site). CamCompare and Compare Empire left the
+  footer. Why: nothing measures footer clicks, footer links get few, and Google gives little weight to
+  sitewide links between one owner's look-alike sites; twelve sites all cross-linked in every footer
+  is the pattern it can read as a link scheme. The price blocks are what a reader has a reason to click.
+- **Watched.** `data:family-feeds` (ops monitor) reads every site's feed the way the blocks do and
+  warns on a missing or stale one (after a rollout grace to 2026-11-06).

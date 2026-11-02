@@ -17,6 +17,7 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { setByCode, isPreorderSetCode } from "@/lib/constants";
 import { releaseDateLabel } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
+import { FamilyDeals } from "@/components/FamilyDeals";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /legacy-preorders — Riftbound Set 6, every store's pre-order, before it ships.
@@ -422,6 +423,8 @@ export default async function LegacyPreordersPage() {
         <Link href="/radiance-preorders" className="btn-ghost">Radiance booster box prices</Link>
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>
       </div>
+
+      <FamilyDeals kind="preorder" country={country} />
 
       <HubFaq faqs={faqs} />
     </div>

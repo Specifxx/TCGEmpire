@@ -98,6 +98,7 @@ const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
 };
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { FamilyDeals } from "@/components/FamilyDeals";
 
 // searchParams-driven (filters/pagination), so the route stays dynamic — same
 // tradeoff as /browse.
@@ -957,6 +958,9 @@ export default async function SetPage({
           </p>
         </section>
       )}
+
+      {/* One block per page (DECISIONS.md "Sites that grow each other"): the next set's page shows other games' pre-orders. */}
+      <FamilyDeals kind={set.comingSoon ? "preorder" : "deal"} country={country} className="" />
     </div>
     </SetOwnedProvider>
   );

@@ -10,6 +10,7 @@ import { SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT, MOBILE_NO_VIGNETTE_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { SISTER_SITES } from "@/lib/sister-sites";
+import { NETWORK_PAGE } from "@/lib/family-network";
 import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
@@ -575,33 +576,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* "Compare other TCGs" (2026-10-23 SEO sprint): the same three
               followed links, now with descriptive anchors (the game's price
               query) instead of the brand alone, under a labelled heading. */}
+          {/* One short line (owner, 2026-11-02: the old two-row list was "convoluted" and footer links
+              barely help): the card-game sisters by name, then the network page that lists every site
+              (DECISIONS.md "Sites that grow each other"). The cross-traffic that counts comes from the
+              "Other card games on sale" block on the deals, pre-order and set pages. */}
           <nav aria-label="Compare other TCGs" className="mb-2">
-            <p className="mb-1 font-semibold text-slate-300">
-              <Link href="/tcg-price-comparison" className="tap-link hover:text-brand-400">Compare other TCGs</Link>{" "}
-              <span className="font-normal text-slate-500">· RiftCompare is part of the Compare Empire family of price comparison sites</span>
-            </p>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1">
-              {SISTER_SITES.filter((s) => !s.notTcg).map((s) => (
-                <li key={s.key}>
-                  <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
-                    {s.anchor}
-                  </a>{" "}
-                  <span className="text-slate-500">on {s.name}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-1">
-              <span className="text-slate-500">Also from Compare Empire:</span>{" "}
-              {SISTER_SITES.filter((s) => s.notTcg).map((s, i) => (
-                <span key={s.key}>
-                  {i ? " · " : ""}
-                  <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline">
-                    {s.anchor}
-                  </a>{" "}
-                  <span className="text-slate-500">on {s.name}</span>
-                </span>
-              ))}
-            </p>
+            <span className="font-semibold text-slate-300">
+              <Link href="/tcg-price-comparison" className="tap-link hover:text-brand-400">Other card games</Link>:
+            </span>{" "}
+            {SISTER_SITES.filter((s) => !s.notTcg).map((s, i) => (
+              <span key={s.key}>
+                {i ? " · " : ""}
+                <a href={s.url} target="_blank" rel="noopener" className="tap-link font-semibold text-brand-400 hover:underline" title={s.anchor}>
+                  {s.name}
+                </a>
+              </span>
+            ))}
+            {" · "}
+            <a href={NETWORK_PAGE} target="_blank" rel="noopener" className="tap-link text-slate-400 hover:underline">A Compare Empire site</a>
           </nav>
           {/* Cross-promotion: our other Riftbound side project. Cheeky on purpose —
               per owner request 2026-08-13. */}

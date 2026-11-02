@@ -647,6 +647,35 @@ export async function dexcompareIndex(d: OpsDeps): Promise<CheckResult> {
   return result(d, { id, area: "data", title, severity: "ok", summary: `${rows.length} US products, ${joinable} joinable by TCGplayer id.` });
 }
 
+/**
+ * The Compare Empire network's feeds (lib/family-network.ts, DECISIONS.md "Sites that grow each other"):
+ * every site's family-feed.json on GitHub, read and validated the way the blocks read them. A feed that is
+ * missing or older than FEED_MAX_AGE_DAYS silently empties that site's tiles everywhere, so it is a warn
+ * (after the rollout week: before 2026-11-06 a site may not have run its first daily job yet).
+ */
+export async function familyFeedsCheck(d: OpsDeps): Promise<CheckResult> {
+  const { FAMILY_SITES, fetchFamilyFeeds } = await import("../family-network");
+  const id = "data:family-feeds";
+  const title = "Sister-site deal feeds";
+  const fetcher = async (url: string) => {
+    const r = await d.fetch(url, { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  };
+  const ok = await fetchFamilyFeeds(FAMILY_SITES.map((s) => s.id), fetcher, d.now.getTime());
+  const missing = FAMILY_SITES.filter((s) => !ok.some((f) => f.site === s.id)).map((s) => s.name);
+  if (!missing.length) return result(d, { id, area: "data", title, severity: "ok", summary: `All ${ok.length} sites published a fresh feed.` });
+  const grace = d.now.getTime() < Date.parse("2026-11-06T00:00:00Z");
+  return result(d, {
+    id,
+    area: "data",
+    title,
+    severity: grace ? "ok" : "warn",
+    summary: `${ok.length} of ${FAMILY_SITES.length} feeds fresh; missing or stale: ${missing.join(", ")}. Their tiles are hidden on the sister sites.`,
+    action: 'Tell Claude: "a sister site\'s family feed is missing or stale; check its daily data job\'s Family feed step" and paste this email.',
+  });
+}
+
 // ── Money ───────────────────────────────────────────────────────────────────
 
 export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
@@ -986,6 +1015,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("site:live", "site", "Live site", () => siteProbe(d));
   await add("discord:bot", "site", "Discord price bot", () => discordBot(d));
   await add("partner:dexcompare", "data", "DexCompare store prices (Pokémon)", () => dexcompareIndex(d));
+  await add("data:family-feeds", "data", "Sister-site deal feeds", () => familyFeedsCheck(d));
 
   await add("stripe", "money", "Stripe", () => stripeChecks(d));
   await add("stores:unlinked", "money", "Stores plan: stores waiting for their report", () => storePlansUnlinked(d));

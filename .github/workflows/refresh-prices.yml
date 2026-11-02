@@ -279,6 +279,8 @@ jobs:
           DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
         run: |
           npx tsx scripts/export-public-data.ts
+          # The Compare Empire network's feed (lib/family.ts), from the files just exported; never fatal.
+          npx tsx scripts/family-feed.ts || true
           bash scripts/publish-public-data.sh "refresh-prices.yml (${{ github.event_name }}, run ${{ github.run_id }})"
 
       - name: Release the snapshot (the daily production deploy)
