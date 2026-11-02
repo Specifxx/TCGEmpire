@@ -28,7 +28,7 @@
     },
     "LGC|Booster Case": {
       "CA": 129999,
-      "US": 137867
+      "US": 137866
     },
     "LGC|Booster Pack": {
       "CA": 2400
@@ -56,7 +56,7 @@
       "UK": 2000
     },
     "LGC|Champion Deck (Lux)": {
-      "CA": 2495,
+      "CA": 5495,
       "EU": 2000,
       "SG": 3000,
       "UK": 2000
@@ -99,7 +99,7 @@
       "AU": 1900,
       "CA": 1199,
       "UK": 700,
-      "US": 1295
+      "US": 1297
     },
     "OGN|Box Set": {
       "UK": 10500
@@ -112,7 +112,7 @@
     },
     "OGN|Champion Deck": {
       "AU": 3300,
-      "CA": 1395,
+      "CA": 4499,
       "SG": 3101,
       "US": 3299
     },
@@ -145,7 +145,7 @@
       "EU": 699,
       "SG": 6853,
       "UK": 1500,
-      "US": 6360
+      "US": 1749
     },
     "OGN|Champion Deck (Viktor) Display": {
       "US": 27296
@@ -156,7 +156,7 @@
       "EU": 3300,
       "SG": 5596,
       "UK": 2999,
-      "US": 4200
+      "US": 4240
     },
     "OGN|Sealed": {
       "EU": 485
@@ -197,7 +197,7 @@
       "AU": 139999,
       "CA": 144995,
       "EU": 60000,
-      "US": 71488
+      "US": 70988
     },
     "RAD|Booster Pack": {
       "AU": 1099,
@@ -225,7 +225,7 @@
       "CA": 4999,
       "EU": 3199,
       "UK": 2500,
-      "US": 2995
+      "US": 2979
     },
     "RAD|Sealed": {
       "EU": 399
@@ -245,7 +245,7 @@
     },
     "RAD|Sleeved Booster": {
       "EU": 500,
-      "US": 760
+      "US": 487
     },
     "RAD|Sleeved Booster (Art Set)": {
       "US": 3000
@@ -323,7 +323,7 @@
     "SFD|Nexus Night Pack": {
       "SG": 2796,
       "UK": 1185,
-      "US": 774
+      "US": 773
     },
     "SFD|Pre-Rift Event Kit": {
       "CA": 220000,
@@ -450,7 +450,7 @@
     },
     "VEN|Booster Box": {
       "AU": 21000,
-      "CA": 15494,
+      "CA": 16995,
       "EU": 9200,
       "SG": 19000,
       "UK": 10470,
@@ -465,7 +465,7 @@
     },
     "VEN|Booster Pack": {
       "AU": 999,
-      "CA": 710,
+      "CA": 799,
       "EU": 795,
       "UK": 499,
       "US": 470
@@ -489,7 +489,7 @@
     },
     "VEN|Nexus Night Pack": {
       "CA": 1500,
-      "US": 634
+      "US": 623
     },
     "VEN|Pre-Rift Event Kit": {
       "CA": 110000,
@@ -512,7 +512,7 @@
       "EU": 904,
       "SG": 2952,
       "UK": 1899,
-      "US": 1175
+      "US": 1388
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -542,7 +542,7 @@
       "CA": 10000
     },
     "giftoftheriftbundle": {
-      "US": 27387
+      "US": 27384
     },
     "jinxchampiondeckriftboundleagueoflegends": {
       "EU": 6399
