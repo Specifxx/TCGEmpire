@@ -34,10 +34,10 @@ import { recallPremiumSurface } from "@/lib/premium-surface";
 // text-center + leading-tight because this label wraps to two lines in the
 // narrower of the two pricing cards; without them the second line sits badly.
 const CTA_BTN = "btn-buy w-full py-3.5 text-center text-base leading-tight";
-// The Pro page's Collectr-style gold pill (2026-10-26, owner: "make it look very
-// similar to how Collector does it"). Only ProLanding asks for it.
-const CTA_GOLD =
-  "inline-flex w-full items-center justify-center rounded-full bg-gradient-to-b from-[#f6dc8f] via-[#d9b04f] to-[#a97b2c] px-6 py-4 text-center text-lg font-extrabold leading-tight text-ink-950 shadow-lg shadow-gold/25 transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:opacity-70";
+// The Pro page's button: the site's own flat orange primary (owner, 2026-11-02:
+// "themed like the website with the website colours"; it replaced the
+// 2026-10-26 Collectr gold pill). Only ProLanding asks for it.
+const CTA_PRO = "btn-primary w-full py-3 text-center text-base leading-tight";
 
 // The Premium subscribe button. Three states: checkout live (Stripe hosted
 // checkout), signed out (straight to /premium/start, which IS the sign-in step
@@ -56,7 +56,7 @@ export function PremiumCta({
   tier = "premium",
   ctaLabel,
   compact = false,
-  gold = false,
+  pro = false,
 }: {
   checkoutLive: boolean;
   signedIn: boolean;
@@ -80,10 +80,10 @@ export function PremiumCta({
   // on the first screen of a phone. A trial's disclosure, the waitlist state
   // and every error line are unchanged: they are never compacted away.
   compact?: boolean;
-  /** The Pro page's gold pill instead of the green buy button. */
-  gold?: boolean;
+  /** The Pro page's orange primary button instead of the green buy button. */
+  pro?: boolean;
 }) {
-  const btn = gold ? CTA_GOLD : CTA_BTN;
+  const btn = pro ? CTA_PRO : CTA_BTN;
   // The plan's price after the trial, as the card quotes it ("$2.99/month").
   const thenPrice = priceLabel || "the paid price";
   const [busy, setBusy] = useState(false);
@@ -127,8 +127,8 @@ export function PremiumCta({
     markSignupSource("premium_cta");
   };
   const startHref = premiumStartHref({ tier, plan, src: "premium-page" });
-  // The Collectr-style Pro page's gold button says "Upgrade to Pro" (2026-10-26).
-  const getLabel = gold ? `Upgrade to ${TIER_NAMES[tier]}` : `Get ${TIER_NAMES[tier]}`;
+  // The Pro page's button says "Upgrade to Pro" (2026-10-26).
+  const getLabel = pro ? `Upgrade to ${TIER_NAMES[tier]}` : `Get ${TIER_NAMES[tier]}`;
 
   if (!signedIn) {
     if (trialAvailable && trialDays > 0) {

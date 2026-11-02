@@ -241,7 +241,7 @@ longer lands on its entry.
   moved up in Stripe. No trial: `PREMIUM_TRIAL_DAYS` defaults to 0 (the 30-day
   trial below is superseded). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.
-  `/premium` copies Collectr's page for non-members. Until the site has 100 ratings, a closable rating pop-up asks
+  `/premium` keeps Collectr's plan and page order for non-members, drawn in the site's own theme since 2026-11-02 (orange button, flat panels, one Free/Pro table; no gold or mock-ups) ([2026-11-02](../DECISIONS.md#the-pro-page-in-the-sites-own-theme)). Until the site has 100 ratings, a closable rating pop-up asks
   every visitor who has not rated (15 s in, again 3 pages after "Maybe later",
   twice a visit at most), then switches itself off ([2026-10-29](../DECISIONS.md#L20782))
   ([2026-10-28](../DECISIONS.md#L20702)). After that, a rate-the-site corner card

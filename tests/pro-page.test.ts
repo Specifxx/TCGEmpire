@@ -172,12 +172,18 @@ test("the rating shown is real and only shown once there are enough", () => {
   assert.doesNotMatch(read("src/app/premium/page.tsx"), /aggregateRating/, "never in JSON-LD");
 });
 
-test("the landing reads its prices from the page and labels its example", () => {
+test("the landing reads its prices from the page, in the site's own theme (owner, 2026-11-02)", () => {
   const page = read("src/app/premium/page.tsx");
   assert.match(page, /monthly: tierMonthlyAmount\("premium"\)/);
   assert.match(page, /perMonth: premiumEffectiveMonthly\("premium"\)/);
   const landing = read("src/components/premium/ProLanding.tsx");
-  assert.match(landing, />Example</);
   assert.match(landing, /href="#features"[\s\S]{0,200}See all features/);
-  assert.match(read("src/components/premium/ProPricePicker.tsx"), /role="switch"/);
+  assert.match(landing, /id="compare"/, "Free and Pro in one table");
+  // No made-up portfolio, no gold gradients, no emoji icons: "too gimmicky".
+  assert.doesNotMatch(landing, /\$1,284|bg-gradient|bg-clip-text|#f6dc8f/);
+  assert.doesNotMatch(landing, /\p{Extended_Pictographic}/u, "line icons, not emoji");
+  const picker = read("src/components/premium/ProPricePicker.tsx");
+  assert.match(picker, /role="radiogroup"/);
+  assert.match(picker, /\bpro\b\s*\/>/, "the orange primary button");
+  assert.match(read("src/components/PremiumCta.tsx"), /const CTA_PRO = "btn-primary /);
 });
