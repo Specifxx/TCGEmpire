@@ -153,6 +153,8 @@ export function PreorderPriceTable({
    *  table — eBay included — reported as the HOMEPAGE ("<retailer>-home"),
    *  which hid the pre-order page's earnings inside the homepage's. */
   page?: "/radiance-preorders" | "/sets/radiance" | "/sets/legacy" | "/legacy-preorders" | "/black-friday" | `/preorders/${string}`;
+
+  page?: "/radiance-preorders" | "/sets/radiance" | "/sets/legacy" | "/legacy-preorders" | "/black-friday" | "/boxing-day" | "/january-sales" | "/lunar-new-year";
   /** Injected for tests; the page renders at request/ISR time. */
   now?: number;
   /** After the set's street date (2026-10-24): the same rows, but an open row
@@ -172,8 +174,10 @@ export function PreorderPriceTable({
           : page?.startsWith("/preorders/")
             ? "preorders" // the automatic pages (2026-11-02); EPN's customid already carries the path
             : "radiance_preorders";
+
+    page === "/sets/radiance" || page === "/sets/legacy" ? "set_hub" : page === "/legacy-preorders" ? "legacy_preorders" : page === "/black-friday" ? "black_friday" : page === "/boxing-day" || page === "/january-sales" || page === "/lunar-new-year" ? page.slice(1).replace(/-/g, "_") : "radiance_preorders";
   // EPN customid segment for the per-product search line, one per page.
-  const searchSource = page === "/sets/radiance" || page === "/sets/legacy" ? "set-hub-product" : page === "/black-friday" ? "black-friday-product" : "preorders-product";
+  const searchSource = page === "/sets/radiance" || page === "/sets/legacy" ? "set-hub-product" : page === "/black-friday" ? "black-friday-product" : page === "/boxing-day" || page === "/january-sales" || page === "/lunar-new-year" ? `${page.slice(1)}-product` : "preorders-product";
   const label = ebayLabel(country);
   const shown = preorderTableGroups(groups);
   if (shown.length === 0) return null;
