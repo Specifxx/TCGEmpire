@@ -6,10 +6,10 @@
       "id": "bluesky-account",
       "site": "all",
       "kind": "chrome",
-      "title": "Create the Compare Empire Bluesky account (one time; it then posts itself)",
+      "title": "Finish the Compare Empire Bluesky account: app password into GitHub (one time; it then posts itself)",
       "why": "The daily Bluesky job is built and dry-running: two link cards a day across all 13 sites, no recurring work, once the account exists.",
       "added": "2026-11-02",
-      "prompt": "social/chrome-prompt-bluesky.md",
+      "prompt": "social/chrome-prompt-bluesky-finish.md",
       "done": null
     },
     {
