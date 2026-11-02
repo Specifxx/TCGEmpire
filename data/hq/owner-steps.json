@@ -3,6 +3,16 @@
   "note": "Bill's weekly queue (Empire HQ, riftcompare.com/admin/hq). One row per step that needs Bill's hands. PUBLIC FILE: a title, a reason and the project-files path of the prompt only; never a key, a token, an address or a private name. Add a row and commit to main (no deploy needed: HQ reads this file from GitHub). Set done to the day you verified it, or Bill presses Done on HQ. The prompt text itself stays in project files; each Monday the steps still open are joined into one Chrome batch, chrome-queue/<date>.md.",
   "steps": [
     {
+      "id": "bluesky-account",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Create the Compare Empire Bluesky account (one time; it then posts itself)",
+      "why": "The daily Bluesky job is built and dry-running: two link cards a day across all 13 sites, no recurring work, once the account exists.",
+      "added": "2026-11-02",
+      "prompt": "social/chrome-prompt-bluesky.md",
+      "done": null
+    },
+    {
       "id": "github-org-step1",
       "site": "all",
       "kind": "chrome",

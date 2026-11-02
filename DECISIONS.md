@@ -21445,3 +21445,21 @@ monitors and two weekly emails each mailed separately, and every thread sent its
   `done` day or the owner's Done button (OpsSnapshot `hq:steps-done`). The steps still open are joined into one
   Chrome batch each Monday (project files, `chrome-queue/<date>.md`) instead of a prompt per thread, unless a step is
   urgent. `tests/hq.test.ts` keeps the file free of addresses and keys.
+
+## 2026-11-02 — Bluesky auto-posting
+
+**Decision.** One Bluesky account for the whole family (not thirteen), posted by `bluesky-post.yml` once a day:
+two link cards, each to one sister site's self-updating page (the price or market report; its Black Friday page from
+1 November to a week after Cyber Monday), rotating so every site appears about once a week. Each card uses the page's
+own title, description and share image, read at post time, so a post never says anything the page doesn't.
+
+**Why.** The owner wants growth that runs without him (2026-11-02: no Reddit posts, no recurring Chrome prompts).
+Bluesky has a free, open posting API with no app review; one account means one setup and one app password, and the
+pages it links already update themselves. X, Threads and Pinterest need paid tiers or app review; Pinterest
+(KaeYoung, FigureCompare, CamCompare) is the next candidate once there is a reason to ask for review.
+
+**Rules.** The job is a green dry run until `BLUESKY_HANDLE` (variable) and `BLUESKY_APP_PASSWORD` (secret, an app
+password, never the login) exist; the owner's one-time setup is a row in `data/hq/owner-steps.json`. A page that
+fails to load is skipped; all failing, or Bluesky refusing a post, fails the run, and the ops monitor watches the job
+(`JOBS`, 36 h). Rotation and text are pure (`src/lib/bluesky-post.ts`, `tests/bluesky-post.test.ts`). Never post a
+price, a claim or a deal the linked page doesn't show, and never reply to or follow people automatically.
