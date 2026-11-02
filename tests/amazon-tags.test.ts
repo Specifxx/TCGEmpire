@@ -7,27 +7,29 @@ import { amazonFor, amazonSearchUrl, amazonTagForHost } from "../src/lib/amazon"
 import { affiliateUrl } from "../src/lib/affiliate";
 import { buildBoard } from "../src/lib/pokemon/board";
 
-test("each Amazon store gets its own account's tag", () => {
-  assert.equal(amazonTagForHost("www.amazon.com", {}), "riftcompare-20");
-  assert.equal(amazonTagForHost("www.amazon.com.au", {}), "compareempire-22");
-  assert.equal(amazonTagForHost("amazon.com.au", { AMAZON_AU_TAG: "riftcompare-22" }), "riftcompare-22");
-  assert.equal(amazonTagForHost("www.amazon.co.uk", { AMAZON_UK_TAG: "riftcompare-21" }), "riftcompare-21");
+test("each Amazon store gets its own account's tag, hard-coded (owner, 2026-11-02)", () => {
+  assert.equal(amazonTagForHost("www.amazon.com"), "riftcompare-20");
+  assert.equal(amazonTagForHost("amazon.com.au"), "compareempire-22");
+  assert.equal(amazonTagForHost("www.amazon.co.uk"), "compareempi03-21");
+  assert.equal(amazonTagForHost("www.amazon.ca"), "compareempire-20");
+  assert.equal(amazonTagForHost("www.amazon.de"), "compareempire-21");
   const au = new URL(affiliateUrl("https://www.amazon.com.au/s?k=Riftbound", "amazon_sealed", "/sealed"));
-  assert.equal(au.searchParams.get("tag"), process.env.AMAZON_AU_TAG || "compareempire-22");
+  assert.equal(au.searchParams.get("tag"), "compareempire-22");
   const us = new URL(affiliateUrl("https://www.amazon.com/s?k=Riftbound", "amazon_sealed", "/sealed"));
-  assert.equal(us.searchParams.get("tag"), process.env.AMAZON_ASSOCIATE_TAG || "riftcompare-20");
+  assert.equal(us.searchParams.get("tag"), "riftcompare-20");
 });
 
-test("where: US and AU by default, UK/CA/EU only with a tag, never Singapore", () => {
-  assert.equal(amazonFor("US", {})!.host, "www.amazon.com");
-  assert.equal(amazonFor("AU", {})!.host, "www.amazon.com.au");
-  for (const c of ["UK", "CA", "EU", "SG"] as const) assert.equal(amazonFor(c, {}), null, c);
-  assert.equal(amazonFor("EU", { AMAZON_DE_TAG: "riftcompare-21" })!.host, "www.amazon.de");
-  assert.equal(amazonFor("US", { AMAZON_ASSOCIATE_TAG: "not a tag" })!.tag, "riftcompare-20");
-  const u = new URL(amazonSearchUrl("US", "Pokemon TCG  Ascended Heroes Elite Trainer Box", "rc-US-pkmn-table", {})!);
+test("where: US, AU, UK, CA and EU (amazon.de), never Singapore", () => {
+  assert.equal(amazonFor("US")!.host, "www.amazon.com");
+  assert.equal(amazonFor("AU")!.host, "www.amazon.com.au");
+  assert.equal(amazonFor("UK")!.host, "www.amazon.co.uk");
+  assert.equal(amazonFor("CA")!.host, "www.amazon.ca");
+  assert.equal(amazonFor("EU")!.host, "www.amazon.de");
+  assert.equal(amazonFor("SG"), null);
+  const u = new URL(amazonSearchUrl("US", "Pokemon TCG  Ascended Heroes Elite Trainer Box", "rc-US-pkmn-table")!);
   assert.equal(u.searchParams.get("k"), "Pokemon TCG Ascended Heroes Elite Trainer Box");
   assert.equal(u.searchParams.get("ascsubtag"), "rc-us-pkmn-table");
-  assert.equal(amazonSearchUrl("SG", "x", "y", {}), null);
+  assert.equal(amazonSearchUrl("SG", "x", "y"), null);
 });
 
 test("/sealed: Amazon only where the market has an account, never the AU fallback", () => {
