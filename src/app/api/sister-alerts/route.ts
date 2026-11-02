@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 // The product's name and link come from the site's own feed at the daily
 // check, so nothing a stranger types ever reaches an inbox.
 
-export const MAX_ALERTS_PER_ADDRESS = 25;
+const MAX_ALERTS_PER_ADDRESS = 25;
 const CONFIRM_RESEND_MS = 24 * 60 * 60 * 1000;
 
 const schema = z.object({
