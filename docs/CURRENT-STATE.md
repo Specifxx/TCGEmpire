@@ -594,10 +594,11 @@ longer lands on its entry.
 - **Upgrade prompts live where a limit is hit, and in the header (header since 10-15):**
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
-  the tool walls — plus the header's Pricing callout (`PricingNudge`, since
-  10-25; since 11-03 only for a returning visitor, from the second page of a
-  visit, snoozed 14 days, sharing the visit's one slot with the rating card;
-  the corner `PremiumSlideIn` is gone), and a tick on a set page (the same
+  the tool walls — the header's Pricing callout (`PricingNudge`) and the
+  monthly→annual corner card (`AnnualSwitchNudge`) are GONE since 11-03 (owner:
+  no Pro or sign-up sliders; the rating card is the only uninvited prompt)
+  ([2026-11-03](../DECISIONS.md#the-trial-on-the-pro-page-and-no-pro-or-sign-up-sliders-at-all-2026-11-03));
+  the corner `PremiumSlideIn` is gone — and a tick on a set page (the same
   `limit:portfolio` panel, reworded for a set). The header carries the shiny
   `GetPremiumLink` since 2026-10-15 (see "Gold marks Premium"); rail and account
   menu stay plain "Pricing" links. [2026-10-15](../DECISIONS.md#L17561) [2026-09-28](../DECISIONS.md#L14549),

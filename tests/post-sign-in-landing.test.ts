@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { POST_SIGN_IN_FALLBACK } from "../src/lib/next-param";
 
@@ -48,11 +48,8 @@ test("a new account returned to its page gets one quiet 'account ready' toast po
   assert.match(w, /action=\{\s*toastAction \?/);
 });
 
-test("the header's Pro callout stays away for the whole sign-up session", () => {
-  const slide = code("src/components/PricingNudge.tsx");
-  const guard = slide.indexOf("if (isSignupSession()) return;");
-  assert.ok(guard > 0, "guarded");
-  assert.ok(guard < slide.indexOf("armNudge({"), "before the show timer is armed");
+test("the header's Pro callout is gone for good (owner, 2026-11-03)", () => {
+  assert.ok(!existsSync(join(process.cwd(), "src/components/PricingNudge.tsx")));
 });
 
 test("isSignupSession: the session flag, or the ?welcome landing before it is written", async () => {

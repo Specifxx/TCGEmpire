@@ -1,6 +1,6 @@
 import test, { mock } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -356,8 +356,6 @@ test("dismissal snoozes: a dismissal is a week, a click a fortnight, two dismiss
   assert.ok(2 >= MAX_NUDGE_DISMISSALS, "the second dismissal is the last");
 });
 
-test("the annual offer waits for the session's 2nd page view", () => {
-  const src = readFileSync(join(process.cwd(), "src/components/AnnualSwitchNudge.tsx"), "utf8");
-  assert.match(src, /const pastFirstPage = views >= ANNUAL_MIN_VIEWS;/);
-  assert.match(src, /if \(!loaded \|\| !premium \|\| !pastFirstPage \|\| checked\.current\) return;/);
+test("the annual corner offer is gone (owner, 2026-11-03: no Pro or sign-up sliders)", () => {
+  assert.ok(!existsSync(join(process.cwd(), "src/components/AnnualSwitchNudge.tsx")));
 });

@@ -2,7 +2,6 @@
 
 import { useMe } from "@/lib/use-me";
 import { PremiumNavLink } from "./PremiumNavLink";
-import { PricingNudge } from "./PricingNudge";
 
 // THE HEADER'S PREMIUM CALL TO ACTION (2026-10-15, owner, with nine active
 // subscribers and churn high: "premium … at the very top, in the header … catchy,
@@ -39,7 +38,7 @@ export function GetPremiumLink({
   /** Kept for callers; the header label is one word ("Pricing") at every width now. */
   compact?: boolean;
   full?: boolean;
-  /** The header's Pricing link carries the "Try our Premium features" callout (PricingNudge). */
+  /** Kept for callers; the header callout (PricingNudge) went on 2026-11-03. */
   nudge?: boolean;
 }) {
   const { tier, loaded } = useMe();
@@ -57,7 +56,6 @@ export function GetPremiumLink({
         <span aria-hidden="true" className={full ? "" : "hidden xl:inline"}>✦ </span>
         {full ? <span>Get Pro</span> : <span>Pricing</span>}
       </span>
-      {nudge && <PricingNudge />}
     </PremiumNavLink>
   );
 }

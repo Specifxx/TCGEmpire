@@ -22068,3 +22068,18 @@ Reverses the "no trial" half of the 2026-10-26 Pro entry; prices are unchanged (
   (pop-up policy). `PREMIUM_COPY_VERSION` is `pro-trial-2026-11-03`.
 
 Measure: trial starts and conversions by copy version against `pro-theme-2026-11-02`, two weeks after release.
+
+## The trial on the Pro page, and no Pro or sign-up sliders at all (2026-11-03)
+
+Owner, after the 3-day trial shipped: "we should mention it … on the pro page as well … get rid of all the sliders
+regarding the premium and the signups. People can do it if they want to."
+
+- `/premium` says it three times for a visitor the trial is offered to: a green line under the headline ("Try everything
+  free for 3 days. Cancel before it ends and you pay nothing."), a "3 days free" chip on the plan card, and the card's
+  footer. All three read `trialAvailable` and a zero fee (`trialOn` in `ProLanding.tsx`), so a paid trial or the kill
+  switch removes them.
+- `PricingNudge` (the header's "Try our Pro features" callout, 2026-10-25) and `AnnualSwitchNudge` (the monthly→annual
+  corner card for paying subscribers) are deleted, with their mounts. The corner Premium slider and the sign-up popup were
+  already gone. What is left uninvited is the rating card alone (pop-up policy, 2026-11-03). The annual switch is still
+  on `/premium` and the account page; `lib/nudge-*.ts` and the shared timer stay for the rating card.
+- Tests that pinned those two components now pin their absence.
