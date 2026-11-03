@@ -21960,6 +21960,14 @@ after this release against 2026-10-20 to 2026-11-02. If ratings stall without
 the drive, ask on the thank-you moments (a store click) rather than bring a
 modal back.
 
+## 2026-11-03: Amazon AU links carry riftcompare-22
+
+The owner created one Amazon AU tracking ID per site in the AU Associates account, so the AU reports
+(Reports → Tracking ID) show which site sells: RiftCompare's amazon.com.au links carry `riftcompare-22`
+(`AMAZON_AU_DEFAULT_TAG`, `src/lib/amazon.ts`) instead of the shared `compareempire-22`. Same account, same
+earnings; `ascsubtag` still splits placements. The other sites have their own (`opcompare-22`,
+`mtgcompare-22`, `dexcompare-22`, `cecompare-22`, …). The owner asked for RiftCompare changes to ship
+urgently, so this release carries `[urgent]`.
 ## 2026-11-03 — Amazon earnings from uploaded reports
 
 Owner: "is there a way to get Amazon on our earnings dashboard as well?"

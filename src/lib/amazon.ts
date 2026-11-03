@@ -4,7 +4,7 @@
 //
 // A tag only earns on the Amazon store whose Associates account issued it, so
 // each store has its own, hard-coded (owner, 2026-11-02: no Vercel variable
-// decides a tag): riftcompare-20 (US account, amazon.com), compareempire-22
+// decides a tag): riftcompare-20 (US account, amazon.com), riftcompare-22
 // (Australia), compareempi03-21 (UK), compareempire-20 (Canada) and
 // compareempire-21 (Germany, which serves the eurozone). Singapore never
 // (amazon.sg has no Associates programme).
@@ -14,7 +14,7 @@
 import type { Country } from "./country";
 
 export const AMAZON_US_DEFAULT_TAG = "riftcompare-20";
-export const AMAZON_AU_DEFAULT_TAG = "compareempire-22";
+export const AMAZON_AU_DEFAULT_TAG = "riftcompare-22";
 // The owner's UK, Canada and Germany Associates accounts (2026-11-02).
 export const AMAZON_UK_DEFAULT_TAG = "compareempi03-21";
 export const AMAZON_CA_DEFAULT_TAG = "compareempire-20";
