@@ -21,7 +21,7 @@ export async function FamilyDeals({ kind, country, className = "mt-8" }: { kind:
           <li key={site.id} className="flex min-w-0 gap-3 rounded-lg border border-ink-700 p-3">
             {item.image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.image} alt="" aria-hidden="true" width={56} height={56} className="h-14 w-14 shrink-0 rounded object-contain" loading="lazy" />
+              <img src={item.image} alt={item.title} aria-hidden="true" width={56} height={56} className="h-14 w-14 shrink-0 rounded object-contain" loading="lazy" />
             ) : null}
             <div className="min-w-0 text-sm">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{site.topic} · {site.name}</p>

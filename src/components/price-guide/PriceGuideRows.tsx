@@ -125,7 +125,7 @@ export function PriceGuideRows({ rows, showD30, market }: { rows: GuideRowProps[
                 // One 320w rendition, no srcSet: a 28px thumbnail is ≤84
                 // device pixels even at 3x.
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={r.i} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="pg-i" />
+                <img src={r.i} alt={r.n} aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="pg-i" />
               ) : (
                 <span aria-hidden="true" className="pg-i" />
               )}

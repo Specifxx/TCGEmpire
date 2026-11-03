@@ -293,6 +293,12 @@ export function regionHomeMetadata(
     title: { absolute: title },
     description,
     alternates: pageAlternates(path, { languages: regionHomeHreflang() }),
-    openGraph: pageOpenGraph({ title, description, url: path }),
+    // A page's openGraph replaces the root's whole object, so the region homes
+    // lost the homepage's share image (SEO audit, 2026-11-03): name it here.
+    openGraph: pageOpenGraph({ title, description, url: path, images: [HOME_OG_IMAGE] }),
+    twitter: { card: "summary_large_image", title, description, images: [HOME_OG_IMAGE] },
   };
 }
+
+/** The homepage's own share image (src/app/opengraph-image.jpg, 2400×1260), which the region homes reuse. */
+export const HOME_OG_IMAGE = `${SITE_URL}/opengraph-image.jpg`;
