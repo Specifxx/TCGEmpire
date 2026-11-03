@@ -211,9 +211,9 @@ export function trialThenLine(days: number, feeCents: number, then: string): str
   return `${trialOfferLead(days, feeCents)}, then ${then}`;
 }
 
-/** The buy button: "Start 30 days for $1", or "Start 30 days free". */
+/** The buy button: "Start 30 days for $1", or "Start 3-day free trial" (2026-11-03). */
 export function trialButtonLabel(days: number, feeCents: number): string {
-  return feeCents > 0 ? `Start ${trialDaysPhrase(days)} for ${premiumTrialFee(feeCents)}` : `Start ${trialDaysPhrase(days)} free`;
+  return feeCents > 0 ? `Start ${trialDaysPhrase(days)} for ${premiumTrialFee(feeCents)}` : `Start ${days}-day free trial`;
 }
 
 /**
@@ -444,4 +444,5 @@ export function premiumLockInTail(): string {
 // "rebrand-2026-10-23": "Never overpay for Riftbound again", live proof, outcome cards, one free alert
 // "one-table-2026-10-25": /premium is one plan table (Monthly, Annual) and the Free vs Premium comparison
 // "pro-theme-2026-11-02": the same Pro plan and prices, the page restyled in the site's own theme (orange, flat panels)
-export const PREMIUM_COPY_VERSION = "pro-theme-2026-11-02";
+// "pro-trial-2026-11-03": the same page and prices with a free 3-day trial ("Start 3-day free trial").
+export const PREMIUM_COPY_VERSION = "pro-trial-2026-11-03";

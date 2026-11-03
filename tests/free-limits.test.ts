@@ -514,5 +514,6 @@ test("no surface quotes a free limit while they are off, and price comparison st
   // then "rebrand-2026-10-23": the "Never overpay" promise, live proof and outcome cards
   // then "one-table-2026-10-25": /premium is the plan table and the comparison, nothing else
   // then "pro-2026-10-26": Premium is Pro at $3.99, and the watchlist and portfolio are free and unlimited
-  assert.equal(PREMIUM_COPY_VERSION, "pro-theme-2026-11-02"); // then "pro-theme-2026-11-02": the same plan, the page restyled
+  // then "pro-theme-2026-11-02": the same plan, the page restyled
+  assert.equal(PREMIUM_COPY_VERSION, "pro-trial-2026-11-03"); // then "pro-trial-2026-11-03": a free 3-day trial
 });

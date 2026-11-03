@@ -303,7 +303,9 @@ test("the Pro-explained article states the price the site actually charges, not 
   // Pro at $6.99/$47.88 from 2026-10-26: $9.99 and $79.99 are retired again.
   assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
   assert.ok(!haystack.includes("$79.99"), "article must not still quote the retired $79.99 annual price anywhere");
-  assert.ok(!/half price for their first|3-day free trial/i.test(haystack), "no trial or intro while both are off");
+  assert.ok(!/half price for their first/i.test(haystack), "no intro while it is off");
+  // The free 3-day trial is on again from 2026-11-03.
+  assert.ok(/3[- ]days?\b[^.]{0,40}free|free[^.]{0,20}3[- ]day/i.test(haystack), "the article quotes the 3-day free trial now that it is on");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
