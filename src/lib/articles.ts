@@ -4320,7 +4320,7 @@ Radiance releases **23 October 2026**.`,
     // confirmed by Riot", a month after the rules made it official. The FAQ
     // and this description now lead with the official rule.
     excerpt:
-      "Deploy gear is played to a battlefield, not a unit, and is killed when an opponent holds that battlefield. Official rules, Deploy vs Equip, every card priced.",
+      "Deploy gear is played to a battlefield, not a unit, and is killed when an opponent holds that battlefield. The rules, Deploy vs Equip, every card priced.",
     author: "RiftCompare",
     date: "2026-09-08",
     updated: "2026-10-23",
@@ -5300,7 +5300,7 @@ Want to see the chase cards in action? Read **[the most valuable Riftbound cards
     // where-to-sell table by country and the fee tools.
     seoTitle: "How to Sell Riftbound Cards: Where, Fees & Pricing (2026)",
     excerpt:
-      "Price each card by its exact printing and condition, then sell where buyers are: TCGplayer (US), Cardmarket (EU), eBay or a local store. Fees and tips inside.",
+      "Price each card by its exact printing and condition, then sell where buyers are: TCGplayer (US), Cardmarket (EU), eBay or a local store. Fees and tips.",
     author: "RiftCompare",
     date: "2026-06-09",
     updated: CORRECTED,
