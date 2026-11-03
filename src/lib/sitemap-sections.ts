@@ -17,6 +17,7 @@ import { SITE_URL } from "./site";
 import { cardImageSrc } from "./card-image-url";
 import { getArticles } from "./articles";
 import { SETS } from "./constants";
+import { getSealedProductSlugs } from "./sealed-import";
 import { openAutoPreorderSets } from "./release-calendar";
 import { DOMAIN_PAGES } from "./domains";
 import { KEYWORDS, KEYWORD_THIN_THRESHOLD, keywordCardWhere } from "./keywords";
@@ -428,12 +429,18 @@ async function sets(): Promise<SitemapEntry[]> {
   // date (the shared `day` fallback) rather than none at all.
   // One URL per set (2026-10-27): the gallery canonicalises to its set page,
   // so only the set page is submitted ("One page per set in Google").
-  return SETS.filter((s) => !countByCode || (countByCode.get(s.code) ?? 0) > 0).map((s) => ({
+  const setEntries = SETS.filter((s) => !countByCode || (countByCode.get(s.code) ?? 0) > 0).map((s) => ({
     url: `${SITE_URL}/sets/${s.slug}`,
     changeFrequency: "daily" as const,
     priority: s.comingSoon ? 0.6 : 0.85,
     lastModified: lastSeenBySet.get(s.code) ?? day,
   }));
+  // Every sealed product's own page (2026-11-03, DECISIONS.md "Sealed products get their own pages"): the groups /sealed
+  // already reads from its cache, so no new query. Fails open to none: a cache miss that errors must not drop the sets.
+  const sealedEntries = await getSealedProductSlugs()
+    .then((rows) => rows.map((r) => ({ url: `${SITE_URL}/sealed/${r.slug}`, changeFrequency: "daily" as const, priority: 0.7, lastModified: day })))
+    .catch(() => []);
+  return [...setEntries, ...sealedEntries];
 }
 
 async function domains(): Promise<SitemapEntry[]> {

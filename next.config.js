@@ -626,6 +626,15 @@ const nextConfig = {
         source: "/card/:id",
         headers: [{ key: "Vercel-CDN-Cache-Control", value: CARD_CDN_CACHE }],
       },
+      {
+        // A sealed product's page (2026-11-03, DECISIONS.md "Sealed products get
+        // their own pages"), on the card pages' terms: force-dynamic, one CDN
+        // copy a day plus a day stale, nothing read per visitor
+        // (tests/sealed-product-page.test.ts). /sealed itself reads the market
+        // cookie and is not here.
+        source: "/sealed/:slug",
+        headers: [{ key: "Vercel-CDN-Cache-Control", value: CARD_CDN_CACHE }],
+      },
     ];
   },
 };

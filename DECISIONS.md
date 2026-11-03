@@ -21959,3 +21959,28 @@ Measure: visitors and pages per visit in Vercel Web Analytics for the two weeks
 after this release against 2026-10-20 to 2026-11-02. If ratings stall without
 the drive, ask on the thank-you moments (a store click) rather than bring a
 modal back.
+
+## Sealed products get their own pages (2026-11-03)
+
+The owner wants Amazon on every site "up there with eBay and TCGplayer", as "the third row out of the three". RiftCompare
+had nowhere to put it: a sealed product's only detail view was the quick view, and Amazon's rules bar Associates links
+from pop-ups and layer ads, so the quick view never carries Amazon (2026-11-02 audit). Asked, the owner chose to build
+a page per product (over putting Amazon in the pop-up, or leaving it).
+
+- `/sealed/<slug>` (`src/app/sealed/[slug]/page.tsx`), the slug made from the group key (`lib/sealed-slug.ts`,
+  "OGN|Booster Box" → `ogn-booster-box`): the same in every market and stable when a name or the cheapest store changes.
+- One CDN copy per product, on the card pages' terms: force-dynamic, `Vercel-CDN-Cache-Control` a day plus a day stale
+  (`next.config.js` `/sealed/:slug`), never ISR or `generateStaticParams`, and nothing in its server tree reads a cookie,
+  a header or the session (`tests/sealed-product-page.test.ts` walks it). Every market's group goes to the client island
+  (`SealedProductView`), which shows the visitor's, or the US board in US$ with a note where their market lists none.
+- No new query: `getSealedProductBySlug` reads the same per-market cached groups `/sealed` reads (memo, then the shared
+  data cache, two days, CONTENT_TAG-busted). Pre-orders included.
+- The board is the quick view's (`SealedOffers`, now shared) plus Amazon as the third pinned row, right after eBay and
+  TCGplayer (first after eBay's search row when neither is pinned): a tagged search of the visitor's Amazon, no price,
+  never ranked or the best price, labelled "Paid link", with Amazon's statement under the board. The quick view passes no
+  `amazon`.
+- The `/sealed` tiles are links to the page (a plain click still opens the quick view; a new tab opens the page), the
+  quick view links to it, and the sets sitemap lists every product page (from the same cached groups, failing open).
+
+Measure: `amazon_sealed` clicks and Associates sales in the AU and US reports, and the pages' impressions in Search
+Console, two weeks after release.

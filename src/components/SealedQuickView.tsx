@@ -19,13 +19,17 @@ import { isPreorderSetCode } from "@/lib/constants";
 import { SealedWatchButton } from "./SealedWatchButton";
 import { PaidLinkTag } from "./AffiliateDisclosure";
 import { pinMarketplaces } from "@/lib/market-rows";
+import { amazonFor, amazonSearchUrl } from "@/lib/amazon";
+import { sealedPath } from "@/lib/sealed-slug";
+import Link from "next/link";
 
 // Quick-view popup for sealed products — the sealed twin of QuickView.tsx (cards).
 // Clicking a SealedTile opens this instead of expanding the whole /sealed page, so
 // the full price board appears instantly, in place. Everything it shows is already
-// on the SealedGroup the tile holds, so it needs NO network fetch. RiftCompare has
-// no /sealed/<slug> detail route, so this modal is self-contained: no history push
-// (nothing to push to) and no "view full page" link — it IS the full view.
+// on the SealedGroup the tile holds, so it needs NO network fetch. Since 2026-11-03
+// each product also has its own page, /sealed/<slug> (app/sealed/[slug]), which
+// draws the same board (SealedOffers below) plus the Amazon row; the modal links to
+// it. No history push: the tile is a real link to that page, so a new tab still works.
 type OpenArg = { group: SealedGroup; currency: string };
 
 const Ctx = createContext<{ open: (group: SealedGroup, currency: string) => void }>({ open: () => {} });
@@ -71,30 +75,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
   const { country } = useCountry();
   const fmt = (cents: number) => formatMoney(cents, currency);
 
-  // Open offers first, then unconfirmed, then sold out (lib/sealed-offers.ts) —
-  // the same order and the same three states as /radiance-preorders.
-  const listings = rankOffers(group.listings);
-  const best = headlineOffer(listings);
-  const preorder = isPreorderSetCode(group.setCode);
-  // One entry per STORE, in-stock and out-of-stock alike ("you list it as
-  // available and it isn't" is one of the issue types). Deduped defensively —
-  // grouping should already give one row per retailer, but the picker must never
-  // show the same store twice.
-  const reportable = [
-    ...new Map(listings.map((l) => [l.retailer, { retailer: l.retailer, retailerName: l.retailerName }])).values(),
-  ];
   const lowest = group.lowestPriceCents;
-  // "Riftbound" exactly once (2026-09-26): a bare product name like "Radiance
-  // Booster Box" also matched Pokémon's Astral Radiance on eBay.
-  const ebayQuery = riftboundEbayQuery(group.name);
-  const ebayHref = ebaySearchUrl(country, ebayQuery, "sealed-quickview");
-  // eBay and TCGplayer first, the cheaper on top, as on every card list (owner,
-  // 2026-10-27; pinMarketplaces). Open rows only: a sold-out marketplace row is
-  // not worth the top slot. With no open eBay row, eBay's search leads instead
-  // of sitting under the list. Display only: "Best price" stays on `best`.
-  const pin = pinMarketplaces(listings.filter((l) => offerStock(l) === "open"));
-  const lead = (pin.tcgFirst ? [pin.tcgplayer, pin.ebay] : [pin.ebay, pin.tcgplayer]).filter((l): l is (typeof listings)[number] => l != null);
-  const shown = [...lead, ...listings.filter((l) => !lead.includes(l))];
 
   return (
     <div className="max-h-[88vh] overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
@@ -163,102 +144,173 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
           <div className="p-4">
             {/* The small eBay + TCGplayer pair (owner, 2026-10-29). */}
             <MiniPicks setCode={group.setCode ?? ""} pageType="sealed_quickview" className="mb-3" />
-            <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
-            {listings.length === 0 ? (
-              <div className="p-4 text-center text-sm text-slate-400">
-                <p>No store is listing this right now.</p>
-                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-buy mt-3 inline-flex text-xs">
-                  Search on eBay →
-                </OutboundLink>
-              </div>
-            ) : (
-              <ul className="divide-y divide-ink-800">
-                {!pin.ebay && (
-                  <li className="flex items-center gap-3 py-2.5">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <span className="truncate text-sm font-semibold text-white">eBay</span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500">
-                        <span>Search current listings</span>
-                        <PaidLinkTag />
-                      </div>
-                    </div>
-                    <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_pinned" className="btn-buy px-3 py-1.5 text-xs">
-                      Search →
-                    </OutboundLink>
-                  </li>
-                )}
-                {shown.map((l, i) => {
-                  const state = offerStock(l);
-                  const isOpen = state === "open";
-                  const isBest = l === best;
-                  const pinned = lead.includes(l);
-                  return (
-                    <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"}`}>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <span className="truncate text-sm font-semibold text-white">{l.retailerName}</span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
-                          <span className={isOpen ? "text-up" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>
-                          <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
-                          {isOpen && <StoreCodeChip href={l.url} className="text-[10px]" />}
-                        </div>
-                      </div>
-                      {isBest && <span className="chip shrink-0 bg-gold/20 text-gold">Best price</span>}
-                      <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "text-slate-500 line-through" : ""}`}>
-                        {fmt(l.priceCents)}
-                      </div>
-                      <OutboundLink
-                        href={affiliateUrl(l.url, l.retailer, "/sealed")}
-                        retailer={l.retailer}
-                        country={country}
-                        kind="sealed"
-                        pageType="sealed"
-                        surface={pinned ? "sealed_pinned" : "sealed_row"}
-                        className={
-                          isOpen
-                            ? `px-3 py-1.5 text-xs ${isBest ? "btn-accent" : "btn-buy"}`
-                            : "px-3 py-1.5 text-xs text-slate-500 underline-offset-2 hover:underline"
-                        }
-                      >
-                        View →
-                      </OutboundLink>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-
-            {listings.length > 0 && (
-              <p className="mt-2 border-t border-ink-800 pt-2 text-right text-[11px]">
-                <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="font-semibold text-brand-400 hover:underline">
-                  Search eBay for more listings →
-                </OutboundLink>
-              </p>
-            )}
-            {/* Sealed's ONLY report surface, and it has to be: there is no
-                /sealed/<slug> detail route (see this file's header) and the
-                /sealed tiles show a cheapest price without naming the store, so
-                this modal is the only place a visitor can see which store's
-                number is wrong. Sealed listings carry no id of their own, so the
-                report identifies them by groupKey + retailer + market — which is
-                what the API looks them up by. */}
-            {reportable.length > 0 && (
-              <div className="mt-2 text-center">
-                <ReportPriceButton
-                  compact
-                  subject={{ kind: "sealed", groupKey: group.groupKey, name: group.name }}
-                  listings={reportable}
-                />
-              </div>
-            )}
-            {/* This modal carries affiliate-tagged store + eBay links exactly like
-                the singles quick-view, so it needs its own in-popup disclosure. */}
-            <AffiliateDisclosure partner="both" />
+            <SealedOffers group={group} currency={currency} />
+            <p className="mt-3 text-center text-xs">
+              <Link href={sealedPath(group.groupKey)} prefetch={false} onClick={onClose} className="font-semibold text-brand-400 hover:underline">
+                Open the full price page →
+              </Link>
+            </p>
           </div>
         </div>
     </div>
+  );
+}
+
+/**
+ * A sealed product's price comparison: every tracked store, eBay and TCGplayer pinned first (the cheaper on top), then
+ * the rest by stock and price. Shared by the quick view and the product page, /sealed/<slug> (2026-11-03). `amazon` adds
+ * a tagged search of the visitor's Amazon as the third pinned row, after eBay and TCGplayer (owner, 2026-11-03: "the
+ * third row out of the three"): no price, never ranked or the best price. Product page only: the quick view is an
+ * overlay, and Amazon's rules bar its links from pop-ups and layer ads, so it never passes `amazon`.
+ */
+export function SealedOffers({ group, currency, amazon = false, source = "sealed-quickview" }: { group: SealedGroup; currency: string; amazon?: boolean; source?: "sealed-quickview" | "sealed-page" }) {
+  const { country } = useCountry();
+  const fmt = (cents: number) => formatMoney(cents, currency);
+  // Open offers first, then unconfirmed, then sold out (lib/sealed-offers.ts) —
+  // the same order and the same three states as /radiance-preorders.
+  const listings = rankOffers(group.listings);
+  const best = headlineOffer(listings);
+  const preorder = isPreorderSetCode(group.setCode);
+  // One entry per STORE, in-stock and out-of-stock alike ("you list it as
+  // available and it isn't" is one of the issue types). Deduped defensively —
+  // grouping should already give one row per retailer, but the picker must never
+  // show the same store twice.
+  const reportable = [
+    ...new Map(listings.map((l) => [l.retailer, { retailer: l.retailer, retailerName: l.retailerName }])).values(),
+  ];
+  // "Riftbound" exactly once (2026-09-26): a bare product name like "Radiance
+  // Booster Box" also matched Pokémon's Astral Radiance on eBay.
+  const ebayQuery = riftboundEbayQuery(group.name);
+  const ebayHref = source === "sealed-page" ? ebaySearchUrl(country, ebayQuery, "sealed-page") : ebaySearchUrl(country, ebayQuery, "sealed-quickview");
+  // eBay and TCGplayer first, the cheaper on top, as on every card list (owner,
+  // 2026-10-27; pinMarketplaces). Open rows only: a sold-out marketplace row is
+  // not worth the top slot. With no open eBay row, eBay's search leads instead
+  // of sitting under the list. Display only: "Best price" stays on `best`.
+  const pin = pinMarketplaces(listings.filter((l) => offerStock(l) === "open"));
+  const lead = (pin.tcgFirst ? [pin.tcgplayer, pin.ebay] : [pin.ebay, pin.tcgplayer]).filter((l): l is (typeof listings)[number] => l != null);
+  const shown = [...lead, ...listings.filter((l) => !lead.includes(l))];
+
+  const amazonStore = amazon ? amazonFor(country) : null;
+  const amazonHref = amazonStore ? amazonSearchUrl(country, riftboundEbayQuery(group.name), `${source}-amazon`) : null;
+  const amazonRow =
+    amazonStore && amazonHref ? (
+      <li key="amazon" data-amazon-row className="flex items-center gap-3 py-2.5">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate text-sm font-semibold text-white">{amazonStore.label}</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500">
+            <span>Price shows on Amazon</span>
+            <PaidLinkTag />
+          </div>
+        </div>
+        <OutboundLink href={amazonHref} retailer="amazon_sealed" country={country} kind="sealed" pageType="sealed" surface="amazon_search" className="btn-buy px-3 py-1.5 text-xs">
+          Check price →
+        </OutboundLink>
+      </li>
+    ) : null;
+
+  return (
+    <>
+    <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
+    {listings.length === 0 ? (
+      <div className="p-4 text-center text-sm text-slate-400">
+        <p>No store is listing this right now.</p>
+        <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-buy mt-3 inline-flex text-xs">
+          Search on eBay →
+        </OutboundLink>
+        {amazonRow && <ul className="mt-3 border-t border-ink-800 text-left">{amazonRow}</ul>}
+      </div>
+    ) : (
+      <ul className="divide-y divide-ink-800">
+        {!pin.ebay && (
+          <li className="flex items-center gap-3 py-2.5">
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <span className="truncate text-sm font-semibold text-white">eBay</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500">
+                <span>Search current listings</span>
+                <PaidLinkTag />
+              </div>
+            </div>
+            <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_pinned" className="btn-buy px-3 py-1.5 text-xs">
+              Search →
+            </OutboundLink>
+          </li>
+        )}
+        {lead.length === 0 && amazonRow}
+        {shown.map((l, i) => {
+          const state = offerStock(l);
+          const isOpen = state === "open";
+          const isBest = l === best;
+          const pinned = lead.includes(l);
+          return [
+            <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"}`}>
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate text-sm font-semibold text-white">{l.retailerName}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
+                  <span className={isOpen ? "text-up" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>
+                  {isBest && <span className="font-semibold text-gold sm:hidden">Best price</span>}
+                  <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
+                  {isOpen && <StoreCodeChip href={l.url} className="text-[10px]" />}
+                </div>
+              </div>
+              {/* On a phone the chip squeezed the store's name to three letters: the label moves under it there. */}
+              {isBest && <span className="chip hidden shrink-0 bg-gold/20 text-gold sm:inline-flex">Best price</span>}
+              <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "text-slate-500 line-through" : ""}`}>
+                {fmt(l.priceCents)}
+              </div>
+              <OutboundLink
+                href={affiliateUrl(l.url, l.retailer, "/sealed")}
+                retailer={l.retailer}
+                country={country}
+                kind="sealed"
+                pageType="sealed"
+                surface={pinned ? "sealed_pinned" : "sealed_row"}
+                className={
+                  isOpen
+                    ? `px-3 py-1.5 text-xs ${isBest ? "btn-accent" : "btn-buy"}`
+                    : "px-3 py-1.5 text-xs text-slate-500 underline-offset-2 hover:underline"
+                }
+              >
+                View →
+              </OutboundLink>
+            </li>,
+            i === lead.length - 1 ? amazonRow : null,
+          ];
+        })}
+      </ul>
+    )}
+
+    {listings.length > 0 && (
+      <p className="mt-2 border-t border-ink-800 pt-2 text-right text-[11px]">
+        <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="font-semibold text-brand-400 hover:underline">
+          Search eBay for more listings →
+        </OutboundLink>
+      </p>
+    )}
+    {/* Sealed's report surface (the quick view and, since 2026-11-03, the
+        product page): the /sealed tiles show a cheapest price without naming
+        the store, so this board is where a visitor can see which store's
+        number is wrong. Sealed listings carry no id of their own, so the
+        report identifies them by groupKey + retailer + market — which is
+        what the API looks them up by. */}
+    {reportable.length > 0 && (
+      <div className="mt-2 text-center">
+        <ReportPriceButton
+          compact
+          subject={{ kind: "sealed", groupKey: group.groupKey, name: group.name }}
+          listings={reportable}
+        />
+      </div>
+    )}
+    {/* This modal carries affiliate-tagged store + eBay links exactly like
+        the singles quick-view, so it needs its own in-popup disclosure. */}
+    <AffiliateDisclosure partner="both" />
+    {amazonRow && <AffiliateDisclosure partner="amazon" />}
+    </>
   );
 }

@@ -15,7 +15,8 @@ import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, produ
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
-import { DEFAULT_COUNTRY, currencyOf, isoCountry, type Country } from "./country";
+import { COUNTRY_LIST, DEFAULT_COUNTRY, currencyOf, isoCountry, type Country } from "./country";
+import { sealedSlug } from "./sealed-slug";
 import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
 import { convertCents } from "./fx";
 import { joinOverlapping, typeLabel } from "./price-report";
@@ -1629,4 +1630,31 @@ export async function writeSealedPriceHistory(): Promise<void> {
     // failure take down the sealed import that already succeeded ahead of it.
     console.warn("Sealed price-history snapshot failed:", e);
   }
+}
+
+/**
+ * One sealed product's group in every market that lists it, for its own page, /sealed/<slug> (2026-11-03, DECISIONS.md
+ * "Sealed products get their own pages"). Reads the same per-market cached groups /sealed reads (getAllSealedGroups: the
+ * process memo, then the shared data cache, two days and CONTENT_TAG-busted), so a product page adds no database read of
+ * its own. Pre-orders included: a pre-order's page is exactly what its searchers want. Empty when no market lists it.
+ */
+export async function getSealedProductBySlug(slug: string): Promise<Partial<Record<Country, SealedGroup>>> {
+  const out: Partial<Record<Country, SealedGroup>> = {};
+  for (const c of COUNTRY_LIST) {
+    const g = (await getAllSealedGroups(c.code)).find((x) => sealedSlug(x.groupKey) === slug);
+    if (g) out[c.code] = g;
+  }
+  return out;
+}
+
+/** Every sealed product page that exists (a group listed in at least one market), for the sitemap. */
+export async function getSealedProductSlugs(): Promise<{ slug: string; name: string }[]> {
+  const seen = new Map<string, string>();
+  for (const c of COUNTRY_LIST) {
+    for (const g of await getAllSealedGroups(c.code)) {
+      const s = sealedSlug(g.groupKey);
+      if (s && !seen.has(s)) seen.set(s, g.name);
+    }
+  }
+  return [...seen].map(([slug, name]) => ({ slug, name }));
 }
