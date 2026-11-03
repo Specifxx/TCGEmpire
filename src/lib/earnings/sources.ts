@@ -26,6 +26,7 @@ import {
   type SourceResult,
   type StripeTxn,
 } from "./core";
+import { AMAZON_STORES, amazonDays, amazonTagDays } from "./amazon";
 
 // The earnings dashboard's fetchers (/admin/earnings; DECISIONS.md "One
 // earnings dashboard"). Each source is read from its own reporting API with
@@ -284,10 +285,40 @@ const fetchMediavine: Fetcher = async () => {
   return { status: "ok", days: mergeDays(rows.map((r) => ({ day: r.day, currency: r.currency, cents: r.amountCents }))), detail: "Entered by hand." };
 };
 
+// ── Amazon Associates (no API for an account our size): uploaded reports ────
+// lib/earnings/amazon.ts says why; the upload route is /api/admin/earnings/amazon.
+const AMAZON_STALE_DAYS = 10;
+const fetchAmazon: Fetcher = async () => {
+  const rows = await prisma.manualEarning.findMany({
+    where: { source: "amazon" },
+    select: { day: true, currency: true, amountCents: true, tag: true, units: true },
+    orderBy: { day: "asc" },
+    take: 20_000,
+  });
+  if (!rows.length) return notConfigured("Amazon has no reporting API for an account our size: upload each store's Earnings report below (Associates Central → Reports → Download reports).");
+  // How far each store's uploads reach (every upload leaves a marker on its last day).
+  const through = new Map<string, string>();
+  for (const r of rows) if ((through.get(r.currency) ?? "") < r.day) through.set(r.currency, r.day);
+  const today = dayIn(Date.now());
+  const stores = AMAZON_STORES.filter((s) => through.has(s.currency)).map((s) => `${s.label} through ${through.get(s.currency)}`);
+  const newest = [...through.values()].sort().pop() ?? "";
+  const stale = newest && newest < dayIn(Date.now() - AMAZON_STALE_DAYS * 86_400_000);
+  return {
+    // Stale uploads are flagged like a failing API, so the ops monitor and the
+    // Monday report say so (the figures still count).
+    status: stale ? "error" : "ok",
+    days: mergeDays(amazonDays(rows)),
+    tags: amazonTagDays(rows),
+    reportedThrough: newest && newest < today ? newest : undefined,
+    detail: `From uploaded Earnings reports: ${stores.join(", ")}. Ad fees on items shipped, in each store's currency.${stale ? ` Nothing newer than ${newest}: upload this week's Earnings report on /admin/earnings.` : ""}`,
+  };
+};
+
 const FETCHERS: Record<EarningsSourceKey, Fetcher> = {
   stripe: fetchStripe,
   tcgplayer: fetchImpact,
   ebay: fetchEpn,
+  amazon: fetchAmazon,
   adsense: fetchAdsense,
   mediavine: fetchMediavine,
 };

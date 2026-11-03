@@ -21960,6 +21960,70 @@ after this release against 2026-10-20 to 2026-11-02. If ratings stall without
 the drive, ask on the thank-you moments (a store click) rather than bring a
 modal back.
 
+## 2026-11-03: Amazon AU links carry riftcompare-22
+
+The owner created one Amazon AU tracking ID per site in the AU Associates account, so the AU reports
+(Reports → Tracking ID) show which site sells: RiftCompare's amazon.com.au links carry `riftcompare-22`
+(`AMAZON_AU_DEFAULT_TAG`, `src/lib/amazon.ts`) instead of the shared `compareempire-22`. Same account, same
+earnings; `ascsubtag` still splits placements. The other sites have their own (`opcompare-22`,
+`mtgcompare-22`, `dexcompare-22`, `cecompare-22`, …). The owner asked for RiftCompare changes to ship
+urgently, so this release carries `[urgent]`.
+## 2026-11-03 — Amazon earnings from uploaded reports
+
+Owner: "is there a way to get Amazon on our earnings dashboard as well?"
+
+Amazon offers no reporting API an account our size can use. Its "Creators API
+Reports" (the old Associates data feed) is opened on request only for publishers
+with tens of thousands of sales a month; the Creators API itself (the AU
+credentials made today) is product data, not earnings, and it is still locked
+until 10 sales in 30 days. Scraping Associates Central would need Bill's
+password on a server and breaks on every redesign. So the one route that works
+today is the report every account can download: Reports → Download reports →
+Earnings (the "Fee-Earnings" ZIP), one row per item shipped with its Tracking
+ID, ship date and ad fee.
+
+- `/admin/earnings` gets an "Amazon Associates" source and an upload form: pick
+  the store (AU, US, UK, CA, DE; each its own account and currency), drop the
+  ZIP or the CSV inside (`src/lib/earnings/amazon.ts`,
+  `/api/admin/earnings/amazon`). An upload REPLACES that store's days in the
+  range the report covers, so re-uploading a month never double counts. Rows are
+  `ManualEarning` rows (`source: "amazon"`, new nullable `tag` and `units`), private
+  like Mediavine's, plus one zero "coverage marker" on each upload's last day so a
+  week without sales still reads as covered.
+- **Per site by tracking ID.** Each AU site has its own ID (2026-11-03) and
+  Gundam/Lorcana/YGO have their own US IDs, so `AMAZON_TRACKING_SITES` maps
+  them to the site keys and the "By site" table, the tag breakdown, the Monday
+  digest and the growth report split Amazon like eBay and TCGplayer. The shared
+  IDs (`riftcompare-20`, `compareempire-22/-20/-21`, `compareempi03-21`) and any
+  ID not in the map go to "Amazon, shared ID (several sites)", never to one site
+  they may not belong to: Amazon reports the ascsubtag only to accounts it grants
+  subtag reporting.
+- **Dates read both ways round carefully.** The US account writes 10/14/2026, the
+  others 14/10/2026; a file's own unambiguous dates decide, and the title's range
+  is used only in the reading that holds every row (an upload deletes its range,
+  so a misread range would delete months).
+- **It goes stale loudly.** With no upload in 10 days the source reports an error
+  (figures still counted), so the ops monitor and the Monday report say so.
+- Weekly upload is a Chrome step for Bill (project files
+  `amazon/chrome-prompt-amazon-earnings-upload.md`). If Amazon ever opens the
+  Reports API to us, a fetcher replaces the upload with the same tags.
+
+## Bing SEO report: sitemap index dates, one copy of the menu's links (2026-11-03)
+
+Bill's all-sites SEO report (Bing) asked for three things on RiftCompare. Two were real:
+
+- **The sitemap index carries `<lastmod>`.** The 2026-09 note said no, because the true value is each child's max and
+  computing it means building every section. Each child's date now comes from the one cheap source its entries already
+  use: the newest price-history day (committed files, no database) for the price-driven sections, the newest article for
+  `content`, none for `pokemon`. `news-sitemap.xml`, listed in robots.txt but not in the index, is in the index too.
+- **The mobile menu draws its links only once opened.** `CinematicNavMenu` stayed mounted and painted at opacity 0, so
+  every page's server HTML repeated all of NAV_GROUPS a second time beside the SideNav and the footer (~338 link
+  instances on /au). The overlay shell still mounts (the transition still runs); its panel renders from the first open.
+  Crawlers keep every link through SideNav and FooterNav.
+
+The third, a "stale 87 days to go countdown", is not stale: it is Legacy's real release date (2027-01-29), computed on
+the server with each six-hour render. No change.
+
 ## Sealed products get their own pages (2026-11-03)
 
 The owner wants Amazon on every site "up there with eBay and TCGplayer", as "the third row out of the three". RiftCompare

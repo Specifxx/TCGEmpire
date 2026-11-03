@@ -46,10 +46,10 @@ export function earningsDigest(sources: readonly SourceResult[], costs: readonly
   const off = sources.filter((s) => s.status === "not-configured" && !s.days.length).map((s) => SOURCE_LABELS[s.key]);
 
   // eBay and TCGplayer by site: each network's tracking tag (customid / sharedid), grouped by prefix.
-  const bySite = (["ebay", "tcgplayer"] as const).flatMap((key) => {
+  const bySite = (["ebay", "tcgplayer", "amazon"] as const).flatMap((key) => {
     const s = sources.find((x) => x.key === key);
     const groups = s?.tags ? tagBreakdown(s.tags, "30d", today, DISPLAY).filter((g) => g.cents || g.sales) : [];
-    return groups.length ? [{ name: key === "ebay" ? "eBay" : "TCGplayer", groups }] : [];
+    return groups.length ? [{ name: key === "ebay" ? "eBay" : key === "amazon" ? "Amazon" : "TCGplayer", groups }] : [];
   });
 
   const total7 = sum("7d");
