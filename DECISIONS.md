@@ -22083,3 +22083,19 @@ regarding the premium and the signups. People can do it if they want to."
   already gone. What is left uninvited is the rating card alone (pop-up policy, 2026-11-03). The annual switch is still
   on `/premium` and the account page; `lib/nudge-*.ts` and the shared timer stay for the rating card.
 - Tests that pinned those two components now pin their absence.
+
+## 2026-11-03 — Amazon uploads are on demand, and the dashboard hands out the prompt
+
+Owner, hours after the entry above: "the amazon associates upload shouldn't be
+a weekly task, it should be any impromptu task that backfills to the latest
+version. Also the earnings dashboard should have the downloadable prompt every
+time I wanna run it."
+
+- No schedule and no nag: the 10-day "stale" error and the Empire HQ queue row
+  are gone. The source is simply "through <date>" per store.
+- `/admin/earnings` has **Download Chrome prompt** (and Copy) beside the upload
+  form. `amazonChromePrompt` (`src/lib/earnings/amazon.ts`) fills in each
+  store's range, from the day after its last covered day to today (the last 90
+  days before a first upload), so one run backfills exactly the gap, and
+  overlap is harmless because an upload replaces its range. The static copy in
+  project files is retired in favour of this generated one.

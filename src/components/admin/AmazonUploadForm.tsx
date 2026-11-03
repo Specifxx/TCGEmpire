@@ -8,9 +8,12 @@ import { formatMoney } from "@/lib/format";
 // Posts the file to /api/admin/earnings/amazon, then re-renders the page so the totals move.
 export function AmazonUploadForm({
   stores,
+  prompt,
   adminKey,
 }: {
   stores: { key: string; label: string; from: string | null; to: string | null }[];
+  /** The Chrome prompt for this run, with each store's dates filled in (lib/earnings/amazon.ts). */
+  prompt: string;
   adminKey: string | null;
 }) {
   const router = useRouter();
@@ -19,6 +22,8 @@ export function AmazonUploadForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const promptHref = `data:text/plain;charset=utf-8,${encodeURIComponent(prompt)}`;
 
   async function upload() {
     if (!file) return;
@@ -50,6 +55,27 @@ export function AmazonUploadForm({
 
   return (
     <div className="mt-3 space-y-3">
+      <div className="flex flex-wrap items-center gap-2" data-amazon-prompt>
+        <a href={promptHref} download="amazon-earnings-upload-prompt.md" className="btn-primary min-h-10 px-4 text-sm">
+          Download Chrome prompt
+        </a>
+        <button
+          type="button"
+          className="min-h-10 rounded-lg border border-ink-700 px-3 text-sm text-slate-200 hover:bg-ink-800"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(prompt);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            } catch {
+              setError("Couldn't copy; download it instead.");
+            }
+          }}
+        >
+          {copied ? "Copied" : "Copy prompt"}
+        </button>
+        <span className="text-xs text-slate-500">Paste it into Claude in Chrome. Dates below are what it will ask for.</span>
+      </div>
       <form
         className="card-surface flex flex-wrap items-end gap-2 rounded-xl border border-ink-700 p-3 text-sm"
         onSubmit={(e) => {
@@ -87,7 +113,7 @@ export function AmazonUploadForm({
         {stores.map((s) => (
           <li key={s.key} className="flex items-center justify-between gap-2 px-3 py-2">
             <span className="text-slate-300">{s.label}</span>
-            <span className="text-xs text-slate-400">{s.to ? `${s.from} to ${s.to}` : "No report yet"}</span>
+            <span className="text-xs text-slate-400">{s.to ? `Covered ${s.from} to ${s.to}; next report from the day after` : "No report yet; first report: last 90 days"}</span>
           </li>
         ))}
       </ul>

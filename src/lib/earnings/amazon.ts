@@ -285,3 +285,71 @@ export function amazonTagDays(rows: readonly AmazonStoredRow[]): TagDay[] {
 export function amazonDays(rows: readonly AmazonStoredRow[]): DayAmount[] {
   return rows.map((r) => ({ day: r.day, currency: r.currency, cents: r.amountCents }));
 }
+
+// ── The Chrome prompt, downloaded from the dashboard ────────────────────────
+// Owner (2026-11-03): the upload is impromptu, not weekly, and the dashboard
+// hands out the prompt every time. Each store's range starts the day after its
+// last covered day (or 90 days back for a first upload), so a run backfills
+// exactly what is missing; re-uploading overlap is harmless (it replaces).
+
+export const AMAZON_PORTALS: Record<AmazonStoreKey, string> = {
+  au: "https://affiliate-program.amazon.com.au",
+  us: "https://affiliate-program.amazon.com",
+  uk: "https://affiliate-program.amazon.co.uk",
+  ca: "https://associates.amazon.ca",
+  de: "https://partnernet.amazon.de",
+};
+const FIRST_UPLOAD_DAYS = 90;
+
+export interface AmazonCoverage {
+  key: AmazonStoreKey;
+  label: string;
+  /** The last day an upload covers, or null before the first one. */
+  to: string | null;
+}
+
+/** The day each store's next report should start. */
+export function amazonNextFrom(cov: Pick<AmazonCoverage, "to">, today: string): string {
+  if (!cov.to) {
+    const t = Date.parse(`${today}T00:00:00Z`) - FIRST_UPLOAD_DAYS * 86_400_000;
+    return new Date(t).toISOString().slice(0, 10);
+  }
+  const t = Date.parse(`${cov.to}T00:00:00Z`) + 86_400_000;
+  const next = new Date(t).toISOString().slice(0, 10);
+  return next > today ? today : next;
+}
+
+export function amazonChromePrompt(coverage: readonly AmazonCoverage[], today: string): string {
+  const lines = coverage.map((c, i) => {
+    const from = amazonNextFrom(c, today);
+    const gap = c.to ? `last upload covers through ${c.to}` : "no upload yet";
+    return `${i + 1}. ${c.label}: ${AMAZON_PORTALS[c.key]} — download ${from} to ${today} (${gap})`;
+  });
+  return `Get my Amazon Associates earnings onto my earnings dashboard at https://riftcompare.com/admin/earnings. Amazon has no API for my account, so the dashboard reads the Earnings report downloaded from each Amazon store's Associates Central. The date ranges below start where the last upload ended, so this run fills in exactly what is missing.
+
+RULES
+- NEVER STOP PARTWAY. If a step needs me (a sign-in, a code, a captcha, anything you are unsure about) or fails twice, leave that tab open on the exact screen where I need to act, note it, and carry on with every other store. Tell me only at the end.
+- SAFE TO RERUN. Uploading the same days again replaces them on the dashboard, so nothing double counts. Skip a store I have no Associates account for and say so.
+- Never change any setting in Associates Central, never apply for anything, never touch payment or tax pages. Only download reports.
+- Use a new tab for each site.
+
+STORES AND DATE RANGES (generated ${today})
+${lines.join("\n")}
+
+For each store:
+a. Open the site. If it asks me to sign in, leave the tab open and move to the next store.
+b. Go to Reports. Click "Download reports" (on the Reports page, near the date picker; on amazon.de it is "Berichte herunterladen").
+c. Set the date range given above for that store. If the picker won't go that far back, use the longest range it allows ending today.
+d. Untick every report type except Earnings (amazon.de: "Einnahmen"). Set the format to CSV. Click Generate reports.
+e. When the Earnings (Fee-Earnings) row says it is ready, click Download. It saves a ZIP to my Downloads folder. Note the file name and the store.
+
+Then upload:
+f. Open https://riftcompare.com/admin/earnings (I am signed in as admin; if not, leave the tab open for me).
+g. Scroll to "Amazon Associates (uploaded reports)". For each ZIP you downloaded: choose its store in "Amazon store", choose the ZIP in "Earnings report", click "Upload report", and copy the green line it shows (or the red error).
+h. If you cannot pick a file from my Downloads folder, leave this tab open and list the ZIPs for me to drag in myself, one per store.
+
+AT THE END tell me:
+1. For each store: downloaded (file name) or skipped (why), and what the dashboard said after upload.
+2. A numbered list of tabs left open and exactly what each needs from me.
+`;
+}

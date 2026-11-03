@@ -287,7 +287,9 @@ const fetchMediavine: Fetcher = async () => {
 
 // ── Amazon Associates (no API for an account our size): uploaded reports ────
 // lib/earnings/amazon.ts says why; the upload route is /api/admin/earnings/amazon.
-const AMAZON_STALE_DAYS = 10;
+// Uploads are on demand, whenever the owner feels like it (owner, 2026-11-03:
+// "shouldn't be a weekly task"): each backfills from the store's last covered
+// day, so nothing here nags about age.
 const fetchAmazon: Fetcher = async () => {
   const rows = await prisma.manualEarning.findMany({
     where: { source: "amazon" },
@@ -302,15 +304,12 @@ const fetchAmazon: Fetcher = async () => {
   const today = dayIn(Date.now());
   const stores = AMAZON_STORES.filter((s) => through.has(s.currency)).map((s) => `${s.label} through ${through.get(s.currency)}`);
   const newest = [...through.values()].sort().pop() ?? "";
-  const stale = newest && newest < dayIn(Date.now() - AMAZON_STALE_DAYS * 86_400_000);
   return {
-    // Stale uploads are flagged like a failing API, so the ops monitor and the
-    // Monday report say so (the figures still count).
-    status: stale ? "error" : "ok",
+    status: "ok",
     days: mergeDays(amazonDays(rows)),
     tags: amazonTagDays(rows),
     reportedThrough: newest && newest < today ? newest : undefined,
-    detail: `From uploaded Earnings reports: ${stores.join(", ")}. Ad fees on items shipped, in each store's currency.${stale ? ` Nothing newer than ${newest}: upload this week's Earnings report on /admin/earnings.` : ""}`,
+    detail: `From uploaded Earnings reports: ${stores.join(", ")}. Ad fees on items shipped, in each store's currency. Upload a newer report any time to bring it up to date.`,
   };
 };
 
