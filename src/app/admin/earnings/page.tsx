@@ -26,7 +26,7 @@ import { loadCosts } from "@/lib/earnings/costs";
 import { siteLedger } from "@/lib/earnings/sites";
 import { ManualEarningsForm } from "@/components/admin/ManualEarningsForm";
 import { AmazonUploadForm } from "@/components/admin/AmazonUploadForm";
-import { AMAZON_STORES } from "@/lib/earnings/amazon";
+import { AMAZON_STORES, amazonChromePrompt } from "@/lib/earnings/amazon";
 import { CostEntriesForm } from "@/components/admin/CostEntriesForm";
 import { EarningsLineChart } from "@/components/admin/EarningsLineChart";
 import { EarningsForecast } from "@/components/admin/EarningsForecast";
@@ -506,9 +506,9 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
       <section className="mt-8" data-amazon-upload>
         <h2 className="text-lg font-extrabold text-white">Amazon Associates (uploaded reports)</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Amazon gives accounts our size no reporting API. Once a week, per store: Associates Central → Reports → Download reports → tick only Earnings, CSV, last 30 days → Generate → Download, then upload the ZIP here. Each upload replaces that store&apos;s days in the report&apos;s range, so uploading again never double counts.
+          Amazon gives accounts our size no reporting API. Whenever you like, download the Chrome prompt below (it already carries each store&apos;s dates, from the day after its last upload to today) and run it, or do it by hand: Associates Central → Reports → Download reports → tick only Earnings, CSV → Generate → Download, then upload the ZIP here. Each upload replaces that store&apos;s days in the report&apos;s range, so overlap never double counts.
         </p>
-        <AmazonUploadForm stores={amazonCoverage} adminKey={keyOk && !me?.isAdmin ? token! : null} />
+        <AmazonUploadForm stores={amazonCoverage} prompt={amazonChromePrompt(amazonCoverage, today)} adminKey={keyOk && !me?.isAdmin ? token! : null} />
       </section>
 
       <section className="mt-8">

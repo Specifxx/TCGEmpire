@@ -146,11 +146,11 @@
       "id": "amazon-earnings-upload",
       "site": "rc",
       "kind": "chrome",
-      "title": "Upload this week's Amazon Earnings reports to the earnings dashboard (weekly, about 3 minutes)",
-      "why": "Amazon has no reporting API for our account, so Amazon earnings per site reach /admin/earnings only from the report each store's Associates Central lets you download.",
+      "title": "Amazon earnings upload: on demand from /admin/earnings (download the prompt there), not a queued step",
+      "why": "Owner, 2026-11-03: impromptu, not weekly. The dashboard hands out a prompt with each store's dates filled in, so nothing to queue here.",
       "added": "2026-11-03",
       "prompt": "amazon/chrome-prompt-amazon-earnings-upload.md",
-      "done": null
+      "done": "2026-11-03"
     }
   ]
 }

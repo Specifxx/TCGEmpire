@@ -128,3 +128,24 @@ test("the upload route is admin-only, replaces its store's range, and the table 
   const page = readFileSync(new URL("../src/app/admin/earnings/page.tsx", import.meta.url), "utf8");
   assert.match(page, /where: \{ source: "mediavine" \}/, "Amazon's rows don't flood the Mediavine list");
 });
+
+test("the Chrome prompt starts each store the day after its last upload, 90 days back before the first", async () => {
+  const { amazonChromePrompt, amazonNextFrom } = await import("../src/lib/earnings/amazon");
+  assert.equal(amazonNextFrom({ to: "2026-10-20" }, "2026-11-03"), "2026-10-21");
+  assert.equal(amazonNextFrom({ to: "2026-11-03" }, "2026-11-03"), "2026-11-03", "never a start after today");
+  assert.equal(amazonNextFrom({ to: null }, "2026-11-03"), "2026-08-05");
+  const p = amazonChromePrompt(
+    [
+      { key: "au", label: "Amazon.com.au", to: "2026-10-20" },
+      { key: "us", label: "Amazon.com", to: null },
+    ],
+    "2026-11-03",
+  );
+  assert.match(p, /Amazon\.com\.au: https:\/\/affiliate-program\.amazon\.com\.au — download 2026-10-21 to 2026-11-03 \(last upload covers through 2026-10-20\)/);
+  assert.match(p, /Amazon\.com: https:\/\/affiliate-program\.amazon\.com — download 2026-08-05 to 2026-11-03 \(no upload yet\)/);
+  assert.match(p, /NEVER STOP PARTWAY/);
+  assert.match(p, /SAFE TO RERUN/);
+  assert.doesNotMatch(p, /week/i, "on demand, never a weekly task (owner, 2026-11-03)");
+  const sources = readFileSync(new URL("../src/lib/earnings/sources.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(sources, /AMAZON_STALE|stale/, "no nag about the age of the last upload");
+});

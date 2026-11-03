@@ -202,7 +202,8 @@ longer lands on its entry.
   Vercel project, the plan and other costs on a shared row. [2026-10-30](../DECISIONS.md#L20960)
   
   on the dashboard (replaces its range, split by site through the tracking IDs,
-  shared IDs on their own row, flagged after 10 days without an upload).
+  shared IDs on their own row); no schedule: the dashboard hands out a Chrome
+  prompt with each store's missing date range filled in, run whenever.
   [2026-11-03](../DECISIONS.md#L21971)
   A growth line sits under the columns; eBay's Today shows its latest reported
   day, dated, because EPN has no same-day data. [2026-10-28](../DECISIONS.md#L20647)
