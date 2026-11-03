@@ -25,6 +25,8 @@ import { EARNINGS_SINCE, loadEarnings } from "@/lib/earnings/sources";
 import { loadCosts } from "@/lib/earnings/costs";
 import { siteLedger } from "@/lib/earnings/sites";
 import { ManualEarningsForm } from "@/components/admin/ManualEarningsForm";
+import { AmazonUploadForm } from "@/components/admin/AmazonUploadForm";
+import { AMAZON_STORES } from "@/lib/earnings/amazon";
 import { CostEntriesForm } from "@/components/admin/CostEntriesForm";
 import { EarningsLineChart } from "@/components/admin/EarningsLineChart";
 import { EarningsForecast } from "@/components/admin/EarningsForecast";
@@ -48,15 +50,18 @@ const COLORS: Record<EarningsSourceKey, string> = {
   stripe: "#635bff",
   tcgplayer: "#2f80ed",
   ebay: "#e53238",
+  amazon: "#ff9900",
   adsense: "#fbbc04",
   mediavine: "#34d17e",
 };
 const DISPLAY = ["AUD", "USD"] as const;
-const TAG_TITLE: Partial<Record<EarningsSourceKey, string>> = { ebay: "eBay", tcgplayer: "TCGplayer" };
+const TAG_TITLE: Partial<Record<EarningsSourceKey, string>> = { ebay: "eBay", tcgplayer: "TCGplayer", amazon: "Amazon" };
 const TAG_NOTE: Partial<Record<EarningsSourceKey, string>> = {
   ebay: "From eBay's transaction report, one row per sale.",
   tcgplayer: "From Impact's actions, by the click's sharedid; reversed actions left out.",
+  amazon: "From the uploaded Earnings reports, by tracking ID (items shipped less returns). Shared IDs serve several sites.",
 };
+const TAGGED: readonly EarningsSourceKey[] = ["ebay", "tcgplayer", "amazon"];
 
 export default async function EarningsPage({ searchParams }: { searchParams: { key?: string; range?: string; cur?: string; fresh?: string; line?: string } }) {
   const token = process.env.ADMIN_TOKEN;
@@ -98,13 +103,21 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
   const costTotal = (r: RangeKey) => costs.reduce((n, c) => n + totalFor(c.days, r, today, display).cents, 0);
   const profit = (r: RangeKey) => combined(r).cents - costTotal(r);
   const manual = await prisma.manualEarning
-    .findMany({ orderBy: { day: "desc" }, take: 50, select: { id: true, source: true, day: true, amountCents: true, currency: true, note: true } })
+    .findMany({ where: { source: "mediavine" }, orderBy: { day: "desc" }, take: 50, select: { id: true, source: true, day: true, amountCents: true, currency: true, note: true } })
     .catch(() => []);
+  // How far each Amazon store's uploads reach (the coverage marker is its newest row).
+  const amazonRows = await prisma.manualEarning
+    .groupBy({ by: ["currency"], where: { source: "amazon" }, _max: { day: true }, _min: { day: true } })
+    .catch(() => []);
+  const amazonCoverage = AMAZON_STORES.map((st) => {
+    const r = amazonRows.find((x) => x.currency === st.currency);
+    return { key: st.key, label: st.label, from: r?._min.day ?? null, to: r?._max.day ?? null };
+  });
   const oldest = Math.min(...sources.map((s) => s.fetchedAt));
   // eBay by tracking tag (2026-10-25, owner): one EPN account, every site's links.
   // TCGplayer by tag (2026-10-26): Impact's sharedid, broken down the same way.
   const tagged = sources
-    .filter((s) => s.tags && (s.key === "ebay" || s.key === "tcgplayer"))
+    .filter((s) => s.tags && TAGGED.includes(s.key))
     .map((s) => {
       const groups = tagBreakdown(s.tags!, range, today, display);
       return { s, groups, total: groups.reduce((n, g) => n + g.cents, 0) };
@@ -282,7 +295,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
       </div>
       {lagged.length > 0 && (
         <p className="mt-2 text-xs text-slate-500" data-earnings-lag>
-          {lagged.map(({ s }) => SOURCE_LABELS[s.key]).join(", ")}: no same-day figures. eBay reports whole days in US time and adds sales up to 48 hours late, so its Today shows its latest day with earnings, dated. Combined Today counts only what is dated today.
+          {lagged.map(({ s }) => SOURCE_LABELS[s.key]).join(", ")}: no same-day figures. eBay reports whole days in US time and adds sales up to 48 hours late, and Amazon counts only the reports uploaded below, so each shows its latest day with earnings, dated. Combined Today counts only what is dated today.
         </p>
       )}
       {/* eBay and TCGplayer by tracking tag: site prefix, then each full tag */}
@@ -488,6 +501,14 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
           adminKey={keyOk && !me?.isAdmin ? token! : null}
           today={today}
         />
+      </section>
+
+      <section className="mt-8" data-amazon-upload>
+        <h2 className="text-lg font-extrabold text-white">Amazon Associates (uploaded reports)</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          Amazon gives accounts our size no reporting API. Once a week, per store: Associates Central → Reports → Download reports → tick only Earnings, CSV, last 30 days → Generate → Download, then upload the ZIP here. Each upload replaces that store&apos;s days in the report&apos;s range, so uploading again never double counts.
+        </p>
+        <AmazonUploadForm stores={amazonCoverage} adminKey={keyOk && !me?.isAdmin ? token! : null} />
       </section>
 
       <section className="mt-8">

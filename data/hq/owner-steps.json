@@ -131,6 +131,16 @@
       "added": "2026-11-03",
       "prompt": "dexcompare/chrome-prompt-tiktok-threads-2026-11-03.md",
       "done": null
+    },
+    {
+      "id": "amazon-earnings-upload",
+      "site": "rc",
+      "kind": "chrome",
+      "title": "Upload this week's Amazon Earnings reports to the earnings dashboard (weekly, about 3 minutes)",
+      "why": "Amazon has no reporting API for our account, so Amazon earnings per site reach /admin/earnings only from the report each store's Associates Central lets you download.",
+      "added": "2026-11-03",
+      "prompt": "amazon/chrome-prompt-amazon-earnings-upload.md",
+      "done": null
     }
   ]
 }

@@ -14,12 +14,13 @@ import { convertCents } from "../fx";
 // source's API response live here too, for the same reason; the fetching is in
 // lib/earnings/sources.ts.
 
-export type EarningsSourceKey = "stripe" | "tcgplayer" | "ebay" | "adsense" | "mediavine";
+export type EarningsSourceKey = "stripe" | "tcgplayer" | "ebay" | "amazon" | "adsense" | "mediavine";
 
 export const SOURCE_LABELS: Record<EarningsSourceKey, string> = {
   stripe: "Stripe (Pro + Stores)",
   tcgplayer: "TCGplayer (Impact)",
   ebay: "eBay Partner Network",
+  amazon: "Amazon Associates",
   adsense: "Google AdSense",
   mediavine: "Mediavine",
 };
@@ -751,6 +752,8 @@ export const TAG_NAMES: Record<string, string> = {
   lorcana: "Lorcana Compare",
   ygo: "YGO Compare (Yu-Gi-Oh!)",
   cc: "CamCompare",
+  // Amazon tracking IDs several sites share (lib/earnings/amazon.ts).
+  amazon: "Amazon, shared ID (several sites)",
 };
 
 // RiftCompare's own TCGplayer sub-ids start with the network, not the site

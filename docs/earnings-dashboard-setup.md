@@ -134,3 +134,20 @@ and the "Vercel invoice …" entries stop counting for the last 120 days (the AP
 covers them; domain entries keep counting). A project the table lists as
 "Vercel project <name>" is one `SITES` in `src/lib/earnings/sites.ts` does not
 recognise: add its name pattern there.
+
+## Part 7. Amazon Associates (2026-11-03): upload the Earnings report weekly
+
+Amazon has no reporting API for an account our size (DECISIONS.md, "Amazon
+earnings from uploaded reports"). Once a week, for each Amazon store with an
+account (Amazon.com.au first; then .com, .co.uk, .ca, .de):
+
+1. Associates Central for that store → Reports → **Download reports**.
+2. Date range: the last 30 days. Tick **only Earnings**, format **CSV** →
+   Generate reports → Download the Fee-Earnings row (a ZIP).
+3. `/admin/earnings` → "Amazon Associates (uploaded reports)": pick the store,
+   choose the ZIP, Upload report. The line under the form says what was read.
+
+Uploading the same days again replaces them. Tracking IDs split it by site
+(`AMAZON_TRACKING_SITES` in `src/lib/earnings/amazon.ts`; add a new site's ID
+there). Ten days without an upload shows as an error on Connections and in the
+ops monitor.

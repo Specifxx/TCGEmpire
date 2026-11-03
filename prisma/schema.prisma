@@ -2176,11 +2176,15 @@ model BasketPlanUsage {
 // Private (admin only); never in the public export.
 model ManualEarning {
   id          String   @id @default(cuid())
-  source      String // "mediavine"
+  source      String // "mediavine", or "amazon" (uploaded Associates reports, 2026-11-03)
   day         String // YYYY-MM-DD
   amountCents Int
   currency    String   @default("USD")
   note        String?
+  // Amazon only: the dashboard tag (`<site>-<store>-<tracking id>`, lib/earnings/amazon.ts)
+  // and the items shipped less returns. An upload's coverage marker has tag "".
+  tag         String?
+  units       Int?
   createdAt   DateTime @default(now())
 
   @@index([source, day])
