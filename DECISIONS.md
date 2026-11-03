@@ -21750,6 +21750,7 @@ as a link network and looks odd to a reader. The owner said do it.
   one owner, not paid, so no `sponsored`/`nofollow`.
 - Kept: the "Other card games" / hobby / tech price blocks on deals, Black Friday and pre-order pages
   (`clusterSisters`). They sit on a few pages, show real prices a reader of that page may want, and are not sitewide.
+
 ## 2026-11-03 — Search Console report: keyword pages lead with the query, stale rules answers fixed, essentials links
 
 **Why.** The owner's Search Console report (90 days: 1.17K clicks, 41.9K impressions, position 8.6) asked for
