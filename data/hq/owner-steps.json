@@ -20,7 +20,7 @@
       "why": "Since about 2 Nov it answers non-browser clients with 429 (fixed 30 Oct, back again): it blocks link previews, IndexNow and the Bluesky poster's CamCompare cards.",
       "added": "2026-11-02",
       "prompt": "camcompare/chrome-prompt-vercel-bot-challenge.md",
-      "done": null
+      "done": "2026-11-03"
     },
     {
       "id": "github-org-step1",
