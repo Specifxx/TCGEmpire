@@ -72,6 +72,7 @@ export const SITES: { key: string; label: string; project: RegExp }[] = [
   { key: "cc", label: "CamCompare", project: /cam/ },
   { key: "ce", label: "Compare Empire", project: /compareempire|compare-empire/ },
   { key: "cyberpunk", label: "Cyberpunk Compare", project: /cyberpunk/ },
+  { key: "bandai", label: "BandaiCompare", project: /bandai/ },
 ];
 export const SHARED = "shared";
 

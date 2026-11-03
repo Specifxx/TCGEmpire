@@ -28,6 +28,7 @@ export const ROTATION: SitePages[] = [
   { name: "YGO Compare", url: "https://ygocompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["YuGiOh", "TCG"] },
   { name: "WargameCompare", url: "https://wargamecompare.com", pages: ["/price-report"], blackFriday: "/us/black-friday", tags: ["Warhammer", "Miniatures"] },
   { name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["CyberpunkTCG", "TCG"] },
+  { name: "BandaiCompare", url: "https://bandaicompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["UnionArena", "TCG"] },
 ];
 
 /** Black Friday pages are posted from 1 November to the week after Cyber Monday (US Thanksgiving + 4 days + 7). */

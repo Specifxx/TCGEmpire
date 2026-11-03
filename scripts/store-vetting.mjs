@@ -53,6 +53,7 @@ export const SITES = {
   lorcanacompare: { repo: "Specifxx/lorcanacompare", files: ["src/content/stores.ts"] },
   ygocompare: { repo: "Specifxx/ygocompare", files: ["src/content/stores.ts"] },
   cyberpunkcompare: { repo: "Specifxx/cyberpunkcompare", files: ["src/content/stores.ts"] },
+  bandaicompare: { repo: "Specifxx/bandaicompare", files: ["src/content/stores.ts"] },
   wargamecompare: { repo: "Specifxx/wargamecompare", files: ["src/data/stores.json"] },
   figurecompare: { repo: "Specifxx/figurecompare", files: ["src/content/stores.ts"] },
   kaeyoung: { repo: "Specifxx/Kaeyoung", files: ["src/content/stores.ts"] },

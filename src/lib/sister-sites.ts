@@ -15,7 +15,7 @@
 // look-alike sites cross-linked sitewide read as a link network.
 
 export interface SisterSite {
-  key: "op" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "wargame" | "figure" | "cam" | "empire";
+  key: "op" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "bandai" | "wargame" | "figure" | "cam" | "empire";
   name: string;
   url: string;
   /** The game, as a reader would say it: "One Piece", "Pokémon", "Magic". */
@@ -142,6 +142,20 @@ export const SISTER_SITES: SisterSite[] = [
     links: [
       { label: "Cyberpunk TCG sealed prices", href: "https://cyberpunkcompare.com/sealed" },
       { label: "Cyberpunk TCG pre-orders", href: "https://cyberpunkcompare.com/preorders" },
+    ],
+    footerOnly: true,
+  },
+  {
+    key: "bandai",
+    search: "https://bandaicompare.com/cards?q={q}",
+    name: "BandaiCompare",
+    url: "https://bandaicompare.com",
+    game: "Bandai card games",
+    anchor: "Union Arena, DBS and Digimon prices",
+    what: "Union Arena, Dragon Ball Super Fusion World and Digimon singles and sealed prices across stores",
+    links: [
+      { label: "Union Arena, DBS and Digimon sealed prices", href: "https://bandaicompare.com/sealed" },
+      { label: "Union Arena, DBS and Digimon pre-orders", href: "https://bandaicompare.com/preorders" },
     ],
     footerOnly: true,
   },
