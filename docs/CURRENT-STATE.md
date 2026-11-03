@@ -1309,7 +1309,10 @@ longer lands on its entry.
   TCGplayer cart) and `/pricebot` for all seven games, HTTP interactions only,
   no database; every reply opens with `#ad`; the owner switches it on, and it is
   removed again if it is not near 30 clicks a day a month after promotion.
-  [2026-10-27](../DECISIONS.md#L20462)
+  [2026-10-27](../DECISIONS.md#L20462) Since 2026-11-03 also `/daily` (the
+  site's daily puzzle, posted publicly) and Cyberpunk; the daily
+  `discord-commands.yml` finishes the set-up itself once the key is live, so
+  the owner's part is one short sitting. [2026-11-03](../DECISIONS.md#L21754)
 - **No AI calls, no Speed Insights (2026-10-16):** Trade Roast (and its
   Gremlin box) and the unrendered AI card insight are gone with the Anthropic
   SDK; the site makes no model call. Speed Insights is removed (billed, unread).

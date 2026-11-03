@@ -71,6 +71,16 @@
       "added": "2026-11-02",
       "prompt": "vercel-cost/chrome-prompt-vercel-cost-2026-11-02.md",
       "done": null
+    },
+    {
+      "id": "discord-bot",
+      "site": "rc",
+      "kind": "chrome",
+      "title": "Switch on the Discord price bot: create the app, paste three values (one time, about 10 minutes)",
+      "why": "Growth plan 2026-11-03: the bot's answers and /daily game posts are seen by whole channels, a loop that brings new players without us posting. Everything after these 10 minutes runs itself (daily setup job).",
+      "added": "2026-11-03",
+      "prompt": "discord-bot/chrome-prompt-discord-bot-v2.md",
+      "done": null
     }
   ]
 }

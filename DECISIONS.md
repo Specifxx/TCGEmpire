@@ -21750,3 +21750,24 @@ as a link network and looks odd to a reader. The owner said do it.
   one owner, not paid, so no `sponsored`/`nofollow`.
 - Kept: the "Other card games" / hobby / tech price blocks on deals, Black Friday and pre-order pages
   (`clusterSisters`). They sit on a few pages, show real prices a reader of that page may want, and are not sitewide.
+
+## 2026-11-03 — Discord bot: the set-up finishes itself, `/daily`, and Cyberpunk
+
+**Why.** The growth plan of 2026-11-03 ("loops, not pushes") ranks the Discord price bot second: every answer is
+seen by a whole channel, and admins of other servers add the bot they see used. It was parked on 2026-11-02 because
+its owner prompt was 45 minutes and ended with a manual release, which the 12-hour build gate now rules out. So the
+part only the owner can do is cut to one short sitting, and the rest runs itself.
+
+**What.**
+- `discord-commands.yml` runs daily (09:47 UTC; in the ops `JOBS`). `scripts/discord-register.ts` registers the
+  commands and, once `GET /api/discord/interactions` reports `configured: true` (the next release after the owner
+  pastes `DISCORD_PUBLIC_KEY` into Vercel), sets the application's Interactions Endpoint URL through the bot token
+  (`PATCH /applications/@me`), unless it already points there. Discord's signed PING must pass, or the run is red.
+  A green no-op until both GitHub secrets exist. No manual release, no second visit to the Developer Portal.
+- `/daily <game>`: a PUBLIC message with a button to that site's daily puzzle (Riftle, or the Price Duel on OP
+  Compare and the engine sites, built the same day), so a channel plays together and posts its grids under it.
+  No paid link in it.
+- Cyberpunk Compare joins `BOT_GAMES` (its engine `/api/search`, US prices). Its Mass Entry `productline` is
+  unverified, like the others were.
+- Unchanged: `#ad` on paid replies, no database, and the removal rule (not near 30 clicks a day a month after it
+  goes live).
