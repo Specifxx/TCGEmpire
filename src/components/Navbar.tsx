@@ -47,7 +47,7 @@ export function Navbar() {
               side — and cost this row ~150px it no longer had, the rail
               having taken --sidenav-w out of the header's width. Below lg the
               rail is not rendered at all and this is still the home link. */}
-          <Link href="/" className="tap-link min-w-11 shrink-0 gap-2 lg:hidden" aria-label="RiftCompare home">
+          <Link href="/" prefetch={false} className="tap-link min-w-11 shrink-0 gap-2 lg:hidden" aria-label="RiftCompare home">
             <BrandLogo />
             {/* THE WORDMARK WAITS FOR lg (was sm). Measured at 640px: this link is
                 151px with the word, 48px as the mark alone — 103px, and the

@@ -88,7 +88,7 @@ export function RadianceSeasonBanner({ placement = "page" }: { placement?: "page
           : "mb-4 flex items-center gap-2 rounded-lg border border-gold/25 bg-gold/10 py-1 pl-3 pr-1 text-xs text-slate-200 sm:text-sm"
       }
     >
-      <Link href={phase === "launch" ? "/radiance-preorders" : phase === "out" ? "/sets/radiance/gallery" : "/sets/radiance"} className="tap-link min-w-0 flex-1 hover:text-white">
+      <Link href={phase === "launch" ? "/radiance-preorders" : phase === "out" ? "/sets/radiance/gallery" : "/sets/radiance"} prefetch={false} className="tap-link min-w-0 flex-1 hover:text-white">
         {/* One child: .tap-link is a flex row, which split the label into columns. */}
         <span>
           <span className="font-semibold text-gold">✦ Radiance</span>{" "}
