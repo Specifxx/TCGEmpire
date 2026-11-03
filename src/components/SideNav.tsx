@@ -215,6 +215,7 @@ export function SideNav() {
           there), so the alignment matters from 1280; below that it's harmless. */}
       <Link
         href="/"
+        prefetch={false}
         aria-label="RiftCompare home"
         className="flex h-[calc(4rem+1px)] shrink-0 items-center gap-2.5 border-b border-ink-800 px-3 transition-colors hover:bg-ink-800/60"
       >

@@ -34,7 +34,11 @@ type Tile = { key: string; href: string; image: string | null; name: string; pri
 
 function Row({ brand, accent, all, tiles, retailer, pageType, country }: { brand: React.ReactNode; accent: string; all: string; tiles: Tile[]; retailer: string; pageType: string; country: string }) {
   return (
-    <div className="flex items-stretch gap-2">
+    // min-w-0: this row is a grid item (the aside is a grid), and a grid item's
+    // min-width is auto, so without it the row grew to the rail's full content
+    // width (688px on a 390px phone) and the rail never scrolled: half the paid
+    // tiles sat past the screen edge, unreachable (2026-11-03 phone audit).
+    <div className="flex min-w-0 items-stretch gap-2">
       <OutboundLink href={all} retailer={retailer} country={country} pageType={pageType} surface="mini_picks" className="flex w-12 shrink-0 flex-col items-center justify-center gap-1 text-center">
         {brand}
         <span className="text-[10px] font-bold" style={{ color: accent }}>All →</span>
