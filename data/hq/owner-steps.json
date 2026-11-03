@@ -81,6 +81,56 @@
       "added": "2026-11-03",
       "prompt": "discord-bot/chrome-prompt-discord-bot-v2.md",
       "done": null
+    },
+    {
+      "id": "vercel-analytics-wargame-figure",
+      "site": "all",
+      "kind": "hands",
+      "title": "Vercel: turn on Analytics for wargamecompare and figurecompare",
+      "why": "Without it those two sites have no visitor counts on HQ.",
+      "added": "2026-11-03",
+      "prompt": null,
+      "done": null
+    },
+    {
+      "id": "ygo-app-redirect",
+      "site": "ygo",
+      "kind": "hands",
+      "title": "Vercel: redirect ygocompare.app to ygocompare.com (Domains settings)",
+      "why": "Two hosts split Google's signals; the .com is the site's address.",
+      "added": "2026-11-03",
+      "prompt": null,
+      "done": null
+    },
+    {
+      "id": "amazon-au-api",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Amazon AU: run the prompt and send back the tracking IDs",
+      "why": "The AU tags and API access are needed for per-site Amazon AU links.",
+      "added": "2026-11-03",
+      "prompt": "amazon/chrome-prompt-amazon-au-api-2026-11-03.md",
+      "done": null
+    },
+    {
+      "id": "dex-adsense-review",
+      "site": "dex",
+      "kind": "hands",
+      "title": "AdSense: request the DexCompare site review",
+      "why": "DexCompare shows no AdSense ads until Google approves the site.",
+      "added": "2026-11-03",
+      "prompt": null,
+      "done": null
+    },
+    {
+      "id": "dex-tiktok-threads",
+      "site": "dex",
+      "kind": "chrome",
+      "title": "Optional: DexCompare TikTok and Threads accounts",
+      "why": "Optional social accounts for DexCompare.",
+      "added": "2026-11-03",
+      "prompt": "dexcompare/chrome-prompt-tiktok-threads-2026-11-03.md",
+      "done": null
     }
   ]
 }
