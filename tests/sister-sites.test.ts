@@ -17,7 +17,7 @@ const published = ARTICLES.filter((a) => !a.draft);
 test("the eleven sister sites, each linking only its own https host", () => {
   assert.deepEqual(
     SISTER_SITES.map((s) => s.url),
-    ["https://opcompare.app", "https://dexcompare.app", "https://mtgcompare.app", "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://cyberpunkcompare.com", "https://wargamecompare.com", "https://figurecompare.com", "https://www.camcompare.app", "https://compareempire.com"],
+    ["https://opcompare.app", "https://dexcompare.app", "https://mtgcompare.app", "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://cyberpunkcompare.com", "https://bandaicompare.com", "https://wargamecompare.com", "https://figurecompare.com", "https://www.camcompare.app", "https://compareempire.com"],
   );
   for (const s of SISTER_SITES) {
     assert.ok(s.links.length > 0, s.name);
@@ -77,7 +77,7 @@ test("footer and article block: plain followed links, rendered from the one list
 test("search another game: every card-game sister site has a search link on its own host; no non-TCG site does", async () => {
   const { familySearchLinks } = await import("../src/lib/sister-sites");
   const links = familySearchLinks("Monkey D. Luffy");
-  assert.deepEqual(links.map((l) => l.key), ["op", "dex", "mtg", "gundam", "lorcana", "ygo", "cyberpunk"]);
+  assert.deepEqual(links.map((l) => l.key), ["op", "dex", "mtg", "gundam", "lorcana", "ygo", "cyberpunk", "bandai"]);
   for (const l of links) {
     const site = SISTER_SITES.find((s) => s.key === l.key)!;
     assert.equal(new URL(l.href).host, new URL(site.url).host, l.href);

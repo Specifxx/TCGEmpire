@@ -51,6 +51,7 @@ export const AMAZON_TRACKING_SITES: Record<string, string> = {
   "ygocompare-22": "ygo",
   "ygocompare-20": "ygo",
   "cyberpunkcompare-22": "cyberpunk",
+  "bandaicompare-22": "bandai",
   "wargamecomp-22": "wgc",
   "figurecompare-22": "figure",
   "kaeyoung-22": "ky",

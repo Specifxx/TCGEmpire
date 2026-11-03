@@ -18,6 +18,7 @@ export type SisterReviewSiteKey =
   | "lorcana"
   | "ygo"
   | "cyberpunk"
+  | "bandai"
   | "wargame"
   | "figure"
   | "kaeyoung"
@@ -41,6 +42,7 @@ export const SISTER_REVIEW_SITES: SisterReviewSite[] = [
   { key: "lorcana", name: "Lorcana Compare", url: "https://lorcanacompare.com" },
   { key: "ygo", name: "YGO Compare", url: "https://ygocompare.com" },
   { key: "cyberpunk", name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com" },
+  { key: "bandai", name: "BandaiCompare", url: "https://bandaicompare.com" },
   { key: "wargame", name: "WargameCompare", url: "https://wargamecompare.com" },
   { key: "figure", name: "FigureCompare", url: "https://figurecompare.com" },
   { key: "kaeyoung", name: "KaeYoung", url: "https://kaeyoung.com" },

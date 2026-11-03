@@ -50,7 +50,7 @@ test("a banned store is red without any network call", async () => {
 test("the banned list carries TCG Synergy, and every site's registry is listed", () => {
   const banned = JSON.parse(readFileSync("data/store-vetting/banned.json", "utf8")) as { domain: string }[];
   assert.ok(banned.some((b) => b.domain === "tcgsynergy.myshopify.com"));
-  for (const s of ["riftcompare", "opcompare", "mtgcompare", "dexcompare", "gundamcompare", "lorcanacompare", "ygocompare", "cyberpunkcompare", "wargamecompare", "figurecompare", "kaeyoung", "camcompare", "compareempire"]) assert.ok(s in SITES, s);
+  for (const s of ["riftcompare", "opcompare", "mtgcompare", "dexcompare", "gundamcompare", "lorcanacompare", "ygocompare", "cyberpunkcompare", "bandaicompare", "wargamecompare", "figurecompare", "kaeyoung", "camcompare", "compareempire"]) assert.ok(s in SITES, s);
 });
 
 test("the issue lists domains only, red first", () => {

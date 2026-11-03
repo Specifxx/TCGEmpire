@@ -33,6 +33,16 @@
       "done": "2026-11-02"
     },
     {
+      "id": "bandai-setup",
+      "site": "bandai",
+      "kind": "chrome",
+      "title": "BandaiCompare: domain, Vercel project, Cyberpunk's eBay keys as repo secrets, Amazon AU tracking ID bandaicompare-22, Search Console",
+      "why": "The site is built and importing; it earns nothing until the eBay secrets, the Amazon tag and the domain exist (owner, 3 Nov: share Cyberpunk Compare's eBay app at 2,500 calls a day).",
+      "added": "2026-11-03",
+      "prompt": "bandaicompare/chrome-setup-prompt.md",
+      "done": null
+    },
+    {
       "id": "cyberpunk-setup",
       "site": "cyberpunk",
       "kind": "chrome",
