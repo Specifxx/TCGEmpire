@@ -12,6 +12,7 @@ import { trackEvent } from "@/lib/analytics";
 import { markSignupSource } from "@/lib/signup-source";
 import { trackAuthStart, trackSignupCta } from "@/lib/growth-events";
 import { pullKey, pullsCsv, shareCode, summarisePulls, type PullLine } from "@/lib/pull-tracker";
+import { shareUrl } from "@/lib/share-link";
 import type { PullCard } from "@/lib/pull-tracker-server";
 import { Toast } from "./ui/Toast";
 
@@ -165,9 +166,10 @@ export function PullTracker({
   const back = encodeURIComponent(pathname || `/tools/pull-tracker/${set.slug}`);
 
   const share = async () => {
-    const url = `${window.location.origin}/tools/pull-tracker/${set.slug}/s/${shareCode(lines, paidCents, country)}`;
+    const url = shareUrl(window.location.origin, `/tools/pull-tracker/${set.slug}/s/${shareCode(lines, paidCents, country)}`, "pulls");
     const text = `My ${set.name} pulls: ${formatMoney(sum.totalCents, cur)}${paidCents ? ` from ${formatMoney(paidCents, cur)}` : ""}`;
     trackEvent("pull_share", { set: set.code, lines: lines.length });
+    trackEvent("share", { medium: "pulls" });
     try {
       if (navigator.share) {
         await navigator.share({ title: text, text, url });
@@ -310,8 +312,15 @@ export function PullTracker({
 
           {lines.length > 0 && (
             <div className="space-y-2 border-t border-white/5 p-4">
+              {/* The moment of pride (growth plan 2026-11-03): a box that beat its
+                  price is the result people want to show, so say so right here. */}
+              {sum.diffCents != null && sum.diffCents > 0 && (
+                <p className="rounded-lg bg-gold/10 px-3 py-2 text-center text-sm font-bold text-gold ring-1 ring-gold/40">
+                  You beat the box by {formatMoney(sum.diffCents, cur)}. Show your crew!
+                </p>
+              )}
               <button type="button" onClick={share} className="btn-primary w-full text-sm">
-                Share my pulls
+                {sum.diffCents != null && sum.diffCents > 0 ? "Share my win" : "Share my pulls"}
               </button>
               {shared && (
                 <p className="break-all text-[11px] text-slate-400">

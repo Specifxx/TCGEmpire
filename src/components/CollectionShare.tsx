@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CopyPostButton } from "./CopyPostButton";
+import { shareUrl } from "@/lib/share-link";
 
 type State = { shared: boolean; url: string | null };
 
@@ -61,18 +62,18 @@ export function CollectionShare() {
   if (!state) return null;
 
   return (
-    <section className="card-surface p-5">
+    <section id="share-binder" className="card-surface scroll-mt-header p-5">
       <h2 className="font-bold text-white">Share your collection</h2>
       <p className="mt-1 text-sm text-slate-400">
-        A read-only page anyone can open — your cards, their conditions and what they&apos;re worth today. What you paid and
-        what you paid are never included.
+        A read-only page anyone can open — your cards, their conditions and what they&apos;re worth today. What you paid is
+        never included. The link unfurls with your binder&apos;s value and top cards in Discord, X and group chats.
       </p>
 
       {error && <p className="mt-2 text-xs text-rose-300">{error}</p>}
 
       {state.shared && state.url ? (
         <div className="mt-3 space-y-3">
-          <CopyPostButton text={state.url} label="Copy link" />
+          <CopyPostButton text={shareUrl(state.url, state.url, "binder")} label="Copy link" />
           <div className="flex flex-wrap gap-2">
             <a href={state.url} target="_blank" rel="noopener noreferrer" className="btn-ghost text-xs">
               Open it →

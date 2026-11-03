@@ -21809,3 +21809,18 @@ part only the owner can do is cut to one short sitting, and the rest runs itself
   unverified, like the others were.
 - Unchanged: `#ad` on paid replies, no database, and the removal rule (not near 30 clicks a day a month after it
   goes live).
+
+## 2026-11-03 — Brag cards at the moment of pride
+
+**Why.** The growth plan's third loop. RiftCompare already had shareable pull results and binders with share
+images, but the buttons sat quietly at the foot of each page, and Riftle's paste, pull links and binder links carried
+no `utm_source=share`, so the growth report could not count a single visit they brought.
+
+**What.**
+- Pull tracker: when the logged pulls beat what was paid, a gold "You beat the box by $X. Show your crew!" line
+  sits on the share button, which reads "Share my win". The link carries `utm_medium=pulls`, and a tap also sends
+  `share { medium: pulls }`.
+- Portfolio: "Show off your binder →" under the collection value, pointing at the share panel; the copied binder
+  link carries `utm_medium=binder`.
+- Riftle's pasted link carries `utm_medium=daily` and sends `share { medium: daily }`.
+- Nothing about the visitor is added; the share images and noindex rules are unchanged.
