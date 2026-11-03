@@ -21914,8 +21914,10 @@ automatically on the website".
 - **The ask copies RiftCompare's corner card, not its rating drive.** On the
   sister sites the card asks after 4 pages and 3 minutes, or on return from a
   store tab, at most three times 14 days apart, never on arrival and always
-  closable; a "Rate us" link sits in the footer. The centred drive pop-up stays
-  RiftCompare's alone unless the owner asks for it elsewhere.
+  closable; a "Rate us" link sits in the footer. No sister site gets a centred
+  pop-up (RiftCompare's own rating drive was removed the same day: "One
+  interruption per visit, never on arrival").
+
 ## One interruption per visit, never on arrival — 2026-11-03
 
 The owner: "I'm a little concerned because I think I've lost some visitors for
