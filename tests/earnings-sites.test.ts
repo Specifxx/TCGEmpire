@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import type { SourceResult } from "../src/lib/earnings/core";
 import { siteForProject, siteLedger, vercelCharges } from "../src/lib/earnings/sites";
 import { buildGrowthReport, growthReportText } from "../src/lib/earnings/growth-report";
@@ -88,4 +89,24 @@ test("only hand-entered Vercel invoices give way to the billing API, never domai
   assert.equal(isVercelInvoice("Vercel Pro"), true);
   assert.equal(isVercelInvoice("Domain kaeyoung.com (purchase) via Vercel"), false);
   assert.equal(isVercelInvoice("Claude plan invoice 2026-09"), false);
+});
+
+test("the By site table carries each site's all-time earned and net beside the range (owner, 2026-11-03)", () => {
+  const page = readFileSync(new URL("../src/app/admin/earnings/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /const ledgerAll = siteLedger\(sources, vercelCost\?\.projects \?\? \[\], otherCostDays, EARNINGS_SINCE, today, display\);/);
+  assert.match(page, /All-time net<\/th>/);
+  assert.match(page, /data-all-time-total/);
+  // The all-time ledger is the same function over the whole span, so a site's rows add up.
+  const ebay: SourceResult = {
+    key: "ebay", status: "ok", fetchedAt: 0,
+    days: [{ day: "2026-03-01", currency: "AUD", cents: 500 }, { day: "2026-10-28", currency: "AUD", cents: 300 }],
+    tags: [
+      { day: "2026-03-01", tag: "rc-au-x", currency: "AUD", cents: 500, pendingCents: 0, sales: 1 },
+      { day: "2026-10-28", tag: "rc-au-x", currency: "AUD", cents: 300, pendingCents: 0, sales: 1 },
+    ],
+  };
+  const all = siteLedger([ebay], [{ day: "2026-02-01", project: "tcgempire", currency: "AUD", cents: 1000 }], [], "2026-01-01", "2026-10-29", "AUD");
+  assert.equal(all.find((r) => r.key === "rc")?.net, -200, "all-time net is earned minus every cost since the start");
+  const recent = siteLedger([ebay], [{ day: "2026-02-01", project: "tcgempire", currency: "AUD", cents: 1000 }], [], "2026-10-23", "2026-10-29", "AUD");
+  assert.equal(recent.find((r) => r.key === "rc")?.net, 300);
 });
