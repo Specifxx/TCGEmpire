@@ -20,11 +20,12 @@ import { premiumTrialFee, trialButtonLabel, trialThenLine, trialOfferLead } from
 const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ");
 const ENDS = new Date("2026-10-30T12:00:00Z");
 
-test("the default is no trial (2026-10-26, like Collectr; a free 30 days before, the $1 first month before that)", () => {
-  assert.equal(PREMIUM_TRIAL_DAYS, 0);
+test("the default is a free 3-day trial (2026-11-03; none from 2026-10-26, a free 30 days before, the $1 first month before that)", () => {
+  assert.equal(PREMIUM_TRIAL_DAYS, 3);
   assert.equal(PREMIUM_TRIAL_FEE_CENTS, 0);
   // The free-trial copy still exists for a length set in the environment.
-  assert.equal(trialButtonLabel(30, 0), "Start 30 days free");
+  assert.equal(trialButtonLabel(30, 0), "Start 30-day free trial");
+  assert.equal(trialButtonLabel(3, 0), "Start 3-day free trial");
   assert.doesNotMatch(trialThenLine(30, 0, "$2.99/mo"), /\$1\b/);
   // The $1 copy still exists for a fee set in the environment.
   assert.equal(trialButtonLabel(30, 100), "Start 30 days for $1");
@@ -141,6 +142,7 @@ test("every remaining 'free trial' / '$0 today' / 'nothing charged' line is the 
     "src/lib/articles.ts",
     "src/lib/checkout-params.ts",
     "src/lib/email.ts",
+    "src/lib/site.ts", // trialButtonLabel's fee-0 branch ("Start 3-day free trial", 2026-11-03)
     "src/lib/use-me.ts",
   ]);
   const found: string[] = [];

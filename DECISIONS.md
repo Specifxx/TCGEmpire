@@ -22048,3 +22048,23 @@ a page per product (over putting Amazon in the pop-up, or leaving it).
 
 Measure: `amazon_sealed` clicks and Associates sales in the AU and US reports, and the pages' impressions in Search
 Console, two weeks after release.
+
+## A 3-day free trial on Pro (2026-11-03)
+
+Owner: "Since noone is signing up to premium in riftcompare I think we should give a couple days free trial."
+Reverses the "no trial" half of the 2026-10-26 Pro entry; prices are unchanged ($6.99/mo, $47.88/yr).
+
+- `PREMIUM_TRIAL_DAYS` defaults to **3** (`lib/trial-config.ts`), `PREMIUM_TRIAL_FEE_CENTS` stays 0: free. All the
+  trial machinery from earlier eras was kept and switches itself back on: checkout sets `trial_period_days` on both plans
+  with `payment_method_collection: "always"` and cancels a trial with no card at its end, so it auto-converts unless
+  cancelled; one trial per account and never for a customer who has ever paid (`trialOfferedTo`); the webhook already
+  entitles `trialing`; the daily *Premium trial reminders* run emails each trialist 24–48 h before the charge (with three
+  days, that is day one or two, which is what "we email you a day or two before" promises). A Vercel
+  `PREMIUM_TRIAL_DAYS` would still override the default; `0` is the kill switch.
+- "A couple of days" read as three: Stripe's own `trial_will_end` fires three days out, and two days would leave the
+  reminder landing almost as the trial starts.
+- The button says "Start 3-day free trial" (`trialButtonLabel`, free form only; a paid trial still says "for $1"), the
+  plan card's footer "3 days free · Cancel anytime", the table's button "Try Pro free". No pop-up or banner was added
+  (pop-up policy). `PREMIUM_COPY_VERSION` is `pro-trial-2026-11-03`.
+
+Measure: trial starts and conversions by copy version against `pro-theme-2026-11-02`, two weeks after release.

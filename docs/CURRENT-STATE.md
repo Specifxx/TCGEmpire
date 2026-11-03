@@ -242,8 +242,9 @@ longer lands on its entry.
   supersedes the price in the next bullet and the free limits below):** the
   paid plan is called Pro in every user-facing string (identifiers, `/premium`
   and tier keys unchanged), $6.99/mo or $47.88/yr (12 × $3.99); nobody is
-  moved up in Stripe. No trial: `PREMIUM_TRIAL_DAYS` defaults to 0 (the 30-day
-  trial below is superseded). `FREE_LIMITS_ON = false`: free watchlist and portfolio
+  moved up in Stripe. Trial: a free 3-day card-gated trial on both plans since
+  2026-11-03 (`PREMIUM_TRIAL_DAYS` default 3, one per account; it was 0 from 10-26)
+  ([2026-11-03](../DECISIONS.md#a-3-day-free-trial-on-pro-2026-11-03)). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.
   `/premium` keeps Collectr's plan and page order for non-members, drawn in the site's own theme since 2026-11-02 (orange button, flat panels, one Free/Pro table; no gold or mock-ups) ([2026-11-02](../DECISIONS.md#the-pro-page-in-the-sites-own-theme)). The rating drive's
   centred pop-up is gone (2026-11-03, owner: visitors lost to "too many pop ups"):

@@ -50,7 +50,7 @@ test("the trial copy helpers say $1 at the default fee and 'free' only when the 
   assert.equal(trialThenLine(30, 100, "$23.99/yr"), "First 30 days for $1, then $23.99/yr");
   assert.equal(trialButtonLabel(30, 100), "Start 30 days for $1");
   assert.equal(trialOfferLead(30, 0), "First 30 days free");
-  assert.equal(trialButtonLabel(30, 0), "Start 30 days free");
+  assert.equal(trialButtonLabel(30, 0), "Start 30-day free trial");
   for (const fee of [100, 250]) {
     for (const line of [trialOfferLead(30, fee), trialButtonLabel(30, fee), trialDisclosure(30, fee, "$2.99/mo")]) {
       assert.doesNotMatch(line, /free|\$0/i, `a $${fee / 100} trial must never read as free or $0: ${line}`);

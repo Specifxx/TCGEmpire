@@ -17,7 +17,7 @@ import { DECK_WATCH_LIMIT } from "@/lib/alert-limits";
 // site's own theme". Replaces the 2026-10-26 Collectr copy's look (gold
 // gradients, a giant gradient headline, emoji icons, a made-up portfolio
 // mock-up with floating badges); the plan, the prices and the terms are
-// unchanged (Collectr's model: $6.99 a month or $47.88 a year, no trial).
+// unchanged ($6.99 a month or $47.88 a year; a free 3-day trial since 2026-11-03).
 //
 //   1. Hero: an orange eyebrow, a plain headline and one sentence, four ticks,
 //      the star rating when there is one; beside it the plan card (Monthly /
@@ -158,6 +158,12 @@ function Cell({ value, pro }: { value: string | boolean; pro?: boolean }) {
   return <span className={pro ? "font-semibold text-white" : "text-slate-300"}>{value}</span>;
 }
 
+// The free trial is offered to this viewer (signed out counts; the checkout
+// route still decides with trialEligible). A paid trial ($1) never says "free".
+function trialOn(cta: ProCtaProps): boolean {
+  return cta.trialAvailable && cta.trialDays > 0 && cta.trialFeeCents === 0;
+}
+
 export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; cta: ProCtaProps; rating: SiteRating | null }) {
   return (
     <div data-pro-landing>
@@ -184,7 +190,7 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
             <ProPricePicker prices={prices} cta={cta} />
           </div>
           <p className="mt-4 border-t border-ink-800 pt-4 text-center text-xs text-slate-400">
-            Cancel anytime ·{" "}
+            {trialOn(cta) ? `${cta.trialDays} days free · ` : ""}Cancel anytime ·{" "}
             <a href="#features" className="font-semibold text-brand-400 hover:underline">
               See all features
             </a>
@@ -292,7 +298,7 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
                 </td>
                 <td className="bg-brand-500/[0.06] px-2 py-4 text-center sm:px-4">
                   <a href="#pro-plan" className="btn-primary w-full px-2 text-xs">
-                    Get Pro
+                    {trialOn(cta) ? "Try Pro free" : "Get Pro"}
                   </a>
                 </td>
               </tr>
