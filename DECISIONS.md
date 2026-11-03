@@ -22007,3 +22007,19 @@ ID, ship date and ad fee.
 - Weekly upload is a Chrome step for Bill (project files
   `amazon/chrome-prompt-amazon-earnings-upload.md`). If Amazon ever opens the
   Reports API to us, a fetcher replaces the upload with the same tags.
+
+## Bing SEO report: sitemap index dates, one copy of the menu's links (2026-11-03)
+
+Bill's all-sites SEO report (Bing) asked for three things on RiftCompare. Two were real:
+
+- **The sitemap index carries `<lastmod>`.** The 2026-09 note said no, because the true value is each child's max and
+  computing it means building every section. Each child's date now comes from the one cheap source its entries already
+  use: the newest price-history day (committed files, no database) for the price-driven sections, the newest article for
+  `content`, none for `pokemon`. `news-sitemap.xml`, listed in robots.txt but not in the index, is in the index too.
+- **The mobile menu draws its links only once opened.** `CinematicNavMenu` stayed mounted and painted at opacity 0, so
+  every page's server HTML repeated all of NAV_GROUPS a second time beside the SideNav and the footer (~338 link
+  instances on /au). The overlay shell still mounts (the transition still runs); its panel renders from the first open.
+  Crawlers keep every link through SideNav and FooterNav.
+
+The third, a "stale 87 days to go countdown", is not stale: it is Legacy's real release date (2027-01-29), computed on
+the server with each six-hour render. No change.
