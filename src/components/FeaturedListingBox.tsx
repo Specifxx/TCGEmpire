@@ -38,7 +38,7 @@ export function FeaturedListingBox({
       <div className="flex items-center gap-4 px-4 py-3">
         {imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" aria-hidden="true" className="h-24 w-auto shrink-0 rounded-md shadow-lg shadow-black/50" />
+          <img src={imageUrl} alt={listing.title} aria-hidden="true" className="h-24 w-auto shrink-0 rounded-md shadow-lg shadow-black/50" />
         )}
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold leading-snug text-white">{listing.title}</p>

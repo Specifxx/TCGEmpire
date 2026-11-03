@@ -21840,3 +21840,23 @@ push through and the page under the pop-up never re-renders.
 
 **SEO.** No new URL exists: the link is the canonical product page, which a reload, a share or a crawler gets in full
 server HTML. Never a `?view=` or `#` variant (duplicate URLs, extra CDN copies). Pinned by `tests/quick-view-url.test.ts`.
+
+## 2026-11-03 — SEO audit: region homes get their share image, card thumbnails name the card
+
+The owner's 2026-11-03 SEO audit of all twelve sites (RiftCompare included this time) found the region homes
+(`/au`, `/ca`, `/uk`, `/eu`, `/sg`) had no `og:image`, and asked for Product markup on card pages, alt text and a
+look at robots, sitemap, hreflang and geo-redirects.
+
+- **Share image.** A page's `openGraph` replaces the root's whole object, so `regionHomeMetadata` dropped the
+  homepage's file-based `opengraph-image.jpg`. It now names it (`HOME_OG_IMAGE`) in `openGraph.images` and a
+  `summary_large_image` twitter card. No new image route, so nothing new to draw or cache.
+- **Alt text.** Card and product thumbnails that sit beside their name (price guide rows, ban list, search, recently
+  viewed, records, shared collections, deck builder, pull tracker, family deals, Pokémon sealed) keep
+  `aria-hidden="true"`, so a screen reader still reads the name once, but their alt is now the card or product name
+  for image search. Decorative art (coins, the R mark), avatars and the Legend quiz picture (its alt would give the
+  answer away) stay `alt="" aria-hidden="true"`, which `tests/image-alt-text.test.ts` still allows.
+- **Already in place, not rebuilt:** Product + AggregateOffer on card pages; robots, the sitemap index and the region
+  hreflang set (`tests/region-pages.test.ts`); no geo-redirect anywhere, since the market is a cookie on one URL set
+  and a crawler always sees the US page.
+
+`tests/seo-audit-2026-11.test.ts` pins the region share image and the named thumbnails.

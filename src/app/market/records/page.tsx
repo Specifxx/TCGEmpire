@@ -112,7 +112,7 @@ function CardCell({ card }: { card: RecordRow["card"] }) {
         // already describes this thumbnail — same convention as /c/[token]'s
         // holdings list and UserMenu.tsx's avatar.
         // eslint-disable-next-line @next/next/no-img-element
-        <img {...cardThumbProps({ imageThumbUrl: card.imageThumbUrl }, "28px")} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded object-cover" />
+        <img {...cardThumbProps({ imageThumbUrl: card.imageThumbUrl }, "28px")} alt={card.name} aria-hidden="true" loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded object-cover" />
       )}
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold text-white">{cardDisplayName(card.name, card)}</span>

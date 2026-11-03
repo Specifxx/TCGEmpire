@@ -235,7 +235,7 @@ export function PullTracker({
                 >
                   {src ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={src} alt="" aria-hidden="true" loading="lazy" className="aspect-[5/7] w-full rounded-md object-cover" />
+                    <img src={src} alt={c.name} aria-hidden="true" loading="lazy" className="aspect-[5/7] w-full rounded-md object-cover" />
                   ) : (
                     <span className="grid aspect-[5/7] w-full place-items-center rounded-md bg-ink-800 text-[10px] text-slate-500">{c.collectorNumber}</span>
                   )}

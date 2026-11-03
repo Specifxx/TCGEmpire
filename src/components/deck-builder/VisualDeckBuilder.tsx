@@ -721,7 +721,7 @@ export function VisualDeckBuilder({ initialList, initialTitle, sharedCode }: { i
         >
           {preview.card.full || preview.card.img ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview.card.full ?? preview.card.img!} alt="" aria-hidden="true" className="block w-full" />
+            <img src={preview.card.full ?? preview.card.img!} alt={preview.card.name} aria-hidden="true" className="block w-full" />
           ) : null}
           <div className="p-2 text-xs">
             <p className="font-bold text-white">{preview.card.name}</p>
@@ -867,7 +867,7 @@ function ZoneBox({
             >
               {card.img ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={card.img} alt="" aria-hidden="true" className="h-9 w-14 shrink-0 object-cover object-[50%_20%]" loading="lazy" />
+                <img src={card.img} alt={card.name} aria-hidden="true" className="h-9 w-14 shrink-0 object-cover object-[50%_20%]" loading="lazy" />
               ) : (
                 <span className="h-9 w-14 shrink-0 bg-ink-800" />
               )}

@@ -30,7 +30,7 @@ export function RecentlyViewedRail({ exclude, className }: { exclude?: string; c
             >
               {c.imageSrc && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={cardArtThumb(c.imageSrc)} srcSet={cardImageSrcSet(c.imageSrc) ?? undefined} sizes="18px" alt="" aria-hidden="true" width={18} height={25} loading="lazy" decoding="async" className="h-6 w-[18px] shrink-0 rounded-sm object-cover" />
+                <img src={cardArtThumb(c.imageSrc)} srcSet={cardImageSrcSet(c.imageSrc) ?? undefined} sizes="18px" alt={c.name} aria-hidden="true" width={18} height={25} loading="lazy" decoding="async" className="h-6 w-[18px] shrink-0 rounded-sm object-cover" />
               )}
               {c.name}
             </Link>
