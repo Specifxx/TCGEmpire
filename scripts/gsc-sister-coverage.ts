@@ -15,14 +15,14 @@ import { createSign } from "node:crypto";
 const SAMPLE = Math.max(5, Math.min(200, Number(process.env.SAMPLE ?? 30)));
 // [Search Console property, site origin]. Domain properties accept any URL on the domain.
 const SITES: [string, string][] = [
-  ["https://www.dexcompare.app/", "https://www.dexcompare.app"],
+  ["sc-domain:dexcompare.app", "https://dexcompare.app"],
   ["sc-domain:opcompare.app", "https://opcompare.app"],
   ["https://mtgcompare.app/", "https://mtgcompare.app"],
   ["sc-domain:gundamcompare.com", "https://gundamcompare.com"],
   ["sc-domain:lorcanacompare.com", "https://lorcanacompare.com"],
   ["sc-domain:ygocompare.com", "https://ygocompare.com"],
   ["https://www.camcompare.app/", "https://www.camcompare.app"],
-  ["https://www.compareempire.com/", "https://www.compareempire.com"],
+  ["sc-domain:compareempire.com", "https://compareempire.com"],
 ];
 
 async function token(): Promise<string> {
@@ -80,7 +80,9 @@ async function inspect(tok: string, property: string, url: string) {
 async function main() {
   if (!process.env.GSC_SA_KEY) return console.log("GSC_SA_KEY is not set.");
   const tok = await token();
-  for (const [property, origin] of SITES) {
+  // ONLY=dexcompare,opcompare limits the run to origins containing one of those strings.
+  const only = (process.env.ONLY ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  for (const [property, origin] of SITES.filter(([, o]) => !only.length || only.some((x) => o.includes(x)))) {
     let urls: string[];
     let final: string;
     try {
@@ -91,7 +93,8 @@ async function main() {
     }
     console.log(`${final}: ${urls.length} sitemap URLs read`);
     const step = Math.max(1, Math.floor(urls.length / SAMPLE));
-    const pick = [...new Set([`${final}/`, ...urls.filter((_, i) => i % step === 0).slice(0, SAMPLE)])];
+    const extra = (process.env.EXTRA_URLS ?? "").split(",").map((x) => x.trim()).filter((x) => x.startsWith(final));
+    const pick = [...new Set([`${final}/`, ...extra, ...urls.filter((_, i) => i % step === 0).slice(0, SAMPLE)])];
     const tally = new Map<string, string[]>();
     for (const u of pick) {
       const { state, crawled } = await inspect(tok, property, u);
