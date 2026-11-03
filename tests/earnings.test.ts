@@ -209,6 +209,7 @@ test("eBay by tag: grouped by the tag's site prefix, then each full tag, within 
   assert.equal(tagGroup("lorcana").key, "lor", "no separator: the first three characters");
   assert.equal(tagGroup("pkmn-kindhub").key, "pkmn");
   assert.equal(tagGroup("tcgplayer-preorders-radiance").key, "rc", "RiftCompare's TCGplayer sub-ids count to RiftCompare");
+  assert.equal(tagGroup("mc-us-card").key, "mtg", "the old MTG singles site's mc- tags count to MTG Compare");
   assert.equal(tagGroup("").label, "No tag");
   assert.deepEqual(tagGroup("zz-thing"), { key: "zz", label: "ZZ" });
   const t = (day: string, tag: string, cents: number) => ({ id: tag + day, day, tag, pending: false, currency: "AUD", cents, updated: "" });

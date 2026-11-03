@@ -758,7 +758,10 @@ export const TAG_NAMES: Record<string, string> = {
 // formed a "TCGPLAYER" group of their own and RiftCompare's row missed its
 // TCGplayer money (2026-11-03, weekly growth review). Every sister site prefixes
 // its own key (oc-, dex-, mtg-, ygo- …), so only RiftCompare sends these.
-export const TAG_ALIASES: Record<string, string> = { tcgplayer: "rc" };
+// MTG Compare's old singles site (before 2026-10-21) tagged its links `mc-…`;
+// late TCGplayer sales from those clicks are MTG Compare's money, not a site
+// called "MC" (2026-11-03, thread "Turn around underperforming sites").
+export const TAG_ALIASES: Record<string, string> = { tcgplayer: "rc", mc: "mtg" };
 
 export function tagGroup(tag: string): { key: string; label: string } {
   const t = tag.trim().toLowerCase();
