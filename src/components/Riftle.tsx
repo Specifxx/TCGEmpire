@@ -274,10 +274,15 @@ export function Riftle() {
     const tag = mode === "unlimited" ? "Riftle ∞" : `Riftle ${day}`;
     // Daily shares carry ?r=<result> so the link unfurls with a custom OG card
     // (see app/riftle/generateMetadata). Unlimited has no shared answer → plain link.
+    // utm_source=share (lib/share-link.ts) so a visit the paste brings counts in the
+    // growth report's word-of-mouth table (2026-11-03).
     const url =
       mode === "unlimited"
-        ? "riftcompare.com/riftle"
-        : `riftcompare.com/riftle?r=${done === "win" ? rows.length : "x"}`;
+        ? "riftcompare.com/riftle?utm_source=share&utm_medium=daily"
+        : `riftcompare.com/riftle?r=${done === "win" ? rows.length : "x"}&utm_source=share&utm_medium=daily`;
+    try {
+      track("share", { medium: "daily" });
+    } catch {}
     // The streak is the most motivating (and viral) line in a Wordle-style share.
     // "win streak" (not "day streak"): it counts consecutive WINS and only resets on a
     // loss — skipped days preserve it, so it isn't a consecutive-calendar-day streak.

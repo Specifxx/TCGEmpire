@@ -200,6 +200,11 @@ export default async function PortfolioPage() {
                   {portfolio.pricedCount} card{portfolio.pricedCount === 1 ? "" : "s"} with a live price
                   {portfolio.unpricedCount > 0 && <> · {portfolio.unpricedCount} awaiting a live price</>}
                 </p>
+                {/* The moment of pride (growth plan 2026-11-03): the share panel sits at
+                    the foot of the page, so point at it from the number people are proud of. */}
+                <a href="#share-binder" className="mt-2 inline-block text-xs font-semibold text-brand-300 hover:underline">
+                  Show off your binder →
+                </a>
               </div>
               {/* No "1 day" chip: PriceHistory is written weekly, so the previous
                   snapshot is a week back and that chip was the 7-day move under

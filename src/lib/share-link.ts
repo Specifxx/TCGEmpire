@@ -5,7 +5,7 @@
 // growth report (lib/earnings/growth-report.ts) counts both for every site.
 // DECISIONS.md, "Share buttons and shared lists".
 
-export type ShareMedium = "card" | "sealed" | "deck" | "list" | "page";
+export type ShareMedium = "card" | "sealed" | "deck" | "list" | "page" | "daily" | "pulls" | "binder";
 
 /** `path` (an existing query string is kept) on `origin`, with the share tags. */
 export function shareUrl(origin: string, path: string, medium: ShareMedium): string {
