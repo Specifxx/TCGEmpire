@@ -21750,3 +21750,42 @@ as a link network and looks odd to a reader. The owner said do it.
   one owner, not paid, so no `sponsored`/`nofollow`.
 - Kept: the "Other card games" / hobby / tech price blocks on deals, Black Friday and pre-order pages
   (`clusterSisters`). They sit on a few pages, show real prices a reader of that page may want, and are not sitewide.
+
+## 2026-11-03 — Search Console report: keyword pages lead with the query, stale rules answers fixed, essentials links
+
+**Why.** The owner's Search Console report (90 days: 1.17K clicks, 41.9K impressions, position 8.6) asked for
+title rewrites on position 4–10 queries, answer pages with FAQ schema, Product/Offer structured data, hub links
+from news posts and country pages. Most of it already exists: card size, rotation, deck size, ban list, grading
+and selling guides; FAQPage on every guide with a FAQ; Product + AggregateOffer + Offer on card pages; `/au`,
+`/sg`, `/ca`, `/uk`, `/eu` with hreflang; card, set and champion pages linking their guides. The card-size title
+the report suggests ("63 × 88 mm") has been live since 2026-09-24. So no second title pass on pages already tuned
+twice (churn). The 28-day `gsc-queries` run (to 31 Oct) showed four real gaps instead:
+- `/keywords/<slug>` pages took "ambush riftbound" (353 impressions, position 10), "predict riftbound" (356, 6.7),
+  "weaponmaster", "accelerate", "assault", "hidden", "deflect" with 0–1 clicks each. The title was
+  "Ambush — Riftbound Keyword Reference | RiftCompare", and the page showed one paragraph; the sections and FAQs
+  written for every keyword in `lib/keywords.ts` were never rendered.
+- The Deploy, Show Off and Disarm guides' FAQ (which feeds FAQPage JSON-LD and the snippet) still answered from
+  the PAX West leak ("not yet confirmed by Riot") a month after Riot's rules made them official. Deploy: 1,430
+  impressions, one click.
+- The rotation guide ("riftbound rotation", rising to 26 impressions a day) still listed five sets and stopped
+  at Vendetta, and called July the latest ban wave.
+- "sell riftbound cards" at position 18, "sell riftbound cards sydney" at 23: the selling post opened with scene
+  setting and never said which platform suits which country.
+
+**What.**
+- Keyword pages: title `Riftbound <Keyword>: What It Does + All N Cards` (`keywordPageTitle` in `lib/keywords.ts`),
+  H1 "Riftbound <Keyword>: what it does", the authored sections and FAQ rendered under the answer, and FAQPage
+  JSON-LD from the same array. Empower, Flow and Burn are excepted (`hasOwnGuide`): each has its own guide that
+  owns "riftbound <keyword>" in the keyword map, so those three keep the short reference page.
+- Deploy/Show Off/Disarm: first FAQ answers rewritten to the official rule text already quoted in each post's
+  status line; Deploy's description now leads with the rule.
+- Rotation: Radiance in the table and FAQ, the September bans as latest, `seoTitle` "Riftbound Rotation 2026: No
+  Set Has Rotated Out Yet", `updated` 2026-11-03.
+- Selling post: answer-first paragraph, a where-to-sell table by country, an Australia paragraph (TCGplayer and
+  Cardmarket only take sellers from their own regions), links to the fee calculator and the TCGplayer fees post.
+- Every blog post (not guides) ends with a "Riftbound essentials" row of eight evergreen links
+  (`EVERGREEN_LINKS` in `ArticleView.tsx`), so Radiance and Legacy news spikes pass links to the reference pages.
+
+Not done, and why: no new country pages (they exist and `/au` already gets 16.8% CTR); no set-page ItemList
+(removed on purpose, it doubled the HTML); no HowTo schema (Google dropped HowTo rich results in 2023). Recheck
+the keyword pages, Deploy and rotation with `gsc-queries` on 2026-11-24.

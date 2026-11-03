@@ -6,10 +6,12 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { KEYWORDS, KEYWORD_THIN_THRESHOLD, keywordBySlug, keywordCardWhere } from "@/lib/keywords";
+import { KEYWORDS, KEYWORD_THIN_THRESHOLD, hasOwnGuide, keywordBySlug, keywordCardWhere, keywordPageTitle } from "@/lib/keywords";
 import { getArticle } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { faqPage } from "@/lib/jsonld";
+import { InlineMarkdown } from "@/components/Markdown";
 
 export const revalidate = 86400;
 
@@ -26,7 +28,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const kw = keywordBySlug(params.slug);
   if (!kw) return notFoundMetadata("Keyword");
-  const title = `${kw.name} — Riftbound Keyword Reference | RiftCompare`;
+  // Thin keyword pages (fewer than KEYWORD_THIN_THRESHOLD cards) are noindexed;
+  // -1 on a failed count keeps the page indexable rather than guessing.
+  const total = await prisma.card.count({ where: keywordCardWhere(kw) }).catch(() => -1);
+  const title = keywordPageTitle(kw, total);
   // Lead with the keyword's OWN direct answer rather than a template sentence.
   // The previous description varied only by the keyword's name, so all three
   // keyword pages read as one description (GROWTH-AUDIT.md § 4) — and they all
@@ -39,9 +44,6 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const answer = kw.directAnswer.replace(/\s+/g, " ").trim();
   const lead = answer.length > 96 ? `${answer.slice(0, answer.lastIndexOf(" ", 96)).replace(/[,;:.]$/, "")}…` : answer;
   const description = `${lead} Plus every card printed with ${kw.name}, live-priced.`;
-  // Thin keyword pages (fewer than KEYWORD_THIN_THRESHOLD cards) are noindexed;
-  // -1 on a failed count keeps the page indexable rather than guessing.
-  const total = await prisma.card.count({ where: keywordCardWhere(kw) }).catch(() => -1);
   return {
     title: { absolute: title },
     description,
@@ -112,11 +114,20 @@ export default async function KeywordPage({ params }: { params: { slug: string }
     },
   };
 
+  // The page's own explainer and FAQ (lib/keywords.ts), rendered for keywords
+  // whose guide covers a FAMILY of keywords (combat, timing, growth, game
+  // actions). For those, this page is the most specific page we have for
+  // "riftbound <keyword>", and Google was showing it with nothing under the
+  // one-paragraph answer. A keyword with its own guide (Empower, Flow, Burn)
+  // keeps the short reference shape, so it never duplicates that guide.
+  const explain = !hasOwnGuide(kw);
+  const faqLd = explain ? faqPage(kw.faqs) : null;
+
   return (
     <div className="flex flex-col gap-6">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, definedTermLd]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, definedTermLd, ...(faqLd ? [faqLd] : [])]) }}
       />
 
       <div>
@@ -128,7 +139,9 @@ export default async function KeywordPage({ params }: { params: { slug: string }
           <span className="text-slate-300">{kw.name}</span>
         </nav>
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">{kw.name} — Riftbound keyword reference</h1>
+          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
+            {explain ? <>Riftbound {kw.name}: what it does</> : <>{kw.name} — Riftbound keyword reference</>}
+          </h1>
           <span className="chip shrink-0 bg-ink-800 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Glossary</span>
         </div>
         {/* Concise rules definition — the direct answer, nothing more. The full
@@ -136,6 +149,16 @@ export default async function KeywordPage({ params }: { params: { slug: string }
             on the guide linked right below. */}
         <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-200">{kw.directAnswer}</p>
       </div>
+
+      {explain &&
+        kw.sections.map((sec) => (
+          <section key={sec.heading} className="max-w-3xl">
+            <h2 className="text-lg font-bold text-white">{sec.heading}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              <InlineMarkdown content={sec.body} />
+            </p>
+          </section>
+        ))}
 
       {/* Prominent link to the full guide — this is the primary target for
           "riftbound {kw.name} explained"-style queries; this page just points there. */}
@@ -189,6 +212,20 @@ export default async function KeywordPage({ params }: { params: { slug: string }
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {cards.map((c) => (
               <CardTile key={c.id} card={c} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {explain && kw.faqs.length > 0 && (
+        <section className="max-w-3xl">
+          <h2 className="text-xl font-extrabold text-white">{kw.name} FAQ</h2>
+          <div className="mt-3 flex flex-col gap-4">
+            {kw.faqs.map((f) => (
+              <div key={f.q}>
+                <h3 className="text-sm font-bold text-white">{f.q}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-slate-300">{f.a}</p>
+              </div>
             ))}
           </div>
         </section>
