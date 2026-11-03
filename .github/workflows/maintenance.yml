@@ -79,6 +79,8 @@ on:
           - trial-cancel-report  # read-only: Premium trials cancelled mid-trial (cancel_at_period_end), hours to cancel, Stripe feedback, activity before cancelling. Anonymised.
           - dns-hosts        # read-only: DNS answers (Google and Cloudflare resolvers) and the first HTTP response for every sister site's apex and www host. No secrets.
           - gsc-cannibal     # read-only SEARCH CONSOLE CANNIBALISATION REPORT for EVERY property GSC_SA_KEY can read (Rift Compare and the sister sites): queries where two or more of a site's own pages show, and the page pairs that share the most, so the weaker page is merged, redirected or retitled. Search terms only.
+          - crawl-audit-sites # read-only: every Compare site read as Google's smartphone crawler (robots, sitemaps, server HTML of a sample, a 250-page crawl from the homepage) plus Search Console sitemaps and URL Inspection. SITES input via `url` (comma list of hosts) narrows it.
+          - gsc-sites-daily  # read-only: every Search Console property's clicks/impressions per day (35d), weekly totals and pages with impressions. Counts only, no search terms. The family growth scoreboard.
           - gsc-queries      # read-only SEARCH CONSOLE QUERY REPORT: top queries, striking-distance queries (position 4-20), rising queries and top pages for the last 28 days, so new articles target searches the site already nearly wins.
           - impact-report    # read-only DAILY IMPACT REPORT: per UTC day for the last 35 days, Search Console clicks/impressions, card views and searches (DemandSnapshot), new accounts by source and PremiumClick by surface, plus window averages around a change date (2026-10-09, the search allowance). Answers "did this change cost visitors or sign-ups?" days after it ships, where funnel-report's weeks are too coarse. Aggregate only, writes nothing.
           - funnel-report    # read-only WEEKLY PREMIUM FUNNEL: accounts, signup sources, PremiumClick, trial stamps and entitlement expiries from Postgres, joined to Stripe subscriptions/trials/conversions/churn, bucketed by ISO week for the last 8 (WEEKS= to change). Exists because neither admin page can answer "were more people signing up before?" — /admin/subscriptions' trial->paid is an ALL-TIME ratio with no time dimension, and /admin/accounts only looks back 30 days. Aggregate only, no PII. Writes nothing.
@@ -178,7 +180,9 @@ on:
 
 jobs:
   run:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest became 26.04, where Playwright 1.56 cannot install
+    # Chromium's system packages (2026-11-02). Move up when Playwright supports it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     # import-prices writes the same tables as the scheduled refresh — join its
     # concurrency group so the two can never run at once. Other tasks keep a
@@ -5471,7 +5475,6 @@ jobs:
           # top of the daily run) for new-market rollouts.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           EBAY_REFRESH: ${{ inputs.ebay_sg && 'true' || 'false' }}
           EBAY_FORCE: ${{ inputs.ebay_sg && '1' || '' }}
           EBAY_ONLY_MARKET: ${{ inputs.ebay_sg && 'SG' || '' }}
@@ -5508,7 +5511,6 @@ jobs:
         env:
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           EBAY_FORCE: ${{ inputs.apply && '1' || '' }}
         run: npx tsx scripts/import-sealed.ts
 
@@ -5769,11 +5771,30 @@ jobs:
           npx tsx scripts/gsc-cannibal.ts
           npx tsx scripts/gsc-sister-coverage.ts
 
+      - name: Crawlability audit of every Compare site (read-only)
+        if: inputs.task == 'crawl-audit-sites'
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          SITES: ${{ inputs.url }}
+        run: npx tsx scripts/crawl-audit-sites.ts
+
+      - name: Every site's Search Console pulse (read-only)
+        if: inputs.task == 'gsc-sites-daily'
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          # `url` = comma list of properties: per-page impression changes instead of the pulse
+          DETAIL: ${{ inputs.url }}
+          # `set_slug` = a URL substring: that page's days and searches too
+          PAGE: ${{ inputs.set_slug }}
+        run: npx tsx scripts/gsc-sites-daily.ts
+
       - name: Search Console query report (read-only)
         if: inputs.task == 'gsc-queries'
         env:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
-          DAYS: "28"
+          # `url` picks another property (e.g. sc-domain:compareempire.com); empty = riftcompare.com
+          GSC_PROPERTY: ${{ inputs.url }}
+          DAYS: ${{ inputs.url && '90' || '28' }}
         run: npx tsx scripts/gsc-queries.ts
 
       - name: Promo art from TCGplayer (report unless apply)

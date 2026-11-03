@@ -804,7 +804,13 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
 // Day-granular, not month-granular: a full calendar month was a disproportionate
 // reward for a single form submission or a single friend signing up (2026-08-31 —
 // cut from 1 month to 1 week for feedback, 3 days for referral).
-export const FEEDBACK_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.FEEDBACK_PREMIUM_DAYS ?? 7)));
+//
+// FEEDBACK REWARD OFF (owner, 2026-10-27: "Let's just turn the reward off"). A
+// rating or review given for a reward is an incentivised review, and reviews
+// show publicly by default; the FTC's 2024 rule and the ACCC don't allow
+// soliciting one and showing it unlabelled. Hard 0, not an env default, so a
+// leftover FEEDBACK_PREMIUM_DAYS in Vercel can't switch it back on.
+export const FEEDBACK_PREMIUM_DAYS: number = 0;
 // +3 days of Premium to the REFERRER for each friend who signs up via their link.
 export const REFERRAL_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.REFERRAL_PREMIUM_DAYS ?? 3)));
 export function feedbackPremiumActive(): boolean {

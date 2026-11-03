@@ -395,7 +395,10 @@ export function historyFiles(d: OpsDeps): CheckResult {
   });
 }
 
-const JOBS: { file: string; title: string; staleH: number }[] = [
+// `scheduledSince`: when a job that used to be manual-only got its schedule. Its last run
+// may be an old manual one, so the staleness clock starts at that time instead (a new
+// schedule is not a job that stopped running). Set it whenever a schedule is added.
+export const JOBS: { file: string; title: string; staleH: number; scheduledSince?: string }[] = [
   { file: "refresh-prices.yml", title: "Price import job", staleH: 36 },
   { file: "refresh-auctions.yml", title: "Auction sweep job", staleH: 16 },
   { file: "sealed-refresh.yml", title: "Sealed refresh job", staleH: 36 },
@@ -405,6 +408,27 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   { file: "promo-art.yml", title: "Promo art job (weekly)", staleH: 200 },
   // Three times a week (2026-10-26): the longest gap is three days.
   { file: "social-packs.yml", title: "Social packs job", staleH: 80 },
+  // Daily (2026-10-27); a green no-op until the channel's secrets exist.
+  { file: "telegram-deals.yml", title: "Telegram deals job", staleH: 36 },
+  // Daily (2026-11-02); a green dry run until the Bluesky account's secrets exist.
+  { file: "bluesky-post.yml", title: "Bluesky posts job", staleH: 36 },
+  // Weekly (2026-10-30): the private growth report the weekly growth review reads.
+  { file: "growth-report.yml", title: "Growth report job (weekly)", staleH: 200 },
+  // Daily (2026-10-31): visitor reports from all twelve sites' `reports` branches.
+  { file: "reports-triage.yml", title: "Reports triage job", staleH: 36 },
+  // Daily (2026-11-01): Search Console demand for Compare Empire's eBay pass (its `demand` branch).
+  { file: "sister-demand.yml", title: "Sister-site search demand job", staleH: 36 },
+  // Twice a day (2026-11-01): the Pokémon section's only data source, its files
+  // in data/pokemon. Missing from this list before, so its week of failures
+  // while its Neon project was gone (2026-10-23) went unnoticed.
+  { file: "pokemon-import.yml", title: "Pokémon import job", staleH: 36 },
+  // Daily (2026-11-02): the sister sites' price alerts (lib/sister-alerts). Fails when a site
+  // that has alerts could not be checked, so a broken feed shows here.
+  { file: "sister-alerts.yml", title: "Sister-site price alerts job", staleH: 36 },
+  // Daily (2026-11-03): registers the Discord bot's commands and finishes its setup; a green no-op until its secrets exist.
+  { file: "discord-commands.yml", title: "Discord bot setup job", staleH: 36, scheduledSince: "2026-11-03T00:49:00Z" },
+  // Weekly (2026-11-02): every site's store domains checked from outside (docs/store-vetting.md).
+  { file: "store-vetting.yml", title: "Store vetting job (weekly)", staleH: 200 },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {
@@ -420,9 +444,12 @@ export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {
       }
       const done = runs.filter((r) => r.status === "completed" && r.conclusion && !["cancelled", "skipped", "neutral"].includes(r.conclusion));
       const failed = (r?: { conclusion: string | null }) => !!r && r.conclusion !== "success";
-      const age = hoursSince(runs[0]!.createdAt, d.now);
+      const lastRun = runs[0]!.createdAt;
+      const since = job.scheduledSince ? new Date(job.scheduledSince) : null;
+      const clockFrom = since && since.getTime() > lastRun.getTime() ? since : lastRun;
+      const age = hoursSince(clockFrom, d.now);
       let sev: Severity = "ok";
-      let summary = `Last ran ${humanAge(age)} ago${done[0] ? ` (${done[0].conclusion})` : ""}.`;
+      let summary = `Last ran ${humanAge(hoursSince(lastRun, d.now))} ago${done[0] ? ` (${done[0].conclusion})` : ""}${clockFrom !== lastRun ? "; its first scheduled run is due" : ""}.`;
       if (failed(done[0]) && failed(done[1])) {
         sev = "crit";
         summary = `Failed the last two times it ran (latest: ${done[0]!.conclusion}).`;
@@ -628,6 +655,35 @@ export async function dexcompareIndex(d: OpsDeps): Promise<CheckResult> {
     });
   }
   return result(d, { id, area: "data", title, severity: "ok", summary: `${rows.length} US products, ${joinable} joinable by TCGplayer id.` });
+}
+
+/**
+ * The Compare Empire network's feeds (lib/family-network.ts, DECISIONS.md "Sites that grow each other"):
+ * every site's family-feed.json on GitHub, read and validated the way the blocks read them. A feed that is
+ * missing or older than FEED_MAX_AGE_DAYS silently empties that site's tiles everywhere, so it is a warn
+ * (after the rollout week: before 2026-11-06 a site may not have run its first daily job yet).
+ */
+export async function familyFeedsCheck(d: OpsDeps): Promise<CheckResult> {
+  const { FAMILY_SITES, fetchFamilyFeeds } = await import("../family-network");
+  const id = "data:family-feeds";
+  const title = "Sister-site deal feeds";
+  const fetcher = async (url: string) => {
+    const r = await d.fetch(url, { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  };
+  const ok = await fetchFamilyFeeds(FAMILY_SITES.map((s) => s.id), fetcher, d.now.getTime());
+  const missing = FAMILY_SITES.filter((s) => !ok.some((f) => f.site === s.id)).map((s) => s.name);
+  if (!missing.length) return result(d, { id, area: "data", title, severity: "ok", summary: `All ${ok.length} sites published a fresh feed.` });
+  const grace = d.now.getTime() < Date.parse("2026-11-06T00:00:00Z");
+  return result(d, {
+    id,
+    area: "data",
+    title,
+    severity: grace ? "ok" : "warn",
+    summary: `${ok.length} of ${FAMILY_SITES.length} feeds fresh; missing or stale: ${missing.join(", ")}. Their tiles are hidden on the sister sites.`,
+    action: 'Tell Claude: "a sister site\'s family feed is missing or stale; check its daily data job\'s Family feed step" and paste this email.',
+  });
 }
 
 // ── Money ───────────────────────────────────────────────────────────────────
@@ -969,6 +1025,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("site:live", "site", "Live site", () => siteProbe(d));
   await add("discord:bot", "site", "Discord price bot", () => discordBot(d));
   await add("partner:dexcompare", "data", "DexCompare store prices (Pokémon)", () => dexcompareIndex(d));
+  await add("data:family-feeds", "data", "Sister-site deal feeds", () => familyFeedsCheck(d));
 
   await add("stripe", "money", "Stripe", () => stripeChecks(d));
   await add("stores:unlinked", "money", "Stores plan: stores waiting for their report", () => storePlansUnlinked(d));

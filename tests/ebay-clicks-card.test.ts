@@ -34,11 +34,8 @@ const PAGE = "src/app/card/[id]/page.tsx";
 
 // ── 1. The buy button's colour, never its position ──────────────────────────
 
-test("buyButtonClass: eBay rows wear eBay blue, every other retailer keeps the one green", () => {
-  for (const r of ["ebay", "ebay_us", "ebay_au", "ebay_uk", "ebay_ca", "ebay_eu"]) {
-    assert.equal(buyButtonClass(r), "btn-ebay", r);
-  }
-  for (const r of ["tcgplayer", "tcgplayer_uk", "cherrycollectables", "cardtrader", ""]) {
+test("buyButtonClass: every row, eBay's included, wears the one green (owner, 2026-11-01: blend in)", () => {
+  for (const r of ["ebay", "ebay_us", "ebay_au", "ebay_uk", "ebay_ca", "ebay_eu", "tcgplayer", "tcgplayer_uk", "cherrycollectables", "cardtrader", ""]) {
     assert.equal(buyButtonClass(r), "btn-buy", r || "(empty)");
   }
   // The label rule is the same prefix test, so the two can never disagree.
@@ -51,7 +48,7 @@ test("the colour is the only thing that changed: both tables still rank by price
   // The row order is computeMarket's, untouched — no eBay-first sort anywhere.
   assert.match(section, /const m = useMemo\(\(\) => computeMarket\(rows, country\), \[rows, country\]\);/);
   const qv = read(QUICKVIEW);
-  assert.match(qv, /import \{ buyButtonClass, buyButtonLabel, ShownFirstTag \} from "\.\/CardMarketSection";/);
+  assert.match(qv, /import \{ buyButtonClass, buyButtonLabel \} from "\.\/CardMarketSection";/);
   assert.match(qv, /\.sort\(\(a, b\) => a\.priceCents - b\.priceCents \|\| a\.delivered - b\.delivered\);/);
   for (const src of [codeOnly(section), codeOnly(qv)]) {
     assert.doesNotMatch(src, /startsWith\("ebay"\)\s*\?\s*-1|sort\([^)]*ebay/i, "no comparison may put eBay first");
@@ -87,7 +84,7 @@ test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when ther
 test("a pinned row keeps its price rank, says it was moved, and says how much dearer it is", () => {
   const src = codeOnly(read(SECTION));
   assert.match(src, /const i = prices\.indexOf\(p\);/);
-  assert.match(src, /\{pinned && <ShownFirstTag \/>\}/);
+  assert.doesNotMatch(src, /ShownFirstTag/, "no wording about the order (owner, 2026-10-30)");
   assert.match(src, /% vs cheapest/);
   assert.match(src, /surface=\{pinned \? "table_pinned" : "table"\}/);
 });
@@ -220,9 +217,9 @@ test("QuickView's two no-eBay-row searches are eBay-blue fallbacks with honest c
     assert.match(l, /pageType="quickview"/);
     assert.doesNotMatch(codeOnly(l.slice(0, l.indexOf("</OutboundLink>"))), /amber|gold|btn-primary/);
   }
-  assert.match(links[0], /className="btn-ebay mt-3 inline-flex text-xs"/);
+  assert.match(links[0], /className="btn-buy mt-3 inline-flex text-xs"/);
   const block = codeOnly(links[1].slice(0, links[1].indexOf("</OutboundLink>")));
-  assert.match(block, /border-\[#0064d2\]\/40 bg-\[#0064d2\]\/\[0\.06\]/);
+  assert.match(block, /rounded-lg border border-ink-800 p-3/);
   assert.match(block, /Search \{ebayMkt\.label\} for \{cardDisplayName\(card\.name, card\)\}/);
   assert.match(block, /We have no \$\{ebayMkt\.label\} price on file for this card right now — eBay sellers may still list it\./);
   assert.match(block, /preRelease\s*\?\s*"This set hasn't released yet — eBay sellers set their own dispatch dates, so check each listing\."/);

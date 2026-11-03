@@ -693,7 +693,7 @@ export function SearchBar({
             clearFocusIntentTimer();
           }}
           onKeyDown={onKeyDown}
-          placeholder={isHero ? "Search any Riftbound card…" : "Search for cards"}
+          placeholder={isHero ? "Search any Riftbound card or sealed product…" : "Search cards or sealed products"}
           className={isHero ? "input border-ink-600 bg-ink-900 py-3.5 pl-11 pr-14 text-base shadow-glow sm:pr-11 sm:text-lg" : "input pl-9 pr-12 sm:pr-10"}
           aria-label="Search cards"
           autoComplete="off"
@@ -1021,7 +1021,7 @@ export function SearchBar({
                           <div className="grid h-12 w-9 shrink-0 place-items-center overflow-hidden rounded bg-ink-900">
                             {s.imageUrl ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={s.imageUrl} alt="" aria-hidden="true" className="h-full w-full object-contain" loading="lazy" decoding="async" />
+                              <img src={s.imageUrl} alt={s.name} aria-hidden="true" className="h-full w-full object-contain" loading="lazy" decoding="async" />
                             ) : (
                               <span className="text-[8px] font-semibold text-slate-600">SEALED</span>
                             )}

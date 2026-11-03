@@ -165,6 +165,27 @@ export function PokemonBoardView({
         </OutboundLink>
       </div>
 
+      {/* Amazon (lib/amazon.ts), where the market has an Associates tag: a search, no price, never ranked with the listings. */}
+      {board.amazonSearch && (
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2.5">
+          <span className="flex items-center gap-2 text-xs text-slate-300">
+            Also on Amazon: we don&apos;t read its prices, so compare its checkout total
+            <PaidLinkTag />
+          </span>
+          <OutboundLink
+            href={board.amazonSearch.href}
+            retailer="pkmn_amazon_search"
+            country={board.market}
+            kind="sealed"
+            pageType={pageType}
+            surface="amazon_search"
+            className="btn-ghost px-3 py-1.5 text-xs"
+          >
+            {board.amazonSearch.label} →
+          </OutboundLink>
+        </div>
+      )}
+
       {dexLast && stores}
 
       {board.references.length > 0 && (
@@ -191,6 +212,7 @@ export function PokemonBoardView({
       )}
 
       <AffiliateDisclosure partner="both" />
+      {board.amazonSearch && <AffiliateDisclosure partner="amazon" tight />}
     </div>
   );
 }

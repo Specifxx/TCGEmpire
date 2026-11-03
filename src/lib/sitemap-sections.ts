@@ -17,6 +17,7 @@ import { SITE_URL } from "./site";
 import { cardImageSrc } from "./card-image-url";
 import { getArticles } from "./articles";
 import { SETS } from "./constants";
+import { openAutoPreorderSets } from "./release-calendar";
 import { DOMAIN_PAGES } from "./domains";
 import { KEYWORDS, KEYWORD_THIN_THRESHOLD, keywordCardWhere } from "./keywords";
 import { CHAMPIONS, championCardWhere, CHAMPION_THIN_THRESHOLD } from "./champions";
@@ -126,6 +127,7 @@ async function core(): Promise<SitemapEntry[]> {
     // a clock, so this is one of the few pages on the site where "hourly" is a
     // description rather than a wish.
     { url: `${SITE_URL}/auctions`, changeFrequency: "hourly", priority: 0.8, lastModified: auctionDay },
+    { url: `${SITE_URL}/graded`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/market/records`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/market/report`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
@@ -208,6 +210,15 @@ async function core(): Promise<SitemapEntry[]> {
     // /sets/legacy: it carries real content (Riot's product list, the
     // distributor's contents, the FAQ) even before a store lists a pre-order.
     { url: `${SITE_URL}/legacy-preorders`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/legacy-preorders") },
+    // Every coming-soon set without a hand-built page has the automatic /preorders/<slug> (2026-11-02), listed only
+    // while it is taking pre-orders, so a retired (redirecting) one never lingers here.
+    ...openAutoPreorderSets().map((s) => ({ url: `${SITE_URL}/preorders/${s.slug}`, changeFrequency: "daily" as const, priority: 0.8 })),
+    // Black Friday sealed deals (2026-10-30), one URL kept year round so it builds history.
+    { url: `${SITE_URL}/black-friday`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/black-friday") },
+    // The seasonal sale pages (2026-11-02), one URL each kept year round like /black-friday.
+    { url: `${SITE_URL}/boxing-day`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/boxing-day") },
+    { url: `${SITE_URL}/january-sales`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/january-sales") },
+    { url: `${SITE_URL}/lunar-new-year`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/lunar-new-year") },
     // /feedback is NOT submitted: src/app/feedback/page.tsx sets
     // robots: { index: false, follow: true } (AdSense remediation § Phase 7 —
     // /contact already covers the same intent with real content). Submitting a
@@ -217,6 +228,8 @@ async function core(): Promise<SitemapEntry[]> {
     // sitemap entry is what was wrong. The page keeps `follow`, and the footer
     // still links it, so it remains crawlable and the link graph is untouched.
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/about") },
+    // Every card game the family compares, one page for the generic query (2026-10-28).
+    { url: `${SITE_URL}/tcg-price-comparison`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/tcg-price-comparison") },
     { url: `${SITE_URL}/creators`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/creators") },
     { url: `${SITE_URL}/creators/apply`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/creators/apply") },
     // The widget directory. Submitted rather than left to the footer because it
@@ -234,6 +247,7 @@ async function core(): Promise<SitemapEntry[]> {
     // submitted rather than left to be discovered from the footer.
     { url: `${SITE_URL}/editorial-policy`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/editorial-policy") },
     { url: `${SITE_URL}/methodology`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/methodology") },
+    { url: `${SITE_URL}/how-we-pick-stores`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/how-we-pick-stores") },
     { url: `${SITE_URL}/authors`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/authors") },
     // Each author page lists only that author's articles (authors/[slug]), so its
     // lastmod is the newest of THEM — guides included — not the newest blog post
@@ -485,32 +499,22 @@ async function champions(): Promise<SitemapEntry[]> {
   // Only champions that actually have cards — the hub page calls notFound() for
   // an empty one, and submitting a URL that 404s is worse than omitting it.
   const counts = await Promise.all(CHAMPIONS.map((c) => prisma.card.count({ where: championCardWhere(c) })));
-  // PER-CHAMPION freshness — same fix as cards()/stores() above, applied here
-  // via a relation filter (RetailerPrice → Card) rather than a groupBy, since
-  // "which champion" isn't a plain column to group by. One aggregate query per
-  // champion, matching the `counts` query above's own shape (CHAMPIONS is a
-  // few dozen entries, not the ~1,400-card scale a groupBy exists to spare).
-  const lastSeens = await Promise.all(
-    CHAMPIONS.map((c) =>
-      prisma.retailerPrice
-        .aggregate({ where: { card: championCardWhere(c) }, _max: { lastSeen: true } })
-        .then((r) => r._max.lastSeen)
-        .catch(() => null)
-    )
-  );
+  // No per-champion lastmod (2026-10-30): the one aggregate per champion that
+  // computed it joined RetailerPrice to Card through a name filter, and the few
+  // dozen of them together ran past 30 seconds on a cache miss, so a crawler
+  // asking for champions.xml timed out (crawl-audit-sites) and the hubs fell out
+  // of the sitemap. The price day is accurate enough for a hub of many cards.
   // Hubs under the threshold carry robots: noindex (see app/champions/[slug]),
   // so submitting them here would ask Google to index URLs we're telling it not
   // to — the contradiction that fills the "Excluded by noindex tag" bucket.
-  // Index into `counts`/`lastSeens` BEFORE filtering — filtering first (as the
-  // facets() function above does) would silently shift the two arrays out of
-  // sync with the filtered CHAMPIONS list.
-  return CHAMPIONS.map((c, i) => ({ c, count: counts[i], lastSeen: lastSeens[i] }))
+  // Index into `counts` BEFORE filtering, so it stays in step with CHAMPIONS.
+  return CHAMPIONS.map((c, i) => ({ c, count: counts[i] }))
     .filter(({ count }) => count >= CHAMPION_THIN_THRESHOLD)
-    .map(({ c, lastSeen }) => ({
+    .map(({ c }) => ({
       url: `${SITE_URL}/champions/${c.slug}`,
       changeFrequency: "daily" as const,
       priority: 0.8,
-      lastModified: lastSeen ?? day,
+      lastModified: day,
     }));
 }
 

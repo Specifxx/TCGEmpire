@@ -79,3 +79,12 @@ test("TCGplayer earnings split by the click's sharedid, reversed actions left ou
   const d = earningsDigest([src("tcgplayer", "ok", [], impactTagDays(actions))], [], "2026-10-26", "https://x/admin/earnings");
   assert.match(d.text, /TCGplayer by site, 30 days:\n\s+RiftCompare \(Riftbound\):/);
 });
+
+test("a TCGplayer action tagged only in SubId1 (engine sites) keeps its site", () => {
+  const [a] = impactActions({
+    Actions: [{ Id: "9", EventDate: "2026-10-24T03:00:00Z", State: "PENDING", Currency: "USD", Payout: "1.50", SharedId: "", SubId1: "lorcana-us-card_pinned-12" }],
+  });
+  assert.equal(a.tag, "lorcana-us-card_pinned-12");
+  const groups = tagBreakdown(impactTagDays([a]), "30d", "2026-10-26", "USD");
+  assert.deepEqual(groups.map((g) => [g.key, g.label]), [["lorcana", "Lorcana Compare"]]);
+});

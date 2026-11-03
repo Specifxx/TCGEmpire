@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { SETS } from "../src/lib/constants";
+import { SETS, hasSetGallery, setByCode } from "../src/lib/constants";
 import { NAV_GROUPS } from "../src/components/nav-groups";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,7 +85,9 @@ test("the gallery links out as text a crawler can follow: Legends and domains", 
 
 test("a set in its preview season is reachable: nav, the gallery hub and every other set's gallery", () => {
   // Derived from SETS, so this holds for whichever set is in its preview season.
-  for (const s of SETS.filter((x) => x.comingSoon && x.hubReady)) {
+  // hasSetGallery: a hub set before its previewFrom day (Legacy until 13 Dec
+  // 2026) has an empty gallery, so the nav waits for it.
+  for (const s of SETS.filter((x) => x.comingSoon && x.hubReady && hasSetGallery(x))) {
     const nav = NAV_GROUPS.flatMap((g) => g.links).find((l) => l.href === `/sets/${s.slug}/gallery`);
     assert.ok(nav, `the ${s.name} gallery must be in the nav (and so the footer)`);
     assert.equal(nav!.label, `${s.name} card gallery`);
@@ -96,15 +98,28 @@ test("a set in its preview season is reachable: nav, the gallery hub and every o
   // Its partial count must not inflate the hub's "all N cards, every set" title.
   assert.ok(hub.includes("const { released } = await getSetCounts();"), "the hub title counts released sets only");
 
-  assert.ok(GALLERY.includes("SETS.filter((s) => s.slug !== set.slug && hasSetHub(s))"), "each gallery links the other set galleries, upcoming included");
+  assert.ok(GALLERY.includes("SETS.filter((s) => s.slug !== set.slug && hasSetGallery(s))"), "each gallery links the other set galleries, upcoming included once they have one");
 
   // The homepage's "By set" grid: the preview set's "Coming soon" tile links to
   // its gallery instead of rendering disabled (owner, 2026-09-30).
   const home = read("src/components/home/HomeSections.tsx");
-  assert.match(home, /hasSetHub\(s\) \? \(\s*<Link[\s\S]{0,120}href=\{`\/sets\/\$\{s\.slug\}\/gallery`\}/, "the Coming soon tile links to the gallery");
+  assert.match(
+    home,
+    /hasSetHub\(s\) \? \([\s\S]{0,300}href=\{hasSetGallery\(s\) \? `\/sets\/\$\{s\.slug\}\/gallery` : `\/sets\/\$\{s\.slug\}`\}/,
+    "the Coming soon tile links to the gallery once it has one, else to the hub",
+  );
 });
 
 test("Vendetta no longer carries the homepage's New badge", () => {
   const ven = SETS.find((s) => s.code === "VEN");
   assert.ok(ven && !ven.recentlyReleased, "Vendetta went on sale 31 Jul 2026; the New badge has run its course");
+});
+
+test("a hub set's gallery is linked only from its first preview day (Legacy, 13 Dec 2026)", () => {
+  const lgc = setByCode("LGC");
+  assert.ok(lgc && lgc.hubReady && lgc.previewFrom === "2026-12-13");
+  assert.equal(hasSetGallery(lgc!, new Date("2026-12-12T23:59:59Z")), false);
+  assert.equal(hasSetGallery(lgc!, new Date("2026-12-13T00:00:00Z")), true);
+  // Released sets and sets without previewFrom are unaffected.
+  assert.equal(hasSetGallery(setByCode("RAD")!, new Date("2026-11-01T00:00:00Z")), true);
 });

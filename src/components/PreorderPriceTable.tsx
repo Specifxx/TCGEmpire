@@ -44,7 +44,8 @@ import {
 //    a dearer eBay row never moves the number the product is sold on;
 //  - the "+N%" over that cheapest offer still shows on the eBay row, so the page
 //    never hides that it is dearer;
-//  - every pinned row carries a "Shown first" tag beside its "Paid link" tag,
+//  - every pinned row carries its "Paid link" tag (the "Shown first" chip went
+//    on 2026-10-30: owner, no wording about the order),
 //    and the table's top line says open eBay listings come first — the pin is
 //    labelled WHERE IT HAPPENS, not only in the footnote below the last product;
 //  - the owner's "eBay may have a lower price" sits on the per-product "Search
@@ -151,7 +152,7 @@ export function PreorderPriceTable({
    *  customid) and buy_click's page_type: without it every click from this
    *  table — eBay included — reported as the HOMEPAGE ("<retailer>-home"),
    *  which hid the pre-order page's earnings inside the homepage's. */
-  page?: "/radiance-preorders" | "/sets/radiance" | "/legacy-preorders";
+  page?: "/radiance-preorders" | "/sets/radiance" | "/sets/legacy" | "/legacy-preorders" | "/black-friday" | "/boxing-day" | "/january-sales" | "/lunar-new-year" | `/preorders/${string}`;
   /** Injected for tests; the page renders at request/ISR time. */
   now?: number;
   /** After the set's street date (2026-10-24): the same rows, but an open row
@@ -161,9 +162,20 @@ export function PreorderPriceTable({
   const taking = released ? "in stock" : "taking pre-orders";
   // /legacy-preorders (2026-10-25) reports as its own page; the EPN customid
   // already separates it (affiliateUrl takes the path's first segment).
-  const pageType = page === "/sets/radiance" ? "set_hub" : page === "/legacy-preorders" ? "legacy_preorders" : "radiance_preorders";
+  const pageType =
+    page === "/sets/radiance" || page === "/sets/legacy"
+      ? "set_hub"
+      : page === "/legacy-preorders"
+        ? "legacy_preorders"
+        : page === "/black-friday"
+          ? "black_friday"
+          : page === "/boxing-day" || page === "/january-sales" || page === "/lunar-new-year"
+            ? page.slice(1).replace(/-/g, "_") // the seasonal sale pages (2026-11-02)
+            : page?.startsWith("/preorders/")
+              ? "preorders" // the automatic pages (2026-11-02); EPN's customid already carries the path
+              : "radiance_preorders";
   // EPN customid segment for the per-product search line, one per page.
-  const searchSource = page === "/sets/radiance" ? "set-hub-product" : "preorders-product";
+  const searchSource = page === "/sets/radiance" || page === "/sets/legacy" ? "set-hub-product" : page === "/black-friday" ? "black-friday-product" : page === "/boxing-day" || page === "/january-sales" || page === "/lunar-new-year" ? `${page.slice(1)}-product` : "preorders-product";
   const label = ebayLabel(country);
   const shown = preorderTableGroups(groups);
   if (shown.length === 0) return null;
@@ -280,12 +292,6 @@ export function PreorderPriceTable({
                           </span>
                           <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
                           {paid && <PaidLinkTag />}
-                          {pinned && (
-                            // The pin, labelled on the row it moved.
-                            <span data-shown-first className="rounded bg-sky-500/10 px-1.5 py-px font-semibold text-sky-300">
-                              Shown first
-                            </span>
-                          )}
                         </span>
                         {pinned && (
                           // What the row IS. Not "may be lower than this": it is
@@ -317,13 +323,11 @@ export function PreorderPriceTable({
                           // A sold-out or unconfirmed offer keeps its link (the store
                           // may restock) but loses the button: no emphasis on a
                           // purchase that probably cannot be made. An open eBay row
-                          // is the same size and weight in eBay blue (2026-09-26).
+                          // is the same button as every store (owner, 2026-11-01: "blend in").
                           className={
                             !isOpen
                               ? "px-2.5 py-1 text-xs text-slate-500 underline-offset-2 hover:underline"
-                              : isEbay
-                                ? "btn-ebay-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
-                                : "btn-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
+                              : "btn-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
                           }
                         >
                           {!isOpen ? "View" : isEbay ? "View on eBay" : released ? "Buy" : "Pre-order"}
@@ -360,7 +364,7 @@ export function PreorderPriceTable({
       <p className="mt-2 text-[11px] leading-snug text-slate-400">
         Links marked &ldquo;Paid link&rdquo;, and the blue &ldquo;Search eBay&rdquo; row at the top of each product,
         earn us a commission if you buy through them, at no extra cost to you.
-        Open eBay listings are shown first in each product, tagged &ldquo;Shown first&rdquo;. They are paid links
+        Open eBay listings are shown first in each product. They are paid links
         and are often not the cheapest, so compare the price beside each one. Every other row is sorted purely by
         price, whether it pays us or not, and only offers open at our last check are listed. The &ldquo;Search
         eBay&rdquo; rows are searches of eBay, not ranked results.

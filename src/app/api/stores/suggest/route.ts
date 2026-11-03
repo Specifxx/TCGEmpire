@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
+import { cleanReport, saveReport } from "@/lib/reports-github";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,9 @@ export async function POST(req: Request) {
         fields: [["Store", storeName], ["Website", storeUrl], ["Market", country]],
         body: note || null,
       });
+      // Also filed in the private reports repo (lib/reports-github.ts), without the email or IP.
+      const copy = cleanReport({ kind: "suggest-store", store: storeName, storeUrl, region: country, note }, "riftcompare");
+      if (copy.ok) await saveReport(copy.report);
     }
   } catch {
     return NextResponse.json({ error: "Couldn't submit right now — please try again shortly." }, { status: 500 });

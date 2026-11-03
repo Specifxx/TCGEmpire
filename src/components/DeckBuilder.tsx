@@ -10,6 +10,8 @@ import { cardImageAlt } from "@/lib/image-alt";
 import { cardImageSrc, cardImageSrcSet } from "@/lib/card-image-url";
 import { formatDeckLine } from "@/lib/deck";
 import { trackEvent } from "@/lib/analytics";
+import { track } from "@vercel/analytics";
+import { shareUrl } from "@/lib/share-link";
 import { CardSearch, type SearchCard } from "./CardSearch";
 import { QtyInput } from "./QtyInput";
 import { cardThumbProps } from "@/lib/card-image-url";
@@ -19,6 +21,7 @@ import { InlineSignupPrompt } from "./InlineSignupPrompt";
 
 import { PremiumButton } from "./PremiumButton";
 import { OutboundLink } from "./OutboundLink";
+import { LotCheck } from "./LotCheck";
 import { affiliateUrl } from "@/lib/affiliate";
 import { RIFTBOUND_TCG_LINE, tcgplayerMassEntryUrl } from "@/lib/tcgplayer-cart";
 
@@ -322,7 +325,21 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
 
   async function share() {
     if (!listText.trim()) return;
-    const url = `${window.location.origin}/deck?list=${encodeURIComponent(encodeList(listText))}`;
+    // utm_source=share (lib/share-link.ts): the growth report counts the visits a shared deck brings.
+    const url = shareUrl(window.location.origin, `/deck?list=${encodeURIComponent(encodeList(listText))}`, "deck");
+    try {
+      track("share", { medium: "deck" });
+    } catch {
+      /* analytics never gets in the way */
+    }
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: "My Riftbound deck, priced", text: `This Riftbound deck costs ${fmt(totals.totalCents)} buying each card where it's cheapest. Compare every store on RiftCompare:`, url });
+        return;
+      } catch (e) {
+        if ((e as Error)?.name === "AbortError") return;
+      }
+    }
     try {
       await navigator.clipboard.writeText(url);
       setShared("copied");
@@ -477,6 +494,10 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
             )}
           </div>
         )}
+
+        {/* The lot checker (2026-10-27, lib/lot-check.ts): is a lot's asking price
+            better than these cards as singles? */}
+        {totals.totalCents > 0 && <LotCheck country={country} singlesCents={totals.totalCents} pricedQty={totals.pricedQty} totalQty={totals.totalQty} />}
 
         {/* Watch this deck's delivered price (Premium, 2026-09-29): the paid
             run re-prices the list after every import, lib/deck-watch.ts. The

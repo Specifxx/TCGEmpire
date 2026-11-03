@@ -146,6 +146,7 @@ export function Dialog({
   z = "modal",
   initialFocusRef,
   className = "",
+  dismissOnBackdrop = true,
 }: {
   open: boolean;
   onClose: () => void;
@@ -157,6 +158,8 @@ export function Dialog({
   z?: DialogZ;
   initialFocusRef?: RefObject<HTMLElement>;
   className?: string;
+  /** false: a click on the dimmed page does not close it (✕, a button and Escape still do). */
+  dismissOnBackdrop?: boolean;
 }) {
   const { mounted, entered } = usePresence(open, DUR.fast);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -258,7 +261,7 @@ export function Dialog({
       <div className={`fixed inset-0 ${Z_CLASS[z]} h-[100dvh]`} role="dialog" aria-modal="true" {...ariaProps}>
         <div
           className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-base ${entered ? "opacity-100" : "motion-safe:opacity-0"}`}
-          onClick={onClose}
+          onClick={dismissOnBackdrop ? onClose : undefined}
           aria-hidden
         />
         <div
@@ -282,7 +285,7 @@ export function Dialog({
       <div className={`fixed inset-0 ${Z_CLASS[z]} flex items-end justify-center p-0 sm:items-center sm:p-4`} role="dialog" aria-modal="true" {...ariaProps}>
         <div
           className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-base ${entered ? "opacity-100" : "motion-safe:opacity-0"}`}
-          onClick={onClose}
+          onClick={dismissOnBackdrop ? onClose : undefined}
           aria-hidden
         />
         <div
@@ -312,7 +315,7 @@ export function Dialog({
     >
       <div
         className={`fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-base ${entered ? "opacity-100" : "motion-safe:opacity-0"}`}
-        onClick={onClose}
+        onClick={dismissOnBackdrop ? onClose : undefined}
         aria-hidden
       />
       <div className={`relative flex min-h-full justify-center ${placement === "top" ? "items-start pt-[7vh]" : "items-center"}`}>

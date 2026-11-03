@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CoinCollection } from "@/components/coins/CoinCollection";
-import { coinArt } from "@/lib/coins";
+import { COINS_ENABLED, coinArt } from "@/lib/coins";
 
 // /coins — RiftCompare Coins (2026-10-16, owner, from George's design: "Turn
 // these into virtual coins that premium members can get by completing tasks…
@@ -28,6 +29,8 @@ const HERO = [
 ];
 
 export default function CoinsPage() {
+  // Switched off 2026-10-29 (owner): a 404 until COINS_ENABLED comes back.
+  if (!COINS_ENABLED) notFound();
   return (
     <div className="container-app max-w-5xl space-y-8 py-6">
       <Breadcrumbs trail={[{ name: "RiftCompare Coins", href: "/coins" }]} />

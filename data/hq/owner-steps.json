@@ -1,0 +1,136 @@
+{
+  "v": 1,
+  "note": "Bill's weekly queue (Empire HQ, riftcompare.com/admin/hq). One row per step that needs Bill's hands. PUBLIC FILE: a title, a reason and the project-files path of the prompt only; never a key, a token, an address or a private name. Add a row and commit to main (no deploy needed: HQ reads this file from GitHub). Set done to the day you verified it, or Bill presses Done on HQ. The prompt text itself stays in project files; each Monday the steps still open are joined into one Chrome batch, chrome-queue/<date>.md.",
+  "steps": [
+    {
+      "id": "bluesky-account",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Finish the Compare Empire Bluesky account: app password into GitHub (one time; it then posts itself)",
+      "why": "The daily Bluesky job is built and dry-running: two link cards a day across all 13 sites, no recurring work, once the account exists.",
+      "added": "2026-11-02",
+      "prompt": "social/chrome-prompt-bluesky-finish.md",
+      "done": "2026-11-02"
+    },
+    {
+      "id": "cam-vercel-bot-challenge",
+      "site": "cc",
+      "kind": "chrome",
+      "title": "Turn off CamCompare's Vercel bot challenge again",
+      "why": "Since about 2 Nov it answers non-browser clients with 429 (fixed 30 Oct, back again): it blocks link previews, IndexNow and the Bluesky poster's CamCompare cards.",
+      "added": "2026-11-02",
+      "prompt": "camcompare/chrome-prompt-vercel-bot-challenge.md",
+      "done": "2026-11-03"
+    },
+    {
+      "id": "github-org-step1",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Create the free Compare Empire GitHub organization (moves nothing)",
+      "why": "Step 1 of the approved consolidation plan: shared secrets and one place for every repo.",
+      "added": "2026-11-02",
+      "prompt": "consolidation/chrome-prompt-github-org-step1.md",
+      "done": "2026-11-02"
+    },
+    {
+      "id": "cyberpunk-setup",
+      "site": "cyberpunk",
+      "kind": "chrome",
+      "title": "Cyberpunk Compare: add the site to Google Search Console (eBay keys and domain already done)",
+      "why": "The site and its own eBay keys are live since 2 Nov; Google still needs the property and sitemap.",
+      "added": "2026-11-01",
+      "prompt": "cyberpunk-compare/chrome-prompt-setup.md",
+      "done": null
+    },
+    {
+      "id": "amazon-uk-ca-de",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Amazon in one sitting: tracking IDs for Dex, MTG and OP, then join UK, Canada and Germany",
+      "why": "UK, CA and EU visitors see no Amazon link today, and Dex/MTG/OP sales count under RiftCompare's tag; every site's code is already wired.",
+      "added": "2026-11-02",
+      "prompt": "amazon/chrome-prompt-amazon-all-2026-11-02.md",
+      "done": "2026-11-02"
+    },
+    {
+      "id": "compareempire-www",
+      "site": "compareempire",
+      "kind": "chrome",
+      "title": "Bring www.compareempire.com back as a redirect (Vercel domain + one DNS record), then tidy Search Console",
+      "why": "www has had no DNS since 26 Oct and Google still files most pages under www; impressions fell from about 25K a day to about 200.",
+      "added": "2026-11-02",
+      "prompt": "seo/chrome-prompt-compareempire-www-2026-11-02.md",
+      "done": "2026-11-02"
+    },
+    {
+      "id": "vercel-cost-cap",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Vercel: spend alerts at $170 a month, Standard build machines, scraper-bot firewall rule on every project",
+      "why": "1 November cost $11.82 against a $5-6 a day ceiling; the code side (one build per 12 hours, no previews) is merged, these are dashboard-only.",
+      "added": "2026-11-02",
+      "prompt": "vercel-cost/chrome-prompt-vercel-cost-2026-11-02.md",
+      "done": null
+    },
+    {
+      "id": "discord-bot",
+      "site": "rc",
+      "kind": "chrome",
+      "title": "Switch on the Discord price bot: create the app, paste three values (one time, about 10 minutes)",
+      "why": "Growth plan 2026-11-03: the bot's answers and /daily game posts are seen by whole channels, a loop that brings new players without us posting. Everything after these 10 minutes runs itself (daily setup job).",
+      "added": "2026-11-03",
+      "prompt": "discord-bot/chrome-prompt-discord-bot-v2.md",
+      "done": null
+    },
+    {
+      "id": "vercel-analytics-wargame-figure",
+      "site": "all",
+      "kind": "hands",
+      "title": "Vercel: turn on Analytics for wargamecompare and figurecompare",
+      "why": "Without it those two sites have no visitor counts on HQ.",
+      "added": "2026-11-03",
+      "prompt": null,
+      "done": null
+    },
+    {
+      "id": "ygo-app-redirect",
+      "site": "ygo",
+      "kind": "hands",
+      "title": "Vercel: redirect ygocompare.app to ygocompare.com (Domains settings)",
+      "why": "Two hosts split Google's signals; the .com is the site's address.",
+      "added": "2026-11-03",
+      "prompt": null,
+      "done": null
+    },
+    {
+      "id": "amazon-au-api",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Amazon AU: run the prompt and send back the tracking IDs",
+      "why": "The AU tags and API access are needed for per-site Amazon AU links.",
+      "added": "2026-11-03",
+      "prompt": "amazon/chrome-prompt-amazon-au-api-2026-11-03.md",
+      "done": null
+    },
+    {
+      "id": "dex-adsense-review",
+      "site": "dex",
+      "kind": "hands",
+      "title": "AdSense: request the DexCompare site review",
+      "why": "DexCompare shows no AdSense ads until Google approves the site.",
+      "added": "2026-11-03",
+      "prompt": null,
+      "done": null
+    },
+    {
+      "id": "dex-tiktok-threads",
+      "site": "dex",
+      "kind": "chrome",
+      "title": "Optional: DexCompare TikTok and Threads accounts",
+      "why": "Optional social accounts for DexCompare.",
+      "added": "2026-11-03",
+      "prompt": "dexcompare/chrome-prompt-tiktok-threads-2026-11-03.md",
+      "done": null
+    }
+  ]
+}

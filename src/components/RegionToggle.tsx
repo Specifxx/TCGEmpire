@@ -2,6 +2,7 @@
 
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { useCountry } from "./CountryProvider";
+import { Flag } from "./Flag";
 
 // Compact segmented market switcher for inline use on tool pages (arbitrage, value
 // finder, etc.). Switching sets the country cookie and refreshes, so the server page
@@ -39,7 +40,6 @@ export function RegionToggle({ label = "Market", className = "" }: { label?: str
           // buttons in CountryHeroToggle for why a hand-written string kept
           // failing label-content-name-mismatch even when it started with the
           // right word.
-          const flagId = `rt-${c.code}-flag`;
           const codeId = `rt-${c.code}-code`;
           const currencyId = `rt-${c.code}-currency`;
           const descId = `rt-${c.code}-desc`;
@@ -54,12 +54,12 @@ export function RegionToggle({ label = "Market", className = "" }: { label?: str
               key={c.code}
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
-              aria-labelledby={active ? `${flagId} ${codeId} ${currencyId} ${descId}` : `${flagId} ${codeId} ${descId}`}
+              aria-labelledby={active ? `${codeId} ${currencyId} ${descId}` : `${codeId} ${descId}`}
               className={`flex min-h-11 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold transition-colors sm:[@media(pointer:fine)]:min-h-0 ${
                 active ? "bg-brand-500 text-ink-950" : "text-slate-300 hover:bg-ink-800 hover:text-white"
               }`}
             >
-              <span id={flagId} className="text-base leading-none">{c.flag}</span>
+              <Flag code={c.code} className="text-base" />
               <span id={codeId}>{c.code}</span>
               {/* No colour of its own: it inherits the active button's
                   text-ink-950, which the light theme keeps dark on the brand

@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { buildInboxEmail, capKeys, MAX_PER_DAY, MAX_PER_HOUR } from "../src/lib/ops/notify-owner";
-import { DEFAULT_OWNER_EMAIL, ownerEmail } from "../src/lib/ops/owner";
+import { buildInboxEmail, capKeys, MAX_PER_DAY, MAX_PER_HOUR, replyAddress } from "../src/lib/ops/notify-owner";
+import { DEFAULT_OWNER_EMAIL, inboxEmail, ownerEmail } from "../src/lib/ops/owner";
+import { CONTACT_EMAIL } from "../src/lib/site";
 import { missingEnv, requiredEnvNames, siteSelfReport } from "../src/lib/ops/self-report";
 import { OPERATIONAL_VARS } from "../src/lib/db-chains";
 import { PUBLIC_MODELS } from "../src/lib/public-data/models";
@@ -27,6 +28,7 @@ test("every public form tells the owner as soon as something is saved", () => {
     ["src/app/api/price-report/route.ts", /kind: "price-report"/],
     ["src/app/api/stores/suggest/route.ts", /kind: "store-suggestion"/],
     ["src/app/api/support/route.ts", /kind: "support"/],
+    ["src/app/api/sister-alerts/route.ts", /kind: "sister-alert"/],
   ];
   for (const [file, kind] of forms) {
     const src = code(file);
@@ -39,8 +41,10 @@ test("every public form tells the owner as soon as something is saved", () => {
   }
 });
 
-test("feedback and ratings send no email; they wait in the admin inbox's summary (owner, 2026-10-27)", () => {
-  assert.doesNotMatch(code("src/app/api/feedback/route.ts"), /notifyOwnerBounded/);
+test("written feedback reaches the site inbox; ratings send no email and wait in the admin summary (owner, 2026-10-27 and 2026-10-30)", () => {
+  const fb = code("src/app/api/feedback/route.ts");
+  assert.match(fb, /if \(!source\.startsWith\("rating"\) && message\.length >= MIN_MESSAGE\) \{\s*await notifyOwnerBounded\(\{\s*kind: "feedback"/);
+  assert.ok(fb.indexOf("notifyOwnerBounded({") > fb.search(/prisma\.feedback\.create\(/), "notify after the row is saved");
   const counts = code("src/lib/ops/inbox-counts.ts");
   assert.match(counts, /const oldest = \[contact, sugg, reports, support\]/, "feedback never ages the inbox into an alert");
   assert.doesNotMatch(counts.slice(counts.indexOf("const waiting")), /^\s*feedback: feedback\._count\._all,\n\s*storeSuggestions/m);
@@ -66,6 +70,20 @@ test("a flood of submissions cannot spend the day's email allowance", () => {
   const src = code("src/lib/ops/notify-owner.ts");
   assert.match(src, /h\.value <= MAX_PER_HOUR && dday\.value <= MAX_PER_DAY/);
   assert.match(src, /catch \{\s*return true;/, "an unreadable counter fails open: a lost cap is better than a lost message");
+});
+
+test("visitor messages go to the site's own inbox with Reply-To the visitor, never the owner's personal address", () => {
+  assert.equal(inboxEmail({}), CONTACT_EMAIL);
+  assert.equal(inboxEmail({}), "riftcompare@gmail.com");
+  assert.equal(inboxEmail({ INBOX_EMAIL: "help@example.org" }), "help@example.org");
+  assert.equal(inboxEmail({ INBOX_EMAIL: "a@b.c, x@y.z" }), CONTACT_EMAIL);
+  assert.equal(replyAddress("Sam <sam@example.com>"), "sam@example.com");
+  assert.equal(replyAddress("sam@example.com"), "sam@example.com");
+  assert.equal(replyAddress("anonymous"), null);
+  assert.equal(replyAddress("x <a@b.c>\r\nBcc: y@z.w"), null, "no header injection");
+  const src = code("src/lib/ops/notify-owner.ts");
+  assert.match(src, /sendEmail\(inboxEmail\(\)/);
+  assert.doesNotMatch(src, /ownerEmail/);
 });
 
 test("the inbox email escapes what a stranger typed and shows the owner who to reply to", () => {
@@ -150,7 +168,11 @@ test("the monitor workflow runs on the live database, every few hours, and diges
   const wf = read(".github/workflows/ops-monitor.yml");
   assert.match(wf, /DATABASE_URL: \$\{\{ secrets\.RM10 \|\| vars\.RM10 \}\}/, "tests/db-chain.test.ts keeps this on the chain head");
   assert.match(wf, /DB_SOURCE_NAME: \$\{\{ \(secrets\.RM10 \|\| vars\.RM10\) && 'RM10' \|\| 'UNSET' \}\}/);
-  assert.match(wf, /cron: "17 \*\/3 \* \* \*"/);
+  // Asked hourly, run about every three hours: GitHub drops many scheduled runs (2026-11-02, 10-hour gap).
+  assert.match(wf, /cron: "17 \* \* \* \*"/);
+  assert.match(wf, /actions\/caches\?key=ops-state-&sort=created_at&direction=desc/, "the gate reads when the last real check saved its memory");
+  assert.match(wf, /if \[ "\$age" -lt 150 \]/);
+  assert.match(wf, /if: \$\{\{ needs\.gate\.outputs\.run == '1' \}\}/);
   assert.match(wf, /cron: "0 21 \* \* 0"/);
   assert.match(wf, /OPS_DIGEST: \$\{\{ \(github\.event\.schedule == '0 21 \* \* 0' \|\| inputs\.digest\) && '1' \|\| '' \}\}/);
   assert.match(wf, /DRY_RUN: \$\{\{ inputs\.dry_run && '1' \|\| '' \}\}/);

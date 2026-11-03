@@ -7,6 +7,7 @@ import {
   impactActionDays,
   impactTagDays,
   impactActions,
+  latestReportDay,
   reportRecords,
   uniqueActions,
   uniqueRecords,
@@ -179,7 +180,8 @@ const fetchEpn: Fetcher = async () => {
     const shape = await epnPages(sid, headers, EPN_DAILY_REPORT, "CAMPAIGN_ID=0&CHECKOUT_SITE=0", (j) => records.push(...reportRecords(j)));
     const unique = uniqueRecords(records);
     const parts = epnDailyParts(unique, EPN_CURRENCY);
-    return { days: mergeDays([...parts.earnings, ...parts.other]), parts, duplicates: records.length - unique.length, ...shape };
+    const latest = latestReportDay(unique, "Date", "EventDate", "Day", "ReportDate", "TransactionDate");
+    return { days: mergeDays([...parts.earnings, ...parts.other]), parts, latest, duplicates: records.length - unique.length, ...shape };
   })();
   const tdrRun = (async () => {
     let lastError: unknown = null;
@@ -201,6 +203,9 @@ const fetchEpn: Fetcher = async () => {
   const tdrDays = t ? txnDays(t.sales) : [];
   const days = d?.days.length ? d.days : tdrDays;
   const tags = t?.sales.length ? tagDays(t.sales) : undefined;
+  // The newest day eBay has reported, for the dashboard's Today (core.ts latestDayFigure).
+  const today = dayIn(Date.now());
+  const reportedThrough = [d?.latest ?? "", ...(t?.sales.map((x) => x.day) ?? [])].filter((x) => x && x <= today).sort().pop() ?? "";
 
   if (!days.length) {
     const unread = [d, t].find((r) => r && r.rows > 0);
@@ -223,7 +228,7 @@ const fetchEpn: Fetcher = async () => {
     checks.push({ label: `Transaction report · ${t.sales.length} sales (latest record of each)`, counted: !d?.days.length, days: tdrDays });
     checks.push({ label: "Transaction report · of which pending", counted: false, days: tdrDays.map((x) => ({ ...x, cents: x.pendingCents ?? 0 })) });
   }
-  return { status: "ok", days, tags, checks, detail: parts.join(" ") };
+  return { status: "ok", days, tags, checks, reportedThrough, detail: parts.join(" ") };
 };
 
 // ── Google AdSense ───────────────────────────────────────────────────────────
@@ -298,7 +303,7 @@ async function load(key: EarningsSourceKey, fresh: boolean): Promise<SourceResul
   } catch (e) {
     console.error(`[earnings] ${key} failed:`, e);
     // An error message from the API, never the credentials (they are only ever in headers).
-    res = { key, fetchedAt: Date.now(), status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed", days: hit?.days ?? [] };
+    res = { key, fetchedAt: Date.now(), status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed", days: hit?.days ?? [], reportedThrough: hit?.reportedThrough };
   }
   memo.set(key, res);
   return res;

@@ -150,7 +150,9 @@ test("the release page's pre-order promise now points somewhere real", () => {
   // the calendar entry, so it retires with the set instead of outliving it), so
   // assert the wiring: the tile renders the upcoming set's own preordersHref.
   const page = read("src/app/release-dates/page.tsx");
-  assert.match(page, /href=\{next\.preordersHref\}/, "the pre-order tile must link to the upcoming set's comparison page");
+  // Since 2026-11-02 through preorderRouteForSet: the row's own page, else the set's automatic /preorders/<slug>.
+  assert.match(page, /const nextPreorders = next \? preorderRouteForSet\(next\.code\) : null/);
+  assert.match(page, /href=\{nextPreorders\}/, "the pre-order tile must link to the upcoming set's comparison page");
   const calendar = read("src/lib/release-calendar.ts");
   assert.match(calendar, /preordersHref: "\/radiance-preorders"/, "the upcoming set must declare its pre-order page");
   assert.match(calendar, /preordersHref: "\/legacy-preorders"/, "Legacy, the next set, declares its pre-order page");
@@ -187,6 +189,9 @@ test("Legacy's four Champion Decks are four products, not one group", () => {
   assert.equal(classifySealed("Riftbound: League of Legends TCG: Legacy Champion Deck - Lux"), "Champion Deck (Lux)");
   assert.equal(classifySealed("Riftbound: League of Legends - Legacy Booster Box (Pre-Order)"), "Booster Box");
   assert.equal(classifySealed("Riftbound: Legacy - Vault Bundle  PREORDER"), "Bundle");
+  // The four decks sold together are one bundle, not a single deck or a Showdown pair.
+  assert.equal(classifySealed("Riftbound TCG - Legacy - Champion Deck - Set of 4 **Pre Order**"), "Champion Deck Set (4)");
+  assert.equal(classifySealed("Riftbound League of Legends - Legacy - Showdown Decks (Set of 4)"), "Champion Deck Set (4)");
 });
 
 test("'legacy' alone never names the set: other games' Legacy products stay out", () => {
@@ -202,12 +207,20 @@ test("'legacy' alone never names the set: other games' Legacy products stay out"
     assert.ok(!isTrackableSealedTitle(title), `gate admitted another game's product: ${title}`);
     assert.notEqual(detectSet(title), "LGC", title);
   }
-  // A Riftbound title that merely mentions Legacy beside another product keeps
-  // that product: Proving Grounds 2nd Edition is filed under Legacy by one store.
-  assert.equal(
-    detectSet("[PREORDER] Riftbound - League of Legends TCG - Legacy - Proving Grounds Box Set (2nd Edition) - 2027-02-19"),
-    "OGS",
-  );
+  // Proving Grounds 2nd Edition is its own product announced with Legacy, never
+  // Origins' Proving Grounds (2026-11-01: it had been the cheapest "in-stock"
+  // offer in the Origins group). Compared under LGC, with its own type.
+  for (const title of [
+    "[PREORDER] Riftbound - League of Legends TCG - Legacy - Proving Grounds Box Set (2nd Edition) - 2027-02-19",
+    "Riftbound: League of Legends - Proving Grounds Box Set 2nd Edition (Pre-Order)",
+    "Riftbound: League of Legends - Proving Grounds Box Set 2nd Edition (Pre Order)",
+  ]) {
+    assert.equal(detectSet(title), "LGC", title);
+    assert.equal(classifySealed(title), "Proving Grounds 2nd Edition", title);
+  }
+  // A first-edition reprint is still Origins' product.
+  assert.equal(detectSet("Proving Grounds Box Set (REPRINT)"), "OGS");
+  assert.equal(classifySealed("Riftbound: League Of Legends TCG - Proving Grounds [Reprint] - EN"), "Proving Grounds");
   // TCGplayer's setName is read inside the Riftbound product line, where the word is the set.
   assert.equal(setCodeFromSetName("Legacy"), "LGC");
 });

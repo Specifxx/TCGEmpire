@@ -177,3 +177,35 @@ test("deck pages and the deck builder offer the whole list as one TCGplayer cart
   }
   assert.match(readFileSync("src/app/decks/[slug]/page.tsx", "utf8"), /tcgplayerCartHref=\{affiliateUrl\(tcgplayerMassEntryUrl\(/);
 });
+
+test("the daily setup job waits for the key, then sets the Interactions URL once", async () => {
+  const { endpointAction, run, INTERACTIONS_URL } = await import("../scripts/discord-register");
+  assert.equal(endpointAction(false, null), "wait");
+  assert.equal(endpointAction(true, null), "set");
+  assert.equal(endpointAction(true, INTERACTIONS_URL), "keep");
+  const logs: string[] = [];
+  await run({}, async () => { throw new Error("no call without secrets"); }, (s) => logs.push(s));
+  assert.match(logs[0], /no-op/);
+  const calls: string[] = [];
+  const f = async (url: string, init?: RequestInit) => {
+    calls.push(`${init?.method ?? "GET"} ${url.replace(/\?t=\d+/, "")}`);
+    if (url.includes("/commands")) return new Response(JSON.stringify([{ name: "price" }]));
+    if (url.startsWith(INTERACTIONS_URL)) return new Response(JSON.stringify({ ok: true, configured: true }));
+    if (init?.method === "PATCH") return new Response("{}");
+    return new Response(JSON.stringify({ interactions_endpoint_url: null }));
+  };
+  await run({ DISCORD_APPLICATION_ID: "1", DISCORD_BOT_TOKEN: "t" }, f, () => {});
+  assert.deepEqual(calls, ["PUT https://discord.com/api/v10/applications/1/commands", `GET ${INTERACTIONS_URL}`, "GET https://discord.com/api/v10/applications/@me", "PATCH https://discord.com/api/v10/applications/@me"]);
+});
+
+test("/daily posts the game's puzzle publicly, with no paid link", async () => {
+  const { handleInteraction, BOT_COMMANDS } = await import("../src/lib/discord/bot");
+  const daily = BOT_COMMANDS.find((c) => c.name === "daily") as unknown as { options: { choices: { value: string }[] }[] };
+  const choices = daily.options[0].choices.map((c) => c.value);
+  assert.ok(choices.includes("gundam") && choices.includes("riftbound") && !choices.includes("pokemon"));
+  const r = (await handleInteraction({ type: 2, data: { name: "daily", options: [{ name: "game", value: "lorcana" }] } }, { fetch: async () => new Response("{}"), riftbound: async () => null })) as { data: { flags?: number; components: { components: { url: string }[] }[] } };
+  assert.equal(r.data.flags, undefined, "public, not ephemeral");
+  const url = r.data.components[0].components[0].url;
+  assert.match(url, /^https:\/\/lorcanacompare\.com\/daily\?utm_source=discord/);
+  assert.doesNotMatch(url, /ebay|tcgplayer|impact/i);
+});

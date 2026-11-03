@@ -73,7 +73,7 @@ jobs:
     # pass visits every singles store too). A heavy eBay day on top would cross
     # 90 and kill the run before the snapshot and the daily release. A ceiling,
     # not a cost: a run only uses the minutes it needs.
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -129,7 +129,6 @@ jobs:
           # eBay is optional — the import skips it if these aren't set.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           # Deploys (push to main) also trigger this workflow to recompute store
           # prices, but must NOT spend eBay quota. Only scheduled / manual runs are
           # allowed to call eBay, so frequent deploys can never add to the daily count.
@@ -180,7 +179,6 @@ jobs:
           DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
           # Cardmarket sealed (EU) — zero-config like its singles pass above; see
@@ -281,6 +279,8 @@ jobs:
           DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
         run: |
           npx tsx scripts/export-public-data.ts
+          # The Compare Empire network's feed (lib/family.ts), from the files just exported; never fatal.
+          npx tsx scripts/family-feed.ts || true
           bash scripts/publish-public-data.sh "refresh-prices.yml (${{ github.event_name }}, run ${{ github.run_id }})"
 
       - name: Release the snapshot (the daily production deploy)

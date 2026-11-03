@@ -46,3 +46,30 @@ export async function readClickCounts(sinceDay: string): Promise<Map<string, Par
   }
   return out;
 }
+
+// Per-store clicks per Sydney month (2026-11-02, "Store clicks per month" in
+// DECISIONS.md). The store partner pitch needs a number a shop owner can check
+// against their own utm_source=riftcompare traffic, and the daily counts above
+// lump every store together. One Counter row per store and month, only for a
+// key in RETAILERS (the caller checks), so a forged beacon cannot mint rows.
+export const STORE_CLICK_PREFIX = "storeclick:";
+
+export const sydneyMonth = (ms: number) => sydneyDay(ms).slice(0, 7);
+
+export const storeClickKey = (month: string, retailer: string) => `${STORE_CLICK_PREFIX}${month}:${retailer}`;
+
+export async function countStoreClick(retailer: string, now = Date.now()): Promise<void> {
+  const key = storeClickKey(sydneyMonth(now), retailer);
+  await prisma.counter.upsert({ where: { key }, create: { key, value: 1 }, update: { value: { increment: 1 } } });
+}
+
+/** Clicks per store for one month ("YYYY-MM"): retailer key -> clicks. */
+export async function readStoreClicks(month: string): Promise<Map<string, number>> {
+  const prefix = `${STORE_CLICK_PREFIX}${month}:`;
+  const rows = await prisma.counter.findMany({
+    where: { key: { startsWith: prefix } },
+    select: { key: true, value: true },
+    take: 500,
+  });
+  return new Map(rows.map((r) => [r.key.slice(prefix.length), r.value]));
+}

@@ -21,6 +21,8 @@
 //   npx tsx scripts/sweep-registry.ts --only somestore.com     # one host
 //   npx tsx scripts/sweep-registry.ts --resume                 # continue a run
 //   npx tsx scripts/sweep-registry.ts --report-only            # re-print a finished run
+//   npx tsx scripts/sweep-registry.ts --extra sisters.json     # also sweep a list of
+//        stores from elsewhere (the sister sites' registries): [{ name, base, market }]
 //
 // OUTPUT: --out (default scratch/sweep-registry.json) is rewritten after every
 // store finishes, so a crash or a Ctrl-C loses nothing — --resume picks up
@@ -194,6 +196,26 @@ async function registryCandidates(markets: Set<Market>): Promise<Candidate[]> {
   }
   console.log(`${byHost.size} unique, untracked, non-social shop domains across the requested markets.`);
   return [...byHost.values()];
+}
+
+// Stores found somewhere other than the official registry (a sister site's
+// registry, a store's own request): same bar, same dedupe against RETAILERS.
+function extraCandidates(path: string | undefined, markets: Set<Market>, registry: Candidate[]): Candidate[] {
+  if (!path) return [];
+  const rows = JSON.parse(readFileSync(path, "utf8")) as { name?: string; base: string; market: string }[];
+  const tracked = trackedApexes();
+  const seen = new Set(registry.map((c) => c.host));
+  const out: Candidate[] = [];
+  for (const r of rows) {
+    const market = r.market.toUpperCase() as Market;
+    if (!markets.has(market)) continue;
+    const host = r.base.replace(/^https?:\/\//i, "").replace(/\/.*$/, "").replace(/^www\./i, "").toLowerCase();
+    if (!host.includes(".") || seen.has(host) || tracked.has(apexDomain(host))) continue;
+    seen.add(host);
+    out.push({ host, base: `https://${host}`, name: r.name ?? host, market, registryCountry: "(extra)" });
+  }
+  console.log(`${out.length} extra candidate(s) from ${path}.`);
+  return out;
 }
 
 function trackedCandidates(markets: Set<Market>): Candidate[] {
@@ -691,6 +713,7 @@ interface Args {
   concurrency: number;
   tracked: boolean;
   reportOnly: boolean;
+  extra?: string;
 }
 function parseArgs(argv: string[]): Args {
   const get = (flag: string) => {
@@ -711,6 +734,7 @@ function parseArgs(argv: string[]): Args {
     concurrency: get("--concurrency") ? Number(get("--concurrency")) : 8,
     tracked: !has("--no-tracked"),
     reportOnly: has("--report-only"),
+    extra: get("--extra"),
   };
 }
 
@@ -861,7 +885,7 @@ async function main() {
   } else {
     const registry = await registryCandidates(markets);
     const tracked = args.tracked ? trackedCandidates(markets) : [];
-    candidates = [...tracked, ...registry];
+    candidates = [...tracked, ...registry, ...extraCandidates(args.extra, markets, registry)];
   }
   if (args.limit) candidates = candidates.slice(0, args.limit);
   console.log(`${candidates.length} store(s) to sweep (${candidates.filter((c) => c.trackedKey).length} already tracked, re-checked for regressions).`);

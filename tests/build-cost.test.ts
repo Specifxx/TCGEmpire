@@ -37,10 +37,18 @@ test("PRODUCTION deployment is never disabled by these rules", () => {
   const rules = vercel.git?.deploymentEnabled;
   assert.notEqual(rules, false, "a blanket deploymentEnabled:false would stop production deploying");
   const map = rules as Record<string, boolean>;
+  // "**": false turns off every branch but production (owner, 2026-11-02: no
+  // previews on any site), which only works because "main": true wins over it.
+  assert.equal(map["main"], true, "main must be explicitly enabled: it is what beats \"**\": false");
+  assert.equal(map["**"], false, "every non-production branch is off (owner, 2026-11-02)");
   for (const [pattern, enabled] of Object.entries(map)) {
-    if (enabled) continue;
+    if (enabled || pattern === "**") continue;
+    // `reports` holds visitor reports only (src/lib/reports-github.ts) and `forum`
+    // the forum's posts (src/lib/forum/store.ts), never site code; `ops-status`
+    // and `social-packs` are force-pushed orphan commits from workflows.
     assert.ok(
-      pattern.startsWith("claude/"),
+      pattern.startsWith("claude/") || pattern === "reports" || pattern === "forum" ||
+        pattern === "ops-status" || pattern === "social-packs",
       `"${pattern}": false disables a branch that is not an automation branch — production must keep deploying`,
     );
   }

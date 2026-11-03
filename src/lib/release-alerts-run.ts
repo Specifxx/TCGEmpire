@@ -1,6 +1,6 @@
 import { prisma } from "./db";
 import { setByCode, isPreorderSetCode } from "./constants";
-import { RELEASES } from "./release-calendar";
+import { preorderRouteForSet } from "./release-calendar";
 import { priceField, type Country } from "./country";
 import { cardHref } from "./card-url";
 import { getPreorderGroups } from "./sealed-import";
@@ -121,7 +121,8 @@ export async function runReleaseAlerts(setCode: string, opts: { dryRun?: boolean
   const setPath = `/sets/${set.slug}`;
   // The set's own pre-order page from the release calendar (/radiance-preorders,
   // /legacy-preorders), so a restock email never names another set's page.
-  const preordersPath = RELEASES.find((r) => r.code === setCode)?.preordersHref ?? setPath;
+  // A set without a hand-built page has the automatic /preorders/<slug> (2026-11-02).
+  const preordersPath = preorderRouteForSet(setCode) ?? setPath;
   let budget = RELEASE_ALERT_SEND_CAP;
   for (const [email, own] of groupByEmail(live)) {
     const notices: (SinglesNotice | RestockNotice)[] = [];

@@ -3,7 +3,7 @@
 // To switch on, set in .env:
 //   EBAY_CLIENT_ID=...     (App ID / Client ID from developer.ebay.com)
 //   EBAY_CLIENT_SECRET=... (Cert ID / Client Secret)
-//   EBAY_AFFILIATE_CAMPAIGN=... (optional, eBay Partner Network campaign id for commission)
+//   (the eBay Partner Network campaign is hard-coded in lib/affiliate.ts)
 //
 // Until those are set, isEbayEnabled() is false and searchEbayLowest() returns null,
 // so nothing breaks. eBay listings are free-text and noisier than store feeds, so
@@ -29,6 +29,62 @@ const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
 // buyer lands on, not which listings exist.
 export const EBAY_MARKETPLACE: Record<string, string> = { AU: "EBAY_AU", US: "EBAY_US", UK: "EBAY_GB", SG: "EBAY_SG", CA: "EBAY_CA", EU: "EBAY_ES" };
 const DEFAULT_MARKETPLACE = "EBAY_AU";
+/** Each marketplace's own currency, for Browse's `price` filter (which is invalid without `priceCurrency`). */
+export const EBAY_MARKETPLACE_CURRENCY: Record<string, string> = {
+  EBAY_AU: "AUD",
+  EBAY_US: "USD",
+  EBAY_GB: "GBP",
+  EBAY_SG: "SGD",
+  EBAY_CA: "CAD",
+  EBAY_ES: "EUR",
+};
+
+// ---- Local sellers, stated postage (visitor feedback, 2026-10-31) -------------
+// A WargameCompare visitor found eBay rows from overseas sellers whose postage made "a lot of wasted clicks". Every
+// search now asks for items DELIVERED to the market's country; on the four single-country marketplaces it also asks
+// for items LOCATED there. eBay Spain stands for the whole EU, so its search keeps any EU seller (sellerIsLocal drops
+// the rest), and eBay Singapore has almost no local Riftbound sellers, so SG keeps any seller who ships there, priced
+// delivered. A regional (Chinese/Korean) printing is only sold from its own region: it keeps any seller too. The buyer's
+// country and a central postcode go in contextualLocation so shippingOptions carry the real postage, and the price path
+// keeps no listing whose postage eBay does not state.
+export const EBAY_BUYER: Record<string, { country: string; zip: string }> = {
+  EBAY_AU: { country: "AU", zip: "2000" },
+  EBAY_US: { country: "US", zip: "64101" },
+  EBAY_GB: { country: "GB", zip: "B1 1AA" },
+  EBAY_SG: { country: "SG", zip: "238801" },
+  EBAY_CA: { country: "CA", zip: "M5V 2T6" },
+  EBAY_ES: { country: "ES", zip: "28013" },
+};
+const LOCAL_ONLY = new Set(["EBAY_AU", "EBAY_US", "EBAY_GB", "EBAY_CA"]);
+const EU_COUNTRIES = new Set(["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"]);
+
+/** The Browse filter terms that keep a search to sellers who deliver to (and, where it applies, are in) the market. */
+export function locationFilters(marketplace: string, anySeller = false): string[] {
+  const b = EBAY_BUYER[marketplace];
+  if (!b) return [];
+  return [`deliveryCountry:${b.country}`, ...(!anySeller && LOCAL_ONLY.has(marketplace) ? [`itemLocationCountry:${b.country}`] : [])];
+}
+
+/** Is the listing's seller local to the marketplace's buyer? (A listing that names no location passes: the search asked.) */
+export function sellerIsLocal(it: any, marketplace: string, anySeller = false): boolean {
+  const c = String(it?.itemLocation?.country ?? "").toUpperCase();
+  if (!c || anySeller) return true;
+  if (marketplace === "EBAY_ES") return EU_COUNTRIES.has(c);
+  if (LOCAL_ONLY.has(marketplace)) return c === EBAY_BUYER[marketplace]?.country;
+  return true;
+}
+
+/** X-EBAY-C-ENDUSERCTX: our campaign (when set) and the buyer's location, so eBay quotes postage to it. */
+export function endUserContext(marketplace: string): string {
+  const b = EBAY_BUYER[marketplace];
+  return [
+    ...(EBAY_CAMPAIGN_ID ? [`affiliateCampaignId=${EBAY_CAMPAIGN_ID}`] : []),
+    ...(b ? [`contextualLocation=${encodeURIComponent(`country=${b.country},zip=${b.zip}`)}`] : []),
+  ].join(",");
+}
+
+/** Does eBay state the listing's postage (free counts)? A "calculated" or missing one is a cost the row would hide. */
+export const postageStated = (it: any): boolean => shippingFromItem(it) != null;
 
 // eBay image renditions (B3-17, 2026-09-23). The Browse API hands back .../s-l225.jpg, and s-lNNN sizes the LONGEST edge,
 // so a portrait card photo is 169px wide - upscaled in every tile and 3x short on a retina phone. Measured live:
@@ -87,14 +143,23 @@ async function fetchRemaining(): Promise<number | null> {
 
 // Call once at the start of an eBay pass. Sets how many calls we may spend so we
 // stop with QUOTA_RESERVE to spare, regardless of how often the importer runs.
-export async function primeEbayBudget(): Promise<{ remaining: number | null; budget: number }> {
+//
+// `reserve` overrides QUOTA_RESERVE for one caller. Only the auction sweep uses
+// it (AUCTION_QUOTA_RESERVE in lib/ebay-auctions.ts): the price import spends
+// down to the full reserve by design, and a sweep held to the same line found
+// a budget of 0 and stored nothing (2026-10-31, DECISIONS.md "The auction sweep
+// spends from the reserve").
+export async function primeEbayBudget(
+  opts: { reserve?: number } = {},
+): Promise<{ remaining: number | null; budget: number }> {
   rateLimited = false;
   spentThisRun = 0;
+  const reserve = opts.reserve ?? QUOTA_RESERVE;
   const remaining = await fetchRemaining();
-  spendable = remaining == null ? FALLBACK_BUDGET : Math.max(0, remaining - QUOTA_RESERVE);
+  spendable = remaining == null ? FALLBACK_BUDGET : Math.max(0, remaining - reserve);
   if (spendable <= 0) rateLimited = true;
   console.log(
-    `eBay quota: ${remaining ?? "unknown"}/5000 remaining today → budget ${spendable} calls this run (reserve ${QUOTA_RESERVE}).`
+    `eBay quota: ${remaining ?? "unknown"}/5000 remaining today → budget ${spendable} calls this run (reserve ${reserve}).`
   );
   return { remaining, budget: spendable };
 }
@@ -793,6 +858,7 @@ export async function searchEbayLowest(
   // extra Browse call on exactly the cards that would otherwise be unpriced, and
   // nothing at all on the ones already working.
   const queries = [buildQuery(card, true), buildQuery(card, false)];
+  const marketplace = card.marketplace ?? DEFAULT_MARKETPLACE;
   const params = new URLSearchParams({
     // Include the collector number so the exact card ranks into the result window —
     // otherwise expensive chase cards (e.g. overnumbered) get pushed past the limit
@@ -809,17 +875,16 @@ export async function searchEbayLowest(
     // name + "signature" is enough to find it; identity is still enforced by the
     // filters below.
     q: queries[0],
-    filter: "buyingOptions:{FIXED_PRICE}",
+    filter: ["buyingOptions:{FIXED_PRICE}", ...locationFilters(marketplace, !!card.regional)].join(","),
     sort: "price",
     limit: "100",
   });
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
-    "X-EBAY-C-MARKETPLACE-ID": card.marketplace ?? DEFAULT_MARKETPLACE,
+    "X-EBAY-C-MARKETPLACE-ID": marketplace,
   };
-  if (EBAY_CAMPAIGN_ID) {
-    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
-  }
+  const ctx = endUserContext(marketplace);
+  if (ctx) headers["X-EBAY-C-ENDUSERCTX"] = ctx;
 
   if (!spend()) return null; // budget exhausted — don't make the call
 
@@ -939,6 +1004,7 @@ export async function searchEbayLowest(
   // Sanity guard: a single can legitimately cost a bit more on eBay than in a
   // store, but not 8×+. A listing that far above the card's store value (and over
   // an absolute floor so cheap-card noise isn't over-filtered) is a mismatch.
+  cur = drop("local seller, postage stated", cur.filter((it) => sellerIsLocal(it, marketplace, !!card.regional) && postageStated(it)), cur);
   cur = drop(
     "not absurdly above store value",
     cur.filter((it) => {
@@ -1036,13 +1102,21 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
 // against every real sealed title in the database on the day (~200 across six
 // markets): not one legitimate English listing uses either word.
 const SEALED_EXCLUDE_EBAY_BASE =
-  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card|\bjumbo\b|\bslim\b/i;
+  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card|\bjumbo\b|\bslim\b|\bdelgad[ao]s?\b/i;
 // A listing calling itself Chinese/Japanese/Korean is (almost always) a foreign
 // printing of an English product being searched for — excluded by default. The T1
 // Signature Edition's CN/KR seeds are the one deliberate exception: for those two
 // searches, THIS is the listing being searched for, not noise. See `language` below.
 const SEALED_EXCLUDE_LANGUAGE_WORDS = /chinese|japanese|korean/i;
-const SEALED_EXCLUDE_EBAY = new RegExp(
+// The game's own name is not a "card" listing. `\\bcard\\b` exists to drop a single
+// card or an art/code card titled with a box's words, but sellers very often
+// spell the game out: "Riftbound League of Legends Trading Card Game Origins
+// Booster Box" was thrown away for saying "Card" (2026-11-01, the AU Origins box
+// with no eBay row). Only the phrase is blanked; every other word is still tested.
+export function sealedExclusionText(title: string): string {
+  return title.replace(/\b(?:trading\s+)?card\s+game\b/gi, " ");
+}
+export const SEALED_EXCLUDE_EBAY = new RegExp(
   `${SEALED_EXCLUDE_EBAY_BASE.source}|${SEALED_EXCLUDE_LANGUAGE_WORDS.source}`,
   "i",
 );
@@ -1090,13 +1164,19 @@ const SEALED_MIN_CENTS: Record<string, number> = {
   "Showdown Decks": 800,
   "Showdown Decks Display": 4000,
 };
+// "Champion Deck (Fiora) Display" carries the champion's name, so it has no key
+// above: a display of decks is held to the Showdown display's floor. L'Atelier
+// TCG (2026-10-29) titles ONE deck "Champion Deck Display: Fiora" at C$30.12;
+// under the 300c default that single deck would have priced the display.
+const CHAMPION_DECK_DISPLAY = /^Champion Deck\b.*\bDisplay$/;
+const CHAMPION_DECK_DISPLAY_MIN_CENTS = 4000;
 
 // The minimum price an eBay sealed listing must clear to be trusted: the larger of the
 // per-type floor and 50% of the known reference (when we have one) — a live store/
 // TCGplayer price where one exists, otherwise the published MSRP (see msrp.ts and
 // sealed-import.ts's trustedRef) for a product with no current stockist at all.
 export function sealedFloorCents(productType: string, referenceCents?: number | null): number {
-  const absolute = SEALED_MIN_CENTS[productType] ?? 300;
+  const absolute = SEALED_MIN_CENTS[productType] ?? (CHAMPION_DECK_DISPLAY.test(productType) ? CHAMPION_DECK_DISPLAY_MIN_CENTS : 300);
   const relative = referenceCents && referenceCents > 0 ? Math.round(referenceCents * 0.5) : 0;
   return Math.max(absolute, relative);
 }
@@ -1132,9 +1212,23 @@ export async function searchEbaySealed(
   if (!token) return null;
   const kw = SEALED_TYPE_KW[productType];
 
+  // THE FLOOR GOES INTO THE QUERY (2026-11-01, owner: "eBay should have a price
+  // row here, there are tons of Origins boxes on eBay"). The search is sorted
+  // cheapest first and reads 50 results, and the floor below was applied only
+  // AFTER them: for a product with a big cheap halo (Origins: packs, singles and
+  // accessories that all say "Origins Booster Box") the 50 cheapest were all under
+  // the floor, so no market ever got an Origins box row while dozens of real boxes
+  // sat on the next pages. Asking eBay for item prices at or above the same floor
+  // makes those 50 the cheapest PLAUSIBLE listings. The post-filter stays.
+  const floor = sealedFloorCents(productType, referenceCents);
+  const currency = EBAY_MARKETPLACE_CURRENCY[marketplace];
   const params = new URLSearchParams({
     q: `Riftbound ${name}`,
-    filter: "buyingOptions:{FIXED_PRICE}",
+    filter: [
+      "buyingOptions:{FIXED_PRICE}",
+      ...locationFilters(marketplace, !!language),
+      ...(currency && floor > 0 ? [`price:[${(floor / 100).toFixed(2)}]`, `priceCurrency:${currency}`] : []),
+    ].join(","),
     sort: "price",
     limit: "50",
   });
@@ -1142,9 +1236,8 @@ export async function searchEbaySealed(
     Authorization: `Bearer ${token}`,
     "X-EBAY-C-MARKETPLACE-ID": marketplace,
   };
-  if (EBAY_CAMPAIGN_ID) {
-    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
-  }
+  const ctx = endUserContext(marketplace);
+  if (ctx) headers["X-EBAY-C-ENDUSERCTX"] = ctx;
 
   if (!spend()) return null; // budget exhausted — don't make the call
 
@@ -1163,9 +1256,9 @@ export async function searchEbaySealed(
   const items: any[] = data.itemSummaries ?? [];
 
   const setName = setCode ? (SET_NAMES[setCode] ?? setCode) : null;
-  const floor = sealedFloorCents(productType, referenceCents);
   const valid = items
     .filter((it) => it?.price?.value)
+    .filter((it) => sellerIsLocal(it, marketplace, !!language) && postageStated(it))
     // "Riftbound" is required in every other search, but a CN/KR reseller's title
     // very often keeps the Latin-script team name ("T1") while dropping or
     // translating the English game name — so a language search also accepts a
@@ -1177,7 +1270,7 @@ export async function searchEbaySealed(
     // Every OTHER exclusion in SEALED_EXCLUDE_EBAY_BASE still applies for a
     // language search (proxy/sleeve/empty/accessory/…) — only the language-word
     // branch is dropped, since that's exactly what CN/KR are searching for.
-    .filter((it) => !(language ? SEALED_EXCLUDE_EBAY_BASE : SEALED_EXCLUDE_EBAY).test(it.title ?? ""))
+    .filter((it) => !(language ? SEALED_EXCLUDE_EBAY_BASE : SEALED_EXCLUDE_EBAY).test(sealedExclusionText(it.title ?? "")))
     .filter((it) => (language ? LANGUAGE_SIGNAL[language].test(it.title ?? "") : !isForeignListing(it)))
     // Price-sanity: drop anything below the per-type / reference floor (the $22
     // "booster box" accessory class).
@@ -1329,6 +1422,8 @@ export async function searchEbayAuctions(opts: {
   // Values are comma-separated in one `filter` parameter. URLSearchParams
   // percent-encodes them, which is what the reference asks for.
   const filters = ["buyingOptions:{AUCTION}"];
+  // Sellers who deliver to (and, on the single-country sites, are in) the market (visitor feedback, 2026-10-31).
+  filters.push(...locationFilters(opts.marketplace));
   if (opts.endsWithinHours != null) {
     // Both bounds given explicitly. The reference documents the two-bound form
     // and an open-ended one; spelling out `now` costs nothing and says exactly
@@ -1352,9 +1447,8 @@ export async function searchEbayAuctions(opts: {
     Authorization: `Bearer ${token}`,
     "X-EBAY-C-MARKETPLACE-ID": opts.marketplace,
   };
-  if (EBAY_CAMPAIGN_ID) {
-    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
-  }
+  const ctx = endUserContext(opts.marketplace);
+  if (ctx) headers["X-EBAY-C-ENDUSERCTX"] = ctx;
 
   if (!spend()) return { items: [], ok: false }; // budget exhausted — don't call
 

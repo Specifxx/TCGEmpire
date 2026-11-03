@@ -248,7 +248,7 @@ export default function PrivacyPage() {
             links. If you buy through them we may earn a commission at no extra cost to you. This
             never affects the prices we show, and it does not affect the order in which stores are
             ranked, with one exception we label where it happens: eBay and TCGplayer are shown first
-            in each price comparison, tagged &ldquo;Shown first&rdquo;.
+            in each price comparison, marked as paid links.
           </p>
           <p>
             We are a member of the eBay Partner Network, TCGplayer&rsquo;s affiliate programme (run
@@ -309,6 +309,16 @@ export default function PrivacyPage() {
             support the one-click unsubscribe your email app may show at the top. For price alerts,
             unsubscribing pauses the emails for that address rather than deleting your watches; deleting
             them is a separate &ldquo;Delete all my watches&rdquo; link in the email&rsquo;s footer.
+          </p>
+          <p id="sister-alerts" className="scroll-mt-header">
+            <strong className="text-white">Price alerts on our sister sites.</strong> DexCompare, MTG
+            Compare, Gundam Compare, Lorcana Compare, YGO Compare, Cyberpunk Compare, WargameCompare
+            and FigureCompare have no database of their own: their &ldquo;Email me when
+            it drops below&rdquo; form sends your email address, the product, your region and your price
+            to this service, which keeps them in the same database as RiftCompare&rsquo;s alerts and
+            uses them only for those alerts. Nothing is sent until you click the link in the
+            confirmation email; an unconfirmed address is deleted after a week. Each alert ends after
+            six months, and every email has links to stop one alert or all of them, which deletes them.
           </p>
         </section>
 

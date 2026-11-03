@@ -344,7 +344,7 @@ export default async function PokemonProductPage({ params }: { params: Params })
                     <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded bg-white/95 p-1">
                       {thumb ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={thumb} alt="" aria-hidden="true" loading="lazy" className="max-h-full max-w-full object-contain" />
+                        <img src={thumb} alt={s.name} aria-hidden="true" loading="lazy" className="max-h-full max-w-full object-contain" />
                       ) : null}
                     </span>
                     <span className="min-w-0">

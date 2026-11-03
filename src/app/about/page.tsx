@@ -235,8 +235,8 @@ export default async function AboutPage() {
           <p>
             With one labelled exception, none of that money buys a position. It never changes the prices we
             show, and among the stores the cheapest always comes first. The exception: eBay and TCGplayer,
-            our affiliate partners, are shown first in every price comparison, tagged &ldquo;Shown
-            first&rdquo; and marked as paid links, with the price beside them still showing how they
+            our affiliate partners, are shown first in every price comparison, marked as paid
+            links, with the price beside them still showing how they
             compare. We
             also link to eBay outside those lists, always labelled. No store can pay for its place in a
             comparison, including a store on the Stores plan. The details are in our{" "}
@@ -260,6 +260,22 @@ export default async function AboutPage() {
               Pro explained
             </Link>
             .
+          </p>
+          {/* Partner links promised to YesTCG (2026-10-28, owner); the full list
+              of fan sites lives on /resources. */}
+          <p>
+            Want to buy in person?{" "}
+            <a
+              href="https://yestcg.com/stores/riftbound"
+              target="_blank"
+              rel="noopener"
+              className="text-brand-400 hover:underline"
+            >
+              Find Riftbound card shops near you
+            </a>{" "}
+            on YesTCG: local game stores near you that carry Riftbound, with in-stock prices. The other fan sites
+            we use are on our{" "}
+            <Link href="/resources" className="text-brand-400 hover:underline">community resources</Link> page.
           </p>
         </section>
 

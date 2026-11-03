@@ -443,4 +443,5 @@ export function premiumLockInTail(): string {
 // "one-plan-2026-10-23": Premium only at $9.99/$79.99, 30-day free trial, Plus off sale
 // "rebrand-2026-10-23": "Never overpay for Riftbound again", live proof, outcome cards, one free alert
 // "one-table-2026-10-25": /premium is one plan table (Monthly, Annual) and the Free vs Premium comparison
-export const PREMIUM_COPY_VERSION = "pro-2026-10-26";
+// "pro-theme-2026-11-02": the same Pro plan and prices, the page restyled in the site's own theme (orange, flat panels)
+export const PREMIUM_COPY_VERSION = "pro-theme-2026-11-02";

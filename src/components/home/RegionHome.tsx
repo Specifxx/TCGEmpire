@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import { getPopularCards, getSetChaseTiles } from "@/lib/cheapest-cards";
 import { featuredSet } from "@/lib/constants";
 import { getHomeStats } from "@/lib/home-stats";
@@ -105,6 +106,8 @@ export async function RegionHome({ region }: { region: Country }) {
       {/* eBay Picks directly under the hero, above Today's Top Deals, as on "/"
           (owner, 2026-10-19). HomeSections gets showEbayPicks={false}. */}
       <EbayPicks pageType="homepage" />
+      {/* Its TCGplayer twin, the Gundam Compare card strip (owner, 2026-10-29). */}
+      <TcgplayerPicks pageType="homepage" />
 
       {/* Today's Top Deals straight under the hero, as on "/" (owner's tidy-up,
           2026-10-19): the editorial band moved to the bottom of the page and

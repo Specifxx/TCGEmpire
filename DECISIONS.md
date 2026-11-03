@@ -20489,3 +20489,1473 @@ or eBay's search as the first row when no eBay listing is open. "Best price"
 stays on the real cheapest. Surfaces `sealed_pinned`, `sealed_row`,
 `ebay_pinned`.
 
+
+## Affiliate channels beyond the compare pages: feed, graded guide, lot checker, Telegram, plain email links — 2026-10-27
+
+The owner asked for the rest of the affiliate research list built (everything
+but the email digest, which needs eBay's approval first). What each is, and the
+one rule they share: **a link that leaves our site for somewhere we can't put a
+paid-link line beside it carries no eBay tracking.**
+
+**eBay links in emails go out plain.** EPN treats email as "messaging", a
+business model it approves in advance, and we have no approval. The
+graded-watch email, the auction digest and the price-drop email's store
+buttons (when a store row is eBay) were sending tagged eBay links.
+`plainEbayUrl` (`lib/affiliate.ts`) strips `campid`, `mkevt`, `mkcid`, `mkrid`,
+`customid`, `toolid`, `siteid` and friends; the emails call it on every eBay
+URL. If EPN approves messaging, remove those calls. The bot and the site are
+unchanged (a website and a disclosed social post are allowed).
+
+**eBay deals feed.** `/feeds/ebay-deals.xml?market=AU|UK|…` is the Deal
+Finder's free "Cheapest on eBay" tab as RSS (top 25,
+`lib/ebay-deals-feed.ts`), linked from that tab and declared as its page's
+`application/rss+xml` alternate. Items link our card pages, not eBay (the
+reason above), with a guid that changes with the price so a reader shows a
+new deal. A plain route function: its CDN header holds each market six hours;
+a miss is one narrow card select over the day-cached ranking.
+
+**Graded price guide, `/graded`.** Every card with a live graded slab: the
+cheapest PSA 10, PSA 9, BGS 10, BGS 9.5 and CGC 10 listing (from the newest
+`data/price-history/graded/` day file, US dollars across the markets searched),
+the cheapest raw US copy and PSA 10 ÷ raw, each row with an eBay search for
+its best grade (`surface` `ebay_graded`, source `graded-guide`). Asking prices,
+said so. ISR six hours; in the sitemap and the nav. One Piece gets its own on
+OP Compare.
+
+**Lot checker.** Under the deck pricer's total (`components/LotCheck.tsx`,
+`lib/lot-check.ts`): type a lot's asking price and see it against the singles
+total of the cards pasted. Within 5% either way reads "about the same"
+(singles exclude postage), plus a tagged eBay search for Riftbound lots.
+
+**Card supplies.** Not a new article: three guides already own the topic
+(storing and protecting, card size and sleeves, gradient sleeves), and a
+fourth would split their queries. The storing guide gained the "Shop this
+guide" strip (top loaders, binders, storage boxes); the grading guide links
+`/graded`.
+
+**Telegram channel.** `telegram-deals.yml` (22:30 UTC daily) reads the live
+feed and posts its top five cards to the channel in `TELEGRAM_CHANNEL_ID` with
+`TELEGRAM_BOT_TOKEN`; a green no-op until both exist, a refused post fails
+the run. Links are our card pages (utm_source=telegram), so a post carries no
+affiliate link and needs no `#ad`. Watched in `JOBS` (ops monitor).
+
+## Feedback and Pro email to registered accounts — 2026-10-27
+
+The owner asked to email the ~550 registered accounts "to ask them for
+feedback, like, are you enjoying the site … consider going to like joining
+the pro plan". The 14-day-trial promotion that `/admin/premium-offer` sent
+since 2026-10-12 was no longer true (the trial was removed on 2026-10-26), so
+the same machinery was repurposed a third time rather than built again.
+
+**What.** Campaign `feedback-pro-2026-10` (`PREMIUM_OFFER_CAMPAIGN`,
+`PRICE_DROP_CAMPAIGN`), stamp `User.priceDropEmailSentAt` from
+`PREMIUM_OFFER_SINCE` 2026-10-27, so everyone the trial email reached gets this
+one once. Subject "How's RiftCompare working for you?". It leads with five
+star links, each opening `/feedback?rating=N` with that rating picked
+(`/feedback` now reads `?rating=`). It does NOT mention the page's
+Pro-for-feedback reward: a review solicited with a reward is an incentivised
+review, and the FTC's 2024 rule and the ACCC do not allow soliciting one and
+showing it unlabelled (reviews show publicly by default). Then Pro at the `lib/site.ts` prices with a
+monthly and a yearly checkout button. Audience: every account not currently
+paying (`isPremium`), not an admin, not a seed persona, not opted out of
+announcements. The trial-only exclusions (had a trial, paid before, the
+refusal to send while the trial is not free) are gone with the trial.
+
+**Rules it keeps.** Every link is riftcompare.com: no eBay or TCGplayer link
+(eBay Partner Network does not allow its links in email without approval;
+`tests/premium-offer.test.ts` pins it). Brevo, batches of 90 (a hand-typed
+limit up to 300), one-click `List-Unsubscribe` into `AnnouncementOptOut`.
+The footer names the sender and links `/contact` (Australia's Spam Act wants
+an identified sender with contact details beside the opt-out). Consent is the
+privacy page's "occasional announcements to registered accounts", in force
+before this send. Logs carry counts only, never an address.
+
+**Not sent on other sites.** OP Compare has accounts but no mailer
+configured (its outbox skips: no `RESEND_API_KEY` / `EMAIL_FROM`) and a
+privacy page that promises no announcements; the other sites have no accounts.
+
+The same day the owner turned the /feedback reward off ("Let's just turn the
+reward off"): `FEEDBACK_PREMIUM_DAYS` is a hard 0 in `lib/premium.ts`, not an
+env default, so a leftover Vercel variable cannot bring it back. Every
+reward line on /feedback was already gated on it; the page's metadata and
+the two articles that promised "a week of Pro for feedback" no longer do.
+
+## One family page and "Searching another game?" instead of a hub domain — 2026-10-28
+
+The owner asked whether a separate hub site (tcgcompare.app or "TCG Empire")
+should proxy all the compare sites to win generic queries like "compare TCG
+card prices". Not built. A proxy that shows the same card pages would copy
+the sister sites and split their rankings (the split-query problem fixed on
+RiftCompare the day before). A link-only hub on a new domain has no authority
+and no card pages to rank with. TCGPriceEmpire, a full multi-game site, was
+built once and never launched (archived in CompareEmpire on 2026-10-27).
+Buying the domain is the owner's call and is on hold.
+
+What shipped instead, at no cost:
+
+- **"Searching another game?"** Under a search on each of the seven
+  card-game sites, a line links the same words to every other card-game site's
+  own search (its SearchAction target). Someone typing "Charizard" on
+  RiftCompare is pointed to DexCompare instead of a dead end. These are search
+  links, so they're `nofollow`: a results page is noindex everywhere. Nothing
+  is fetched from the other sites.
+- **One `/tcg-price-comparison` page, on RiftCompare only.** It lists every
+  game we compare, has a search box that sends the words to that game's site,
+  and is linked from RiftCompare's "Compare other TCGs" footer heading. One page
+  on the strongest domain, never a copy per site, so the family never competes
+  with itself for the generic query.
+
+## Ratings: one tap counts, and the card asks at the moment it has earned — 2026-10-28
+
+The owner: "we actually do need to collect some feedback on the website. 9
+ratings is not enough", and "pop ups are fine if they don't occur all the
+time". Supersedes the timing in "One rating ask, earned by engagement"
+(2026-10-27); the corner card, the one form and the opt-out display stay.
+
+**Where ratings were lost.**
+- Since "One feedback form, shown by default" a star counted only when Send
+  was pressed, under the review box, email, consent box and name. The old
+  corner card had saved the tap itself. Anyone who tapped five stars and
+  closed the card, the panel or the tab gave us nothing.
+- The card asked only on a second visit, a day after the first, after five
+  pages, twice ever: most visitors never qualified.
+- The feedback email's star links land on /feedback with the stars preset,
+  and the only Send is at the bottom of the form, below the fold on a phone.
+
+**What.**
+- `RatingReviewForm` saves stars the visitor tapped when the form goes away
+  unsent (closed, a page change, the tab hidden or closed), by `sendBeacon`,
+  stars only and private (a half-typed review is never sent). A review sent
+  after that goes as `rating-review`, which repeats the stars and is already
+  left out of the average, so nothing counts twice.
+- Stars preset by a link (`/feedback?rating=N` from the email) are not a tap
+  on this page: they arm only after a real pointer or key press here, so a mail
+  scanner opening all five links stores nothing. A "Save my N-star rating"
+  button sits right under the stars on that page. The strip's stars opening
+  the panel are the visitor's own tap (`presetIsTap`).
+- `lib/rate-prompt.ts`: the card may ask after 4 pages and 3 minutes since the
+  first page view (no second visit, no day), or 1.5 s after the visitor comes
+  back to the tab from a store they clicked out to (`BUY_CLICK_EVENT`), once
+  they have seen 2 pages: the moment they have just used the site for what it
+  is for. Still never on a visit's first page otherwise, never with the Pricing
+  callout in the same visit, never on the excluded paths. Up to 3 asks, 14 days
+  apart; a rating or "Don't ask again" ends it.
+
+**Not done.** No reward for a rating (off since 2026-10-27; incentivised
+reviews), no email to the owner per rating, no modal.
+
+## Earnings dashboard: a growth line, and eBay's Today stops reading 0 — 2026-10-28
+
+The owner, on `/admin/earnings`: keep the stacked columns, but add a line
+graph "cause it shows the linear relationship of the growth"; and "the today
+figure for eBay Partner Network … always shows zero, no matter what day it is".
+
+**Why eBay's Today was always 0.** Not a bug in the request or the parser:
+the dashboard's Today is Sydney's calendar day, and EPN reports whole days in
+its own US time zone, about 17 hours behind, adding a day's sales up to 48
+hours late. For most of a Sydney day that date has not begun in eBay's report,
+and once it has, nothing has landed in it. Same-day eBay data does not exist,
+so no request window or time-zone shift can produce a true figure.
+
+**What.**
+- A source can say it lags (`SourceResult.reportedThrough`, set only by the
+  EPN fetcher: the newest date any of its report rows carries). For a lagging
+  source with nothing dated today, the Today cell shows its newest day with
+  earnings, muted and dated ("27 Oct · latest"), with a footnote saying why
+  (`latestDayFigure` in `lib/earnings/core.ts`). Stripe, Impact and the rest
+  keep a real 0.
+- Totals never borrow: Combined Today, the headline, the digest and every
+  range still count only what is dated in them.
+- Under the columns, a "Growth" line chart over the same buckets: one line per
+  source and the combined line, per day (per month for all time) or as a
+  running total (`?line=total`), with a dashed least-squares trend through the
+  combined per-day line. Today is left out of the trend while it fills in.
+  Server-drawn SVG (`components/admin/EarningsLineChart.tsx`), no chart library.
+
+## Rating drive: a pop-up until 100 — 2026-10-28
+
+The owner, the same day as "Ratings: one tap counts": "we do need to get more
+reviews … have that pop up happen [as] originally was implemented … with the
+next 100 visitors until we get like over 100 reviews. And then we can like turn
+it off … it's more active for the first 100." A temporary exception to "One
+rating ask, earned by engagement" and the corner-card timing.
+
+**What.** While the site has fewer than 100 ratings (`RATING_DRIVE_TARGET`,
+counted like the shown average: `getSiteRating`), `RateUsPrompt` is a centred
+pop-up (`Dialog`) for every visitor who has not rated, new or returning, once
+per visit until they rate. No "Don't ask again", and a click on the dimmed page
+does not close it (`dismissOnBackdrop={false}`, a new `Dialog` option). It
+shows "N players have rated so far" out of 100. `/api/rating-drive` answers
+`{ active, count }`, read once per visit (sessionStorage), with a six-hour CDN
+header over `getSiteRating`'s six-hour memo; any error is "off". At 100 it
+switches itself off (within about 12 hours) and the corner card's rules apply
+again, with no deploy.
+
+**Kept from the original on purpose.** A visible ✕, "Maybe later" and Escape
+always close it, and it never covers a visit's landing page before 30 seconds
+(`RATING_DRIVE_LANDING_MS`; 6 s from the second page). A pop-up with no way
+out, or one covering the page a searcher just landed on, is what Google's
+intrusive-interstitial rule demotes on mobile, and search is ~180 clicks a day
+of the core business. Never someone who rated, never on sign-in, checkout,
+/premium, /feedback, admin, embeds or the arcade. No reward for rating.
+
+## Earnings dashboard: a forecast by quarter — 2026-10-28
+
+The owner liked the growth and trend lines and asked for "projected forecasts
+… by the end of this year, quarter 1 next year, quarter 2, quarter 3,
+quarter 4 … so it's easy to visualize where we're heading".
+
+**What.** A "Forecast" panel on `/admin/earnings` under the growth line: this
+quarter and the four after it as columns (earned so far solid, the projected
+rest faded, the likely range as a whisker), then a table with each quarter and
+this year and next as wholes: projected, likely range, and "if growth stops".
+
+**How it projects** (`forecastQuarters` in `lib/earnings/core.ts`):
+- A least-squares straight line through combined earnings per day over the last
+  90 complete days (from the first earning day if that is later; null under 30
+  days), carried forward a day at a time, never below 0, added per period.
+- The last two days are projected, not counted as earned, because eBay adds a
+  day's sales up to 48 hours late (the same lag as eBay's Today, above).
+- Likely range: the line's slope ± 1.28 standard errors, an ~80% band on the
+  growth rate, which is what dominates a projection a year out. Day-to-day
+  noise is left out; it averages away over a quarter.
+- "If growth stops": the last 30 complete days' average held flat.
+- Combined earnings before costs, in the display currency at the reference FX
+  rates. Labelled a projection everywhere; never added to any other figure,
+  the digest or an email.
+
+**Not done.** No seasonality (under a year of history), no per-source or
+profit forecast: a straight line on a young business is a guide, and more
+model would only look more certain than it is.
+
+## Store audit: 43 stores added from a fresh registry sweep and the sister sites — 2026-10-28
+
+**Owner:** "for all of these websites, and for Rift Compare as well, we gotta look at all the store health and make sure that all the latest and greatest stores they're all on our website."
+
+**Health.** The 2026-10-27 public export had every one of the 224 registered stores priced and seen within the day (only eBay SG older). One store has nothing to buy: Monster Card Corner (UK) lists 438 singles, none in stock, and the sweep read 0 in stock too; it stays (its rows are honest "sold out"), to be looked at if it is still empty at the next audit. The store-health monitor's 173 `frozen-prices` alerts are its median-price streak firing on quiet stores, not broken scrapers: a two-day diff of the listings found price or stock changes at all but 30 stores, all small. Nothing removed.
+
+**New stores.** `scripts/sweep-registry.ts` over the UVS registry again (8,340 stores worldwide; 2,964 untracked shop domains in our markets) plus, through its new `--extra` option, every store the sister sites (OP, Dex, MTG, Gundam, Lorcana, YGO Compare) track and this site does not (341). Same bar as 2026-10-16. 69 cleared it; added are those with 40+ in-stock singles (20+ in the thinner UK, EU and SG), less:
+- addresses of a store we already read: Plenty of Games' own domain, Abyss's .ca, Derpy Cards' .com, The TCG Group's tcggroup.co.uk; and Cardbot's .co.nz shop charging AUD;
+- Hobby Collectors Australia (sealed-only since 2026-10-16), and the three the 2026-10-16 entry turned down (Prestige Games, Twin Moons, Columbus Card Shop: no shipping or no orders);
+- three that quoted no postage to any address the postage probe tried, i.e. pickup only: Face to Face Games Rotterdam, Hideyoshi (SG) and Stupid Geeks (US).
+
+| Market | Added |
+|---|---|
+| AU (11) | Good Games Morley, Wonderland Games, Steel City Games, Team Card Titan, Irresistible Force TCG, Mayhem, Crystal Collectables, The Combat Company, Good Games Greensborough, HBT, Groovy Collectables |
+| CA (22) | Desert City Games, ParadoxTCG, HFX Games, SeaToSky, Fafnir's Hoard, BeardyCards, Exor Games, Dragon Cards & Games, Realm Hoppers, Trinity Hobby, Deck Out Gaming, Collect-Edition, Board Game Bliss, Card Caster, TKO Toy Co, Gamer's Lair, Poke Gems MTL, Let's Play!, Infinity Cards, Champion City Games, Cardboard Hero, L'univers de la carte |
+| EU (5) | Lake Cards, Ohana Giochi, Tradingcardsxxx, Magician's Circle, Retro Empire Gaming |
+| UK (1) | JGC Collectables |
+| US (4) | Level Up Games MD, Triad, Poke-Collect, Hasty Goblin Games |
+
+The registry goes from 224 to 267 stores. Postage was measured for every one (`probe-shipping-rates.ts --store=…`). Groovy Collectables quotes A$7.34 to some capitals and A$9.79 to others: the first AU store priced by state, so the AU postage picker now asks for the state (`marketHasZonePricing`, data-driven; `tests/shipping.test.ts` updated).
+
+**The job limit goes from 120 to 150 minutes.** The 2026-10-27 evening run took 90 (prices 68, sealed 22) for 224 stores read one after another; 43 more add about a fifth. As on 2026-10-16, the limit is a ceiling, not a cost.
+
+## TCGplayer card strip, the Gundam Compare design — 2026-10-29
+
+**Owner:** "every single site … also have the TCGplayer banners as well … as well as the eBay one", after seeing Gundam Compare's "Top Gundam cards on TCGplayer" strip. RiftCompare had been left out of the 2026-10-28 card ad strips; the owner now wants it here too.
+
+**What.** `TcgplayerPicks` (server) + `TcgplayerPicksLive` (client), the TCGplayer twin of `EbayPicks`: the set's chase cards (the same `getChaseCards` selection, US baseline), each with its own card art and TCGplayer's US market price (the `tcgplayer_market` row, else the buyable `tcgplayer` row, labelled "On TCGplayer"), on a boxed, horizontally scrolling strip with a price badge, "Shop TCGplayer" button and end tile, "Ad" label and the TCGplayer disclosure under it. Hidden for ad-free members. Prices stay US$; outside the US the line says it is the US marketplace.
+
+**Where.** Directly under `EbayPicks` on `/` and the region homes, the set hubs and articles that opt into eBay Picks, and on card pages under the eBay listings panel (that set's chase cards). Not on /browse, where it would push the results down. The text `TcgplayerAd` banners are unchanged.
+
+**Cost.** One small `RetailerPrice` read per set (`cardId in` ≤12, two retailer keys), inside a day-long `unstable_cache` tagged `CONTENT_TAG`, exactly as `EbayPicks`; no cookies, so the cached pages stay cached. Clicks: `buy_click` surface `tcg_strip`, retailer `tcgplayer_strip`, Impact sub-id `rc-<page>-tcg_strip`.
+
+## Small eBay + TCGplayer pair near the top and on every page — 2026-10-29
+
+**Owner:** the eBay and TCGplayer strips should also show on card pages and the quick views "near the top, but much smaller so it's not intrusive", and on every other page (pre-orders, lists…). Pro members see none of it.
+
+**What.** `MiniPicks`: a set's chase cards as 56px tiles in one slim box, with an eBay row (the cheapest live listing in the visitor's market, `selectPicks`) and a TCGplayer row (US market price). Each row has an "All →" link, and an "Ad" label and the disclosure sit inside the box. It is hidden for every paid tier (`usePremium`, and `data-ad-placement`). Clicks: surface `mini_picks`, retailers `ebay_mini` / `tcgplayer_mini`, sub-ids `mini_<market>` / `tcg_mini`.
+
+**Where.** Card pages under the price and alert button (that card's set). The card and sealed quick views. Above the footer banners on every page that shows them, except the homes, set hubs and card pages, which already carry strips (`miniPicksAllowed` in FooterAds.tsx).
+
+**Cost.** It reads nothing on the server. It fetches `/api/mini-picks?set=`, which reads the same day-long `cachedEbayPicks` / `cachedTcgPicks` caches the full strips use, and the CDN keeps each set's answer six hours. So no page gains a server read or a shorter cache life.
+
+## Amazon: each store's own tag, and Amazon on the Pokémon boards — 2026-10-29
+
+**Why.** The owner: Amazon Associates commissions are coming in, and every site should carry Amazon where it sells the product. Riftbound barely sells on Amazon; Pokémon sealed does. Auditing RiftCompare's Amazon links found the one on `/sealed` earning nothing for most of its audience: every amazon.* link carried `riftcompare-20`, which is the US Associates account's ID and credits only on amazon.com, and `/sealed` sent Australian, Singaporean, Canadian and EU visitors to amazon.com.au (UK visitors to amazon.co.uk) with it.
+
+**What.** `src/lib/amazon.ts` decides which Amazon a market gets and which of the owner's IDs goes on it: Amazon US (`AMAZON_ASSOCIATE_TAG`, default `riftcompare-20`) and Amazon AU (`AMAZON_AU_TAG`, default `compareempire-22`, the owner's Australian account); the UK, Canada and the EU only once `AMAZON_UK_TAG` / `AMAZON_CA_TAG` / `AMAZON_DE_TAG` is set; never Singapore. `affiliateUrl` now tags each amazon.* host with its own store's ID. `/sealed` shows its Amazon button only where the market has one. The Pokémon section's price board (`buildBoard`, product page and quick view) gains a "Check price on Amazon US/AU" search under its eBay search: no price, never a listing or ranked, ascsubtag `rc-<market>-pkmn-<surface>`, retailer `pkmn_amazon_search`, surface `amazon_search`, with Amazon's own statement under the board.
+
+**Not.** No Amazon on Riftbound card or sealed product pages: Amazon has little Riftbound product, and a search that finds nothing is a bad click.
+
+## Rating drive: the pop-up was invisible; now it asks sooner and again — 2026-10-29
+
+The owner, the morning after "Rating drive: a pop-up until 100": "I still have
+gotten no ratings since - it needs to be a bit more intrusive".
+
+**Why nothing came in.** The pop-up's box carried `data-rate-prompt`, the
+corner card's hook that `globals.css` hides (`visibility: hidden`) whenever a
+Dialog is open, so it hid itself: visitors saw the page dim and nothing to
+tap. Found in a real browser (the earlier check only counted the element).
+The box now has its own `data-rating-drive` hook and a solid card
+background; `tests/pro-page.test.ts` fails if the pop-up wears the corner
+card's hook again. Lesson: check a pop-up is VISIBLE in a browser, not just in
+the DOM.
+
+**More insistent, still closable.**
+- The landing page waits 15 s (was 30 s; most search visitors read one page
+  and leave inside 30 s), later pages 4 s.
+- "Maybe later" brings it back 3 pages on, up to twice a visit, every visit,
+  until they rate.
+- An unknown count (an API error, a cold database) keeps the drive on; only a
+  real count of 100 ends it.
+- `?rate=1` opens it at once, so the owner can see it after rating.
+- Unchanged: ✕, "Maybe later" and Escape close it; never someone who rated;
+  never on sign-in, checkout, /premium, /feedback, admin, embeds or the arcade.
+
+## The Card Shop Finder: a reciprocal link on store pages and the footer — 2026-10-29
+
+**Owner:** a link exchange agreed with The Card Shop Finder's owner (Ben Gunther, eSEOspace): a "Prefer to buy local?" block with "Find a local card shop near you" on every store page, and "Local Card Shop Directory" once in the footer, both to `thecardshopfinder.com/browse/` with `utm_source=riftcompare&utm_medium=referral`.
+
+**What.** The URL and labels live in `src/lib/partners.ts` (`CARD_SHOP_FINDER`, `cardShopFinderUrl(path)`), so a per-state or per-city page (`/co/`, `/co/denver/`) can replace `/browse/` in one place. The store-page block sits below the prices and the "Is it the cheapest?" section, a quiet bordered aside. The footer link is added straight to `FOOTER_GROUPS` ("Learn & help", beside "Community sites & tools"), not to `NAV_GROUPS`: the agreement is one footer link, not a launcher or rail entry. `NavGroupLink.rel` lets this one external link render `rel="noopener"`; every other external footer link keeps `noopener noreferrer`.
+
+**Terms.** Followed (`rel="noopener"` only: no nofollow, sponsored or noreferrer), new tab, no outbound click tracking. The directory is US-only, so the block says "a directory of US card shops" for readers of the other markets' store pages. `tests/partners.test.ts` pins all of it.
+
+## Earnings forecast: compounding, fading and seasonal, not a straight line — 2026-10-29
+
+**Owner:** "our trend line, it shouldn't be linear, right? It could be like non-linear. So make sure you account for that". This replaces the straight line in "Earnings dashboard: a forecast by quarter" (2026-10-28).
+
+**Why not a line.** Search traffic, and the affiliate money that follows it, compounds while pages climb, slows as a game runs out of searches, and follows the hobby's calendar. A straight line gets all three wrong: it under-reads a business compounding at 20% a month, never levels off, and reads January's lull as a collapse.
+
+**How it projects now** (`forecastQuarters`, `lib/earnings/core.ts`):
+- Growth rate: a least-squares line through the LOG of weekly earnings over the last 90 complete days (from the first earning day if later; null under 30 days), each week first divided by its month's season. That is a compounding rate, clamped to ±10% a week (`FORECAST_MAX_WEEKLY`) so a short, spiky history cannot project a runaway.
+- The rate fades: on day k it is r·e^(−k/180) (`FORECAST_FADE_DAYS`), so half of it is gone after about four months and the curve levels off at a plateau (`plateauPerDay`, shown in the note) instead of running away.
+- Season: each projected day is multiplied by its month (`SEASON`: Jan 0.85, Feb 0.9, May and Jun 0.95, Oct 1.05, Nov 1.1, Dec 1.2, the rest 1). Assumed from the hobby calendar until a year of our own data can replace it.
+- Likely range: the weekly rate ± 1.28 standard errors (~80%), faded the same way. "If growth stops", the eBay two-day lag, the display currency and "never in any other figure" are unchanged.
+
+**What the panel shows.** A monthly curve from this quarter to the end of the fifth (earned solid, projected dashed, the range as a band, "if growth stops" dotted), with the quarter and year table under it as before. The same model, at site level, is in the growth projections doc (project files `growth/projection-model.py`).
+
+**Not done.** No per-source or profit forecast, and no learned seasonality yet: re-fit `SEASON` from our own months once there is a full year.
+
+## RiftCompare Coins switched off — 2026-10-29
+
+**Owner:** "can we please get rid of the coins? … just completely get rid of the coins on the website". This turns off "RiftCompare Coins" (2026-10-16).
+
+**What.** One switch, `COINS_ENABLED = false` in `src/lib/coins.ts`. With it off, `/coins` is a 404, `coinsEnabledFor` is false for everyone (so `/api/coins` reports not eligible, pulls and claims are refused, and the watch and referral rewards pay nothing), and `earnCoin` sends no beacon from share buttons or store clicks. The row left the nav ("Your stuff"), the tier comparison table on `/premium` and the Pro ticks. Nothing else depended on coins: Pro's other perks, the referral's Premium days and the rating pop-up are unchanged.
+
+**Hidden, not deleted.** `CoinWallet`, `CoinTask` and `CoinOwned` and their rows stay, as do the page, the routes, the art and `tests/coins.test.ts`. Setting the switch back to true (and re-adding the nav, table and ticks rows) restores every member's collection as it was.
+
+## L'Atelier TCG listed for Riftbound sealed, its second storefront left out — 2026-10-29
+
+**Store:** L'Atelier TCG (Laval, QC) asked by email to be listed on RiftCompare (it has been on DexCompare since 2026-10-26).
+
+**What.** It runs its own platform but serves Shopify's feed format for its whole catalogue at `/products.json` (1,716 products on 2026-10-29, every game, CAD, a `url` linking its own product page; 22 Riftbound, all sealed or accessories, no singles). So it is a `SEALED_ONLY_SHOPIFY` store, not a retailer, with the collection `WHOLE_CATALOGUE` (`"*"`, `fetchProducts` in `sealed-import.ts`): one feed read, no sitemap discovery (it has no Shopify sitemap, and the pre-order fallback would only 404), `strictTitles` because the feed holds every game. The French Origins display is refused by the usual language rule.
+
+**A display floor for champion decks.** It titles single decks "Champion Deck Display: Fiora" (C$30.12). "Champion Deck (Fiora) Display" had no floor key (the type carries the champion's name), so the 300c default would have let one deck price the display. A champion-deck display is now held to the Showdown display's 4000c floor in `sealedFloorCents`, which also guards eBay. Refuse-only.
+
+**CCC left out.** Its second storefront, CCC (ccctcg.ca, Dorval), was asked for too: every one of its 284 products is one of L'Atelier's, at the same price and availability. One stock shown as two stores would mislead buyers and inflate the store count.
+
+## A private weekly growth report for the growth review — 2026-10-30
+
+**Owner:** "I want significant jumps to our affiliate link revenue … you can see it's not growing these past week from the earnings dashboard." Growth is now a standing weekly review (a scheduled Claude session), ranked by affiliate revenue, and that review needs the money split finer than the Monday digest gives: which site, placement and market moved, week over week.
+
+**What.** `POST /api/cron/growth-report` (CRON_SECRET, fails closed) builds `lib/earnings/growth-report.ts`: the last four whole weeks ending yesterday (eBay's report lags a day), totals by source, eBay and TCGplayer by site, the top 25 placements (`site · placement · network`, the third segment of the tag, so a product slug after it never splits a placement) and top 15 markets, each with last week's sales and the change on the week before, plus RiftCompare's own outbound click counters per week so earnings per click can be read. Plain text in a `<pre>`, so the review can parse it.
+
+**Private, like the digest.** It is mailed to a fixed business inbox, `riftcompare@gmail.com` (`growthReportEmail`, `GROWTH_REPORT_EMAIL` overrides; never from the request), the inbox the review reads; the owner's personal inbox keeps the Monday digest. The response is only `ok`/`via`, and `.github/workflows/growth-report.yml` (Mondays 20:41 UTC, Tuesday morning in Sydney, and on dispatch) logs only the HTTP status. It is in the ops monitor's `JOBS` (weekly, 200 h).
+
+## A Black Friday deals page on RiftCompare — 2026-10-30
+
+**Why (the first weekly growth review).** The private growth report (entry above) showed affiliate earnings flat week on week after three weeks of doubling, and why: the Radiance pre-order placements (TCGplayer `preorders`, eBay `rc-*-preorders`) fell about 80% after the 23 October street date, while the new eBay strips and picks made up the difference. Legacy is three months away, so November's buying moment is Black Friday (27 November) and Cyber Monday. DexCompare and MTG Compare already have a Black Friday page; RiftCompare, the biggest earner, had only a gift-guide article. A page needs a few weeks to be crawled before the searches arrive, so it ships now.
+
+**What.** `/black-friday`, one URL kept all year (in the sitemap, nav label "Black Friday": a bare "deals" keyword would take the Deal Finder's nav-search rank). It lists `lib/black-friday.ts` `sealedDeals`: in-stock sealed products whose cheapest store is at least 10% under the median of three or more in-stock stores, or 5% under the US MSRP, biggest saving first, top 12, drawn with the pre-order pages' `PreorderPriceTable` (`page="/black-friday"`, `page_type` `black_friday`, eBay search source `black-friday-product`) and an "Also on eBay" panel. eBay rows never count as a store or a deal. No "was" price, countdown or "ends soon", like DexCompare's page. Six-hour revalidate; reads `getSealedGroups` only.
+
+## One eBay campaign for every Compare site, hard-coded — 2026-10-30
+
+**Decided (owner).** Every Compare site now sends eBay clicks to ONE EPN campaign, 5339155912 (RiftCompare's,
+already set up), hard-coded in the code: no variable overrides it any more, so a forgotten secret or Vercel
+value can't split the sites again. The sites are told apart by the `customid` prefix alone, which comes first
+in every tag; this site's is `rc-<market>`. The Pokémon section shares the same constant.
+Replaced: 5339155911 (WargameCompare, FigureCompare, Compare Empire, K Young), 5339231473 (Lorcana),
+5339231474 (Gundam), 5339234013 (YGO). Old secrets/variables (`EBAY_AFFILIATE_CAMPAIGN`,
+`NEXT_PUBLIC_EBAY_CAMPAIGN_ID`, `EBAY_CAMPAIGN_ID`) are no longer read and can be deleted.
+
+## The Pokémon section is paused — 2026-10-30
+
+**Why.** The Pokémon Neon project (`POKEMON_DATABASE_URL`) has refused every connection since 2026-10-23: each
+`pokemon-import.yml` run since then fails at `prisma db push` with P1001 "Can't reach database server". The section's
+pages throw on a read error by design (fail-open, no cached copy), so every `/pokemon` URL answered HTTP 500 for a week
+while the "Pokémon (beta)" nav link, the homepage promo and `sitemaps/pokemon.xml` still sent visitors and Google to it.
+The ops monitor did not notice: its only Pokémon check reads DexCompare's index, not the section's own pages.
+
+**What.** `POKEMON_PAUSED = true` in `src/lib/pokemon/flag.ts` turns the section off whatever
+`NEXT_PUBLIC_POKEMON_SECTION` says (nav link, promo and sitemap section disappear, every route is gated), and a 302
+redirect in `next.config.js` sends `/pokemon` and everything under it to DexCompare, the owner's Pokémon sealed site.
+302, not 301, so the URLs keep their place if the section comes back. The import workflow is left as it is: its daily
+failure is the signal that the database answers again.
+
+**To undo.** Once the owner restores the database (Neon console: the project may be suspended or deleted; a new one
+means a new `POKEMON_DATABASE_URL` in GitHub and Vercel and a first import run), set `POKEMON_PAUSED` to false and
+delete the redirect. Whether to keep the section at all, or make the redirect permanent, stays the owner's call
+(CURRENT-STATE, "Pokémon section (off, or 301 to DexCompare)").
+
+## The Pokémon section redirects to DexCompare for good — 2026-10-30
+
+**Why.** The owner chose "Redirect to DexCompare" for the paused section (above): DexCompare is the Pokémon sealed
+site, and it needs the links more than a dead beta section on RiftCompare does.
+
+**What.** The 302 became 301s in `next.config.js`: `/pokemon/booster-boxes`, `/elite-trainer-boxes` and
+`/booster-bundles` go to DexCompare's US type pages, `/pokemon/sets/*` to its US set list, and everything else under
+`/pokemon` to its region picker. Product pages are not mapped one to one: the two sites' slugs differ, and a guessed
+slug would 404. `POKEMON_PAUSED` stays true; the section's code stays removable in one commit
+(`docs/pokemon/README.md`).
+
+## No "Shown first" tag on pinned rows — 2026-10-30
+
+**Owner (2026-10-30, for every site):** the paid rows go first, tinted and labelled as paid links, with no wording
+about the order: no "Shown first" or "pinned first" chips or notes. K Young, Compare Empire and CamCompare dropped
+theirs the same day; this does the same here.
+
+**What.** `ShownFirstTag` is gone from the card comparison, the card and sealed QuickViews and the pre-order table. The
+pinned eBay and TCGplayer rows keep everything else that makes the pin honest: the "Paid link" tag, the price rank in
+the number column, "+N% vs cheapest", and "Cheapest" on the real cheapest. The policy pages still name the pin as the
+one exception to price order, now "marked as paid links" instead of "tagged Shown first".
+
+## The Card Hive: a store read from its own Firebase shop — 2026-10-30
+
+**Why.** A UK Riftbound singles shop (thecardhive.co.uk, ~1,000 singles) came in through the suggest-a-store form,
+recommended by a buyer. It is neither Shopify nor WooCommerce: a custom React app on Google Firebase, so
+`/products.json` and the Woo Store API both answer with the app's home page. Asked whether to ask the shop for a feed,
+build a reader or decline, the owner chose to build the reader.
+
+**What.** `platform: "cardhive"` in `lib/retailers.ts`, read by `lib/cardhive.ts`:
+- **Source.** The shop page itself loads its whole stock, signed out, from one Firestore collection, `shop`, with the
+  web API key its bundle ships. The importer makes the same read through Firestore's public REST endpoint (four pages
+  of 300). Nothing signs in and no other collection is read.
+- **Matching by Riot's picture, not the title.** The shop's own set and number fields are hand-entered and wrong for
+  the printings that matter (alt arts under the base number, "r02" for r02a, the K/DA Special Art Akali as "RAD 2"),
+  and 39 rows have none. Every row hotlinks its card picture from Riot's gallery, and the gallery page (one plain GET,
+  as `backfill-card-text.ts` already makes) names each picture's printing (`publicCode`). A row is matched only when
+  its picture is in the gallery, that code names exactly one non-promo printing of ours, and the shop's card name
+  agrees. The title matcher is never asked (`ShopifyProduct.cardId`). Dry run from a runner, 2026-10-30: 985 of
+  1,004 singles matched (981 printings, 975 in stock), no name or set disagreement; the 19 left out are runes and two
+  cards whose pictures the gallery does not carry.
+- **Not covered.** Its sealed (a few boxes, packs and decks): the sealed importer skips the store. The price verifier
+  skips it too (no `/products/` URL); a link opens `/shop?item=<id>`, the shop's own deep link.
+- **Postage.** Not cart-probed (the probe is Shopify-only); the labelled estimate is its checkout's own rule from its
+  bundle, Royal Mail Tracked 48 at £2.90 for up to 10 singles, UK only.
+
+If either read fails the store keeps yesterday's rows, and store-health's stale alert fires if that lasts. If the shop
+moves to Shopify or changes its app, drop the platform and read it like any other store.
+
+## Visitor messages go to the site's own inbox — 2026-10-30
+
+**Why.** The owner: "make sure that contact information is really clear on all of our websites so that any feedback
+feeds into the respective emails". RiftCompare's instant inbox emails (contact, wrong-price reports, store
+suggestions, support tickets, creator applications) went to the owner's personal address, while `/contact`, the
+footer and every policy page tell visitors to write to riftcompare@gmail.com. Replies to visitors therefore came from
+the wrong mailbox, and the site's own inbox never saw what its forms collected.
+
+**What.**
+- `notifyOwnerOfInboxItem` sends to `inboxEmail()` (`lib/ops/owner.ts`): `CONTACT_EMAIL` unless `INBOX_EMAIL` names
+  one valid address. Ops-monitor alerts, the Sunday digest and the cron route still go to `ownerEmail()`.
+- Each inbox email carries `Reply-To:` the visitor's address when they gave a clean one (`replyAddress`), so a reply
+  answers the visitor from the RiftCompare inbox.
+- Written feedback (a message of 10+ characters from `/feedback`, the widget or Riftle) is emailed too. Star ratings
+  and the few words a rater adds (`rating`, `rating-review` sources) still are not: the 2026-10-27 rule ("stop sending
+  me emails for every single … rating") stands for ratings, and the 8/h, 25/day cap covers everything.
+- The same change was made on every sister site that has forms (OP Compare, CamCompare, Compare Empire AU); the
+  static sites have no forms and send visitors straight to their own address from the footer and `/contact`.
+
+## Vercel cost per site from the billing API — 2026-10-30
+
+**Why.** The owner: "we have so many websites now … an easy centralized way of looking at the costs that each website
+costs to run on Vercel, and the amount of earnings this brings". Earnings were already split by site (every eBay and
+TCGplayer link carries the site's tag prefix), but costs were one lump of hand-entered invoices. The 2026-10-25 entry
+said Vercel has no billing API; it now has one: `GET /v1/billing/charges` returns the team's charges as FOCUS v1.3
+JSONL, one line per SKU, day and project (`Tags.ProjectName`), for Pro teams.
+
+**What.**
+- A second automatic cost line, "Vercel (per project)" (`lib/earnings/costs.ts`), reads the last 120 days in 31-day
+  requests with `VERCEL_BILLING_TOKEN` + `VERCEL_TEAM_ID` (Vercel env, server-only; a token on a Billing role is enough),
+  memoised 30 minutes like the other sources. Not set → "Not connected" and nothing else changes.
+- Domain charges are skipped in the export: domains stay hand entries (setup doc, Part 5), so they are never counted
+  twice. A hand entry whose label names Vercel and not a domain ("Vercel invoice 2026-09") now counts only for the days
+  before the API's 120-day window.
+- `lib/earnings/sites.ts` (pure) maps each Vercel project to its site's tag prefix (`SITES`; an unknown project is
+  listed under its own name, a charge with no project, i.e. the plan, seats or tax, is "Shared") and builds one row
+  per site: earned − Vercel = net. Stripe, AdSense and Mediavine are RiftCompare's; Anthropic and every hand entry sit
+  on the shared row, so the rows add up to the dashboard's profit. Every site is listed, even at zero, so a site that
+  costs and earns nothing shows.
+- Shown on `/admin/earnings` ("By site: earned vs Vercel cost", for the chosen range) and in the weekly growth report
+  email (last week and four weeks). Amounts stay out of every log, as before.
+- Not covered: Amazon Associates and store programs (no reporting API), Neon (free tier), and invoice timing (the API
+  dates usage by the day it ran, an invoice by the day it was billed).
+- The ops monitor's earnings check already reports any automatic cost source that errors; `costsHealth` now returns
+  both.
+
+## Wrong-price reports and store suggestions also go to a private GitHub repo — 2026-10-31
+
+**Owner:** "for all of these websites … we must have the ability to report any prices that are wrong, for users to
+suggest a store … it's just stored within the GitHub … a daily job that checks for that."
+
+* Every Compare Empire site now has the same two forms: **Report a wrong price** (a quiet link under the price table
+  that opens in place, never a pop-up) and **Suggest a store**. Both POST to `/api/report`
+  (`src/lib/reports-github.ts`, `src/components/ReportForms.tsx`: the same two files in every site repo).
+* They are filed in ONE **private** repository, `Specifxx/compare-reports`: one new JSON file per report at
+  `inbox/<site>/<day>/…json`, created through GitHub's contents API with `REPORTS_GITHUB_TOKEN` (a fine-grained token
+  with Contents read/write on that repo only, Vercel only). Private because the site repos are public and a note is a
+  stranger's free text; the K Young reviews branch is public because reviews are meant to be read.
+* Nothing about the visitor is stored: no email field, no IP, no hash of one (the per-visitor limit, 6 an hour, lives
+  in the function's memory), and email addresses, IP addresses and phone-like numbers in a note are blanked before
+  the write. A honeypot field swallows bots.
+* Each write creates a new file (no read, no sha), so reports never race, and the commit subject never carries
+  `[deploy]`/`[preview]`. The route is POST only: no page view or crawler runs it, so it costs nothing at rest.
+* A daily job in that repo (`triage.yml`) keeps one issue per site listing what is still open, flags repeat
+  reports of the same product and store, and warns before the token expires. A handled report is moved to
+  `done/<site>/`. Until the token is set the route answers 503 and the form says to email the site's address.
+* RiftCompare keeps its own forms (`ReportPriceButton`, `/stores/suggest`), its database rows, admin actions and
+  instant emails; `/api/price-report` and `/api/stores/suggest` also file each report and new suggestion in the
+  reports repo, without the user id, email or IP. The shared `ReportForms.tsx` is not used here.
+
+## Visitor reports live on each site's own `reports` branch, not a private repo — 2026-10-31
+
+**Owner:** "we don't need a private repo for this … just build it into each site … inside the public GitHub, it's
+fine. As long as it's not reflected on the front end." This replaces the private `Specifxx/compare-reports` repo
+of the entry before it; everything else in that entry (the forms, no email/IP, redaction, new file per report,
+POST only, 503 until the token is set) still holds.
+
+* Each site writes its reports to **its own repo**, on an orphan branch named `reports` (`SITE_REPOS` in
+  `src/lib/reports-github.ts`): `inbox/<site>/<day>/…json`, moved to `done/<site>/…` once handled. The branch is
+  never merged into `main` and never deploys: `git.deploymentEnabled.reports = false` in `main`'s `vercel.json`
+  (pinned by `tests/reports-github.test.ts`) and the branch's own `vercel.json` turns deploys off as well.
+* Nothing on any site reads the branch, so no report ever shows on a page. The branch is public with the source,
+  which is why nothing about the visitor is stored and notes are redacted before the write.
+* One token, `REPORTS_GITHUB_TOKEN` (fine-grained, Contents read/write on the twelve site repos only), set in each
+  Vercel project for Production.
+* The daily triage moved to RiftCompare (`Specifxx/TCGEmpire`): `.github/workflows/reports-triage.yml` reads all
+  twelve `reports` branches through the API and keeps one issue per site there, plus a once-a-day "Reports digest"
+  comment. Those issues are public, so they link to each report's file and never quote a note. It fails (and
+  GitHub emails the owner) when a site has no `reports` branch, or the token stops working or expires within 14
+  days (checked only when the token is also a TCGEmpire Actions secret). The ops monitor's job list watches it.
+
+## The auction sweep spends from the reserve, and runs off the top of the hour — 2026-10-31
+
+**Owner:** "The eBay auction sweep has stopped." The ops monitor flagged `/auctions` as not refreshed for 16 hours.
+
+* **Why it stopped.** Every run was green, but the 04:43 UTC sweep found 600 of 5,000 calls left, and
+  `primeEbayBudget` held it to the same 600 reserve the price import spends down to: a budget of 0, nothing stored.
+  The import had run twice after the last good sweep (the 21:31 push run and the 22:45 scheduled one), each
+  spending to the line. The quota day resets at 07:00 UTC (08:00 in northern winter), so any sweep between the
+  evening import and the reset could get nothing.
+* **Fix.** `primeEbayBudget({ reserve })` takes a per-caller line; the sweep uses `AUCTION_QUOTA_RESERVE` (100,
+  `EBAY_AUCTION_QUOTA_RESERVE` env). The 500 calls between the two lines are about 40 sweeps, and 100 still keeps
+  eBay's hard limit out of reach. The import's 600 is unchanged, so nothing else gets more.
+* **Schedule.** The cron was `0 */4 * * *`, and GitHub dropped about half of those runs (28 to 31 Oct: three
+  sweeps a day, not six). It is now minute 23. `tests/ebay-auctions.test.ts` pins both.
+
+## eBay rows: local sellers, postage stated — 2026-10-31
+
+**Owner** (passing on a WargameCompare visitor's feedback for every sister site): eBay rows from overseas sellers
+carried postage that made "a lot of wasted clicks".
+
+* **Search.** RiftCompare's Browse searches asked for no location at all, so a row could be a seller who does not
+  even ship to the buyer. Every search (singles, sealed, auctions) now asks for `deliveryCountry:<market>`, and on the
+  four single-country sites (AU, US, UK, CA) `itemLocationCountry:<market>` too (`locationFilters`). eBay Spain stands
+  for the whole EU, so it keeps any EU seller and `sellerIsLocal` drops the rest. eBay Singapore has almost no local
+  Riftbound sellers, so SG keeps any seller who ships there, priced delivered. A regional printing (Chinese, Korean)
+  is only sold from its own region, so it keeps any seller too.
+* **Postage.** The buyer's country and a central postcode go in `contextualLocation` (`endUserContext`), so eBay
+  quotes real postage, and the price path and sealed search keep no listing whose postage eBay does not state
+  (`postageStated`; the funnel stage "local seller, postage stated"). Ranking was already by delivered price.
+* Rows stored before this are replaced as the import reaches them.
+
+## Christmas on every site: snow for embers, 1 November to Boxing Day — 2026-11-01
+
+**Owner:** "Now that it's November, we want to make all of the sites Christmas themed. I really like the Halloween
+theme … for Rift Compare, all of those lights and orange dots … can be snowflakes or snow going down … Christmas
+trees, maybe a Santa hat … stockings … candy canes … K Young … less gamified, professional Christmas." Screenshots of
+every site go to the owner before anything is deployed.
+
+* **Window.** `lib/season.ts` gains `christmas: 1 Nov to 26 Dec`, by the visitor's own date like Halloween, so it
+  ends on 27 December with no deploy. To end it early, change `to` (or delete the entry). `?season=christmas`
+  previews it any day; `?season=off` hides it. The boot script now reads the window table instead of naming
+  Halloween, so a later season is one entry.
+* **What it looks like here.** The hero's embers become snow falling through it (`RiftEmbers`: white and ice-blue
+  flakes, the big ones drawn as six-armed flakes that turn; the pointer still parts them, a click throws white, red
+  and gold sparkles). The dark night is midnight blue on the same lightness ramp (`tests/season.test.ts` measures
+  every 4.5:1 pair, as for Halloween). A strand of twinkling lights runs along the hero's top, trees, a present and a
+  candy cane stand in its bottom corners (`ChristmasDecor`), a stocking hangs from the rail where the cobweb was,
+  Santa's hat sits on the R mark everywhere `BrandLogo` is, and a "Christmas gifts" line under the hero's logo goes to
+  `/sealed` (`ChristmasGifts`).
+* **Cost and safety.** Art is eight small SVGs in `public/xmas/` (cached once). The snow outside the canvas is two
+  CSS layers moved by transform only. Every piece is `aria-hidden`, `pointer-events: none` and under the content, so
+  it never covers a price or takes a tap, and reduced motion stills it. Season markup is in the HTML only around the
+  window (`seasonMarkupLive`); the hat is one empty span, hidden by CSS out of season.
+* **Shared across the family.** The decoration classes (`xmas-*`) are one CSS block, marked `xmas-common`, that is
+  byte-for-byte the same on every sister site, with each site's own colours and copy in a `xmas-site` block after it.
+  K Young is the exception by the owner's ask: no hats, lights or trees, only a quiet "Holiday Edit" line and sparse
+  rose-and-gold snow.
+
+## 2026-11-01: A beta community forum, no accounts, posts in this repo
+
+The owner asked for "user forums ... you don't need to be able to sign in ...
+put your name down ... it'll save your name ... all of this is public data ...
+keep it within each website's repository", on every site, to give the sites a
+reason to come back that search rankings alone don't. `/forum` (docs/forum.md):
+
+- **Storage:** `forum.json` on this repo's public orphan branch `forum`
+  (never deployed: its own vercel.json, plus `deploymentEnabled.forum: false`
+  here). Written only by `POST /api/forum` with the visitor-reports token;
+  a write reads the file's sha and retries when two posts race.
+- **Cost:** pages read the file from raw.githubusercontent.com inside their
+  normal cache life, never per visit; the browser fetches the newest copy from
+  GitHub directly, so a new post shows in minutes with no deploy, no function
+  and no database. Rebuilding pages for posts would have meant a build per post.
+- **Spam:** honeypot, a 2.5 s minimum on the form, per-visitor limits (4 per
+  10 min, 20 a day, 4 threads a day) and a per-instance cap, all in memory; no
+  IP, email or hash is stored, and emails/IPs/phone numbers in posts are
+  blanked. Links to other sites and slurs or strong profanity are HELD (filed
+  under `held/` and flagged in the daily reports triage), never published.
+- **Not dead when empty:** the site's topics with a line and a few prompts;
+  never an invented post.
+- **SEO:** threads are in the server HTML; a thread is noindex until it has a
+  reply, the forum page until any thread has one; indexed threads carry
+  DiscussionForumPosting JSON-LD.
+- **Moderation:** the owner asks Claude; a post is removed by an edit to
+  `forum.json` (`removeFromForum` in `src/lib/forum/core.ts`).
+
+## 2026-11-01: Search Console demand for the sister sites' eBay passes
+
+Compare Empire's eBay key (about 4,950 Browse calls a day) covers fewer than a fifth of its ~29,500 products
+over A$10 each day, so the owner asked that the calls go to what people search for and to expensive products.
+Search Console is the only demand signal Compare Empire has (it has no database of views), and the service
+account (`GSC_SA_KEY`) lives here. So `.github/workflows/sister-demand.yml` (daily 17:40 UTC, before Compare
+Empire's 19:10 price job) runs `scripts/sister-demand-export.mjs`: page-level clicks and impressions for 56 days,
+aggregated by path, written as `gsc-pages.json` to the `demand` branch of the site's own repo with
+`REPORTS_GITHUB_TOKEN` (the visitor-reports token, Contents read/write on the twelve site repos; nothing else
+writes with it here). The branch is an orphan with its own no-deploy `vercel.json`. Only page numbers leave
+Search Console, never a query. Watched in `JOBS` (`src/lib/ops/checks.ts`). Another sister site joins by adding
+a row to `SITES` and reading the file in its own eBay script.
+
+## AdSense back on, again — 2026-11-01
+
+The owner turned AdSense back on: "I think it's not worth it having it off the
+whole time. I don't think it's doing anything much." `ADSENSE_SERVING = true`
+in `lib/adsense.ts`, exactly as in "AdSense back on" (2026-10-26): the loader,
+the pagead2 and Funding Choices preconnects and (under `AD_STRATEGY=manual`)
+the units return on every page, so Auto ads and the EEA consent message come
+back. Paid members stay ad-free (`lib/ad-free-boot.ts` pauses ad requests),
+Journey still loads only on blog and guide articles, and the AdSense console
+settings (Auto ads, vignette off, anchor) are untouched. The 2026-11-23 review
+keeps AdSense in the comparison against affiliate earnings per visit.
+Deployed immediately on the owner's standing authorisation.
+
+## 2026-11-01: Creators, "How to work with us"
+
+Creators kept asking the owner how we'd like the site promoted, so /creators
+now answers it in a "How to work with us" section (`#work-with-us`). Owner's
+terms: flexible, low expectations, no contract, script or quota; any one of
+three is plenty: link the site (plus their creator code where the site has
+codes, RiftCompare only), a shout-out in their normal content, or a
+walkthrough/review of the site. They call us their **partner**, never
+"sponsor": we don't pay them for a mention. On our own pages they stay
+"featured creators" ("partners" here still means affiliate links). The
+section asks them to say it's a partnership (FTC/ASA), lightly. The
+owner's ready-to-send replies live in the project's creators playbook, not
+in the repo.
+
+## 2026-11-01: Legacy season starts: a set hub, a banner on every Legacy post, four posts
+
+The owner: "let's get Legacy set up … all the guides, everything we did right for
+Radiance … as soon as possible." Legacy (LGC) ships 29 January 2027 and Riot has
+shown no card; the first previews are at Convergence Fest from 13 December. What
+Radiance had at this stage, and Legacy did not:
+
+- **An indexable set hub.** `/sets/legacy` was noindex (zero cards, no hub).
+  `components/sets/LegacyHub.tsx` now renders Riot's facts, the eight named
+  Legends (each linked to its champion hub), the products with US MSRPs, a live
+  cross-store pre-order table, the timeline and an FAQ that also feeds the
+  page's FAQPage JSON-LD (`lib/sets/legacy.ts`, one array). That earns
+  `hubReady`. With zero cards the page's title is "Riftbound Legacy: Legends,
+  Products & Card List", not "Card List & Price Guide", which would promise
+  prices it does not have.
+- **`previewFrom` and `hasSetGallery()`.** `hubReady` also sent the nav, the
+  homepage's "By set" tile and every other gallery to `/sets/legacy/gallery`,
+  an empty noindexed page until a card exists. `previewFrom: "2026-12-13"` holds
+  those links back (the tile opens the hub instead) and lets them through on
+  the first preview day with no edit. Radiance never needed it.
+- **A pre-order banner on every legacy-tagged post** (`LegacyPreorderCta`), the
+  cheapest open box pre-order in the reader's market, as Radiance's posts had.
+  Guides included: Legacy has no guide with its own release capture to protect.
+  It retires on release day.
+- **Three posts** for queries nobody owned (docs/seo-keyword-map.md), each
+  over the 1,500-word policy: where to buy, the pre-order sell-out snapshot
+  (12 of 17 box listings sold out on 31 Oct, the cheapest first: the Reddit
+  link), and all eight 2027 precons (Legacy's Champion Decks with Proving
+  Grounds 2nd Edition: one post, since two short deck posts would split one
+  buyer and miss the word floor). Prices are from the 31 Oct public sealed
+  export, dated in the copy; card prices are TCGplayer market, never the
+  cheapest listing, which had outliers.
+
+**Reversed: Proving Grounds 2nd Edition is not OGS.** On 2026-10-25 a store
+title "Legacy - Proving Grounds Box Set (2nd Edition)" was deliberately kept
+under OGS. But PG2 is a new box (Heimerdinger, Karma, Vladimir, Illaoi;
+US$40, 19 Feb 2027), and filed as OGS it sat in Origins' Proving Grounds group as
+its cheapest "in-stock" offer (C$47.95 at 401 Games). It now maps to LGC with
+its own type, "Proving Grounds 2nd Edition", so it is compared on
+`/legacy-preorders`; a "(REPRINT)" first edition stays OGS. The four Legacy
+Champion Decks sold as one ("Set of 4", or one store's "Showdown Decks (Set of
+4)": Legacy has no Showdown Decks) are "Champion Deck Set (4)", never a single
+deck's group.
+
+Next, when previews start on 13 December: reveals into the spoilers post and the
+gallery (as Radiance's importer did), and the four unnamed Legends into
+`LEGACY_LEGENDS_CONFIRMED`.
+
+## 2026-11-01 — The decline is the Radiance wave fading; deck size moves to its own page
+
+Bill: RiftCompare is declining while the sister sites grow. Search Console (90 days to 31 Oct, `gsc-queries` and
+`impact-report`): impressions fell from about 11–12k a day in late September to 4.6–6k by 28–30 October and average
+position slipped from 7.1 to about 8.6. Clicks averaged 194 a day from 28 Sep to 8 Oct and 180 from 9 to 31 Oct, with
+spikes on 16, 17 and 23 October from the Radiance release and 112 on 30 October. So the drop is mostly the end of the
+Radiance spoiler and release searches, on top of a slow slide in position. It is not a crawl or indexing fault.
+
+What was not done, on purpose: no new title pass on the low-CTR guides (card size, Deploy, Empower, ban list, rotation,
+HEARTSTEEL overnumbered). Each already had a CTR pass on 2026-09-24 or 2026-10-23, and changing them again with no new
+evidence is churn. No new hubs either: champions, keywords, types and printings already exist, and more pages on the same
+queries would split them ("Pages competing in Google"). The Ahri blog/guide pair was already folded by a 301. The one
+fix with clear evidence: "riftbound deck size" (rising, about 520 impressions at position 9) was landing on the
+card-size guide, which answers a different question. `how-a-riftbound-deck-is-built` now owns it with
+`seoTitle` "Riftbound Deck Size: 40 Cards, 12 Runes, 3 Battlefields" and a snippet that leads with the numbers. The
+next lever is the Legacy preview season (13 December), which another thread is preparing. Re-check `gsc-queries` around
+17 November.
+
+## 2026-11-01: The Pokémon section returns, served from files in the repository
+
+The owner asked for the Pokémon section back ("bring it back exactly how it
+looked before, and exactly where it was on the homepage … we're not using a
+Neon database anymore, we're using the actual repository"). It had been off
+since 2026-10-30 (above): its Neon project stopped answering on 2026-10-23 and
+every page was a 500, and the paused section 301'd to DexCompare.
+
+- **No database.** Everything the section stored is public (TCGplayer,
+  Cardmarket and eBay prices the pages print anyway), so it now lives as JSON
+  in `data/pokemon/` (`src/lib/pokemon/store.ts`): `sets.json`,
+  `products.json`, `offers.json` (current price per product, market and
+  source), `ebay-checks.json` (the eBay rotation), `last-run.json` and one
+  `history/YYYY-MM-DD.json` per UTC day. `prisma/pokemon/`, `lib/pokemon/db.ts`,
+  `POKEMON_VARS` and the second `prisma generate` are gone.
+- **The import** (`pokemon-import.yml`, same two runs, same eBay rules) reads
+  the files, changes them in memory and writes them back once, then
+  `scripts/pokemon/publish-data.sh` commits them to `main` without the deploy
+  marker, like the Riftbound price history. A failed TCGCSV read writes
+  nothing; an empty catalogue is never written. The 05:17 UTC run lands before
+  the morning release, so pages carry the day's TCGplayer prices; the 21:47 eBay
+  run rides the next one. The page purge step is gone: data changes only with a
+  deploy, and a deploy starts with a fresh page cache.
+- **Reads.** The two loaders (`getPokemonCatalog`, `getPokemonProduct`) read
+  the files once per warm function and memoise; no `unstable_cache`, because
+  there is no database read to save and a Data Cache entry would only add
+  writes. The sitemap reads the files directly. Page TTLs are unchanged.
+- **Bundle and cost.** `next.config.js` traces `data/pokemon` into the
+  `/pokemon/**`, `/api/pokemon/**` and sitemap functions only, never `/**`, so
+  the ~300 Riftbound functions do not grow. Size: about 1 MB of current files
+  and ~20 KB of history a day (~7 MB a year), one row per line so a day's diff
+  is the rows that changed.
+- **The switch follows the files.** `next.config.js` inlines
+  `POKEMON_DATA_BUILT` ("1" when the build has `data/pokemon/products.json`),
+  and `pokemonSectionOn()` is that AND `NEXT_PUBLIC_POKEMON_SECTION` not "0".
+  So the nav link, the homepage promo (unchanged, still in `HomeSections.tsx`
+  where it was) and the sitemap section come back with the first build that
+  carries the files, and a build without them shows nothing rather than an
+  empty section. `POKEMON_PAUSED` and the DexCompare 301s are removed.
+- **Watched.** `pokemon-import.yml` joins the ops monitor's scheduled jobs
+  (36 h): it was missing, which is why a week of failed imports went unseen.
+- Lost with the old project: the market-price history before 2026-11-01 (the
+  charts start again from the first import) and the original product slugs,
+  which the importer re-derives from the same names, so most come back the same.
+
+## 2026-11-01: eBay rows in the price lists wear the stores' button again
+
+The owner, across every site: "the ebay and amazon links should blend in and look exactly the same as the other price
+rows … reflect that change on the other sites that require it". Inside a price list (the card table and its quick
+view, the sealed quick view's pinned eBay search, the card page's and quick view's "no eBay price" search row, the
+pre-order table), an eBay row now uses the same button as a store: `buyButtonClass` returns `btn-buy` for every
+retailer, the pre-order table's eBay row is `btn-ghost` like its neighbours, and the quick view's eBay fallback box
+loses its blue tint. The "Paid link" tag and EPN disclosure stay; rows keep their price position. This reverses the
+eBay-blue buttons of 2026-09-26 for price rows only: eBay ad strips, panels, the price guide's per-card eBay button
+and the Pokémon section keep `.btn-ebay`/`.btn-ebay-ghost`.
+
+## 2026-11-01 — The US searches first in the eBay pass
+
+Owner, 2026-11-01: "the eBay API for all websites should also prioritise the US." `ebayMarketsForDay` used to put the
+rotating market first and alternate AU and US behind it, so every other day the US was last: the market whose whole pass
+is discarded when the Browse budget latches (and CA, derived from the US pass, with it). It now returns
+US → today's rotating market → AU. The US has first claim on the quota every day and is never the casualty; the rotating
+market keeps the place ahead of every other daily market (the 2026-08-23 reasoning still holds for everything after the
+US); AU, also daily, now carries the trailing slot alone and loses at most a day when a run overspends. Which markets run
+each day, and the chase pass that follows the same list, are unchanged (`tests/affiliate-priority.test.ts`).
+
+## 2026-11-01 — eBay sealed searches ask for the floor; Black Friday re-checks stock at the store
+
+The owner, on the AU Origins Booster Box on /black-friday: "some prices are out of stock … eBay should have a price
+row here, there are tons of Origins boxes on eBay".
+
+- **No eBay box row in any market.** `searchEbaySealed` sorts by price, reads 50 results, and applied the price floor
+  (half the store reference, or the per-type minimum) only afterwards. Origins has a large cheap halo on eBay (packs,
+  singles, protectors that all say "Origins Booster Box"), so the 50 cheapest were all under the floor and the search
+  came back empty every day in AU, US and UK. The floor now goes into the query as `price:[floor]` with the
+  marketplace's `priceCurrency` (`EBAY_MARKETPLACE_CURRENCY`), so the 50 read are the cheapest plausible listings; the
+  post-filter is unchanged. Second cause: `\bcard\b` in the sealed exclusion threw out every title that spells out
+  "Trading Card Game". `sealedExclusionText` blanks that phrase (and "card game") before the test; a single, code or
+  art card is still excluded (`tests/ebay-sealed-floor.test.ts`).
+- **Stale stock.** The page reads the daily snapshot, so a store that sold its last box after the export kept its "In
+  stock" badge for up to a day (Eternal Magic's A$350 box, checked at the store: `available: false`). /black-friday now
+  runs its likely deals (twice the shown count) through `withLiveStock`, the pre-order pages' one-way Shopify
+  `available` check held six hours, and picks the deals again from what is still open. The other five AU "In stock"
+  stores answered `available: true`; their pages' text shows a hidden "Sold out" badge, which is theme markup, not stock.
+
+## 2026-11-01: The earnings forecast is three stated scenarios, not a fitted curve
+
+**Owner:** "the growth is a bit too ambitious … I highly doubt I'm going to be earning $250K next year … that's I would
+have generated 5 million dollars in sales, which is kind of crazy." This replaces the fitted, fading curve of
+"Earnings forecast: compounding, fading and seasonal, not a straight line" (2026-10-29).
+
+**Why the old one ran away.** It fitted a compounding rate to the log of weekly earnings, and our whole history was
+about six weeks of a young business doubling (much of it Radiance pre-orders). The fit hit the +10%-a-week clamp, and
+even fading over 180 days that compounds to ~13× the run rate: the "$250K next year". The clamp was a bound on noise, not on what is plausible for a business.
+
+**How it projects now** (`forecastQuarters`, `lib/earnings/core.ts`):
+- Run rate: the last 28 complete days (`FORECAST_RUN_DAYS`) per day, each day divided by its month's `SEASON`. AdSense
+  is left out of it (switched on and off three times since 10-26; back on 2026-11-01) and added instead as an assumed
+  amount a day per scenario.
+- Growth: a fixed monthly rate per scenario (`SCENARIOS`), compounding, never above `FORECAST_MAX_MONTHLY` (8%, ~2.5× a
+  year): Conservative −4% a month (Google traffic sliding after the Radiance release, as Search Console shows),
+  Base +2% (~+27% a year), Optimistic +6% (~2× a year). AdSense A$1.00 / 1.50 / 2.50 a day, grown the same way.
+- The observed change (last 28 days vs the 28 before) is shown for reference and never extrapolated.
+- Implied store sales: the eBay + TCGplayer part ÷ `ASSUMED_COMMISSION` (4.5%, the owner's ~4–5%), shown under every
+  figure, so a projection that needs an absurd sales volume is visible. Stripe, AdSense and Mediavine imply none.
+- Season, the two-day eBay lag and "a projection, never a figure anywhere else" are unchanged. "If growth stops" and
+  the ±1.28 SE band are gone: the band is now Conservative to Optimistic.
+
+On October's shape next year's three scenarios come out at roughly 0.7×, 1.2× and 1.7× the current annual run rate,
+instead of ~13×. Revisit the three rates with a full quarter of data (February 2027), and re-fit `SEASON` after a year.
+`growth/projection-model.py` in the project files (site-level visitors) is not this model and was not changed.
+
+## 2026-11-01 — Admin analytics page from Vercel's Web Analytics API
+
+The owner: "another page on an admin called analytics … the line graph that compares the last seven days, 30 days, and
+90 days, 12 months of all of the websites on that one graph … a line to show the cumulative total … it can also focus
+on … the buy_click events, and compare that". The visit numbers were only in Vercel's dashboard, one project at a
+time, and the only way a session had read them was the dashboard's internal endpoint, which rides a browser login.
+
+- **Source.** Vercel's public Web Analytics API (`GET /v1/query/web-analytics/visits/aggregate` and
+  `events/aggregate`, bearer token + `teamId` + `projectId`), never the internal endpoint
+  (`tests/admin-analytics.test.ts`). Token `VERCEL_ANALYTICS_TOKEN`, falling back to `VERCEL_BILLING_TOKEN` (both are
+  team-scoped Vercel tokens), with `VERCEL_TEAM_ID`; Production env of `riftcompare`, server-only. Not set → the page
+  says what to add and nothing else changes.
+- **Every site without a list to keep.** The team's projects come from `GET /v10/projects` and map to sites through the
+  earnings dashboard's `siteForProject`, so a new site shows up by itself and a project with Web Analytics off is
+  listed as such. Four requests a project (visits and `buy_click`, by day for 90 days and by week for 12 months, each
+  under the API's 100-row limit), four projects at a time, memoised 30 minutes; "Refresh" bypasses it. No database.
+- **What it draws** (`/admin/analytics`, `lib/analytics/series.ts`, pure): one line per site for visitors, page views,
+  buy clicks or buy clicks per 100 visitors; 7 / 30 / 90 days (daily) or 12 months (weekly); an all-sites line (always
+  every site, even ones hidden from the chart) and a running total. A running rate is clicks so far ÷ visitors so far,
+  never a sum of percentages. The table under it totals each site for the range, with the change against the period
+  before for 7 and 30 days.
+- **Visitors are summed per bucket**, so a visitor who returns on three days counts three times; Vercel's dashboard
+  counts unique visitors per range and reads lower. The page says so rather than spend a fifth request per project.
+- A separate page, not a section of `/admin/earnings`: the owner moved it there, and it keeps clear of the earnings
+  page's own rework.
+
+## 2026-11-02 — Family growth target, measured on every site's Google clicks
+
+The owner: "I can see that our websites are growing but I'm not happy with the pace. I want strong weekly if not daily
+growth." `/admin/growth` showed Google clicks for RiftCompare and OP Compare only (`GSC_PROPERTIES` was never set), so
+the family's growth had no one number.
+
+- **Every property, one series per site.** `scripts/growth-snapshot.ts` now lists every property `GSC_SA_KEY` reads and
+  groups them by host (`propertiesByHost`): a Domain property only has data from the day it was verified (most from
+  25 Oct) while the URL-prefix property holds the longer history, so each day takes the property that saw the most
+  (`mergeGscDays`), never the sum. `GSC_PROPERTIES` still overrides the list.
+- **The target is weekly, on Google clicks.** One day against the next swings with the weekday and a post, so the
+  target is the last 7 settled days against the 7 before (`targetRow`, `GROWTH_TARGETS`): the sister sites together
+  +15% a week (doubling in five weeks: they are new to Google, sitemaps submitted 22 Oct to 1 Nov, and doubled the week
+  to 29 Oct), RiftCompare holds (it is between sets; the Legacy previews from 13 Dec are its next wave), every site
+  together +5%. Shown at the top of `/admin/growth`; per-site cards follow, biggest first.
+- **Read-only diagnosis task** `gsc-sites-daily` (maintenance): every property's daily clicks, weekly totals, pages with
+  impressions, permission and sitemaps; with `url` (properties) the pages that gained or lost impressions, and with
+  `set_slug` one page's days and searches. Counts and search terms only, never money.
+- **Found on the first run:** Compare Empire's "collapse" on 29 Oct was one search, "robot vacuum price comparison",
+  showing the US robot vacuum page 22,000 times in three days with no click, then nothing. That is not real demand
+  (rank trackers or a Google test) and no fix was made; the site's real level is a few hundred impressions a day.
+  DexCompare's apex property has three pages with impressions: its sitemap was first read on 30 Oct, so it is new to
+  Google, not broken.
+
+## 2026-11-02 — Family links name no single country
+
+The owner: "Riftcompare says 'Australian tech prices on compareempire' … when I switch to US it still says Australian
+tech prices when compareempire has US stores." Compare Empire's root has been the US home since 2026-11-01 (AU at
+`/au`, UK at `/uk`), but every family footer still called it Australian.
+
+- **Every family list, all twelve sites that have one** (KaeYoung keeps none): Compare Empire is "Tech and appliance
+  prices"; its RiftCompare blurb names all three markets and its two deep links go to the US edition (`/us/phones`,
+  `/us/deals`), from which Compare Empire's region script moves an AU or UK visitor to their own. DexCompare's
+  "Pokémon booster boxes in Australia" link became "Pokémon booster boxes" on `/us/` for the same reason.
+- **Cyberpunk Compare joined every list** it was missing from (RiftCompare, OP, MTG, Dex, Wargame, Figure, Cam,
+  Compare Empire); the engine sites already had it.
+- **A test in each repo** fails on a country adjective in a family anchor or blurb (and, here, on a deep link into a
+  non-US edition), so the wording cannot drift back.
+## Store clicks per month — 2026-11-02
+
+Thread "Win exclusive store partner codes" (owner, 2026-11-02: "implement now"). A week after the 26 Oct partner-code
+emails no store had answered, and the one store that did engage (Plenty of Games, AU) asked first for "data to
+support how many customers you've directed to the store". The daily counts ("Click counts by day") lump every store
+into one `store` number, so the only per-store evidence we could quote was "cards where you are cheapest".
+
+- `/api/click` now also adds one to `storeclick:<Sydney month>:<retailer>` (a `Counter` row) when the beacon's
+  retailer is a key in `RETAILERS`. Unknown values are ignored, so a forged beacon cannot mint rows; at ~150 stores
+  that is at most ~150 rows a month. One extra single-row upsert per store click, no read on the request path.
+- `/admin/store-partners` shows this month and last month per store. It is the number to quote in a pitch, next to
+  the store's own `utm_source=riftcompare` traffic. Like the daily counts it is a trend, never a payout.
+- Not done on purpose: no per-card or per-day breakdown, no visitor identifiers.
+## 2026-11-02 — Empire HQ and the one Monday report
+
+The owner approved the consolidation plan's control tower ("Sure go ahead with this plan"): thirteen sites, nine
+monitors and two weekly emails each mailed separately, and every thread sent its own Chrome prompt. Now:
+
+- **Only red mails, on every site.** `decide` (`src/lib/ops/state.ts`) never plans a warning: amber is shown on
+  `/admin/health`, Empire HQ and in the Monday report. A red is mailed when it appears (or rises from amber), again
+  every 24 h while it lasts, and its recovery is announced. The sister monitors do the same: a run fails (GitHub's
+  email) only on a failed check, and OP Compare's watchdog mails failures only and dropped its own Monday summary.
+- **One status file per site.** Each sister monitor writes `ops-status.json` and its workflow force-pushes it as
+  `status.json`, one orphan commit, to the repo's public `ops-status` branch (never deployed). Format in
+  `src/lib/hq/status.ts`; status and the monitor's own sentences only, the same as the public Actions log. No new
+  secret is needed: each repo writes its own branch with its Actions token.
+- **RiftCompare's monitor collects them** (`src/lib/hq/collect.ts`, every three hours) into the OpsSnapshot row
+  `hq:sites`. For a site without a monitor (DexCompare, MTG Compare, CamCompare, Compare Empire) it probes the home
+  page and its import workflows' latest runs instead. Red that cannot mail itself joins its own checks (area
+  `sites`, `hqChecks`): a sister monitor silent for a day (GitHub pauses idle schedules), or a site without a monitor
+  down. Compare Empire's repository is private, so only its home page is probed.
+- **Empire HQ** (`/admin/hq`, linked first on `/admin` with a dot per site): one row per site with Google clicks for
+  the last 7 settled days against the week's target (sisters +15%, RiftCompare hold, from `GROWTH_TARGETS`),
+  earnings for the last 7 full days by affiliate tag (`siteLedger`; `pkmn` counts to RiftCompare), Vercel cost once
+  the billing token exists, health, and the owner's open steps. Admin only, uncached, a few small rows.
+- **The one Monday report** (`/api/cron/weekly-report`, `src/lib/hq/weekly-email.ts`) replaces the Sunday digest and
+  the separate growth report: targets, the owner's steps, every site's row, RiftCompare's flagged checks, the money
+  section and the growth review's detail, to the owner AND the business inbox the weekly growth review reads
+  (subject `Empire weekly <date>`). The ops monitor's Sunday 21:00 UTC run asks the site to send it (the site alone
+  holds the reporting keys, so no amount reaches a public log) and sends its own plain digest if that fails, so a
+  Monday without email still means the monitor stopped. `growth-report.yml` lost its schedule; dispatch it for an
+  extra copy.
+- **The owner's queue** is `data/hq/owner-steps.json` on main: a public file of titles, reasons and the
+  project-files path of each prompt (the prompt text stays private). A thread adds a row and commits to main; HQ
+  reads the file from GitHub at request time (bundled copy as fallback), so no deploy is needed. Done is the row's
+  `done` day or the owner's Done button (OpsSnapshot `hq:steps-done`). The steps still open are joined into one
+  Chrome batch each Monday (project files, `chrome-queue/<date>.md`) instead of a prompt per thread, unless a step is
+  urgent. `tests/hq.test.ts` keeps the file free of addresses and keys.
+
+## 2026-11-02 — Bluesky auto-posting
+
+**Decision.** One Bluesky account for the whole family (not thirteen), posted by `bluesky-post.yml` once a day:
+two link cards, each to one sister site's self-updating page (the price or market report; its Black Friday page from
+1 November to a week after Cyber Monday), rotating so every site appears about once a week. Each card uses the page's
+own title, description and share image, read at post time, so a post never says anything the page doesn't.
+
+**Why.** The owner wants growth that runs without him (2026-11-02: no Reddit posts, no recurring Chrome prompts).
+Bluesky has a free, open posting API with no app review; one account means one setup and one app password, and the
+pages it links already update themselves. X, Threads and Pinterest need paid tiers or app review; Pinterest
+(KaeYoung, FigureCompare, CamCompare) is the next candidate once there is a reason to ask for review.
+
+**Rules.** The job is a green dry run until `BLUESKY_HANDLE` (variable) and `BLUESKY_APP_PASSWORD` (secret, an app
+password, never the login) exist; the owner's one-time setup is a row in `data/hq/owner-steps.json`. A page that
+fails to load is skipped; all failing, or Bluesky refusing a post, fails the run, and the ops monitor watches the job
+(`JOBS`, 36 h). Rotation and text are pure (`src/lib/bluesky-post.ts`, `tests/bluesky-post.test.ts`). Never post a
+price, a claim or a deal the linked page doesn't show, and never reply to or follow people automatically.
+
+**Hashtags (2026-11-02, later).** The account starts with no followers, so a link card alone reaches nobody; each
+post now ends with one or two hashtags people already follow for that hobby (`ROTATION[].tags`: #PokemonTCG,
+#MTG, #KBeauty…), sent as real rich-text tag facets (UTF-8 byte offsets, `tagFacets`) so Bluesky's tag feeds and
+custom hobby feeds pick them up. Never more than two, never a trending tag unrelated to the page. Bluesky's
+developer guidelines count automated likes, follows, replies and anything that notifies a user as spam; the job does
+none of them, and the profile says the posts are automated.
+
+**Stand-ins and no repeats (2026-11-02, later).** The first real run posted one card: CamCompare's bot challenge
+answered the fetch with 429. A pick that can't be read, or whose link the account already posted in the last six days
+(read from its own feed, so a manual re-run never repeats a card), now gives way to the next site in rotation
+(`postCandidates`); the run fails only when nothing at all could be posted.
+
+## 2026-11-02 — One price alert service for the sister sites
+
+The owner chose "Yes, one shared service" on the card "Add email price alerts to the sister sites, through one shared
+alert service?" (a single RiftCompare alert email sold A$67 in October). These sister sites have no database, no mail key
+and no accounts (the engine sites since 2026-10-25), so their alerts run here, on what RiftCompare already pays for.
+
+- **Who.** DexCompare, MTG Compare, Gundam, Lorcana, YGO and Cyberpunk Compare, WargameCompare and FigureCompare
+  (`lib/sister-alerts/sites.ts`). Not RiftCompare or OP Compare (their own account alerts), not CamCompare or
+  Compare Empire (their own alert tables and mailers), not KaeYoung (left out by the owner unless he asks).
+- **The form** on each site posts `{site, productId, region, email, targetCents}` to `POST /api/sister-alerts`
+  (CORS for each site's exact origin and its www twin, never `*`; a site may add alerts only for itself; 8 a minute per
+  IP, 10 an hour per address, 25 alerts per address). Nothing else is taken from the form: the product's name and link
+  come from the site's own feed at the daily check, so no text a stranger types ever reaches an inbox.
+- **Double opt-in.** A new address gets one confirmation email (at most one a day per address) and nothing else until
+  it presses the button on the confirm page; unconfirmed addresses and their alerts go after a week. A confirmed
+  address's new alerts start at once. Confirm, manage and stop are pages whose GET never changes anything (mail
+  scanners open links); only their buttons' POSTs do. One-click List-Unsubscribe POSTs stop every alert. Links carry
+  a random 24-byte per-address token, the same unguessable-token pattern as RiftCompare's `unsubToken`.
+- **The prices: each site's own static feed, not its repo or a database.** Every site's build writes
+  `/alert-feed.json` (format at the top of `lib/sister-alerts/feed.ts`) from the loaders its pages read: the lowest
+  IN-STOCK STORE price per region in that region's currency, never eBay, Amazon or a conversion, plus a few of its own
+  real deals. The check fetches it from the site's CDN once a day, so the feed is exactly what a visitor saw, costs the
+  sister no function call, and a format change happens in the repo that owns the format. A feed for the wrong site, of
+  another version, or older than four days fires nothing.
+- **When it emails** (`evaluate.ts`, pinned by `tests/sister-alerts.test.ts`): at or below the target; then only after
+  a further 5% drop, at most once in three days, re-armed when the price climbs back above the target. A product with
+  no price in its region for 90 days, or an alert six months old, is removed. One email per (address, site) per run.
+- **Mail budget.** Sent through Resend (RiftCompare's verified domain, the sister's name as the sender's display
+  name), counted in the shared alert budget (`recentlyEmailedAddresses` now reads `SisterAlert.lastNotifiedAt`, so
+  RiftCompare's runs see these sends and this run sees theirs), plus the service's own cap of 30 emails a UTC day,
+  confirmations included (`mail-cap.ts`, fails closed). A deferred alert keeps its state and fires the next day.
+- **Each email** names the sister site, links to its product page (utm_source=alert-email), has "Send this to a
+  friend" (a `mailto:` with the link) and "Stop this alert" per row, and ends with one real deal from another site of
+  the same group (cards, hobby), taken from that site's feed in the same region, rotating by day. No eBay links
+  in email (EPN).
+- **Runs** daily at 14:20 UTC: `.github/workflows/sister-alerts.yml` calls `/api/cron/sister-alerts` with
+  `CRON_SECRET` (the send needs Vercel's mail key). It answers 500 when a site that has alerts could not be checked,
+  so the job fails; `sister-alerts.yml` is in the ops monitor's `JOBS`. A first signup from a new address calls
+  `notifyOwnerBounded` (kind `sister-alert`, no address in it).
+- **Privacy:** both tables are private (never in `PUBLIC_MODELS`); `/privacy#sister-alerts` says what is kept, and
+  each sister's privacy page points to it.
+
+## 2026-11-02 — Pre-order pages build themselves for every coming-soon set
+
+Pre-order landings were the family's top pages in October (`/radiance-preorders` here), but each one was a
+hand-built route, so a set only had one if a session wrote it in time. Now every coming-soon set in `SETS` without a
+hand-built page gets `/preorders/<slug>` (`src/app/preorders/[slug]`) with no other edit: adding the set to `SETS`,
+which the sealed import needs anyway to file its listings, is the whole job.
+
+- **Hand-built pages win.** A calendar row's `preordersHref` (Radiance, Legacy) stays the set's page, and
+  `/preorders/<its slug>` 308s there, so writing one later never leaves two pages on "<set> pre-order".
+  `preorderRouteForSet` / `preordersHrefForSet` (`src/lib/release-calendar.ts`) are the one answer for every link: the
+  set page and gallery, card pages, the homepage countdown, `/release-dates` and the restock email.
+- **Only data.** The automatic page shows the name, the street date when `SETS` has one, and the stores' listings
+  (`getPreorderGroups`, the same table as Legacy's). No list price, contents or card count: those need a source and
+  belong on a hand-built page.
+- **Self-retiring** (`autoPreorderState`): pre-order prices until the street date, in-stock prices for 45 days, then
+  a 308 to `/sets/<slug>`. It is in the sitemap only while it takes pre-orders (`openAutoPreorderSets`).
+- Clicks report as `page_type` `preorders`; EPN's customid already carries the path.
+
+## 2026-11-02 — Seasonal sale pages
+
+`/boxing-day`, `/january-sales` and `/lunar-new-year` (owner-approved growth plan, 2026-11-02): one URL
+each, kept every year like `/black-friday`, built weeks ahead so they are indexed before the day. They
+list exactly what `/black-friday` lists (`sealedDeals` in the visitor's market, live-stock re-checked),
+from one component, `src/components/SaleSeasonPage.tsx`. The visitor's market decides the rows, so the
+opening sentence names every market we cover, never one country. Dates, the year a page is about (it
+rolls over a week after the event) and the intro are pure in `src/lib/sale-seasons.ts`
+(`tests/sale-seasons.test.ts`); Lunar New Year is a published-date table to 2040 (6 February 2027).
+Six-hour revalidate, the floor for pages buyers act on. In the Prices menu beside Black Friday and in
+the sitemap. Never a "was" price, a countdown or an invented sale.
+
+
+## 2026-11-02 — Share buttons and shared lists
+
+The owner wants word of mouth to be a big growth driver across every site. The on-site part, the same shape on all
+twelve sites (each repo's DECISIONS has its own entry):
+
+- **The Share button opens the phone's share sheet** (`navigator.share`), else copies the link with the message. No
+  pop-up and no new reward (the existing Coins task for a share stays). The card page and the quick view pass their
+  rows, so the message names the real gap in the visitor's market: cheapest and dearest in-stock item price from two
+  different sellers (`lib/share-link.ts` `priceGap`, never converted). The card's share image already shows the
+  lowest live price in each market (`card/[id]/opengraph-image.tsx`); it was left as it is rather than add a
+  per-store query to an image route.
+- **Shared decks stay URL-only**: the deck builder's link (`/deck?list=`) now goes through the share sheet too, and a
+  `/deck` page carrying a list is `noindex` (someone's own list, not a page to rank).
+- **Counting**: every shared link carries `utm_source=share&utm_medium=<card|deck|…>`. The button sends a Vercel
+  `share` event; `ShareArrival` (root layout) sends one `share_visit` per tab when a shared link brings someone. The
+  weekly growth report reads both for every project from the Web Analytics API (`loadShareCounts`, the analytics
+  page's credentials) as "WORD OF MOUTH": share taps / visits per site and week. robots.txt allows
+  `/*utm_source=share` because X's and Reddit's preview fetchers obey it and every other query string is disallowed.
+
+
+## 2026-11-02 — Sites that grow each other: family feed, "Other card games on sale", short footer
+
+Owner, 2026-11-02: "We need each site to help each other grow as a team effort and to lean on each
+other", then, of the footers: "a bit convoluted … I'm wondering if it actually helps". Plan: "Sites
+that grow each other" in https://claude.ai/artifact/QjrWGrfBqH4sKctwdjwptK.
+
+- **Clusters.** `src/lib/family-network.ts` is the same file in every Compare Empire repo: card games
+  (Rift, OP, Dex, MTG, Gundam, Lorcana, YGO, Cyberpunk), hobby (Wargame, Figure, Gunpla on Gundam
+  Compare), tech (Compare Empire, CamCompare). KaeYoung stays out.
+- **Out.** `scripts/family-feed.ts` runs in refresh-prices.yml right after the morning export and
+  writes `data/public/family/family-feed.json` from the exported `sealed-listings.json` (no Neon read):
+  per market, sealed products whose cheapest in-stock store is 10%+ under the median of 3+ stores (the
+  /black-friday bar; eBay, TCGplayer and Cardmarket never count), and the next set's booster box
+  pre-order. It rides the snapshot commit to main.
+- **In.** The card sisters' feeds are read from raw.githubusercontent.com through one `unstable_cache`
+  entry per TTL (six hours for the buyer pages, a day for /market/report so the report keeps its day;
+  plain `no-store` fetches inside, nothing nested). `validFeed` drops a feed from the wrong site, older
+  than four days, or with an item whose link leaves its own host or whose saving isn't its two prices'
+  arithmetic, so a block shows less, never a guess.
+- **Where.** One `FamilyDeals` block per page: /black-friday (deals), /legacy-preorders and
+  /radiance-preorders (pre-orders), every set page (pre-orders for a coming set, else deals). One tile
+  per sister, in the visitor's market, else its US price in US$. /market/report gets "Other card game
+  markets": each card sister's own report, with its best US store deal today.
+- **Footer: one line.** The card-game sisters by name, then "A Compare Empire site" to
+  https://compareempire.com/network (which lists every site). CamCompare and Compare Empire left the
+  footer. Why: nothing measures footer clicks, footer links get few, and Google gives little weight to
+  sitewide links between one owner's look-alike sites; twelve sites all cross-linked in every footer
+  is the pattern it can read as a link scheme. The price blocks are what a reader has a reason to click.
+- **Watched.** `data:family-feeds` (ops monitor) reads every site's feed the way the blocks do and
+  warns on a missing or stale one (after a rollout grace to 2026-11-06).
+
+## 2026-11-02 — Amazon Associates: following the Operating Agreement's Dos and Don'ts
+
+The owner sent Amazon's own "Operating Agreement: Top Dos and Don'ts" page (2026-11-02: "make sure you
+are following these instructions for all amazon affiliates"), and every site was audited against it.
+The rules we keep, on every Compare Empire site:
+
+- **Disclosure beside every Amazon link** ("Ad" / "Paid link"), and Amazon's statement "As an Amazon
+  Associate I (we) earn from qualifying purchases." in the footer of every page.
+- **Amazon's trademark notice** in the footer of every page: "Amazon and the Amazon logo are trademarks
+  of Amazon.com, Inc. or its affiliates." No Amazon logo, screenshot, review or Amazon's own colours
+  (its orange): the page "Don't use style or color of Amazon site which may cause confusion".
+- **Links lead to a specific product** (an ASIN, or a search for that exact product's name), never a
+  category or generic search: "All the links or buttons on your site should take customers to specific
+  products on Amazon."
+- **No Amazon link in a pop-up or layer**: the quick views show none; product pages carry the row.
+- **Never Amazon prices in price tracking or alerts** ("Don't track prices or set price alerts"), and no
+  Amazon link or trademark in any email, SMS or printed material.
+- Every link tagged, rel="sponsored nofollow"; no incentive (cashback, discount) for buying through it.
+- Here: the footer gained the statement and trademark line; the Amazon disclosure beside /sealed and
+  the Pokémon boards now carries the trademark line too; the Pokémon quick view drops its Amazon search;
+  /sealed's marketplace block is headed "Search the big marketplaces too" (it offered searches, not deals).
+
+## 2026-11-02 — The hero's region chooser is prominent, with drawn flags
+
+Owner: "the region switcher must be more prevalent on all sites, on the main home page hero etc … and have
+the flags as well". This reverses the hero toggle's "deliberately quiet" styling (9px label, slate-500 chips,
+no flags, placed last in the hero under the Premium link).
+
+- `CountryHeroToggle` now sits straight under the hero search (under the intro on phones, where the hero has
+  no search), with an 11px "Shopping from" label, white flag + code chips and a brand outline on the active
+  one; three by two on phones, one row from sm. The header's `CountrySwitcher` stays as it was, so both
+  controls can be above the fold at once (`scripts/homepage-audit.mjs` reports it; that is now intended).
+- **Flags are inline SVG (`src/components/Flag.tsx`), not the `COUNTRIES[].flag` emoji and not image files.**
+  The emoji render as the letters "AU"/"US" on Windows, which is why the hero dropped flags before; image
+  files would be new requests and hosting. No ids or clip paths, so a flag works inside a closed menu and
+  many times on a page. The header switcher, its menu and `RegionToggle` use it too; the emoji stay only in
+  text-only places (select options, admin tables). The same file is in every Compare Empire repo that has a
+  region switcher; keep the copies identical.
+
+## 2026-11-02 — Every store is vetted before it is listed, and checked every week after
+
+A visitor asked how we stop "pointing everyone to the cheapest place on the internet" from sending them to scam shops.
+Owner: valid, fix it and say what we do. The audit: all thirteen sites list only hand-picked stores (a registry per
+repo, added in PRs after a runner probe, from official store locators, sister lists, store emails and visitor
+suggestions), and twelve already drop implausible prices at import. Missing: written criteria, any check after a
+store is listed, a way for visitors to report a store, and a too-cheap guard on RiftCompare's store singles.
+
+- **Criteria written down** (`docs/store-vetting.md`): established domain (RDAP age; under a year needs a second
+  sign, under three months waits), a reachable business with its own policies (public registers where they exist),
+  reviews or community standing, readable prices in its own currency, never marketplace sellers, drop-shippers,
+  copycats or banned stores. Each site has a public `/how-we-pick-stores` page (`components/HowWePickStores.tsx`,
+  the same file in every repo; KaeYoung's says nothing about the Compare family).
+- **Weekly outside check, run here for every site** (`scripts/store-vetting.mjs`, `store-vetting.yml`): it reads
+  each site's registry FILE from its repo (`SITES`), not a database, so one job covers all thirteen and keeps
+  working when a site is down. Red fails the run (banned, dead, parked, or a young domain with no contact link);
+  everything else is one "Store vetting" issue. A store that blocks the check is unknown, never failed (we never
+  work around bot protection). **Trustpilot was dropped from the automatic check**: it refuses Actions runners
+  (1,929 of 1,930 unreadable on the first run), so reviews stay a hand check. A redirect to another domain is a
+  look, not a failure: most are renames, and the first run had 50.
+- **Shared banned list** `data/store-vetting/banned.json` (TCG Synergy, 2026-10-31); MTG and Dex keep their code
+  `BLOCKED_STORES` too.
+- **RiftCompare store singles under a quarter of TCGplayer's US market are dropped** (`lib/price-sanity.ts`; from
+  US$2, damaged and heavily played exempt), the engine sites' rule. `tcgplayerUsValues()` is read once more, before
+  the store loop (`tests/ebay-value-floor.test.ts` counts three reads now).
+- **Report a store:** "I don't trust this store / had a problem ordering" on every report form (`store-problem`;
+  `STORE_UNTRUSTED` here and on OP, whose forms are their own), and a "Report a store" form on each
+  `/how-we-pick-stores`, which here posts to the new `/api/report` (the sister sites' shared handler, plus
+  `notifyOwnerBounded`). `reports-triage.mjs` ranks them first.
+- Cyberpunk Compare has no `reports` branch yet, so the triage still lists twelve sites; its forms file in its own
+  repo once the branch exists.
+- **First run (2026-11-02), 1,930 store domains across the thirteen sites.** No banned, dead or parked store (two
+  "parked" hits were real shops whose big pages mention "unavailable"; the parked test now only reads small pages).
+  Removed in each site's repo the same day: **Fox and Fable Games** (Rift, OP, MTG, Dex: a domain under a year old
+  with no contact details, no readable policies and no footprint anywhere; `DECOMMISSIONED_RETAILERS` here);
+  **one shop listed twice** under an old domain that now redirects to a listed one (Games Capital → Good Games,
+  eToys World → Side Quest Games, Norton TCG → TCG Group, Cosmic Bham → Cosmic Games, board-game.co.uk → Zatu,
+  Pokemonwinkel → PKM Winkel, Plenty of Games' myshopify address, Abyss Game Store's .com and L'Abyss, Derpy
+  Cards .ca, Mulligan Merchant → Fan of the Sport); and **domains under three months old with no second sign**
+  (Ballers TCG, JJasper TCG, Wayward City Games, TCG Card Depot, Unifig Shop), which can come back after a re-check.
+  SephiGames (70 days, a seller with thousands of Cardmarket sales who asked to be listed) and The Card Hive
+  (a custom shop verified by email) are on `data/store-vetting/verified.json`.
+
+## 2026-11-02 — At most one production build every 12 hours, and no branch but production deploys
+
+**Why.** The owner capped Vercel spend at $5–6 a day across every site. 1 November cost $11.82 (normally
+$2–4), and Build CPU was the largest line ($4.26), followed by CDN requests and ISR writes, which every
+build multiplies (a deploy empties the page cache, so the next crawl re-renders and re-writes every page).
+The `[deploy]` gate itself held; its premise did not: sessions landed 7–14 `[deploy]` commits a day per site
+(manual "release now" runs and `[deploy]` in merge subjects), RiftCompare, OP, MTG and DexCompare alike.
+Compare Empire's site built on every push to its production branch (84 commits that day) and CamCompare on
+every three-hourly price commit, because neither had the gate.
+
+**What.**
+- `scripts/vercel-ignore-build.sh` skips a production `[deploy]` commit when the last production
+  deployment (`VERCEL_GIT_PREVIOUS_SHA`, set by Vercel in that step) is under 12 hours old; the commit
+  rides the next release. `[urgent]` in the SUBJECT overrides it, and only when the owner says a release
+  cannot wait. An unset or unreadable last deployment builds (fail open). `tests/deploy-gap.test.ts` pins it,
+  and the file is the same in every Compare Empire repo.
+- `vercel.json` `git.deploymentEnabled` starts with `"**": false` and enables only the production branch
+  (Vercel: when a branch matches several rules, any `true` wins). No preview is built for any branch or pull
+  request, `[preview]` included; the older per-branch `false` entries stay for orphan commits' own copies.
+- So "push to prod" means land on the production branch; the release reaches visitors within a day.
+
+## 2026-11-02 — The ops monitor asks every hour and runs about every three
+
+**Why.** /admin/health said the monitor had not reported for 10 hours. Nothing was broken: every run had
+passed, GitHub simply never started the scheduled ones. This repo has ~50 scheduled workflows and GitHub
+drops many of their runs under load (Keep warm, every five minutes, got two or three runs a day). With one
+`17 */3` slot, the monitor's real gaps were 6–10 hours, past the page's 8-hour stale line.
+
+**What.** `ops-monitor.yml` is scheduled `17 * * * *`, and a small `gate` job lets a scheduled run through only
+when the newest `ops-state-` Actions cache (saved after every real check) is 150+ minutes old. The cadence and
+the database reads stay about every three hours, with three chances per slot instead of one. A manual run and
+the Sunday report always go through, and a gate that cannot read the cache runs the checks (fail open). The
+8-hour stale line stays: a real stop should still show. `tests/ops-wiring.test.ts` pins the schedule and gate.
+
+## 2026-11-02 — The Pro page, in the site's own theme
+
+**Why.** The owner: "noone's buying pro for riftcompare. It might look too gimmicky. We gotta make it look more
+professional and themed like the website with the website colours." The 2026-10-26 Collectr copy wore its own
+look: a gold "PRO" tag, a huge gold-gradient headline, a gold pill button, emoji feature icons and a made-up
+"$1,284.50" portfolio mock-up with floating badges. None of it is how any other RiftCompare page looks.
+
+**What.** `ProLanding` / `ProPricePicker` redrawn with the site's own parts; the plan, prices and terms are unchanged
+($6.99 a month or $47.88 a year, no trial):
+- Hero: an orange eyebrow, a plain Cinzel headline, one sentence on what Pro does, four ticks; beside it (on a
+  phone, straight after the headline) one `card-surface` plan card with a Monthly / Annual segmented control, the
+  price and the site's flat orange `btn-primary` "Upgrade to Pro" (`PremiumCta`'s `pro` prop, replacing `gold`).
+- What Pro adds: nine flat panels with line icons, no emoji. The mock-up is gone.
+- Free and Pro: one table with the real limits (90 days vs every day, 3 plans a month vs unlimited...), replacing the
+  two plan cards, with "Sign up free" and "Get Pro" (back to the plan card) under the columns.
+- `PREMIUM_COPY_VERSION` is `pro-theme-2026-11-02`, so the funnel can compare before and after.
+
+## 2026-11-03 — Footers link only card sites to card sites; every other site lists no sisters
+
+The owner asked whether linking every Compare Empire site together helps or is a risk for search and for how the
+sites look. Verdict: a sitewide footer link between sites one person owns carries little ranking value (Google
+discounts it), and a mesh of unrelated sites (camera, appliance and figure sites in a card site's footer) can read
+as a link network and looks odd to a reader. The owner said do it.
+
+- `footerSisters()` in `lib/family-network.ts` (same file in every repo) now returns the other card sites for a card
+  site and nothing for any other site. Gundam's Gunpla side no longer pulls WargameCompare and FigureCompare into its
+  footer; the engine footer's heading is "Other card games".
+- WargameCompare, FigureCompare, CamCompare and Compare Empire show no sister list in their footers, only one
+  "A Compare Empire site" link to compareempire.com/network (Compare Empire: its own /network), the one page that
+  lists every site. KaeYoung still links none.
+- Anchors stay the brand name only, and links stay plain followed links: they are honest links between sites with
+  one owner, not paid, so no `sponsored`/`nofollow`.
+- Kept: the "Other card games" / hobby / tech price blocks on deals, Black Friday and pre-order pages
+  (`clusterSisters`). They sit on a few pages, show real prices a reader of that page may want, and are not sitewide.
+
+## 2026-11-03 — Search Console report: keyword pages lead with the query, stale rules answers fixed, essentials links
+
+**Why.** The owner's Search Console report (90 days: 1.17K clicks, 41.9K impressions, position 8.6) asked for
+title rewrites on position 4–10 queries, answer pages with FAQ schema, Product/Offer structured data, hub links
+from news posts and country pages. Most of it already exists: card size, rotation, deck size, ban list, grading
+and selling guides; FAQPage on every guide with a FAQ; Product + AggregateOffer + Offer on card pages; `/au`,
+`/sg`, `/ca`, `/uk`, `/eu` with hreflang; card, set and champion pages linking their guides. The card-size title
+the report suggests ("63 × 88 mm") has been live since 2026-09-24. So no second title pass on pages already tuned
+twice (churn). The 28-day `gsc-queries` run (to 31 Oct) showed four real gaps instead:
+- `/keywords/<slug>` pages took "ambush riftbound" (353 impressions, position 10), "predict riftbound" (356, 6.7),
+  "weaponmaster", "accelerate", "assault", "hidden", "deflect" with 0–1 clicks each. The title was
+  "Ambush — Riftbound Keyword Reference | RiftCompare", and the page showed one paragraph; the sections and FAQs
+  written for every keyword in `lib/keywords.ts` were never rendered.
+- The Deploy, Show Off and Disarm guides' FAQ (which feeds FAQPage JSON-LD and the snippet) still answered from
+  the PAX West leak ("not yet confirmed by Riot") a month after Riot's rules made them official. Deploy: 1,430
+  impressions, one click.
+- The rotation guide ("riftbound rotation", rising to 26 impressions a day) still listed five sets and stopped
+  at Vendetta, and called July the latest ban wave.
+- "sell riftbound cards" at position 18, "sell riftbound cards sydney" at 23: the selling post opened with scene
+  setting and never said which platform suits which country.
+
+**What.**
+- Keyword pages: title `Riftbound <Keyword>: What It Does + All N Cards` (`keywordPageTitle` in `lib/keywords.ts`),
+  H1 "Riftbound <Keyword>: what it does", the authored sections and FAQ rendered under the answer, and FAQPage
+  JSON-LD from the same array. Empower, Flow and Burn are excepted (`hasOwnGuide`): each has its own guide that
+  owns "riftbound <keyword>" in the keyword map, so those three keep the short reference page.
+- Deploy/Show Off/Disarm: first FAQ answers rewritten to the official rule text already quoted in each post's
+  status line; Deploy's description now leads with the rule.
+- Rotation: Radiance in the table and FAQ, the September bans as latest, `seoTitle` "Riftbound Rotation 2026: No
+  Set Has Rotated Out Yet", `updated` 2026-11-03.
+- Selling post: answer-first paragraph, a where-to-sell table by country, an Australia paragraph (TCGplayer and
+  Cardmarket only take sellers from their own regions), links to the fee calculator and the TCGplayer fees post.
+- Every blog post (not guides) ends with a "Riftbound essentials" row of eight evergreen links
+  (`EVERGREEN_LINKS` in `ArticleView.tsx`), so Radiance and Legacy news spikes pass links to the reference pages.
+
+Not done, and why: no new country pages (they exist and `/au` already gets 16.8% CTR); no set-page ItemList
+(removed on purpose, it doubled the HTML); no HowTo schema (Google dropped HowTo rich results in 2023). Recheck
+the keyword pages, Deploy and rotation with `gsc-queries` on 2026-11-24.
+## 2026-11-03 — Discord bot: the set-up finishes itself, `/daily`, and Cyberpunk
+
+**Why.** The growth plan of 2026-11-03 ("loops, not pushes") ranks the Discord price bot second: every answer is
+seen by a whole channel, and admins of other servers add the bot they see used. It was parked on 2026-11-02 because
+its owner prompt was 45 minutes and ended with a manual release, which the 12-hour build gate now rules out. So the
+part only the owner can do is cut to one short sitting, and the rest runs itself.
+
+**What.**
+- `discord-commands.yml` runs daily (09:47 UTC; in the ops `JOBS`). `scripts/discord-register.ts` registers the
+  commands and, once `GET /api/discord/interactions` reports `configured: true` (the next release after the owner
+  pastes `DISCORD_PUBLIC_KEY` into Vercel), sets the application's Interactions Endpoint URL through the bot token
+  (`PATCH /applications/@me`), unless it already points there. Discord's signed PING must pass, or the run is red.
+  A green no-op until both GitHub secrets exist. No manual release, no second visit to the Developer Portal.
+- `/daily <game>`: a PUBLIC message with a button to that site's daily puzzle (Riftle, or the Price Duel on OP
+  Compare and the engine sites, built the same day), so a channel plays together and posts its grids under it.
+  No paid link in it.
+- Cyberpunk Compare joins `BOT_GAMES` (its engine `/api/search`, US prices). Its Mass Entry `productline` is
+  unverified, like the others were.
+- Unchanged: `#ad` on paid replies, no database, and the removal rule (not near 30 clicks a day a month after it
+  goes live).
+
+## 2026-11-03 — Brag cards at the moment of pride
+
+**Why.** The growth plan's third loop. RiftCompare already had shareable pull results and binders with share
+images, but the buttons sat quietly at the foot of each page, and Riftle's paste, pull links and binder links carried
+no `utm_source=share`, so the growth report could not count a single visit they brought.
+
+**What.**
+- Pull tracker: when the logged pulls beat what was paid, a gold "You beat the box by $X. Show your crew!" line
+  sits on the share button, which reads "Share my win". The link carries `utm_medium=pulls`, and a tap also sends
+  `share { medium: pulls }`.
+- Portfolio: "Show off your binder →" under the collection value, pointing at the share panel; the copied binder
+  link carries `utm_medium=binder`.
+- Riftle's pasted link carries `utm_medium=daily` and sends `share { medium: daily }`.
+- Nothing about the visitor is added; the share images and noindex rules are unchanged.
+
+## 2026-11-03 — The quick view shows the product's own link
+
+**Why.** Owner: "quickview popup should have a link change as well for all sites, instead of using the same link". The
+pop-up kept the list page's URL, so a copied or bookmarked link lost the product, and Back left the page instead of
+closing the pop-up.
+
+**What.** Opening a quick view pushes the product page's own existing URL (/pokemon/sealed/<slug>, for the Pokémon quick view; the card quick view already did it with /card/<slug>, and Riftbound sealed has no product page, so its pop-up keeps the page's URL) with `history.pushState`
+(`src/lib/quick-view-url.ts`, the same file on every site). Back closes it and restores the list's URL, Forward reopens it,
+closing it (×, Escape, the backdrop) steps back, so the history never fills with pop-ups. "See price history and details"
+only hides the pop-up and navigates to the URL already shown, which Next turns into a replace: Back from the product page
+goes to the list. The entry copies Next's own history state (`__NA` and the router tree), so the app router passes the
+push through and the page under the pop-up never re-renders.
+
+**SEO.** No new URL exists: the link is the canonical product page, which a reload, a share or a crawler gets in full
+server HTML. Never a `?view=` or `#` variant (duplicate URLs, extra CDN copies). Pinned by `tests/quick-view-url.test.ts`.
+
+## 2026-11-03 — SEO audit: region homes get their share image, card thumbnails name the card
+
+The owner's 2026-11-03 SEO audit of all twelve sites (RiftCompare included this time) found the region homes
+(`/au`, `/ca`, `/uk`, `/eu`, `/sg`) had no `og:image`, and asked for Product markup on card pages, alt text and a
+look at robots, sitemap, hreflang and geo-redirects.
+
+- **Share image.** A page's `openGraph` replaces the root's whole object, so `regionHomeMetadata` dropped the
+  homepage's file-based `opengraph-image.jpg`. It now names it (`HOME_OG_IMAGE`) in `openGraph.images` and a
+  `summary_large_image` twitter card. No new image route, so nothing new to draw or cache.
+- **Alt text.** Card and product thumbnails that sit beside their name (price guide rows, ban list, search, recently
+  viewed, records, shared collections, deck builder, pull tracker, family deals, Pokémon sealed) keep
+  `aria-hidden="true"`, so a screen reader still reads the name once, but their alt is now the card or product name
+  for image search. Decorative art (coins, the R mark), avatars and the Legend quiz picture (its alt would give the
+  answer away) stay `alt="" aria-hidden="true"`, which `tests/image-alt-text.test.ts` still allows.
+- **Already in place, not rebuilt:** Product + AggregateOffer on card pages; robots, the sitemap index and the region
+  hreflang set (`tests/region-pages.test.ts`); no geo-redirect anywhere, since the market is a cookie on one URL set
+  and a crawler always sees the US page.
+
+`tests/seo-audit-2026-11.test.ts` pins the region share image and the named thumbnails.
+
+## AdSense off, visitors complained — 2026-11-03
+
+The owner switched AdSense off again: "lets completely disable adsense on the
+website for now - users are complaining". `ADSENSE_SERVING = false` in
+`lib/adsense.ts`, exactly as in "AdSense off again" (2026-10-27): no loader
+script, no pagead2 or Funding Choices preconnect and no unit on any page, so
+Auto ads (anchor and in-page) stop. The `google-adsense-account` meta tag and
+`/ads.txt` stay, so the account and site stay verified and switching back is
+the one constant. Journey by Mediavine is not AdSense and still loads only on
+blog and guide articles; the affiliate banner pair (eBay and TCGplayer) is
+unchanged. The owner also asked for a thank-you line: while AdSense is off,
+`ADS_OFF_NOTICE` ("Thanks to your feedback, we've turned off ads. Support us
+instead by leaving a review.") replaces the "Rate us" strip's subtitle and sits
+above the stars of the one rating form (the footer panel, the corner card and
+`/feedback`). It is null while ads serve, and no new pop-up was added. The
+owner asked for it to go live urgently, so this one release
+overrides the 12-hour build gap with `[urgent]`. The 2026-11-23 review still
+compares ad money against affiliate earnings per visit.
+
+## Every site's reviews, approved in one queue — 2026-11-03
+
+The owner: "the feedback pop up is awesome and we should have it on all of our
+other website too, and have the reviews public for each website … I want to
+approve them in the riftcompare admin dashboard for all sites", then "in terms
+of the written reviews that would need approval - star reviews are
+automatically on the website".
+
+- **One store: RiftCompare's `Feedback` table, with a `site` column.** Most
+  sister sites have no database, and the ones that do (OP Compare, CamCompare,
+  Compare Empire) would each need their own queue. Instead every sister site's
+  rating card posts cross-origin to `/api/site-reviews` (exact origins from
+  `lib/site-reviews/sites.ts`, the site taken from the Origin header, never the
+  form), and the row is stored with `site` set. RiftCompare's own rows keep
+  `site = "riftcompare"`, and every read of RiftCompare's own rating and
+  reviews filters on it (`tests/site-reviews.test.ts`). The sister-alerts
+  service set the pattern: no new database, no repo token, no function on the
+  sister sites.
+- **Stars count at once, words wait.** A star rating goes straight into its
+  site's public score (spam one in the admin to take it out). A written review
+  shows on its site only when its writer left "Show my review" ticked AND it
+  was published in `/admin/reviews`, the one queue for every site (RiftCompare
+  included), linked from `/admin` with a waiting count. No email is asked for
+  or sent (2026-10-27: no email per rating or review).
+- **Shown by the sites from one cached JSON.** `/api/site-reviews/<site>` is
+  the score, the star split and up to 24 published reviews, CDN-cached six
+  hours, `Access-Control-Allow-Origin: *` (public data, no credentials). The
+  sister pages fetch it in the browser, so no sister page gains a function or
+  a build step, and a new rating or approval shows within six hours. Never
+  review markup: a site's rating of itself is self-serving under Google's
+  rules, as on RiftCompare.
+- **The ask copies RiftCompare's corner card, not its rating drive.** On the
+  sister sites the card asks after 4 pages and 3 minutes, or on return from a
+  store tab, at most three times 14 days apart, never on arrival and always
+  closable; a "Rate us" link sits in the footer. No sister site gets a centred
+  pop-up (RiftCompare's own rating drive was removed the same day: "One
+  interruption per visit, never on arrival").
+
+## One interruption per visit, never on arrival — 2026-11-03
+
+The owner: "I'm a little concerned because I think I've lost some visitors for
+riftcompare simply because before there were too many pop ups".
+
+What could interrupt a visitor uninvited, before this change:
+
+- **The rating drive** (2026-10-28, made more insistent 2026-10-29): a centred
+  modal for EVERY visitor who had not rated, on the page they landed on after
+  15 seconds, again three pages after "Maybe later", every visit, with no
+  "Don't ask again". It never reached its 100-rating target, so it never
+  switched itself off. Most search visitors read one page; this covered it.
+- **The header's Pricing callout** (`PricingNudge`, 2026-10-25): three seconds
+  after the first page settled, every session, for anyone not on Pro, snoozed
+  only three days. It and the drive did not yield to each other (the drive
+  ignored the "one prompt per visit" flag), so a first visit could get both.
+- AdSense's own vignettes and anchors until 2026-11-03 (off since, entry above).
+- The rating corner card (after 4 pages and 3 minutes) and the dismissible
+  in-page Radiance banner (ends 2026-11-13) were already fine.
+
+Now:
+
+- **The rating drive is gone**, and `/api/rating-drive` with it (one function
+  call a visit saved). The corner card is the only rating ask, and asks at most
+  twice (was three), 30 days apart (was 14). A return from a store tab no
+  longer brings it on the page a visitor landed on.
+- **One uninvited interruption per visit, and never on a visit's first page.**
+  The card and the Pricing callout share one slot (`RATE_SESSION_KEY` /
+  `PRICING_NUDGE_SESSION_KEY`, both checked by both).
+- **The Pricing callout waits for a returning visitor** (second visit on, from
+  the second page; `shouldShowPricingNudge`), and a dismissal snoozes it 14
+  days (was 3). Nobody has bought Pro from it, so a first-time visitor gains
+  nothing from it.
+- Not touched: Mediavine on articles (its own review on 2026-11-23), in-page
+  prompts (the "Rate us" row, sign-up and limit panels: part of the page, never
+  over it), and anything a visitor opens themselves.
+
+Measure: visitors and pages per visit in Vercel Web Analytics for the two weeks
+after this release against 2026-10-20 to 2026-11-02. If ratings stall without
+the drive, ask on the thank-you moments (a store click) rather than bring a
+modal back.

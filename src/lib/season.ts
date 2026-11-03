@@ -12,15 +12,22 @@
 // (`seasonMarkupLive`), with a day of slack either side so the cached HTML
 // always has it while the attribute could be on; CSS hides it otherwise.
 //
-// Preview / test override: `?season=halloween` turns it on for that page load,
-// `?season=off` turns it off, whatever the date.
+// Preview / test override: `?season=halloween` or `?season=christmas` turns
+// that one on for the page load, `?season=off` turns any off, whatever the date.
+//
+// Christmas (owner, 2026-11-01: "now that it's November, we want to make all of
+// the sites Christmas themed … the lights and orange dots … can be snowflakes
+// or snow going down"): 1 November to Boxing Day. To switch it off early, set
+// `to` to yesterday's date (or delete the entry): no other file decides it.
 
-export type Season = "halloween";
+export type Season = "halloween" | "christmas";
 
 /** Inclusive month/day window, in the visitor's local time. Month is 1-12. */
 export const SEASONS: Record<Season, { from: [number, number]; to: [number, number] }> = {
   // Through Halloween night; gone on 1 November.
   halloween: { from: [10, 16], to: [10, 31] },
+  // From 1 November through Boxing Day; gone on 27 December.
+  christmas: { from: [11, 1], to: [12, 26] },
 };
 
 function md(d: Date): number {
@@ -51,4 +58,9 @@ export function seasonMarkupLive(season: Season, now: Date = new Date()): boolea
 // data-season is not one of them. Measured on the live phone homepage
 // 2026-10-16: the season was gone after a #418/#423 load, while data-theme
 // (re-set by ThemeProvider) survived.
-export const SEASON_BOOT_SCRIPT = `(function(){try{var q=(location.search.match(/[?&]season=([a-z]+)/)||[])[1];var s=null;if(q){s=q==="halloween"?"halloween":null}else{var d=new Date(),v=(d.getMonth()+1)*100+d.getDate();if(v>=${SEASONS.halloween.from[0] * 100 + SEASONS.halloween.from[1]}&&v<=${SEASONS.halloween.to[0] * 100 + SEASONS.halloween.to[1]})s="halloween"}if(s){var e=document.documentElement;e.setAttribute("data-season",s);if(typeof MutationObserver=="function")new MutationObserver(function(){if(e.getAttribute("data-season")!==s)e.setAttribute("data-season",s)}).observe(e,{attributes:true,attributeFilter:["data-season"]})}}catch(e){}})();`;
+const WINDOWS = (Object.entries(SEASONS) as [Season, (typeof SEASONS)[Season]][]).map(([n, w]) => [
+  n,
+  w.from[0] * 100 + w.from[1],
+  w.to[0] * 100 + w.to[1],
+]);
+export const SEASON_BOOT_SCRIPT = `(function(){try{var W=${JSON.stringify(WINDOWS)},i,q=(location.search.match(/[?&]season=([a-z]+)/)||[])[1];var s=null;if(q){for(i=0;i<W.length;i++)if(W[i][0]===q)s=q}else{var d=new Date(),v=(d.getMonth()+1)*100+d.getDate();for(i=0;i<W.length;i++)if(v>=W[i][1]&&v<=W[i][2])s=W[i][0]}if(s){var e=document.documentElement;e.setAttribute("data-season",s);if(typeof MutationObserver=="function")new MutationObserver(function(){if(e.getAttribute("data-season")!==s)e.setAttribute("data-season",s)}).observe(e,{attributes:true,attributeFilter:["data-season"]})}}catch(e){}})();`;

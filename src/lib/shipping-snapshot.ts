@@ -117,6 +117,13 @@ export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
   // PvP Shoppe (Markham) ships to Canada and the US (/meta.json), but
   // /cart/shipping_rates.json was empty at every Canadian address, 2026-10-16.
   pvpshoppe: { status: "unmeasured", note: "Ships to Canada and the US, but its rates are only shown inside checkout" },
+  // Ultima Cards (Laval) was added on its own request on 2026-10-29, after the
+  // last probe run; the next CA probe measures it. Until then, on the estimate.
+  ultimacards: { status: "unmeasured", note: "Not measured yet (added 2026-10-29); its site states free shipping in Canada over C$250" },
+  // The Card Hive (added 2026-10-30) is a Firebase shop the Shopify cart probe
+  // cannot read. Its page bundle's own checkout rules: Royal Mail Tracked 48,
+  // £2.90 as a large letter up to 10 singles, UK addresses only.
+  thecardhive: { status: "unmeasured", note: "Not cart-probed (a Firebase shop, not Shopify); its checkout charges Royal Mail Tracked 48 from £2.90, UK addresses only" },
   // ── Stores that do not post (at all, or to this market) ──
   // Each re-probed 2026-09-25 (every cart empty at New York, San Francisco,
   // Dallas and Chicago) and checked through the Storefront API (no delivery

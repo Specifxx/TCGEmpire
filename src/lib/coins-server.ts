@@ -15,6 +15,7 @@ import { prisma } from "./db";
 import { isPremium, type EntitlementUser } from "./premium";
 import {
   COINS,
+  COINS_ENABLED,
   SHARDS_FOR_DUPLICATE,
   SHARDS_PER_PULL,
   dayKey,
@@ -30,7 +31,7 @@ import {
 /** Coins are a Premium perk (the top tier; admins count, as everywhere). */
 export const COIN_TIER = "premium" as const;
 export function coinsEnabledFor(user: EntitlementUser | null | undefined): boolean {
-  return isPremium(user, COIN_TIER);
+  return COINS_ENABLED && isPremium(user, COIN_TIER);
 }
 
 const isUniqueViolation = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";

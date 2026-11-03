@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { loadGrowth, type Series } from "@/lib/admin-growth";
+import { loadGrowth, type Series, type TargetRow } from "@/lib/admin-growth";
 
 export const dynamic = "force-dynamic";
 
@@ -69,13 +69,43 @@ function Card({ s }: { s: Series }) {
   );
 }
 
+function Targets({ rows }: { rows: TargetRow[] }) {
+  if (!rows.length) return null;
+  return (
+    <section className="mt-6 rounded-xl border border-ink-700 bg-ink-850 p-4">
+      <h2 className="font-semibold text-white">This week against the target</h2>
+      <p className="mt-1 text-xs text-slate-500">Google clicks, the last 7 settled days against the 7 before. Sister sites +15% a week (doubles in five weeks), RiftCompare holds until the Legacy previews, every site together +5%.</p>
+      <table className="mt-3 w-full text-left text-sm">
+        <thead className="text-xs uppercase text-slate-500">
+          <tr><th className="py-1 pr-3">Signal</th><th className="py-1 pr-3 text-right">Last 7 days</th><th className="py-1 pr-3 text-right">Week before</th><th className="py-1 pr-3 text-right">Change</th><th className="py-1 pr-3 text-right">Target</th><th className="py-1 text-right">On track</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            const pct = r.last7 != null && r.prev7 ? ((r.last7 - r.prev7) / r.prev7) * 100 : null;
+            return (
+              <tr key={r.key} className="border-t border-ink-800">
+                <td className="py-1 pr-3 text-slate-200">{r.label}</td>
+                <td className="py-1 pr-3 text-right text-slate-300">{r.last7?.toLocaleString("en-AU") ?? "–"}</td>
+                <td className="py-1 pr-3 text-right text-slate-300">{r.prev7?.toLocaleString("en-AU") ?? "–"}</td>
+                <td className="py-1 pr-3 text-right text-slate-300">{pct == null ? "–" : `${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%`}</td>
+                <td className="py-1 pr-3 text-right text-slate-300">{r.pct ? `+${r.pct}%` : "hold"}</td>
+                <td className={`py-1 text-right font-bold ${r.met == null ? "text-slate-500" : r.met ? "text-up" : "text-rose-400"}`}>{r.met == null ? "not enough data" : r.met ? "yes" : "no"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
 export default async function GrowthPage({ searchParams }: { searchParams: { key?: string } }) {
   const token = process.env.ADMIN_TOKEN;
   const keyOk = !!token && searchParams.key === token;
   const me = await getCurrentUser();
   if (!(keyOk || me?.isAdmin)) notFound();
 
-  const { series, earningsBySource, gscUpdatedAt, splits, errors } = await loadGrowth();
+  const { series, earningsBySource, targets, gscUpdatedAt, splits, errors } = await loadGrowth();
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <Link href="/admin" className="text-sm text-brand-400 hover:underline">← Admin</Link>
@@ -91,6 +121,7 @@ export default async function GrowthPage({ searchParams }: { searchParams: { key
           ))}
         </ul>
       )}
+      <Targets rows={targets} />
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {series.map((s) => (
           <Card key={s.key} s={s} />

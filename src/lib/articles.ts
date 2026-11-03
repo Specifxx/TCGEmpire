@@ -7,6 +7,7 @@ import { PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, premiumTrialEnabled } from
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
+import { LEGACY_SEASON_ARTICLES } from "./content/legacy-season-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
 import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE } from "./alert-limits";
@@ -269,14 +270,329 @@ const PREMIUM_TRIAL_ARTICLE_BILLING = premiumTrialEnabled()
   : "Pro runs through Stripe and is charged when you subscribe — no free trial, no introductory price, just the price in the table.";
 
 export const ARTICLES: Article[] = [
-  // METAL CARDS (2026-10-25, owner: "the medal prize wall cards … add those to
-  // the website … tag them as medal card … and we should make a blog post on all
-  // the metal cards so far and the metal cards coming"). Players call them metal
-  // cards ("riftbound medal" autocompletes to "riftbound metal cards"). Owns
-  // `riftbound metal cards`, `plated legend`, `prize wall`, `best of` clusters
-  // (docs/seo-keyword-map.md). The 86 cards are TCGplayer's "Organized Play
-  // Promotional Cards" metal printings, each now a card page (lib/metal-cards.ts);
-  // prices in the body are TCGplayer's on 25 October and dated, the embeds live.
+  {
+    slug: "riftbound-gift-guide-2026",
+    category: "blog",
+    title: "Riftbound Gift Guide 2026: What to Buy at Every Budget",
+    seoTitle: "Riftbound Gift Guide 2026: Best Gifts From $5 to $150",
+    excerpt:
+      "What to buy a Riftbound player this holiday season, from a US$5 pack to a booster box, with real store prices and how to spot a real Black Friday deal.",
+    author: "RiftCompare",
+    date: "2026-10-29",
+    readMins: 7,
+    tags: ["gift guide", "black friday", "christmas", "sealed", "radiance", "buying", "beginners"],
+    hero: {
+      src: "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8cec0480427b3646cb48cb2e3fe3a02b629f7aeb-744x1039.png?accountingTag=RB",
+      alt: "Riven, The Exile, the Showcase Legend from Riftbound's newest set, Radiance",
+    },
+    summary: [
+      "**For someone new to Riftbound:** a two-player Showdown Decks box (US$34.99 MSRP, from US$19.91 at a US store on 28 October) or a Champion Deck (from about US$15).",
+      "**For a player who already has decks:** a Radiance Vault Bundle (US$34.99 MSRP) or the exact single cards on their wish list, which is almost always better value than packs.",
+      "**For a collector:** a Radiance booster box, from US$116.59 in the US, £100 in the UK, €97.99 in the EU, C$179.95 in Canada and A$239.99 in Australia on 28 October.",
+      "**On Black Friday, compare against today's price, not the MSRP.** Radiance boxes already sit at or under the US$120 MSRP at the cheapest stores, so a \"deal\" at MSRP is no deal.",
+    ],
+    faq: [
+      {
+        q: "What is a good Riftbound gift for a beginner?",
+        a: "A Showdown Decks box, which holds two ready-to-play decks so two people can learn together, or a single Champion Deck if they already have someone to play with. Both are cheaper than a booster box and need nothing else to start.",
+      },
+      {
+        q: "Should I buy booster packs or single cards as a gift?",
+        a: "For a player, single cards from their wish list are better value: a whole Radiance base set cost about US$113 in singles on 28 October, less than one booster box. Packs and boxes make sense for someone who enjoys opening them, or a collector chasing Showcase cards.",
+      },
+      {
+        q: "Will Riftbound be cheaper on Black Friday 2026?",
+        a: "Some stores will discount, but Radiance booster boxes were already selling at or below the US$120 MSRP at the cheapest stores in late October. Compare any Black Friday price with the live lowest price on RiftCompare rather than with the MSRP or a crossed-out 'was' price.",
+      },
+      {
+        q: "What Riftbound product comes out next?",
+        a: "Legacy, Riot's Set 6, releases on 29 January 2027 and is already on pre-order. Proving Grounds 2nd Edition, a US$39.99 boxed starter with four Champion decks for two to four new players, follows on 19 February 2027.",
+      },
+    ],
+    shop: [
+      { label: "Radiance Showdown Decks", query: "riftbound radiance showdown deck" },
+      { label: "Radiance booster boxes", query: "Riftbound Radiance booster box" },
+      { label: "Riftbound Champion Decks", query: "riftbound champion deck" },
+      { label: "Riftbound playmats", query: "riftbound playmat" },
+    ],
+    browseCta: {
+      href: "/sealed",
+      label: "Compare every sealed product →",
+      blurb: "Booster boxes, bundles, Showdown Decks and Champion Decks, with today's price at every store we track.",
+    },
+    body: `Riftbound turned one this year and Radiance, its fifth set, launched on 23 October, so this is the first holiday season with a full shelf of products to choose from. Here is what to buy at each budget, who each product suits, and what it actually costs. Every price below is the cheapest in-stock store price in our catalogue on 28 October 2026; the [sealed product page](/sealed) has today's numbers.
+
+## Under US$10: a booster pack or two
+
+A single Radiance booster pack is the classic stocking filler. On 28 October the cheapest were **US$5.74** in the US, **£4.99** in the UK, **C$7.95** in Canada and **A$10.99** in Australia. Older-set packs cost about the same (Vendetta from US$4.93), except Origins, the launch set, whose packs now start around US$13.
+
+A pack is a lottery ticket, not a deck. Buy one for the fun of opening it, not because the person needs cards.
+
+## US$15 to US$40: a ready-to-play deck
+
+This is the best range for someone new to the game, or a player you want to get a second deck.
+
+- **Showdown Decks (Radiance: Evelynn vs Seraphine).** Two complete decks in one box, built to play against each other, so it's a game for two out of the box. MSRP is US$34.99; on 28 October it was from **US$19.91** at a US store, £21.99, €18.99, C$29.99 and A$49.99. The Vendetta Showdown Decks are still around and slightly cheaper (from US$15.99).
+- **Champion Decks.** A single pre-built deck around one Legend. The Unleashed Vi deck was the easiest to find, from **US$15.08**, £15, C$17.99 and A$25.99, and the Spirit Forged decks (Rumble and Fiora) from about US$20.
+- **Proving Grounds.** The original boxed starter was from US$49.95 in the US but only £29 in the UK and €25.99 in the EU. If you can wait, [Proving Grounds 2nd Edition](/release-dates) arrives on 19 February 2027 at US$39.99, with four decks (Heimerdinger, Karma, Vladimir and Illaoi) for two to four new players.
+
+New players will also want sleeves and a deck box; [the card size guide](/guides/riftbound-card-size-sleeves-deck-boxes) lists what fits.
+
+## US$35 to US$70: the Radiance Vault Bundle
+
+The bundle is the middle option: a handful of packs plus extras in a gift-shaped box. MSRP is US$34.99, and on 28 October the cheapest were **US$35** in the US, £33.95, €28.90, C$57.99 and A$65. It's a good present for someone who already plays and likes opening packs, but per pack it costs more than a box.
+
+## For a player: buy their wish list
+
+If the person already plays, the most useful gift is the exact cards they want. It's also the cheapest way to get them: the whole 167-card [Radiance base set](/guides/whats-in-the-riftbound-radiance-set) cost about **US$113 in singles** on 28 October, less than a single booster box, and most playable cards cost under a dollar.
+
+Ask for their list (most players keep one), paste it into the [deck builder](/deck) and it prices every card at the cheapest store in your market. If you'd rather not guess, a store gift card from one of the shops on [our store list](/stores) does the same job.
+
+Not sure what they play? Ask which Legend their main deck is built around. Each Legend is a League of Legends champion, and the champion's page lists every card of theirs in every set with live prices, so you can pick a card for their deck, or a premium printing of their favourite, without knowing the meta. If they play one of Radiance's nine new Legends, the Epic numbered right after it (Blade of the Exile for Riven, The Ball for Orianna) is almost always on the list.
+
+## US$100 and up: a booster box
+
+A booster box (24 packs) is the big present for a collector or someone who loves opening packs. On 28 October the cheapest Radiance boxes were:
+
+| Market | Cheapest box | Typical store price |
+| --- | --- | --- |
+| US | US$116.59 | about US$140 |
+| UK | £100 | about £117 |
+| Eurozone | €97.99 | about €125 |
+| Canada | C$179.95 | about C$210 |
+| Australia | A$239.99 | about A$245 |
+
+Vendetta boxes cost about the same (from US$119.99, £109.95). Origins and Spirit Forged boxes are now much dearer outside the US, so they suit a collector more than a player.
+
+Before buying a box for value rather than fun, read [whether a box is worth opening](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles). For a collector who has everything, [Legacy pre-orders](/legacy-preorders) open the door to Set 6 on 29 January 2027.
+
+[[shop]]
+
+## Gifts that aren't cards
+
+Plenty of Riftbound players have more cards than they need. These are the presents they tend to want anyway:
+
+- **Sleeves.** Every serious player sleeves their deck, and sleeves wear out. Riftbound cards are standard TCG size, so any standard-size sleeve fits; [the card size guide](/guides/riftbound-card-size-sleeves-deck-boxes) covers which brands and how many to buy. A 100-pack of good sleeves costs about the same as two booster packs.
+- **A deck box.** One that holds a sleeved 40-card deck plus Runes, Battlefields and a Legend. Players who carry two or three decks to a store night will use a second one.
+- **A playmat.** Riot and many stores sell Riftbound playmats, and they're the one accessory people show off. Check the mat is the standard 24 by 14 inch size so it fits a store table.
+- **A binder.** For a collector, a side-loading binder for alt arts and Showcase cards. [How to store and protect your cards](/guides/how-to-store-and-protect-riftbound-cards) explains what's worth paying for.
+- **An event entry.** A local store's weekly Nexus Night usually costs little, and players can earn promo cards there. Bigger: Legacy's Pre-Rift events run 22 to 28 January 2027, a week before the set's release, and an entry makes a good Christmas IOU. [How Pre-Rift works](/guides/riftbound-pre-rift-rules-explained) explains the format.
+
+## Gifts for a collector who has everything
+
+If the person already owns the sets, think premium printings rather than more packs.
+
+- **A Showcase or Signature card of their favourite champion.** Every champion has a page listing all of their printings with live prices, from the base card to the Signature; [the champions index](/champions) is the place to start. Radiance's over-numbered Showcase Legends started at about US$54 on 28 October, and alt arts at under US$10.
+- **A graded card.** A PSA, BGS or CGC slab of a card they love is a display piece. [The grading guide](/guides/riftbound-psa-bgs-grading-guide) explains the grades, and each card page shows graded listings where they exist.
+- **A metal card.** The rarest Riftbound cards are metal Prize Wall and Best Of Legends, won or traded for at events. They run into thousands of dollars; [every metal card and its price](/blog/riftbound-metal-cards) is listed in one place.
+
+## What to avoid
+
+A few mistakes come up every holiday season:
+
+- **Resealed or "mystery" boxes.** Buy sealed product from a real store, not a marketplace seller with a stock photo. A box whose shrink wrap looks wrong, or a "repack" of unknown packs, is not the same product.
+- **The wrong language.** Riftbound is printed in English and Simplified Chinese, and the two look alike in small listing photos. If the person plays at an English-speaking store, check the listing says English.
+- **Paying double for a sold-out product.** Launch-week bundles and Showdown Decks sometimes sell out at stores and appear on marketplaces at twice the MSRP. Usually they return to store shelves within weeks; [the Radiance pre-order follow-up](/blog/riftbound-radiance-preorder-prices-two-weeks-later) showed marketplace premiums falling by a third or more within a fortnight.
+- **Buying the wrong game.** Riftbound is the League of Legends card game. If you're shopping for someone who plays Legends of Runeterra, the digital game, ask first: [is there a League of Legends card game?](/guides/is-there-a-league-of-legends-card-game) explains the difference.
+
+## Black Friday and Cyber Monday: what a real deal looks like
+
+Black Friday falls on 27 November this year. Some stores will discount Riftbound, but three things are worth knowing first:
+
+1. **Compare with today's price, not the MSRP.** The cheapest Radiance boxes were already at or under the US$120 MSRP a week after launch. A "Black Friday price" of US$120 is the normal price.
+2. **Ignore the crossed-out price.** A "was US$180" tag means nothing if five other stores sold it for US$125 last week. Check the live price on [the Radiance set page](/sets/radiance) or [the sealed page](/sealed) before you buy.
+3. **Add postage.** A box that's US$5 cheaper but costs US$15 more to ship isn't a deal, so check each store's postage before you pay.
+
+If you're waiting for a particular card to drop, a free [price alert](/alerts) emails you when it does, so you don't have to watch for it.
+
+## Ordering in time for Christmas
+
+Stores set their own Christmas postage cut-offs, usually in mid-December for domestic orders and earlier for international ones. Order from a store in your own country where you can: [are Riftbound cards cheaper in another country?](/blog/are-riftbound-cards-cheaper-in-another-country) shows why the saving abroad usually disappears once postage and import tax are added. Our buying guides cover the stores in [the US](/blog/buy-riftbound-cards-us), [the UK](/blog/buy-riftbound-cards-uk), [Canada](/blog/buy-riftbound-cards-canada), [Australia](/blog/buy-riftbound-cards-australia) and [Europe](/blog/buy-riftbound-cards-europe).`,
+  },
+  {
+    slug: "whats-in-the-riftbound-radiance-set",
+    category: "guide",
+    title: "What's in the Riftbound Radiance Set?",
+    seoTitle: "Riftbound Radiance Set Breakdown: Rarities, Legends & Costs",
+    excerpt:
+      "167 base cards, 62 Showcase printings and nine Legends, each paired with its own Epic: the full Radiance breakdown, counted from our catalogue.",
+    author: "RiftCompare",
+    date: "2026-10-29",
+    readMins: 8,
+    tags: ["sets", "guide", "radiance", "rad", "rarity", "collecting", "set 5"],
+    hero: {
+      src: "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/8cec0480427b3646cb48cb2e3fe3a02b629f7aeb-744x1039.png?accountingTag=RB",
+      alt: "Riven, The Exile — the over-numbered Showcase Legend from the Riftbound Radiance set",
+    },
+    summary: [
+      "**167 base cards**, numbered 001/167 to 167/167 with no gaps: one card bigger than Vendetta and well short of the 200-plus-card sets before it.",
+      "**Rarity splits 48 Common / 46 Uncommon / 45 Rare / 28 Epic**, plus **62 Showcase-tier printings** on top: 18 alt arts, 17 over-numbered cards, 16 Signatures, 6 Showcase Runes and 5 SP specials.",
+      "**Nine Legends, and each one sits next to its own Epic** in the numbering (Riven at 149, Blade of the Exile at 150), so every champion arrives with a signature spell or Gear.",
+      "**The whole 167-card base set cost about US$113 in singles** at the cheapest US store prices on 28 October, five days after launch. Booster boxes started at US$116.59.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in Riftbound Radiance?",
+        a: "167 base cards, numbered 001/167 to 167/167. On top of those there are 62 Showcase-tier printings (alt arts, over-numbered cards, Signatures, Showcase Runes and five SP cards), so the main print run is 229 printings before promos and the 18 Runes.",
+      },
+      {
+        q: "What is the rarity breakdown of Radiance?",
+        a: "48 Common, 46 Uncommon, 45 Rare and 28 Epic across the 167 base cards. The nine Legends are all Rare and the ten Battlefields are all Uncommon.",
+      },
+      {
+        q: "Who are the Legends in Radiance?",
+        a: "Nine: Ekko, Ziggs and Mordekaiser (Fury), Orianna, K'Sante and Riven (Calm), Seraphine (Mind), and Evelynn and Jarvan IV (Body). There is no Chaos or Order Legend in the set.",
+      },
+      {
+        q: "How many Signature cards are in Radiance?",
+        a: "16. Each of the nine over-numbered Showcase Legends (168 to 176) has a Signature version, as do the six HEARTSTEEL Showcase Units (178 to 183), plus a Chinese-exclusive Seraphine Legend at 174a.",
+      },
+      {
+        q: "How much does a Radiance booster box cost?",
+        a: "On 28 October 2026, the cheapest in-stock Radiance booster box we tracked was US$116.59 in the US, £100 in the UK, €97.99 in the EU, C$179.95 in Canada and A$239.99 at an Australian store (A$200 on eBay). The live comparison is on the Radiance set page.",
+      },
+    ],
+    shop: [
+      { label: "Radiance booster boxes", query: "Riftbound Radiance booster box" },
+      { label: "Radiance Showcase Legends", query: "Riftbound Radiance showcase legend" },
+      { label: "Radiance Signature cards", query: "Riftbound Radiance signature" },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Browse every Radiance card →",
+      blurb: "All 167 base cards and every Showcase printing, with live prices across every store we track.",
+    },
+    body: `Radiance (set code RAD) is Riftbound's fifth set, released worldwide on 23 October 2026. Now that the whole set is out and priced, here is exactly what's in it (for the card-by-card list with live prices, see the [Radiance card list](/sets/radiance)), counted from our own catalogue rather than copied from a reveal schedule: rarity, card type, domain, the Showcase tier, and what it all costs a week in.
+
+## The headline number: 167 base cards
+
+Radiance's collector numbers run from 001/167 to 167/167 with no gaps. That's one card more than [Vendetta](/sets/vendetta) (166) and well under [Unleashed](/guides/whats-in-the-riftbound-unleashed-set) (219) or [Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set) (221). Riftbound sets have been getting smaller and tighter since the launch set, and Radiance continues that.
+
+On top of the base set there are **62 Showcase-tier printings**, in five groups:
+
+- **18 alternate-art Units** that keep their base number with an "a" after it (Riven, Broken Blade at 043a, for example). Every one is a champion Unit, two for each of the nine Legends.
+- **17 over-numbered cards** at 168/167 to 184/167: the nine Showcase Legends (168 to 176), seven Showcase Units (177 to 183: Ekko, then the six HEARTSTEEL band members K'Sante, Aphelios, Ezreal, Yone, Kayn and Sett) and one Showcase Battlefield, Packed Amphitheater at 184.
+- **16 Signatures**, with the artist's signature and a star in the number (173★/167): all nine Legends, the six HEARTSTEEL Units (178★ to 183★, signed with the band members' names), and a Chinese-exclusive Seraphine Legend at 174a★. [Every Radiance Signature](/blog/riftbound-radiance-signature-cards) has the full story.
+- **6 Showcase Runes**, one per domain (R01A to R06A).
+- **5 SP cards**, numbered SP1/005 to SP5/005: Ahri, Akali, Evelynn, Kai'Sa and Seraphine.
+
+New to Showcase, over-numbered and Signature? The [rarity and printings guide](/guides/understanding-riftbound-card-rarity) explains each one, and [the Radiance alt arts](/guides/riftbound-radiance-alt-art-cards) and [the Radiance Legends](/guides/riftbound-radiance-legends) show them side by side.
+
+## Rarity breakdown
+
+| Rarity | Cards |
+| --- | --- |
+| Common | 48 |
+| Uncommon | 46 |
+| Rare | 45 |
+| Epic | 28 |
+| **Base total** | **167** |
+| Showcase-tier printings (incl. 16 Signature) | 62 |
+
+The first three tiers are almost level, so a Radiance Rare isn't much scarcer than a Common. The real scarcity is at Epic (28 cards, 17% of the set) and in the Showcase tier. All 28 Epics are listed with prices in [every Radiance Epic](/guides/riftbound-radiance-epic-cards).
+
+By type, the Epics are 14 Units, 8 Gear and 6 Spells. By domain, Fury and Calm have 6 each, Body 5, Mind 4, Chaos and Order 3 each, and Colorless 1 (Neeko, Blending In, the set's last card at 167/167).
+
+## Every Legend comes with its own Epic
+
+This is the most interesting thing about how Radiance is laid out. The nine Legends sit at the odd numbers from 139 to 155, and the even number after each one is an Epic built for that champion:
+
+| # | Legend | Domain | Its Epic |
+| --- | --- | --- | --- |
+| 139 | [Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-139-167) | Fury | Chronobreak (Spell) |
+| 141 | [Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-141-167) | Fury | Hexplosive Minefield (Spell) |
+| 143 | [Mordekaiser, Iron Revenant](/card/mordekaiser-iron-revenant-rad-143-167) | Fury | Realm of Death (Spell) |
+| 145 | [Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-145-167) | Calm | The Ball (Gear) |
+| 147 | [K'Sante, Pride of Nazumah](/card/k-sante-pride-of-nazumah-rad-147-167) | Calm | Ntofo Strikes (Spell) |
+| 149 | [Riven, The Exile](/card/riven-the-exile-rad-149-167) | Calm | Blade of the Exile (Gear) |
+| 151 | [Seraphine, Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-151-167) | Mind | Encore (Spell) |
+| 153 | [Evelynn, Agony's Embrace](/card/evelynn-agony-s-embrace-rad-153-167) | Body | Last Caress (Spell) |
+| 155 | [Jarvan IV, Exemplar of Demacia](/card/jarvan-iv-exemplar-of-demacia-rad-155-167) | Body | Demacian Standard (Gear) |
+
+So a player building around a Radiance Legend will usually want that Epic too, which is why these nine Epics are among the set's dearest base cards. On 28 October, [Blade of the Exile](/card/blade-of-the-exile-rad-150-167) was the most expensive base card in the set at US$35, ahead of The Ball (US$9.45) and Realm of Death (US$9.25).
+
+As in Spirit Forged, there is **no Chaos or Order Legend**. Every champion also has a hub page with all of their printings across sets: [Ekko](/champions/ekko), [Ziggs](/champions/ziggs), [Mordekaiser](/champions/mordekaiser), [Orianna](/champions/orianna), [K'Sante](/champions/k-sante), [Riven](/champions/riven), [Seraphine](/champions/seraphine), [Evelynn](/champions/evelynn) and [Jarvan IV](/champions/jarvan-iv).
+
+## Card type breakdown
+
+| Type | Common | Uncommon | Rare | Epic | Total |
+| --- | --- | --- | --- | --- | --- |
+| Unit | 26 | 20 | 24 | 14 | 84 |
+| Spell | 15 | 13 | 4 | 6 | 38 |
+| Gear | 7 | 3 | 8 | 8 | 26 |
+| Battlefield | — | 10 | — | — | 10 |
+| Legend | — | — | 9 | — | 9 |
+
+Units are about half the set. Gear is unusually top-heavy: 16 of the 26 Gear cards are Rare or Epic, so equipment from this set is more often a chase than filler. Spells go the other way, with only 10 of 38 at Rare or above. All ten Battlefields are Uncommon (157 to 166), so a full Radiance Battlefield set costs very little; each was about 10 US cents or less.
+
+## Domain breakdown
+
+| Domain | Cards |
+| --- | --- |
+| Fury | 29 |
+| Calm | 29 |
+| Body | 27 |
+| Mind | 25 |
+| Chaos | 23 |
+| Order | 23 |
+| Colorless | 11 |
+
+The spread is tighter than in Origins or Spirit Forged: just six cards between the biggest and smallest domain. Fury and Calm lead as they have in every set, and Chaos and Order sit at the bottom again.
+
+## The cost curve
+
+Across the 148 base-set Units, Spells and Gear (Legends and Battlefields have no cost):
+
+| Energy cost | Cards |
+| --- | --- |
+| 1 | 14 |
+| 2 | 26 |
+| 3 | 34 |
+| 4 | 26 |
+| 5 | 19 |
+| 6 | 11 |
+| 7 | 6 |
+| 8+ | 12 |
+
+Radiance is a heavier set than the ones before it. The average costed card is about **3.9 energy** (Spirit Forged was 3.4), only 27% cost 2 or less, and **12 cards cost 8 or 9**, including Supernova, Zero Point Inflection, Mordekaiser, Dominating and Party Crasher. Among Units, the most common might is 4 (21 Units), and the biggest body is Drakehound Packmaster, a 9-cost Fury Rare with 9 might.
+
+## Radiance next to Vendetta
+
+Radiance is built almost exactly like the set before it, which makes the two easy to compare:
+
+| | Vendetta | Radiance |
+| --- | --- | --- |
+| Base cards | 166 | 167 |
+| Common / Uncommon / Rare / Epic | 48 / 46 / 45 / 27 | 48 / 46 / 45 / 28 |
+| Units / Spells / Gear | 91 / 41 / 15 | 84 / 38 / 26 |
+| Legends / Battlefields | 9 / 10 | 9 / 10 |
+| Average cost (Units, Spells, Gear) | 3.7 | 3.9 |
+| Cards costing 8 or more | 7 | 12 |
+| Showcase-tier printings | 64 | 62 |
+| Signature printings | 9 | 16 |
+| Whole base set in singles, cheapest US price, 28 October | about US$73 | about US$113 |
+
+The rarity split is identical apart from one extra Epic, and both sets have nine Legends and ten Battlefields. The differences are in what the cards do and what the premium tier looks like. Radiance trades Units for Gear (26 Gear cards against Vendetta's 15), it is noticeably more expensive to cast, and it has nearly twice as many Signatures, because the six HEARTSTEEL Units get one as well as every Legend.
+
+That last point matters for collectors. In Vendetta the Signature chase was nine Legends. In Radiance it is sixteen cards, so a Signature is easier to pull in a box but each one is a smaller share of the set's value. If you want the history of how Vendetta's chase tiers priced out, [the Vendetta chase cards post](/blog/riftbound-vendetta-chase-cards-so-far) tracks them.
+
+## What it costs a week after launch
+
+Prices were taken from our catalogue on 28 October 2026, five days after release. They move daily, so the set page always has the live numbers.
+
+- **A complete base set (all 167 cards) came to about US$113** in singles at the cheapest US store price for each card. Blade of the Exile alone is almost a third of that.
+- **Booster boxes** started at US$116.59 in the US (TCGplayer), £100 in the UK, €97.99 in the EU, C$179.95 in Canada and A$239.99 at an Australian store. Single packs were from US$5.74, £4.99, C$7.95 and A$10.99.
+- **The Showcase tier is where the money is.** Over-numbered Showcase Legends ran from about US$54 (K'Sante) to US$230 (Riven). Their Signature versions start around US$300 and reach four figures: Riven's Signature was listed at US$1,450 and Seraphine's at US$1,250.
+- **Alt arts are the affordable premium.** The 18 alternate-art Units ran from US$1.50 to US$6.50, with Riven, Broken Blade the dearest at about US$9.
+
+So for most players, singles are far cheaper than chasing a playset from packs, and the [box value guide](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles) explains when opening a box still makes sense. For pull odds, see [Radiance pull rates](/blog/riftbound-radiance-pull-rates); for where each market is cheapest, see [where to buy Radiance](/blog/where-to-buy-riftbound-radiance).
+
+[[shop]]
+
+## See the actual cards
+
+[Browse the Radiance set](/sets/radiance) for every card with live prices across every store we track in your market. We've written the same breakdown for [Origins](/guides/whats-in-the-riftbound-origins-set), [Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set) and [Unleashed](/guides/whats-in-the-riftbound-unleashed-set), and [every Riftbound set in order](/guides/riftbound-sets-in-order) shows what comes next: [Legacy](/legacy-preorders), due 29 January 2027.`,
+  },
   {
     slug: "riftbound-metal-cards",
     category: "blog",
@@ -3998,8 +4314,13 @@ Radiance releases **23 October 2026**.`,
     category: "guide",
     title: "Riftbound Deploy Explained: Official Rules",
     seoTitle: "Riftbound Deploy Explained: Rules + Every Deploy Card",
+    // 2026-11-03: "deploy riftbound" + "riftbound deploy" 1,430 impressions in
+    // 28 days at position 6–7 and ONE click. The FAQ (which feeds FAQPage
+    // JSON-LD and the snippet) still answered from the PAX West leak, "not yet
+    // confirmed by Riot", a month after the rules made it official. The FAQ
+    // and this description now lead with the official rule.
     excerpt:
-      "Riftbound Deploy, now in Riot's 9 Oct rules: how Deploy gear works, when an opponent kills it, how it differs from Equip, and all 27 Deploy cards priced.",
+      "Deploy gear is played to a battlefield, not a unit, and is killed when an opponent holds that battlefield. The rules, Deploy vs Equip, every card priced.",
     author: "RiftCompare",
     date: "2026-09-08",
     updated: "2026-10-23",
@@ -4017,10 +4338,10 @@ Radiance releases **23 October 2026**.`,
       "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-spoilers)); now printed on Pillaged Armory and Dockside Lock-Up, two finished Radiance cards.",
     ],
     faq: [
-      { q: "What is Deploy in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear.\" It's reportedly a Gear keyword tied to controlling one specific battlefield, not yet confirmed by Riot." },
-      { q: "How does the Deploy mechanic work?", a: "As leaked: you play the Gear to a battlefield rather than to a unit or your base. While you hold that battlefield, it grants a benefit (the leak doesn't say what kind). If an opponent takes the battlefield, the Gear is killed outright." },
-      { q: "What happens if I lose the battlefield a Deploy gear is on?", a: "Per the leaked wording, the Gear is killed — not deactivated or returned to hand, but removed from the game the way any killed permanent would be." },
-      { q: "How is Deploy different from Equip?", a: "Equip attaches a Gear card to a unit, and it stays functional regardless of board state. Deploy, as leaked, attaches to a battlefield instead of a unit, and is destroyed if you lose control of that battlefield — a much higher-risk trade for whatever benefit it grants." },
+      { q: "What is Deploy in Riftbound?", a: "Deploy is a gear keyword from Radiance. Deploy gear is played to a battlefield (friendly, uncontrolled or held by an enemy) instead of your base or a unit, and stays there unless it is destroyed. If an opponent holds a battlefield where you have Deploy gear, that gear is killed. It is in Riot's Radiance core rules, in effect from 16 October 2026." },
+      { q: "How does the Deploy mechanic work?", a: "Play the gear to a battlefield. It gives whatever benefit its own card text prints while it sits there (Pillaged Armory and Dockside Lock-Up each have their own). The printed reminder reads: \"Play this only to a battlefield. When an opponent holds here, kill this.\"" },
+      { q: "What happens if I lose the battlefield a Deploy gear is on?", a: "If an opponent holds that battlefield, the gear is killed: it goes to the trash like any killed permanent, not back to your hand." },
+      { q: "How is Deploy different from Equip?", a: "Equip attaches gear to a unit, and it stays with that unit whatever happens on the board. Deploy gear sits on a battlefield instead, and is killed when an opponent holds that battlefield, so it is a riskier trade for its benefit." },
       { q: "Is Deploy confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
       { q: "How is Deploy different from Showoff and Disarm?", a: "Deploy is a Gear keyword about holding a battlefield; Showoff is a modal reveal effect triggered on play; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly, unlike Vendetta's Empower/Flow/Burn." },
     ],
@@ -4121,8 +4442,8 @@ Yes. Riot's Radiance core rules patch notes (9 October 2026, in effect from 16 O
       "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-spoilers)); now printed on Primordial Roar and Rousing Display, two finished Radiance cards.",
     ],
     faq: [
-      { q: "What is Showoff in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off.\" It's reportedly a modal reveal effect, not yet confirmed by Riot." },
-      { q: "How does the Showoff mechanic work?", a: "As leaked: when you play a Showoff card, you may either reveal a card from your hand or point at a friendly card already in play that meets whatever criteria is printed on the Showoff card. The effect then changes depending on what you showed." },
+      { q: "What is Show Off in Riftbound?", a: "Show Off is a Radiance keyword. As you play the card, you reveal a matching card from your hand, or pick a friendly card or token on the board that meets the card's condition, and whatever the card reads from the shown-off object is locked in when you show it. It is in Riot's Radiance core rules, in effect from 16 October 2026." },
+      { q: "How does the Show Off mechanic work?", a: "Each Show Off card prints its own condition, such as 'Show Off a unit'. When you play it, reveal a card from hand or choose a friendly card in play that meets that condition; the effect then uses what you showed, fixed at that moment." },
       { q: "What does 'meets the listed criteria' mean for Showoff?", a: "Each card prints its own criteria straight after the keyword. On Primordial Roar it is 'Show Off a unit'; on Rousing Display it is 'Show Off a card with Energy cost 7 or more'. You meet it by revealing a matching card from your hand or picking a matching friendly card on the board." },
       { q: "How is Showoff different from Vision?", a: "Vision triggers a Predict, looking at the top card of your own Main Deck. Showoff, as leaked, instead looks at a card you already have — in hand or already in play — rather than the top of your deck." },
       { q: "Is Showoff confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
@@ -4222,8 +4543,8 @@ Yes. Riot's Radiance core rules patch notes (9 October 2026, in effect from 16 O
       "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-spoilers)); now printed on Kai'Sa, Rebel and Disposal Expert, two finished Radiance cards.",
     ],
     faq: [
-      { q: "What is Disarm in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"When this unit attacks, decrease the Might of an enemy unit here.\" It reportedly weakens an enemy unit's Might as part of attacking, rather than boosting the attacker's own stats." },
-      { q: "How does the Disarm mechanic work?", a: "As leaked: when a unit with Disarm attacks, it decreases the Might of an enemy unit present at that battlefield. It reads as a repeatable, built-in unit ability rather than a one-time removal spell." },
+      { q: "What is Disarm in Riftbound?", a: "Disarm is a Radiance attack trigger. The first time a unit with Disarm attacks in a combat, an enemy unit at that battlefield gets -1 Might this turn (-2 for Disarm 2). Several instances of Disarm combine into one trigger using their total. It is in Riot's Radiance core rules, in effect from 16 October 2026." },
+      { q: "How does the Disarm mechanic work?", a: "When your Disarm unit attacks, pick an enemy unit at that battlefield; it loses Might equal to the Disarm value for the rest of the turn. It is built into the unit, so it happens every combat that unit attacks in, not once like a spell." },
       { q: "Is Disarm the opposite of Assault?", a: "That's how the leak's own source frames it, and the wording supports the comparison: Assault gives the attacker +X Might while attacking — a self-buff. Disarm, as leaked, instead lowers an enemy unit's Might when this unit attacks — a debuff aimed at the opponent's board." },
       { q: "Does Disarm work with direct damage spells?", a: "The leak's own source suggests pairing Disarm with direct-damage spells like Falling Star — a real Fury-domain Spell from the Origins set. Shrinking a blocker's Might first would make a fixed amount of direct damage go further toward actually killing it, though Disarm's exact numbers aren't known yet." },
       { q: "Is Disarm confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
@@ -4432,18 +4753,25 @@ The exact card dimensions, the landscape cards, and which deck boxes hold a full
     slug: "riftbound-format-legality-rotation",
     category: "guide",
     title: "Riftbound Rotation: Nothing Has Rotated Out",
+    // 2026-11-03: "riftbound rotation" is rising (0 → 26 impressions a day,
+    // position 5–7, 0 clicks in 28 days). The page still said "five released
+    // sets" and stopped at Vendetta, three weeks after Radiance released. The title
+    // leads with the exact query and the year, so it reads as current next to
+    // forum threads from launch.
+    seoTitle: "Riftbound Rotation 2026: No Set Has Rotated Out Yet",
     excerpt:
-      "No Riftbound set has rotated out — all five released sets are legal in Standard. Riot has published no rotation policy; bans remove named cards, not sets.",
+      "No. No Riftbound set has rotated out: every released set, Origins to Radiance, is legal in Standard. Riot has no rotation policy; bans remove single cards.",
     author: "RiftCompare",
     date: "2026-08-27",
+    updated: "2026-11-03",
     readMins: 6,
     tags: ["rules", "format", "rotation", "banlist", "buying guide"],
     hero: {
       src: "/blog/riftbound-format-legality-rotation.png",
-      alt: "Riftbound format legality — all five released sets are currently legal, with bans the only removal mechanism",
+      alt: "Riftbound format legality — every released set is currently legal, with bans the only removal mechanism",
     },
     summary: [
-      "**No Riftbound set has rotated out.** All five released sets are currently legal in Standard.",
+      "**No Riftbound set has rotated out.** Every released set, Origins to Radiance, is currently legal in Standard.",
       "**Riot has not published a rotation policy.** That is not the same as promising there will never be one — and we are not going to pretend it is.",
       "**Bans are the only mechanism removing cards today**, and they are applied narrowly, a handful of cards at a time.",
       "**Standard and 2v2 have separate ban lists.** A card legal in one can be banned in the other.",
@@ -4452,7 +4780,7 @@ The exact card dimensions, the landscape cards, and which deck boxes hold a full
     faq: [
       {
         q: "Does Riftbound have rotation?",
-        a: "Not today. No Riftbound set has rotated out of legality, and every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — is currently legal in Standard. Riot has not published a rotation policy either way, so nobody can tell you what happens in 2028.",
+        a: "Not today. No Riftbound set has rotated out of legality, and every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed, Vendetta and Radiance — is currently legal in Standard. Riot has not published a rotation policy either way, so nobody can tell you what happens in 2028.",
       },
       {
         q: "Are Origins cards still legal in Riftbound?",
@@ -4491,6 +4819,7 @@ Here is the honest, current answer — including the part most sites skip, which
 | Spirit Forged | SFD | Yes |
 | Unleashed | UNL | Yes |
 | Vendetta | VEN | Yes |
+| Radiance | RAD | Yes, since its release on 23 October 2026 |
 
 The only cards not legal are the specific ones on the **[ban list](/guides/riftbound-banlist-explained)** — a small, named set, not a whole generation of cards.
 
@@ -4498,7 +4827,7 @@ The only cards not legal are the specific ones on the **[ban list](/guides/riftb
 
 These get conflated constantly, and the difference matters a lot for what you buy.
 
-**A ban is a scalpel.** It removes one named card because that card is distorting the format. It is targeted, it is rare, and it is announced with a reason. Riftbound's **[July 2026 ban wave](/blog/riftbound-july-2026-ban-list-update)** is the most recent example.
+**A ban is a scalpel.** It removes one named card because that card is distorting the format. It is targeted, it is rare, and it is announced with a reason. Riftbound's **[September 2026 bans](/blog/riftbound-september-2026-bans-meta-shift)** are the most recent example, after the **[July 2026 wave](/blog/riftbound-july-2026-ban-list-update)**.
 
 **A rotation is a scheduled amputation.** It removes entire sets at once on a calendar, whether or not their cards were causing any problem at all. Cards that were perfectly reasonable simply stop being legal because of their age. Several long-running card games work this way; Riftbound, so far, does not.
 
@@ -4516,9 +4845,9 @@ You will find sites confidently telling you Riftbound "will never rotate" or "ro
 
 ## Why a game this young leaves the question open
 
-Riftbound launched in 2026 and has five released sets with four more announced through 2027. That is a relevant piece of context, because rotation is a problem that only becomes worth solving once a card pool gets large.
+Riftbound launched in 2026 and has released five main sets (Radiance is Set 5) plus Proving Grounds, with Legacy (Set 6) next on 29 January 2027 and more announced through 2027. That is a relevant piece of context, because rotation is a problem that only becomes worth solving once a card pool gets large.
 
-A game with five sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone adding 239 cards.
+A game with five or six sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone adding 239 cards.
 
 None of that is evidence rotation is coming. It is the reason the question is worth keeping open rather than answering prematurely in either direction.
 
@@ -4810,6 +5139,14 @@ Either way, the smart move is the same: compare prices before you spend. That's 
     date: "2026-06-12",
     readMins: 5,
     tags: ["collecting", "guide", "condition", "storage"],
+    // eBay searches for the supplies this guide recommends (2026-10-27,
+    // "Affiliate channels beyond the compare pages"): the supplies guide the
+    // report proposed is this one, so it gets the strip rather than a new post.
+    shop: [
+      { label: "Penny sleeves and top loaders", query: "top loaders penny sleeves standard card" },
+      { label: "Side-loading card binders", query: "side loading card binder 9 pocket zip" },
+      { label: "Card storage boxes", query: "trading card storage box 800 count" },
+    ],
     faq: [
       {
         q: "What's the difference between penny sleeves and deck sleeves?",
@@ -4955,8 +5292,15 @@ Want to see the chase cards in action? Read **[the most valuable Riftbound cards
     slug: "how-to-sell-riftbound-cards",
     category: "blog",
     title: "How to Sell Riftbound Cards for the Best Price",
+    // 2026-11-03: "sell riftbound cards" sits at position 18 and "sell
+    // riftbound cards sydney" at 23 (131 impressions in 28 days), with the page
+    // averaging position 10. The old opening was a paragraph of scene-setting
+    // with the answer three headings down, and it never said which platform
+    // suits which market. The answer now comes first, followed by a
+    // where-to-sell table by country and the fee tools.
+    seoTitle: "How to Sell Riftbound Cards: Where, Fees & Pricing (2026)",
     excerpt:
-      "Sitting on Riftbound cards you don't need? Here's how to price them accurately, where to sell, and how to get the most for your singles and sealed.",
+      "Price each card by its exact printing and condition, then sell where buyers are: TCGplayer (US), Cardmarket (EU), eBay or a local store. Fees and tips.",
     author: "RiftCompare",
     date: "2026-06-09",
     updated: CORRECTED,
@@ -4988,7 +5332,24 @@ Want to see the chase cards in action? Read **[the most valuable Riftbound cards
         a: "Price the deck as a bundle with the [deck pricer](/deck) so buyers can see the value at a glance, rather than listing each card separately.",
       },
     ],
-    body: `Got a stack of Riftbound cards gathering dust — duplicates, cards from a deck you've moved on from, or pulls you don't need? Here's how to turn them into cash (or store credit) and get a fair price.
+    body: `**The short answer:** look up each card's live price by its exact printing and condition, then list it where Riftbound buyers in your country already shop — TCGplayer in the US, Cardmarket in Europe, eBay almost everywhere, or a local game store if you want it gone today. Price at or just under the cheapest comparable listing for a quick sale, and work out your take-home after fees and postage before you pick a platform.
+
+Got a stack of Riftbound cards gathering dust — duplicates, cards from a deck you've moved on from, or pulls you don't need? Here's how to turn them into cash (or store credit) and get a fair price.
+
+## Where to sell Riftbound cards, by country
+
+| Where you live | Best reach | Also worth trying |
+| --- | --- | --- |
+| United States | TCGplayer | eBay, local game stores |
+| Europe | Cardmarket | eBay, local game stores |
+| United Kingdom | eBay UK | Local game stores, trading groups |
+| Australia and New Zealand | eBay AU | Local game stores, Facebook and Discord trading groups |
+| Canada | eBay CA | Local game stores, trading groups |
+| Singapore | Carousell and local stores | Facebook and Discord trading groups |
+
+Marketplaces take a commission and a payment fee, so the same sale nets different amounts on each. **[Selling fees compared](/tools/selling-fees)** works out your take-home on each platform, and **[TCGplayer fees explained](/blog/tcgplayer-fees)** breaks TCGplayer's down fee by fee. A local store pays less than a marketplace sale but takes the whole pile at once, with no postage, no listing work and no returns to handle. Many stores also offer more in store credit than in cash.
+
+**Selling in Australia** (Sydney, Melbourne, Brisbane and the rest): TCGplayer and Cardmarket only take sellers from their own regions, so eBay AU is where most Australian singles change hands, alongside local game stores and state trading groups. Check what the same card sells for in Australian dollars on **[RiftCompare Australia](/au)** before you price it, because US prices converted to AUD are not what Australian buyers pay.
 
 ## 1. Price your cards accurately first
 
@@ -5278,6 +5639,8 @@ Head to the **[sealed products page](/sealed)** to see live prices for booster b
 
 [[shop]]
 
+Buying one as a present? [Our 2026 Riftbound gift guide](/blog/riftbound-gift-guide-2026) covers every budget, from a single pack to a box, and what a real Black Friday deal looks like.
+
 Ready to buy? **[Compare Riftbound booster box prices now](/sealed)**, or if you only need a few cards, **[search the singles database](/browse)** instead.`,
     // A US-market sealed guide (marketData: "US") that had no buy path at all.
     // Worth more than most: /sealed carries no eBay rows outside AU (eBay sealed
@@ -5424,7 +5787,7 @@ You can check the first three yourself before submitting: hold the card up to a 
 
 ## Is it worth it for Riftbound specifically?
 
-Grading only makes financial sense once a card's raw value clears the submission fee by a comfortable margin — so it's a question of which Riftbound printings are worth enough to clear that bar. That's [the same chase tier as the rest of the value conversation](/guides/most-valuable-riftbound-cards): Signature printings, Showcase alt-arts and Overnumbered prints, not ordinary Commons or Uncommons. Riftbound is still a young game without a long graded-sales history the way an established TCG has, so treat any specific resale-premium claim for a graded Riftbound card skeptically — the graded aftermarket for this game is still forming.
+Grading only makes financial sense once a card's raw value clears the submission fee by a comfortable margin — so it's a question of which Riftbound printings are worth enough to clear that bar. That's [the same chase tier as the rest of the value conversation](/guides/most-valuable-riftbound-cards): Signature printings, Showcase alt-arts and Overnumbered prints, not ordinary Commons or Uncommons. Riftbound is still a young game without a long graded-sales history the way an established TCG has, so treat any specific resale-premium claim for a graded Riftbound card skeptically — the graded aftermarket for this game is still forming. To see where it stands today, [our graded price guide](/graded) lists the cheapest live PSA 10, PSA 9, BGS and CGC listing for every card that has one, beside the cheapest raw copy.
 
 ## Before you submit
 
@@ -5975,11 +6338,16 @@ Once you have a list, **[Best Basket](/guides/best-basket-cheapest-riftbound-dec
     slug: "how-a-riftbound-deck-is-built",
     category: "guide",
     title: "How a Riftbound Deck Is Built",
+    // Intent pass 2026-11-01: "riftbound deck size" (rising, ~520 impressions in
+    // 90 days at position 9) was landing on the CARD-size guide, which answers a
+    // different question. This page owns deck size; the numbers lead the title
+    // and the snippet so Google can tell the two apart.
+    seoTitle: "Riftbound Deck Size: 40 Cards, 12 Runes, 3 Battlefields",
     excerpt:
-      "Legend, Champion, main deck, runes, battlefields and the 10-card side deck — the anatomy of a Riftbound deck, explained with real examples.",
+      "A Riftbound deck is a Legend, a 40-card main deck, 12 runes and 3 battlefields, plus a 10-card side deck: 66 cards. Each part explained.",
     author: "RiftCompare",
     date: "2026-06-06",
-    updated: "2026-08-04",
+    updated: "2026-11-01",
     readMins: 4,
     tags: ["beginner", "deckbuilding"],
     faq: [
@@ -9861,7 +10229,7 @@ Each set on this calendar gets its own tracker as Riot shows it: **[the Radiance
     author: "RiftCompare",
     date: "2026-08-04",
     readMins: 8,
-    tags: ["news", "rules", "mechanics", "gameplay", "set"],
+    tags: ["news", "rules", "mechanics", "gameplay", "set", "legacy"],
     hero: {
       src: "/blog/riftbound-legacy-pack-changes-and-card-templating.png",
       alt: "Riftbound Legacy pack composition and card templating changes explained on RiftCompare",
@@ -11632,7 +12000,6 @@ We built the price tracking, the price history, and the alerts specifically beca
       `**Pro watches prices for you.** No ads, an unlimited watchlist and portfolio, every deal in Deal Finder and Rising Cards, and target-price alerts and sealed watches with no limit: an email when a card reaches your price, or when a box is back in stock, at RRP, or at your price (checked ${SEALED_CHECK_CADENCE}). With no card limit, a whole set fits in the set checklist.`,
       `**Pro also plans the order.** Best Basket's store-by-store plan for a deck, a list or the rest of a set (which stores, with each store's postage counted), at the minimum condition you set, and a deck price watch: save up to ${DECK_WATCH_LIMIT} lists and we re-price each one delivered after every price update and email you when the total reaches your price. Also Buy this list, and Demand Finder.`,
       `**A free account is genuinely useful**: an unlimited watchlist with new-low emails, an unlimited portfolio with a set checklist showing what each set is missing and the cheapest listing to finish it, the top 3 of each deal list and your own Best Basket total with ${FREE_PLANS_PER_MONTH} store-by-store plans a month.`,
-      "**You can also get a week of Pro for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
     browseCta: {
       href: "/premium",
@@ -11817,14 +12184,13 @@ Nothing here hides behind a menu. The heart on a card is the watch; a target is 
 
 The Value Finder, Rising Sealed, the Bulk Pricer and the Condition Impact Calculator used to be listed here. They've left the paid tiers, and their old links now go to the free pages that carry what was useful in them: paste-a-list pricing is part of the free [deck builder](/deck), sealed products keep their live prices on [sealed](/sealed), and the [condition guide](/guides/riftbound-card-condition-guide) explains what each grade does to a price. Each was either unreliable with the price history we have, free elsewhere on the site already, or the same answer for every card. Fewer tools, each one worth paying for. Demand Finder left the same morning and came back that day as a Pro tool, with its counter hardened against inflated counts.
 
-## Two free ways to get Pro without paying
+## A free way to get Pro without paying
 
 You don't have to subscribe to try it:
 
 - **[Invite a friend](/profile)** — share your referral link, and every friend who creates a free account earns you **3 days of Pro**, free.
-- **[Submit feedback once](/feedback)** — a bug report, a feature request, anything genuinely useful — and it unlocks a full **week of Pro, free**, no card required either.
 
-Neither of these requires ever entering a payment method. If Pro turns out to not be for you, both simply expire with nothing charged.
+It never asks for a payment method. If Pro turns out to not be for you, the days simply expire with nothing charged.
 
 ## Who should actually pay for it
 
@@ -12330,6 +12696,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
   },
   ...SEO_PACK_ARTICLES,
   ...RADIANCE_TIER_GUIDES,
+  ...LEGACY_SEASON_ARTICLES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",
     category: "blog",

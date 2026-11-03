@@ -7,7 +7,7 @@
  *  unreachable): it never raises or clears an alert, because "I could not look" is not "it is fine". */
 export type Severity = "ok" | "warn" | "crit" | "unknown";
 
-export type OpsArea = "databases" | "ebay" | "data" | "money" | "email" | "site" | "inbox";
+export type OpsArea = "databases" | "ebay" | "data" | "money" | "email" | "site" | "inbox" | "sites";
 
 export const AREA_LABEL: Record<OpsArea, string> = {
   databases: "Databases & limits",
@@ -17,9 +17,10 @@ export const AREA_LABEL: Record<OpsArea, string> = {
   email: "Email",
   site: "Site & deploys",
   inbox: "Inbox",
+  sites: "Sister sites (Empire HQ)",
 };
 
-export const AREA_ORDER: OpsArea[] = ["databases", "ebay", "data", "money", "email", "site", "inbox"];
+export const AREA_ORDER: OpsArea[] = ["databases", "ebay", "data", "money", "email", "site", "inbox", "sites"];
 
 export interface CheckResult {
   /** Stable id: alert state is keyed on it. `area:thing`, e.g. "neon:operational". */

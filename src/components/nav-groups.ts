@@ -1,6 +1,7 @@
 import { DISCORD_URL } from "@/lib/site";
-import { SETS } from "@/lib/constants";
+import { SETS, hasSetGallery } from "@/lib/constants";
 import { pokemonSectionOn } from "@/lib/pokemon/flag";
+import { CARD_SHOP_FINDER } from "@/lib/partners";
 
 // The grouped site navigation, shared by the ⌘K command launcher
 // (CommandLauncher.tsx), the persistent desktop rail (SideNav.tsx), the footer
@@ -42,6 +43,12 @@ export interface NavGroupLink {
    * second copy in the site map would only repeat them.
    */
   hideInFooter?: boolean;
+  /**
+   * The rel for an `external` link, when it is not the default
+   * "noopener noreferrer": a partner link agreed as followed and with the
+   * referrer kept is "noopener" (lib/partners.ts).
+   */
+  rel?: string;
 }
 
 export interface NavGroup {
@@ -80,9 +87,16 @@ export const NAV_GROUPS: NavGroup[] = [
       // before Radiance shipped. The bare "preorder" keywords moved here: a
       // pre-order searcher now wants Legacy. Same no-"prices" label rule.
       { href: "/legacy-preorders", label: "Legacy pre-orders", keywords: ["legacy", "set 6", "legacy booster box", "legacy preorder", "preorder", "pre-order", "upcoming set"] },
+      // Black Friday sealed deals (2026-10-30, the weekly growth review). No "prices" or bare "deals" in the label: "deals" belongs to the Deal Finder (tests/nav-search.test.ts).
+      { href: "/black-friday", label: "Black Friday", keywords: ["black friday", "cyber monday", "black friday deals", "sale", "discount", "cheap booster box", "christmas", "holiday"] },
+      // The seasonal sale pages (2026-11-02, DECISIONS.md "Seasonal sale pages"): same no-"deals"/"prices" label rule.
+      { href: "/boxing-day", label: "Boxing Day", keywords: ["boxing day", "boxing day sale", "boxing day sales", "boxing day deals", "end of year sale"] },
+      { href: "/january-sales", label: "January sales", keywords: ["january sale", "january sales", "new year sale", "after christmas sale"] },
+      { href: "/lunar-new-year", label: "Lunar New Year", keywords: ["lunar new year", "chinese new year", "cny sale", "lunar new year sale"] },
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
       { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "most searched", "popular cards"] },
       { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },
+      { href: "/graded", label: "Graded card prices", keywords: ["graded", "psa", "psa 10", "psa 9", "bgs", "cgc", "slab", "graded price"] },
       { href: "/stores/tracked", label: "Stores we track", keywords: ["stores", "shops", "retailers", "which stores"] },
       // The Pokémon section (2026-10-01), only while its switch is on
       // (lib/pokemon/flag.ts). Last in Prices, which renders open on a first
@@ -121,7 +135,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/portfolio", label: "My Binder", keywords: ["collection", "my cards", "holdings", "portfolio", "binder", "what is mine worth"] },
       { href: "/watching", label: "My Watchlist", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"] },
       { href: "/alerts", label: "Price Alerts", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
-      { href: "/coins", label: "RiftCompare Coins", keywords: ["coins", "collect", "gacha", "pulls", "rewards", "daily check in", "champion coins"] },
       { href: "/premium", label: "Pro", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"] },
     ],
   },
@@ -150,6 +163,8 @@ export const NAV_GROUPS: NavGroup[] = [
       // you on a page headed something else. The `keywords` below already carry
       // news/articles/announcements, so ⌘K still finds it by any of the old words.
       { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "posts", "updates", "announcements", "analysis"] },
+      // The beta community forum (owner, 2026-11-01): no accounts, posts on the repo's forum branch.
+      { href: "/forum", label: "Community forum", keywords: ["forum", "community", "discussion", "talk", "chat", "questions", "ask"] },
       // hideInFooter: the footer's four columns are already at the top of their
       // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
       // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
@@ -187,7 +202,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // from its set page and card pages; a sitewide link is what gets a new
       // page crawled during a preview season. Derived from SETS, so the next
       // set's gallery takes the slot when its hub goes live.
-      ...SETS.filter((s) => s.comingSoon && s.hubReady).map((s) => {
+      ...SETS.filter((s) => s.comingSoon && s.hubReady && hasSetGallery(s)).map((s) => {
         const n = s.name.toLowerCase();
         return { href: `/sets/${s.slug}/gallery`, label: `${s.name} card gallery`, keywords: [`${n} gallery`, `${n} card gallery`, `${n} cards`, `${n} card images`] };
       }),
@@ -298,6 +313,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/contact", label: "Contact", keywords: ["contact", "email", "get in touch", "reach us"] },
       { href: "/feedback", label: "Rate & review", keywords: ["feedback", "rate", "review", "rating", "suggest", "idea", "feature request"] },
       { href: "/stores/suggest", label: "Suggest a store", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
+      { href: "/how-we-pick-stores", label: "How we pick stores", keywords: ["scam", "fake store", "trusted stores", "report a store", "how we pick stores", "vetting"] },
       { href: "/about", label: "About RiftCompare", keywords: ["about", "who we are", "riftcompare", "compare"] },
       // The two policies (2026-09-26, "Blog and tools, joined up" in
       // DECISIONS.md). They were linked only from the footer's link row, so the
@@ -400,6 +416,13 @@ export const FOOTER_GROUPS: NavGroup[] = [
   },
   {
     title: "Learn & help",
-    links: [...(byTitle["Guides & News"] ?? []), ...(byTitle["Help"] ?? [])],
+    links: [
+      ...(byTitle["Guides & News"] ?? []),
+      ...(byTitle["Help"] ?? []),
+      // Footer only, not NAV_GROUPS (2026-10-29, owner): the reciprocal link
+      // agreed with The Card Shop Finder is one footer link, beside
+      // "Community sites & tools", not a launcher or rail entry.
+      { href: CARD_SHOP_FINDER.url, label: CARD_SHOP_FINDER.footerLabel, external: true, rel: CARD_SHOP_FINDER.rel },
+    ],
   },
 ];

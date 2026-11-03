@@ -15,7 +15,7 @@
 // look-alike sites cross-linked sitewide read as a link network.
 
 export interface SisterSite {
-  key: "op" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cam" | "empire";
+  key: "op" | "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "wargame" | "figure" | "cam" | "empire";
   name: string;
   url: string;
   /** The game, as a reader would say it: "One Piece", "Pokémon", "Magic". */
@@ -32,11 +32,16 @@ export interface SisterSite {
   footerOnly?: boolean;
   /** Not a card game: listed after the TCGs, under "Also from Compare Empire". */
   notTcg?: boolean;
+  /** The site's own search results for a query, `{q}` replaced by it (its
+   *  WebSite SearchAction target). Card games only: the "Search another game"
+   *  line under /browse results (components/FamilySearch.tsx). */
+  search?: string;
 }
 
 export const SISTER_SITES: SisterSite[] = [
   {
     key: "op",
+    search: "https://opcompare.app/browse?q={q}",
     name: "OP Compare",
     url: "https://opcompare.app",
     game: "One Piece",
@@ -50,19 +55,21 @@ export const SISTER_SITES: SisterSite[] = [
   },
   {
     key: "dex",
+    search: "https://dexcompare.app/us/sealed?q={q}",
     name: "DexCompare",
-    url: "https://www.dexcompare.app",
+    url: "https://dexcompare.app",
     game: "Pokémon",
     anchor: "Pokémon TCG sealed prices",
     what: "Pokémon booster box, Elite Trainer Box and bundle prices across independent stores in seven markets",
     links: [
-      { label: "Pick your country", href: "https://www.dexcompare.app/" },
-      { label: "Pokémon booster boxes in Australia", href: "https://www.dexcompare.app/au/type/booster-boxes" },
-      { label: "Pokémon release calendar", href: "https://www.dexcompare.app/au/releases" },
+      { label: "Pick your country", href: "https://dexcompare.app/" },
+      { label: "Pokémon booster boxes", href: "https://dexcompare.app/us/type/booster-boxes" },
+      { label: "Pokémon release calendar", href: "https://dexcompare.app/us/releases" },
     ],
   },
   {
     key: "mtg",
+    search: "https://mtgcompare.app/us/sealed?q={q}",
     name: "MTG Compare",
     url: "https://mtgcompare.app",
     game: "Magic",
@@ -81,6 +88,7 @@ export const SISTER_SITES: SisterSite[] = [
   // that day.
   {
     key: "gundam",
+    search: "https://gundamcompare.com/cards?q={q}",
     name: "Gundam Compare",
     url: "https://gundamcompare.com",
     game: "Gundam",
@@ -94,6 +102,7 @@ export const SISTER_SITES: SisterSite[] = [
   },
   {
     key: "lorcana",
+    search: "https://lorcanacompare.com/cards?q={q}",
     name: "Lorcana Compare",
     url: "https://lorcanacompare.com",
     game: "Lorcana",
@@ -110,6 +119,7 @@ export const SISTER_SITES: SisterSite[] = [
   // Compare Empire are not card games, so they sit after the TCGs.
   {
     key: "ygo",
+    search: "https://ygocompare.com/cards?q={q}",
     name: "YGO Compare",
     url: "https://ygocompare.com",
     game: "Yu-Gi-Oh!",
@@ -120,6 +130,45 @@ export const SISTER_SITES: SisterSite[] = [
       { label: "Yu-Gi-Oh! pre-orders", href: "https://ygocompare.com/preorders" },
     ],
     footerOnly: true,
+  },
+  {
+    key: "cyberpunk",
+    search: "https://cyberpunkcompare.com/cards?q={q}",
+    name: "Cyberpunk Compare",
+    url: "https://cyberpunkcompare.com",
+    game: "Cyberpunk TCG",
+    anchor: "Cyberpunk TCG prices",
+    what: "Cyberpunk TCG singles and sealed prices across stores, Beta and Retail kept apart",
+    links: [
+      { label: "Cyberpunk TCG sealed prices", href: "https://cyberpunkcompare.com/sealed" },
+      { label: "Cyberpunk TCG pre-orders", href: "https://cyberpunkcompare.com/preorders" },
+    ],
+    footerOnly: true,
+  },
+  {
+    key: "wargame",
+    name: "WargameCompare",
+    url: "https://wargamecompare.com",
+    game: "Wargames",
+    anchor: "Miniature wargame prices",
+    what: "miniature wargame kit and army box prices across independent hobby stores",
+    links: [{ label: "Wargame prices", href: "https://wargamecompare.com/" }],
+    footerOnly: true,
+    notTcg: true,
+  },
+  {
+    key: "figure",
+    name: "FigureCompare",
+    url: "https://figurecompare.com",
+    game: "Anime figures",
+    anchor: "Anime figure prices",
+    what: "Nendoroid, figma and POP UP PARADE prices across real figure stores, matched by barcode",
+    links: [
+      { label: "Nendoroid prices", href: "https://figurecompare.com/nendoroid" },
+      { label: "Figure deals", href: "https://figurecompare.com/deals" },
+    ],
+    footerOnly: true,
+    notTcg: true,
   },
   {
     key: "cam",
@@ -138,13 +187,15 @@ export const SISTER_SITES: SisterSite[] = [
   {
     key: "empire",
     name: "Compare Empire",
-    url: "https://www.compareempire.com",
+    url: "https://compareempire.com",
     game: "Tech",
-    anchor: "Australian tech prices",
-    what: "phone, TV and laptop prices across Australian stores",
+    anchor: "Tech and appliance prices",
+    what: "phone, TV, laptop and appliance prices across stores in the US, Australia and the UK",
+    // US URLs (the root is the US home): a visitor from Australia or the UK is
+    // moved to their own edition by Compare Empire's region script.
     links: [
-      { label: "Phone prices", href: "https://www.compareempire.com/phones" },
-      { label: "Today's deals", href: "https://www.compareempire.com/deals" },
+      { label: "Phone prices", href: "https://compareempire.com/us/phones" },
+      { label: "Today's deals", href: "https://compareempire.com/us/deals" },
     ],
     footerOnly: true,
     notTcg: true,
@@ -172,4 +223,17 @@ export function sisterSitesFor(article: { slug: string; tags: readonly string[] 
   const buying =
     article.slug.startsWith("where-to-buy-") || article.slug.startsWith("buy-riftbound-cards-") || article.tags.some((t) => BUYING_TAGS.has(t));
   return buying ? ARTICLE_SITES : [];
+}
+
+/** Each card-game sister site's search for `q`, for the "Search another game"
+ *  line. A plain search link per site: nothing is fetched from them. */
+export function familySearchLinks(q: string): { key: SisterSite["key"]; name: string; game: string; href: string }[] {
+  const term = q.trim().slice(0, 80);
+  if (!term) return [];
+  return SISTER_SITES.filter((s) => s.search && !s.notTcg).map((s) => ({
+    key: s.key,
+    name: s.name,
+    game: s.game,
+    href: s.search!.replace("{q}", encodeURIComponent(term)),
+  }));
 }

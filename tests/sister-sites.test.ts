@@ -14,15 +14,25 @@ import { SISTER_SITES, sisterSitesFor } from "../src/lib/sister-sites";
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const published = ARTICLES.filter((a) => !a.draft);
 
-test("the eight sister sites, each linking only its own https host", () => {
+test("the eleven sister sites, each linking only its own https host", () => {
   assert.deepEqual(
     SISTER_SITES.map((s) => s.url),
-    ["https://opcompare.app", "https://www.dexcompare.app", "https://mtgcompare.app", "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://www.camcompare.app", "https://www.compareempire.com"],
+    ["https://opcompare.app", "https://dexcompare.app", "https://mtgcompare.app", "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://cyberpunkcompare.com", "https://wargamecompare.com", "https://figurecompare.com", "https://www.camcompare.app", "https://compareempire.com"],
   );
   for (const s of SISTER_SITES) {
     assert.ok(s.links.length > 0, s.name);
     const host = new URL(s.url).host;
     for (const l of s.links) assert.equal(new URL(l.href).host, host, `${s.name}: ${l.href}`);
+  }
+});
+
+// Owner, 2026-11-02: a family link never ties a site to one country ("Australian
+// tech prices" was shown to US visitors of a site that compares US stores too).
+// No country adjective in a label, and no deep link into one non-US edition.
+test("family links never tie a site to one region", () => {
+  for (const s of SISTER_SITES) {
+    for (const t of [s.anchor, s.what, s.game, ...s.links.map((l) => l.label)]) assert.doesNotMatch(t, /\b(Australian|Aussie|American|British|Canadian|Australia only|AU only)\b/i, `${s.name}: ${t}`);
+    for (const l of s.links) assert.doesNotMatch(new URL(l.href).pathname, /^\/(au|uk|ca|nz|sg|eu)(\/|$)/, `${s.name}: ${l.href}`);
   }
 });
 
@@ -49,7 +59,9 @@ test("footer and article block: plain followed links, rendered from the one list
   const layout = read("src/app/layout.tsx");
   const footer = layout.slice(layout.indexOf("<footer"), layout.indexOf("</footer>"));
   assert.match(footer, /SISTER_SITES\.filter\(\(s\) => !s\.notTcg\)\.map/);
-  assert.match(footer, /SISTER_SITES\.filter\(\(s\) => s\.notTcg\)\.map/);
+  // Short footer (owner, 2026-11-02): the card-game sisters only, plus one link to the network page.
+  assert.doesNotMatch(footer, /SISTER_SITES\.filter\(\(s\) => s\.notTcg\)\.map/);
+  assert.match(footer, /NETWORK_PAGE/);
   const block = read("src/components/SisterSites.tsx");
   for (const src of [footer.slice(footer.indexOf("SISTER_SITES.filter")), block]) {
     const anchors = [...src.matchAll(/<a\b[^>]*>/g)].map((m) => m[0]);
@@ -60,4 +72,19 @@ test("footer and article block: plain followed links, rendered from the one list
     }
   }
   assert.match(read("src/components/ArticleView.tsx"), /<SisterSites sites=\{sisterSitesFor\(article\)\} \/>/);
+});
+
+test("search another game: every card-game sister site has a search link on its own host; no non-TCG site does", async () => {
+  const { familySearchLinks } = await import("../src/lib/sister-sites");
+  const links = familySearchLinks("Monkey D. Luffy");
+  assert.deepEqual(links.map((l) => l.key), ["op", "dex", "mtg", "gundam", "lorcana", "ygo", "cyberpunk"]);
+  for (const l of links) {
+    const site = SISTER_SITES.find((s) => s.key === l.key)!;
+    assert.equal(new URL(l.href).host, new URL(site.url).host, l.href);
+    assert.equal(new URL(l.href).searchParams.get("q"), "Monkey D. Luffy", l.href);
+  }
+  assert.deepEqual(familySearchLinks("   "), []);
+  const block = read("src/components/FamilySearch.tsx");
+  assert.match(block, /rel="noopener nofollow"/);
+  assert.match(read("src/app/browse/page.tsx"), /\{q && <FamilySearch q=\{q\}/);
 });

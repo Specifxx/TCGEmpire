@@ -75,7 +75,7 @@ const cspReportOnly = [
   // img-src must stay open to https: — narrowing it would blank creatives.
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://cdn.riftscribe.gg ${ADS_CONNECT_SRC.join(" ")} ${GA_CONNECT_SRC.join(" ")}`,
+  `connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://*.vercel-insights.com https://vitals.vercel-insights.com https://cdn.riftscribe.gg ${ADS_CONNECT_SRC.join(" ")} ${GA_CONNECT_SRC.join(" ")}`,
   // Ads render inside cross-origin iframes; the consent message does too.
   `frame-src 'self' https: ${ADS_FRAME_SRC.join(" ")}`,
   "frame-ancestors 'self'",
@@ -113,9 +113,19 @@ const PUBLIC_DATA_BUNDLED = ["files", "fallback"].includes((process.env.PUBLIC_D
 const PUBLIC_DATA_PACKED = require("node:fs").existsSync(require("node:path").join(__dirname, ".public-data-pack", "pack.json"));
 const PUBLIC_DATA_FILES = !PUBLIC_DATA_BUNDLED ? [] : PUBLIC_DATA_PACKED ? ["./.public-data-pack/**/*"] : ["./data/public/**/*.json"];
 
+// The Pokémon section (2026-11-01, DECISIONS.md "The Pokémon section returns,
+// served from files in the repository") is on when this build carries its
+// catalogue, data/pokemon/products.json, written by pokemon-import.yml. The
+// answer is inlined into client and server code as POKEMON_DATA_BUILT
+// (src/lib/pokemon/flag.ts), so a build without the files shows no nav link,
+// homepage promo or sitemap section. NEXT_PUBLIC_POKEMON_SECTION="0" in Vercel
+// still turns it off.
+const POKEMON_DATA_BUILT = require("node:fs").existsSync(require("node:path").join(__dirname, "data", "pokemon", "products.json")) ? "1" : "0";
+
 const CARD_CDN_CACHE = "public, s-maxage=86400, stale-while-revalidate=86400";
 
 const nextConfig = {
+  env: { POKEMON_DATA_BUILT },
   // Public data as files (src/lib/public-data/, DECISIONS.md 2026-10-09): the
   // router and mode modules import node:fs / node:crypto / node:async_hooks, and
   // lib/db.ts (which imports them) is reachable from a few client components via
@@ -147,6 +157,13 @@ const nextConfig = {
       // packed when the packer ran (PUBLIC_DATA_FILES above). In "db" mode no
       // function needs it, so it stays out of all ~300 function bundles.
       "/**": ["./data/price-history/**/*.json", ...PUBLIC_DATA_FILES],
+      // The Pokémon section's files only where they are read: its pages, its
+      // API routes and the child sitemaps (src/lib/pokemon/store.ts). Never "/**":
+      // ~300 Riftbound functions have no use for them.
+      "/pokemon/**": ["./data/pokemon/**/*.json"],
+      "/api/pokemon/**": ["./data/pokemon/**/*.json"],
+      "/sitemaps/**": ["./data/pokemon/**/*.json"],
+      "/sitemap.xml": ["./data/pokemon/**/*.json"],
     },
     // With the pack bundled, data/public/ never is, even if the tracer follows
     // the reader's path.join(process.cwd(), "data", "public") on its own.

@@ -4,12 +4,17 @@ import { useRouter, usePathname } from "next/navigation";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { REGION_HOME_PATH } from "@/lib/seo";
 import { useCountry } from "./CountryProvider";
+import { Flag } from "./Flag";
 
 // Market chooser for the homepage hero — pill toggle of AU/US/UK/SG/CA/EU
 // that switches all prices + store lists. Mirrors the compact navbar switcher.
-// Deliberately quiet (small type, low-contrast border, no filled active
-// state) — it's a utility, not a CTA, and shouldn't compete with the search
-// box or the hero's one primary button.
+// PROMINENT WITH FLAGS (owner, 2026-11-02: "the region switcher must be more
+// prevalent … on the main home page hero … and have the flags as well"). It
+// was deliberately quiet (9px label, slate-500 chips, no flags) and sat last
+// in the hero, under the Premium link; it now sits right under the search and
+// stats line, each chip carries its drawn flag (Flag.tsx, inline SVG — not
+// the emoji, which Windows draws as the letters "AU"), and the active chip
+// has a brand outline. Still smaller than the search box: it is not a CTA.
 //
 // RESTORED (2026-08-17) to this horizontal strip, overriding a same-day
 // redesign that had collapsed it into a single "Shopping from: US" trigger +
@@ -40,15 +45,14 @@ export function CountryHeroToggle() {
     // and the header's own CountrySwitcher both carry this tag (a different
     // value each) so the audit can assert at most one is visible above the
     // fold at a time rather than guessing from class names.
-    <div data-region-control="hero" className="mt-4 flex flex-col items-center gap-1">
-      <span className="text-[9px] font-medium uppercase tracking-wide text-slate-500">Shopping from</span>
-      {/* Compact segmented control: one label per chip (country code only — no
-          flag glyph, since regional-indicator flag emoji render as literal
-          "AU"/"US" text on several platforms, which duplicated the code right
-          next to it), currency shown only on the active chip. Stays a single
-          tight row even with 4+ markets on a phone; min-h-11 keeps each chip's
-          tap target accessible despite the small type. */}
-      <div className="inline-flex items-center gap-1 rounded-full border border-ink-800 p-0.5">
+    <div data-region-control="hero" className="mt-5 flex flex-col items-center gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Shopping from</span>
+      {/* Segmented control: flag + code per chip (the flag is a drawn SVG,
+          aria-hidden, so it never duplicates the code the way the emoji's
+          "AU" letters did), currency shown only on the active chip. Three by two on
+          phones (six flags and codes don't fit one 360px row), one row from sm;
+          min-h-11 keeps each chip's tap target accessible. */}
+      <div className="grid max-w-full grid-cols-3 gap-1 rounded-2xl border border-ink-700 bg-ink-900/60 p-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:rounded-full">
         {COUNTRY_LIST.map((c) => {
           const active = c.code === country;
           // aria-labelledby, not aria-label: it concatenates the referenced
@@ -80,13 +84,14 @@ export function CountryHeroToggle() {
               // inactive chip ("SG", no currency suffix shown) at ~37px wide on
               // a real 390px viewport — under the 44px mobile tap-target floor
               // even though the height was already covered.
-              className={`flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${
-                active ? "bg-ink-800 text-slate-200" : "text-slate-500 hover:bg-ink-900 hover:text-slate-300"
+              className={`flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border px-2.5 text-sm font-semibold transition-colors ${
+                active ? "border-brand-400/70 bg-ink-800 text-white" : "border-transparent text-slate-300 hover:bg-ink-800 hover:text-white"
               }`}
             >
+              <Flag code={c.code} />
               <span id={codeId}>{c.code}</span>
               {active && (
-                <span id={currencyId} className="text-[9px] font-medium text-slate-400">
+                <span id={currencyId} className="text-[10px] font-medium text-slate-400">
                   {currency}
                 </span>
               )}

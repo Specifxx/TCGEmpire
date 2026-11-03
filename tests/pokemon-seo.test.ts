@@ -330,13 +330,13 @@ test("index-gate.ts: the gate reads only kind and pack count, and its kinds are 
   assert.doesNotMatch(src, /^\s*import\b/m, "no imports: it is on the Riftbound importers' load path");
 });
 
-test("sitemap.ts: the gate from ./index-gate, a narrow select, the landing pages", () => {
+test("sitemap.ts: the gate from ./index-gate, the committed files, the landing pages", () => {
   const src = codeOnly(read("src/lib/pokemon/sitemap.ts"));
   assert.match(src, /import \{ INDEX_STAGE1_KINDS, productPassesIndexGate \} from "\.\/index-gate";/);
   assert.doesNotMatch(src, /from "\.\/seo"|from "\.\/data"|getPokemonCatalog/, "never the metadata module or the catalogue loader");
-  assert.doesNotMatch(src, /^import[^;]*from "\.\/db"/m, "the Pokémon client stays a dynamic import");
-  assert.match(src, /where: \{ active: true, kind: \{ in: \[\.\.\.INDEX_STAGE1_KINDS\] \} \}/);
-  assert.match(src, /select: \{ slug: true, imageUrl: true, kind: true, packCount: true \}/);
+  assert.doesNotMatch(src, /^import[^;]*from "\.\/store"/m, "the store stays a dynamic import");
+  assert.match(src, /await import\("\.\/store"\)/);
+  assert.match(src, /p\.active && \(INDEX_STAGE1_KINDS as readonly string\[\]\)\.includes\(p\.kind\)/);
   assert.match(src, /products\.filter\(productPassesIndexGate\)/);
   for (const p of ["/pokemon/booster-boxes", "/pokemon/elite-trainer-boxes", "/pokemon/booster-bundles", "/pokemon/price-per-pack"]) {
     assert.ok(src.includes(`"${p}"`), p);

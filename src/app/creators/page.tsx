@@ -48,6 +48,23 @@ const FAQS = [
   },
 ];
 
+// "How to work with us" (owner, 2026-11-01): flexible on purpose, any one of these is plenty. Creators call us their
+// "partner" in their own content, not "sponsor": we don't pay them for a mention.
+const WORK_WITH_US = [
+  {
+    title: "Link us, with your code",
+    body: "Put riftcompare.com in your bio, video description or a story link. Have a creator code? Add it beside the link. No code is fine too.",
+  },
+  {
+    title: "Shout us out",
+    body: "In the content you already make, a quick line: “check out our partner RiftCompare” while you price a pull, open packs or build a deck.",
+  },
+  {
+    title: "Show how it works",
+    body: "A short walkthrough or honest review: look up a card, compare the stores, track your collection. Say what you really think.",
+  },
+];
+
 const SOCIALS = [
   { label: "Discord", href: DISCORD_URL, bg: "#5865F2", blurb: "Chat, report a bad price, get pinged on drops." },
   { label: "Instagram", href: INSTAGRAM_URL, bg: "#E1306C", blurb: "Set previews and price-check graphics." },
@@ -250,6 +267,39 @@ export default async function CreatorsPage() {
             See the widgets →
           </Link>
         </p>
+      </section>
+
+      {/* How to work with us (owner, 2026-11-01): creators kept asking how we'd like to be promoted. */}
+      <section id="work-with-us" className="mt-10 scroll-mt-header">
+        <h2 className="text-2xl font-extrabold text-white">How to work with us</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Creators often ask how we&rsquo;d like {SITE_NAME} promoted. Honestly, however suits you: no contract, no script, no
+          quota and nothing to send us first. We help you, you help us, and we keep featuring you either way.
+        </p>
+        <ol className="mt-5 grid gap-3 sm:grid-cols-3">
+          {WORK_WITH_US.map((w, i) => (
+            <li key={w.title} className="rounded-2xl border border-white/10 bg-ink-900 p-5">
+              <span className="text-xs font-bold uppercase tracking-wide text-gold">Option {i + 1}</span>
+              <h3 className="mt-1 font-extrabold text-white">{w.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{w.body}</p>
+            </li>
+          ))}
+        </ol>
+        <div className="mt-3 rounded-2xl border border-white/10 bg-ink-900 p-5">
+          <h3 className="font-extrabold text-white">Lines you can borrow</h3>
+          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-400">
+            <li>&ldquo;Prices checked on our partner riftcompare.com. Link and my code are in my bio.&rdquo;</li>
+            <li>
+              &ldquo;Be sure to check out our partner {SITE_NAME}: it compares Riftbound prices across stores, so you find the
+              cheapest.&rdquo;
+            </li>
+          </ul>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            Please say we&rsquo;re partners (&ldquo;our partner&rdquo;, or your platform&rsquo;s partnership label) so your
+            followers know. Ad rules such as the FTC&rsquo;s in the US and the ASA&rsquo;s in the UK ask for that, and they
+            certainly do once you earn from a creator code.
+          </p>
+        </div>
       </section>
 
       {/* Creator codes (2026-10-16): the paid programme has its own page. */}

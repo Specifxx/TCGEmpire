@@ -401,17 +401,22 @@ test("the snapshot covers every configured store, in its own currency, and stays
   assert.ok(statSync(join(ROOT, "src/lib/shipping-rates.json")).size < 120_000, "keep the snapshot condensed — raw probe files are artifacts, not source");
 });
 
-test("the real snapshot: Obsession Gaming is $20 to Adelaide, and no AU store charges by state", () => {
+test("the real snapshot: Obsession Gaming is $20 to Adelaide, and one AU store charges by state", () => {
   const q = shippingFor("obsessiongaming", cart(30, 5), { region: "SA" });
   assert.equal(q.cents, 2000);
   assert.equal(q.basis, "measured");
-  for (const s of Object.values(SHIPPING_SNAPSHOT.stores)) {
+  const byState: string[] = [];
+  for (const [key, s] of Object.entries(SHIPPING_SNAPSHOT.stores)) {
     if (s.market !== "AU" || s.status !== "measured") continue;
     const prices = new Set(s.zones.map((z) => JSON.stringify(z.std.map((e) => e?.[0] ?? null))));
-    assert.equal(prices.size, 1, "measured 2026-09-25: every AU store quoted all eight capitals the same");
+    if (prices.size > 1) byState.push(key);
   }
-  // So the AU picker says so, rather than implying Adelaide pays more; the CA one does not.
-  assert.equal(marketHasZonePricing("AU"), false, "88 Games Arena's differently-NAMED $8 rate is not zone pricing");
+  // Measured 2026-09-25, every AU store quoted all eight capitals the same (88 Games
+  // Arena's differently-NAMED $8 rate is not zone pricing). Groovy Collectables,
+  // added 2026-10-28, quotes A$7.34 to some capitals and A$9.79 to others, so the AU
+  // picker now asks for the state, as the CA one does.
+  assert.deepEqual(byState, ["groovycollectables"]);
+  assert.equal(marketHasZonePricing("AU"), true);
   assert.equal(marketHasZonePricing("CA"), true);
 });
 

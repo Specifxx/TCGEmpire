@@ -45,6 +45,7 @@ import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { cardImageAlt } from "@/lib/image-alt";
 import { cardHref } from "@/lib/card-url";
 import { pageAlternates } from "@/lib/seo";
+import { EBAY_FEED_PATH, ebayFeedUrl } from "@/lib/ebay-deals-feed";
 import { cardThumbProps } from "@/lib/card-image-url";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +54,7 @@ export const metadata: Metadata = {
   title: { absolute: "Riftbound Deal Finder — Underpriced vs TCGplayer & eBay | RiftCompare" },
   description:
     "Riftbound cards a store or eBay seller in your market is selling for less than TCGplayer's US market price, the cards whose cheapest copy is on eBay, and the cards a store sells for less than eBay. Updated daily, with direct links. Cheapest on eBay is free; free accounts see the top three of the others, Pro every one.",
-  alternates: pageAlternates("/tools/deal-finder"),
+  alternates: pageAlternates("/tools/deal-finder", { types: { "application/rss+xml": EBAY_FEED_PATH } }),
   openGraph: { title: "Riftbound Deal Finder — Underpriced vs TCGplayer & eBay", url: `${SITE_URL}/tools/deal-finder` },
 };
 
@@ -359,7 +360,11 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
             Cards whose cheapest <strong className="text-slate-200">eBay</strong> listing in {info.place} costs less than every
             store we track there{country === "US" ? " and TCGplayer's own cheapest listing" : country === "EU" ? " and CardTrader" : ""},
             ranked by how much less. Free for everyone. The eBay price includes the seller&apos;s stated postage where there is one;
-            store prices it beats are item prices, postage extra.
+            store prices it beats are item prices, postage extra.{" "}
+            <a href={ebayFeedUrl("", country)} className="text-brand-400 hover:underline">
+              Follow this list by RSS
+            </a>
+            .
           </p>
           {priceLine}
           {!cheapestEbay.available ? (

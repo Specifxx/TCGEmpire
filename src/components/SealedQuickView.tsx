@@ -1,5 +1,6 @@
 "use client";
 
+import { MiniPicks } from "./MiniPicks";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import type { SealedGroup } from "@/lib/sealed-import";
@@ -16,7 +17,6 @@ import { CheckedAgo } from "./CheckedAgo";
 import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/sealed-offers";
 import { isPreorderSetCode } from "@/lib/constants";
 import { SealedWatchButton } from "./SealedWatchButton";
-import { ShownFirstTag } from "./CardMarketSection";
 import { PaidLinkTag } from "./AffiliateDisclosure";
 import { pinMarketplaces } from "@/lib/market-rows";
 
@@ -161,6 +161,8 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
 
           {/* Price comparison — every tracked store, cheapest in-stock first */}
           <div className="p-4">
+            {/* The small eBay + TCGplayer pair (owner, 2026-10-29). */}
+            <MiniPicks setCode={group.setCode ?? ""} pageType="sealed_quickview" className="mb-3" />
             <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
             {listings.length === 0 ? (
               <div className="p-4 text-center text-sm text-slate-400">
@@ -176,14 +178,13 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-center gap-1.5">
                         <span className="truncate text-sm font-semibold text-white">eBay</span>
-                        <ShownFirstTag />
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500">
                         <span>Search current listings</span>
                         <PaidLinkTag />
                       </div>
                     </div>
-                    <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_pinned" className="btn-ebay px-3 py-1.5 text-xs">
+                    <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_pinned" className="btn-buy px-3 py-1.5 text-xs">
                       Search →
                     </OutboundLink>
                   </li>
@@ -198,7 +199,6 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-1.5">
                           <span className="truncate text-sm font-semibold text-white">{l.retailerName}</span>
-                          {pinned && <ShownFirstTag />}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
                           <span className={isOpen ? "text-up" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>

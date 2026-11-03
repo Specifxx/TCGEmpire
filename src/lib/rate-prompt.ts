@@ -10,27 +10,45 @@
 // feedback form has no floating button any more: it opens from the footer's
 // "Rate & review" link (FeedbackLink) and the /contact page.
 //
-// WHEN. Never a new visitor (owner, 2026-10-27: "asking new users to rate it,
-// it's kind of weird"; "I just don't want to be bombarded with it every time I
-// open the site"). Only a returning one who has really used the site:
-//   • a return visit (a page view RATE_VISIT_GAP_MS after the last), AND
-//   • RATE_AFTER_MS (a day) since their first visit, AND
-//   • RATE_AFTER_PAGES pages in all;
-//   • never on the first page of a visit, never in a visit where the Pricing
-//     callout already showed (one uninvited prompt per visit), never on sign-in,
-//     checkout, admin, embeds or the arcade.
+// WHEN (relaxed 2026-10-28, owner: "pop ups are fine if they don't occur all
+// the time" and "9 ratings is not enough"; DECISIONS.md, "Ratings: one tap
+// counts, and the card asks at the moment it has earned"). Never on arrival:
+//   • RATE_AFTER_PAGES pages in all and RATE_AFTER_MS since their first page
+//     view (a few minutes of real browsing, not a day and a second visit), OR
+//   • right after a high-intent moment: they clicked out to a store and came
+//     back to the tab (visit.intent), once they have seen 2 pages this visit;
+//   • never on the first page of a visit (2026-11-03: not even after a store
+//     click), never in a visit
+//     where the Pricing callout already showed (one uninvited prompt per
+//     visit), never on sign-in, checkout, admin, embeds or the arcade.
 // HOW OFTEN. A rating or "Don't ask again" ends it for good; closing it (✕,
-// Escape, "Not now") waits RATE_SNOOZE_MS; it gives up after RATE_MAX_ASKS.
+// Escape, "Not now") waits RATE_SNOOZE_MS (30 days since 2026-11-03, was 14);
+// it gives up after RATE_MAX_ASKS (2 since 2026-11-03, was 3).
 // It is a small corner card, not a modal: it never blocks the page.
 
-export const RATE_AFTER_PAGES = 5;
-export const RATE_AFTER_MS = 86_400_000;
+// ONE INTERRUPTION PER VISIT, NEVER ON ARRIVAL (owner, 2026-11-03: "I think
+// I've lost some visitors for riftcompare simply because before there were too
+// many pop ups"). DECISIONS.md, "One interruption per visit, never on arrival".
+// The rating drive (2026-10-28: a centred pop-up for every visitor, on their
+// landing page after 15 s, twice a visit, every visit) is gone. What is left
+// uninvited is this corner card and the header's Pricing callout, and they
+// share ONE slot a visit (RATE_SESSION_KEY / PRICING_NUDGE_SESSION_KEY):
+//   • neither ever shows on the first page of a visit;
+//   • the Pricing callout waits for a returning visitor (second visit on);
+//   • the card asks at most RATE_MAX_ASKS times, RATE_SNOOZE_MS apart.
+
+export const RATE_AFTER_PAGES = 4;
+export const RATE_AFTER_MS = 3 * 60_000;
+/** Pages a visitor must have seen before a store click may bring the card. */
+export const RATE_INTENT_PAGES = 2;
 export const RATE_VISIT_GAP_MS = 30 * 60_000;
 export const RATE_SNOOZE_MS = 30 * 86_400_000;
 export const RATE_MAX_ASKS = 2;
 export const RATE_STORAGE_KEY = "rc_rate";
 /** sessionStorage: set when the prompt showed this visit (PricingNudge yields to it). */
 export const RATE_SESSION_KEY = "rc_rate_seen";
+/** sessionStorage: set when the Pricing callout showed this visit (the card yields to it). */
+export const PRICING_NUDGE_SESSION_KEY = "rc_pricing_nudge_seen";
 
 const NEVER = [/^\/login/, /^\/verify/, /^\/admin/, /^\/embed/, /^\/premium/, /^\/checkout/, /^\/games/, /^\/riftle/, /^\/unsubscribe/, /^\/contact/, /^\/feedback/];
 
@@ -95,18 +113,34 @@ export interface RateVisit {
   pages: number;
   /** Another uninvited prompt (the Pricing callout) already showed this visit. */
   otherPromptShown: boolean;
+  /** They just came back from a store tab they opened here (a buy click). */
+  intent?: boolean;
 }
 
 /** Should the prompt open on this page view (after it was counted)? */
 export function shouldAskRating(s: RateState, now: number, path: string, visit: RateVisit): boolean {
   if (s.rated || s.optedOut || s.asks >= RATE_MAX_ASKS) return false;
   if (!rateAllowedOn(path)) return false;
-  if (visit.pages < 2 || visit.otherPromptShown) return false;
-  if (s.pages < RATE_AFTER_PAGES) return false;
-  if (now - s.firstSeen < RATE_AFTER_MS) return false;
-  if (s.visits < 2) return false;
+  if (visit.otherPromptShown) return false;
+  if (visit.pages < 2) return false; // never the page they landed on
+  if (visit.intent) {
+    if (visit.pages < RATE_INTENT_PAGES) return false;
+  } else {
+    if (s.pages < RATE_AFTER_PAGES) return false;
+    if (now - s.firstSeen < RATE_AFTER_MS) return false;
+  }
   if (s.snoozedAt && now - s.snoozedAt < RATE_SNOOZE_MS) return false;
   return true;
+}
+
+/**
+ * May the header's Pricing callout show on this page view? Only for a
+ * returning visitor (their second visit or later, counted in RATE_STORAGE_KEY)
+ * and never on the first page of a visit. It also needs the visit's one slot
+ * free (PricingNudge checks RATE_SESSION_KEY).
+ */
+export function shouldShowPricingNudge(s: RateState, visitPages: number): boolean {
+  return s.visits >= 2 && visitPages >= 2;
 }
 
 /**

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   RATE_AFTER_MS,
   RATE_AFTER_PAGES,
+  RATE_INTENT_PAGES,
   RATE_MAX_ASKS,
   RATE_SNOOZE_MS,
   RATE_VISIT_GAP_MS,
@@ -11,6 +12,7 @@ import {
   freshRateState,
   parseRateState,
   shouldAskRating,
+  shouldShowPricingNudge,
 } from "../src/lib/rate-prompt";
 import { MIN_RATINGS_TO_SHOW, ratingLine, ratingToShow } from "../src/lib/site-rating";
 import { PREMIUM_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT, annualSavingPct, premiumEffectiveMonthly } from "../src/lib/site";
@@ -30,16 +32,45 @@ test("Pro is $6.99 a month or $47.88 a year, which is exactly $3.99 a month", ()
 const V = { pages: 2, otherPromptShown: false };
 const engaged = { ...freshRateState(T0), pages: RATE_AFTER_PAGES, visits: 2 };
 
-test("the rate prompt never asks a new visitor: a return visit, a day and several pages first", () => {
+test("the rate prompt never asks on arrival: a few minutes and pages first (relaxed 2026-10-28)", () => {
   const now = T0 + RATE_AFTER_MS;
-  assert.equal(shouldAskRating(engaged, now, "/card/x", V), true);
+  const first = { ...engaged, visits: 1 };
+  assert.equal(shouldAskRating(first, now, "/card/x", V), true, "a first visit may be asked after real use");
   assert.equal(shouldAskRating({ ...engaged, pages: RATE_AFTER_PAGES - 1 }, now, "/card/x", V), false, "too few pages");
   assert.equal(shouldAskRating(engaged, now - 1, "/card/x", V), false, "too soon");
-  assert.equal(shouldAskRating({ ...engaged, visits: 1, pages: 50 }, now, "/card/x", V), false, "a first visit is never asked, however long");
   assert.equal(shouldAskRating(engaged, now, "/card/x", { pages: 1, otherPromptShown: false }), false, "never on a visit's first page");
   assert.equal(shouldAskRating(engaged, now, "/card/x", { pages: 3, otherPromptShown: true }), false, "one uninvited prompt per visit");
   for (const p of ["/login", "/admin/x", "/premium", "/premium/start", "/embed/card", "/games/x", "/contact"]) assert.equal(shouldAskRating(engaged, now, p, V), false, p);
-  assert.ok(RATE_AFTER_PAGES >= 5 && RATE_AFTER_MS >= 86_400_000, "not a quick ask");
+  assert.ok(RATE_AFTER_PAGES >= 4 && RATE_AFTER_MS >= 3 * 60_000, "never on arrival");
+});
+
+test("coming back from a store tab may bring the card early, but not on a first page view", () => {
+  const s = { ...freshRateState(T0), pages: RATE_INTENT_PAGES };
+  const I = { pages: RATE_INTENT_PAGES, otherPromptShown: false, intent: true };
+  assert.equal(shouldAskRating(s, T0 + 10_000, "/card/x", I), true);
+  // 2026-11-03: not even after a store click on the page they landed on.
+  assert.equal(shouldAskRating(s, T0 + 10_000, "/card/x", { ...I, pages: 1 }), false, "one page of this visit is arrival");
+  assert.equal(shouldAskRating(s, T0 + 10_000, "/card/x", { ...I, otherPromptShown: true }), false);
+  assert.equal(shouldAskRating({ ...s, rated: true }, T0 + 10_000, "/card/x", I), false);
+  const c = read("src/components/RateUsPrompt.tsx");
+  assert.match(c, /BUY_CLICK_EVENT/);
+  assert.match(c, /visibilitychange/);
+});
+
+test("one interruption per visit, never on arrival: the rating drive is over (owner, 2026-11-03)", () => {
+  const c = read("src/components/RateUsPrompt.tsx");
+  assert.doesNotMatch(c, /<Dialog\b/, "no centred pop-up any more");
+  assert.doesNotMatch(c, /rating-drive/, "and no drive to ask about");
+  assert.doesNotMatch(read("src/lib/rate-prompt.ts"), /export const RATING_DRIVE/);
+  // The Pricing callout: a returning visitor, from the second page of a visit.
+  const fresh = freshRateState(T0);
+  assert.equal(shouldShowPricingNudge(fresh, 5), false, "never in a first visit");
+  assert.equal(shouldShowPricingNudge({ ...fresh, visits: 2 }, 1), false, "never on a visit's first page");
+  assert.equal(shouldShowPricingNudge({ ...fresh, visits: 2 }, 2), true);
+  const nudge = read("src/components/PricingNudge.tsx");
+  assert.match(nudge, /shouldShowPricingNudge\(/);
+  assert.match(nudge, /read\("session", RATE_SESSION_KEY\)/, "it yields to the card's visit");
+  assert.match(c, /otherPromptShown: otherPromptShown\(\)/, "and the card yields to it");
 });
 
 test("a page view after a long gap is a new visit", () => {
@@ -50,13 +81,13 @@ test("a page view after a long gap is a new visit", () => {
   assert.equal(b.pages, 2);
 });
 
-test("a rating or Don't ask again ends it for good; closing waits; it gives up after two asks", () => {
+test("a rating or Don't ask again ends it for good; closing waits a month; it gives up after two asks", () => {
   const now = T0 + RATE_AFTER_MS;
   assert.equal(shouldAskRating({ ...engaged, rated: true }, now, "/", V), false);
   assert.equal(shouldAskRating({ ...engaged, optedOut: true }, now, "/", V), false);
   assert.equal(shouldAskRating({ ...engaged, snoozedAt: now }, now + RATE_SNOOZE_MS - 1, "/", V), false);
   assert.equal(shouldAskRating({ ...engaged, snoozedAt: now }, now + RATE_SNOOZE_MS, "/", V), true);
-  assert.ok(RATE_SNOOZE_MS >= 30 * 86_400_000);
+  assert.ok(RATE_SNOOZE_MS >= 30 * 86_400_000, "not all the time");
   assert.equal(RATE_MAX_ASKS, 2);
   assert.equal(shouldAskRating({ ...engaged, asks: RATE_MAX_ASKS }, now, "/", V), false);
   assert.deepEqual(parseRateState("not json", T0), freshRateState(T0));
@@ -67,7 +98,7 @@ test("the prompt is a closable corner card, not a modal, and still posts a ratin
   const layout = read("src/app/layout.tsx");
   assert.match(layout, /<RateUsPrompt \/>/);
   const c = read("src/components/RateUsPrompt.tsx");
-  assert.doesNotMatch(c, /<Dialog\b/, "no modal: the page stays usable");
+  assert.doesNotMatch(c, /<Dialog\b/, "never a modal: the page stays usable");
   assert.match(c, /useEscapeLayer\(open, close\)/, "Escape closes it");
   assert.match(c, /aria-label="Close"/);
   assert.match(c, />\s*Not now\s*</);
@@ -78,6 +109,18 @@ test("the prompt is a closable corner card, not a modal, and still posts a ratin
   const route = read("src/app/api/feedback/route.ts");
   assert.match(route, /"rating", "rating-review"\]\)/, "the API accepts both sources");
   assert.match(route, /!source\.startsWith\("rating"\) && feedbackPremiumActive\(\)/, "a star tap or its review earns no free Pro");
+});
+
+test("a tapped star counts even when the form is closed unsent, and never twice", () => {
+  const f = read("src/components/RatingReviewForm.tsx");
+  assert.match(f, /sendBeacon/, "saved as the form goes away");
+  assert.match(f, /message: "", source: cur\.source/, "stars only: a half-typed review is never sent");
+  assert.match(f, /reviewOnly && rating \? "rating-review" : source/, "a later review repeats the stars and is left out of the average");
+  assert.match(f, /useState\(initialRating > 0 && presetIsTap\)/, "a link-preset rating needs a gesture here first");
+  assert.match(f, /"pointerdown", arm/);
+  assert.match(read("src/components/FeedbackWidget.tsx"), /presetIsTap/, "the strip's stars are the visitor's tap");
+  assert.doesNotMatch(read("src/components/FeedbackForm.tsx"), /presetIsTap/, "the email's ?rating= link is not a tap");
+  assert.match(read("src/lib/site-rating.ts"), /NOT: \{ source: "rating-review" \}/);
 });
 
 test("the feedback panel has no floating button: it opens from the footer link", () => {
@@ -99,7 +142,15 @@ test("the rating shown is real and only shown once there are enough", () => {
   assert.equal(ratingLine({ average: 4.7, count: 1234 }), "4.7 rating · 1,234 ratings");
   const landing = read("src/components/premium/ProLanding.tsx");
   assert.match(landing, /<SiteRatingBadge rating=\{rating\}/);
-  assert.match(landing, /<div className="pt-16 empty:hidden">\s*<ReviewsSection \/>/, "approved reviews on the Pro page");
+  assert.match(landing, /<div className="pt-12 empty:hidden">\s*<ReviewsSection rating=\{rating\} \/>/, "approved reviews on the Pro page");
+  assert.ok(landing.indexOf("<ReviewsSection") < landing.indexOf('id="features"'), "reviews sit under the hero, above the feature panels (owner, 2026-11-03)");
+  const home = read("src/app/page.tsx");
+  assert.match(home, /<ReviewsSection rating=\{rating\} \/>/, "the homepage shows the reviews too");
+  assert.ok(home.indexOf("<ReviewsSection") < home.indexOf("<EbayPicks"), "right under the homepage hero");
+  assert.match(home, /showReviews=\{false\}/, "and only once");
+  const reviews = read("src/components/ReviewsSection.tsx");
+  assert.match(reviews, /if \(reviews\.length < MIN_REVIEWS_TO_DISPLAY\) return null;/, "no reviews, no section");
+  assert.doesNotMatch(reviews, /itemprop|itemscope|aggregateRating|application\/ld\+json/i, "plain HTML, never self-serving review markup");
   const badge = read("src/components/SiteRatingBadge.tsx");
   assert.match(badge, /if \(!rating\) return null;/, "no rating line without a rating");
   assert.doesNotMatch(badge, /itemprop|aggregateRating|application\/ld\+json/i, "plain HTML, never review markup");
@@ -113,12 +164,27 @@ test("the rating shown is real and only shown once there are enough", () => {
   assert.doesNotMatch(read("src/app/premium/page.tsx"), /aggregateRating/, "never in JSON-LD");
 });
 
-test("the landing reads its prices from the page and labels its example", () => {
+test("the landing reads its prices from the page, in the site's own theme (owner, 2026-11-02)", () => {
   const page = read("src/app/premium/page.tsx");
   assert.match(page, /monthly: tierMonthlyAmount\("premium"\)/);
   assert.match(page, /perMonth: premiumEffectiveMonthly\("premium"\)/);
   const landing = read("src/components/premium/ProLanding.tsx");
-  assert.match(landing, />Example</);
   assert.match(landing, /href="#features"[\s\S]{0,200}See all features/);
-  assert.match(read("src/components/premium/ProPricePicker.tsx"), /role="switch"/);
+  assert.match(landing, /id="compare"/, "Free and Pro in one table");
+  // No made-up portfolio, no gold gradients, no emoji icons: "too gimmicky".
+  assert.doesNotMatch(landing, /\$1,284|bg-gradient|bg-clip-text|#f6dc8f/);
+  assert.doesNotMatch(landing, /\p{Extended_Pictographic}/u, "line icons, not emoji");
+  const picker = read("src/components/premium/ProPricePicker.tsx");
+  assert.match(picker, /role="radiogroup"/);
+  assert.match(picker, /\bpro\b\s*\/>/, "the orange primary button");
+  assert.match(read("src/components/PremiumCta.tsx"), /const CTA_PRO = "btn-primary /);
+});
+
+test("a review card needs a written comment (owner, 2026-11-03)", async () => {
+  const { hasComment } = await import("../src/lib/reviews");
+  assert.equal(hasComment({ message: "" }), false);
+  assert.equal(hasComment({ message: "   \n" }), false);
+  assert.equal(hasComment({ message: null }), false);
+  assert.equal(hasComment({ message: "Great site" }), true);
+  assert.match(read("src/lib/reviews.ts"), /rows\.filter\(hasComment\)/);
 });

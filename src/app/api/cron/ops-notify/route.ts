@@ -43,7 +43,7 @@ async function handleGET(req: Request) {
   // rather than costing the rest of the report.
   const earnings = await Promise.race([
     Promise.all([earningsHealth(), costsHealth()])
-      .then(([e, c]) => [...e, c])
+      .then(([e, c]) => [...e, ...c])
       .catch(() => undefined),
     new Promise<undefined>((r) => setTimeout(() => r(undefined), 20_000)),
   ]);

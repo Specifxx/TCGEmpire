@@ -55,7 +55,7 @@ export async function BanListTable() {
                     <Link prefetch={false} href={`/card/${b.slug}`} className="flex items-center gap-2.5 text-[13px] font-semibold sm:text-sm text-slate-100 hover:text-brand-300">
                       {img ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={cardArtThumb(img)} srcSet={cardImageSrcSet(img) ?? undefined} sizes="28px" alt="" aria-hidden="true" width={28} height={39} loading="lazy" className="h-[39px] w-7 shrink-0 rounded-sm object-cover" />
+                        <img src={cardArtThumb(img)} srcSet={cardImageSrcSet(img) ?? undefined} sizes="28px" alt={b.name} aria-hidden="true" width={28} height={39} loading="lazy" className="h-[39px] w-7 shrink-0 rounded-sm object-cover" />
                       ) : (
                         <span aria-hidden className="h-[39px] w-7 shrink-0 rounded-sm bg-ink-800" />
                       )}

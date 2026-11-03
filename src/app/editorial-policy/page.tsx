@@ -149,7 +149,7 @@ export default function EditorialPolicyPage() {
             <Link href="/methodology#sources" className="text-brand-400 hover:underline">methodology page</Link>.
             We do not accept price submissions from retailers, and no retailer can pay to appear, to
             rank higher, or to have a competitor removed. The one thing in an order that follows
-            commission is that eBay and TCGplayer, our affiliate partners, are shown first and tagged so —
+            commission is that eBay and TCGplayer, our affiliate partners, are shown first, marked as paid links —
             see <a href="#money" className="text-brand-400 hover:underline">how we make money</a>.
           </p>
           <p>
@@ -321,8 +321,8 @@ export default function EditorialPolicyPage() {
           <p>
             None of it affects the prices we show. It affects the order of a comparison in one labelled
             way: since 27 October 2026 every card comparison, and each product on our Radiance pre-order
-            table, shows eBay and TCGplayer, our affiliate partners, first, tagged &ldquo;Shown first&rdquo;
-            and marked as paid links, whatever their price. They are often not the cheapest: the number
+            table, shows eBay and TCGplayer, our affiliate partners, first,
+            marked as paid links, whatever their price. They are often not the cheapest: the number
             beside each row is its rank by price, a pinned row that costs more says by how much, the
             &ldquo;Cheapest&rdquo; badge stays on the cheapest copy, and the headline price is always the
             cheapest offer from anyone. Every store below them is ranked by item price, with known postage

@@ -1,4 +1,6 @@
 import { metalKindOf } from "@/lib/metal-cards";
+import { MiniPicks } from "@/components/MiniPicks";
+import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import { publicRead, routeRaw } from "@/lib/public-data/route";
 import { BanNotice } from "@/components/BanNotice";
 import type { Metadata } from "next";
@@ -1107,7 +1109,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   are 48px icon squares; from sm they carry their labels. */}
               <div className="flex shrink-0 items-start gap-2">
                 <PriceWatchButton cardId={card.id} variant="responsive" />
-                <ShareButton responsive />
+                <ShareButton responsive name={displayName} rows={rows} medium="card" />
               </div>
             </div>
 
@@ -1131,6 +1133,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               unpriced={priceState.isEmpty && !priceState.noRetailChannel}
               preorder={isPreorderSetCode(card.setCode)}
             />
+
+            {/* The small eBay + TCGplayer pair of this set's chase cards, near
+                the top under the price and alert (owner, 2026-10-29: "much
+                smaller … not intrusive"); the full strips stay further down. */}
+            <MiniPicks setCode={card.setCode} pageType="card_detail" className="mt-4" />
 
             {/* A revealed card from an unreleased set has no price to compare
                 yet; what its visitor came for is the rest of the reveal
@@ -1622,6 +1629,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               className="mt-3"
             />
           </section>
+          {/* The set's top cards on TCGplayer, under the eBay panel: the
+              Gundam Compare card strip (owner, 2026-10-29). */}
+          <TcgplayerPicks pageType="card_detail" setCode={card.setCode} className="mt-6" />
         </div>
       </div>
 
@@ -1741,6 +1751,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       {/* The "Embed this live price" widget button was here — removed with the rest
           of the widget feature. /embed/card/[id] still serves so existing third-party
           embeds don't break; we simply no longer offer new ones. */}
+
+      {/* Partner link promised to Rift Atlas (2026-10-28, owner): one quiet,
+          static line at the foot of the page, the same on every card, so it
+          never competes with the price comparison. */}
+      <p className="mt-10 text-xs text-slate-500">
+        Want to try this card in a deck first?{" "}
+        <a href="https://play.riftatlas.com" target="_blank" rel="noopener" className="text-brand-400 hover:underline">
+          Play online on Rift Atlas
+        </a>
+      </p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Country } from "./country";
 import { formatMoney } from "./format";
 import { SITE_URL } from "./site";
+import { plainEbayUrl } from "./affiliate";
 import { alertListHeaders, checkedLabel, emailButton, emailShell, escapeHtml, sendEmail } from "./email";
 import type { WatchActionLinks } from "./alert-actions";
 import { MIN_CONDITION_PHRASE } from "./basket-condition";
@@ -370,7 +371,7 @@ export function buildGradedWatchEmail(item: GradedWatchItem): BuiltWatchEmail {
       <br/><span style="font-size:12px;color:#6b7585">${escapeHtml(item.listingTitle)}</span>
       <br/><strong style="color:#fff">${escapeHtml(checked)}</strong> <span style="color:#9aa4b2">A listing can sell before you get there.</span>
     </td></tr>
-    <tr><td style="padding:14px 32px 4px">${emailButton(item.listingUrl, "See it on eBay")}
+    <tr><td style="padding:14px 32px 4px">${emailButton(plainEbayUrl(item.listingUrl), "See it on eBay")}
       <div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(card)}" style="color:#f29733;font-weight:700;text-decoration:none">Graded price history on RiftCompare →</a></div></td></tr>
     <tr><td style="padding:4px 32px 16px;font-size:12px;line-height:1.7;color:#6b7585">
       Graded listings are read from eBay once a day. The seller's grade and the slab are theirs to describe; check the photos before you buy.
@@ -381,7 +382,7 @@ export function buildGradedWatchEmail(item: GradedWatchItem): BuiltWatchEmail {
     before,
     item.listingTitle,
     `${checked} A listing can sell before you get there.`,
-    `See it on eBay: ${item.listingUrl}`,
+    `See it on eBay: ${plainEbayUrl(item.listingUrl)}`,
     `Graded price history: ${card}`,
     ...(item.actions ? [`Stop watching this grade: ${item.actions.stop}`, `Snooze 30 days: ${item.actions.snooze}`] : []),
     `Manage your watches: ${manage}`,
@@ -444,7 +445,7 @@ export function buildAuctionAlertEmail(items: AuctionAlertItem[], actions: Watch
       <span style="font-size:18px;font-weight:800;color:#34d17e">${escapeHtml(formatMoney(it.currentBidCents, it.currency))}</span>
       current bid · ${it.bidCount} bid${it.bidCount === 1 ? "" : "s"} · ends in ${escapeHtml(endsIn(it.endsAt, now))}<br/>
       <span style="font-size:12px;color:#6b7585">${escapeHtml(it.title)}</span><br/>
-      <a href="${escapeHtml(it.url)}" style="color:#f29733;font-weight:700;text-decoration:none">Bid on eBay →</a>
+      <a href="${escapeHtml(plainEbayUrl(it.url))}" style="color:#f29733;font-weight:700;text-decoration:none">Bid on eBay →</a>
     </td></tr>`,
     )
     .join("");
@@ -456,7 +457,7 @@ export function buildAuctionAlertEmail(items: AuctionAlertItem[], actions: Watch
   const text = [
     heading,
     ...items.map(
-      (it) => `${it.cardName} (${it.market}): ${formatMoney(it.currentBidCents, it.currency)} current bid, ${it.bidCount} bids, ends in ${endsIn(it.endsAt, now)}. ${it.title}. ${it.url}`,
+      (it) => `${it.cardName} (${it.market}): ${formatMoney(it.currentBidCents, it.currency)} current bid, ${it.bidCount} bids, ends in ${endsIn(it.endsAt, now)}. ${it.title}. ${plainEbayUrl(it.url)}`,
     ),
     `Every live auction: ${auctions}`,
     "Bids are as of our last sweep. We match auctions to your cards by their eBay titles, so check the listing is the printing you want.",

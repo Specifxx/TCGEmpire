@@ -9,6 +9,17 @@ import {
   epnDays,
   impactDays,
   inRange,
+  dailyTotals,
+  forecastQuarters,
+  growthFactor,
+  SEASON,
+  SCENARIOS,
+  ASSUMED_COMMISSION,
+  FORECAST_MAX_MONTHLY,
+  latestDayFigure,
+  latestReportDay,
+  linearTrend,
+  runningTotal,
   mergeDays,
   rangeStart,
   seriesFor,
@@ -197,6 +208,8 @@ test("eBay by tag: grouped by the tag's site prefix, then each full tag, within 
   assert.deepEqual(tagGroup("gd_au_kit"), { key: "gd", label: "GD" });
   assert.equal(tagGroup("lorcana").key, "lor", "no separator: the first three characters");
   assert.equal(tagGroup("pkmn-kindhub").key, "pkmn");
+  assert.equal(tagGroup("tcgplayer-preorders-radiance").key, "rc", "RiftCompare's TCGplayer sub-ids count to RiftCompare");
+  assert.equal(tagGroup("mc-us-card").key, "mtg", "the old MTG singles site's mc- tags count to MTG Compare");
   assert.equal(tagGroup("").label, "No tag");
   assert.deepEqual(tagGroup("zz-thing"), { key: "zz", label: "ZZ" });
   const t = (day: string, tag: string, cents: number) => ({ id: tag + day, day, tag, pending: false, currency: "AUD", cents, updated: "" });
@@ -308,4 +321,91 @@ test("eBay daily report: a repeated row counts once; Earnings and Other earnings
   const parts = epnDailyParts(recs, "AUD");
   assert.deepEqual(parts.earnings, [{ day: "2026-10-20", currency: "AUD", cents: 600, pendingCents: 0 }]);
   assert.deepEqual(parts.other, [{ day: "2026-10-20", currency: "AUD", cents: 100, pendingCents: 0 }]);
+});
+
+// eBay's Today was always 0 (2026-10-28): EPN has no same-day data in Sydney's day.
+test("a lagging source with nothing today shows its latest earning day; others never do", () => {
+  const days = [
+    { day: "2026-10-25", currency: "AUD", cents: 1200, pendingCents: 1200 },
+    { day: "2026-10-26", currency: "AUD", cents: 2850, pendingCents: 2850 },
+  ];
+  const today = "2026-10-28";
+  const ebay = latestDayFigure({ days, reportedThrough: "2026-10-27" }, today, "AUD");
+  assert.equal(ebay?.day, "2026-10-26");
+  assert.equal(ebay?.total.cents, 2850);
+  assert.equal(latestDayFigure({ days }, today, "AUD"), null, "a source that does not lag keeps its real 0");
+  assert.equal(latestDayFigure({ days: [...days, { day: today, currency: "AUD", cents: 5 }], reportedThrough: today }, today, "AUD"), null, "real same-day data wins");
+  assert.equal(latestDayFigure({ days: [], reportedThrough: "" }, today, "AUD"), null);
+  assert.equal(totalFor(days, "1d", today, "AUD").cents, 0, "Today's total itself stays dated, never borrowed");
+});
+
+test("latestReportDay reads every row's date, zero-earning rows too", () => {
+  assert.equal(latestReportDay([{ Date: "10/26/2026", Earnings: "1.00" }, { Date: "10/27/2026", Earnings: "0" }, { Date: "" }], "Date"), "2026-10-27");
+  assert.equal(latestReportDay([], "Date"), "");
+});
+
+test("growth line: running total and a least-squares trend", () => {
+  const run = runningTotal([
+    { label: "a", cents: 100, bySource: { ebay: 100 } },
+    { label: "b", cents: 50, bySource: { tcgplayer: 50 } },
+    { label: "c", cents: 30, bySource: { ebay: 30 } },
+  ]);
+  assert.deepEqual(run.map((b) => b.cents), [100, 150, 180]);
+  assert.deepEqual(run[2].bySource, { ebay: 130, tcgplayer: 50 });
+  assert.deepEqual(linearTrend([10, 20, 30, 40]), { start: 10, end: 40, slope: 10 });
+  assert.equal(linearTrend([1, 2]), null);
+  assert.equal(linearTrend([5, 5, 5])?.slope, 0);
+});
+
+// Forecast (2026-10-28; scenarios with stated assumptions since 2026-11-01, owner:
+// "$250K next year … that's 5 million dollars in sales, which is kind of crazy").
+const season = (day: string) => SEASON[Number(day.slice(5, 7)) - 1];
+const src = (key: SourceResult["key"], daily: { label: string; cents: number }[]) => ({ key, days: daily.map((d) => ({ day: d.label, currency: "AUD", cents: d.cents })) });
+const series = (from: string, to: string, f: (d: string, i: number) => number) => {
+  const out: { label: string; cents: number }[] = [];
+  let i = 0;
+  for (let d = from; d <= to; d = addDays(d, 1), i++) out.push({ label: d, cents: f(d, i) });
+  return out;
+};
+const NO_ADS = SCENARIOS.map((s) => ({ ...s, adsenseAudCentsPerDay: 0 }));
+
+test("forecast: flat seasonal earnings project the season; actual days count as earned; scenarios are ordered", () => {
+  const f = forecastQuarters([src("ebay", series("2026-07-01", "2026-10-27", (d) => 1000 * season(d)))], "2026-10-28", "AUD", NO_ADS)!;
+  assert.equal(f.from, "2026-10-26", "the last two days (eBay's lag) are projected, not counted as earned");
+  assert.deepEqual(f.periods.map((p) => p.label), ["Q4 2026", "Q1 2027", "Q2 2027", "Q3 2027", "Q4 2027"]);
+  assert.equal(f.months.length, 15);
+  assert.equal(f.perDayNow, 1000);
+  assert.equal(f.observedPct28, 0);
+  assert.equal(f.periods[0].actualCents, Math.round(25 * 1000 * season("2026-10-01")));
+  const dec = f.months.find((m) => m.label === "2026-12")!;
+  const jan = f.months.find((m) => m.label === "2027-01")!;
+  assert.ok(dec.scenarios.base.cents > jan.scenarios.base.cents * 1.3, "December peak, January dip");
+  for (const p of [...f.periods.slice(1), ...f.years])
+    assert.ok(p.scenarios.conservative.cents < p.scenarios.base.cents && p.scenarios.base.cents < p.scenarios.optimistic.cents, p.label);
+});
+
+test("forecast: a business that doubled in six weeks is NOT extrapolated; growth is the scenario's, capped", () => {
+  // A business that doubled in six weeks (the shape that made the old fit say ~13× a year).
+  const daily = series("2026-09-01", "2026-10-30", (d, i) => Math.round(2000 * Math.exp(0.02 * i)));
+  const f = forecastQuarters([src("ebay", daily)], "2026-11-01", "AUD", NO_ADS)!;
+  assert.ok(f.observedPct28! > 50, "the doubling is reported…");
+  const runRate = f.perDayNow * 365;
+  const next = f.years[1].scenarios;
+  assert.ok(next.optimistic.cents < runRate * 2.5, `…but the optimistic year is ${next.optimistic.cents} vs run rate ${runRate}`);
+  assert.ok(next.base.cents < runRate * 1.4 && next.base.cents > runRate * 0.9);
+  assert.ok(next.conservative.cents < runRate);
+  // Implied sales = affiliate earnings ÷ commission.
+  assert.equal(next.base.salesCents, Math.round(next.base.cents / ASSUMED_COMMISSION));
+  assert.ok(SCENARIOS.every((s) => s.monthly <= FORECAST_MAX_MONTHLY));
+  assert.ok(Math.abs(growthFactor(1, 30) - (1 + FORECAST_MAX_MONTHLY)) < 1e-9, "a scenario cannot exceed the cap");
+});
+
+test("forecast: only eBay and TCGplayer imply sales; AdSense is an assumption, not the run rate; too little data is null", () => {
+  const daily = series("2026-08-01", "2026-10-30", () => 1000);
+  const f = forecastQuarters([src("ebay", daily), src("stripe", daily), src("adsense", daily)], "2026-11-01", "AUD")!;
+  assert.ok(Math.abs(f.affiliatePerDayNow * 2 - f.perDayNow) <= 1, "AdSense's history is left out of the run rate");
+  const y = f.years[1].scenarios.base;
+  assert.ok(y.salesCents < (y.cents / ASSUMED_COMMISSION) * 0.6, "Stripe and AdSense imply no store sales");
+  assert.equal(forecastQuarters([src("ebay", daily.slice(-20))], "2026-11-01", "AUD"), null);
+  assert.deepEqual(dailyTotals([{ days: [{ day: "2026-10-01", currency: "AUD", cents: 5 }, { day: "2026-10-29", currency: "AUD", cents: 9 }] }], "2026-10-28", "AUD"), [{ label: "2026-10-01", cents: 5 }]);
 });

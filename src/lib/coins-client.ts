@@ -10,11 +10,12 @@
 // re-checks everything (lib/coins-server.ts claimTask); this is a filter, not
 // the rule. Sent as a beacon so a store click that leaves the page still lands.
 import { fetchMe } from "./use-me";
-import { dayKey, taskById, type TaskId } from "./coins";
+import { COINS_ENABLED, dayKey, taskById, type TaskId } from "./coins";
 
 const storeKey = (task: TaskId, day: string) => `rc_coins_${task}_${day}`;
 
 export function earnCoin(task: "share" | "visit"): void {
+  if (!COINS_ENABLED) return;
   try {
     const cap = taskById(task)?.perDay ?? 0;
     const day = dayKey(new Date());

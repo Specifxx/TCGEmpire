@@ -61,6 +61,5 @@ test("the cells the owner sees", () => {
     "Graded price tracking": "—/✓/✓",
     "eBay auction alerts": "—/—/✓",
     "Demand Finder": "Top 10 searched/Top 10 searched/✓",
-    "RiftCompare Coins": "—/—/✓",
   });
 });

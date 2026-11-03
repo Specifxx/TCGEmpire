@@ -8,7 +8,7 @@ import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { PokemonHomePromo } from "@/components/pokemon/PokemonHomePromo";
-import { SETS, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
+import { SETS, hasSetGallery, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
 import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import type { Country } from "@/lib/country";
@@ -51,6 +51,8 @@ export interface HomeSectionsProps {
   /** Render eBay Picks here. All six homes render it themselves, directly under
    *  the editorial band, and pass false (owner, 2026-10-06). */
   showEbayPicks?: boolean;
+  /** false where the page shows ReviewsSection itself, higher up (the main homepage, 2026-11-03). */
+  showReviews?: boolean;
   // ALL FIVE markets, not just `country` — TodaysTopDeals/MarketPulse localise
   // to the VISITOR's own market client-side (useCountry()), which can differ
   // from the page's URL/baseline market (e.g. a bookmarked /au visited by
@@ -82,6 +84,7 @@ export function HomeSections({
   popularItemList = true,
   showTopDeals = true,
   showEbayPicks = true,
+  showReviews = true,
   topDealsByCountry,
   moversByCountry,
   recentlyUpdated,
@@ -213,7 +216,7 @@ export function HomeSections({
           none (see ReviewsSection); no placeholder or seeded example. Moved up
           from the bottom of the page on 2026-10-27 (owner: "feedback and trust
           is very important … display it and be transparent"). */}
-      <ReviewsSection />
+      {showReviews && <ReviewsSection />}
 
       {/* eBay Picks — the newest set's chase cards with their cheapest live
           listing, rather than a generic banner. Held the top slot from
@@ -280,16 +283,18 @@ export function HomeSections({
             // 12 Oct, its full list out) is shown like a released set, badged New.
             s.comingSoon && !s.sealedAvailable && !showsAsNew(s) ? (
               hasSetHub(s) ? (
+                // Before its previews (Legacy until 13 Dec 2026) the gallery is
+                // empty, so the tile opens the set's hub instead.
                 <Link
                   key={s.code}
-                  href={`/sets/${s.slug}/gallery`}
+                  href={hasSetGallery(s) ? `/sets/${s.slug}/gallery` : `/sets/${s.slug}`}
                   className="card-surface flex flex-col gap-1 p-4 transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
                 >
                   <span className="flex flex-wrap items-center gap-1.5 text-lg font-bold text-white">
                     {s.code}
                     <span className="chip bg-gold/20 text-gold">Coming soon</span>
                   </span>
-                  <span className="text-xs text-slate-400">{s.name} · card gallery →</span>
+                  <span className="text-xs text-slate-400">{s.name} · {hasSetGallery(s) ? "card gallery" : "what's confirmed"} →</span>
                 </Link>
               ) : (
                 <div key={s.code} className="card-surface flex flex-col gap-1 p-4 opacity-60" aria-disabled>
@@ -326,7 +331,7 @@ export function HomeSections({
             there is one (its gallery is the page people are looking for, and
             it has no complete count to quote yet), else the newest released
             set, which is Radiance again from 23 October. */}
-        {nextSet && hasSetHub(nextSet) ? (
+        {nextSet && hasSetGallery(nextSet) ? (
           <p className="mt-3 text-sm">
             <Link
               href={`/sets/${nextSet.slug}/gallery`}

@@ -1,0 +1,51 @@
+name: Sister-site price alerts
+
+# The daily check for the price alerts the other Compare Empire sites collect
+# (lib/sister-alerts, DECISIONS.md "One price alert service for the sister
+# sites", 2026-11-02). The send happens ON VERCEL (/api/cron/sister-alerts),
+# where the mail key lives; this job only calls it with CRON_SECRET, like
+# release-day-email.yml. The route reads each site's /alert-feed.json from its
+# CDN. It answers 500 (and this job fails, and the ops monitor's job check
+# sees it) when a site that has alerts could not be checked.
+
+on:
+  schedule:
+    - cron: "20 14 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: decide and count, send and write nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sister-alerts
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Run the sister-site alert check on Vercel
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DRY: ${{ inputs.dry_run && '1' || '0' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET is not set as an Actions secret."
+            exit 1
+          fi
+          code=$(curl -sS --max-time 150 -o response.json -w "%{http_code}" -X POST \
+            "https://riftcompare.com/api/cron/sister-alerts?dry=$DRY" -H "Authorization: Bearer $CRON_SECRET")
+          echo "HTTP $code"
+          cat response.json
+          echo
+          if [ "$code" = "404" ]; then
+            echo "::warning::The route is not deployed yet; it ships with the next daily release."
+            exit 0
+          fi
+          [ "$code" = "200" ] || { echo "::error::Sister-site alert check failed (HTTP $code)"; exit 1; }

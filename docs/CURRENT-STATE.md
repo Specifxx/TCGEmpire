@@ -29,6 +29,12 @@ longer lands on its entry.
   (schema push, Singapore import, ~475 prerendered database-backed pages); an
   unreadable message builds no preview. Production is unchanged.
   [2026-10-14](../DECISIONS.md#L17091)
+- **At most one production build every 12 hours, and production only (owner, 2026-11-02):**
+  Vercel spend is capped at $5–6 a day; 1 November cost $11.82 after 14 `[deploy]` builds here. The
+  ignore script skips a `[deploy]` commit within 12 hours of the last production deployment
+  (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject overrides, only on the owner's word.
+  `vercel.json` sets `"**": false` with `"main": true`, so no branch or pull request builds a
+  preview, `[preview]` included. [2026-11-02](../DECISIONS.md#L21685)
 - **One release a day, after the snapshot (2026-10-15):** the morning import
   (`refresh-prices.yml`) exports and commits the public data snapshot, then
   dispatches `production-deploy.yml`, which lands an empty `[deploy]` commit;
@@ -103,13 +109,31 @@ longer lands on its entry.
   a `where: { retailer }` query reads the `retailer` index, not every listing;
   the 226 store pages were most of the build's prerender. [2026-10-26](../DECISIONS.md#L19878)
 - **The site watches itself (2026-10-14):** `ops-monitor.yml` (GitHub Actions, every
-  3 h, Sunday digest) checks Neon transfer limits, eBay, price imports, scheduled
+  3 h) checks Neon transfer limits, eBay, price imports, scheduled
   jobs, the live site, Stripe, email and the inbox, stores the result for
-  `/admin/health`, and emails the owner only when something needs a look. Its
+  `/admin/health`, and emails the owner only when something is RED; amber waits for
+  Empire HQ (`/admin/hq`, every site in one row, sisters' `ops-status` files) and the
+  one Monday report, which replaced the Sunday digest and the growth report email
+  [2026-11-02](../DECISIONS.md#L21386). Its
   memory is the Actions cache, not the database it watches. Every new public form
-  calls `notifyOwnerBounded` (capped 8/h, 25/day); a new job, API or limit gets a
+  calls `notifyOwnerBounded` (capped 8/h, 25/day), which emails the SITE inbox
+  (`CONTACT_EMAIL`, Reply-To the visitor), not the owner, written feedback included
+  and ratings excluded [2026-10-30](../DECISIONS.md#L20941); a new job, API or limit gets a
   check in `lib/ops/checks.ts`. The Neon rows need the `NEON_API_KEY` Actions secret.
   `docs/ops-monitor.md`. [2026-10-14](../DECISIONS.md#L16978)
+- **Price reports and store suggestions are also filed in GitHub (2026-10-31):** each site's own
+  repo, on a `reports` branch that never deploys or merges, one JSON file per report
+  (`lib/reports-github.ts`, `REPORTS_GITHUB_TOKEN`); no user id, email or IP, and no page reads it. The daily
+  `reports-triage.yml` here keeps one issue per site. [2026-10-31](../DECISIONS.md#L21011)
+- **Stores are vetted before listing and checked weekly (2026-11-02):** criteria in `docs/store-vetting.md`;
+  `store-vetting.yml` checks every site's store domains from outside (red: banned, dead, parked, new domain with no
+  contact); `data/store-vetting/banned.json` is the shared ban list; Rift store singles under a quarter of
+  TCGplayer's US market are dropped (`lib/price-sanity.ts`). [2026-11-02](../DECISIONS.md#L21642)
+- **The sister sites' price alerts run here (2026-11-02):** one shared service (`lib/sister-alerts/`): their form
+  posts to `/api/sister-alerts` (exact-origin CORS, double opt-in), the daily `sister-alerts.yml` reads each site's own
+  static `/alert-feed.json` from its CDN (never its repo or a database) and emails under the shared alert budget plus a
+  30-a-day cap. Private tables `SisterAlert`, `SisterAlertAddress`. KaeYoung, OP Compare, CamCompare and Compare Empire are not in it.
+  [2026-11-02](../DECISIONS.md#L21386)
 - **Live names** (since 2026-10-25; `src/lib/db-chains.ts` is the source of
   truth): operational `RM10`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
@@ -153,6 +177,11 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
+- **Amazon Associates rules (2026-11-02, owner):** every Amazon link is tagged,
+  labelled beside it, and goes to one specific product (never a category search
+  or a pop-up/quick view); every page's footer carries Amazon's statement and its
+  trademark notice; no Amazon colours, logo, prices in alerts or tracking, and no
+  Amazon link or trademark in any email. [2026-11-02](../DECISIONS.md#L21603)
 - **Earnings dashboard (2026-10-24):** `/admin/earnings` shows Stripe, TCGplayer
   (Impact API), eBay Partner Network (Performance by Day report), AdSense
   (Management API) and Mediavine (entered by hand) for today / 7 / 30 / 90 days /
@@ -167,6 +196,17 @@ longer lands on its entry.
   monthly / yearly, stop-and-replace on a plan change; no billing API exists for
   them). Vercel and Anthropic are entered from their invoices month by month;
   only the US$200 of ads is pre-filled. [2026-10-25](../DECISIONS.md#L19446)
+  Vercel is automatic too once `VERCEL_BILLING_TOKEN` + `VERCEL_TEAM_ID` are set
+  (billing API, per project, last 120 days, domains still by hand), and a "By site"
+  table (also in the weekly growth report) shows each site's earnings minus its own
+  Vercel project, the plan and other costs on a shared row. [2026-10-30](../DECISIONS.md#L20960)
+  A growth line sits under the columns; eBay's Today shows its latest reported
+  day, dated, because EPN has no same-day data. [2026-10-28](../DECISIONS.md#L20647)
+  A forecast panel projects this quarter and the next four (and this year and
+  next) month by month under three stated scenarios (−4%, +2%, +6% a month on
+  the last 28 days' run rate, capped at 8%, times a monthly season), with the
+  store sales each implies at 4.5% commission; never a fitted curve.
+  [2026-11-01](../DECISIONS.md#L21309)
 - **The Stores plan (2026-10-23, owner):** US$79.99/month (`STRIPE_STORE_PRICE_ID`,
   displayed amount `NEXT_PUBLIC_STORE_PLAN_AMOUNT`) for a retailer: the repricing
   report with "what buyers are searching for", a Verified mark with the store's own
@@ -201,14 +241,26 @@ longer lands on its entry.
   moved up in Stripe. No trial: `PREMIUM_TRIAL_DAYS` defaults to 0 (the 30-day
   trial below is superseded). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.
-  `/premium` copies Collectr's page for non-members. A rate-the-site corner card
-  (not a modal) asks only returning visitors, at most twice, and is the one
-  uninvited opinion ask; one rating-and-review form everywhere (corner card,
+  `/premium` keeps Collectr's plan and page order for non-members, drawn in the site's own theme since 2026-11-02 (orange button, flat panels, one Free/Pro table; no gold or mock-ups) ([2026-11-02](../DECISIONS.md#the-pro-page-in-the-sites-own-theme)). The rating drive's
+  centred pop-up is gone (2026-11-03, owner: visitors lost to "too many pop ups"):
+  ONE uninvited interruption per visit, never on a visit's first page. A
+  rate-the-site corner card (not a modal) asks after 4 pages and 3 minutes, or
+  on return from a store tab from the second page of a visit, at most twice 30
+  days apart, and is the one uninvited opinion ask
+  ([2026-11-03](../DECISIONS.md#one-interruption-per-visit-never-on-arrival));
+  a tapped star counts even when the form is closed unsent ([2026-10-28](../DECISIONS.md#L20608)); one rating-and-review form everywhere (corner card,
   footer panel, a "Rate us" row at the end of every page, /feedback), reviews
   shown unless unticked, still admin-approved ([2026-10-27](../DECISIONS.md#L20240)); no floating button ([2026-10-27](../DECISIONS.md#L20201)); the homepage hero and the
   Pro page show the real average with its count from the first rating
   (2026-10-27), approved and consented reviews on both, never in JSON-LD.
   [2026-10-26](../DECISIONS.md#L19772)
+- **Every sister site's ratings and reviews live here (2026-11-03):** the same
+  corner card on each sister site posts to `/api/site-reviews`; stars count in
+  that site's public score at once, written reviews wait for `/admin/reviews`
+  (one queue, every site), and each site reads its score from
+  `/api/site-reviews/<site>` (CDN six hours). `Feedback.site` keeps
+  RiftCompare's own reads to its own rows.
+  [2026-11-03](../DECISIONS.md#every-sites-reviews-approved-in-one-queue)
 - **One paid plan again (2026-10-23, supersedes the trial and tier bullets
   below):** Premium $9.99/mo or $79.99/yr with a free 30-day card-gated trial;
   existing $4.99/$39.99 subscribers are grandfathered by not migrating them.
@@ -228,9 +280,10 @@ longer lands on its entry.
 - **Free 14-day trial (2026-10-12; replaces the $1 first month below):**
   `PREMIUM_TRIAL_DAYS` 14 and `PREMIUM_TRIAL_FEE_CENTS` 0 by default, card
   required, prices unchanged. Leave price, trial and pitch alone until two
-  14-day cohorts have matured (late November). `/admin/premium-offer` sends the
-  "Subscribe now and get 14 days free" email to accounts that can still get a
-  trial, and refuses while the trial is not free. `/premium/welcome` leads with
+  14-day cohorts have matured (late November). Since 2026-10-27 `/admin/premium-offer` sends
+  the feedback + Pro email instead (one-tap star rating, then Pro at its own
+  prices, no trial, no affiliate links) to every non-paying account.
+  [2026-10-27](../DECISIONS.md#feedback-and-pro-email-to-registered-accounts--2026-10-27) `/premium/welcome` leads with
   watching a card until the account has one. [2026-10-12](../DECISIONS.md#L16934)
 - **Superseded 2026-10-12, kept for its mechanics: the $1 first month, no intro (2026-09-30, owner: "Can we do $1 free trial for both
   pro and premium please? And the trial is for the first month?"):** a PAID trial on
@@ -537,7 +590,9 @@ longer lands on its entry.
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
   the tool walls — plus the header's Pricing callout (`PricingNudge`, since
-  10-25; the corner `PremiumSlideIn` is gone), and a tick on a set page (the same
+  10-25; since 11-03 only for a returning visitor, from the second page of a
+  visit, snoozed 14 days, sharing the visit's one slot with the rating card;
+  the corner `PremiumSlideIn` is gone), and a tick on a set page (the same
   `limit:portfolio` panel, reworded for a set). The header carries the shiny
   `GetPremiumLink` since 2026-10-15 (see "Gold marks Premium"); rail and account
   menu stay plain "Pricing" links. [2026-10-15](../DECISIONS.md#L17561) [2026-09-28](../DECISIONS.md#L14549),
@@ -567,12 +622,16 @@ longer lands on its entry.
   [2026-10-17](../DECISIONS.md#L18273)
 - **Legacy is coming soon (2026-10-25):** LGC is `comingSoon` with
   `releasedOn` 2027-01-29 and Riot's 239 cards (93 Showcase) as
-  `announcedCards`. It has no `totalCards`, `newFrom` or `hubReady`, so
-  /sets/legacy stays noindex while it has no cards. In a store title "legacy"
+  `announcedCards`. It has no `totalCards` or `newFrom`. Since 2026-11-01 it is
+  `hubReady` (LegacyHub, facts in `lib/sets/legacy.ts`), so /sets/legacy is
+  indexed with zero cards, and `previewFrom` 2026-12-13 keeps the nav and
+  homepage off its empty gallery until previews start (`hasSetGallery`).
+  Every legacy-tagged post carries `LegacyPreorderCta` until release. Proving
+  Grounds 2nd Edition files under LGC as its own type, never OGS. In a store title "legacy"
   names the set only beside "Riftbound"/"League of Legends", or as the bare code
   LGC. `/legacy-preorders` holds its pre-orders. Release alerts take the
   pre-order link from the calendar row and run for RAD and LGC.
-  [2026-10-25](../DECISIONS.md#L19536)
+  [2026-10-25](../DECISIONS.md#L19536) · [2026-11-01](../DECISIONS.md#L21158)
 - **Radiance is released (2026-10-22):** RAD is no longer `comingSoon` (Legacy
   is, since 10-25); RAD is `recentlyReleased`. Every release check uses `streetDateStartMs()` (midnight
   AEDT on the street date), never midnight UTC. `/radiance-preorders` stays live
@@ -580,14 +639,15 @@ longer lands on its entry.
   cheapest first, same URL, no redirect ([2026-10-24](../DECISIONS.md#L19340)). All 219 official printings plus 16
   Signatures are in the catalogue; all nine Legends are named everywhere
   (`RADIANCE_LEGENDS_CONFIRMED`). [2026-10-22](../DECISIONS.md#L18959)
-- **AdSense off; Journey on articles only (owner, 2026-10-27):**
-  AdSense was switched off, back on "for now", and off again for good the
-  next day because the ads were too annoying:
+- **AdSense off; Journey on articles only (owner, 2026-11-03):**
+  AdSense was switched off, back on "for now", off again the next day because
+  the ads were too annoying, back on 2026-11-01, and off again 2026-11-03
+  because visitors complained:
   `ADSENSE_SERVING` (`lib/adsense.ts`) is the one switch for the loader and
-  every unit. Mediavine's script loads only on `/blog/[slug]` and
+  every unit; the ownership meta tag and ads.txt stay. Mediavine's script loads only on `/blog/[slug]` and
   `/guides/[slug]`, never for an ad-free member, and links off an article do a
   full page load so it never reaches card, set, sealed or price pages.
-  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20023), [2026-10-27](../DECISIONS.md#L20039)
+  Review 2026-11-23. [2026-10-26](../DECISIONS.md#L19693), [2026-10-26](../DECISIONS.md#L20023), [2026-10-27](../DECISIONS.md#L20039), [2026-11-01](../DECISIONS.md#L21131), [2026-11-03](../DECISIONS.md#L21864)
 - **Paid ads: a measured test, not a ban (2026-10-16):** AdSense pays per page,
   so a paid click is worth its page views plus any sign-up. The test (small
   fixed budget, free high-RPM pages only, `utm_source=*_ads` → entry bucket
@@ -682,18 +742,23 @@ longer lands on its entry.
   cheapest TCGplayer row, the cheaper of the two on top (TCGplayer on a tie,
   `tcgFirst`), then the stores by price (`pinMarketplaces`); with no eBay row,
   a live TCGplayer row leads, else eBay's search; outside the US TCGplayer's US market price is a
-  labelled reference row. "Shown first" + "Paid link" tags, the price rank in
+  labelled reference row. A "Paid link" tag (no "Shown first" chip since [2026-10-30](../DECISIONS.md#L20903)), the price rank in
   the number column, "+N% vs cheapest", and "Cheapest" on the real cheapest.
   The headline, `CardTopBuy`, the sticky bar and JSON-LD still read the price
   ranking. Policy pages name it as the one labelled exception; this replaces
   the "never inside the ranking" rule below. [2026-10-27](../DECISIONS.md#L20143),
   [2026-10-27](../DECISIONS.md#L20462)
+- **Affiliate links off-site (2026-10-27):** eBay links in our emails go out
+  without EPN tracking (`plainEbayUrl`) until EPN approves messaging; the eBay
+  deals RSS feed and the Telegram channel link our card pages, never eBay.
+  `/graded` (graded price guide) and the deck pricer's lot checker carry tagged
+  eBay links on the site. [2026-10-27](../DECISIONS.md#L20493)
 - **eBay beside every comparison, never inside the ranking** (owner, 09-26:
   push eBay clicks even where stores are cheaper) — **with ONE exception since
   10-15 (owner):** the pre-order table (`PreorderPriceTable`, on
   `/radiance-preorders` and `/sets/radiance`) pins every OPEN eBay row first in
   each product (`orderPreorderRows`; stale or sold-out eBay rows are not
-  pinned), each tagged "Shown first" beside "Paid link", the table's top line
+  pinned), each tagged "Paid link" (no "Shown first" chip since 2026-10-30), the table's top line
   saying so. The headline stays the cheapest open offer from anyone and the
   "+N%" stays on the eBay row. "eBay may have a lower price" is on the
   per-product Search eBay line only — never on a listing, which is already the
@@ -704,8 +769,8 @@ longer lands on its entry.
   "cheapest first". [2026-10-15](../DECISIONS.md#L17284). Elsewhere
   no comparison is re-ranked
   and no true figure (the "+N%" on a dearer eBay row) is hidden; eBay rows keep
-  their price position but wear eBay blue (`.btn-ebay`, or `.btn-ebay-ghost` in
-  a list of ghost buttons). Everything else is a labelled "Search …" beside the
+  their price position and wear the stores' own button, so they blend in
+  ([2026-11-01](../DECISIONS.md#L21269)). Everything else is a labelled "Search …" beside the
   list (`EbaySearchPanel`, Paid link tag + EPN disclosure) that claims no price,
   stock or listing; cross-sells (`promo`) hide for ad-free members and carry
   `data-ad-placement`. `/editorial-policy`, `/about` and `/privacy` disclose
@@ -770,18 +835,20 @@ longer lands on its entry.
   ([2026-10-16](../DECISIONS.md#L18131)). Real anchor ads and the in-page ad cap are
   AdSense console settings (anchor "Top only" or off keeps a card page's Buy
   bar clear). [2026-10-16](../DECISIONS.md#L17916)
-- **RiftCompare Coins (`/coins`) are free and Premium-only:** tasks earn pulls,
-  a server-side roll reveals one of twelve coins (odds and pity printed on the
-  page), and nothing about them is ever sold. Every reward is idempotent on
-  `CoinTask`'s unique key. [2026-10-16](../DECISIONS.md#L17866)
+- **RiftCompare Coins are switched off** (`COINS_ENABLED = false`): `/coins` 404s,
+  no task pays, and they are out of the nav and the Pro tables. The coin tables
+  and rows are kept so they could come back. [2026-10-29](../DECISIONS.md#L20831)
 - **The arcade's line-up is chosen by data:** `games-report.yml` (dispatch-only)
   gives each game's search clicks and players; the two weakest (Card Rain,
   Pairs) were replaced by Seraphine's Piano, a Radiance rhythm game timed on
   the Web Audio clock and drawn on one rAF canvas. Retired game routes 301 to
   it. [2026-10-16](../DECISIONS.md#L17753)
-- **Sister sites:** the footer links the whole Compare Empire family (the other
-  six card-game sites, then CamCompare and Compare Empire on their own line;
-  [2026-10-27](../DECISIONS.md#L20126)) (`SISTER_SITES`, `lib/sister-sites.ts`), and the cross-game guides and the
+- **Sister sites:** the footer is one line: the other card-game sites by name, then
+  "A Compare Empire site" to compareempire.com/network ([2026-11-02](../DECISIONS.md#L21572);
+  was the whole family, [2026-10-27](../DECISIONS.md#L20126)) (`SISTER_SITES`, `lib/sister-sites.ts`). The deals,
+  pre-order and set pages carry one "Other card games on sale" block with the sisters' real prices
+  from their daily feeds (`lib/family-network.ts`, `lib/family.ts`, six-hour cache; a day on
+  /market/report). The cross-game guides and the
   where-to-buy / price-comparison articles end with a sister-site block
   (`sisterSitesFor`; at most a third of articles). Plain followed links
   (`rel="noopener"`); a deep link is added only once it is live there. The
@@ -847,6 +914,10 @@ longer lands on its entry.
 
 ## Content & SEO
 
+- **Pre-order pages:** every coming-soon set in `SETS` without a hand-built
+  page gets `/preorders/<slug>` automatically, from data only; a calendar
+  row's `preordersHref` wins and links go through `preorderRouteForSet`.
+  [2026-11-02](../DECISIONS.md#L21479)
 - **One page, one phrase:** add the `docs/seo-keyword-map.md` row before
   publishing, and publish fewer pages than feels natural (13 of ~24 Vendetta
   posts were 301'd, 7 after an AdSense low-value rejection).
@@ -943,6 +1014,10 @@ longer lands on its entry.
   Six competing posts were folded into one page each the same day. Before
   splitting an intent across two pages, check "Pages competing in Google" on
   `/admin/growth` (or `gsc-queries`' SPLIT QUERIES); a pair there gets folded. [2026-10-27](../DECISIONS.md#L20384)
+- **Growth target (every site):** Google clicks, week against week, on
+  `/admin/growth`: sister sites +15% a week, RiftCompare holds until the
+  Legacy previews, every site +5%. Every Search Console property is read
+  (one series per site). [2026-11-02](../DECISIONS.md#L21362)
 - **FAQ:** one `faq` field feeds the visible Q&A and the JSON-LD. Every
   article needs an editorial inbound link. [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9273)
@@ -1173,12 +1248,18 @@ longer lands on its entry.
 
 ## Pokémon section (beta)
 
+- **Back since 2026-11-01 (owner), with no database:** its data is committed JSON in
+  `data/pokemon/` (`lib/pokemon/store.ts`), written by `pokemon-import.yml` and committed
+  to main without the deploy marker (`scripts/pokemon/publish-data.sh`); traced into the
+  `/pokemon` functions only. On when the build carries `data/pokemon/products.json`
+  (`POKEMON_DATA_BUILT`, `next.config.js`) unless `NEXT_PUBLIC_POKEMON_SECTION=0`. The
+  2026-10-30 pause and its DexCompare 301s are gone; the import is in the ops monitor's jobs.
+  [2026-10-30](../DECISIONS.md#L20873), [2026-11-01](../DECISIONS.md#L21224)
 - **Self-contained, removable, off by default (2026-10-01, owner: "if there is
   an issue, I can just completely remove all the Pokemon"):** `/pokemon` prices
-  English Pokémon sealed (Sword & Shield onward) in all six markets from its OWN
-  Neon project (`POKEMON_DATABASE_URL`, `prisma/pokemon/schema.prisma`, its own
-  client) — never RM5 or history. On only when `NEXT_PUBLIC_POKEMON_SECTION=1`
-  AND the database is set; off, every route 404s and the nav link, homepage
+  English Pokémon sealed (Sword & Shield onward) in all six markets from its own
+  files (`data/pokemon/`, above; its own Neon project until 2026-10-23) — never
+  RM5 or history. Off, every route 404s and the nav link, homepage
   promo, sitemap section, robots.txt and llms.txt entries vanish. Six Riftbound
   files know it exists, pinned by `tests/pokemon-isolation.test.ts`; the
   removal table is in `docs/pokemon/README.md`. Daily import
@@ -1238,7 +1319,10 @@ longer lands on its entry.
   TCGplayer cart) and `/pricebot` for all seven games, HTTP interactions only,
   no database; every reply opens with `#ad`; the owner switches it on, and it is
   removed again if it is not near 30 clicks a day a month after promotion.
-  [2026-10-27](../DECISIONS.md#L20462)
+  [2026-10-27](../DECISIONS.md#L20462) Since 2026-11-03 also `/daily` (the
+  site's daily puzzle, posted publicly) and Cyberpunk; the daily
+  `discord-commands.yml` finishes the set-up itself once the key is live, so
+  the owner's part is one short sitting. [2026-11-03](../DECISIONS.md#L21792)
 - **No AI calls, no Speed Insights (2026-10-16):** Trade Roast (and its
   Gremlin box) and the unrendered AI card insight are gone with the Anthropic
   SDK; the site makes no model call. Speed Insights is removed (billed, unread).
@@ -1292,13 +1376,15 @@ longer lands on its entry.
   for OG images and email.
   [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713)
 - **Seasons and scroll motion (2026-10-16):** a season is a local-date window
-  (`lib/season.ts`; Halloween 16-31 Oct) stamped as `data-season` on `<html>`
-  before paint, so it starts and ends with no deploy; `?season=halloween|off`
-  previews it. Anything a boot script stamps outside React's props needs an
+  (`lib/season.ts`; Halloween 16-31 Oct, Christmas 1 Nov to 26 Dec) stamped
+  as `data-season` on `<html>` before paint, so it starts and ends with no
+  deploy; `?season=halloween|christmas|off` previews it. Anything a boot script stamps outside React's props needs an
   observer to survive a failed hydration, which resets `<html>`/`<body>`
   attributes ([2026-10-16](../DECISIONS.md#L17916)). Season markup lives in
-  its own components (`NocturneComing`, `HalloweenDecor`), so a season comes
-  out by deleting them.
+  its own components (`NocturneComing`, `HalloweenDecor`, `ChristmasDecor`,
+  `ChristmasGifts`), so a season comes out by deleting them. Christmas
+  decoration is shared CSS ("xmas-common", the same block on every sister
+  site) and art in `public/xmas/` ([2026-11-01](../DECISIONS.md#L21063)).
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired

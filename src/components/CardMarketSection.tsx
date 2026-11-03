@@ -45,20 +45,12 @@ export type EbaySearchMap = Record<string, { url: string; label: string } | null
 // the primary button orange and kept every purchase button as it was.
 // Reuses the shared `.btn` base (layout/sizing) from globals.css. Exported so
 // QuickView's compact price list uses the exact same treatment.
-export function buyButtonClass(retailer: string): string {
-  return retailer.startsWith("ebay") ? "btn-ebay" : "btn-buy";
-}
-/** The tag on a row pinned to the top of a comparison (pinMarketplaces). */
-export function ShownFirstTag() {
-  return (
-    <span
-      data-shown-first
-      title="eBay and TCGplayer are shown first, whatever their price. Every other row is sorted by price."
-      className="chip shrink-0 bg-sky-500/10 text-[10px] font-semibold text-sky-300"
-    >
-      Shown first
-    </span>
-  );
+// 2026-11-01 (owner): "the ebay and amazon links should blend in and look exactly
+// the same as the other price rows": every row, eBay's included, wears the one
+// green again. The function stays so the card table, the quick view and the
+// mobile buy bar keep sharing one rule.
+export function buyButtonClass(_retailer: string): string {
+  return "btn-buy";
 }
 
 export function buyButtonLabel(retailer: string): string {
@@ -458,7 +450,6 @@ export function CardPriceComparison({
                         Cheapest
                       </span>
                     )}
-                    {pinned && <ShownFirstTag />}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                     {/* Foil is a per-row BADGE, never a filter: a foil listing
@@ -615,7 +606,6 @@ export function CardPriceComparison({
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="min-w-0 truncate font-semibold text-white">{ebay.label}</span>
-                        <ShownFirstTag />
                       </div>
                       <p className="mt-0.5 text-xs text-slate-500">
                         {preRelease
@@ -632,7 +622,7 @@ export function CardPriceComparison({
                       cardName={displayName}
                       pageType="card_detail"
                       surface="ebay_fallback"
-                      className="btn-ebay order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                      className="btn-buy order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
                     >
                       Search {ebay.label} →
                     </OutboundLink>
@@ -649,7 +639,6 @@ export function CardPriceComparison({
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="min-w-0 truncate font-semibold text-white">TCGplayer</span>
                         <span className="chip shrink-0 bg-ink-800 text-[10px] text-slate-400">US market price</span>
-                        <ShownFirstTag />
                       </div>
                       <p className="mt-0.5 text-xs text-slate-500">
                         A reference, converted at an approximate rate. TCGplayer may not ship to your country.{" "}

@@ -9,7 +9,7 @@ import {
   pushSample,
   recentRatePerDay,
 } from "../src/lib/ops/thresholds";
-import { decide, digestDue, emptyState, markDelivered, parseState, planIsUrgent } from "../src/lib/ops/state";
+import { decide, digestDue, emptyState, markDelivered, parseState, planIsEmpty, planIsUrgent } from "../src/lib/ops/state";
 import {
   databaseReachable,
   deployState,
@@ -20,6 +20,7 @@ import {
   priceFreshness,
   runChecks,
   scheduledJobs,
+  JOBS,
   siteProbe,
   dexcompareIndex,
   stripeChecks,
@@ -146,25 +147,26 @@ test("a problem whose mail did not go out is planned again on the next run", () 
   assert.equal(second.plan.problems.length, 1, "the owner was never told, so it is still new");
 });
 
-test("warn then crit is an escalation; crit then warn is silent", () => {
-  let st = markDelivered(decide(emptyState(), [r("a", "warn")], NOW).next, decide(emptyState(), [r("a", "warn")], NOW).plan, NOW);
-  const up = decide(st, [r("a", "crit")], later(3));
-  assert.equal(up.plan.escalations.length, 1);
-  st = markDelivered(up.next, up.plan, later(3));
+test("only red mails: a warning is never planned; warn then crit is a new problem; crit then warn is silent", () => {
+  const w = decide(emptyState(), [r("a", "warn")], NOW);
+  assert.equal(planIsEmpty(w.plan), true, "amber waits for Empire HQ and the Monday report");
+  assert.equal(decide(w.next, [r("a", "warn")], later(100)).plan.reminders.length, 0);
+  const up = decide(w.next, [r("a", "crit")], later(3));
+  assert.equal(up.plan.problems.length, 1);
+  const st = markDelivered(up.next, up.plan, later(3));
   const down = decide(st, [r("a", "warn")], later(6));
-  assert.equal(planIsUrgent(down.plan), false);
-  assert.equal(down.next.checks.a!.emailedSev, "warn", "later escalations are measured from the lower level");
+  assert.equal(planIsEmpty(down.plan), true);
+  // The owner was told it was red, so its recovery is announced even after a spell of amber.
+  assert.equal(decide(down.next, [r("a", "ok")], later(9)).plan.recoveries.length, 1);
+  // A warning that clears is never announced.
+  assert.equal(decide(w.next, [r("a", "ok")], later(3)).plan.recoveries.length, 0);
 });
 
-test("an open problem is repeated after 24 h (critical) or 72 h (warning), not before", () => {
+test("an open red problem is repeated after 24 h, not before", () => {
   const crit = decide(emptyState(), [r("c", "crit")], NOW);
   const cs = markDelivered(crit.next, crit.plan, NOW);
   assert.equal(decide(cs, [r("c", "crit")], later(23)).plan.reminders.length, 0);
   assert.equal(decide(cs, [r("c", "crit")], later(25)).plan.reminders.length, 1);
-  const warn = decide(emptyState(), [r("w", "warn")], NOW);
-  const ws = markDelivered(warn.next, warn.plan, NOW);
-  assert.equal(decide(ws, [r("w", "warn")], later(48)).plan.reminders.length, 0);
-  assert.equal(decide(ws, [r("w", "warn")], later(73)).plan.reminders.length, 1);
 });
 
 test("recovery is mailed only for a problem the owner was told about", () => {
@@ -327,6 +329,19 @@ test("scheduled jobs: two failures in a row is critical, one is a warning, a mis
   assert.equal(sev["job:sealed-refresh"], "crit", "80 h with a 36 h cadence");
   assert.equal(sev["job:store-health"], "ok");
   assert.equal(sev["job:production-deploy"], "ok", "a cancelled run is ignored");
+});
+
+test("scheduled jobs: a newly scheduled job's old manual run is not stale until the schedule has had time", async () => {
+  const job = JOBS.find((j) => j.scheduledSince)!;
+  const since = new Date(job.scheduledSince!).getTime();
+  const at = (h: number) => new Date(since + h * 3_600_000);
+  const runs = async (f: string) => (f === job.file ? [{ status: "completed", conclusion: "success", createdAt: new Date(since - 160 * 3_600_000) }] : []);
+  const id = `job:${job.file.replace(/\.yml$/, "")}`;
+  const early = (await scheduledJobs(deps({ now: at(4), github: { runs, productionDeploy: async () => null } }))).find((x) => x.id === id)!;
+  assert.equal(early.severity, "ok");
+  assert.match(early.summary, /first scheduled run is due/);
+  const late = (await scheduledJobs(deps({ now: at(job.staleH + 1), github: { runs, productionDeploy: async () => null } }))).find((x) => x.id === id)!;
+  assert.equal(late.severity, "warn", "the schedule never fired");
 });
 
 test("production build: a failed build is critical and says nothing is down", async () => {

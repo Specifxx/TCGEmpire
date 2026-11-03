@@ -14,6 +14,8 @@ import { RiftEmbers } from "./RiftEmbers";
 import { BrandLogo } from "@/components/BrandLogo";
 import { NocturneComing } from "./NocturneComing";
 import { HalloweenDecor } from "./HalloweenDecor";
+import { ChristmasDecor } from "./ChristmasDecor";
+import { ChristmasGifts } from "./ChristmasGifts";
 import type { CardTileData } from "@/components/CardTile";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 
@@ -115,6 +117,8 @@ export function CinematicHero({
         <RiftEmbers />
         {/* Above the embers' dark, so the jack-o'-lanterns glow through it. */}
         <HalloweenDecor />
+        {/* Christmas (1 November to Boxing Day): lights, trees, presents. */}
+        <ChristmasDecor />
         <div className="rb-paranoia absolute inset-0" />
       </div>
 
@@ -167,6 +171,8 @@ export function CinematicHero({
             asset/component. */}
         {/* Halloween (until 31 October): "Nocturne is coming". */}
         <NocturneComing />
+        {/* Christmas (until Boxing Day): gift shoppers to the sealed prices. */}
+        <ChristmasGifts />
         <div className="hidden items-center justify-center gap-2 sm:flex">
           <BrandLogo className="h-8 w-8" />
           <span className="text-lg font-extrabold tracking-tight text-white">
@@ -364,6 +370,12 @@ export function CinematicHero({
           </Suspense>
         </div>
 
+        {/* The region chooser, with flags, straight under the search box
+            (owner, 2026-11-02: make it prominent). It was last in the hero,
+            under the Premium link. On phones, where the hero has no search,
+            it sits right under the intro. */}
+        <CountryHeroToggle />
+
         {/* Trending search chips — an instant path in for a visitor who doesn't
             know what to type yet. Server-rendered (real data, real hrefs); only
             the click beacon is client-side. */}
@@ -372,6 +384,7 @@ export function CinematicHero({
         {/* One thin stat line, directly under the search field — was 4 bordered
             boxes. */}
         <HeroStats totalCards={totalCards} statsByCountry={statsByCountry} freshness={freshness} freshnessAt={freshnessAt} lockCountry={region?.code} />
+
 
         {/* EXACTLY ONE secondary action below the search box, per the redesign
             brief: "the search box is the hero", so nothing here competes with
@@ -418,7 +431,6 @@ export function CinematicHero({
             full
             className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-lg px-4 text-sm font-semibold"
           />
-          <CountryHeroToggle />
         </div>
       </div>
       </div>

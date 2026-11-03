@@ -56,9 +56,9 @@ test("rendered: eBay leads, labelled on the row; the headline is still the cheap
   assert.match(html, /cheapest open · storeA/, "pinning eBay never moves the headline price");
   const ebayRow = html.match(/<li data-stock="open"[\s\S]*?ebay_us[\s\S]*?<\/li>/)?.[0] ?? "";
   assert.match(ebayRow, />\+46%</, "the dearer eBay row still says how much dearer");
-  // The pin is labelled WHERE IT HAPPENS (review finding, 2026-10-15): on the row.
-  assert.match(ebayRow, /data-shown-first[^>]*>Shown first</);
-  assert.equal((html.match(/data-shown-first/g) ?? []).length, 1, "only the pinned row — not a store, not the stale eBay row");
+  // No wording about the order (owner, 2026-10-30): the pinned row carries its
+  // "Paid link" tag, and the old "Shown first" chip is gone.
+  assert.doesNotMatch(html, /data-shown-first|Shown first/);
   // The table's own top line says how it is ordered.
   // Stores taking orders, cheapest first, THEN the unconfirmed and sold-out ones
   // — "every store cheapest first" was inexact (final review, 2026-10-15).

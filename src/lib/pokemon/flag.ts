@@ -1,18 +1,22 @@
 // The Pokémon section's one switch. Client-safe (no server imports), because the
 // nav config and the homepage promo read it from client components too.
 //
-// OFF unless NEXT_PUBLIC_POKEMON_SECTION is exactly "1", like
-// introOfferEnabled() in lib/site.ts. Next inlines NEXT_PUBLIC_* at build time,
-// so flipping it takes a redeploy, which is also what any Vercel variable change
-// takes. The server additionally requires POKEMON_DATABASE_URL
-// (lib/pokemon/gate.ts pokemonEnabled), so a flag set without a database shows
-// nothing rather than an empty section.
+// ON when the build carries the section's data files (data/pokemon/, written
+// by pokemon-import.yml; lib/pokemon/store.ts). next.config.js answers that at
+// build time and inlines it as POKEMON_DATA_BUILT, so the client and the server
+// agree. NEXT_PUBLIC_POKEMON_SECTION="0" (Vercel) turns it off whatever the
+// files say; it takes a redeploy, like any Vercel variable change.
 //
 // Turned off, every Pokémon route 404s (app/pokemon/layout.tsx), the nav entry,
-// homepage promo and sitemap section disappear, and the import workflow exits
-// early. docs/pokemon/README.md has the full kill-switch and removal runbook.
+// homepage promo and sitemap section disappear. docs/pokemon/README.md has the
+// full kill-switch and removal runbook.
+//
+// History: paused 2026-10-30 (its Neon project died and every page was a 500)
+// and 301'd to DexCompare; back 2026-11-01 on the owner's word, served from
+// committed files instead of a database (DECISIONS.md, "The Pokémon section
+// returns, served from files in the repository").
 export function pokemonSectionOn(): boolean {
-  return process.env.NEXT_PUBLIC_POKEMON_SECTION === "1";
+  return process.env.NEXT_PUBLIC_POKEMON_SECTION !== "0" && process.env.POKEMON_DATA_BUILT === "1";
 }
 
 /**

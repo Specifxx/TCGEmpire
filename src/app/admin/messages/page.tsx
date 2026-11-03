@@ -107,13 +107,15 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
   let ratingSplit = new Map<number, number>();
   let writtenCount = 0;
   try {
-    const ratedWhere = { rating: { not: null }, NOT: { source: "rating-review" } };
+    // RiftCompare's own rows only: the other sites' ratings and reviews have their
+    // own queue, /admin/reviews (2026-11-03).
+    const ratedWhere = { site: "riftcompare", rating: { not: null }, NOT: { source: "rating-review" } };
     const [rows, total, agg, split, written] = await Promise.all([
-      prisma.feedback.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
-      prisma.feedback.count(),
+      prisma.feedback.findMany({ where: { site: "riftcompare" }, orderBy: { createdAt: "desc" }, take: 500 }),
+      prisma.feedback.count({ where: { site: "riftcompare" } }),
       prisma.feedback.aggregate({ where: ratedWhere, _avg: { rating: true }, _count: { rating: true } }),
       prisma.feedback.groupBy({ by: ["rating"], where: ratedWhere, _count: { _all: true } }),
-      prisma.feedback.count({ where: { message: { not: "" } } }),
+      prisma.feedback.count({ where: { site: "riftcompare", message: { not: "" } } }),
     ]);
     feedback = rows;
     feedbackTotal = total;
@@ -301,6 +303,8 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
         </div>
         <p className="mt-1 text-sm text-slate-400">
           From the <Link href="/feedback" className="text-brand-400 hover:underline">feedback page</Link> and the site-wide widget — signed-in and anonymous.
+          The other sites&apos; ratings and reviews are in{" "}
+          <Link href={`/admin/reviews${keySuffix}`} className="text-brand-400 hover:underline">Reviews, every site</Link>.
         </p>
         <p className="mt-2 rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2 text-xs text-slate-500">
           Only submissions where the person ticked <strong className="text-slate-300">&ldquo;you can show this

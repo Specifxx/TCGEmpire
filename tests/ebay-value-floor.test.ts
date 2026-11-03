@@ -95,9 +95,11 @@ test("both eBay singles passes filter on the value floor", () => {
   // entirely on 2026-08-20.)
   const calls = src.match(/eBayWorthSearching\(c, tcgValues\.get\(c\.id\)\)/g) ?? [];
   assert.equal(calls.length, 2, "expected the catalogue and chase passes to each apply the floor");
-  // Read once per pass, never per card — the map is a whole-table read.
+  // Read once per pass, never per card — the map is a whole-table read. The third
+  // read is the store import's too-cheap guard (lib/price-sanity.ts, 2026-11-02),
+  // once before its store loop.
   const reads = src.match(/await tcgplayerUsValues\(\)/g) ?? [];
-  assert.equal(reads.length, 2, "tcgplayerUsValues must be read once per pass, not inside a market loop");
+  assert.equal(reads.length, 3, "tcgplayerUsValues must be read once per pass, not inside a market loop");
 });
 
 test("the preview script passes the value explicitly, never as a bare .filter reference", () => {

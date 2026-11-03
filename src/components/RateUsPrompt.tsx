@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { armNudge, countSessionView } from "@/lib/nudge-runtime";
+import { BUY_CLICK_EVENT } from "@/lib/buy-intent";
 import { useEscapeLayer } from "./ui/Dialog";
 import { RatingReviewForm } from "./RatingReviewForm";
 import {
+  PRICING_NUDGE_SESSION_KEY,
   RATE_SESSION_KEY,
   RATE_STORAGE_KEY,
   countPageView,
@@ -15,15 +17,25 @@ import {
 } from "@/lib/rate-prompt";
 
 // "Rate RiftCompare" (owner, 2026-10-26; reworked 2026-10-27, DECISIONS.md "One
-// rating ask, earned by engagement"). When it asks is lib/rate-prompt.ts: never
-// a new visitor, only a returning one after real use, at most twice ever, never in the same visit as the Pricing
-// callout. A small corner card, not a modal: the page stays usable under it,
-// and ✕, Escape and "Not now" all close it (snoozed), "Don't ask again" ends it.
+// rating ask, earned by engagement"; relaxed 2026-10-28, "Ratings: one tap
+// counts, and the card asks at the moment it has earned"). When it asks is
+// lib/rate-prompt.ts: never on arrival, never on the first page of a visit,
+// after a few minutes and pages of real use or when they come back from a
+// store tab they opened here, at most twice, a month apart, never in the same
+// visit as the Pricing callout. A small corner card, not a modal: the page
+// stays usable under it, and ✕, Escape and "Not now" all close it (snoozed),
+// "Don't ask again" ends it.
+//
+// THE RATING DRIVE IS OVER (owner, 2026-11-03: "I think I've lost some
+// visitors … because before there were too many pop ups"). The centred pop-up
+// that asked every visitor on their landing page (2026-10-28 to 2026-11-03)
+// is gone; DECISIONS.md, "One interruption per visit, never on arrival".
 // Its body is the one rating-and-review form every surface uses
 // (RatingReviewForm, source "rating"): stars first, then the review box.
 
 const SHOW_DELAY_MS = 8_000;
-const PRICING_NUDGE_SESSION_KEY = "rc_pricing_nudge_seen"; // PricingNudge's own flag
+/** After they come back from the store tab: long enough to settle, short enough to still be "just now". */
+const RETURN_DELAY_MS = 1_500;
 
 function save(s: RateState) {
   try {
@@ -41,6 +53,11 @@ function load(now: number): RateState {
   }
 }
 
+/** The Pricing callout already claimed this visit's one interruption. */
+function otherPromptShown(): boolean {
+  return sessionFlag(PRICING_NUDGE_SESSION_KEY);
+}
+
 function sessionFlag(key: string): boolean {
   try {
     return sessionStorage.getItem(key) === "1";
@@ -54,35 +71,82 @@ export function RateUsPrompt() {
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState(false);
 
+  // Count every page view (never twice for one path change).
   useEffect(() => {
     const now = Date.now();
-    const s = countPageView(load(now), now);
-    save(s);
+    save(countPageView(load(now), now));
+  }, [path]);
+
+  useEffect(() => {
     if (open) return;
-    const visitPages = countSessionView("rc_rate_views", path);
+    const visitPages = countSessionView("rc_rate_views", path); // the same path is not counted twice
+    // "?rate=1": open it now (to see it, even after rating in this browser).
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("rate") === "1") {
+      show();
+      return;
+    }
     const ask = () =>
       !sessionFlag(RATE_SESSION_KEY) &&
-      shouldAskRating(load(Date.now()), Date.now(), path, { pages: visitPages, otherPromptShown: sessionFlag(PRICING_NUDGE_SESSION_KEY) });
+      shouldAskRating(load(Date.now()), Date.now(), path, { pages: visitPages, otherPromptShown: otherPromptShown() });
     if (!ask()) return;
     // Wait for a quiet moment on the page (no dialog, no typing), then check
     // again: the Pricing callout may have claimed the visit meanwhile.
     return armNudge({
       delayMs: SHOW_DELAY_MS,
       onFire: () => {
-        if (!ask()) return;
-        const cur = load(Date.now());
-        save({ ...cur, asks: cur.asks + 1 });
-        try {
-          sessionStorage.setItem(RATE_SESSION_KEY, "1");
-        } catch {
-          /* private mode */
-        }
-        setOpen(true);
+        if (ask()) show();
       },
     });
-    // Counting page views only: re-running when `open` flips would count twice.
+    // Not on `open`: closing must not re-arm the ask in the same visit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path]);
+
+  // The high-intent moment: they clicked out to a store (a new tab) and came
+  // back. The card asks then, while the price they found is fresh.
+  useEffect(() => {
+    let armed = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onBuy = () => {
+      armed = true;
+    };
+    const onVisible = () => {
+      if (!armed || document.visibilityState !== "visible") return;
+      armed = false;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const here = window.location.pathname;
+        const visitPages = countSessionView("rc_rate_views", here); // the page already counted: no double count
+        if (
+          !sessionFlag(RATE_SESSION_KEY) &&
+          shouldAskRating(load(Date.now()), Date.now(), here, {
+            pages: visitPages,
+            otherPromptShown: otherPromptShown(),
+            intent: true,
+          })
+        )
+          show();
+      }, RETURN_DELAY_MS);
+    };
+    window.addEventListener(BUY_CLICK_EVENT, onBuy);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener(BUY_CLICK_EVENT, onBuy);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function show() {
+    const cur = load(Date.now());
+    save({ ...cur, asks: cur.asks + 1 });
+    try {
+      sessionStorage.setItem(RATE_SESSION_KEY, "1");
+    } catch {
+      /* private mode */
+    }
+    setOpen(true);
+  }
 
   // ✕, Escape and "Not now": ask again after the snooze (a rater is done anyway).
   const close = () => {
@@ -98,6 +162,19 @@ export function RateUsPrompt() {
   useEscapeLayer(open, close);
 
   if (!open) return null;
+
+  const form = (
+    <RatingReviewForm
+      compact
+      source="rating"
+      page={path}
+      onDone={() => {
+        setDone(true);
+        setTimeout(() => setOpen(false), 2500);
+      }}
+    />
+  );
+
   return (
     <div
       role="dialog"
@@ -117,18 +194,10 @@ export function RateUsPrompt() {
       {!done && (
         <>
           <h2 className="pr-8 font-display text-lg font-extrabold text-white">How would you rate RiftCompare?</h2>
-          <p className="mb-2 mt-1 text-sm text-slate-400">A few seconds. We only ask once.</p>
+          <p className="mb-2 mt-1 text-sm text-slate-400">One tap. It helps other players find us.</p>
         </>
       )}
-      <RatingReviewForm
-        compact
-        source="rating"
-        page={path}
-        onDone={() => {
-          setDone(true);
-          setTimeout(() => setOpen(false), 2500);
-        }}
-      />
+      {form}
       {!done && (
         <div className="mt-3 flex items-center justify-center gap-4 text-xs text-slate-500">
           <button type="button" onClick={close} className="tap-link hover:text-slate-300 hover:underline">

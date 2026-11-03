@@ -1,0 +1,29 @@
+# Daily Search Console page demand for the sister sites' eBay passes (scripts/sister-demand-export.mjs).
+# Writes one aggregate file to each site's own `demand` branch; Compare Empire's eBay script reads it.
+# Runs before Compare Empire's price job (cron 19:10 UTC). Fails (GitHub emails the owner) when Search
+# Console or the sites' write token stops working.
+name: Sister-site search demand
+on:
+  schedule:
+    - cron: "40 17 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sister-demand
+  cancel-in-progress: false
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/sister-demand-export.mjs
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          REPORTS_GITHUB_TOKEN: ${{ secrets.REPORTS_GITHUB_TOKEN }}

@@ -91,7 +91,8 @@ test("the restock email links the set's own pre-order page, never another set's"
   // No pre-order page known: the set page, not /radiance-preorders.
   assert.equal(buildReleaseEmail("Legacy", "/sets/legacy", restock).cta.url, "https://riftcompare.com/sets/legacy");
   const run = readFileSync("src/lib/release-alerts-run.ts", "utf8");
-  assert.match(run, /RELEASES\.find\(\(r\) => r\.code === setCode\)\?\.preordersHref/);
+  // The set's own page: its calendar row's preordersHref, else its automatic /preorders/<slug> (2026-11-02).
+  assert.match(run, /preorderRouteForSet\(setCode\) \?\? setPath/);
   // Code only: the header comment still names where the signups sit.
   const emailCode = readFileSync("src/lib/release-alerts.ts", "utf8").replace(/^\s*\/\/[^\n]*$/gm, "");
   assert.doesNotMatch(emailCode, /\/radiance-preorders/);

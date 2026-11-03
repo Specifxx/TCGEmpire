@@ -41,20 +41,29 @@ type Memo = { at: number; rows: PublicReview[] };
 // convention.
 const g = globalThis as unknown as { __rcReviews?: Memo };
 
+/** A review card needs words: a star-only row is a rating, not a review. */
+export function hasComment(r: { message: string | null | undefined }): boolean {
+  return (r.message ?? "").trim().length > 0;
+}
+
 export async function getApprovedReviews(limit = 12): Promise<PublicReview[]> {
   const now = Date.now();
   if (g.__rcReviews && now - g.__rcReviews.at < TTL_MS) return g.__rcReviews.rows.slice(0, limit);
   try {
     const rows = await prisma.feedback.findMany({
-      where: { status: "APPROVED", consentPublic: true, publishedAt: { not: null } },
+      where: { site: "riftcompare", status: "APPROVED", consentPublic: true, publishedAt: { not: null } },
       orderBy: { publishedAt: "desc" },
       take: 24,
       // Explicit select — never widen this to include `email`, which is a reply
       // address collected under "only if you want a reply", not for publication.
       select: { id: true, rating: true, message: true, displayName: true, publishedAt: true },
     });
-    g.__rcReviews = { at: now, rows };
-    return rows.slice(0, limit);
+    // Stars with no written comment are not shown as a review card (owner,
+    // 2026-11-03: "Get rid of the review without a comment it looks bad").
+    // Their stars still count in the site rating (lib/site-rating.ts).
+    const written = rows.filter(hasComment);
+    g.__rcReviews = { at: now, rows: written };
+    return written.slice(0, limit);
   } catch {
     // A reviews strip must never take the homepage down with it.
     return [];

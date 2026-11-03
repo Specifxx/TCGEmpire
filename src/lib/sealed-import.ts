@@ -33,7 +33,16 @@ interface ShopifyProd { title: string; handle: string; variants: ShopifyVar[]; i
 // Riftbound"). Exported for tests.
 export const LEGACY_TITLE = /^(?=[\s\S]*\b(?:riftbound|league\s*of\s*legends)\b)[\s\S]*\blegacy\b|\bLGC\b/i;
 
+// Proving Grounds 2nd Edition (PG2, Riot, due 19 Feb 2027) is a NEW product
+// announced with Legacy, not a reprint of Origins' Proving Grounds: until
+// 2026-11-01 "Proving Grounds Box Set 2nd Edition (Pre-Order)" was filed as OGS
+// and sat in the Origins Proving Grounds group as its cheapest "in-stock" offer
+// (C$47.95 at 401 Games). It goes to LGC, with its own type (classifySealed), so
+// it is compared on /legacy-preorders. A "(REPRINT)" first edition stays OGS.
+export const PROVING_GROUNDS_2ND = /proving\s*grounds[\s\S]*\b(?:2nd|second)\s*ed(?:ition|\.)?|\bPG2\b/i;
+
 const SET_FROM_TITLE: [RegExp, string][] = [
+  [PROVING_GROUNDS_2ND, "LGC"],
   [/proving\s*grounds|\bOGS\b/i, "OGS"],
   [/spirit\s*forged|\bSFD\b/i, "SFD"],
   [/unleashed|\bUNL\b/i, "UNL"],
@@ -359,8 +368,15 @@ export async function discoverCollections(base: string): Promise<{ riftbound: st
  *  a big general collection sets its own `maxPages` (lib/sealed-stores.ts). */
 export const DEFAULT_COLLECTION_PAGES = 10;
 
+/** The collection handle that means "the store's whole catalogue": /products.json
+ *  rather than /collections/<handle>/products.json. For a store that serves
+ *  Shopify's feed format without Shopify's collections (L'Atelier TCG). Such a
+ *  store has no Shopify sitemap, so nothing is discovered for it, and its
+ *  catalogue holds every game: set `strictTitles` beside it. */
+export const WHOLE_CATALOGUE = "*";
+
 export async function fetchProducts(base: string, handle: string, country: Country, maxPages = DEFAULT_COLLECTION_PAGES): Promise<ShopifyProd[]> {
-  const path = `/collections/${handle}/products.json`;
+  const path = handle === WHOLE_CATALOGUE ? "/products.json" : `/collections/${handle}/products.json`;
   const allowed = await robotsAllows(base);
   if (!allowed(path)) return [];
   const all: ShopifyProd[] = [];
@@ -426,7 +442,13 @@ export function classifySealed(title: string): string {
   const t = title.toLowerCase();
   const rawChamp = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim() || title.match(CHAMPIONS)?.[1];
   const champ = rawChamp ? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
+  if (PROVING_GROUNDS_2ND.test(title)) return "Proving Grounds 2nd Edition";
   if (/proving\s*grounds/.test(t)) return /\bcase\b/.test(t) ? "Proving Grounds Case" : "Proving Grounds";
+  // Legacy's four Champion Decks sold together (2026-11-01): "Legacy - Champion
+  // Deck - Set of 4" and "Legacy - Showdown Decks (Set of 4)" are the same
+  // four-deck bundle, never one deck (whose group it shared) and never a
+  // Showdown Decks pair (Legacy has none).
+  if (/(?:champion|showdown)\s*decks?/.test(t) && /set\s*of\s*(?:4|four)|\b4\s*decks\b|all\s*four/.test(t)) return "Champion Deck Set (4)";
   if (/nexus\s*night\s*(?:\d+\s*)?(?:promo\s*)?pack/.test(t)) return "Nexus Night Pack";
   // The Radiance Showdown Decks are also sold as "Champion Deck: Evelynn Vs.
   // Seraphine" (Alt F4, 2026-09-24) — a head-to-head pair is the Showdown Decks
@@ -586,13 +608,15 @@ export async function importSealed(): Promise<number> {
     // `own` marks the store's own configured/Riftbound collections: a read of one
     // licenses the replace below even when it is read strictly (strictTitles).
     const batches: { products: ShopifyProd[]; strict: boolean; own?: boolean }[] = [];
+    // The Card Hive's own shop (lib/cardhive.ts) is read for singles only.
+    if (store.platform === "cardhive") continue;
     if (store.platform === "woocommerce") {
       batches.push({ products: await fetchWooSealedProducts(store), strict: false });
     } else {
       // Auto-discover from the sitemap, but fall back to the store's configured
       // collections (some stores' sitemaps don't expose their collection handles —
       // some sealed stores were being skipped). Mirrors price-import.ts.
-      const found = await discoverCollections(store.base);
+      const found = (store.collections ?? []).includes(WHOLE_CATALOGUE) ? { riftbound: [], preorder: [] } : await discoverCollections(store.base);
       const handles = Array.from(new Set([...found.riftbound, ...(store.collections ?? [])]));
       if (!handles.length) continue;
       // A configured collection on a sealed-only store may be a big general one
@@ -1286,6 +1310,7 @@ const SEALED_TYPE_IMAGE: Record<string, string> = {
   "Proving Grounds Case": "/sealed/sealed-case.png",
   "Bulk Runes Case": "/sealed/sealed-case.png",
   "Proving Grounds": "/sealed/sealed-deck.png",
+  "Proving Grounds 2nd Edition": "/sealed/sealed-deck.png",
   "Starter Set": "/sealed/sealed-deck.png",
   // The one entry here that is a PHOTO of the real product rather than a RiftCompare
   // graphic. The T1 Signature Edition is drawing-only, so no store or TCGplayer
@@ -1483,7 +1508,7 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
   });
   // Boxes/cases first, then by price.
   const order = [
-    "Booster Box", "Booster Case", "Proving Grounds", "Proving Grounds Case", "Box Set",
+    "Booster Box", "Booster Case", "Proving Grounds", "Proving Grounds 2nd Edition", "Proving Grounds Case", "Box Set",
     "Bundle Case", "Pre-Rift Event Kit", "Pre-Rift Kit", "Vault", "Bundle", "Starter Set",
     "Nexus Night Pack", "Promo Pack", "Sleeved Booster (Art Set)", "Sleeved Booster",
     "Booster Pack", "Bulk Runes Case", "Bulk Runes", "Tin", "Sealed",

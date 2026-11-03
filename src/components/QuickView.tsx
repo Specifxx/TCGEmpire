@@ -1,5 +1,6 @@
 "use client";
 
+import { MiniPicks } from "./MiniPicks";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { sendCardView } from "@/lib/card-views";
@@ -28,12 +29,13 @@ import { EbayTabs, type EbayTab } from "./EbayTabs";
 import { EbayGradedLive, type GradedRow } from "./EbayGradedLive";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { timeAgo } from "@/lib/format";
-import { buyButtonClass, buyButtonLabel, ShownFirstTag } from "./CardMarketSection";
+import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
 import type { PricePoint } from "@/lib/price-history";
 import { lastKnownLabel, lastKnownPrice, lastKnownTitle, type LastKnownPrice } from "@/lib/last-known-price";
 import { hasAnyMarketPrice, pinMarketplaces } from "@/lib/market-rows";
+import { ShareButton } from "@/components/ShareButton";
 import { Dialog } from "./ui/Dialog";
 import { Spinner } from "./ui/Skeleton";
 import { pushRecentCard } from "@/lib/recently-viewed";
@@ -401,7 +403,10 @@ function QuickViewModal({
                 <p className="font-mono text-xs text-slate-500">{card.setName} ({card.setCode}) · {card.collectorNumber}</p>
                 <BanNotice name={card.name} compact />
               </div>
-              <PriceWatchButton cardId={card.id} variant="responsive" limitInline />
+              <div className="flex shrink-0 items-start gap-2">
+                <PriceWatchButton cardId={card.id} variant="responsive" limitInline />
+                <ShareButton responsive name={cardDisplayName(card.name, card)} prices={inStock} path={href} medium="card" />
+              </div>
             </div>
 
             {/* LAST KNOWN PRICE (2026-10-18, lib/last-known-price.ts): where this
@@ -430,6 +435,10 @@ function QuickViewModal({
                 </div>
               );
             })()}
+
+            {/* The small eBay + TCGplayer pair of this set's chase cards (owner,
+                2026-10-29: "much smaller … not intrusive"). */}
+            <MiniPicks setCode={card.setCode} pageType="quickview" className="mt-3" />
 
             {/* The card page's featured listing, here too (owner, 2026-10-19;
                 lib/featured-listings.ts). Labelled and above the comparison. */}
@@ -594,7 +603,7 @@ function QuickViewModal({
                         cardName={cardDisplayName(card.name, card)}
                         pageType="quickview"
                         surface="ebay_fallback"
-                        className="btn-ebay mt-3 inline-flex text-xs"
+                        className="btn-buy mt-3 inline-flex text-xs"
                       >
                         Search {ebayMkt.label} →
                       </OutboundLink>
@@ -631,7 +640,6 @@ function QuickViewModal({
                               Cheapest
                             </span>
                           )}
-                          {pinned && <ShownFirstTag />}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500">
                           {p.isFoil && <span className="font-semibold text-gold">✦ Foil</span>}
@@ -771,7 +779,7 @@ function QuickViewModal({
                 cardName={cardDisplayName(card.name, card)}
                 pageType="quickview"
                 surface="ebay_fallback"
-                className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-[#0064d2]/40 bg-[#0064d2]/[0.06] p-3 transition-colors hover:border-[#0064d2]/70"
+                className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-ink-800 p-3 transition-colors hover:border-ink-600"
               >
                 <span className="min-w-0 flex-1 basis-44 text-xs text-slate-300">
                   <span className="block font-semibold text-white">Search {ebayMkt.label} for {cardDisplayName(card.name, card)}</span>
@@ -781,7 +789,7 @@ function QuickViewModal({
                       : `We have no ${ebayMkt.label} price on file for this card right now — eBay sellers may still list it.`}
                   </span>
                 </span>
-                <span className="shrink-0 text-xs font-semibold text-sky-300">Search {ebayMkt.label} →</span>
+                <span className="shrink-0 text-xs font-semibold text-slate-300">Search {ebayMkt.label} →</span>
               </OutboundLink>
             )}
             {ebaySearchUrl && ebayMkt && <AffiliateDisclosure partner="ebay" tight />}

@@ -15,6 +15,7 @@ import {
   type ReportKind,
 } from "@/lib/price-report";
 import { formatMoney } from "@/lib/format";
+import { cleanReport, saveReport } from "@/lib/reports-github";
 
 export const dynamic = "force-dynamic";
 
@@ -197,6 +198,24 @@ export async function POST(req: Request) {
       ],
       body: str(body?.note, MAX_NOTE),
     });
+
+    // Also filed in the private reports repo the daily triage reads
+    // (lib/reports-github.ts): no user id, email or IP; never fails the report.
+    const copy = cleanReport(
+      {
+        kind: "wrong-price",
+        product: what ? `${what.name} ${what.setCode} ${what.collectorNumber}` : kind === "sealed" ? `sealed ${sealedGroupKey}` : cardId,
+        store: retailerName || retailer,
+        region: country,
+        shown: shownPriceCents != null ? formatMoney(shownPriceCents, currencyOf(country)) : null,
+        actual: actualPriceCents != null ? formatMoney(actualPriceCents, currencyOf(country)) : null,
+        issue,
+        note: str(body?.note, MAX_NOTE),
+        page: str(body?.page, MAX_PAGE),
+      },
+      "riftcompare",
+    );
+    if (copy.ok) await saveReport(copy.report);
 
     return NextResponse.json({ ok: true });
   } catch {

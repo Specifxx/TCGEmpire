@@ -1,21 +1,20 @@
-import { POKEMON_VARS, resolveUrl } from "../db-chains";
 import { pokemonSectionOn } from "./flag";
+import { pokemonDataPresent } from "./store";
 
-// The server-side on/off answer, WITHOUT the database client. Kept apart from
-// lib/pokemon/db.ts on purpose: the sitemap module (and through it
-// lib/revalidate-content.ts, which every Riftbound importer loads) has to ask
-// "is the section on?" without loading the generated Pokémon Prisma client,
-// which those importers' workflows never generate.
+// The server-side on/off answer. Kept apart from lib/pokemon/data.ts on
+// purpose: the sitemap module (and through it lib/revalidate-content.ts, which
+// every Riftbound importer loads) has to ask "is the section on?" without
+// loading the section's loaders.
 
-/** Is a Pokémon database configured in this environment? */
-export function pokemonDbConfigured(): boolean {
-  return Boolean(resolveUrl(POKEMON_VARS));
+/** Does this deployment carry the section's data files (data/pokemon/)? */
+export function pokemonDataReady(): boolean {
+  return pokemonDataPresent();
 }
 
 /**
- * Server-side gate for every Pokémon surface: the public switch AND a database.
+ * Server-side gate for every Pokémon surface: the switch AND the files.
  * The flag alone (lib/pokemon/flag.ts) is what client components can see.
  */
 export function pokemonEnabled(): boolean {
-  return pokemonSectionOn() && pokemonDbConfigured();
+  return pokemonSectionOn() && pokemonDataReady();
 }

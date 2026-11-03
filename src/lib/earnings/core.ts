@@ -46,6 +46,10 @@ export interface SourceResult {
    *  matched line by line against the network's dashboard (e.g. Earnings vs Other
    *  earnings, approved vs pending). Informational: `days` is what is counted. */
   checks?: { label: string; counted: boolean; days: DayAmount[] }[];
+  /** The newest day the source's report covers, in its own time zone, even a day
+   *  it earned nothing. Set only for eBay, whose report lags Sydney's today; it
+   *  marks the source as lagging (see latestDayFigure). */
+  reportedThrough?: string;
   /** When this source's data was fetched (ms). */
   fetchedAt: number;
 }
@@ -116,6 +120,22 @@ export function totalFor(days: readonly DayAmount[], range: RangeKey, today: str
   return out;
 }
 
+// EBAY'S "TODAY" WAS ALWAYS 0 (2026-10-28, owner). Today is Sydney's day, but
+// EPN reports whole days in its own (US) time zone, ~17 hours behind, and adds a
+// day's sales up to 48 hours late: Sydney's date had not started in eBay's report
+// for most of the day, and once it had, nothing was in it yet. Same-day data does
+// not exist, so a lagging source (one that sets reportedThrough) shows, under
+// Today, its newest day with earnings, labelled with that date, instead of a
+// false 0. Totals and Combined still count only what is dated today.
+/** For a lagging source with nothing dated today: its newest earning day before today and that day's total. */
+export function latestDayFigure(s: Pick<SourceResult, "days" | "reportedThrough">, today: string, display: string): { day: string; total: RangeTotal } | null {
+  if (s.reportedThrough === undefined || s.days.some((d) => d.day === today)) return null;
+  let day = "";
+  for (const d of s.days) if (d.day < today && d.day > day && (d.cents || d.pendingCents)) day = d.day;
+  if (!day) return null;
+  return { day, total: totalFor(s.days.filter((d) => d.day === day), "1d", day, display) };
+}
+
 /** Combined earnings per day (or per month for all time), in the display currency, oldest first. */
 export function seriesFor(
   sources: readonly SourceResult[],
@@ -139,6 +159,257 @@ export function seriesFor(
     }
   }
   return [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([label, v]) => ({ label, ...v }));
+}
+
+// THE GROWTH LINE (2026-10-28, owner: the stacked columns stay, "a line graph
+// would also be good … it shows the linear relationship of the growth"). Same
+// buckets as the columns, drawn per day or as a running total, with a straight
+// least-squares trend through the combined line.
+type Bucket = ReturnType<typeof seriesFor>[number];
+/** Each bucket's amounts added to every bucket before it. */
+export function runningTotal(series: readonly Bucket[]): Bucket[] {
+  const bySource: Partial<Record<EarningsSourceKey, number>> = {};
+  let cents = 0;
+  return series.map((b) => {
+    cents += b.cents;
+    for (const [k, v] of Object.entries(b.bySource) as [EarningsSourceKey, number][]) bySource[k] = (bySource[k] ?? 0) + v;
+    return { label: b.label, cents, bySource: { ...bySource } };
+  });
+}
+
+/** The least-squares straight line through `values` (x = 0, 1, 2…): its first and last y. Null under three points. */
+export function linearTrend(values: readonly number[]): { start: number; end: number; slope: number } | null {
+  const n = values.length;
+  if (n < 3) return null;
+  const mx = (n - 1) / 2;
+  const my = values.reduce((a, b) => a + b, 0) / n;
+  let num = 0;
+  let den = 0;
+  values.forEach((y, x) => {
+    num += (x - mx) * (y - my);
+    den += (x - mx) ** 2;
+  });
+  const slope = den ? num / den : 0;
+  return { start: my - slope * mx, end: my + slope * (n - 1 - mx), slope };
+}
+
+// FORECAST (2026-10-28, owner: "projected forecasts … by the end of this year,
+// quarter 1 next year, quarter 2, quarter 3, quarter 4 … easy to visualize
+// where we're heading"). Not a straight line (owner, 2026-10-29): growth
+// compounds and follows the hobby's calendar.
+//
+// SCENARIOS, NOT A FITTED CURVE (owner, 2026-11-01: "the growth is a bit too
+// ambitious … if I do 250K next year, that's … 5 million dollars in sales").
+// The 2026-10-29 model fitted a compounding rate to ~6 weeks of a young
+// business doubling, hit the +10%/week clamp and projected ~13× in a year.
+// Now every number comes from plainly stated assumptions:
+//  1. RUN RATE: the last FORECAST_RUN_DAYS complete days per source, each day
+//     divided by its month's SEASON (so a December peak isn't read as growth).
+//     AdSense is left out of it and added as an assumed amount a day, because
+//     it was switched on and off (back on 2026-11-01) and has no steady history.
+//  2. GROWTH: a fixed, capped monthly rate per scenario (SCENARIOS), compounding.
+//     The observed change (last 28 days vs the 28 before) is shown beside it,
+//     never extrapolated: a few weeks of pre-order spikes are not a trend.
+//  3. SEASON: each projected day times its month's multiplier.
+//  4. IMPLIED SALES: affiliate earnings (eBay + TCGplayer) ÷ ASSUMED_COMMISSION,
+//     the store sales those earnings would take, so a forecast that needs an
+//     absurd sales volume is visible at a glance.
+// The last FORECAST_LAG_DAYS are projected, not counted, because eBay adds a
+// day's sales up to 48 hours late. A projection, never a figure anywhere else.
+export const FORECAST_RUN_DAYS = 28;
+export const FORECAST_LAG_DAYS = 2;
+/** No scenario may assume more than this compounding growth a month (~2.5× a year). */
+export const FORECAST_MAX_MONTHLY = 0.08;
+/** Blended affiliate commission on store sales (eBay EPN and TCGplayer, ~4–5%). */
+export const ASSUMED_COMMISSION = 0.045;
+/** Earnings that come from a commission on a store sale. */
+export const AFFILIATE_SOURCES: readonly EarningsSourceKey[] = ["ebay", "tcgplayer"];
+/** Month multipliers (Jan … Dec), mean 1: hobby gifting peak, January lull.
+ *  Assumed from the hobby calendar until a year of our own data replaces it. */
+export const SEASON = [0.85, 0.9, 1, 1, 0.95, 0.95, 1, 1, 1, 1.05, 1.1, 1.2] as const;
+
+export type ScenarioKey = "conservative" | "base" | "optimistic";
+export interface Scenario {
+  key: ScenarioKey;
+  label: string;
+  /** Compounding growth a month, seasonally adjusted. */
+  monthly: number;
+  /** AdSense assumed per day at today's traffic, AUD cents (grows with the scenario). */
+  adsenseAudCentsPerDay: number;
+  why: string;
+}
+export const SCENARIOS: readonly Scenario[] = [
+  {
+    key: "conservative",
+    label: "Conservative",
+    monthly: -0.04,
+    adsenseAudCentsPerDay: 100,
+    why: "Google traffic keeps sliding after the Radiance release, as Search Console shows now, and nothing new replaces it",
+  },
+  {
+    key: "base",
+    label: "Base",
+    monthly: 0.02,
+    adsenseAudCentsPerDay: 150,
+    why: "slow, steady SEO and sister-site growth; Legacy pre-orders roughly replace the lost Radiance ones",
+  },
+  {
+    key: "optimistic",
+    label: "Optimistic",
+    monthly: 0.06,
+    adsenseAudCentsPerDay: 250,
+    why: "the SEO fixes land and Legacy sells like Radiance did",
+  },
+];
+
+export interface ScenarioValue {
+  /** Earned so far + projected. */
+  cents: number;
+  /** Store sales the affiliate part implies (earned and projected), ÷ ASSUMED_COMMISSION. */
+  salesCents: number;
+}
+
+export interface ForecastPeriod {
+  label: string;
+  from: string;
+  to: string;
+  /** Already earned (days before the projection starts). */
+  actualCents: number;
+  /** Store sales the affiliate part of actualCents implies. */
+  actualSalesCents: number;
+  /** One per SCENARIOS key. */
+  scenarios: Record<ScenarioKey, ScenarioValue>;
+}
+
+export interface Forecast {
+  /** First projected day; days before it are actual. */
+  from: string;
+  runFrom: string;
+  runTo: string;
+  /** Run rate a day, seasonally adjusted, AdSense excluded (display cents). */
+  perDayNow: number;
+  /** The affiliate (commission) part of perDayNow. */
+  affiliatePerDayNow: number;
+  /** The last 28 days against the 28 before, seasonally adjusted, %; null without both. */
+  observedPct28: number | null;
+  scenarios: readonly Scenario[];
+  /** This quarter and the four after it. */
+  periods: ForecastPeriod[];
+  /** The same span month by month, for the curve. */
+  months: ForecastPeriod[];
+  /** This calendar year and next, whole. */
+  years: ForecastPeriod[];
+}
+
+const seasonOf = (day: string) => SEASON[Number(day.slice(5, 7)) - 1];
+const quarterOf = (day: string) => ({ y: Number(day.slice(0, 4)), q: Math.floor((Number(day.slice(5, 7)) - 1) / 3) + 1 });
+const quarterBounds = (y: number, q: number) => {
+  const from = `${y}-${String((q - 1) * 3 + 1).padStart(2, "0")}-01`;
+  const next = q === 4 ? `${y + 1}-01-01` : `${y}-${String(q * 3 + 1).padStart(2, "0")}-01`;
+  return { from, to: addDays(next, -1) };
+};
+
+/** Combined earnings per day, every day any source earned, in the display currency. */
+export function dailyTotals(sources: readonly Pick<SourceResult, "days">[], today: string, display: string): { label: string; cents: number }[] {
+  const m = new Map<string, number>();
+  for (const s of sources) for (const d of s.days) if (d.day <= today) m.set(d.day, (m.get(d.day) ?? 0) + toDisplay(d.cents, d.currency, display));
+  return [...m.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([label, cents]) => ({ label, cents }));
+}
+
+/** Compounding growth factor `k` days into a projection at `monthly` a month. */
+export function growthFactor(monthly: number, k: number): number {
+  return Math.pow(1 + Math.max(-0.5, Math.min(FORECAST_MAX_MONTHLY, monthly)), k / 30);
+}
+
+/** The quarter `today` is in and the four after it, projected under each of
+ *  SCENARIOS. `sources` are the live sources (key + days). Null with under
+ *  FORECAST_RUN_DAYS days since the first earning. */
+export function forecastQuarters(
+  sources: readonly Pick<SourceResult, "key" | "days">[],
+  today: string,
+  display: string,
+  scenarios: readonly Scenario[] = SCENARIOS,
+): Forecast | null {
+  const start = addDays(today, -FORECAST_LAG_DAYS); // first projected day
+  const runTo = addDays(start, -1);
+  const runFrom = addDays(runTo, -(FORECAST_RUN_DAYS - 1));
+  const total = new Map<string, number>();
+  const affiliate = new Map<string, number>();
+  const counted = new Map<string, number>(); // the run rate's sources: all but AdSense
+  for (const s of sources)
+    for (const d of s.days) {
+      if (d.day > today) continue;
+      const c = toDisplay(d.cents, d.currency, display);
+      total.set(d.day, (total.get(d.day) ?? 0) + c);
+      if (AFFILIATE_SOURCES.includes(s.key)) affiliate.set(d.day, (affiliate.get(d.day) ?? 0) + c);
+      if (s.key !== "adsense") counted.set(d.day, (counted.get(d.day) ?? 0) + c);
+    }
+  const firstDay = [...total.entries()].filter(([, c]) => c > 0).map(([d]) => d).sort()[0];
+  if (!firstDay || firstDay > runFrom) return null;
+  const deseason = (m: Map<string, number>, from: string, to: string) => {
+    let sum = 0;
+    for (let d = from; d <= to; d = addDays(d, 1)) sum += (m.get(d) ?? 0) / seasonOf(d);
+    return sum / FORECAST_RUN_DAYS;
+  };
+  const level = deseason(counted, runFrom, runTo);
+  const affLevel = deseason(affiliate, runFrom, runTo);
+  const priorTo = addDays(runFrom, -1);
+  const priorFrom = addDays(priorTo, -(FORECAST_RUN_DAYS - 1));
+  const prior = firstDay <= priorFrom ? deseason(counted, priorFrom, priorTo) : 0;
+  const observedPct28 = prior > 0 ? Math.round((level / prior - 1) * 1000) / 10 : null;
+
+  const period = (label: string, from: string, to: string): ForecastPeriod => {
+    let actualCents = 0;
+    let actualAff = 0;
+    const proj = Object.fromEntries(scenarios.map((s) => [s.key, { cents: 0, aff: 0 }])) as Record<ScenarioKey, { cents: number; aff: number }>;
+    for (let d = from; d <= to; d = addDays(d, 1)) {
+      if (d < start) {
+        actualCents += total.get(d) ?? 0;
+        actualAff += affiliate.get(d) ?? 0;
+        continue;
+      }
+      const k = Math.round((Date.parse(d) - Date.parse(runTo)) / 86_400_000);
+      for (const s of scenarios) {
+        const f = growthFactor(s.monthly, k) * seasonOf(d);
+        proj[s.key].cents += (level + toDisplay(s.adsenseAudCentsPerDay, "AUD", display)) * f;
+        proj[s.key].aff += affLevel * f;
+      }
+    }
+    const out = Object.fromEntries(
+      scenarios.map((s) => [
+        s.key,
+        { cents: Math.round(actualCents + proj[s.key].cents), salesCents: Math.round((actualAff + proj[s.key].aff) / ASSUMED_COMMISSION) },
+      ]),
+    ) as Record<ScenarioKey, ScenarioValue>;
+    return { label, from, to, actualCents: Math.round(actualCents), actualSalesCents: Math.round(actualAff / ASSUMED_COMMISSION), scenarios: out };
+  };
+  const { y, q } = quarterOf(today);
+  const periods: ForecastPeriod[] = [];
+  for (let i = 0; i < 5; i++) {
+    const qq = ((q - 1 + i) % 4) + 1;
+    const yy = y + Math.floor((q - 1 + i) / 4);
+    const { from, to } = quarterBounds(yy, qq);
+    periods.push(period(`Q${qq} ${yy}`, from, to));
+  }
+  const months: ForecastPeriod[] = [];
+  for (let m = periods[0].from; m <= periods[4].to; ) {
+    const next = Number(m.slice(5, 7)) === 12 ? `${Number(m.slice(0, 4)) + 1}-01-01` : `${m.slice(0, 5)}${String(Number(m.slice(5, 7)) + 1).padStart(2, "0")}-01`;
+    months.push(period(m.slice(0, 7), m, addDays(next, -1)));
+    m = next;
+  }
+  const years = [y, y + 1].map((yy) => period(String(yy), `${yy}-01-01`, `${yy}-12-31`));
+  return {
+    from: start,
+    runFrom,
+    runTo,
+    perDayNow: Math.round(level),
+    affiliatePerDayNow: Math.round(affLevel),
+    observedPct28,
+    scenarios,
+    periods,
+    months,
+    years,
+  };
 }
 
 /** Merge rows into one per (day, currency). */
@@ -223,7 +494,10 @@ export function impactActions(json: unknown): ImpactAction[] {
       state: String(a.State ?? "").toUpperCase(),
       currency: String(a.Currency ?? "USD").toUpperCase(),
       cents: toCents(a.Payout),
-      tag: String(pick(a, "SharedId", "SubId1") ?? "").trim(),
+      // First NON-EMPTY of the two: the API returns both keys on every action,
+      // and the engine sites (Gundam, Lorcana, YGO) tagged only subId1 before
+      // 2026-10-28, so SharedId alone read as "No tag" for their sales.
+      tag: [pick(a, "SharedId"), pick(a, "SubId1")].map((v) => String(v ?? "").trim()).find(Boolean) ?? "",
     });
   }
   return out;
@@ -330,6 +604,16 @@ export function epnDailyParts(records: readonly Record<string, unknown>[], accou
     other.push({ day, currency, cents: toCents(pick(r, "OtherEarnings")) });
   }
   return { earnings: mergeDays(earnings), other: mergeDays(other) };
+}
+
+/** The newest date any report row carries (zero-earning rows too), or "" when none. */
+export function latestReportDay(records: readonly Record<string, unknown>[], ...columns: string[]): string {
+  let max = "";
+  for (const r of records) {
+    const day = reportDay(pick(r, ...columns));
+    if (day && day > max) max = day;
+  }
+  return max;
 }
 
 /** Exact-duplicate report rows (same values in every column) counted once: a row
@@ -465,14 +749,26 @@ export const TAG_NAMES: Record<string, string> = {
   oc: "OP Compare (One Piece)",
   gundam: "Gundam Compare",
   lorcana: "Lorcana Compare",
+  ygo: "YGO Compare (Yu-Gi-Oh!)",
   cc: "CamCompare",
 };
+
+// RiftCompare's own TCGplayer sub-ids start with the network, not the site
+// (`tcgplayer-card-…`, `tcgplayer-preorders-radiance`; lib/affiliate.ts), so they
+// formed a "TCGPLAYER" group of their own and RiftCompare's row missed its
+// TCGplayer money (2026-11-03, weekly growth review). Every sister site prefixes
+// its own key (oc-, dex-, mtg-, ygo- …), so only RiftCompare sends these.
+// MTG Compare's old singles site (before 2026-10-21) tagged its links `mc-…`;
+// late TCGplayer sales from those clicks are MTG Compare's money, not a site
+// called "MC" (2026-11-03, thread "Turn around underperforming sites").
+export const TAG_ALIASES: Record<string, string> = { tcgplayer: "rc", mc: "mtg" };
 
 export function tagGroup(tag: string): { key: string; label: string } {
   const t = tag.trim().toLowerCase();
   if (!t) return { key: "", label: "No tag" };
   const m = /^([a-z0-9]+)[-_.\s/:|]/.exec(t);
-  const key = m ? m[1] : t.slice(0, 3);
+  const raw = m ? m[1] : t.slice(0, 3);
+  const key = TAG_ALIASES[raw] ?? raw;
   return { key, label: TAG_NAMES[key] ?? key.toUpperCase() };
 }
 

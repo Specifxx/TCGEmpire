@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import Link from "next/link";
 import type { Article, ArticleCloseUp, ArticleEmbed } from "@/lib/articles";
 import { ARTICLES } from "@/lib/articles";
@@ -29,6 +30,8 @@ import { ScrollDepthTracker } from "./ScrollDepthTracker";
 import { ArticleSignupCta } from "./ArticleSignupCta";
 import { carriesRadiancePreorderCta, isBeforeRadianceRelease, RADIANCE_CALLOUT_SLUGS } from "@/lib/sets/radiance";
 import { RadiancePreorderCta } from "./RadiancePreorderCta";
+import { LegacyPreorderCta } from "./LegacyPreorderCta";
+import { carriesLegacyPreorderCta } from "@/lib/sets/legacy";
 import { BanListTable } from "./BanListTable";
 import { BANLIST_SLUG } from "@/lib/banlist";
 import { EbayCardSearchRow, EbayCountryLink } from "./EbayCountryLink";
@@ -289,6 +292,24 @@ function articleTools(slug: string, ctaHref: string): { href: ToolRoute; label: 
   return tools;
 }
 
+// "Riftbound essentials" (2026-11-03, owner's Search Console report: "link from
+// Radiance and Legacy news posts into evergreen pages so the traffic spike
+// benefits them"). News posts take the spikes (spoilers, signatures, chase
+// cards) while the reference guides that answer the standing questions sit at
+// position 6-9 with almost no clicks. Every blog post now links the same small
+// set of evergreen answers, as plain server-rendered links. Guides already link
+// each other through "Recommended reads", so they don't get the block.
+const EVERGREEN_LINKS: readonly { href: string; label: string }[] = [
+  { href: "/price-guide", label: "Riftbound price guide" },
+  { href: "/guides/riftbound-sets-in-order", label: "Every set in order" },
+  { href: "/guides/how-a-riftbound-deck-is-built", label: "Deck size and deck rules" },
+  { href: "/guides/riftbound-card-size-sleeves-deck-boxes", label: "Card size and sleeves" },
+  { href: "/guides/riftbound-banlist-explained", label: "Current ban list" },
+  { href: "/guides/riftbound-format-legality-rotation", label: "Does Riftbound rotate?" },
+  { href: "/keywords", label: "Keyword glossary" },
+  { href: "/blog/how-to-sell-riftbound-cards", label: "How to sell your cards" },
+];
+
 const DEFAULT_BROWSE_CTA = {
   href: "/browse",
   label: "Browse the card database →",
@@ -319,6 +340,9 @@ export async function ArticleView({ article }: { article: Article }) {
   // The block itself switches to "see Radiance prices" on release day, so the
   // rule does not expire.
   const preorderCta = carriesRadiancePreorderCta(article);
+  // Every legacy-tagged post until Legacy's street date (lib/sets/legacy.ts).
+  // Never both: a post tagged for both sets keeps Radiance's block.
+  const legacyCta = !preorderCta && carriesLegacyPreorderCta(article);
   const radianceAlertOpen = !!setByCode(RADIANCE_SET_CODE)?.comingSoon;
   // Radiance posts lead with "Follow the chase cards" instead of the email box
   // (2026-10-16 growth pass, components/ChaseWatchCta.tsx): their readers came
@@ -533,6 +557,7 @@ export async function ArticleView({ article }: { article: Article }) {
       {/* Radiance pre-order CTA, first placement: above the TL;DR, so it is on
           the first screen of the site's highest-traffic post. */}
       {preorderCta && <RadiancePreorderCta placement="top" />}
+      {legacyCta && <LegacyPreorderCta placement="top" />}
 
       {/* Answer-first TL;DR — the block a featured snippet or an AI answer engine
           lifts. Above the fold, above the first ad. */}
@@ -573,6 +598,7 @@ export async function ArticleView({ article }: { article: Article }) {
                 )}
                 {firstSection.trim() ? <Markdown content={firstSection} cards={cards} /> : null}
                 {preorderCta && <RadiancePreorderCta placement="section" withSignup />}
+                {legacyCta && <LegacyPreorderCta placement="section" />}
                 {afterFirst.trim() ? <Markdown content={afterFirst} cards={cards} /> : null}
               </Fragment>
             );
@@ -665,6 +691,13 @@ export async function ArticleView({ article }: { article: Article }) {
                 ...(article.ebayPicks.heading ? { heading: article.ebayPicks.heading } : {}),
               }
             : {})}
+        />
+      )}
+      {article.ebayPicks && (
+        <TcgplayerPicks
+          className="mt-6"
+          pageType="article"
+          {...(typeof article.ebayPicks === "object" && article.ebayPicks.setCode ? { setCode: article.ebayPicks.setCode } : {})}
         />
       )}
 
@@ -819,6 +852,21 @@ export async function ArticleView({ article }: { article: Article }) {
             ))}
           </div>
         </section>
+      )}
+
+      {article.category === "blog" && (
+        <nav aria-label="Riftbound essentials" className="mt-6">
+          <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-400">Riftbound essentials</h2>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            {EVERGREEN_LINKS.filter((l) => l.href !== `/blog/${article.slug}`).map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="chip bg-ink-800 text-slate-300 hover:bg-ink-700 hover:text-white">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       )}
 
       {/* Sister sites (owner, 2026-10-14): the cross-game guides link their

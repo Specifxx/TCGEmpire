@@ -2,19 +2,17 @@
 // outbound URLs and in the page HTML — so they're safe as code defaults (override
 // via env if you ever rotate them).
 
+import { amazonTagForHost } from "./amazon";
 import { SITE_URL } from "./site";
 import { normalizeCardmarketUrl } from "@/lib/cardmarket-url";
 import { partnerRefUrl } from "@/lib/store-partner-deals";
 
 // eBay Partner Network campaign id. Passed to the Browse API so listing URLs come
 // back already affiliate-tagged (itemAffiliateWebUrl). See lib/ebay.ts.
-// NOTE: `||` (not `??`) so a var accidentally set to an EMPTY string still falls
-// back to this id — an empty value emits `campid=` and silently untracks clicks.
-export const EBAY_CAMPAIGN_ID = process.env.EBAY_AFFILIATE_CAMPAIGN || "5339155912";
-
-// Amazon Associates store/tracking id, appended to amazon.* product links.
-// `||` (not `??`) so an empty-string env var still falls back to the default.
-export const AMAZON_ASSOCIATE_TAG = process.env.AMAZON_ASSOCIATE_TAG || "riftcompare-20";
+// One campaign for every Compare site, hard-coded (owner, 2026-10-30: "make all
+// of them use this exact campaign"): no variable overrides it, and each site's
+// customid prefix (`rc-` here) tells the sites apart in EPN's reports.
+export const EBAY_CAMPAIGN_ID = "5339155912";
 
 // Impact (TCGplayer affiliate) site-ownership verification token. Rendered as a
 // <meta> in the document <head>.
@@ -261,6 +259,22 @@ export function ebayDomain(country: string): string {
   return EBAY_DOMAIN[country] ?? EBAY_DOMAIN.US;
 }
 
+// An eBay link with our EPN tracking taken off (2026-10-27). EPN counts email as
+// "messaging", a special business model it approves in advance, and we have no
+// such approval, so the eBay links in our emails (graded-watch lows, auction
+// digests) go out plain. Remove this call from the emails once EPN approves.
+const EPN_PARAMS = ["mkevt", "mkcid", "mkrid", "campid", "customid", "toolid", "siteid", "mkgroupid", "_trkparms"];
+export function plainEbayUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    if (!/(?:^|\.)ebay\./i.test(u.hostname)) return url;
+    for (const k of EPN_PARAMS) u.searchParams.delete(k);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 // Human-readable label for "which eBay am I searching" copy. Deliberately NOT
 // derived from EBAY_DOMAIN: SG's logical domain is still ebay.com.sg (above),
 // but the link a Singapore visitor actually lands on is ebay.com (see the SG
@@ -379,7 +393,8 @@ export function affiliateUrl(
       return ebayAffiliateUrl(url, affiliateSubId(subId, page));
     }
     if (/(?:^|\.)amazon\./i.test(u.hostname)) {
-      u.searchParams.set("tag", AMAZON_ASSOCIATE_TAG);
+      // The tag of THAT Amazon's account (lib/amazon.ts): riftcompare-20 earns only on amazon.com.
+      u.searchParams.set("tag", amazonTagForHost(u.hostname));
       // Amazon's own sub-tag field. Associates reports break it out per ascsubtag.
       u.searchParams.set("ascsubtag", affiliateSubId(subId, page));
       return u.toString();

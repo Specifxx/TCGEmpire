@@ -23,7 +23,9 @@ import { conditionRank, listingCondition } from "./condition";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO, convertCents } from "./fx";
+import { implausiblyCheap } from "./price-sanity";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
+import { fetchCardHiveProducts } from "./cardhive";
 import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
@@ -38,6 +40,11 @@ export interface ShopifyProduct {
   // …), so the Shopify shape would produce a 404 on every outbound buy link —
   // the click that earns the site money, pointed at a dead page.
   url?: string;
+  // The printing, when the store's adapter has already decided it from
+  // something better than the title (lib/cardhive.ts: Riot's own card picture).
+  // null = the adapter could not match it; the title matcher is NOT asked then.
+  // Absent = the normal title matcher decides.
+  cardId?: string | null;
 }
 
 
@@ -798,13 +805,24 @@ export function ebayDayIndex(): number {
 }
 
 export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
-  const n = EBAY_ALWAYS_MARKETS.length;
+  // ── THE US SEARCHES FIRST, EVERY DAY (owner, 2026-11-01) ───────────────────
+  // "The eBay API for all websites should also prioritise the US." The US is the
+  // default market and the largest EPN payout, so it now has first claim on the
+  // quota every day, ahead of even the rotating market, and is never the market
+  // a latched budget discards. The other daily markets (AU today) still rotate
+  // among themselves for the trailing slot below, and the rotating market keeps
+  // the place straight after the US, so it is still never last (the 2026-08-23
+  // reasoning below holds for everything after the US).
+  const us = EBAY_ALWAYS_MARKETS.filter((m) => m.country === "US");
+  const rest = EBAY_ALWAYS_MARKETS.filter((m) => m.country !== "US");
+  const n = rest.length;
   // `% n` twice with an added n: dayIndex is derived from a clock and is always
   // positive today, but a negative index would otherwise produce a negative
   // slice offset and silently return a SHORTER market list — a dropped market,
   // not an error.
   const offset = n === 0 ? 0 : ((dayIndex % n) + n) % n;
-  const always = [...EBAY_ALWAYS_MARKETS.slice(offset), ...EBAY_ALWAYS_MARKETS.slice(0, offset)];
+  const others = [...rest.slice(offset), ...rest.slice(0, offset)];
+  const always = [...us, ...others];
   // No rotating markets today. Indexing an empty array here would yield
   // `undefined` and append it, and the pass would crash on `mkt.marketplace`
   // rather than simply searching the always-markets.
@@ -832,7 +850,7 @@ export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
   // casualty is always one of the daily markets, which lose the least by being
   // skipped, and which one it is still alternates by day via `offset` above —
   // the 2026-08-05 fix, intact.
-  return [today, ...always];
+  return [...us, today, ...others];
 }
 
 // EBAY_CA_RETAILER moved to constants.ts (2026-08-20) so sealed-import.ts can
@@ -1768,6 +1786,11 @@ export async function importPrices(): Promise<ImportSummary> {
     if (purged.count) console.log(`Purged ${purged.count} card rows from stores now tracked for sealed only (${SINGLES_RETIRED_RETAILERS.join(", ")}).`);
   }
 
+  // TCGplayer's US market per card (yesterday's), for the too-cheap guard
+  // (lib/price-sanity.ts). Unreadable = no guard this run, never no import.
+  const tcgUs = await tcgplayerUsValues().catch(() => new Map<string, number>());
+  let tooCheap = 0;
+
   for (const store of RETAILER_LIST) {
     const cc = store.country ?? "AU";
     if (onlyCountry && cc !== onlyCountry) continue;
@@ -1781,7 +1804,9 @@ export async function importPrices(): Promise<ImportSummary> {
     const products =
       store.platform === "woocommerce"
         ? await fetchWooStoreProducts(store)
-        : await fetchShopifyStoreProducts(store);
+        : store.platform === "cardhive"
+          ? await fetchCardHiveProducts(store.base, allCardRows)
+          : await fetchShopifyStoreProducts(store);
     if (!products.length) {
       // Keeping the rows is right for ONE bad run and wrong for a store that has
       // stopped selling Riftbound: E4 Cards' 138 listings were still on card
@@ -1811,7 +1836,7 @@ export async function importPrices(): Promise<ImportSummary> {
     // reason; this gives the Shopify path the same diagnostic.
     const unmatchedSample: string[] = [];
     for (const p of products) {
-      const cardId = resolveCardId(p, idx);
+      const cardId = p.cardId !== undefined ? p.cardId : resolveCardId(p, idx);
       if (!cardId) {
         unmatched++;
         if (unmatchedSample.length < 5) unmatchedSample.push(p.title.slice(0, 70));
@@ -1838,6 +1863,10 @@ export async function importPrices(): Promise<ImportSummary> {
       // The variant's label, or a played/damaged label from the PRODUCT title
       // when the variant names none (lib/condition.ts listingCondition).
       const condition = listingCondition(p.title, best.title);
+      if (implausiblyCheap(priceCents, currencyOf(cc), tcgUs.get(cardId), condition)) {
+        tooCheap++;
+        continue;
+      }
       const prev = rows.get(cardId);
       // Keep the best listing per store+card: in-stock beats out-of-stock, then
       // better condition, then cheaper beats dearer — a store's separate
@@ -1881,6 +1910,7 @@ export async function importPrices(): Promise<ImportSummary> {
     summary.totalMatched += matched;
     summary.totalUnmatched += unmatched;
   }
+  if (tooCheap) console.log(`Too-cheap guard: dropped ${tooCheap} store listings under a quarter of TCGplayer's market (lib/price-sanity.ts).`);
 
   // Confirm each card's displayed (cheapest) price against the live product page,
   // since the collection feed can lag it. In single-market mode only that market's

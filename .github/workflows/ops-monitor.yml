@@ -3,8 +3,10 @@ name: Ops monitor
 # The site watches itself. Every three hours this checks the things that quietly break
 # a site nobody is looking at (database transfer limits, eBay, store prices, scheduled
 # jobs, the live site, Stripe, email, the inbox), stores the result for /admin/health,
-# and emails the owner ONLY when something needs attention. Sundays it also sends a short
-# "all healthy" digest, so silence is never ambiguous: no Monday email means this has stopped.
+# and emails the owner ONLY when something is RED. It also reads every sister site's status
+# for Empire HQ (/admin/hq), and Sundays it asks the site to send the ONE Monday report
+# (every site, earnings, the owner's steps; its own digest is the fallback), so silence is
+# never ambiguous: no Monday email means this has stopped.
 # scripts/ops-monitor.ts has the full account; DECISIONS.md, "The site watches itself", 2026-10-14.
 #
 # WHY HERE AND NOT ON VERCEL. It has to keep working when the database has run out of
@@ -18,14 +20,21 @@ name: Ops monitor
 # An undeliverable URGENT alert fails the job, so GitHub's own failed-run email reaches
 # the owner as a last resort.
 
+# GITHUB DROPS SCHEDULED RUNS. This repo has ~50 scheduled workflows and GitHub skips many of their
+# runs under load (Keep warm, every five minutes, gets two or three a day). The old "17 */3" schedule
+# left gaps of 8-10 hours, which /admin/health rightly called a stopped monitor (2026-11-02). So the
+# cron now ASKS every hour and the gate job below lets a scheduled run through only when the last
+# real check is 150+ minutes old: the cadence (and the database reads) stay about every three hours,
+# with three chances per slot instead of one. A manual run and the Sunday report always go through.
+
 on:
   schedule:
-    - cron: "17 */3 * * *"
-    - cron: "0 21 * * 0" # Sunday 21:00 UTC = Monday morning in Sydney: the weekly digest
+    - cron: "17 * * * *"
+    - cron: "0 21 * * 0" # Sunday 21:00 UTC = Monday morning in Sydney: the one Monday report
   workflow_dispatch:
     inputs:
       digest:
-        description: "Send the weekly digest now"
+        description: "Send the Monday report now"
         type: boolean
         default: false
       dry_run:
@@ -43,7 +52,32 @@ permissions:
   deployments: read
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+    steps:
+      - id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          # The monitor's memory is saved to the Actions cache after every real check, so the newest
+          # ops-state- cache is when the last check ran. Fail open: no answer means run.
+          if [ "$EVENT" != "schedule" ] || [ "$SCHEDULE" = "0 21 * * 0" ]; then echo "run=1" >> "$GITHUB_OUTPUT"; exit 0; fi
+          last=$(gh api "repos/${{ github.repository }}/actions/caches?key=ops-state-&sort=created_at&direction=desc&per_page=1" -q '.actions_caches[0].created_at // empty' 2>/dev/null || true)
+          if [ -n "$last" ]; then
+            age=$(( ($(date +%s) - $(date -d "$last" +%s)) / 60 ))
+            echo "Last check ${age} minutes ago ($last)."
+            if [ "$age" -lt 150 ]; then echo "Checked recently; skipping this hour."; echo "run=0" >> "$GITHUB_OUTPUT"; exit 0; fi
+          fi
+          echo "run=1" >> "$GITHUB_OUTPUT"
+
   monitor:
+    needs: gate
+    if: ${{ needs.gate.outputs.run == '1' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

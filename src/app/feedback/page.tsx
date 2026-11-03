@@ -13,18 +13,22 @@ export const metadata: Metadata = {
   // the link graph is intact — never a robots.txt Disallow, which would stop
   // Google reading this tag at all. AdSense remediation § Phase 7.
   robots: { index: false, follow: true },
-  title: "Feedback — Shape RiftCompare (and get Pro)",
+  title: "Rate & review RiftCompare",
   description:
-    "Tell us what would make RiftCompare better. Your first feedback earns free RiftCompare Pro — help us build the best Riftbound price tool.",
+    "Rate RiftCompare and tell us what would make it better — help us build the best Riftbound price tool.",
   alternates: pageAlternates("/feedback"),
   openGraph: {
     title: "Feedback — Shape RiftCompare",
-    description: "Tell us what would make RiftCompare better — your first feedback earns free Pro.",
+    description: "Rate RiftCompare and tell us what would make it better.",
     url: `${SITE_URL}/feedback`,
   },
 };
 
-export default async function FeedbackPage() {
+// ?rating=1…5 preselects that many stars: the feedback email's star links
+// (buildPremiumOfferEmail in lib/email.ts) land here with the reader's tap.
+export default async function FeedbackPage({ searchParams }: { searchParams?: { rating?: string } }) {
+  const r = Number(searchParams?.rating);
+  const initialRating = Number.isInteger(r) && r >= 1 && r <= 5 ? r : 0;
   const days = feedbackPremiumActive() ? FEEDBACK_PREMIUM_DAYS : 0;
   const dayLabel = `${days} day${days === 1 ? "" : "s"}`;
   // The reward EXTENDS an existing subscription at its own tier rather than
@@ -49,7 +53,7 @@ export default async function FeedbackPage() {
         </p>
       </div>
 
-      <FeedbackForm days={days} />
+      <FeedbackForm days={days} initialRating={initialRating} />
 
       <p className="mt-4 text-center text-xs text-slate-500">
         Prefer email? Reach us via the <a href="/contact" className="text-brand-400 hover:underline">contact page</a>.
