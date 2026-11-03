@@ -36,8 +36,8 @@
       "id": "cyberpunk-setup",
       "site": "cyberpunk",
       "kind": "chrome",
-      "title": "Finish Cyberpunk Compare's account setup (check first: eBay keys, Search Console)",
-      "why": "The site is live; eBay prices stay off until its own keys exist, and Google needs the property.",
+      "title": "Cyberpunk Compare: add the site to Google Search Console (eBay keys and domain already done)",
+      "why": "The site and its own eBay keys are live since 2 Nov; Google still needs the property and sitemap.",
       "added": "2026-11-01",
       "prompt": "cyberpunk-compare/chrome-prompt-setup.md",
       "done": null
