@@ -44,7 +44,7 @@ export async function getSiteRating(): Promise<SiteRating | null> {
   const now = Date.now();
   if (g.__rcSiteRating && now - g.__rcSiteRating.at < TTL_MS) return g.__rcSiteRating.value;
   try {
-    const agg = await prisma.feedback.aggregate({ where: { rating: { not: null }, NOT: { source: "rating-review" } }, _avg: { rating: true }, _count: { rating: true } });
+    const agg = await prisma.feedback.aggregate({ where: { site: "riftcompare", rating: { not: null }, NOT: { source: "rating-review" } }, _avg: { rating: true }, _count: { rating: true } });
     const value = ratingToShow(agg._avg.rating, agg._count.rating);
     g.__rcSiteRating = { at: now, value };
     return value;

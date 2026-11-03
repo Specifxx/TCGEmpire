@@ -46,7 +46,7 @@ export async function getApprovedReviews(limit = 12): Promise<PublicReview[]> {
   if (g.__rcReviews && now - g.__rcReviews.at < TTL_MS) return g.__rcReviews.rows.slice(0, limit);
   try {
     const rows = await prisma.feedback.findMany({
-      where: { status: "APPROVED", consentPublic: true, publishedAt: { not: null } },
+      where: { site: "riftcompare", status: "APPROVED", consentPublic: true, publishedAt: { not: null } },
       orderBy: { publishedAt: "desc" },
       take: 24,
       // Explicit select — never widen this to include `email`, which is a reply

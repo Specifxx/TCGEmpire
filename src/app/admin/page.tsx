@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getLatestReport, SNAPSHOT_STALE_HOURS } from "@/lib/ops/snapshot";
 import { getInboxCounts } from "@/lib/ops/inbox-counts";
+import { REVIEWS_WAITING_WHERE } from "@/lib/site-reviews/admin";
 import { countBy, worst } from "@/lib/ops/types";
 import { humanAge } from "@/lib/ops/thresholds";
 import { prisma } from "@/lib/db";
@@ -102,6 +103,12 @@ const TOOLS: Tool[] = [
     desc: "Contact messages, store suggestions, feedback and wrong-price reports — everything sent in through a site form.",
   },
   {
+    href: "/admin/reviews",
+    title: "Reviews, every site",
+    icon: "⭐",
+    desc: "Every site's star score, and the written reviews waiting for your approval before they show on that site.",
+  },
+  {
     href: "/admin/decks",
     title: "Decks",
     icon: "🃏",
@@ -144,10 +151,11 @@ export default async function AdminHome({ searchParams }: { searchParams: { key?
   const suffix = keyOk && !user?.isAdmin ? `?key=${encodeURIComponent(token!)}` : "";
 
   // One cheap row (the monitor's last report) and five count queries. Both degrade to "nothing to show".
-  const [report, inbox, hqRow] = await Promise.all([
+  const [report, inbox, hqRow, reviewsWaiting] = await Promise.all([
     getLatestReport(),
     getInboxCounts().catch(() => null),
     prisma.opsSnapshot.findUnique({ where: { key: HQ_SNAPSHOT_KEY } }).catch(() => null),
+    prisma.feedback.count({ where: REVIEWS_WAITING_WHERE }).catch(() => 0),
   ]);
   // Empire HQ at a glance: one dot per site (the collector's snapshot, one small row).
   const hqHealth = [healthFromReport(report, new Date(), SNAPSHOT_STALE_HOURS), ...(parseHqSnapshot(hqRow?.json)?.sites ?? [])];
@@ -165,7 +173,7 @@ export default async function AdminHome({ searchParams }: { searchParams: { key?
         : overall === "warn"
           ? { tone: "border-gold/50 text-gold", dot: "bg-gold", text: `${counts!.warn} to keep an eye on` }
           : { tone: "border-brand-500/40 text-brand-300", dot: "bg-brand-400", text: "Everything is healthy" };
-  const badges: Record<string, number> = { "/admin/messages": inbox?.total ?? 0 };
+  const badges: Record<string, number> = { "/admin/messages": inbox?.total ?? 0, "/admin/reviews": reviewsWaiting };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
