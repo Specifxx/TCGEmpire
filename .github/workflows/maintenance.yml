@@ -5734,8 +5734,8 @@ jobs:
         if: inputs.task == 'gsc-coverage'
         env:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
-          ONLY: "opcompare,dexcompare,compareempire"
-          EXTRA_URLS: "https://opcompare.app/price-guide"
+          ONLY: "dexcompare,compareempire"
+          SAMPLE: "8"
         run: npx tsx scripts/gsc-sister-coverage.ts
 
       - name: DNS and first response for every sister host (read-only)

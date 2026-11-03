@@ -77,6 +77,19 @@ async function inspect(tok: string, property: string, url: string) {
   return { state: s?.coverageState ?? "no result", crawled: s?.lastCrawlTime?.slice(0, 10) ?? "" };
 }
 
+/** The sitemaps Search Console holds for a property: when Google last read each, and how many URLs it found. */
+async function sitemaps(tok: string, property: string): Promise<string[]> {
+  const r = await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(property)}/sitemaps`, {
+    headers: { Authorization: `Bearer ${tok}` },
+    signal: AbortSignal.timeout(30_000),
+  }).catch(() => null);
+  if (!r || !r.ok) return [`sitemaps: ${r ? `HTTP ${r.status}` : "no answer"}`];
+  const j = (await r.json()) as { sitemap?: { path: string; lastDownloaded?: string; errors?: string; warnings?: string; contents?: { submitted?: string }[] }[] };
+  return (j.sitemap ?? []).map(
+    (m) => `sitemap ${m.path}: last read ${m.lastDownloaded?.slice(0, 10) ?? "never"}, ${m.contents?.[0]?.submitted ?? "?"} URLs, ${m.errors ?? 0} errors, ${m.warnings ?? 0} warnings`,
+  );
+}
+
 async function main() {
   if (!process.env.GSC_SA_KEY) return console.log("GSC_SA_KEY is not set.");
   const tok = await token();
@@ -92,6 +105,7 @@ async function main() {
       continue;
     }
     console.log(`${final}: ${urls.length} sitemap URLs read`);
+    for (const line of await sitemaps(tok, property)) console.log(`   ${line}`);
     const step = Math.max(1, Math.floor(urls.length / SAMPLE));
     const extra = (process.env.EXTRA_URLS ?? "").split(",").map((x) => x.trim()).filter((x) => x.startsWith(final));
     const pick = [...new Set([`${final}/`, ...extra, ...urls.filter((_, i) => i % step === 0).slice(0, SAMPLE)])];
