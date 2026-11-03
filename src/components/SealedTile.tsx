@@ -5,10 +5,12 @@ import type { SealedGroup } from "@/lib/sealed-import";
 import { useSealedQuickView } from "./SealedQuickView";
 import { sealedImageAlt } from "@/lib/image-alt";
 import { SealedWatchButton } from "./SealedWatchButton";
+import { sealedPath } from "@/lib/sealed-slug";
 
 // A single compact sealed-product tile for the /sealed grid — the RiftCompare twin
-// of DexCompare's SealedTile. RiftCompare has no /sealed/<slug> detail page, so the
-// tile is a button that opens the quick-view popup in place (no navigation). Images
+// of DexCompare's SealedTile. The tile is a real link to the product's own page,
+// /sealed/<slug> (2026-11-03), so crawlers and new tabs reach it; a plain click
+// opens the quick-view popup in place instead (no navigation). Images
 // come from arbitrary store/eBay CDNs, so a plain lazy <img> is used rather than
 // next/image (which would need every host allow-listed).
 //
@@ -31,16 +33,21 @@ export function SealedTile({
   const { open } = useSealedQuickView();
   const fmt = (cents: number) => formatMoney(cents, currency);
 
-  // The watch heart (2026-09-29) is a SIBLING of the tile's button, never a
-  // child — a button inside a button is invalid HTML, and its own click must
+  // The watch heart (2026-09-29) is a SIBLING of the tile's link, never a
+  // child — a button inside a link is invalid HTML, and its own click must
   // not open the quick view. Sits top-right; the sold-out badge moved under
   // the product-type chip to make room.
   return (
     <div className="relative">
     <SealedWatchButton groupKey={g.groupKey} name={g.name} compact className="absolute right-2 top-2 z-10" />
-    <button
-      type="button"
-      onClick={() => open(g, currency)}
+    <a
+      href={sealedPath(g.groupKey)}
+      onClick={(e) => {
+        // A modified or middle click opens the page itself (new tab, new window).
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        open(g, currency);
+      }}
       className="cv-auto group card-surface relative flex h-full w-full flex-col overflow-hidden text-left transition-[transform,box-shadow,border-color] duration-base motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0"
     >
       <div className="relative grid aspect-square w-full place-items-center overflow-hidden bg-ink-950 p-4">
@@ -109,7 +116,7 @@ export function SealedTile({
           )}
         </div>
       </div>
-    </button>
+    </a>
     </div>
   );
 }

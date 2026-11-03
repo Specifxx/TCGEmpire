@@ -134,9 +134,11 @@ test("the discovery lines are inline — no Dialog, no overlay, no portal — an
 
 test("the watch buttons never nest a button in a button, and sell the right tier below it", () => {
   const tile = code("src/components/SealedTile.tsx");
-  const buttonAt = tile.indexOf("<button");
+  // The tile is a link to the product page since 2026-11-03 (a click still opens the quick view).
+  const linkAt = tile.indexOf("<a\n");
   const watchAt = tile.indexOf("<SealedWatchButton");
-  assert.ok(watchAt >= 0 && watchAt < buttonAt, "the heart is a sibling before the tile's button, never inside it");
+  assert.ok(linkAt >= 0 && watchAt >= 0 && watchAt < linkAt, "the heart is a sibling before the tile's link, never inside it");
+  assert.doesNotMatch(tile, /<button/, "the tile itself is a link, not a button");
   const btn = code("src/components/SealedWatchButton.tsx");
   assert.match(btn, /if \(!user\) \{/, "signed out, the same spot sells the tier (sign in first)");
   assert.match(btn, /const freeInUse = !!user && !premium && !watching && \(refused \|\| \(rows\?\.length \?\? 0\) >= FREE_SEALED_WATCH_LIMIT\)/, "a free account's first watch works; the upgrade shows only once it is in use");
