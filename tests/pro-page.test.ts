@@ -179,3 +179,12 @@ test("the landing reads its prices from the page, in the site's own theme (owner
   assert.match(picker, /\bpro\b\s*\/>/, "the orange primary button");
   assert.match(read("src/components/PremiumCta.tsx"), /const CTA_PRO = "btn-primary /);
 });
+
+test("a review card needs a written comment (owner, 2026-11-03)", async () => {
+  const { hasComment } = await import("../src/lib/reviews");
+  assert.equal(hasComment({ message: "" }), false);
+  assert.equal(hasComment({ message: "   \n" }), false);
+  assert.equal(hasComment({ message: null }), false);
+  assert.equal(hasComment({ message: "Great site" }), true);
+  assert.match(read("src/lib/reviews.ts"), /rows\.filter\(hasComment\)/);
+});
