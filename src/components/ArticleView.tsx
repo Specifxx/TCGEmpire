@@ -292,6 +292,24 @@ function articleTools(slug: string, ctaHref: string): { href: ToolRoute; label: 
   return tools;
 }
 
+// "Riftbound essentials" (2026-11-03, owner's Search Console report: "link from
+// Radiance and Legacy news posts into evergreen pages so the traffic spike
+// benefits them"). News posts take the spikes (spoilers, signatures, chase
+// cards) while the reference guides that answer the standing questions sit at
+// position 6-9 with almost no clicks. Every blog post now links the same small
+// set of evergreen answers, as plain server-rendered links. Guides already link
+// each other through "Recommended reads", so they don't get the block.
+const EVERGREEN_LINKS: readonly { href: string; label: string }[] = [
+  { href: "/price-guide", label: "Riftbound price guide" },
+  { href: "/guides/riftbound-sets-in-order", label: "Every set in order" },
+  { href: "/guides/how-a-riftbound-deck-is-built", label: "Deck size and deck rules" },
+  { href: "/guides/riftbound-card-size-sleeves-deck-boxes", label: "Card size and sleeves" },
+  { href: "/guides/riftbound-banlist-explained", label: "Current ban list" },
+  { href: "/guides/riftbound-format-legality-rotation", label: "Does Riftbound rotate?" },
+  { href: "/keywords", label: "Keyword glossary" },
+  { href: "/blog/how-to-sell-riftbound-cards", label: "How to sell your cards" },
+];
+
 const DEFAULT_BROWSE_CTA = {
   href: "/browse",
   label: "Browse the card database →",
@@ -834,6 +852,21 @@ export async function ArticleView({ article }: { article: Article }) {
             ))}
           </div>
         </section>
+      )}
+
+      {article.category === "blog" && (
+        <nav aria-label="Riftbound essentials" className="mt-6">
+          <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-400">Riftbound essentials</h2>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            {EVERGREEN_LINKS.filter((l) => l.href !== `/blog/${article.slug}`).map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="chip bg-ink-800 text-slate-300 hover:bg-ink-700 hover:text-white">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       )}
 
       {/* Sister sites (owner, 2026-10-14): the cross-game guides link their

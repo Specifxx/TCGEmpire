@@ -914,3 +914,23 @@ export const ALL_KEYWORD_NAMES: string[] = [
 ];
 
 export const keywordSlug = (name: string): string => name.toLowerCase();
+
+// Search Console, 28 days to 31 Oct 2026: "ambush riftbound" (353 impressions,
+// position 10), "predict riftbound" (356, 6.7), "weaponmaster riftbound" (263,
+// 9.1), "accelerate riftbound" (214, 8.0), "assault", "hidden", "deflect"… all
+// land on these pages and earned 0–1 clicks each. The old title led with the bare
+// keyword and "Keyword Reference", which reads as a glossary stub next to the
+// query "riftbound <keyword>". The title now leads with the query and says what
+// the page answers. Empower, Flow and Burn keep the reference title: each has
+// its own single-keyword guide that owns "riftbound <keyword>"
+// (docs/seo-keyword-map.md), and this page must not compete with it.
+export function hasOwnGuide(kw: { slug: string; guideSlug: string }): boolean {
+  return kw.guideSlug === `riftbound-${kw.slug}-explained`;
+}
+
+export function keywordPageTitle(kw: { slug: string; name: string; guideSlug: string }, total: number): string {
+  if (hasOwnGuide(kw)) return `${kw.name} — Riftbound Keyword Reference | RiftCompare`;
+  return total > 0
+    ? `Riftbound ${kw.name}: What It Does + All ${total} Cards`
+    : `Riftbound ${kw.name} Keyword: What It Does + Every Card`;
+}

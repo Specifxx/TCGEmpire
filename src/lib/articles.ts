@@ -4314,8 +4314,13 @@ Radiance releases **23 October 2026**.`,
     category: "guide",
     title: "Riftbound Deploy Explained: Official Rules",
     seoTitle: "Riftbound Deploy Explained: Rules + Every Deploy Card",
+    // 2026-11-03: "deploy riftbound" + "riftbound deploy" 1,430 impressions in
+    // 28 days at position 6–7 and ONE click. The FAQ (which feeds FAQPage
+    // JSON-LD and the snippet) still answered from the PAX West leak, "not yet
+    // confirmed by Riot", a month after the rules made it official. The FAQ
+    // and this description now lead with the official rule.
     excerpt:
-      "Riftbound Deploy, now in Riot's 9 Oct rules: how Deploy gear works, when an opponent kills it, how it differs from Equip, and all 27 Deploy cards priced.",
+      "Deploy gear is played to a battlefield, not a unit, and is killed when an opponent holds that battlefield. Official rules, Deploy vs Equip, every card priced.",
     author: "RiftCompare",
     date: "2026-09-08",
     updated: "2026-10-23",
@@ -4333,10 +4338,10 @@ Radiance releases **23 October 2026**.`,
       "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-spoilers)); now printed on Pillaged Armory and Dockside Lock-Up, two finished Radiance cards.",
     ],
     faq: [
-      { q: "What is Deploy in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear.\" It's reportedly a Gear keyword tied to controlling one specific battlefield, not yet confirmed by Riot." },
-      { q: "How does the Deploy mechanic work?", a: "As leaked: you play the Gear to a battlefield rather than to a unit or your base. While you hold that battlefield, it grants a benefit (the leak doesn't say what kind). If an opponent takes the battlefield, the Gear is killed outright." },
-      { q: "What happens if I lose the battlefield a Deploy gear is on?", a: "Per the leaked wording, the Gear is killed — not deactivated or returned to hand, but removed from the game the way any killed permanent would be." },
-      { q: "How is Deploy different from Equip?", a: "Equip attaches a Gear card to a unit, and it stays functional regardless of board state. Deploy, as leaked, attaches to a battlefield instead of a unit, and is destroyed if you lose control of that battlefield — a much higher-risk trade for whatever benefit it grants." },
+      { q: "What is Deploy in Riftbound?", a: "Deploy is a gear keyword from Radiance. Deploy gear is played to a battlefield (friendly, uncontrolled or held by an enemy) instead of your base or a unit, and stays there unless it is destroyed. If an opponent holds a battlefield where you have Deploy gear, that gear is killed. It is in Riot's Radiance core rules, in effect from 16 October 2026." },
+      { q: "How does the Deploy mechanic work?", a: "Play the gear to a battlefield. It gives whatever benefit its own card text prints while it sits there (Pillaged Armory and Dockside Lock-Up each have their own). The printed reminder reads: \"Play this only to a battlefield. When an opponent holds here, kill this.\"" },
+      { q: "What happens if I lose the battlefield a Deploy gear is on?", a: "If an opponent holds that battlefield, the gear is killed: it goes to the trash like any killed permanent, not back to your hand." },
+      { q: "How is Deploy different from Equip?", a: "Equip attaches gear to a unit, and it stays with that unit whatever happens on the board. Deploy gear sits on a battlefield instead, and is killed when an opponent holds that battlefield, so it is a riskier trade for its benefit." },
       { q: "Is Deploy confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
       { q: "How is Deploy different from Showoff and Disarm?", a: "Deploy is a Gear keyword about holding a battlefield; Showoff is a modal reveal effect triggered on play; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly, unlike Vendetta's Empower/Flow/Burn." },
     ],
@@ -4437,8 +4442,8 @@ Yes. Riot's Radiance core rules patch notes (9 October 2026, in effect from 16 O
       "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-spoilers)); now printed on Primordial Roar and Rousing Display, two finished Radiance cards.",
     ],
     faq: [
-      { q: "What is Showoff in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off.\" It's reportedly a modal reveal effect, not yet confirmed by Riot." },
-      { q: "How does the Showoff mechanic work?", a: "As leaked: when you play a Showoff card, you may either reveal a card from your hand or point at a friendly card already in play that meets whatever criteria is printed on the Showoff card. The effect then changes depending on what you showed." },
+      { q: "What is Show Off in Riftbound?", a: "Show Off is a Radiance keyword. As you play the card, you reveal a matching card from your hand, or pick a friendly card or token on the board that meets the card's condition, and whatever the card reads from the shown-off object is locked in when you show it. It is in Riot's Radiance core rules, in effect from 16 October 2026." },
+      { q: "How does the Show Off mechanic work?", a: "Each Show Off card prints its own condition, such as 'Show Off a unit'. When you play it, reveal a card from hand or choose a friendly card in play that meets that condition; the effect then uses what you showed, fixed at that moment." },
       { q: "What does 'meets the listed criteria' mean for Showoff?", a: "Each card prints its own criteria straight after the keyword. On Primordial Roar it is 'Show Off a unit'; on Rousing Display it is 'Show Off a card with Energy cost 7 or more'. You meet it by revealing a matching card from your hand or picking a matching friendly card on the board." },
       { q: "How is Showoff different from Vision?", a: "Vision triggers a Predict, looking at the top card of your own Main Deck. Showoff, as leaked, instead looks at a card you already have — in hand or already in play — rather than the top of your deck." },
       { q: "Is Showoff confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
@@ -4538,8 +4543,8 @@ Yes. Riot's Radiance core rules patch notes (9 October 2026, in effect from 16 O
       "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-spoilers)); now printed on Kai'Sa, Rebel and Disposal Expert, two finished Radiance cards.",
     ],
     faq: [
-      { q: "What is Disarm in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"When this unit attacks, decrease the Might of an enemy unit here.\" It reportedly weakens an enemy unit's Might as part of attacking, rather than boosting the attacker's own stats." },
-      { q: "How does the Disarm mechanic work?", a: "As leaked: when a unit with Disarm attacks, it decreases the Might of an enemy unit present at that battlefield. It reads as a repeatable, built-in unit ability rather than a one-time removal spell." },
+      { q: "What is Disarm in Riftbound?", a: "Disarm is a Radiance attack trigger. The first time a unit with Disarm attacks in a combat, an enemy unit at that battlefield gets -1 Might this turn (-2 for Disarm 2). Several instances of Disarm combine into one trigger using their total. It is in Riot's Radiance core rules, in effect from 16 October 2026." },
+      { q: "How does the Disarm mechanic work?", a: "When your Disarm unit attacks, pick an enemy unit at that battlefield; it loses Might equal to the Disarm value for the rest of the turn. It is built into the unit, so it happens every combat that unit attacks in, not once like a spell." },
       { q: "Is Disarm the opposite of Assault?", a: "That's how the leak's own source frames it, and the wording supports the comparison: Assault gives the attacker +X Might while attacking — a self-buff. Disarm, as leaked, instead lowers an enemy unit's Might when this unit attacks — a debuff aimed at the opponent's board." },
       { q: "Does Disarm work with direct damage spells?", a: "The leak's own source suggests pairing Disarm with direct-damage spells like Falling Star — a real Fury-domain Spell from the Origins set. Shrinking a blocker's Might first would make a fixed amount of direct damage go further toward actually killing it, though Disarm's exact numbers aren't known yet." },
       { q: "Is Disarm confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
@@ -4748,18 +4753,25 @@ The exact card dimensions, the landscape cards, and which deck boxes hold a full
     slug: "riftbound-format-legality-rotation",
     category: "guide",
     title: "Riftbound Rotation: Nothing Has Rotated Out",
+    // 2026-11-03: "riftbound rotation" is rising (0 → 26 impressions a day,
+    // position 5–7, 0 clicks in 28 days). The page still said "five released
+    // sets" and stopped at Vendetta, three weeks after Radiance released. The title
+    // leads with the exact query and the year, so it reads as current next to
+    // forum threads from launch.
+    seoTitle: "Riftbound Rotation 2026: No Set Has Rotated Out Yet",
     excerpt:
-      "No Riftbound set has rotated out — all five released sets are legal in Standard. Riot has published no rotation policy; bans remove named cards, not sets.",
+      "No. No Riftbound set has rotated out: every released set, Origins to Radiance, is legal in Standard. Riot has no rotation policy; bans remove single cards.",
     author: "RiftCompare",
     date: "2026-08-27",
+    updated: "2026-11-03",
     readMins: 6,
     tags: ["rules", "format", "rotation", "banlist", "buying guide"],
     hero: {
       src: "/blog/riftbound-format-legality-rotation.png",
-      alt: "Riftbound format legality — all five released sets are currently legal, with bans the only removal mechanism",
+      alt: "Riftbound format legality — every released set is currently legal, with bans the only removal mechanism",
     },
     summary: [
-      "**No Riftbound set has rotated out.** All five released sets are currently legal in Standard.",
+      "**No Riftbound set has rotated out.** Every released set, Origins to Radiance, is currently legal in Standard.",
       "**Riot has not published a rotation policy.** That is not the same as promising there will never be one — and we are not going to pretend it is.",
       "**Bans are the only mechanism removing cards today**, and they are applied narrowly, a handful of cards at a time.",
       "**Standard and 2v2 have separate ban lists.** A card legal in one can be banned in the other.",
@@ -4768,7 +4780,7 @@ The exact card dimensions, the landscape cards, and which deck boxes hold a full
     faq: [
       {
         q: "Does Riftbound have rotation?",
-        a: "Not today. No Riftbound set has rotated out of legality, and every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — is currently legal in Standard. Riot has not published a rotation policy either way, so nobody can tell you what happens in 2028.",
+        a: "Not today. No Riftbound set has rotated out of legality, and every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed, Vendetta and Radiance — is currently legal in Standard. Riot has not published a rotation policy either way, so nobody can tell you what happens in 2028.",
       },
       {
         q: "Are Origins cards still legal in Riftbound?",
@@ -4807,6 +4819,7 @@ Here is the honest, current answer — including the part most sites skip, which
 | Spirit Forged | SFD | Yes |
 | Unleashed | UNL | Yes |
 | Vendetta | VEN | Yes |
+| Radiance | RAD | Yes, since its release on 23 October 2026 |
 
 The only cards not legal are the specific ones on the **[ban list](/guides/riftbound-banlist-explained)** — a small, named set, not a whole generation of cards.
 
@@ -4814,7 +4827,7 @@ The only cards not legal are the specific ones on the **[ban list](/guides/riftb
 
 These get conflated constantly, and the difference matters a lot for what you buy.
 
-**A ban is a scalpel.** It removes one named card because that card is distorting the format. It is targeted, it is rare, and it is announced with a reason. Riftbound's **[July 2026 ban wave](/blog/riftbound-july-2026-ban-list-update)** is the most recent example.
+**A ban is a scalpel.** It removes one named card because that card is distorting the format. It is targeted, it is rare, and it is announced with a reason. Riftbound's **[September 2026 bans](/blog/riftbound-september-2026-bans-meta-shift)** are the most recent example, after the **[July 2026 wave](/blog/riftbound-july-2026-ban-list-update)**.
 
 **A rotation is a scheduled amputation.** It removes entire sets at once on a calendar, whether or not their cards were causing any problem at all. Cards that were perfectly reasonable simply stop being legal because of their age. Several long-running card games work this way; Riftbound, so far, does not.
 
@@ -4832,9 +4845,9 @@ You will find sites confidently telling you Riftbound "will never rotate" or "ro
 
 ## Why a game this young leaves the question open
 
-Riftbound launched in 2026 and has five released sets with four more announced through 2027. That is a relevant piece of context, because rotation is a problem that only becomes worth solving once a card pool gets large.
+Riftbound launched in 2026 and has released five main sets (Radiance is Set 5) plus Proving Grounds, with Legacy (Set 6) next on 29 January 2027 and more announced through 2027. That is a relevant piece of context, because rotation is a problem that only becomes worth solving once a card pool gets large.
 
-A game with five sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone adding 239 cards.
+A game with five or six sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone adding 239 cards.
 
 None of that is evidence rotation is coming. It is the reason the question is worth keeping open rather than answering prematurely in either direction.
 
@@ -5279,8 +5292,15 @@ Want to see the chase cards in action? Read **[the most valuable Riftbound cards
     slug: "how-to-sell-riftbound-cards",
     category: "blog",
     title: "How to Sell Riftbound Cards for the Best Price",
+    // 2026-11-03: "sell riftbound cards" sits at position 18 and "sell
+    // riftbound cards sydney" at 23 (131 impressions in 28 days), with the page
+    // averaging position 10. The old opening was a paragraph of scene-setting
+    // with the answer three headings down, and it never said which platform
+    // suits which market. The answer now comes first, followed by a
+    // where-to-sell table by country and the fee tools.
+    seoTitle: "How to Sell Riftbound Cards: Where, Fees & Pricing (2026)",
     excerpt:
-      "Sitting on Riftbound cards you don't need? Here's how to price them accurately, where to sell, and how to get the most for your singles and sealed.",
+      "Price each card by its exact printing and condition, then sell where buyers are: TCGplayer (US), Cardmarket (EU), eBay or a local store. Fees and tips inside.",
     author: "RiftCompare",
     date: "2026-06-09",
     updated: CORRECTED,
@@ -5312,7 +5332,24 @@ Want to see the chase cards in action? Read **[the most valuable Riftbound cards
         a: "Price the deck as a bundle with the [deck pricer](/deck) so buyers can see the value at a glance, rather than listing each card separately.",
       },
     ],
-    body: `Got a stack of Riftbound cards gathering dust — duplicates, cards from a deck you've moved on from, or pulls you don't need? Here's how to turn them into cash (or store credit) and get a fair price.
+    body: `**The short answer:** look up each card's live price by its exact printing and condition, then list it where Riftbound buyers in your country already shop — TCGplayer in the US, Cardmarket in Europe, eBay almost everywhere, or a local game store if you want it gone today. Price at or just under the cheapest comparable listing for a quick sale, and work out your take-home after fees and postage before you pick a platform.
+
+Got a stack of Riftbound cards gathering dust — duplicates, cards from a deck you've moved on from, or pulls you don't need? Here's how to turn them into cash (or store credit) and get a fair price.
+
+## Where to sell Riftbound cards, by country
+
+| Where you live | Best reach | Also worth trying |
+| --- | --- | --- |
+| United States | TCGplayer | eBay, local game stores |
+| Europe | Cardmarket | eBay, local game stores |
+| United Kingdom | eBay UK | Local game stores, trading groups |
+| Australia and New Zealand | eBay AU | Local game stores, Facebook and Discord trading groups |
+| Canada | eBay CA | Local game stores, trading groups |
+| Singapore | Carousell and local stores | Facebook and Discord trading groups |
+
+Marketplaces take a commission and a payment fee, so the same sale nets different amounts on each. **[Selling fees compared](/tools/selling-fees)** works out your take-home on each platform, and **[TCGplayer fees explained](/blog/tcgplayer-fees)** breaks TCGplayer's down fee by fee. A local store pays less than a marketplace sale but takes the whole pile at once, with no postage, no listing work and no returns to handle. Many stores also offer more in store credit than in cash.
+
+**Selling in Australia** (Sydney, Melbourne, Brisbane and the rest): TCGplayer and Cardmarket only take sellers from their own regions, so eBay AU is where most Australian singles change hands, alongside local game stores and state trading groups. Check what the same card sells for in Australian dollars on **[RiftCompare Australia](/au)** before you price it, because US prices converted to AUD are not what Australian buyers pay.
 
 ## 1. Price your cards accurately first
 
