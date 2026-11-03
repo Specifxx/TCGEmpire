@@ -422,6 +422,8 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   // Daily (2026-11-02): the sister sites' price alerts (lib/sister-alerts). Fails when a site
   // that has alerts could not be checked, so a broken feed shows here.
   { file: "sister-alerts.yml", title: "Sister-site price alerts job", staleH: 36 },
+  // Daily (2026-11-03): registers the Discord bot's commands and finishes its setup; a green no-op until its secrets exist.
+  { file: "discord-commands.yml", title: "Discord bot setup job", staleH: 36 },
   // Weekly (2026-11-02): every site's store domains checked from outside (docs/store-vetting.md).
   { file: "store-vetting.yml", title: "Store vetting job (weekly)", staleH: 200 },
 ];

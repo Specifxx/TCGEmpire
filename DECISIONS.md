@@ -21789,3 +21789,23 @@ twice (churn). The 28-day `gsc-queries` run (to 31 Oct) showed four real gaps in
 Not done, and why: no new country pages (they exist and `/au` already gets 16.8% CTR); no set-page ItemList
 (removed on purpose, it doubled the HTML); no HowTo schema (Google dropped HowTo rich results in 2023). Recheck
 the keyword pages, Deploy and rotation with `gsc-queries` on 2026-11-24.
+## 2026-11-03 — Discord bot: the set-up finishes itself, `/daily`, and Cyberpunk
+
+**Why.** The growth plan of 2026-11-03 ("loops, not pushes") ranks the Discord price bot second: every answer is
+seen by a whole channel, and admins of other servers add the bot they see used. It was parked on 2026-11-02 because
+its owner prompt was 45 minutes and ended with a manual release, which the 12-hour build gate now rules out. So the
+part only the owner can do is cut to one short sitting, and the rest runs itself.
+
+**What.**
+- `discord-commands.yml` runs daily (09:47 UTC; in the ops `JOBS`). `scripts/discord-register.ts` registers the
+  commands and, once `GET /api/discord/interactions` reports `configured: true` (the next release after the owner
+  pastes `DISCORD_PUBLIC_KEY` into Vercel), sets the application's Interactions Endpoint URL through the bot token
+  (`PATCH /applications/@me`), unless it already points there. Discord's signed PING must pass, or the run is red.
+  A green no-op until both GitHub secrets exist. No manual release, no second visit to the Developer Portal.
+- `/daily <game>`: a PUBLIC message with a button to that site's daily puzzle (Riftle, or the Price Duel on OP
+  Compare and the engine sites, built the same day), so a channel plays together and posts its grids under it.
+  No paid link in it.
+- Cyberpunk Compare joins `BOT_GAMES` (its engine `/api/search`, US prices). Its Mass Entry `productline` is
+  unverified, like the others were.
+- Unchanged: `#ad` on paid replies, no database, and the removal rule (not near 30 clicks a day a month after it
+  goes live).

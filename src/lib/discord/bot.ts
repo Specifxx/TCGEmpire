@@ -47,6 +47,12 @@ export const BOT_COMMANDS = [
     ...EVERYWHERE,
     options: [GAME_OPTION, MARKET_OPTION],
   },
+  {
+    name: "daily",
+    description: "Post today's daily card price game for the whole channel to play",
+    ...EVERYWHERE,
+    options: [{ ...GAME_OPTION, choices: BOT_GAMES.filter((g) => g.daily).map((g) => ({ name: g.label, value: g.key })) }],
+  },
   { name: "pricebot", description: "What this bot does and how it is paid for", ...EVERYWHERE },
 ];
 
@@ -144,6 +150,16 @@ export function deckReply(g: BotGame, market: Country, text: string) {
   });
 }
 
+/** `/daily`: a PUBLIC message, so the whole channel sees today's puzzle and posts its grids under it. No paid link. */
+export function dailyReply(g: BotGame) {
+  const d = g.daily ?? BOT_GAMES.find((x) => x.daily)!.daily!;
+  const game = g.daily ? g : BOT_GAMES.find((x) => x.daily)!;
+  return message({
+    content: `**Today's ${d.name}**: which card is worth more? Same puzzle for everyone today. Play, then paste your grid here.`,
+    components: [row(button(`Play ${d.name}`, siteLink(game, d.path)))],
+  });
+}
+
 export function helpReply() {
   return message({
     flags: EPHEMERAL,
@@ -151,6 +167,7 @@ export function helpReply() {
       "**Compare Empire price bot**",
       "`/price` finds a card or sealed product and shows its price, with links to compare every store, eBay and TCGplayer.",
       "`/deck` takes a pasted deck list and gives you a one-tap TCGplayer cart.",
+      "`/daily` posts today's card price game for the channel to play together.",
       `Games: ${BOT_GAMES.map((g) => g.label).join(", ")}.`,
       "Prices come from RiftCompare and its sister sites. The eBay and TCGplayer links are paid links: we may earn a commission, and the price is the same for you.",
     ].join("\n"),
@@ -165,6 +182,7 @@ export async function handleInteraction(i: Interaction, deps: LookupDeps): Promi
     const market = botMarket(opt(i, "market"));
     if (i.data?.name === "price") return priceReply(g, opt(i, "card") ?? "", market, deps);
     if (i.data?.name === "deck") return deckModal(g, marketFor(g, market));
+    if (i.data?.name === "daily") return dailyReply(g);
     return helpReply();
   }
   if (i.type === T.MODAL_SUBMIT && i.data?.custom_id?.startsWith("deck:")) {
