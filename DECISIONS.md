@@ -21879,3 +21879,40 @@ above the stars of the one rating form (the footer panel, the corner card and
 owner asked for it to go live urgently, so this one release
 overrides the 12-hour build gap with `[urgent]`. The 2026-11-23 review still
 compares ad money against affiliate earnings per visit.
+
+## Every site's reviews, approved in one queue — 2026-11-03
+
+The owner: "the feedback pop up is awesome and we should have it on all of our
+other website too, and have the reviews public for each website … I want to
+approve them in the riftcompare admin dashboard for all sites", then "in terms
+of the written reviews that would need approval - star reviews are
+automatically on the website".
+
+- **One store: RiftCompare's `Feedback` table, with a `site` column.** Most
+  sister sites have no database, and the ones that do (OP Compare, CamCompare,
+  Compare Empire) would each need their own queue. Instead every sister site's
+  rating card posts cross-origin to `/api/site-reviews` (exact origins from
+  `lib/site-reviews/sites.ts`, the site taken from the Origin header, never the
+  form), and the row is stored with `site` set. RiftCompare's own rows keep
+  `site = "riftcompare"`, and every read of RiftCompare's own rating and
+  reviews filters on it (`tests/site-reviews.test.ts`). The sister-alerts
+  service set the pattern: no new database, no repo token, no function on the
+  sister sites.
+- **Stars count at once, words wait.** A star rating goes straight into its
+  site's public score (spam one in the admin to take it out). A written review
+  shows on its site only when its writer left "Show my review" ticked AND it
+  was published in `/admin/reviews`, the one queue for every site (RiftCompare
+  included), linked from `/admin` with a waiting count. No email is asked for
+  or sent (2026-10-27: no email per rating or review).
+- **Shown by the sites from one cached JSON.** `/api/site-reviews/<site>` is
+  the score, the star split and up to 24 published reviews, CDN-cached six
+  hours, `Access-Control-Allow-Origin: *` (public data, no credentials). The
+  sister pages fetch it in the browser, so no sister page gains a function or
+  a build step, and a new rating or approval shows within six hours. Never
+  review markup: a site's rating of itself is self-serving under Google's
+  rules, as on RiftCompare.
+- **The ask copies RiftCompare's corner card, not its rating drive.** On the
+  sister sites the card asks after 4 pages and 3 minutes, or on return from a
+  store tab, at most three times 14 days apart, never on arrival and always
+  closable; a "Rate us" link sits in the footer. The centred drive pop-up stays
+  RiftCompare's alone unless the owner asks for it elsewhere.

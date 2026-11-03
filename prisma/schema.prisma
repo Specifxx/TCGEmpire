@@ -586,11 +586,18 @@ model Feedback {
   status        String    @default("NEW") // NEW | APPROVED | HIDDEN | SPAM
   consentPublic Boolean   @default(false)
   publishedAt   DateTime?
+  // WHICH SITE IT IS ABOUT (2026-11-03, owner: every site's ratings and reviews,
+  // approved in this admin). "riftcompare" for this site's own forms; a sister
+  // site's key (lib/site-reviews/sites.ts) for rows posted to /api/site-reviews.
+  // Every read of RiftCompare's own rating or reviews filters on it.
+  site          String    @default("riftcompare")
 
   @@index([createdAt])
   @@index([userId])
   // Serves the public "approved reviews" read without scanning the table.
   @@index([status, publishedAt])
+  // One site's rating and approved reviews (lib/site-reviews/read.ts).
+  @@index([site, status])
 }
 
 // A "clicked Premium" intent event — someone opened the Premium upsell dialog or

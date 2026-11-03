@@ -253,6 +253,13 @@ longer lands on its entry.
   Pro page show the real average with its count from the first rating
   (2026-10-27), approved and consented reviews on both, never in JSON-LD.
   [2026-10-26](../DECISIONS.md#L19772)
+- **Every sister site's ratings and reviews live here (2026-11-03):** the same
+  corner card on each sister site posts to `/api/site-reviews`; stars count in
+  that site's public score at once, written reviews wait for `/admin/reviews`
+  (one queue, every site), and each site reads its score from
+  `/api/site-reviews/<site>` (CDN six hours). `Feedback.site` keeps
+  RiftCompare's own reads to its own rows.
+  [2026-11-03](../DECISIONS.md#every-sites-reviews-approved-in-one-queue)
 - **One paid plan again (2026-10-23, supersedes the trial and tier bullets
   below):** Premium $9.99/mo or $79.99/yr with a free 30-day card-gated trial;
   existing $4.99/$39.99 subscribers are grandfathered by not migrating them.
