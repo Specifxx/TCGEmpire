@@ -17,6 +17,7 @@ import { OutboundLink } from "../OutboundLink";
 import { AffiliateDisclosure } from "../AffiliateDisclosure";
 import { Dialog } from "../ui/Dialog";
 import { PokemonBoardView } from "./PokemonBoardView";
+import { closeQuickViewUrl, onQuickViewHistory, openQuickViewUrl } from "@/lib/quick-view-url";
 
 // The Pokémon twin of SealedQuickView: a tile opens the price board in place.
 // Unlike Riftbound sealed, the tile does not carry every offer (a grid of a
@@ -40,15 +41,23 @@ export function PokemonQuickViewProvider({ children }: { children: React.ReactNo
 
   const open = useCallback((tile: PkTile, currency: string) => {
     setState({ tile, currency });
+    // The product page's own link in the address bar while it is open (owner, 2026-11-03), so it can be copied or shared; Back closes it.
+    openQuickViewUrl(`/pokemon/sealed/${tile.slug}`, { tile, currency });
     trackEvent("pokemon_quickview_open", { product: tile.slug, kind: tile.kind });
   }, []);
-  const close = useCallback(() => setState(null), []);
+  // Closing steps back to the page's own URL (lib/quick-view-url.ts); the full-page link only hides it, landing on the URL shown.
+  const close = useCallback(() => {
+    setState(null);
+    closeQuickViewUrl();
+  }, []);
+  const hide = useCallback(() => setState(null), []);
+  useEffect(() => onQuickViewHistory<Opened>((e) => setState(e?.tile ? e : null)), []);
 
   return (
     <Ctx.Provider value={{ open }}>
       {children}
       <Dialog open={!!state} onClose={close} size="2xl" z="overlay" labelledBy="pokemon-quickview-title">
-        {shown && <QuickViewPanel key={shown.tile.slug} tile={shown.tile} currency={shown.currency} onClose={close} />}
+        {shown && <QuickViewPanel key={shown.tile.slug} tile={shown.tile} currency={shown.currency} onClose={close} onLeave={hide} />}
       </Dialog>
     </Ctx.Provider>
   );
@@ -56,7 +65,7 @@ export function PokemonQuickViewProvider({ children }: { children: React.ReactNo
 
 const cache = new Map<string, Loaded>();
 
-function QuickViewPanel({ tile, currency, onClose }: { tile: PkTile; currency: string; onClose: () => void }) {
+function QuickViewPanel({ tile, currency, onClose, onLeave }: { tile: PkTile; currency: string; onClose: () => void; onLeave: () => void }) {
   const { country } = useCountry();
   const [loaded, setLoaded] = useState<Loaded | null>(() => cache.get(tile.slug) ?? null);
   const [failed, setFailed] = useState(false);
@@ -141,7 +150,7 @@ function QuickViewPanel({ tile, currency, onClose }: { tile: PkTile; currency: s
                 <div className="text-sm font-semibold text-slate-400">No tracked listing in your market</div>
               )}
             </div>
-            <Link href={`/pokemon/sealed/${tile.slug}`} className="mt-2 inline-block text-xs font-semibold text-brand-400 hover:underline">
+            <Link href={`/pokemon/sealed/${tile.slug}`} onClick={onLeave} className="mt-2 inline-block text-xs font-semibold text-brand-400 hover:underline">
               Full price page, every market →
             </Link>
           </div>
