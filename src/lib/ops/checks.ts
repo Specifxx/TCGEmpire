@@ -395,7 +395,10 @@ export function historyFiles(d: OpsDeps): CheckResult {
   });
 }
 
-const JOBS: { file: string; title: string; staleH: number }[] = [
+// `scheduledSince`: when a job that used to be manual-only got its schedule. Its last run
+// may be an old manual one, so the staleness clock starts at that time instead (a new
+// schedule is not a job that stopped running). Set it whenever a schedule is added.
+export const JOBS: { file: string; title: string; staleH: number; scheduledSince?: string }[] = [
   { file: "refresh-prices.yml", title: "Price import job", staleH: 36 },
   { file: "refresh-auctions.yml", title: "Auction sweep job", staleH: 16 },
   { file: "sealed-refresh.yml", title: "Sealed refresh job", staleH: 36 },
@@ -423,7 +426,7 @@ const JOBS: { file: string; title: string; staleH: number }[] = [
   // that has alerts could not be checked, so a broken feed shows here.
   { file: "sister-alerts.yml", title: "Sister-site price alerts job", staleH: 36 },
   // Daily (2026-11-03): registers the Discord bot's commands and finishes its setup; a green no-op until its secrets exist.
-  { file: "discord-commands.yml", title: "Discord bot setup job", staleH: 36 },
+  { file: "discord-commands.yml", title: "Discord bot setup job", staleH: 36, scheduledSince: "2026-11-03T00:49:00Z" },
   // Weekly (2026-11-02): every site's store domains checked from outside (docs/store-vetting.md).
   { file: "store-vetting.yml", title: "Store vetting job (weekly)", staleH: 200 },
 ];
@@ -441,9 +444,12 @@ export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {
       }
       const done = runs.filter((r) => r.status === "completed" && r.conclusion && !["cancelled", "skipped", "neutral"].includes(r.conclusion));
       const failed = (r?: { conclusion: string | null }) => !!r && r.conclusion !== "success";
-      const age = hoursSince(runs[0]!.createdAt, d.now);
+      const lastRun = runs[0]!.createdAt;
+      const since = job.scheduledSince ? new Date(job.scheduledSince) : null;
+      const clockFrom = since && since.getTime() > lastRun.getTime() ? since : lastRun;
+      const age = hoursSince(clockFrom, d.now);
       let sev: Severity = "ok";
-      let summary = `Last ran ${humanAge(age)} ago${done[0] ? ` (${done[0].conclusion})` : ""}.`;
+      let summary = `Last ran ${humanAge(hoursSince(lastRun, d.now))} ago${done[0] ? ` (${done[0].conclusion})` : ""}${clockFrom !== lastRun ? "; its first scheduled run is due" : ""}.`;
       if (failed(done[0]) && failed(done[1])) {
         sev = "crit";
         summary = `Failed the last two times it ran (latest: ${done[0]!.conclusion}).`;

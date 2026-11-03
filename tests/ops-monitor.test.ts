@@ -20,6 +20,7 @@ import {
   priceFreshness,
   runChecks,
   scheduledJobs,
+  JOBS,
   siteProbe,
   dexcompareIndex,
   stripeChecks,
@@ -328,6 +329,19 @@ test("scheduled jobs: two failures in a row is critical, one is a warning, a mis
   assert.equal(sev["job:sealed-refresh"], "crit", "80 h with a 36 h cadence");
   assert.equal(sev["job:store-health"], "ok");
   assert.equal(sev["job:production-deploy"], "ok", "a cancelled run is ignored");
+});
+
+test("scheduled jobs: a newly scheduled job's old manual run is not stale until the schedule has had time", async () => {
+  const job = JOBS.find((j) => j.scheduledSince)!;
+  const since = new Date(job.scheduledSince!).getTime();
+  const at = (h: number) => new Date(since + h * 3_600_000);
+  const runs = async (f: string) => (f === job.file ? [{ status: "completed", conclusion: "success", createdAt: new Date(since - 160 * 3_600_000) }] : []);
+  const id = `job:${job.file.replace(/\.yml$/, "")}`;
+  const early = (await scheduledJobs(deps({ now: at(4), github: { runs, productionDeploy: async () => null } }))).find((x) => x.id === id)!;
+  assert.equal(early.severity, "ok");
+  assert.match(early.summary, /first scheduled run is due/);
+  const late = (await scheduledJobs(deps({ now: at(job.staleH + 1), github: { runs, productionDeploy: async () => null } }))).find((x) => x.id === id)!;
+  assert.equal(late.severity, "warn", "the schedule never fired");
 });
 
 test("production build: a failed build is critical and says nothing is down", async () => {
