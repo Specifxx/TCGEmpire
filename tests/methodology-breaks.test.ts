@@ -148,6 +148,7 @@ const IMPORTS_DROP =
 const EXEMPT: Record<string, string> = {
   "src/lib/price-history-store.ts": "the store itself: it reads and writes the day files and compares nothing",
   "src/lib/sitemap-sections.ts": "reads the newest snapshot day for <lastmod>, nothing else",
+  "src/app/sitemap.xml/route.ts": "reads the newest snapshot day for the sitemap index's <lastmod>, nothing else",
   "src/lib/card-price-state.ts": "counts a card's distinct history days to decide indexability",
   "src/lib/public-api.ts":
     "publishes RECORDED prices (latest, ~1/7/30 days back, high, low) for API consumers, not a change; dropping points there would delete facts",

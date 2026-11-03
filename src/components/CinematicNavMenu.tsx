@@ -78,6 +78,12 @@ export function CinematicNavMenu() {
   const dialogRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
+  // The menu's ~150 links are drawn only once it has been opened (SEO report,
+  // 2026-11-03: the closed overlay repeated every SideNav and footer link in the
+  // server HTML, ~338 link instances on /au). The overlay shell stays mounted,
+  // so the open/close transition still runs; once drawn, the links stay.
+  const [drawn, setDrawn] = useState(false);
+  if (open && !drawn) setDrawn(true);
 
   // React 18's JSX `inert` prop doesn't reliably reach the DOM (no first-class
   // support until React 19 — the attribute was silently missing from the
@@ -283,7 +289,7 @@ export function CinematicNavMenu() {
         className={`absolute inset-0 overflow-y-auto overscroll-contain p-4 pb-[max(1rem,env(safe-area-inset-bottom))] transition-all duration-slow ease-out sm:p-8 ${open ? "cine-open scale-100 opacity-100 translate-y-0" : "scale-[0.98] opacity-0 translate-y-6 sm:translate-y-3"}`}
       >
         {/* The middle panel — flat, bordered. */}
-        <div className="relative mx-auto my-auto max-w-5xl">
+        {drawn && <div className="relative mx-auto my-auto max-w-5xl">
           <div className="relative rounded-lg border border-ink-800 bg-ink-900 p-5 sm:p-8">
             {/* Top bar — sticky (2026-09-23). The menu is a ~4,100px sheet on a
                 phone and this bar holds its only Close control, which used to
@@ -452,7 +458,7 @@ export function CinematicNavMenu() {
               ))}
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );
