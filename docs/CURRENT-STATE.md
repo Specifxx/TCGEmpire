@@ -200,6 +200,8 @@ longer lands on its entry.
   (billing API, per project, last 120 days, domains still by hand), and a "By site"
   table (also in the weekly growth report) shows each site's earnings minus its own
   Vercel project, the plan and other costs on a shared row. [2026-10-30](../DECISIONS.md#L20960)
+  The table also carries each site's all-time earned and net (since
+  `EARNINGS_SINCE`) beside the range, with a footer total. [2026-11-03](../DECISIONS.md#L22103)
   
   on the dashboard (replaces its range, split by site through the tracking IDs,
   shared IDs on their own row); no schedule: the dashboard hands out a Chrome

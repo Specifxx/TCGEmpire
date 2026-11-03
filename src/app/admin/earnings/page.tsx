@@ -133,7 +133,17 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
   const checked = sources.filter((s) => s.checks?.length);
   // Cost and earnings per site (2026-10-30): tags split the earnings, Vercel's billing API the hosting.
   const vercelCost = costs.find((c) => c.key === "vercel");
-  const ledger = siteLedger(sources, vercelCost?.projects ?? [], costs.filter((c) => c.key !== "vercel").flatMap((c) => c.days), spanFrom, today, display);
+  const otherCostDays = costs.filter((c) => c.key !== "vercel").flatMap((c) => c.days);
+  const ledger = siteLedger(sources, vercelCost?.projects ?? [], otherCostDays, spanFrom, today, display);
+  // All-time profit or loss per site (2026-11-03, owner: "total profit or loss for
+  // each site … not just 30 days"): the same ledger since EARNINGS_SINCE, shown
+  // beside the range's columns whatever range is picked. Vercel's API covers the
+  // last 120 days; the hand-entered invoices cover the days before, on the shared row.
+  const ledgerAll = siteLedger(sources, vercelCost?.projects ?? [], otherCostDays, EARNINGS_SINCE, today, display);
+  const allNetOf = (key: string) => ledgerAll.find((r) => r.key === key)?.net ?? 0;
+  const allEarnedOf = (key: string) => ledgerAll.find((r) => r.key === key)?.earned ?? 0;
+  const allTotal = ledgerAll.reduce((n, r) => n + r.net, 0);
+  const rangeTotal = ledger.reduce((n, r) => n + r.net, 0);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -346,11 +356,11 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
       {/* Every site: what it earned, what its Vercel project cost, and the difference */}
       <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-site-ledger>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-extrabold text-white">By site: earned vs Vercel cost · {RANGES.find((r) => r.key === range)!.label}</h2>
+          <h2 className="text-sm font-extrabold text-white">By site: earned vs Vercel cost · {RANGES.find((r) => r.key === range)!.label}, and all time</h2>
           <span className="text-xs text-slate-400">
             {vercelCost?.status === "ok"
-              ? "Vercel per project from its billing API. Amazon and store programs have no API and are not in here."
-              : "Vercel per project is not connected yet (see Connections), so costs show only on the shared row."}
+              ? `Vercel per project from its billing API (last 120 days; earlier invoices count on the shared row). All time = since ${EARNINGS_SINCE}.`
+              : `Vercel per project is not connected yet (see Connections), so costs show only on the shared row. All time = since ${EARNINGS_SINCE}.`}
           </span>
         </div>
         <div className="mt-3 overflow-x-auto rounded-xl border border-ink-700">
@@ -361,13 +371,15 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
                 <th className="px-3 py-2 text-right font-semibold">Earned</th>
                 <th className="px-3 py-2 text-right font-semibold">Vercel</th>
                 <th className="px-3 py-2 text-right font-semibold">Net</th>
+                <th className="border-l border-ink-700 px-3 py-2 text-right font-semibold">All-time earned</th>
+                <th className="px-3 py-2 text-right font-semibold">All-time net</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-800">
               {ledger
-                .filter((r) => r.key !== "" || r.earned)
+                .filter((r) => r.key !== "" || r.earned || allEarnedOf(r.key))
                 .map((r) => (
-                  <tr key={r.key || "none"}>
+                  <tr key={r.key || "none"} data-site-row={r.key || "none"}>
                     <td className="px-3 py-2 text-white">{r.label}</td>
                     <td className="num px-3 py-2 text-right text-slate-200">{money(r.earned)}</td>
                     <td className="num px-3 py-2 text-right text-slate-400">
@@ -375,9 +387,25 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
                       {r.other ? <span className="ml-1 text-xs text-slate-500">+ {money(r.other)} other</span> : null}
                     </td>
                     <td className={`num px-3 py-2 text-right font-bold ${r.net < 0 ? "text-rose-400" : "text-white"}`}>{money(r.net)}</td>
+                    <td className="num border-l border-ink-700 px-3 py-2 text-right text-slate-200">{money(allEarnedOf(r.key))}</td>
+                    <td className={`num px-3 py-2 text-right font-bold ${allNetOf(r.key) < 0 ? "text-rose-400" : "text-white"}`} data-all-time-net>
+                      {money(allNetOf(r.key))}
+                    </td>
                   </tr>
                 ))}
             </tbody>
+            <tfoot className="border-t border-ink-700 text-xs text-slate-300">
+              <tr>
+                <td className="px-3 py-2 font-semibold">Every site together</td>
+                <td className="px-3 py-2" />
+                <td className="px-3 py-2" />
+                <td className={`num px-3 py-2 text-right font-bold ${rangeTotal < 0 ? "text-rose-400" : "text-white"}`}>{money(rangeTotal)}</td>
+                <td className="border-l border-ink-700 px-3 py-2" />
+                <td className={`num px-3 py-2 text-right font-bold ${allTotal < 0 ? "text-rose-400" : "text-white"}`} data-all-time-total>
+                  {money(allTotal)}
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </section>

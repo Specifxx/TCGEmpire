@@ -22099,3 +22099,17 @@ time I wanna run it."
   days before a first upload), so one run backfills exactly the gap, and
   overlap is harmless because an upload replaces its range. The static copy in
   project files is retired in favour of this generated one.
+
+## 2026-11-03 — All-time profit or loss per site
+
+Owner: "We should have total profit or loss for each site on the earnings
+dashboard and not just 30 days."
+
+The "By site" table followed the picked range only. It now adds two columns,
+**All-time earned** and **All-time net**, the same `siteLedger` run from
+`EARNINGS_SINCE` to today, whatever range is picked, and a footer with every
+site's net together for the range and all time. Vercel's billing API covers the
+last 120 days, so before that the hand-entered invoices count on the shared
+row; a site's all-time net is therefore its earnings minus its own Vercel usage
+for the API's window, with the plan and older invoices shared. Shown, never
+hidden, when a site has earned nothing: a site that costs money is the point.
