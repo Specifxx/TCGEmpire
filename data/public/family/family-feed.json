@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "rift",
- "generatedAt": "2026-11-02T18:30:33.726Z",
+ "generatedAt": "2026-11-03T16:39:58.444Z",
  "links": {
   "US": {
    "deals": "https://riftcompare.com/black-friday",
@@ -29,6 +29,18 @@
   }
  },
  "items": [
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "AU",
+   "title": "Riftbound Legacy Booster Box",
+   "url": "https://riftcompare.com/legacy-preorders",
+   "cents": 24000,
+   "currency": "AUD",
+   "store": "Spellroo Gaming",
+   "image": "https://cdn.shopify.com/s/files/1/0674/7753/6846/files/1367876911.png?v=1793706244",
+   "releaseDate": "2027-01-29"
+  },
   {
    "kind": "deal",
    "cluster": "cards",
@@ -129,6 +141,20 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "CA",
+   "title": "Riftbound Vendetta Showdown Decks",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks",
+   "cents": 1999,
+   "currency": "CAD",
+   "store": "Face to Face Games",
+   "image": "https://cdn.shopify.com/s/files/1/0574/4692/4324/files/90d40043504382959f4500a1fe6d98faf2c70403_Asset_SEA_DEC_RBD_RB_04SD01_EN.png?v=1774450987",
+   "refCents": 3695,
+   "refLabel": "median store price",
+   "savingPct": 46
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "CA",
    "title": "Riftbound Radiance Showdown Decks",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Showdown%20Decks",
    "cents": 2499,
@@ -192,20 +218,6 @@
    "store": "Level Up Games",
    "image": "https://cdn.shopify.com/s/files/1/0533/4912/2222/files/raw_394x_572eeb0a-59f8-4a5b-b4e3-d9fd2929264c.webp?v=1771002617",
    "refCents": 1499,
-   "refLabel": "median store price",
-   "savingPct": 33
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "CA",
-   "title": "Riftbound Spirit Forged Champion Deck (Rumble)",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Spirit%20Forged%20Champion%20Deck%20(Rumble)",
-   "cents": 1999,
-   "currency": "CAD",
-   "store": "Geek & Co.",
-   "image": "https://cdn.shopify.com/s/files/1/0824/7679/4161/files/raw_4_60202e6c-6202-4974-9a03-d96a7bbe1a5b.png?v=1770564885",
-   "refCents": 2999,
    "refLabel": "median store price",
    "savingPct": 33
   },
@@ -447,7 +459,7 @@
    "region": "US",
    "title": "Riftbound Vendetta Showdown Decks",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks",
-   "cents": 1432,
+   "cents": 1412,
    "currency": "USD",
    "store": "Shippin Texas",
    "image": "https://cdn.shopify.com/s/files/1/0676/9413/3386/files/697971.jpg?v=1785959826",
