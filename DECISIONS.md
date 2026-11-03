@@ -21860,3 +21860,22 @@ look at robots, sitemap, hreflang and geo-redirects.
   and a crawler always sees the US page.
 
 `tests/seo-audit-2026-11.test.ts` pins the region share image and the named thumbnails.
+
+## AdSense off, visitors complained — 2026-11-03
+
+The owner switched AdSense off again: "lets completely disable adsense on the
+website for now - users are complaining". `ADSENSE_SERVING = false` in
+`lib/adsense.ts`, exactly as in "AdSense off again" (2026-10-27): no loader
+script, no pagead2 or Funding Choices preconnect and no unit on any page, so
+Auto ads (anchor and in-page) stop. The `google-adsense-account` meta tag and
+`/ads.txt` stay, so the account and site stay verified and switching back is
+the one constant. Journey by Mediavine is not AdSense and still loads only on
+blog and guide articles; the affiliate banner pair (eBay and TCGplayer) is
+unchanged. The owner also asked for a thank-you line: while AdSense is off,
+`ADS_OFF_NOTICE` ("Thanks to your feedback, we've turned off ads. Support us
+instead by leaving a review.") replaces the "Rate us" strip's subtitle and sits
+above the stars of the one rating form (the footer panel, the corner card and
+`/feedback`). It is null while ads serve, and no new pop-up was added. The
+owner asked for it to go live urgently, so this one release
+overrides the 12-hour build gap with `[urgent]`. The 2026-11-23 review still
+compares ad money against affiliate earnings per visit.

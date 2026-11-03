@@ -5,6 +5,7 @@ import { track } from "@vercel/analytics";
 import { useMe } from "@/lib/use-me";
 import { markRated } from "@/lib/rate-prompt";
 import { ShareRow } from "./ShareRow";
+import { ADS_OFF_NOTICE } from "@/lib/adsense";
 
 // THE ONE RATING-AND-REVIEW FORM (owner, 2026-10-27: "all feedback options
 // [must be] the same … if it's the star rating, that's the star rating"). The
@@ -206,6 +207,11 @@ export function RatingReviewForm({
   const shown = hover || rating;
   return (
     <form onSubmit={submit} className="space-y-3 text-left" data-rating-review-form>
+      {ADS_OFF_NOTICE && (
+        <p className="text-center text-xs text-slate-400" data-ads-off-notice>
+          {ADS_OFF_NOTICE}
+        </p>
+      )}
       <div className="flex flex-wrap justify-center gap-1" onMouseLeave={() => setHover(0)} role="radiogroup" aria-label="Your rating">
         {[1, 2, 3, 4, 5].map((n) => (
           <button

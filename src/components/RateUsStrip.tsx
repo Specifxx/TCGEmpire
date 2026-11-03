@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { openFeedback } from "@/lib/feedback-open";
 import { hasRated, rateAllowedOn } from "@/lib/rate-prompt";
+import { ADS_OFF_NOTICE } from "@/lib/adsense";
 
 // "RATE US" ON EVERY PAGE, IN THE PAGE (owner, 2026-10-27: "a clear button that
 // you can click for feedback … somewhere along the page of every page … it
@@ -34,7 +35,9 @@ export function RateUsStrip() {
     >
       <div>
         <p className="font-semibold text-white">How&apos;s RiftCompare working for you?</p>
-        <p className="text-xs text-slate-400">Rate us and leave a review. No account needed.</p>
+        <p className="text-xs text-slate-400">
+          {ADS_OFF_NOTICE ? `${ADS_OFF_NOTICE} No account needed.` : "Rate us and leave a review. No account needed."}
+        </p>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex" role="group" aria-label="Rate RiftCompare out of 5">
