@@ -112,8 +112,8 @@ export function buildGrowthReport(
   const site = new Map<string, Line>();
   const place = new Map<string, Line>();
   const market = new Map<string, Line>();
-  for (const key of ["ebay", "tcgplayer"] as const) {
-    const net = key === "ebay" ? "eBay" : "TCGplayer";
+  for (const key of ["ebay", "tcgplayer", "amazon"] as const) {
+    const net = key === "ebay" ? "eBay" : key === "amazon" ? "Amazon" : "TCGplayer";
     for (const r of sources.find((s) => s.key === key)?.tags ?? ([] as TagDay[])) {
       const wi = weekIndex(r.day, weeks);
       if (wi < 0) continue;

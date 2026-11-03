@@ -125,7 +125,7 @@ export function siteLedger(
   const inRange = (day: string) => day >= from && day <= to;
   const cents = (d: { cents: number; currency: string }) => toDisplay(d.cents, d.currency, display);
   for (const s of sources) {
-    if (s.tags && (s.key === "ebay" || s.key === "tcgplayer")) {
+    if (s.tags && (s.key === "ebay" || s.key === "tcgplayer" || s.key === "amazon")) {
       // The tags split the source by site; whatever its total has beyond them goes to "No tag".
       let tagged = 0;
       for (const t of s.tags) {
