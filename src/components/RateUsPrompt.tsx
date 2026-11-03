@@ -1,44 +1,41 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { armNudge, countSessionView } from "@/lib/nudge-runtime";
 import { BUY_CLICK_EVENT } from "@/lib/buy-intent";
-import { Dialog, useEscapeLayer } from "./ui/Dialog";
+import { useEscapeLayer } from "./ui/Dialog";
 import { RatingReviewForm } from "./RatingReviewForm";
 import {
+  PRICING_NUDGE_SESSION_KEY,
   RATE_SESSION_KEY,
   RATE_STORAGE_KEY,
-  RATING_DRIVE_ASKS_KEY,
-  RATING_DRIVE_DELAY_MS,
-  RATING_DRIVE_LANDING_MS,
-  RATING_DRIVE_SESSION_KEY,
-  RATING_DRIVE_TARGET,
   countPageView,
   parseRateState,
   shouldAskRating,
-  shouldAskRatingDrive,
   type RateState,
 } from "@/lib/rate-prompt";
 
 // "Rate RiftCompare" (owner, 2026-10-26; reworked 2026-10-27, DECISIONS.md "One
 // rating ask, earned by engagement"; relaxed 2026-10-28, "Ratings: one tap
 // counts, and the card asks at the moment it has earned"). When it asks is
-// lib/rate-prompt.ts: never on arrival, after a few minutes and pages of real
-// use or when they come back from a store tab they opened here, at most three
-// times, never in the same visit as the Pricing callout. A small corner card, not a modal: the page stays usable under it,
-// and ✕, Escape and "Not now" all close it (snoozed), "Don't ask again" ends it.
-// DURING THE RATING DRIVE (2026-10-28, under 100 ratings: lib/rate-prompt.ts)
-// it is a centred pop-up for every visitor who has not rated, up to twice a visit (every visit),
-// with ✕, "Maybe later" and Escape but no "Don't ask again" and no closing by
-// a click on the page behind; after the drive, the corner card again.
+// lib/rate-prompt.ts: never on arrival, never on the first page of a visit,
+// after a few minutes and pages of real use or when they come back from a
+// store tab they opened here, at most twice, a month apart, never in the same
+// visit as the Pricing callout. A small corner card, not a modal: the page
+// stays usable under it, and ✕, Escape and "Not now" all close it (snoozed),
+// "Don't ask again" ends it.
+//
+// THE RATING DRIVE IS OVER (owner, 2026-11-03: "I think I've lost some
+// visitors … because before there were too many pop ups"). The centred pop-up
+// that asked every visitor on their landing page (2026-10-28 to 2026-11-03)
+// is gone; DECISIONS.md, "One interruption per visit, never on arrival".
 // Its body is the one rating-and-review form every surface uses
 // (RatingReviewForm, source "rating"): stars first, then the review box.
 
 const SHOW_DELAY_MS = 8_000;
 /** After they come back from the store tab: long enough to settle, short enough to still be "just now". */
 const RETURN_DELAY_MS = 1_500;
-const PRICING_NUDGE_SESSION_KEY = "rc_pricing_nudge_seen"; // PricingNudge's own flag
 
 function save(s: RateState) {
   try {
@@ -56,6 +53,11 @@ function load(now: number): RateState {
   }
 }
 
+/** The Pricing callout already claimed this visit's one interruption. */
+function otherPromptShown(): boolean {
+  return sessionFlag(PRICING_NUDGE_SESSION_KEY);
+}
+
 function sessionFlag(key: string): boolean {
   try {
     return sessionStorage.getItem(key) === "1";
@@ -64,64 +66,10 @@ function sessionFlag(key: string): boolean {
   }
 }
 
-interface Drive {
-  active: boolean;
-  count: number | null;
-}
-
-/** The drive's state for this visit: cached in sessionStorage, else asked of /api/rating-drive once. */
-async function loadDrive(): Promise<Drive> {
-  try {
-    const cached = sessionStorage.getItem(RATING_DRIVE_SESSION_KEY);
-    if (cached) return JSON.parse(cached) as Drive;
-  } catch {
-    /* private mode: ask the API */
-  }
-  try {
-    const res = await fetch("/api/rating-drive");
-    const d = (await res.json()) as Partial<Drive>;
-    // Only the API's own "off" (a real count of 100+) ends the drive; a failed answer keeps it on.
-    const drive: Drive = { active: !(res.ok && d.active === false), count: typeof d.count === "number" ? d.count : null };
-    try {
-      sessionStorage.setItem(RATING_DRIVE_SESSION_KEY, JSON.stringify(drive));
-    } catch {
-      /* private mode */
-    }
-    return drive;
-  } catch {
-    return { active: true, count: null }; // unknown is on: only a real 100 ends it
-  }
-}
-
-function readDriveAsks(): { shown: number; atPage: number } {
-  try {
-    const v = JSON.parse(sessionStorage.getItem(RATING_DRIVE_ASKS_KEY) ?? "null");
-    if (v && typeof v.shown === "number" && typeof v.atPage === "number") return v;
-  } catch {
-    /* private mode or junk */
-  }
-  return { shown: 0, atPage: 0 };
-}
-
 export function RateUsPrompt() {
   const path = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState(false);
-  const [drive, setDrive] = useState<Drive | null>(null);
-  // How this ask was shown: the drive's pop-up or the corner card.
-  const [popup, setPopup] = useState(false);
-  const driveRef = useRef<Drive | null>(null);
-  driveRef.current = drive;
-
-  useEffect(() => {
-    let live = true;
-    loadDrive().then((d) => {
-      if (live) setDrive(d);
-    });
-    return () => {
-      live = false;
-    };
-  }, []);
 
   // Count every page view (never twice for one path change).
   useEffect(() => {
@@ -130,41 +78,28 @@ export function RateUsPrompt() {
   }, [path]);
 
   useEffect(() => {
-    if (open || drive === null) return; // wait for the drive's answer
+    if (open) return;
     const visitPages = countSessionView("rc_rate_views", path); // the same path is not counted twice
-    if (drive.active) {
-      const ask = () => {
-        const a = readDriveAsks();
-        return shouldAskRatingDrive(load(Date.now()), path, { shown: a.shown, pagesSince: visitPages - a.atPage });
-      };
-      // "?rate=1": open it now (to see it, even after rating in this browser).
-      if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("rate") === "1") {
-        show(true, visitPages);
-        return;
-      }
-      if (!ask()) return;
-      return armNudge({
-        delayMs: visitPages >= 2 ? RATING_DRIVE_DELAY_MS : RATING_DRIVE_LANDING_MS,
-        onFire: () => {
-          if (ask()) show(true, visitPages);
-        },
-      });
+    // "?rate=1": open it now (to see it, even after rating in this browser).
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("rate") === "1") {
+      show();
+      return;
     }
     const ask = () =>
       !sessionFlag(RATE_SESSION_KEY) &&
-      shouldAskRating(load(Date.now()), Date.now(), path, { pages: visitPages, otherPromptShown: sessionFlag(PRICING_NUDGE_SESSION_KEY) });
+      shouldAskRating(load(Date.now()), Date.now(), path, { pages: visitPages, otherPromptShown: otherPromptShown() });
     if (!ask()) return;
     // Wait for a quiet moment on the page (no dialog, no typing), then check
     // again: the Pricing callout may have claimed the visit meanwhile.
     return armNudge({
       delayMs: SHOW_DELAY_MS,
       onFire: () => {
-        if (ask()) show(false);
+        if (ask()) show();
       },
     });
     // Not on `open`: closing must not re-arm the ask in the same visit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path, drive]);
+  }, [path]);
 
   // The high-intent moment: they clicked out to a store (a new tab) and came
   // back. The card asks then, while the price they found is fresh.
@@ -181,20 +116,15 @@ export function RateUsPrompt() {
       timer = setTimeout(() => {
         const here = window.location.pathname;
         const visitPages = countSessionView("rc_rate_views", here); // the page already counted: no double count
-        if (driveRef.current?.active) {
-          const a = readDriveAsks();
-          if (shouldAskRatingDrive(load(Date.now()), here, { shown: a.shown, pagesSince: visitPages - a.atPage })) show(true, visitPages);
-          return;
-        }
         if (
           !sessionFlag(RATE_SESSION_KEY) &&
           shouldAskRating(load(Date.now()), Date.now(), here, {
             pages: visitPages,
-            otherPromptShown: sessionFlag(PRICING_NUDGE_SESSION_KEY),
+            otherPromptShown: otherPromptShown(),
             intent: true,
           })
         )
-          show(false);
+          show();
       }, RETURN_DELAY_MS);
     };
     window.addEventListener(BUY_CLICK_EVENT, onBuy);
@@ -207,15 +137,7 @@ export function RateUsPrompt() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function show(asPopup: boolean, visitPage = 0) {
-    setPopup(asPopup);
-    if (asPopup) {
-      try {
-        sessionStorage.setItem(RATING_DRIVE_ASKS_KEY, JSON.stringify({ shown: readDriveAsks().shown + 1, atPage: visitPage }));
-      } catch {
-        /* private mode */
-      }
-    }
+  function show() {
     const cur = load(Date.now());
     save({ ...cur, asks: cur.asks + 1 });
     try {
@@ -237,7 +159,7 @@ export function RateUsPrompt() {
     setOpen(false);
   };
 
-  useEscapeLayer(open && !popup, close); // the pop-up's Dialog owns Escape itself
+  useEscapeLayer(open, close);
 
   if (!open) return null;
 
@@ -252,40 +174,6 @@ export function RateUsPrompt() {
       }}
     />
   );
-
-  if (popup) {
-    const count = drive?.count ?? null;
-    return (
-      <Dialog open onClose={close} size="md" label="Rate RiftCompare" dismissOnBackdrop={false} className="rounded-2xl border border-ink-700 bg-ink-900 px-5 pb-5 pt-6 text-center shadow-2xl">
-        <div data-rating-drive>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Close"
-            className="tap-icon absolute right-1.5 top-1.5 rounded-lg text-slate-400 hover:bg-ink-800 hover:text-white"
-          >
-            ✕
-          </button>
-          {!done && (
-            <>
-              <h2 className="px-6 font-display text-xl font-extrabold text-white">How would you rate RiftCompare?</h2>
-              <p className="mb-3 mt-1 text-sm text-slate-400">
-                {count !== null && count < RATING_DRIVE_TARGET
-                  ? `We're collecting our first ${RATING_DRIVE_TARGET} ratings, and ${count} players have rated so far. One tap helps.`
-                  : "One tap. It helps other players find us."}
-              </p>
-            </>
-          )}
-          {form}
-          {!done && (
-            <button type="button" onClick={close} className="tap-link mt-3 text-xs text-slate-500 hover:text-slate-300 hover:underline">
-              Maybe later
-            </button>
-          )}
-        </div>
-      </Dialog>
-    );
-  }
 
   return (
     <div

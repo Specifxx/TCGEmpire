@@ -5,10 +5,6 @@ import {
   RATE_AFTER_MS,
   RATE_AFTER_PAGES,
   RATE_INTENT_PAGES,
-  RATING_DRIVE_LANDING_MS,
-  RATING_DRIVE_TARGET,
-  ratingDriveActive,
-  shouldAskRatingDrive,
   RATE_MAX_ASKS,
   RATE_SNOOZE_MS,
   RATE_VISIT_GAP_MS,
@@ -16,6 +12,7 @@ import {
   freshRateState,
   parseRateState,
   shouldAskRating,
+  shouldShowPricingNudge,
 } from "../src/lib/rate-prompt";
 import { MIN_RATINGS_TO_SHOW, ratingLine, ratingToShow } from "../src/lib/site-rating";
 import { PREMIUM_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT, annualSavingPct, premiumEffectiveMonthly } from "../src/lib/site";
@@ -49,9 +46,10 @@ test("the rate prompt never asks on arrival: a few minutes and pages first (rela
 
 test("coming back from a store tab may bring the card early, but not on a first page view", () => {
   const s = { ...freshRateState(T0), pages: RATE_INTENT_PAGES };
-  const I = { pages: 1, otherPromptShown: false, intent: true };
+  const I = { pages: RATE_INTENT_PAGES, otherPromptShown: false, intent: true };
   assert.equal(shouldAskRating(s, T0 + 10_000, "/card/x", I), true);
-  assert.equal(shouldAskRating({ ...s, pages: 1 }, T0 + 10_000, "/card/x", I), false, "one page is arrival");
+  // 2026-11-03: not even after a store click on the page they landed on.
+  assert.equal(shouldAskRating(s, T0 + 10_000, "/card/x", { ...I, pages: 1 }), false, "one page of this visit is arrival");
   assert.equal(shouldAskRating(s, T0 + 10_000, "/card/x", { ...I, otherPromptShown: true }), false);
   assert.equal(shouldAskRating({ ...s, rated: true }, T0 + 10_000, "/card/x", I), false);
   const c = read("src/components/RateUsPrompt.tsx");
@@ -59,33 +57,20 @@ test("coming back from a store tab may bring the card early, but not on a first 
   assert.match(c, /visibilitychange/);
 });
 
-test("the rating drive: a pop-up for every visitor until 100 ratings, then off by itself (owner, 2026-10-28)", () => {
-  assert.equal(RATING_DRIVE_TARGET, 100);
-  assert.equal(ratingDriveActive(9), true);
-  assert.equal(ratingDriveActive(99), true);
-  assert.equal(ratingDriveActive(100), false, "switches itself off at the target");
-  assert.equal(ratingDriveActive(null), true, "unknown stays on (owner, 2026-10-29): only a real 100 ends it");
-  const fresh = freshRateState(T0);
-  const first = { shown: 0, pagesSince: 0 };
-  assert.equal(shouldAskRatingDrive(fresh, "/card/x", first), true, "a new visitor is asked too");
-  assert.equal(shouldAskRatingDrive({ ...fresh, rated: true }, "/card/x", first), false, "never someone who rated");
-  assert.equal(shouldAskRatingDrive(fresh, "/card/x", { shown: 1, pagesSince: 2 }), false, "not straight back after Maybe later");
-  assert.equal(shouldAskRatingDrive(fresh, "/card/x", { shown: 1, pagesSince: 3 }), true, "back three pages later");
-  assert.equal(shouldAskRatingDrive(fresh, "/card/x", { shown: 2, pagesSince: 9 }), false, "at most twice a visit");
-  for (const p of ["/login", "/premium", "/checkout", "/feedback"]) assert.equal(shouldAskRatingDrive(fresh, p, first), false, p);
-  assert.ok(RATING_DRIVE_LANDING_MS >= 15_000, "never in a visitor's first seconds (Google's intrusive-interstitial rule)");
+test("one interruption per visit, never on arrival: the rating drive is over (owner, 2026-11-03)", () => {
   const c = read("src/components/RateUsPrompt.tsx");
-  assert.match(c, /dismissOnBackdrop=\{false\}/, "a click on the page behind does not close it");
-  // 2026-10-29: the pop-up shipped wearing data-rate-prompt, which globals.css
-  // hides whenever a Dialog is open, so it hid ITSELF: a dimmed page and no box.
-  assert.match(c, /<div data-rating-drive>/);
-  assert.doesNotMatch(c.slice(c.indexOf("if (popup) {"), c.indexOf("</Dialog>")), /data-rate-prompt/, "the pop-up must not carry the corner card's hide-under-a-dialog hook");
-  assert.match(c, /aria-label="Close"/);
-  assert.match(c, /Maybe later/, "always a visible way out");
-  assert.match(c, /fetch\("\/api\/rating-drive"\)/);
-  const route = read("src/app/api/rating-drive/route.ts");
-  assert.match(route, /s-maxage=21600/);
-  assert.match(route, /getSiteRating/);
+  assert.doesNotMatch(c, /<Dialog\b/, "no centred pop-up any more");
+  assert.doesNotMatch(c, /rating-drive/, "and no drive to ask about");
+  assert.doesNotMatch(read("src/lib/rate-prompt.ts"), /export const RATING_DRIVE/);
+  // The Pricing callout: a returning visitor, from the second page of a visit.
+  const fresh = freshRateState(T0);
+  assert.equal(shouldShowPricingNudge(fresh, 5), false, "never in a first visit");
+  assert.equal(shouldShowPricingNudge({ ...fresh, visits: 2 }, 1), false, "never on a visit's first page");
+  assert.equal(shouldShowPricingNudge({ ...fresh, visits: 2 }, 2), true);
+  const nudge = read("src/components/PricingNudge.tsx");
+  assert.match(nudge, /shouldShowPricingNudge\(/);
+  assert.match(nudge, /read\("session", RATE_SESSION_KEY\)/, "it yields to the card's visit");
+  assert.match(c, /otherPromptShown: otherPromptShown\(\)/, "and the card yields to it");
 });
 
 test("a page view after a long gap is a new visit", () => {
@@ -96,14 +81,14 @@ test("a page view after a long gap is a new visit", () => {
   assert.equal(b.pages, 2);
 });
 
-test("a rating or Don't ask again ends it for good; closing waits; it gives up after three asks", () => {
+test("a rating or Don't ask again ends it for good; closing waits a month; it gives up after two asks", () => {
   const now = T0 + RATE_AFTER_MS;
   assert.equal(shouldAskRating({ ...engaged, rated: true }, now, "/", V), false);
   assert.equal(shouldAskRating({ ...engaged, optedOut: true }, now, "/", V), false);
   assert.equal(shouldAskRating({ ...engaged, snoozedAt: now }, now + RATE_SNOOZE_MS - 1, "/", V), false);
   assert.equal(shouldAskRating({ ...engaged, snoozedAt: now }, now + RATE_SNOOZE_MS, "/", V), true);
-  assert.ok(RATE_SNOOZE_MS >= 14 * 86_400_000, "not all the time");
-  assert.equal(RATE_MAX_ASKS, 3);
+  assert.ok(RATE_SNOOZE_MS >= 30 * 86_400_000, "not all the time");
+  assert.equal(RATE_MAX_ASKS, 2);
   assert.equal(shouldAskRating({ ...engaged, asks: RATE_MAX_ASKS }, now, "/", V), false);
   assert.deepEqual(parseRateState("not json", T0), freshRateState(T0));
   assert.equal(parseRateState(JSON.stringify({ firstSeen: T0, pages: 4, rated: false }), T0 + 5).visits, 1, "an old stored state still reads");
@@ -113,9 +98,8 @@ test("the prompt is a closable corner card, not a modal, and still posts a ratin
   const layout = read("src/app/layout.tsx");
   assert.match(layout, /<RateUsPrompt \/>/);
   const c = read("src/components/RateUsPrompt.tsx");
-  assert.equal(c.match(/<Dialog\b/g)?.length, 1, "a modal only during the rating drive");
-  assert.match(c, /if \(popup\) \{[\s\S]{0,120}<Dialog\b/, "outside the drive the page stays usable");
-  assert.match(c, /useEscapeLayer\(open && !popup, close\)/, "Escape closes it");
+  assert.doesNotMatch(c, /<Dialog\b/, "never a modal: the page stays usable");
+  assert.match(c, /useEscapeLayer\(open, close\)/, "Escape closes it");
   assert.match(c, /aria-label="Close"/);
   assert.match(c, />\s*Not now\s*</);
   assert.match(c, /Don&apos;t ask again/);

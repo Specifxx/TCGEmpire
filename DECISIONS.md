@@ -21879,3 +21879,45 @@ above the stars of the one rating form (the footer panel, the corner card and
 owner asked for it to go live urgently, so this one release
 overrides the 12-hour build gap with `[urgent]`. The 2026-11-23 review still
 compares ad money against affiliate earnings per visit.
+
+## One interruption per visit, never on arrival — 2026-11-03
+
+The owner: "I'm a little concerned because I think I've lost some visitors for
+riftcompare simply because before there were too many pop ups".
+
+What could interrupt a visitor uninvited, before this change:
+
+- **The rating drive** (2026-10-28, made more insistent 2026-10-29): a centred
+  modal for EVERY visitor who had not rated, on the page they landed on after
+  15 seconds, again three pages after "Maybe later", every visit, with no
+  "Don't ask again". It never reached its 100-rating target, so it never
+  switched itself off. Most search visitors read one page; this covered it.
+- **The header's Pricing callout** (`PricingNudge`, 2026-10-25): three seconds
+  after the first page settled, every session, for anyone not on Pro, snoozed
+  only three days. It and the drive did not yield to each other (the drive
+  ignored the "one prompt per visit" flag), so a first visit could get both.
+- AdSense's own vignettes and anchors until 2026-11-03 (off since, entry above).
+- The rating corner card (after 4 pages and 3 minutes) and the dismissible
+  in-page Radiance banner (ends 2026-11-13) were already fine.
+
+Now:
+
+- **The rating drive is gone**, and `/api/rating-drive` with it (one function
+  call a visit saved). The corner card is the only rating ask, and asks at most
+  twice (was three), 30 days apart (was 14). A return from a store tab no
+  longer brings it on the page a visitor landed on.
+- **One uninvited interruption per visit, and never on a visit's first page.**
+  The card and the Pricing callout share one slot (`RATE_SESSION_KEY` /
+  `PRICING_NUDGE_SESSION_KEY`, both checked by both).
+- **The Pricing callout waits for a returning visitor** (second visit on, from
+  the second page; `shouldShowPricingNudge`), and a dismissal snoozes it 14
+  days (was 3). Nobody has bought Pro from it, so a first-time visitor gains
+  nothing from it.
+- Not touched: Mediavine on articles (its own review on 2026-11-23), in-page
+  prompts (the "Rate us" row, sign-up and limit panels: part of the page, never
+  over it), and anything a visitor opens themselves.
+
+Measure: visitors and pages per visit in Vercel Web Analytics for the two weeks
+after this release against 2026-10-20 to 2026-11-02. If ratings stall without
+the drive, ask on the thank-you moments (a store click) rather than bring a
+modal back.

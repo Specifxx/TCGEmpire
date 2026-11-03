@@ -100,5 +100,5 @@ export const SNOOZE_AFTER_CLICK_MS = 14 * 864e5; // 14 days
  * only AnnualSwitchNudge.
  */
 export const PREMIUM_SLIDER_DELAY_MS = 3_000;
-export const PREMIUM_SLIDER_SNOOZE_MS = 3 * 864e5; // 3 days
+export const PREMIUM_SLIDER_SNOOZE_MS = 14 * 864e5; // 14 days (was 3 until 2026-11-03: one interruption per visit)
 
