@@ -6,9 +6,9 @@ import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { PREMIUM_SLIDER_DELAY_MS, PREMIUM_SLIDER_SNOOZE_MS } from "@/lib/nudge-timing";
 import { premiumSliderEligible } from "@/lib/nudge-gate";
-import { armNudge } from "@/lib/nudge-runtime";
+import { armNudge, countSessionView } from "@/lib/nudge-runtime";
 import { isSignupSession } from "@/lib/signup-session";
-import { RATE_SESSION_KEY } from "@/lib/rate-prompt";
+import { PRICING_NUDGE_SESSION_KEY, RATE_SESSION_KEY, RATE_STORAGE_KEY, parseRateState, shouldShowPricingNudge } from "@/lib/rate-prompt";
 
 // THE PRICING CALLOUT (2026-10-25, owner: "the premium slide is not working …
 // get rid of the slider … create a little cool animation with an arrow pointing
@@ -24,8 +24,15 @@ import { RATE_SESSION_KEY } from "@/lib/rate-prompt";
 // a dismissal snoozes it for PREMIUM_SLIDER_SNOOZE_MS (3 days). The skip list is
 // the slider's own gate (premiumSliderEligible: never on /premium, sign-in,
 // admin, games, embeds). Client-only, so a crawler never sees it.
+//
+// ONE INTERRUPTION PER VISIT, NEVER ON ARRIVAL (owner, 2026-11-03: "I think
+// I've lost some visitors … because before there were too many pop ups"): it
+// now waits for a returning visitor (second visit on) and never shows on the
+// first page of a visit (shouldShowPricingNudge, lib/rate-prompt.ts); a
+// dismissal snoozes it for PREMIUM_SLIDER_SNOOZE_MS (14 days, was 3). It shares
+// the visit's one slot with the rating card (RATE_SESSION_KEY).
 
-const SESSION_KEY = "rc_pricing_nudge_seen";
+const SESSION_KEY = PRICING_NUDGE_SESSION_KEY;
 const SNOOZE_KEY = "rc_pricing_nudge_snooze";
 const VISIBLE_MS = 9_000;
 
@@ -56,6 +63,9 @@ export function PricingNudge() {
     if (!loaded || tier === "premium" || !premiumCheckout) return;
     if (!premiumSliderEligible({ pathname })) return;
     if (read("session", SESSION_KEY)) return;
+    // Never on the page they landed on, never in their first visit.
+    const visitPages = countSessionView("rc_rate_views", pathname ?? "/");
+    if (!shouldShowPricingNudge(parseRateState(read("local", RATE_STORAGE_KEY), Date.now()), visitPages)) return;
     // One uninvited prompt per visit: the rating card already asked this one.
     if (read("session", RATE_SESSION_KEY)) return;
     // Someone who has just signed up is shown around, not sold to.

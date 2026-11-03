@@ -241,12 +241,13 @@ longer lands on its entry.
   moved up in Stripe. No trial: `PREMIUM_TRIAL_DAYS` defaults to 0 (the 30-day
   trial below is superseded). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.
-  `/premium` keeps Collectr's plan and page order for non-members, drawn in the site's own theme since 2026-11-02 (orange button, flat panels, one Free/Pro table; no gold or mock-ups) ([2026-11-02](../DECISIONS.md#the-pro-page-in-the-sites-own-theme)). Until the site has 100 ratings, a closable rating pop-up asks
-  every visitor who has not rated (15 s in, again 3 pages after "Maybe later",
-  twice a visit at most), then switches itself off ([2026-10-29](../DECISIONS.md#L20782))
-  ([2026-10-28](../DECISIONS.md#L20702)). After that, a rate-the-site corner card
-  (not a modal) asks after 4 pages and 3 minutes, or on return from a store
-  tab, at most three times 14 days apart, and is the one uninvited opinion ask;
+  `/premium` keeps Collectr's plan and page order for non-members, drawn in the site's own theme since 2026-11-02 (orange button, flat panels, one Free/Pro table; no gold or mock-ups) ([2026-11-02](../DECISIONS.md#the-pro-page-in-the-sites-own-theme)). The rating drive's
+  centred pop-up is gone (2026-11-03, owner: visitors lost to "too many pop ups"):
+  ONE uninvited interruption per visit, never on a visit's first page. A
+  rate-the-site corner card (not a modal) asks after 4 pages and 3 minutes, or
+  on return from a store tab from the second page of a visit, at most twice 30
+  days apart, and is the one uninvited opinion ask
+  ([2026-11-03](../DECISIONS.md#one-interruption-per-visit-never-on-arrival));
   a tapped star counts even when the form is closed unsent ([2026-10-28](../DECISIONS.md#L20608)); one rating-and-review form everywhere (corner card,
   footer panel, a "Rate us" row at the end of every page, /feedback), reviews
   shown unless unticked, still admin-approved ([2026-10-27](../DECISIONS.md#L20240)); no floating button ([2026-10-27](../DECISIONS.md#L20201)); the homepage hero and the
@@ -589,7 +590,9 @@ longer lands on its entry.
   the at-the-limit panel (`limit:watchlist`, `limit:portfolio`), Best
   Basket's preview (`limit:basket`, leading with the list's own saving) and
   the tool walls — plus the header's Pricing callout (`PricingNudge`, since
-  10-25; the corner `PremiumSlideIn` is gone), and a tick on a set page (the same
+  10-25; since 11-03 only for a returning visitor, from the second page of a
+  visit, snoozed 14 days, sharing the visit's one slot with the rating card;
+  the corner `PremiumSlideIn` is gone), and a tick on a set page (the same
   `limit:portfolio` panel, reworded for a set). The header carries the shiny
   `GetPremiumLink` since 2026-10-15 (see "Gold marks Premium"); rail and account
   menu stay plain "Pricing" links. [2026-10-15](../DECISIONS.md#L17561) [2026-09-28](../DECISIONS.md#L14549),

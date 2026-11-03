@@ -33,7 +33,7 @@ test("the constants are the owner's rules, in one place", () => {
   assert.equal(NUDGE_DELAY_MS, 12_000, "the annual offer's delay");
   // The Akali slider (2026-10-17): a few seconds, then a three-day snooze.
   assert.equal(PREMIUM_SLIDER_DELAY_MS, 3_000);
-  assert.equal(PREMIUM_SLIDER_SNOOZE_MS, 3 * DAY);
+  assert.equal(PREMIUM_SLIDER_SNOOZE_MS, 14 * DAY);
   assert.equal(ANNUAL_MIN_VIEWS, 2);
   assert.equal(DIALOG_QUIET_MS, 10_000);
   // The caps and snoozes the nudges keep, unchanged by this pass.
