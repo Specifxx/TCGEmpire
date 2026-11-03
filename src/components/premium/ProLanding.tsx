@@ -22,8 +22,8 @@ import { DECK_WATCH_LIMIT } from "@/lib/alert-limits";
 //   1. Hero: an orange eyebrow, a plain headline and one sentence, four ticks,
 //      the star rating when there is one; beside it the plan card (Monthly /
 //      Annual, the price, one orange button).
-//   2. What Pro adds: nine flat panels, each a real Pro feature, line icons.
-//   3. Real, approved reviews (none: no section).
+//   2. Real, approved reviews with the rating (none: no section).
+//   3. What Pro adds: nine flat panels, each a real Pro feature, line icons.
 //   4. Free and Pro side by side: one table with the real limits.
 //
 // Flat ink panels with hairline borders, the brand orange for the action, the
@@ -206,6 +206,14 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
         </div>
       </section>
 
+      {/* Real, consented, approved reviews and the site's rating, straight
+          under the hero (owner, 2026-11-03: "we need it visible on … the
+          pricing page"). ReviewsSection renders nothing when there are none,
+          and the wrapper hides itself then. */}
+      <div className="pt-12 empty:hidden">
+        <ReviewsSection rating={rating} />
+      </div>
+
       <section id="features" className="scroll-mt-header pt-16" aria-labelledby="pro-features">
         <div className="rb-eyebrow text-brand-400">What Pro adds</div>
         <h2 id="pro-features" className="mt-2 text-2xl text-white sm:text-3xl">
@@ -226,12 +234,6 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
           ))}
         </div>
       </section>
-
-      {/* Real, consented, approved reviews. ReviewsSection renders nothing when
-          there are none (it adds its own spacing only when it renders). */}
-      <div className="pt-16 empty:hidden">
-        <ReviewsSection />
-      </div>
 
       <section id="compare" className="scroll-mt-header pt-16" aria-labelledby="pro-compare">
         <div className="rb-eyebrow text-brand-400">Plans</div>

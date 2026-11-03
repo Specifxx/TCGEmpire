@@ -9,6 +9,7 @@ import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/pric
 import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
+import { ReviewsSection } from "@/components/ReviewsSection";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EbayPicks } from "@/components/EbayPicks";
@@ -342,6 +343,12 @@ export default async function HomePage() {
         rating={rating}
       />
 
+      {/* Real, approved reviews and the site's rating, right under the hero
+          (owner, 2026-11-03: "we have a couple reviews published … we need it
+          visible on the home page"). Nothing at all when there are none.
+          HomeSections gets showReviews={false} so it appears once. */}
+      <ReviewsSection rating={rating} />
+
       {/* eBay Picks (the newest set's chase cards, cheapest live listing
           each) directly under the hero, above Today's Top Deals (owner,
           2026-10-19: "ebay chase cards should be at the top above todays top
@@ -393,6 +400,7 @@ export default async function HomePage() {
           HomeSections, so a visitor who picks a market in the hero toggle gets
           the SAME feature set, not a stripped-down page. See HomeSections.tsx. */}
       <HomeSections
+        showReviews={false}
         country={country}
         totalCards={totalCards}
         storeCount={storeCount}

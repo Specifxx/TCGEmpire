@@ -51,6 +51,8 @@ export interface HomeSectionsProps {
   /** Render eBay Picks here. All six homes render it themselves, directly under
    *  the editorial band, and pass false (owner, 2026-10-06). */
   showEbayPicks?: boolean;
+  /** false where the page shows ReviewsSection itself, higher up (the main homepage, 2026-11-03). */
+  showReviews?: boolean;
   // ALL FIVE markets, not just `country` — TodaysTopDeals/MarketPulse localise
   // to the VISITOR's own market client-side (useCountry()), which can differ
   // from the page's URL/baseline market (e.g. a bookmarked /au visited by
@@ -82,6 +84,7 @@ export function HomeSections({
   popularItemList = true,
   showTopDeals = true,
   showEbayPicks = true,
+  showReviews = true,
   topDealsByCountry,
   moversByCountry,
   recentlyUpdated,
@@ -213,7 +216,7 @@ export function HomeSections({
           none (see ReviewsSection); no placeholder or seeded example. Moved up
           from the bottom of the page on 2026-10-27 (owner: "feedback and trust
           is very important … display it and be transparent"). */}
-      <ReviewsSection />
+      {showReviews && <ReviewsSection />}
 
       {/* eBay Picks — the newest set's chase cards with their cheapest live
           listing, rather than a generic banner. Held the top slot from
