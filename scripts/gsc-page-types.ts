@@ -60,6 +60,7 @@ async function main() {
       for (const [k, e] of [...b].sort((x, y) => y[1].clicks - x[1].clicks || y[1].imps - x[1].imps).slice(0, 18))
         console.log(`${k} | ${e.pages} | ${e.imp10} | ${e.clicked} | ${e.clicks} | ${e.imps}`);
       const top = rows.filter((r) => r.clicks > 0).sort((a, b) => b.clicks - a.clicks).slice(0, 12);
+      if (/compareempire|ygocompare|kaeyoung/.test(siteUrl)) for (const r of rows.filter((r) => r.clicks > 0 || r.impressions >= 20)) console.log(`PAGE ${new URL(r.keys[0]).pathname} ${r.clicks} ${r.impressions}`);
       console.log("top pages: " + top.map((r) => `${new URL(r.keys[0]).pathname} ${r.clicks}`).join(", "));
     } catch (e) { console.log(`\n== ${siteUrl}: ${(e as Error).message}`); }
   }
