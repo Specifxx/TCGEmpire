@@ -1,5 +1,5 @@
 // Amazon Associates (2026-10-29): each Amazon gets ITS account's tag (riftcompare-20 earns only on amazon.com,
-// compareempire-22 on amazon.com.au); a market without an account shows no Amazon; the Pokémon board carries a search.
+// riftcompare-22 on amazon.com.au); a market without an account shows no Amazon; the Pokémon board carries a search.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -9,12 +9,12 @@ import { buildBoard } from "../src/lib/pokemon/board";
 
 test("each Amazon store gets its own account's tag, hard-coded (owner, 2026-11-02)", () => {
   assert.equal(amazonTagForHost("www.amazon.com"), "riftcompare-20");
-  assert.equal(amazonTagForHost("amazon.com.au"), "compareempire-22");
+  assert.equal(amazonTagForHost("amazon.com.au"), "riftcompare-22");
   assert.equal(amazonTagForHost("www.amazon.co.uk"), "compareempi03-21");
   assert.equal(amazonTagForHost("www.amazon.ca"), "compareempire-20");
   assert.equal(amazonTagForHost("www.amazon.de"), "compareempire-21");
   const au = new URL(affiliateUrl("https://www.amazon.com.au/s?k=Riftbound", "amazon_sealed", "/sealed"));
-  assert.equal(au.searchParams.get("tag"), "compareempire-22");
+  assert.equal(au.searchParams.get("tag"), "riftcompare-22");
   const us = new URL(affiliateUrl("https://www.amazon.com/s?k=Riftbound", "amazon_sealed", "/sealed"));
   assert.equal(us.searchParams.get("tag"), "riftcompare-20");
 });
