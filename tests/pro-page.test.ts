@@ -158,7 +158,15 @@ test("the rating shown is real and only shown once there are enough", () => {
   assert.equal(ratingLine({ average: 4.7, count: 1234 }), "4.7 rating · 1,234 ratings");
   const landing = read("src/components/premium/ProLanding.tsx");
   assert.match(landing, /<SiteRatingBadge rating=\{rating\}/);
-  assert.match(landing, /<div className="pt-16 empty:hidden">\s*<ReviewsSection \/>/, "approved reviews on the Pro page");
+  assert.match(landing, /<div className="pt-12 empty:hidden">\s*<ReviewsSection rating=\{rating\} \/>/, "approved reviews on the Pro page");
+  assert.ok(landing.indexOf("<ReviewsSection") < landing.indexOf('id="features"'), "reviews sit under the hero, above the feature panels (owner, 2026-11-03)");
+  const home = read("src/app/page.tsx");
+  assert.match(home, /<ReviewsSection rating=\{rating\} \/>/, "the homepage shows the reviews too");
+  assert.ok(home.indexOf("<ReviewsSection") < home.indexOf("<EbayPicks"), "right under the homepage hero");
+  assert.match(home, /showReviews=\{false\}/, "and only once");
+  const reviews = read("src/components/ReviewsSection.tsx");
+  assert.match(reviews, /if \(reviews\.length < MIN_REVIEWS_TO_DISPLAY\) return null;/, "no reviews, no section");
+  assert.doesNotMatch(reviews, /itemprop|itemscope|aggregateRating|application\/ld\+json/i, "plain HTML, never self-serving review markup");
   const badge = read("src/components/SiteRatingBadge.tsx");
   assert.match(badge, /if \(!rating\) return null;/, "no rating line without a rating");
   assert.doesNotMatch(badge, /itemprop|aggregateRating|application\/ld\+json/i, "plain HTML, never review markup");
