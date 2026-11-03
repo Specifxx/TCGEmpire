@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
@@ -38,40 +38,14 @@ test("the subscription read treats only PAID subs as switch candidates (trials e
   assert.doesNotMatch(code, /status:\s*"trialing"/, "a trialing user hasn't paid — must not be pushed to switch");
 });
 
-test("the nudge only ever targets a monthly, tenured, Pro subscriber", () => {
-  const code = codeOnly(read(NUDGE));
-  assert.match(code, /premium/, "gated on Pro (mirror image of the non-Pro slide-in)");
-  assert.match(code, /interval !== "month"/, "must bail for anyone not on the monthly plan");
-  assert.match(code, /MIN_MONTHS/, "must require some tenure before pitching a year up front");
-  assert.match(code, /annualAvailable/, "must require annual to actually be purchasable");
-});
-
-test("the nudge is non-modal and capped hard", () => {
-  const code = codeOnly(read(NUDGE));
-  // The yield to an open modal lives in the shared timer (lib/nudge-runtime.ts,
-  // armNudge, pinned by tests/nudge-gate.test.ts); this nudge must use it.
-  assert.match(code, /armNudge\(\{[\s\S]*?delayMs: NUDGE_DELAY_MS/, "must arm the shared show timer, which yields to any open modal");
-  assert.match(readFileSync(join(process.cwd(), "src/lib/nudge-runtime.ts"), "utf8"), /dataset\.rcDialog === "1"/, "the shared timer yields to any open modal");
-  assert.doesNotMatch(code, /dataset\.rcDialog\s*=\s*["']1["']/, "a corner nudge must not claim the modal lock");
-  assert.match(code, /MAX_DISMISSALS\s*=\s*2/, "two 'not now's is a permanent no");
-  assert.match(code, /localStorage/, "the snooze/never-again state must outlive the session");
-  // A successful switch must also stop it re-offering (they're annual now).
-  assert.match(code, /invalidateMe\(\)/, "a successful switch must refresh cached session state");
-});
-
-test("its events are routed like the other high-volume nudges", () => {
-  const code = read(NUDGE);
-  for (const ev of ["annual_switch_shown", "annual_switch_click", "annual_switch_success", "annual_switch_dismissed"]) {
-    assert.ok(code.includes(ev), `must fire ${ev}`);
-  }
+// The header's Pricing callout (PricingNudge) and the monthly→annual corner
+// card (AnnualSwitchNudge) went on 2026-11-03 (owner: "get rid of all the
+// sliders regarding the premium and the signups. People can do it if they
+// want to"). No uninvited Pro or sign-up prompt exists any more.
+test("the corner nudge is gone; the switch stays available on /premium and the account page", () => {
+  assert.ok(!existsSync(join(process.cwd(), NUDGE)), "AnnualSwitchNudge.tsx was removed on 2026-11-03");
+  assert.doesNotMatch(read("src/app/layout.tsx"), /<AnnualSwitchNudge\s*\/>/, "not mounted");
   const analytics = read("src/lib/analytics.ts");
   const ga4Only = analytics.slice(analytics.indexOf("GA4_ONLY_EVENTS"), analytics.indexOf("export function trackEvent"));
-  assert.ok(ga4Only.includes("annual_switch_shown"), "the impression is GA4-only");
-  assert.ok(ga4Only.includes("annual_switch_dismissed"), "the dismiss is GA4-only");
-  assert.ok(!ga4Only.includes("annual_switch_click"), "the click stays dual-tracked");
-  assert.ok(!ga4Only.includes("annual_switch_success"), "the conversion stays dual-tracked");
-});
-
-test("it is mounted in the layout", () => {
-  assert.match(read("src/app/layout.tsx"), /<AnnualSwitchNudge\s*\/>/, "must render in the layout");
+  assert.ok(!ga4Only.includes("annual_switch_click"), "the switch click stays dual-tracked");
 });

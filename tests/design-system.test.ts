@@ -459,8 +459,7 @@ test("every fixed bottom-corner surface (the nudges, the rating card, ui/Toast) 
   // 2026-09-30 ("The sign-up slider is gone"); PremiumSlideIn followed it on
   // 2026-10-25 (the header's PricingNudge replaced it, anchored to the link).
   for (const rel of [
-    "src/components/AnnualSwitchNudge.tsx",
-    "src/components/RateUsPrompt.tsx", // the feedback FAB it replaces went on 2026-10-27
+    "src/components/RateUsPrompt.tsx", // AnnualSwitchNudge went 2026-11-03 // the feedback FAB it replaces went on 2026-10-27
     "src/components/ui/Toast.tsx",
   ]) {
     const src = readCode(rel);

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   RATE_AFTER_MS,
   RATE_AFTER_PAGES,
@@ -67,10 +68,9 @@ test("one interruption per visit, never on arrival: the rating drive is over (ow
   assert.equal(shouldShowPricingNudge(fresh, 5), false, "never in a first visit");
   assert.equal(shouldShowPricingNudge({ ...fresh, visits: 2 }, 1), false, "never on a visit's first page");
   assert.equal(shouldShowPricingNudge({ ...fresh, visits: 2 }, 2), true);
-  const nudge = read("src/components/PricingNudge.tsx");
-  assert.match(nudge, /shouldShowPricingNudge\(/);
-  assert.match(nudge, /read\("session", RATE_SESSION_KEY\)/, "it yields to the card's visit");
-  assert.match(c, /otherPromptShown: otherPromptShown\(\)/, "and the card yields to it");
+  // The callout itself went on 2026-11-03 (owner: no Pro or sign-up sliders).
+  assert.ok(!existsSync(join(process.cwd(), "src/components/PricingNudge.tsx")));
+  assert.match(c, /otherPromptShown: otherPromptShown\(\)/, "the card still yields to the visit's slot");
 });
 
 test("a page view after a long gap is a new visit", () => {
@@ -105,7 +105,6 @@ test("the prompt is a closable corner card, not a modal, and still posts a ratin
   assert.match(c, /Don&apos;t ask again/);
   assert.match(c, /armNudge\(/, "waits for a quiet moment");
   assert.match(c, /<RatingReviewForm[\s\S]{0,80}source="rating"/, "the same form as every rating surface");
-  assert.match(read("src/components/PricingNudge.tsx"), /RATE_SESSION_KEY/, "the Pricing callout yields to it");
   const route = read("src/app/api/feedback/route.ts");
   assert.match(route, /"rating", "rating-review"\]\)/, "the API accepts both sources");
   assert.match(route, /!source\.startsWith\("rating"\) && feedbackPremiumActive\(\)/, "a star tap or its review earns no free Pro");

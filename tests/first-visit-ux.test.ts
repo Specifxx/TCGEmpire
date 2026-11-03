@@ -1,8 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
 
 // Section 4 of the 2026-09-24 brief: first visit from Reddit/Discord.
 // DECISIONS.md, "First visit from Reddit/Discord: no sign-up prompt on the
@@ -33,13 +32,10 @@ test("the sign-up card never interrupts a visit's first pages (removed 09-30, re
   // 2026-10-17: the separate sign-up card is gone; the Akali slider asks everyone.
 });
 
-test("the header's Pricing callout: once a session, never in the sign-up session, off the sign-in and checkout pages", () => {
-  // Replaced the corner Premium slider on 2026-10-25 (PricingNudge).
-  const slide = code("src/components/PricingNudge.tsx");
-  assert.match(slide, /premiumSliderEligible\(\{ pathname \}\)/, "through the slider's own gate");
-  assert.match(slide, /if \(read\("session", SESSION_KEY\)\) return;/, "once per session");
-  assert.match(slide, /if \(isSignupSession\(\)\) return;/, "and never in the sign-up session");
-  assert.match(slide, /Date\.now\(\) - snoozed < PREMIUM_SLIDER_SNOOZE_MS/, "a dismissal snoozes it");
+test("the header's Pricing callout is gone (owner, 2026-11-03: no Pro or sign-up sliders)", () => {
+  // Replaced the corner Premium slider on 2026-10-25 (PricingNudge); removed 2026-11-03.
+  assert.ok(!existsSync(join(process.cwd(), "src/components/PricingNudge.tsx")));
+  assert.doesNotMatch(code("src/components/GetPremiumLink.tsx"), /PricingNudge/);
 });
 
 test("hero stats render the server's final numbers, with no count-up", () => {

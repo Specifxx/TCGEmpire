@@ -53,9 +53,6 @@ const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").the
 // Retention nudge: offer monthly Premium subscribers a one-click switch to annual.
 // ssr:false and self-gated to premium/monthly users — renders nothing for everyone
 // else.
-const AnnualSwitchNudge = dynamic(() => import("@/components/AnnualSwitchNudge").then((m) => m.AnnualSwitchNudge), {
-  ssr: false,
-});
 // The feedback panel. No floating button since 2026-10-27: it opens from the
 // footer's FeedbackLink. ssr:false because it renders nothing until then.
 const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), {
@@ -417,11 +414,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </main>
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
-                {/* The corner Premium slider (PremiumSlideIn) went on 2026-10-25
-                    (owner: "get rid of the slider … it's not working"); the
-                    header's Pricing link carries a short callout instead
-                    (PricingNudge). Monthly-Pro → annual retention nudge: */}
-                <AnnualSwitchNudge />
+                {/* No uninvited Pro or sign-up prompt anywhere (owner, 2026-11-03:
+                    "get rid of all the sliders regarding the premium and the
+                    signups. People can do it if they want to"): the corner
+                    Premium slider went 2026-10-25, the header's Pricing callout
+                    (PricingNudge) and the monthly→annual corner card
+                    (AnnualSwitchNudge) on 2026-11-03. The annual switch is still
+                    offered on /premium and the account page. */}
 
                 {/* Converts the OAuth callback's one-time ?welcome= param into
                     the sign_up analytics event, then strips it from the URL.

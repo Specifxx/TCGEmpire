@@ -439,7 +439,8 @@ test("no corner Pro slider and no signed-out popup; the header callout and the a
   assert.ok(!existsSync(join(ROOT, "src/components/PremiumSlideIn.tsx")), "the slider is gone");
   const layout = code("src/app/layout.tsx");
   assert.doesNotMatch(layout, /<PremiumSlideIn/, "not mounted");
-  assert.match(code("src/components/GetPremiumLink.tsx"), /<PricingNudge \/>/, "the callout rides the Pricing link");
+  // The callout went too, 2026-11-03 (owner: no Pro or sign-up sliders).
+  assert.doesNotMatch(code("src/components/GetPremiumLink.tsx"), /PricingNudge/, "no header callout");
   // The signed-out sign-up popup stayed beside it until 2026-09-30, when the
   // owner removed it altogether: sign-up prompts are page content now
   // (InlineSignupPrompt; tests/signup-inline.test.ts).

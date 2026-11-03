@@ -177,11 +177,21 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
             Pro plans the cheapest delivered order for any deck or list, emails you when a card or box hits your price, and keeps every
             day of price history. Comparing prices stays free.
           </p>
+          {trialOn(cta) && (
+            <p className="mt-3 text-base font-semibold text-emerald-300">
+              Try everything free for {cta.trialDays} days. Cancel before it ends and you pay nothing.
+            </p>
+          )}
         </div>
 
         <div id="pro-plan" className="card-surface scroll-mt-header p-6 md:col-start-2 md:row-span-2 md:row-start-1">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg text-white">Pro</h2>
+            <h2 className="flex items-center gap-2 text-lg text-white">
+              Pro
+              {trialOn(cta) && (
+                <span className="rounded bg-buy/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-emerald-300">{cta.trialDays} days free</span>
+              )}
+            </h2>
             <a href="#compare" className="text-xs font-semibold text-slate-400 hover:text-brand-400">
               Compare plans
             </a>

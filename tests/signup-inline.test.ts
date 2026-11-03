@@ -80,25 +80,18 @@ test("the layout mounts no signed-out sign-up nudge, and the file is gone", () =
   }
 });
 
-test("no corner Pro card: the header's Pricing link carries the callout (2026-10-25)", () => {
+test("no Pro or sign-up slider at all (owner, 2026-11-03: \"get rid of all the sliders regarding the premium and the signups\")", () => {
   const layout = code("src/app/layout.tsx");
   assert.doesNotMatch(layout, /<PremiumSlideIn/, "the Akali slider is gone (owner: \"it's not working\")");
   assert.ok(!exists("src/components/PremiumSlideIn.tsx"));
   assert.doesNotMatch(layout, /SignupSlideIn/, "the separate signed-out card stays gone");
   assert.ok(!exists("src/components/SignupSlideIn.tsx"));
-  assert.match(layout, /<AnnualSwitchNudge \/>/, "the annual offer stays");
-  const nudge = code("src/components/PricingNudge.tsx");
-  assert.match(nudge, /if \(!loaded \|\| tier === "premium" \|\| !premiumCheckout\) return;/, "anyone not on Pro, checkout on");
+  assert.doesNotMatch(layout, /<AnnualSwitchNudge/, "the annual corner offer went 2026-11-03");
+  assert.ok(!exists("src/components/AnnualSwitchNudge.tsx"));
+  assert.ok(!exists("src/components/PricingNudge.tsx"), "the header callout went 2026-11-03");
+  assert.doesNotMatch(code("src/components/Navbar.tsx"), /surface="nav:navbar"\s+nudge/, "nothing rides the Pricing link");
   assert.equal(PREMIUM_SLIDER_DELAY_MS, 3_000);
-  assert.match(nudge, /delayMs: PREMIUM_SLIDER_DELAY_MS/);
-  assert.equal(NUDGE_DELAY_MS, 12_000, "the annual offer keeps its own delay");
-  assert.match(code("src/components/Navbar.tsx"), /surface="nav:navbar"\s+nudge/, "on the header's Pricing link");
-});
-
-test("the remaining corner nudge keeps its corner and z-tier", () => {
-  // globals.css's .above-bottombar + .left-4 rule depends on it.
-  const CORNER = /above-bottombar fixed left-4 z-\[70\]/;
-  assert.match(code("src/components/AnnualSwitchNudge.tsx"), CORNER);
+  assert.equal(NUDGE_DELAY_MS, 12_000, "the rating card keeps the shared delay");
 });
 
 test("the nudge gate's old sign-up and Pro page-count rules are gone", () => {
