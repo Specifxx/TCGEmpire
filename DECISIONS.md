@@ -22113,3 +22113,27 @@ last 120 days, so before that the hand-entered invoices count on the shared
 row; a site's all-time net is therefore its earnings minus its own Vercel usage
 for the API's window, with the plan and older invoices shared. Shown, never
 hidden, when a site has earned nothing: a site that costs money is the point.
+
+## 2026-11-04 — Rift card pages are Product snippets, not Merchant listings
+
+Search Console (owner, 4 Nov) showed riftcompare.com with 432 Merchant listing
+items, 431 of them "Invalid object type for field offers" and the rest warning
+about missing return policy, shipping and delivery time. No sister site has a
+Merchant listing bucket at all. The cause was the card page's `offers` array:
+an AggregateOffer plus one `Offer` per tracked store (price, seller, buy link,
+shipping). An Offer with a seller and a price is what makes Google file a page
+as a merchant listing, which this site is not (it sells nothing), and inside a
+merchant listing Google rejects the AggregateOffer beside it.
+
+- `/card/[id]` now emits the AggregateOffer only (range, count, currency,
+  availability, url, priceValidUntil), as every sister site does. The visible
+  table still carries every delivered price; the markup says only what a
+  comparison page can stand behind. Return policy, shipping details and
+  delivery time are facts about third-party stores we never asserted, and are
+  not needed for a Product snippet.
+- The four "missing image" items are cards with no art at all (`cardImageSrc`
+  null, the page draws generated CardArt). Image is recommended, not required,
+  for a Product snippet, so they drop to warnings with this change; a card gets
+  an image when its set's gallery supplies one, not a placeholder in the markup.
+- `tests/card-product-snippet.test.ts` fails if a per-store `Offer` node
+  returns to the card page's JSON-LD.
