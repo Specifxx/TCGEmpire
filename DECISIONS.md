@@ -22198,3 +22198,15 @@ Store drawing and its event stands. So they follow the T1 collection's arrangeme
   1,500-word policy, with the regular printings of all six cards embedded and priced (4 November TCGplayer
   market), no forecast, and the T1 Player Bundle's shared November window noted. The T1 explainer links it.
   `tests/riot-drawings.test.ts` pins the chain.
+
+## 2026-11-04 — List your store: stores come to us
+
+The owner stopped cold email outreach ("not really doing anything") and set the aim: be popular enough that stores
+ask us, and encourage the ones that do. Every Compare Empire site now has `/list-your-store` (shared
+`ListYourStore.tsx` + the `ListStore` form in `ReportForms.tsx`), linked from the footer, `/contact` and the stores
+page: what a store gets (free, no contract, never pays to rank), what we need (a readable shop, own currency,
+established), and what happens next (checked within a few days, reply through the store's own contact details).
+The request is filed as a `suggest-store` report with `issue: "owner"`; RiftCompare's daily reports triage puts
+those first and asks for a reply within two days. No email is asked for (the reports branch is public); no pop-up,
+no cold email. RiftCompare and OP Compare keep their `/stores/suggest` page (now the owner pitch) and redirect
+`/list-your-store` to it.

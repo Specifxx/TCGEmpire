@@ -44,8 +44,20 @@ test("repeat wrong prices are flagged first and notes are never quoted", () => {
   assert.match(body, /\[report\]\(u1\)/);
 });
 
-test("the triage knows the same twelve repos as the writer", () => {
+test("the triage knows the same fourteen repos as the writer", () => {
   const src = readFileSync("src/lib/reports-github.ts", "utf8");
   for (const [site, repo] of Object.entries(SITE_REPOS as Record<string, string>)) assert.ok(src.includes(`${site}: "${repo}"`), site);
-  assert.equal(Object.keys(SITE_REPOS).length, 12);
+  assert.equal(Object.keys(SITE_REPOS).length, 14);
+});
+
+test("a store owner's own request is flagged first and asks for a reply within two days", () => {
+  const rs = [
+    { v: 1, at: new Date().toISOString(), site: "lorcanacompare", kind: "suggest-store", store: "Shop A", storeUrl: "a.example", issue: null, note: null, url: "u1" },
+    { v: 1, at: new Date().toISOString(), site: "lorcanacompare", kind: "suggest-store", store: "Shop B", storeUrl: "b.example", issue: "owner", note: "Store owner request. Platform: shopify.", url: "u2" },
+  ];
+  const f = flag(rs as never);
+  assert.equal(f[0].store, "Shop B");
+  assert.ok(f[0].attention);
+  assert.match(f[0].why[0], /store owner asked.*two days/);
+  assert.match(issueBody("lorcanacompare", rs as never), /Needs a look[\s\S]*Shop B/);
 });
