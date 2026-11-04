@@ -1,0 +1,4784 @@
+[
+ {
+  "region": "AU",
+  "host": "aussietcg.com.au",
+  "name": "Aussie TCG",
+  "home": {
+   "status": 200,
+   "final": "https://www.aussietcg.com.au/",
+   "server": "Squarespace",
+   "sig": [
+    "magento",
+    "squarespace",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*?author=*",
+    "/*&author=*",
+    "/*?tag=*",
+    "/*&tag=*",
+    "/*?month=*",
+    "/*&month=*",
+    "/*?view=*",
+    "/*&view=*",
+    "/*?format=json",
+    "/*&format=json",
+    "/*?format=page-context",
+    "/*&format=page-context",
+    "/*?format=main-content",
+    "/*&format=main-content",
+    "/*?format=json-pretty",
+    "/*&format=json-pretty",
+    "/*?format=ical",
+    "/*&format=ical",
+    "/*?reversePaginate=*",
+    "/*&reversePaginate=*"
+   ],
+   "sitemaps": [
+    "https://www.aussietcg.com.au/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://aussietcg.com.au/shop/p/pokemon-tcg-scarlet-violet-30th-celebration-etb",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "290.95",
+   "currency": "AUD",
+   "sig": [
+    "magento",
+    "squarespace",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "AU",
+  "host": "curacards.com.au",
+  "name": "Cura Cards",
+  "home": {
+   "status": 200,
+   "final": "https://curacards.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://curacards.com.au/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "GG53/70 Hoopa V - Rare Holo V - Crown Zenith Galarian Gallery | Pokemon | 25.15",
+    "103/182 Cynthia's Gabite - Common - Destined Rivals | Pokemon | 0.85"
+   ]
+  },
+  "meta": {
+   "currency": "AUD",
+   "name": "CuraCards",
+   "country": "AU"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://curacards.com.au/products/swsh271-307-kirlia-promo-swsh-black-star-promos",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "8.99",
+   "currency": "AUD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "AU",
+  "host": "ebgames.com.au",
+  "name": "EB Games Australia",
+  "home": {
+   "status": 403,
+   "final": "https://www.ebgames.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 403,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "AU",
+  "host": "eclipsegames.com.au",
+  "name": "Eclipse Games AU",
+  "home": {
+   "status": 200,
+   "final": "https://eclipsegames.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://eclipsegames.com.au/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "UNO Show 'Em No Mercy Card Game | Mattel | 13.00",
+    "UNO K-Pop Demon Hunters Card Game | Mattel | 12.00"
+   ]
+  },
+  "meta": {
+   "currency": "AUD",
+   "name": "Eclipse Games Pty Ltd",
+   "country": "AU"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://eclipsegames.com.au/products/bicycle-fireflies-playing-cards",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "15.0",
+   "currency": "USD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "AU",
+  "host": "gamesmen.com.au",
+  "name": "The Gamesmen",
+  "home": {
+   "status": 403,
+   "final": "https://gamesmen.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*.php$",
+    "/*SID=",
+    "/*?",
+    "/catalog/product_compare/",
+    "/catalog/product/view/",
+    "/composer.json",
+    "/package.json",
+    "/*?*sort-by/",
+    "/*?*product_list_mode=",
+    "/*?*product_list_order=",
+    "/*?*product_list_limit=",
+    "/*?*product_list_dir=",
+    "/*.git",
+    "/*.cvs",
+    "/*.zip$",
+    "/*.svn$",
+    "/*.idea$",
+    "/*.sql$",
+    "/*.tgz$"
+   ],
+   "sitemaps": [
+    "https://www.gamesmen.com.au/sitemap.xml",
+    "https://www.gamesmen.com.au/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "AU",
+  "host": "gamesparadise.com.au",
+  "name": "Games Paradise",
+  "home": {
+   "status": 200,
+   "final": "https://gamesparadise.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://gamesparadise.com.au/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "D&D: World of Warcraft - Icecrown Citadel Adventure Map Pack | Asmodee | 43.00",
+    "D&D: World of Warcraft (Alternate Cover) | Asmodee | 85.00"
+   ]
+  },
+  "meta": {
+   "currency": "AUD",
+   "name": "Games Paradise",
+   "country": "AU"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://gamesparadise.com.au/products/pop-demon-hunters-3-104pc-jigsaw-super",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "25.00",
+   "currency": "AUD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "AU",
+  "host": "hobbyco.com.au",
+  "name": "Hobbyco",
+  "home": {
+   "status": 200,
+   "final": "https://www.hobbyco.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://www.hobbyco.com.au/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Tamagotchi Original 30th Anniversary Revival (Blue) | Tamagotchi | 34.99",
+    "S.H.Figuarts All Might | Tamashii Nations | 164.99"
+   ]
+  },
+  "meta": {
+   "currency": "AUD",
+   "name": "Hobbyco",
+   "country": "AU"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://hobbyco.com.au/products/im-gonna-risk-it",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "24.99",
+   "currency": "AUD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "AU",
+  "host": "jenesmtg.com.au",
+  "name": "Jenes MTG",
+  "home": {
+   "status": 200,
+   "final": "https://jenesmtg.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "binderpos",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://jenesmtg.com.au/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Swiftfoot Boots | Secret Lair Drop | 2096 | jenesmtg | 13.40",
+    "Karn, Legacy Reforged | March of the Machine: The Aftermath | 99 | Showcase | jenesmtg | 33.89"
+   ]
+  },
+  "meta": {
+   "currency": "AUD",
+   "name": "jenesmtg",
+   "country": "AU"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  }
+ },
+ {
+  "region": "AU",
+  "host": "m-g.com.au",
+  "name": "M&G (Mind Games?)",
+  "home": {
+   "status": 200,
+   "final": "https://www.m-g.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "woocommerce",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*?add-to-cart=",
+    "/*?*add-to-cart="
+   ],
+   "sitemaps": [
+    "https://www.m-g.com.au/sitemap_index.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": true,
+   "n": 24,
+   "sample": [
+    "01-11 Adeptus Custodes: Custodian Wardens | AUD 9500",
+    "01-12 Adeptus Custodes: Vertus Praetors | AUD 9270"
+   ]
+  },
+  "productPage": {
+   "url": "https://www.m-g.com.au/product/im-gonna-risk-it/",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "woocommerce",
+    "magento",
+    "cloudflare-challenge",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "AU",
+  "host": "mightyape.com.au",
+  "name": "Mighty Ape",
+  "home": {
+   "status": 403,
+   "final": "https://www.mightyape.com.au/",
+   "server": "DataDome",
+   "sig": [
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/ma/*?q=*",
+    "/ma/*?*price=*",
+    "/ma/*?*kogan_first=*",
+    "/ma/*?*brand=*",
+    "/ma/*?*condition=*",
+    "/ma/*?*primate=*",
+    "/ma/*?*deals_from=*",
+    "/ma/*?*shipping=*",
+    "/ma/*?*dispatch=*",
+    "/ma/*?*order_by=*",
+    "/ma/shop/*&*",
+    "/ma/*?q=*",
+    "/ma/*?*price=*",
+    "/ma/*?*kogan_first=*",
+    "/ma/*?*brand=*",
+    "/ma/*?*condition=*",
+    "/ma/*?*primate=*",
+    "/ma/*?*deals_from=*",
+    "/ma/*?*shipping=*",
+    "/ma/*?*dispatch=*"
+   ],
+   "sitemaps": [
+    "https://www.mightyape.com.au/sitemap.xml",
+    "https://www.mightyape.com.au/sitemap.xml",
+    "https://www.mightyape.com.au/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "AU",
+  "host": "mtgmate.com.au",
+  "name": "MTG Mate",
+  "home": {
+   "status": 403,
+   "final": "https://mtgmate.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": [
+    "http://mtgmate-sitemaps.s3.amazonaws.com/sitemap.xml.gz"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "AU",
+  "host": "tcg.gumnut.com.au",
+  "name": "Gumnut Games (TCG singles)",
+  "home": {
+   "status": 200,
+   "final": "https://tcg.gumnut.com.au/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://tcg.gumnut.com.au/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Magic Single - Snakeskin Veil (JP Alternate Art) | Wizards of the Coast | 0.70",
+    "Magic Single - Tezzeret's Gambit (JP Alternate Art) | Wizards of the Coast | 1.90"
+   ]
+  },
+  "meta": {
+   "currency": "AUD",
+   "name": "Gumnut TCG Singles",
+   "country": "AU"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  }
+ },
+ {
+  "region": "AU",
+  "host": "untappedrealms.com",
+  "name": "Untapped Realms",
+  "home": {
+   "status": 200,
+   "final": "https://www.untappedrealms.com/",
+   "server": "nginx",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/collections/*+",
+    "/collections/*%2B",
+    "/collections/*%2b",
+    "/collections/*?*",
+    "/",
+    "/"
+   ],
+   "sitemaps": [
+    "https://www.untappedrealms.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  },
+  "productPage": {
+   "url": "https://untappedrealms.com/collections/masters-25/products/masters-25-animar-soul-of-elements",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "65.35",
+   "currency": "AUD",
+   "sig": [
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "CA",
+  "host": "cardchasersmtl.com",
+  "name": "Card Chasers MTL",
+  "home": {
+   "status": 200,
+   "final": "https://www.cardchasersmtl.com/en-us",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://www.cardchasersmtl.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "2015-16 Upper Deck Series 2 Hobby Box | CardChasers | 500.99",
+    "Pokemon TCG: XY Furious Fists Booster Pack | CardChasers | 130.99"
+   ]
+  },
+  "meta": {
+   "currency": "CAD",
+   "name": "CardChasers",
+   "country": "CA"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://cardchasersmtl.com/en-us/products/2025-26-upper-deck-stature-hockey-hobby-box",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "0.00",
+   "currency": "USD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "CA",
+  "host": "cartamagica.com",
+  "name": "Carta Magica",
+  "home": {
+   "status": 200,
+   "final": "https://www.cartamagica.com/",
+   "server": "nginx/1.26.3 (Ubuntu)",
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://www.cartamagica.com/catalog/union_arena_sealed_products-union_arena__booster_boxes/union_arena__jujutsu_kaisen__booster_box/1043532",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "CA",
+  "host": "gamekeeperonline.com",
+  "name": "Gamekeeper",
+  "home": {
+   "status": 200,
+   "final": "https://www.gamekeeperonline.com/",
+   "server": "nginx/1.26.3 (Ubuntu)",
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://gamekeeperonline.com/products/multi_search",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "CA",
+  "host": "imaginaire.com",
+  "name": "L'Imaginaire",
+  "home": {
+   "status": 403,
+   "final": "https://imaginaire.com/",
+   "server": "cloudflare",
+   "sig": [
+    "cloudflare-challenge",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 403,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "CA",
+  "host": "levalet.com",
+  "name": "Le Valet d'Cœur",
+  "home": {
+   "status": 403,
+   "final": "https://levalet.com/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "CA",
+  "host": "magicstronghold.com",
+  "name": "Magic Stronghold",
+  "home": {
+   "status": 200,
+   "final": "https://magicstronghold.com/",
+   "server": "AmazonS3",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": [
+    "https://www.magicstronghold.com/sitemaps/sitemap_index.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 200
+  }
+ },
+ {
+  "region": "CA",
+  "host": "mightyape.ca",
+  "name": "—",
+  "home": {
+   "status": 0,
+   "error": "fetch failed",
+   "sig": []
+  },
+  "robots": {
+   "status": 0,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 0,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 0
+  }
+ },
+ {
+  "region": "CA",
+  "host": "theconnectiongames.com",
+  "name": "The Connection Games",
+  "home": {
+   "status": 200,
+   "final": "https://www.theconnectiongames.com/",
+   "server": "nginx/1.26.3 (Ubuntu)",
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://theconnectiongames.com/products/multi_search",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "CA",
+  "host": "threekingsloot.com",
+  "name": "Three Kings Loot",
+  "home": {
+   "status": 200,
+   "final": "https://www.threekingsloot.com/",
+   "server": "nginx/1.26.3 (Ubuntu)",
+   "sig": [
+    "crystalcommerce",
+    "wordpress",
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://threekingsloot.com/products/multi_search",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "EU",
+  "host": "bazaarofmagic.eu",
+  "name": "Bazaar of Magic",
+  "home": {
+   "status": 403,
+   "final": "https://bazaarofmagic.eu/",
+   "server": "cloudflare",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "EU",
+  "host": "card-corner.de",
+  "name": "Card-Corner",
+  "home": {
+   "status": 200,
+   "final": "https://www.card-corner.de/",
+   "server": "cloudflare",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "cardgameshop.be",
+  "name": "Cardgameshop",
+  "home": {
+   "status": 429,
+   "final": "https://cardgameshop.be/",
+   "server": "nginx",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/?*sort=",
+    "/?*brand=",
+    "/?*category=",
+    "/?*min-price=",
+    "/?*max-price=",
+    "/?*color=",
+    "/?*material=",
+    "/?*property=",
+    "/?*page=",
+    "/?*discount="
+   ],
+   "sitemaps": [
+    "https://www.cardgameshop.be/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 429,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 429
+  }
+ },
+ {
+  "region": "EU",
+  "host": "cartaneko.com",
+  "name": "Cartaneko",
+  "home": {
+   "status": 0,
+   "error": "fetch failed",
+   "sig": []
+  },
+  "robots": {
+   "status": 0,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 0,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 0
+  }
+ },
+ {
+  "region": "EU",
+  "host": "dcardtcg.it",
+  "name": "D_Card TCG",
+  "home": {
+   "status": 200,
+   "final": "https://dcardtcg.it/",
+   "server": "Netlify",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 200
+  }
+ },
+ {
+  "region": "EU",
+  "host": "dungeonmarvels.com",
+  "name": "Dungeon Marvels",
+  "home": {
+   "status": 200,
+   "final": "https://dungeonmarvels.com/",
+   "server": "Apache",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*orderby=",
+    "/*orderway=",
+    "/*tag=",
+    "/*id_currency=",
+    "/*search_query=",
+    "/*back=",
+    "/*n=",
+    "/*?q=",
+    "/*&q=",
+    "/*?f9",
+    "/*?qty=",
+    "/*?nosto=",
+    "/*?open=",
+    "/*?iRId=",
+    "/*?iRId=",
+    "/*?vmode=",
+    "/*?bPost=",
+    "/*?rand=",
+    "/*?amp",
+    "/*?cid="
+   ],
+   "sitemaps": [
+    "https://dungeonmarvels.com/1_index_sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 0
+  }
+ },
+ {
+  "region": "EU",
+  "host": "eclipsetcg.be",
+  "name": "Eclipse TCG",
+  "home": {
+   "status": 200,
+   "final": "https://www.eclipsetcg.be/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://www.eclipsetcg.be/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Display Radiance Français | Eclipse TCG | 113.00",
+    "Vendetta FR | Eclipse TCG | 113.00"
+   ]
+  },
+  "meta": {
+   "currency": "EUR",
+   "name": "Eclipse TCG",
+   "country": "BE"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://eclipsetcg.be/products/card-16",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "130.0",
+   "currency": "EUR",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "EU",
+  "host": "fantasiapelit.com",
+  "name": "Fantasiapelit",
+  "home": {
+   "status": 200,
+   "final": "https://www.fantasiapelit.com/",
+   "server": "Apache",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "fantasywelt.de",
+  "name": "FantasyWelt",
+  "home": {
+   "status": 403,
+   "final": "https://fantasywelt.de/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "EU",
+  "host": "faraos.dk",
+  "name": "Faraos Cigarer",
+  "home": {
+   "status": 200,
+   "final": "https://www.faraos.dk/",
+   "server": "Microsoft-IIS/10.0",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 200
+  }
+ },
+ {
+  "region": "EU",
+  "host": "gamesisland.de",
+  "name": "Gamesisland",
+  "home": {
+   "status": 0,
+   "error": "fetch failed",
+   "sig": []
+  },
+  "robots": {
+   "status": 0,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 0,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 0
+  }
+ },
+ {
+  "region": "EU",
+  "host": "gate-to-the-games.de",
+  "name": "Gate to the Games",
+  "home": {
+   "status": 200,
+   "final": "https://www.gate-to-the-games.de/",
+   "server": "LiteSpeed",
+   "sig": [
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://www.gate-to-the-games.de/sitemap_index.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "generacionx.es",
+  "name": "Generación X",
+  "home": {
+   "status": 200,
+   "final": "https://www.generacionx.es/",
+   "server": "Microsoft-IIS/10.0",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://www.generacionx.es/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "ilantcgbelgium.com",
+  "name": "Ilan TCG Belgium",
+  "home": {
+   "status": 200,
+   "final": "https://ilantcgbelgium.com/",
+   "server": "cloudflare",
+   "sig": [
+    "woocommerce",
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*?add-to-cart=",
+    "/*?*add-to-cart="
+   ],
+   "sitemaps": [
+    "https://ilantcgbelgium.com/sitemaps.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": true,
+   "n": 3,
+   "sample": [
+    "Toploaders transparents standard 35pt – Lot de 100 (Ultra Pro) | EUR 1095",
+    "Mallette Showcase Vault noire – 75+ cartes gradées (Ultra Pro) | EUR 6995"
+   ]
+  }
+ },
+ {
+  "region": "EU",
+  "host": "keepseven.de",
+  "name": "Keepseven",
+  "home": {
+   "status": 403,
+   "final": "https://keepseven.de/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": [
+    "https://keepseven.de/sitemap_index.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "EU",
+  "host": "kelz0r.dk",
+  "name": "Kelz0r",
+  "home": {
+   "status": 200,
+   "final": "https://www.kelz0r.dk/magic/",
+   "server": "nginx",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "madatsutcg.com",
+  "name": "Madatsu TCG",
+  "home": {
+   "status": 200,
+   "final": "https://madatsutcg.com/",
+   "server": "hcdn",
+   "sig": [
+    "woocommerce"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*?add-to-cart=",
+    "/*?*add-to-cart="
+   ],
+   "sitemaps": [
+    "https://madatsutcg.com/wp-sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": true,
+   "n": 3,
+   "sample": [
+    "One Piece Card Game Mini Tin Vol.3 TS-03 English (1 Tin) | EUR 6000",
+    "Booster Box Display EB-06 (24 Packs) &#8211; One Piece Card Game | EUR 14999"
+   ]
+  },
+  "productPage": {
+   "url": "https://madatsutcg.com/products/booster-box-display-op-18-24-packs-one-piece-card-game/",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "300.00",
+   "currency": "EUR",
+   "sig": [
+    "woocommerce",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "EU",
+  "host": "magicbazar.fr",
+  "name": "Play-in (absorbed Magic Bazar)",
+  "home": {
+   "status": 200,
+   "final": "https://www.play-in.com/en",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "nextjs"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/espace-client",
+    "/*/panier",
+    "/*sortBy=                       #tri catalogue",
+    "/*displayMode=                  #affichage catalogue",
+    "/*search=                       #recherche",
+    "/*searchType=                   #type de produits",
+    "/*family=                       #gamme",
+    "/*category=                     #categorie",
+    "/*format=                       #format",
+    "/*lang=                         #langue",
+    "/*brand=                        #marque",
+    "/*editor=                       #editeur",
+    "/*rating=                       #avis",
+    "/*isPreorder=                   #precommande",
+    "/*availability=                 #disponibilite",
+    "/*priceMin=                     #prix minimum",
+    "/*priceMax=                     #prix maximum",
+    "/*isDiscounted=                 #promotions",
+    "/*?age=                         #jds age",
+    "/*&age=                         #jds age"
+   ],
+   "sitemaps": [
+    "https://www.play-in.com/sitemap_index.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "magiccorporation.com",
+  "name": "Magic Corporation",
+  "home": {
+   "status": 200,
+   "final": "https://www.magiccorporation.com/",
+   "server": "nginx",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://www.magiccorporation.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "magictraders.nl",
+  "name": "Magic Traders",
+  "home": {
+   "status": 200,
+   "final": "https://magictraders.nl/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://magictraders.nl/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Pokémon TCG: Mega Evolution – Delta Reign Booster Pack | Pokémon | 14.00",
+    "Pokémon TCG: Delta Reign Elite Trainer Box (ETB) | Pokémon | 138.00"
+   ]
+  },
+  "meta": {
+   "currency": "EUR",
+   "name": "Magic Traders",
+   "country": "NL"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://magictraders.nl/products/4d-build-pokemon-bulbasaur",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "37.00",
+   "currency": "USD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "EU",
+  "host": "nedgame.nl",
+  "name": "Nedgame",
+  "home": {
+   "status": 403,
+   "final": "https://nedgame.nl/",
+   "server": "cloudflare",
+   "sig": [
+    "cloudflare-challenge",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 403,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "EU",
+  "host": "onytcg.it",
+  "name": "ONY TCG",
+  "home": {
+   "status": 200,
+   "final": "https://onytcg.it/en",
+   "server": "Apache",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://onytcg.it/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "parkage.com",
+  "name": "Parkage",
+  "home": {
+   "status": 200,
+   "final": "https://www.parkage.com/en",
+   "server": "Apache",
+   "sig": [
+    "magento",
+    "nextjs"
+   ]
+  },
+  "robots": {
+   "status": 404,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "philibertnet.com",
+  "name": "Philibert",
+  "home": {
+   "status": 200,
+   "final": "https://www.philibertnet.com/fr/",
+   "server": "",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*?orderby=",
+    "/*?orderway=",
+    "/*?tag=",
+    "/*?id_currency=",
+    "/*?search_query=",
+    "/*?back=",
+    "/*?n=",
+    "/*&orderby=",
+    "/*&orderway=",
+    "/*&tag=",
+    "/*&id_currency=",
+    "/*&search_query=",
+    "/*&back=",
+    "/*&n=",
+    "/*controller=addresses",
+    "/*controller=address",
+    "/*controller=authentication",
+    "/*controller=cart",
+    "/*controller=discount",
+    "/*controller=footer"
+   ],
+   "sitemaps": [
+    "https://www.philibertnet.com/sitemaps/sitemap_1.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 500,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 500
+  }
+ },
+ {
+  "region": "EU",
+  "host": "play-in.com",
+  "name": "Play-in (absorbed Magic Bazar)",
+  "home": {
+   "status": 200,
+   "final": "https://www.play-in.com/en",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "nextjs"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/espace-client",
+    "/*/panier",
+    "/*sortBy=                       #tri catalogue",
+    "/*displayMode=                  #affichage catalogue",
+    "/*search=                       #recherche",
+    "/*searchType=                   #type de produits",
+    "/*family=                       #gamme",
+    "/*category=                     #categorie",
+    "/*format=                       #format",
+    "/*lang=                         #langue",
+    "/*brand=                        #marque",
+    "/*editor=                       #editeur",
+    "/*rating=                       #avis",
+    "/*isPreorder=                   #precommande",
+    "/*availability=                 #disponibilite",
+    "/*priceMin=                     #prix minimum",
+    "/*priceMax=                     #prix maximum",
+    "/*isDiscounted=                 #promotions",
+    "/*?age=                         #jds age",
+    "/*&age=                         #jds age"
+   ],
+   "sitemaps": [
+    "https://www.play-in.com/sitemap_index.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "poromagia.com",
+  "name": "Poromagia",
+  "home": {
+   "status": 403,
+   "final": "https://poromagia.com/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 403,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "EU",
+  "host": "tcgacademy.es",
+  "name": "TCG Academy",
+  "home": {
+   "status": 200,
+   "final": "https://www.tcgacademy.es/",
+   "server": "",
+   "sig": [
+    "magento",
+    "nextjs"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*?*utm_",
+    "/*?*gclid",
+    "/*?*fbclid",
+    "/*?*ref=",
+    "/*?*sort=",
+    "/*?*order=",
+    "/*?*priceMin",
+    "/*?*priceMax",
+    "/*?*inStock=0",
+    "/*?*utm_",
+    "/*?*gclid",
+    "/*?*fbclid",
+    "/*?*ref=",
+    "/*?*sort=",
+    "/*?*order=",
+    "/*?*priceMin",
+    "/*?*priceMax",
+    "/*?*inStock=0",
+    "/*?*utm_",
+    "/*?*gclid"
+   ],
+   "sitemaps": [
+    "https://www.tcgacademy.es/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "threeforonetrading.com",
+  "name": "Three for One Trading",
+  "home": {
+   "status": 200,
+   "final": "https://www.threeforonetrading.com/",
+   "server": "HTTP Server",
+   "sig": [
+    "woocommerce",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://www.threeforonetrading.com/sitemap_index.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "EU",
+  "host": "trader-online.de",
+  "name": "TRADER Online",
+  "home": {
+   "status": 200,
+   "final": "https://trader-online.de/",
+   "server": "Apache",
+   "sig": [
+    "magento",
+    "oxid"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*cl=amazondispatch",
+    "/*?cl=newsletter",
+    "/*&cl=newsletter",
+    "/*?cl=basket",
+    "/*&cl=basket",
+    "/*?cl=account",
+    "/*&cl=account",
+    "/*?cl=account_noticelist",
+    "/*&cl=account_noticelist",
+    "/*?cl=account_wishlist",
+    "/*&cl=account_wishlist",
+    "/*?cl=register",
+    "/*&cl=register",
+    "/*?cl=forgotpwd",
+    "/*&cl=forgotpwd",
+    "/*?cl=moredetails",
+    "/*&cl=moredetails",
+    "/*?cl=review",
+    "/*&cl=review",
+    "/*?cl=search"
+   ],
+   "sitemaps": [
+    "https://trader-online.de/sitemapindex.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 200
+  }
+ },
+ {
+  "region": "EU",
+  "host": "ultrajeux.com",
+  "name": "UltraJeux",
+  "home": {
+   "status": 200,
+   "final": "https://www.ultrajeux.com/",
+   "server": "nginx",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "NZ",
+  "host": "gameroost.co.nz",
+  "name": "Game Roost",
+  "home": {
+   "status": 200,
+   "final": "https://www.gameroost.co.nz/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://www.gameroost.co.nz/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Nico Robin (016) (EB05-016) - Extra Booster: One Piece Heroines Edition Vol. 2 Foil | Extra Booster: One Piece Heroine's Edition Vol. 2 | 9.00",
+    "Gloriosa (Alternate Art) (EB05-052) - Extra Booster: One Piece Heroines Edition Vol. 2 Foil | Extra Booster: One Piece Heroine's Edition Vol. 2 | 44.50"
+   ]
+  },
+  "meta": {
+   "currency": "NZD",
+   "name": "Game Roost - Games Hobbies Collectibles",
+   "country": "NZ"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://gameroost.co.nz/products/magic-the-gathering-star-trek-collector-booster-box",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "860.00",
+   "currency": "NZD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "NZ",
+  "host": "hobbymaster.co.nz",
+  "name": "Hobby Master",
+  "home": {
+   "status": 200,
+   "final": "https://hobbymaster.co.nz/",
+   "server": "nginx",
+   "sig": [
+    "lightspeed",
+    "tcgplayer-pro",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://hobbymaster.co.nz/products/new-releases",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "lightspeed",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "NZ",
+  "host": "mightyape.co.nz",
+  "name": "Mighty Ape",
+  "home": {
+   "status": 403,
+   "final": "https://www.mightyape.co.nz/",
+   "server": "DataDome",
+   "sig": [
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/mn/*?q=*",
+    "/mn/*?*price=*",
+    "/mn/*?*kogan_first=*",
+    "/mn/*?*brand=*",
+    "/mn/*?*condition=*",
+    "/mn/*?*primate=*",
+    "/mn/*?*deals_from=*",
+    "/mn/*?*shipping=*",
+    "/mn/*?*dispatch=*",
+    "/mn/*?*order_by=*",
+    "/mn/shop/*&*",
+    "/mn/*?q=*",
+    "/mn/*?*price=*",
+    "/mn/*?*kogan_first=*",
+    "/mn/*?*brand=*",
+    "/mn/*?*condition=*",
+    "/mn/*?*primate=*",
+    "/mn/*?*deals_from=*",
+    "/mn/*?*shipping=*",
+    "/mn/*?*dispatch=*"
+   ],
+   "sitemaps": [
+    "https://www.mightyape.co.nz/sitemap.xml",
+    "https://www.mightyape.co.nz/sitemap.xml",
+    "https://www.mightyape.co.nz/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "NZ",
+  "host": "mindgames.co.nz",
+  "name": "Mind Games NZ",
+  "home": {
+   "status": 0,
+   "error": "fetch failed",
+   "sig": []
+  },
+  "robots": {
+   "status": 0,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 0,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 0
+  }
+ },
+ {
+  "region": "NZ",
+  "host": "toyworld.co.nz",
+  "name": "Toyworld NZ",
+  "home": {
+   "status": 200,
+   "final": "https://www.toyworld.co.nz/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://www.toyworld.co.nz/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Cool Maker Mix & Mani Foil Nails Set | Cool Maker | 24.99",
+    "Intex Mandarin 2-Ring Swim Centre Family Pool 229cm X 147cm X 46cm | Intex | 89.99"
+   ]
+  },
+  "meta": {
+   "currency": "NZD",
+   "name": "Toyworld NZ",
+   "country": "NZ"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://www.toyworld.co.nz/products/zuru-mini-brands-vinyls-playset-series-1",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "34.99",
+   "currency": "NZD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "NZ",
+  "host": "turtleisland.co.nz",
+  "name": "Turtle Island",
+  "home": {
+   "status": 429,
+   "final": "https://turtleisland.co.nz/",
+   "server": "Vercel",
+   "sig": []
+  },
+  "robots": {
+   "status": 429,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 429,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 429
+  }
+ },
+ {
+  "region": "SG",
+  "host": "agorahobby.com",
+  "name": "Agora Hobby",
+  "home": {
+   "status": 200,
+   "final": "https://agorahobby.com/",
+   "server": "cloudflare",
+   "sig": []
+  },
+  "robots": {
+   "status": 404,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "SG",
+  "host": "capybaracards.com",
+  "name": "smaller SG shops from the tcgtalk direct",
+  "home": {
+   "status": 200,
+   "final": "https://capybaracards.com/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://capybaracards.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Radiance Pre-rift | CapybaraCards | 55.00",
+    "Riftbound TCG Vendetta Skirmish I (Ticket) | CapybaraCards | 25.00"
+   ]
+  },
+  "meta": {
+   "currency": "SGD",
+   "name": "CapybaraCards",
+   "country": "SG"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://capybaracards.com/products/veltech-presidential-card-normal-prd",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "114.99",
+   "currency": "SGD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "SG",
+  "host": "cardarena.sg",
+  "name": "Card Arena",
+  "home": {
+   "status": 200,
+   "final": "https://cardarena.sg/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://cardarena.sg/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 0,
+   "sample": []
+  },
+  "meta": {
+   "currency": "SGD",
+   "name": "Card Arena ",
+   "country": "SG"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  }
+ },
+ {
+  "region": "SG",
+  "host": "cardboardcrackgames.com",
+  "name": "Cardboard Crack Games",
+  "home": {
+   "status": 429,
+   "final": "https://cardscentral.com/",
+   "server": "Vercel",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 429,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 429
+  }
+ },
+ {
+  "region": "SG",
+  "host": "conceptcity.sg",
+  "name": "smaller SG shops from the tcgtalk direct",
+  "home": {
+   "status": 200,
+   "final": "https://www.conceptcity.sg/",
+   "server": "Vercel",
+   "sig": [
+    "magento",
+    "nextjs"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://conceptcity.sg/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "SG",
+  "host": "deckardgaming.com",
+  "name": "Deckard Gaming",
+  "home": {
+   "status": 200,
+   "final": "https://deckardgaming.com/",
+   "server": "Fly/366e4bf88 (2026-10-27)",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://deckardgaming.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://deckardgaming.com/product/prismatic-evolution-booster-bundle-01kb4q28xwc207mq6w5txf4yrd",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "130.00",
+   "sig": [
+    "woocommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "SG",
+  "host": "distribution.battlebunker.com.sg",
+  "name": "Battle Bunker",
+  "home": {
+   "status": 200,
+   "final": "https://distribution.battlebunker.com.sg/",
+   "server": "Apache",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*?orderby=",
+    "/*?orderway=",
+    "/*?tag=",
+    "/*?id_currency=",
+    "/*?search_query=",
+    "/*?back=",
+    "/*?n=",
+    "/*&orderby=",
+    "/*&orderway=",
+    "/*&tag=",
+    "/*&id_currency=",
+    "/*&search_query=",
+    "/*&back=",
+    "/*&n=",
+    "/*controller=addresses",
+    "/*controller=address",
+    "/*controller=authentication",
+    "/*controller=cart",
+    "/*controller=discount",
+    "/*controller=footer"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "SG",
+  "host": "duellerspoint.com",
+  "name": "Dueller's Point",
+  "home": {
+   "status": 200,
+   "final": "https://www.duellerspoint.com/",
+   "server": "nginx/1.28.3 (Ubuntu)",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "http://www.duellerspoint.com/sitemap.xml.gz"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 500
+  }
+ },
+ {
+  "region": "SG",
+  "host": "gameshaventcg.com",
+  "name": "Games Haven",
+  "home": {
+   "status": 200,
+   "final": "https://www.gameshaventcg.com/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "binderpos",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://www.gameshaventcg.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Guide of Souls (Top 8) [Store Championships 2026] | Magic: The Gathering | 0.40",
+    "Abhorrent Oculus [Store Championships 2026] | Magic: The Gathering | 83.78"
+   ]
+  },
+  "meta": {
+   "currency": "SGD",
+   "name": "Games Haven SG",
+   "country": "SG"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://gameshaventcg.com/products/island-263-full-art-phyrexia-all-will-be-one",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "0.48",
+   "currency": "USD",
+   "sig": [
+    "shopify",
+    "binderpos",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "SG",
+  "host": "gamingotaku.com",
+  "name": "Gaming Otaku",
+  "home": {
+   "status": 200,
+   "final": "https://gamingotaku.com/",
+   "server": "Apache",
+   "sig": [
+    "woocommerce",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*?add-to-cart=",
+    "/*?*add-to-cart=",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": [
+    "https://gamingotaku.com/sitemap_index.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": true,
+   "n": 3,
+   "sample": [
+    "Kayou Sanrio Characters Cute Dream Fun Pack Booster Box (30 Packs) | SGD 2500",
+    "Pokémon Starter Bouquet Acrylic Keychain | SGD 250"
+   ]
+  },
+  "productPage": {
+   "url": "https://gamingotaku.com/product/kayou-sanrio-characters-cute-dream-fun-pack-booster-box/",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "25.00",
+   "currency": "SGD",
+   "sig": [
+    "woocommerce",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "SG",
+  "host": "infernogamingsg.com",
+  "name": "Inferno Gaming",
+  "home": {
+   "status": 200,
+   "final": "https://infernogamingsg.com/",
+   "server": "hcdn",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 200
+  }
+ },
+ {
+  "region": "SG",
+  "host": "jeuxkingdom.com",
+  "name": "Jeux Kingdom",
+  "home": {
+   "status": 200,
+   "final": "https://www.jeuxkingdom.com/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "binderpos",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://www.jeuxkingdom.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Treasure Island // High Seas Map Doubled Sided Art Card (Top Left) [] (High Seas) | Flesh And Blood | 6.00",
+    "Treasure Island // High Seas Map Doubled Sided Art Card (Middle Right) [] (High Seas) | Flesh And Blood | 4.00"
+   ]
+  },
+  "meta": {
+   "currency": "SGD",
+   "name": "Jeux Kingdom",
+   "country": "SG"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://jeuxkingdom.com/products/bloodrush-bellow-u-wtr007-welcome-to-rathe-unlimited-unlimited-normal",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "5.0",
+   "currency": "USD",
+   "sig": [
+    "shopify",
+    "binderpos",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "SG",
+  "host": "lunartoysngames.sg",
+  "name": "smaller SG shops from the tcgtalk direct",
+  "home": {
+   "status": 0,
+   "error": "fetch failed",
+   "sig": []
+  },
+  "robots": {
+   "status": 0,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 0,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 0
+  }
+ },
+ {
+  "region": "SG",
+  "host": "newtroshop.com",
+  "name": "smaller SG shops from the tcgtalk direct",
+  "home": {
+   "status": 200,
+   "final": "https://newtroshop.com/",
+   "server": "Fly/366e4bf88 (2026-10-27)",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://newtroshop.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://newtroshop.com/product/warhammer-40000-introductory-set-eng",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "125.00",
+   "sig": [
+    "woocommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "SG",
+  "host": "obocollectibles.com",
+  "name": "OBO Collectibles",
+  "home": {
+   "status": 200,
+   "final": "https://obocollectibles.com/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://obocollectibles.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "Sprigatito 017/M-P Promo M-P Promotional Cards Pokemon Japanese Near Mint | OBO Collectibles | 3.00",
+    "Fuecoco 018/M-P Promo Mcdonald's Pokemon Japanese Near Mint | OBO Collectibles | 3.00"
+   ]
+  },
+  "meta": {
+   "currency": "SGD",
+   "name": "OBO Collectibles",
+   "country": "SG"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://obocollectibles.com/products/st04",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "6.0",
+   "currency": "SGD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "SG",
+  "host": "oxleygrading.com",
+  "name": "Oxley Grading",
+  "home": {
+   "status": 200,
+   "final": "https://www.oxleygrading.com/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "wix",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "*?lightbox=",
+    "/_partials*",
+    "/pro-gallery-webapp/v1/galleries/*",
+    "/"
+   ],
+   "sitemaps": [
+    "https://www.oxleygrading.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 400,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "SG",
+  "host": "redhobbygamesshop.com",
+  "name": "Red Hobby Games",
+  "home": {
+   "status": 403,
+   "final": "https://redhobbygamesshop.com/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 403,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "SG",
+  "host": "teamboardgame.com",
+  "name": "smaller SG shops from the tcgtalk direct",
+  "home": {
+   "status": 200,
+   "final": "https://www.teamboardgame.com/",
+   "server": "cloudflare",
+   "sig": [
+    "woocommerce",
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": true,
+   "n": 3,
+   "sample": [
+    "Threads of Fate | SGD 12790",
+    "Ministry of Lost Things Case 2: Finders Keypers | SGD 4090"
+   ]
+  },
+  "productPage": {
+   "url": "https://www.teamboardgame.com/product/jisogi-edition-1-5/",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "80.00",
+   "currency": "SGD",
+   "sig": [
+    "woocommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "SG",
+  "host": "vaultcards.io",
+  "name": "smaller SG shops from the tcgtalk direct",
+  "home": {
+   "status": 0,
+   "error": "fetch failed",
+   "sig": []
+  },
+  "robots": {
+   "status": 0,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 0,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 0
+  }
+ },
+ {
+  "region": "UK",
+  "host": "bigorbitcards.co.uk",
+  "name": "Big Orbit Cards",
+  "home": {
+   "status": 403,
+   "final": "https://bigorbitcards.co.uk/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "UK",
+  "host": "chaoscards.co.uk",
+  "name": "Chaos Cards",
+  "home": {
+   "status": 403,
+   "final": "https://chaoscards.co.uk/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/productreviews/"
+   ],
+   "sitemaps": [
+    "https://www.chaoscards.co.uk/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "UK",
+  "host": "darksphere.co.uk",
+  "name": "Dark Sphere",
+  "home": {
+   "status": 200,
+   "final": "https://darksphere.co.uk/",
+   "server": "cloudflare",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "UK",
+  "host": "elementgames.co.uk",
+  "name": "Element Games",
+  "home": {
+   "status": 200,
+   "final": "https://elementgames.co.uk/",
+   "server": "cloudflare",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://elementgames.co.uk/sitemap/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "UK",
+  "host": "firestormcards.co.uk",
+  "name": "Firestorm Cards",
+  "home": {
+   "status": 403,
+   "final": "https://firestormcards.co.uk/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 500,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "UK",
+  "host": "leisuregames.com",
+  "name": "Leisure Games",
+  "home": {
+   "status": 200,
+   "final": "https://leisuregames.com/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://leisuregames.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "26th November 2026 (Thursday) One Piece Card Game Store Tournament | Leisure Games | 5.50",
+    "19th November 2026 (Thursday) One Piece Card Game Store Tournament | Leisure Games | 5.50"
+   ]
+  },
+  "meta": {
+   "currency": "GBP",
+   "name": "Leisure Games",
+   "country": "GB"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://leisuregames.com/products/gift-voucher",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "UK",
+  "host": "magicmadhouse.co.uk",
+  "name": "Magic Madhouse",
+  "home": {
+   "status": 200,
+   "final": "https://magicmadhouse.co.uk/",
+   "server": "cloudflare",
+   "sig": [
+    "bigcommerce",
+    "lightspeed"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/productimage.php",
+    "/productupdates.php",
+    "/?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*",
+    "/*?_bc_fsnf=1*",
+    "/*?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*"
+   ],
+   "sitemaps": [
+    "https://magicmadhouse.co.uk/xmlsitemap.php"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "UK",
+  "host": "manaleak.com",
+  "name": "Manaleak",
+  "home": {
+   "status": 200,
+   "final": "http://www.manaleak.com/",
+   "server": "Apache",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*?"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "UK",
+  "host": "packratt.co.uk",
+  "name": "PACKRAT",
+  "home": {
+   "status": 200,
+   "final": "https://packratt.co.uk/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "nextjs"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": [
+    "https://packratt.co.uk/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  },
+  "productPage": {
+   "url": "https://packratt.co.uk/products/pokemon-tcg-mega-evolution-delta-reign-booster-bundle",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "49.99",
+   "currency": "GBP",
+   "sig": [
+    "magento",
+    "nextjs"
+   ]
+  }
+ },
+ {
+  "region": "UK",
+  "host": "patriotgames.ltd.uk",
+  "name": "Patriot Games",
+  "home": {
+   "status": 0,
+   "error": "fetch failed",
+   "sig": []
+  },
+  "robots": {
+   "status": 0,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 0,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 0
+  }
+ },
+ {
+  "region": "UK",
+  "host": "smythstoys.com",
+  "name": "Smyths Toys",
+  "home": {
+   "status": 200,
+   "final": "https://www.smythstoys.com/",
+   "server": "",
+   "sig": [
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "*/warenkorb",
+    "*/checkout",
+    "*/my-account",
+    "*/mein-konto",
+    "*/mon-compte",
+    "*/confirm-order",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": [
+    "https://www.smythstoys.com/uk/en-gb/sitemap.xml",
+    "https://www.smythstoys.com/ie/en-ie/sitemap.xml",
+    "https://www.smythstoys.com/de/de-de/sitemap.xml",
+    "https://www.smythstoys.com/at/de-at/sitemap.xml",
+    "https://www.smythstoys.com/ch/de-ch/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 200
+  }
+ },
+ {
+  "region": "UK",
+  "host": "waylandgames.co.uk",
+  "name": "Wayland Games",
+  "home": {
+   "status": 403,
+   "final": "https://www.waylandgames.co.uk/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*.php$",
+    "/*SID=",
+    "/catalog/product_compare/",
+    "/catalog/product/view/",
+    "/composer.json",
+    "/package.json",
+    "/*?*product_list_mode=",
+    "/*?*product_list_order=",
+    "/*?*product_list_limit=",
+    "/*?*product_list_dir=",
+    "/*.git",
+    "/*.CVS",
+    "/*.Zip$",
+    "/*.Svn$",
+    "/*.Idea$",
+    "/*.Sql$",
+    "/*.Tgz$"
+   ],
+   "sitemaps": [
+    "https://www.waylandgames.co.uk/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "US",
+  "host": "95gamecenter.com",
+  "name": "Ninety Five (95 Game Center)",
+  "home": {
+   "status": 200,
+   "final": "https://www.95gamecenter.com/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "wix",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "*?lightbox=",
+    "/_partials*",
+    "/pro-gallery-webapp/v1/galleries/*",
+    "/"
+   ],
+   "sitemaps": [
+    "https://www.95gamecenter.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 400,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "US",
+  "host": "95mtg.com",
+  "name": "Ninety Five (95 Game Center)",
+  "home": {
+   "status": 200,
+   "final": "https://www.95gamecenter.com/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "wix",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "*?lightbox=",
+    "/_partials*",
+    "/pro-gallery-webapp/v1/galleries/*",
+    "/"
+   ],
+   "sitemaps": [
+    "https://www.95gamecenter.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 400,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "US",
+  "host": "abugames.com",
+  "name": "ABUGames",
+  "home": {
+   "status": 200,
+   "final": "https://abugames.com/",
+   "server": "cloudflare",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://abugames.com/sitemap1.xml",
+    "https://abugames.com/sitemap2.xml",
+    "https://abugames.com/sitemap6.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 200
+  }
+ },
+ {
+  "region": "US",
+  "host": "alterrealitygames.com",
+  "name": "Alter Reality Games",
+  "home": {
+   "status": 200,
+   "final": "https://alterrealitygames.com/",
+   "server": "",
+   "sig": []
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 200
+  }
+ },
+ {
+  "region": "US",
+  "host": "cardgiants.com",
+  "name": "Card Giants",
+  "home": {
+   "status": 200,
+   "final": "https://cardgiants.com/",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": [
+    "https://cardgiants.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": true,
+   "products": 3,
+   "sample": [
+    "2025-26 Panini Select Basketball 24ct. Blaster Box | Panini | 29.99",
+    "2026-27 Upper Deck Series 1 NHL Hockey 12Ct. Starter Kit | Upper Deck | 19.99"
+   ]
+  },
+  "meta": {
+   "currency": "USD",
+   "name": "Card Giants",
+   "country": "US"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  },
+  "productPage": {
+   "url": "https://cardgiants.com/products/2026-panini-select-basketball-24-ct-blaster-box",
+   "status": 200,
+   "jsonldProduct": true,
+   "price": "29.99",
+   "currency": "USD",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "US",
+  "host": "cardkingdom.com",
+  "name": "Card Kingdom",
+  "home": {
+   "status": 200,
+   "final": "https://www.cardkingdom.com/",
+   "server": "cloudflare",
+   "sig": [
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "https://www.cardkingdom.com/retrieve/sitemap-index"
+   ]
+  },
+  "productsJson": {
+   "status": 200,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "US",
+  "host": "cardtitan.com",
+  "name": "Card Titan",
+  "home": {
+   "status": 200,
+   "final": "https://www.cardtitan.com/",
+   "server": "nginx/1.26.3 (Ubuntu)",
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://cardtitan.com/products/multi_search",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "US",
+  "host": "collectorscache.com",
+  "name": "Collector's Cache",
+  "home": {
+   "status": 200,
+   "final": "https://www.collectorscache.com/",
+   "server": "nginx/1.26.3 (Ubuntu)",
+   "sig": [
+    "crystalcommerce",
+    "magento",
+    "lightspeed"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://collectorscache.com/catalog/pokmon_sealed_product-pokemon_tins__box_sets/pokemon_30th_celebration_anniversary_elite_trainer_box_etb/797895",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "crystalcommerce",
+    "magento",
+    "lightspeed"
+   ]
+  }
+ },
+ {
+  "region": "US",
+  "host": "coolstuffinc.com",
+  "name": "CoolStuffInc",
+  "home": {
+   "status": 200,
+   "final": "https://www.coolstuffinc.com/",
+   "server": "Apache",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://coolstuffinc.com/p/448237",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "US",
+  "host": "coretcg.com",
+  "name": "CoreTCG",
+  "home": {
+   "status": 200,
+   "final": "https://coretcg.com/",
+   "server": "nginx/1.24.0 (Ubuntu)",
+   "sig": []
+  },
+  "robots": {
+   "status": 404,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://buylist.coretcg.com/Products/0/3/0",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "tcgplayer-pro"
+   ]
+  }
+ },
+ {
+  "region": "US",
+  "host": "dacardworld.com",
+  "name": "Dave & Adam's Card World",
+  "home": {
+   "status": 403,
+   "final": "https://dacardworld.com/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": [
+    "http://www.dacardworld.com/sitemap.xml.gz"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "US",
+  "host": "gamegoblins.com",
+  "name": "Game Goblins",
+  "home": {
+   "status": 200,
+   "final": "https://gamegoblins.com/",
+   "server": "cloudflare",
+   "sig": [
+    "bigcommerce",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/productimage.php",
+    "/productupdates.php",
+    "/*?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*",
+    "/*?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "US",
+  "host": "gamenerdz.com",
+  "name": "Game Nerdz",
+  "home": {
+   "status": 200,
+   "final": "https://www.gamenerdz.com/",
+   "server": "cloudflare",
+   "sig": [
+    "bigcommerce",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/productimage.php",
+    "/productupdates.php",
+    "/*sort=",
+    "/*?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*",
+    "/*?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "US",
+  "host": "ideal808.com",
+  "name": "Ideal808",
+  "home": {
+   "status": 200,
+   "final": "https://www.ideal808.com/",
+   "server": "nginx/1.24.0 (Ubuntu)",
+   "sig": [
+    "squarespace",
+    "tcgplayer-pro"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://buylist.ideal808.com/Products/0/2/0",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": []
+  }
+ },
+ {
+  "region": "US",
+  "host": "miniaturemarket.com",
+  "name": "Miniature Market",
+  "home": {
+   "status": 200,
+   "final": "https://www.miniaturemarket.com/",
+   "server": "",
+   "sig": [
+    "magento",
+    "shopware",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "User-agent: *",
+    "/*?SID=",
+    "/*?dir=",
+    "/*?mode=",
+    "/*?limit="
+   ],
+   "sitemaps": [
+    "https://www.miniaturemarket.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "US",
+  "host": "nerdragegaming.com",
+  "name": "Nerd Rage Gaming",
+  "home": {
+   "status": 200,
+   "final": "https://www.nerdragegaming.com/",
+   "server": "nginx/1.26.3 (Ubuntu)",
+   "sig": [
+    "crystalcommerce",
+    "magento",
+    "lightspeed"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://www.nerdragegaming.com/catalog/t/Featured%20Products",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "US",
+  "host": "nobleknight.com",
+  "name": "Noble Knight Games",
+  "home": {
+   "status": 200,
+   "final": "https://www.nobleknight.com/",
+   "server": "",
+   "sig": [
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "User-agent: *"
+   ],
+   "sitemaps": [
+    "https://www.nobleknight.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://nobleknight.com/Products/Noble-Knight-Gift-Cards",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "magento",
+    "bot-wall"
+   ]
+  }
+ },
+ {
+  "region": "US",
+  "host": "pastimes.net",
+  "name": "Pastimes",
+  "home": {
+   "status": 200,
+   "final": "https://www.pastimes.net/",
+   "server": "nginx/1.26.3 (Ubuntu)",
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  },
+  "productPage": {
+   "url": "https://pastimes.net/products/multi_search",
+   "status": 200,
+   "jsonldProduct": false,
+   "sig": [
+    "crystalcommerce",
+    "magento"
+   ]
+  }
+ },
+ {
+  "region": "US",
+  "host": "pokemoncenter.com",
+  "name": "Pokémon Center (official)",
+  "home": {
+   "status": 403,
+   "final": "https://www.pokemoncenter.com/",
+   "server": "CloudFront",
+   "sig": [
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/search/*&.js",
+    "/site/*/resourceapi/",
+    "/site/*/resourceapi/*",
+    "/page/*",
+    "/en-zz/*"
+   ],
+   "sitemaps": [
+    "https://www.pokemoncenter.com/sitemap.xml"
+   ]
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "US",
+  "host": "potomacdist.com",
+  "name": "Potomac Distribution",
+  "home": {
+   "status": 200,
+   "final": "http://www.potomacdist.com/",
+   "server": "Microsoft-IIS/10.0",
+   "sig": [
+    "magento"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/order* # these will soon disappear"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 500,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "US",
+  "host": "proplaygames.com",
+  "name": "Pro-Play Games",
+  "home": {
+   "status": 403,
+   "final": "https://proplaygames.com/",
+   "server": "cloudflare",
+   "sig": [
+    "magento",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/",
+    "/"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 403,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 403
+  }
+ },
+ {
+  "region": "US",
+  "host": "starcitygames.com",
+  "name": "Star City Games",
+  "home": {
+   "status": 200,
+   "final": "https://starcitygames.com/",
+   "server": "cloudflare",
+   "sig": [
+    "bigcommerce",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/productimage.php",
+    "/productupdates.php",
+    "/productimage.php",
+    "/productupdates.php",
+    "/*?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*",
+    "/*?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*"
+   ],
+   "sitemaps": [
+    "https://starcitygames.com/xmlsitemap.php"
+   ]
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "US",
+  "host": "strikezoneonline.com",
+  "name": "Strike Zone",
+  "home": {
+   "status": 0,
+   "error": "fetch failed",
+   "sig": []
+  },
+  "robots": {
+   "status": 0,
+   "disallows": [],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 0,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 0
+  }
+ },
+ {
+  "region": "US",
+  "host": "toywiz.com",
+  "name": "ToyWiz",
+  "home": {
+   "status": 200,
+   "final": "https://toywiz.com/",
+   "server": "cloudflare",
+   "sig": [
+    "bigcommerce",
+    "cloudflare-challenge"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/productimage.php",
+    "/productupdates.php",
+    "/productimage.php",
+    "/productupdates.php",
+    "/*?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*",
+    "/*?_bc_fsnf=1*",
+    "/*&_bc_fsnf=1*"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 404,
+   "ok": false
+  },
+  "woo": {
+   "ok": false,
+   "status": 404
+  }
+ },
+ {
+  "region": "US",
+  "host": "trollandtoad.com",
+  "name": "Troll and Toad",
+  "home": {
+   "status": 200,
+   "final": "https://www.trollandtoad.com/password",
+   "server": "cloudflare",
+   "sig": [
+    "shopify",
+    "magento",
+    "bot-wall"
+   ]
+  },
+  "robots": {
+   "status": 200,
+   "disallows": [
+    "/*/cart/",
+    "/*/checkout",
+    "/*/checkouts/",
+    "/*/orders",
+    "/*/account",
+    "/cdn/wpm/*.js",
+    "/sf_*",
+    "/*/cart.js",
+    "/recommendations/products",
+    "/*/recommendations/products",
+    "/collections/*sort_by*",
+    "/*/collections/*sort_by*",
+    "/collections/*+*",
+    "/collections/*%2B*",
+    "/collections/*%2b*",
+    "/*/collections/*+*",
+    "/*/collections/*%2B*",
+    "/*/collections/*%2b*",
+    "/collections/*filter*&*filter*",
+    "/*/collections/*filter*&*filter*"
+   ],
+   "sitemaps": []
+  },
+  "productsJson": {
+   "status": 401,
+   "ok": false
+  },
+  "meta": {
+   "currency": "USD",
+   "name": "Troll and Toad",
+   "country": "US"
+  },
+  "woo": {
+   "ok": false,
+   "status": 400
+  }
+ }
+]
