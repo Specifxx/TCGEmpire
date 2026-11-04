@@ -1,0 +1,46 @@
+{
+ "startedAt": "2026-11-04T05:01:47.664Z",
+ "args": {
+  "markets": [
+   "SG"
+  ],
+  "only": "capybaracards.com",
+  "out": "probe/sweep-capybaracards.com.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "capybaracards.com": {
+   "host": "capybaracards.com",
+   "base": "https://capybaracards.com",
+   "name": "capybaracards.com",
+   "market": "SG",
+   "registryCountry": "(only)",
+   "verdict": "ok",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "ogn-riftbound-origins-singles",
+    "sfd-riftbound-spiritforged-singles",
+    "unl-riftbound-unleashed-singles",
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 294,
+   "inStock": 294,
+   "total": 320,
+   "currency": "SGD",
+   "currencyAgrees": true,
+   "sample": "KaiSa Survivor Alternate Art [OGN-039a/2 95.00",
+   "shippingPolicy": false,
+   "finalHost": "capybaracards.com",
+   "ms": 5262,
+   "at": "2026-11-04T05:01:47.665Z",
+   "suggestedKey": "capybaracards"
+  }
+ }
+}

@@ -1,0 +1,39 @@
+{
+ "startedAt": "2026-11-04T05:02:35.797Z",
+ "args": {
+  "markets": [
+   "SG"
+  ],
+  "only": "teamboardgame.com",
+  "out": "probe/sweep-teamboardgame.com.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "teamboardgame.com": {
+   "host": "teamboardgame.com",
+   "base": "https://teamboardgame.com",
+   "name": "teamboardgame.com",
+   "market": "SG",
+   "registryCountry": "(only)",
+   "verdict": "thin",
+   "platform": "woocommerce",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [],
+   "singles": 0,
+   "inStock": 0,
+   "total": 0,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "",
+   "shippingPolicy": false,
+   "finalHost": "teamboardgame.com",
+   "ms": 12369,
+   "at": "2026-11-04T05:02:35.798Z"
+  }
+ }
+}

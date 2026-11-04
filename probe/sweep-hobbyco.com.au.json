@@ -1,0 +1,42 @@
+{
+ "startedAt": "2026-11-04T05:01:22.130Z",
+ "args": {
+  "markets": [
+   "AU"
+  ],
+  "only": "hobbyco.com.au",
+  "out": "probe/sweep-hobbyco.com.au.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "hobbyco.com.au": {
+   "host": "hobbyco.com.au",
+   "base": "https://hobbyco.com.au",
+   "name": "hobbyco.com.au",
+   "market": "AU",
+   "registryCountry": "(only)",
+   "verdict": "no-stock",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 0,
+   "inStock": 0,
+   "total": 0,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "",
+   "shippingPolicy": false,
+   "finalHost": "hobbyco.com.au",
+   "ms": 4811,
+   "at": "2026-11-04T05:01:22.131Z"
+  }
+ }
+}

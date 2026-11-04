@@ -1,0 +1,42 @@
+{
+ "startedAt": "2026-11-04T05:02:08.812Z",
+ "args": {
+  "markets": [
+   "UK"
+  ],
+  "only": "leisuregames.com",
+  "out": "probe/sweep-leisuregames.com.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "leisuregames.com": {
+   "host": "leisuregames.com",
+   "base": "https://leisuregames.com",
+   "name": "leisuregames.com",
+   "market": "UK",
+   "registryCountry": "(only)",
+   "verdict": "no-stock",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 0,
+   "inStock": 0,
+   "total": 0,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "",
+   "shippingPolicy": false,
+   "finalHost": "leisuregames.com",
+   "ms": 2974,
+   "at": "2026-11-04T05:02:08.813Z"
+  }
+ }
+}

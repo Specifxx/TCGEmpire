@@ -1,0 +1,42 @@
+{
+ "startedAt": "2026-11-04T05:01:53.339Z",
+ "args": {
+  "markets": [
+   "SG"
+  ],
+  "only": "cardarena.sg",
+  "out": "probe/sweep-cardarena.sg.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "cardarena.sg": {
+   "host": "cardarena.sg",
+   "base": "https://cardarena.sg",
+   "name": "cardarena.sg",
+   "market": "SG",
+   "registryCountry": "(only)",
+   "verdict": "no-stock",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 0,
+   "inStock": 0,
+   "total": 0,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "",
+   "shippingPolicy": false,
+   "finalHost": "cardarena.sg",
+   "ms": 3110,
+   "at": "2026-11-04T05:01:53.340Z"
+  }
+ }
+}

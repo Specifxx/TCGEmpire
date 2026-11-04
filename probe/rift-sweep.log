@@ -1,0 +1,285 @@
+===== curacards.com.au (AU) =====
+Sweeping markets: AU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ AU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== eclipsegames.com.au (AU) =====
+Sweeping markets: AU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ AU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== gamesparadise.com.au (AU) =====
+Sweeping markets: AU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ AU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== hobbyco.com.au (AU) =====
+Sweeping markets: AU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ AU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== jenesmtg.com.au (AU) =====
+Sweeping markets: AU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ AU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== tcg.gumnut.com.au (AU) =====
+Sweeping markets: AU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ AU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== cardchasersmtl.com (CA) =====
+Sweeping markets: CA
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ CA — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== eclipsetcg.be (EU) =====
+Sweeping markets: EU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ EU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== magictraders.nl (EU) =====
+Sweeping markets: EU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ EU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== capybaracards.com (SG) =====
+Sweeping markets: SG
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ SG — 1 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+capybaracards.com            capybaracards.com              shopify    singles= 294 inStock= 294 cur=SGD policy=n [ogn-riftbound-origins-singles,sfd-riftbound-spiritforged-singles] e.g. KaiSa Survivor Alternate Art [OGN-039a/2 95.00
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+
+  // ---- Registry sweep (2026-11-04, scripts/sweep-registry.ts) — 1 store(s) cleared MIN_SINGLES_FOR_STORE ----
+  capybaracards: {
+    key: "capybaracards",
+    name: "capybaracards.com",
+    base: "https://capybaracards.com",
+    collections: ["ogn-riftbound-origins-singles", "sfd-riftbound-spiritforged-singles", "unl-riftbound-unleashed-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  }, // sweep: 294 singles, cur=SGD
+
+===== cardarena.sg (SG) =====
+Sweeping markets: SG
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ SG — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== gameshaventcg.com (SG) =====
+Sweeping markets: SG
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ SG — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== jeuxkingdom.com (SG) =====
+Sweeping markets: SG
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ SG — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== obocollectibles.com (SG) =====
+Sweeping markets: SG
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ SG — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== leisuregames.com (UK) =====
+Sweeping markets: UK
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ UK — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== cardgiants.com (US) =====
+Sweeping markets: US
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ US — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== m-g.com.au (AU) =====
+Sweeping markets: AU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ AU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== ilantcgbelgium.com (EU) =====
+Sweeping markets: EU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ EU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== madatsutcg.com (EU) =====
+Sweeping markets: EU
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ EU — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== gamingotaku.com (SG) =====
+Sweeping markets: SG
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ SG — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+
+===== teamboardgame.com (SG) =====
+Sweeping markets: SG
+1 store(s) to sweep (0 already tracked, re-checked for regressions).
+1 to sweep this run.
+
+
+════ SG — 0 new store(s) clear the bar (of 1 swept, 0 already-tracked duplicates) ════
+
+════ combined non-Shopify platform histogram (all swept markets) — the input to any adapter decision ════
+
+── retailers.ts block ──
+(no new stores cleared the bar this run)
+

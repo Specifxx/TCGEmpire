@@ -1,0 +1,42 @@
+{
+ "startedAt": "2026-11-04T05:01:18.563Z",
+ "args": {
+  "markets": [
+   "AU"
+  ],
+  "only": "gamesparadise.com.au",
+  "out": "probe/sweep-gamesparadise.com.au.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "gamesparadise.com.au": {
+   "host": "gamesparadise.com.au",
+   "base": "https://gamesparadise.com.au",
+   "name": "gamesparadise.com.au",
+   "market": "AU",
+   "registryCountry": "(only)",
+   "verdict": "no-stock",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 0,
+   "inStock": 0,
+   "total": 0,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "",
+   "shippingPolicy": false,
+   "finalHost": "gamesparadise.com.au",
+   "ms": 3149,
+   "at": "2026-11-04T05:01:18.563Z"
+  }
+ }
+}

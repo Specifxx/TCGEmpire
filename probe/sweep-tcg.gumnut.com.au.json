@@ -1,0 +1,42 @@
+{
+ "startedAt": "2026-11-04T05:01:30.979Z",
+ "args": {
+  "markets": [
+   "AU"
+  ],
+  "only": "tcg.gumnut.com.au",
+  "out": "probe/sweep-tcg.gumnut.com.au.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "tcg.gumnut.com.au": {
+   "host": "tcg.gumnut.com.au",
+   "base": "https://tcg.gumnut.com.au",
+   "name": "tcg.gumnut.com.au",
+   "market": "AU",
+   "registryCountry": "(only)",
+   "verdict": "no-stock",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 0,
+   "inStock": 0,
+   "total": 0,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "",
+   "shippingPolicy": false,
+   "finalHost": "tcg.gumnut.com.au",
+   "ms": 3347,
+   "at": "2026-11-04T05:01:30.980Z"
+  }
+ }
+}

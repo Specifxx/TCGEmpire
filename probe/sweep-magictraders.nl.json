@@ -1,0 +1,43 @@
+{
+ "startedAt": "2026-11-04T05:01:43.667Z",
+ "args": {
+  "markets": [
+   "EU"
+  ],
+  "only": "magictraders.nl",
+  "out": "probe/sweep-magictraders.nl.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "magictraders.nl": {
+   "host": "magictraders.nl",
+   "base": "https://magictraders.nl",
+   "name": "magictraders.nl",
+   "market": "EU",
+   "registryCountry": "(only)",
+   "verdict": "thin",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "riftbound-league-of-legends",
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 0,
+   "inStock": 1,
+   "total": 8,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "Riftbound: League of Legends - Spiritfor 14.95",
+   "shippingPolicy": false,
+   "finalHost": "magictraders.nl",
+   "ms": 3601,
+   "at": "2026-11-04T05:01:43.668Z"
+  }
+ }
+}

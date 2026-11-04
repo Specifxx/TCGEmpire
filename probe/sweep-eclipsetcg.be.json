@@ -1,0 +1,43 @@
+{
+ "startedAt": "2026-11-04T05:01:38.852Z",
+ "args": {
+  "markets": [
+   "EU"
+  ],
+  "only": "eclipsetcg.be",
+  "out": "probe/sweep-eclipsetcg.be.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "eclipsetcg.be": {
+   "host": "eclipsetcg.be",
+   "base": "https://eclipsetcg.be",
+   "name": "eclipsetcg.be",
+   "market": "EU",
+   "registryCountry": "(only)",
+   "verdict": "thin",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "riftbound",
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 0,
+   "inStock": 3,
+   "total": 10,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "Deck Champion Jinx Riftbound Origins Set 20.00",
+   "shippingPolicy": false,
+   "finalHost": "eclipsetcg.be",
+   "ms": 4412,
+   "at": "2026-11-04T05:01:38.853Z"
+  }
+ }
+}

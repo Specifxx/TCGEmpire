@@ -1,0 +1,39 @@
+{
+ "startedAt": "2026-11-04T05:02:15.788Z",
+ "args": {
+  "markets": [
+   "AU"
+  ],
+  "only": "m-g.com.au",
+  "out": "probe/sweep-m-g.com.au.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "m-g.com.au": {
+   "host": "m-g.com.au",
+   "base": "https://m-g.com.au",
+   "name": "m-g.com.au",
+   "market": "AU",
+   "registryCountry": "(only)",
+   "verdict": "thin",
+   "platform": "woocommerce",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [],
+   "singles": 0,
+   "inStock": 12,
+   "total": 0,
+   "currency": "AUD",
+   "currencyAgrees": false,
+   "sample": "",
+   "shippingPolicy": false,
+   "finalHost": "m-g.com.au",
+   "ms": 6834,
+   "at": "2026-11-04T05:02:15.789Z"
+  }
+ }
+}

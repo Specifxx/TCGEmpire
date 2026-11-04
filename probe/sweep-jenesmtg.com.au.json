@@ -1,0 +1,42 @@
+{
+ "startedAt": "2026-11-04T05:01:27.344Z",
+ "args": {
+  "markets": [
+   "AU"
+  ],
+  "only": "jenesmtg.com.au",
+  "out": "probe/sweep-jenesmtg.com.au.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "jenesmtg.com.au": {
+   "host": "jenesmtg.com.au",
+   "base": "https://jenesmtg.com.au",
+   "name": "jenesmtg.com.au",
+   "market": "AU",
+   "registryCountry": "(only)",
+   "verdict": "no-stock",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 0,
+   "inStock": 0,
+   "total": 0,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "",
+   "shippingPolicy": false,
+   "finalHost": "jenesmtg.com.au",
+   "ms": 3227,
+   "at": "2026-11-04T05:01:27.345Z"
+  }
+ }
+}

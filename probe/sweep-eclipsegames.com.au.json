@@ -1,0 +1,43 @@
+{
+ "startedAt": "2026-11-04T05:01:14.296Z",
+ "args": {
+  "markets": [
+   "AU"
+  ],
+  "only": "eclipsegames.com.au",
+  "out": "probe/sweep-eclipsegames.com.au.json",
+  "resume": false,
+  "concurrency": 8,
+  "tracked": true,
+  "reportOnly": false
+ },
+ "results": {
+  "eclipsegames.com.au": {
+   "host": "eclipsegames.com.au",
+   "base": "https://eclipsegames.com.au",
+   "name": "eclipsegames.com.au",
+   "market": "AU",
+   "registryCountry": "(only)",
+   "verdict": "thin",
+   "platform": "shopify",
+   "robotsOk": true,
+   "rateLimited": false,
+   "riftboundMentioned": false,
+   "handles": [
+    "riftbound",
+    "riftbound-single",
+    "riftbound-singles"
+   ],
+   "singles": 0,
+   "inStock": 1,
+   "total": 1,
+   "currency": "n/a",
+   "currencyAgrees": false,
+   "sample": "Riftbound: League of Legends TCG – Boost 220.00",
+   "shippingPolicy": false,
+   "finalHost": "eclipsegames.com.au",
+   "ms": 3858,
+   "at": "2026-11-04T05:01:14.297Z"
+  }
+ }
+}
