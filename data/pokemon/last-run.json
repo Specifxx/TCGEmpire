@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-11-04T01:43:00.494Z",
-  "finishedAt": "2026-11-04T01:43:01.715Z",
+  "startedAt": "2026-11-04T12:59:45.717Z",
+  "finishedAt": "2026-11-04T12:59:46.267Z",
   "ok": true,
   "summary": {
     "groups": {
@@ -27,8 +27,8 @@
       "written": 0
     },
     "ebay": {
-      "enabled": true,
-      "remaining": 1480,
+      "enabled": false,
+      "remaining": null,
       "budget": 0,
       "searched": 0,
       "matched": 0
