@@ -111,7 +111,7 @@
       "AU": 1900,
       "CA": 1199,
       "UK": 700,
-      "US": 1150
+      "US": 1095
     },
     "OGN|Box Set": {
       "UK": 50000
@@ -210,7 +210,7 @@
       "CA": 144995,
       "EU": 59900,
       "UK": 61999,
-      "US": 68400
+      "US": 64444
     },
     "RAD|Booster Pack": {
       "AU": 1099,
@@ -224,7 +224,7 @@
       "EU": 2890,
       "SG": 5830,
       "UK": 2799,
-      "US": 2999
+      "US": 2779
     },
     "RAD|Bundle Case": {
       "US": 45999
@@ -238,7 +238,7 @@
       "CA": 4999,
       "EU": 3199,
       "UK": 2500,
-      "US": 2999
+      "US": 2979
     },
     "RAD|Sealed": {
       "EU": 399
@@ -254,7 +254,7 @@
     "RAD|Showdown Decks Display": {
       "AU": 5500,
       "CA": 4499,
-      "US": 6576
+      "US": 7073
     },
     "RAD|Sleeved Booster": {
       "EU": 3750,
@@ -328,7 +328,7 @@
     },
     "SFD|Champion Deck (Rumble) Display": {
       "AU": 4000,
-      "US": 6000
+      "US": 5995
     },
     "SFD|Champion Deck Display": {
       "AU": 24900
@@ -383,7 +383,7 @@
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 59990,
-      "US": 99499
+      "US": 101497
     },
     "UNL|Booster Pack": {
       "AU": 1100,
@@ -413,7 +413,7 @@
     },
     "UNL|Champion Deck (Vex) Display": {
       "AU": 4000,
-      "US": 8900
+      "US": 7999
     },
     "UNL|Champion Deck (Vi)": {
       "AU": 2499,
@@ -425,7 +425,7 @@
     },
     "UNL|Champion Deck (Vi) Display": {
       "AU": 4000,
-      "US": 4998
+      "US": 5992
     },
     "UNL|Nexus Night Pack": {
       "CA": 1900,
@@ -436,7 +436,7 @@
     },
     "UNL|Pre-Rift Event Kit": {
       "EU": 4500,
-      "US": 71999
+      "US": 71899
     },
     "UNL|Pre-Rift Kit": {
       "AU": 5000,
@@ -478,7 +478,7 @@
     },
     "VEN|Booster Pack": {
       "AU": 999,
-      "CA": 799,
+      "CA": 795,
       "EU": 795,
       "UK": 499,
       "US": 495
@@ -507,7 +507,7 @@
     "VEN|Pre-Rift Event Kit": {
       "CA": 110000,
       "EU": 3990,
-      "US": 56491
+      "US": 55000
     },
     "VEN|Pre-Rift Kit": {
       "AU": 6605,
@@ -559,7 +559,7 @@
       "CA": 10000
     },
     "giftoftheriftbundle": {
-      "US": 27196
+      "US": 27191
     },
     "jinxchampiondeckriftboundleagueoflegends": {
       "EU": 6399
@@ -637,9 +637,6 @@
     },
     "riftboundgiftoftheriftbundle": {
       "EU": 18999
-    },
-    "riftboundgiftoftheriftbundledec2026": {
-      "CA": 19999
     },
     "riftboundleagueoflegendsarcaneboxset": {
       "CA": 97000,
