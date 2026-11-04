@@ -22222,3 +22222,19 @@ The request is filed as a `suggest-store` report with `issue: "owner"`; RiftComp
 those first and asks for a reply within two days. No email is asked for (the reports branch is public); no pop-up,
 no cold email. RiftCompare and OP Compare keep their `/stores/suggest` page (now the owner pitch) and redirect
 `/list-your-store` to it.
+
+## 2026-11-05 — The fonts are self-hosted: the build never asks Google Fonts
+
+The 09:45 AEDT production build (the #314 release) died in `next/font/google`: "TypeError: Cannot read properties
+of null (reading '1')". That loader fetches each family's CSS from fonts.googleapis.com at build time and then
+downloads every file it names; the crash is the loader finding a `src: url(...)` whose name has no font
+extension, which only happens when Google answers with something other than the @font-face list it expects.
+Nothing in the day's merges touched fonts; the fetch is simply a third-party dependency of a build this site
+makes once a day and cannot afford to lose. The three latin woff2 files Google served (Inter variable 100–900,
+Cinzel variable 700–800, JetBrains Mono variable 100–800; the same files, the same unicode range the `latin`
+subset covered) now live in `src/app/fonts/` and load through `next/font/local` with the same CSS variables,
+`display: swap`, the same `preload: false` on the mono face and size-matched fallbacks (Arial for the sans and
+mono faces, Times New Roman for Cinzel). Visitors see the same fonts; the build no longer reaches the network
+for them. `tests/critical-path.test.ts` fails if `next/font/google` comes back. Released at once under the
+owner's standing rule for RiftCompare (deploy all RiftCompare changes urgently, 2026-11-03): the failed build
+also held back the #314 post and the list-your-store page (#316).

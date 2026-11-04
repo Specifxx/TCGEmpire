@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -26,13 +26,25 @@ test("gtag.js loads after the page is interactive, not as a high-priority preini
 
 test("the monospace font is not preloaded ahead of the stylesheet", () => {
   const src = read("src/app/layout.tsx");
-  const mono = /const jetbrainsMono = JetBrains_Mono\(\{[^}]*\}\)/.exec(src)?.[0] ?? "";
-  assert.ok(mono, "expected the JetBrains_Mono() call");
+  const mono = /const jetbrainsMono = localFont\(\{[^}]*\}\)/.exec(src)?.[0] ?? "";
+  assert.ok(mono, "expected the jetbrainsMono localFont() call");
   assert.match(mono, /preload:\s*false/, "mono font must carry preload: false");
   // The H1 face and the body face stay preloaded — they ARE the first paint.
-  const display = /const cinzel = Cinzel\(\{[\s\S]*?\}\)/.exec(src)?.[0] ?? "";
-  assert.ok(display, "expected the Cinzel() call (the heading face since the 2026-10-16 rebrand)");
+  const display = /const cinzel = localFont\(\{[\s\S]*?\}\)/.exec(src)?.[0] ?? "";
+  assert.ok(display, "expected the cinzel localFont() call (the heading face since the 2026-10-16 rebrand)");
   assert.ok(!/preload:\s*false/.test(display), "the display font must stay preloaded (it is the LCP on article pages)");
+});
+
+test("the fonts are self-hosted: the build never fetches Google Fonts", () => {
+  // 2026-11-05: the production build died in next/font/google ("Cannot read
+  // properties of null (reading '1')") when fonts.googleapis.com answered with
+  // something other than the @font-face list the loader parses. A gated site
+  // builds once a day; that build must not depend on a third-party fetch.
+  const src = read("src/app/layout.tsx");
+  assert.ok(!/from "next\/font\/google"/.test(src), "layout must not import next/font/google");
+  for (const f of ["inter-latin-wght.woff2", "cinzel-latin-wght.woff2", "jetbrains-mono-latin-wght.woff2"]) {
+    assert.ok(existsSync(join(process.cwd(), "src/app/fonts", f)), `missing self-hosted font ${f}`);
+  }
 });
 
 test("robots.txt never blocks the crawlers that matter", () => {
