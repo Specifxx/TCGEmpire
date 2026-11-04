@@ -54,7 +54,17 @@ export interface RetailerInfo {
   // "cardhive" is ONE store's own Firebase shop (The Card Hive), read from its
   // public Firestore `shop` list and matched by Riot's card picture — see
   // lib/cardhive.ts. Singles only: the sealed importer skips it.
-  platform?: "shopify" | "woocommerce" | "cardhive";
+  //
+  // "bigcommerce" and "shopware" read the store's server-rendered category
+  // pages (lib/storefront-html.ts, 2026-11-04): `collections` are then the
+  // category PATHS holding singles ("/tcgs/riftbound/riftbound-singles/"), and
+  // `sealedCollections` the paths the sealed importer reads. A theme that draws
+  // its grid in the browser cannot be read; the probe
+  // (scripts/probe-html-stores.ts) proves a store before it is added.
+  platform?: "shopify" | "woocommerce" | "cardhive" | "bigcommerce" | "shopware";
+  // BigCommerce / Shopware only: category paths holding Riftbound SEALED product,
+  // read by lib/sealed-import.ts (the Shopify path discovers these itself).
+  sealedCollections?: string[];
   // The currency the storefront actually CHARGES, when it is not the market's
   // own. Omitted = currencyOf(country). Shopify Markets converts for most
   // stores, but not all: Sky Fox Games returned the same CAD prices for
@@ -1658,6 +1668,26 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. S$2.50 · free over S$60",
     country: "SG",
   }, // sweep 2026-11-04: 294 in-stock singles, cur=SGD
+
+  // ---- BigCommerce (lib/storefront-html.ts), 2026-11-04 ----------------------
+  // Grand J Games, Melbourne: the first store read from its category pages
+  // rather than a feed. Probed from a runner the same day: 1,200 Riftbound
+  // products in the first 12 pages of its singles category (721 in stock, 719
+  // singles, prices stated in AUD: "1.75$ AUD"), titled "|PG01|[OGS-003/024](C)
+  // Incinerate". Its sealed category (32 products, sleeves included) is read by
+  // the sealed importer through `sealedCollections`. Postage not measured.
+  grandjgames: {
+    key: "grandjgames",
+    name: "Grand J Games",
+    base: "https://grandjgames.com",
+    collections: ["/tcgs/riftbound/riftbound-singles/"],
+    sealedCollections: ["/tcgs/riftbound/riftbound-sealed/"],
+    shippingFlatCents: 995,
+    freeOverCents: 0,
+    shippingNote: "est. A$9.95",
+    country: "AU",
+    platform: "bigcommerce",
+  },
 
   // ---- SG leads checked and NOT added ----------------------------------------
   //   - cardscentral.com, duellerspoint.com, cardconnectsg.com, metagamestcg.com

@@ -27,6 +27,7 @@ import { implausiblyCheap } from "./price-sanity";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { fetchCardHiveProducts } from "./cardhive";
 import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
+import { fetchHtmlStoreProducts } from "./storefront-html";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
 export interface ShopifyProduct {
@@ -1806,7 +1807,9 @@ export async function importPrices(): Promise<ImportSummary> {
         ? await fetchWooStoreProducts(store)
         : store.platform === "cardhive"
           ? await fetchCardHiveProducts(store.base, allCardRows)
-          : await fetchShopifyStoreProducts(store);
+          : store.platform === "bigcommerce" || store.platform === "shopware"
+            ? await fetchHtmlStoreProducts(store, store.collections ?? [])
+            : await fetchShopifyStoreProducts(store);
     if (!products.length) {
       // Keeping the rows is right for ONE bad run and wrong for a store that has
       // stopped selling Riftbound: E4 Cards' 138 listings were still on card

@@ -12,6 +12,7 @@ import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
 import { withLiveStock } from "./preorder-live-stock";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
+import { fetchHtmlStoreProducts } from "./storefront-html";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
@@ -613,6 +614,12 @@ export async function importSealed(): Promise<number> {
     if (store.platform === "cardhive") continue;
     if (store.platform === "woocommerce") {
       batches.push({ products: await fetchWooSealedProducts(store), strict: false });
+    } else if (store.platform === "bigcommerce" || store.platform === "shopware") {
+      // Its sealed category paths, read like a configured collection (lib/storefront-html.ts);
+      // a store with none configured is singles-only here.
+      const paths = store.sealedCollections ?? [];
+      if (!paths.length) continue;
+      batches.push({ products: await fetchHtmlStoreProducts(store, paths), strict: false, own: true });
     } else {
       // Auto-discover from the sitemap, but fall back to the store's configured
       // collections (some stores' sitemaps don't expose their collection handles —
