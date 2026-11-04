@@ -28,7 +28,7 @@ import { CardTile } from "@/components/CardTile";
 import { cardTileSelect, trimTileArtFallback } from "@/lib/cards";
 import { cardImageSrc } from "@/lib/card-image-url";
 import { AdSlot } from "@/components/AdSlot";
-import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from "@/lib/country";
+import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY, priceField, type Country } from "@/lib/country";
 import { setByCode, hasSetHub, isPreorderSetCode } from "@/lib/constants";
 import { preordersHrefForSet, releaseDateLabel, spoilersHrefForSet } from "@/lib/release-calendar";
 import { domainSlug } from "@/lib/domains";
@@ -472,10 +472,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // each snapshot is honest until the next pass overwrites it.
   const priceValidUntil = new Date(Date.now() + 86400e3).toISOString().slice(0, 10);
   const hasStoreOffers = baseline.prices.length > 0 && baseline.lowest != null;
-  // Hoisted above the JSON-LD: the AggregateOffer needs a landing URL, and
-  // Google's merchant-listing guidance lists offers.url as recommended — the
-  // per-listing Offer nodes below already set one, so the aggregate was the odd
-  // one out.
+  // Hoisted above the JSON-LD: the AggregateOffer needs a landing URL
+  // (offers.url is recommended).
   const setInfoForLd = setByCode(card.setCode);
   const cardUrl = `/card/${card.slug ?? params.id}`;
   const cardAbsUrl = `${SITE_URL}${cardUrl}`;
@@ -496,37 +494,15 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           priceValidUntil,
         }]
       : []),
-    // One Offer per tracked store, alongside the AggregateOffer summary above —
-    // this is where "total delivered cost" (the site's whole differentiator)
-    // actually reaches structured data instead of living only in the visible
-    // table. `row.ship` is the SAME effective-shipping figure already shown to
-    // visitors (real per-listing cost where the source gives one, e.g. eBay;
-    // otherwise the store's documented flat estimate — see
-    // lib/market-rows.ts/effectiveShippingCents), so this asserts nothing the
-    // page doesn't already claim. shippingDetails is omitted, not zeroed, for
-    // the rare row where even that estimate is unknown ("at checkout").
-    // hasMerchantReturnPolicy is deliberately NOT set here — return policy is a
-    // fact about the individual third-party retailer that this data does not
-    // track, and asserting one uniformly would overclaim a guarantee we can't
-    // make on their behalf.
-    ...baseline.prices.map((row) => ({
-      "@type": "Offer",
-      price: (row.priceCents / 100).toFixed(2),
-      priceCurrency: baseline.currency,
-      availability: "https://schema.org/InStock",
-      seller: { "@type": "Organization", name: row.retailerName },
-      url: row.buyHref,
-      priceValidUntil,
-      ...(row.ship != null
-        ? {
-            shippingDetails: {
-              "@type": "OfferShippingDetails",
-              shippingRate: { "@type": "MonetaryAmount", value: (row.ship / 100).toFixed(2), currency: baseline.currency },
-              shippingDestination: { "@type": "DefinedRegion", addressCountry: isoCountry(baseline.market) },
-            },
-          }
-        : {}),
-    })),
+    // No per-store Offer nodes (2026-11-04, "Rift card pages are Product
+    // snippets, not Merchant listings" in DECISIONS.md): one Offer per retailer
+    // with a seller and a price made Google read every priced card page as a
+    // merchant listing, which this site is not, and then reject the
+    // AggregateOffer beside them ("Invalid object type for field offers", 431
+    // pages) and warn about return policy, shipping and delivery time for
+    // stores we don't speak for. The visible table still carries every
+    // delivered price; the markup now says only what a comparison page can:
+    // the range, the count and the currency.
   ];
   // THE printing this page is, resolved once and shared by the "Printing" cell,
   // the About narrative, the FAQ, the structured data and — since
@@ -574,8 +550,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // in the BASELINE market, not how many pages carry correct markup. The fix for
   // that number is price coverage, not more schema.)
   //
-  // Fields below are the ones Google actually reads for a merchant listing:
-  // sku/productID make the printing uniquely addressable (collector number is
+  // Fields below are the ones Google reads for a Product snippet (never a
+  // merchant listing: see offersLd above): sku/productID make the printing uniquely addressable (collector number is
   // stable per printing), brand identifies the game, and description now carries
   // the card's REAL printed text rather than a templated sentence — matching the
   // visible page, which is what validation cross-checks.
