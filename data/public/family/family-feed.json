@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "rift",
- "generatedAt": "2026-11-03T16:39:58.444Z",
+ "generatedAt": "2026-11-04T16:44:14.832Z",
  "links": {
   "US": {
    "deals": "https://riftcompare.com/black-friday",
@@ -131,10 +131,10 @@
    "region": "CA",
    "title": "Riftbound Legacy Booster Box",
    "url": "https://riftcompare.com/legacy-preorders",
-   "cents": 22995,
+   "cents": 19995,
    "currency": "CAD",
-   "store": "Banana Games & Hobby",
-   "image": "https://cdn.shopify.com/s/files/1/0620/7658/4128/files/JASRB-06BD01-EN_1-Z.jpg?v=1787246070",
+   "store": "Cartes Sportives Rive Sud",
+   "image": "https://cdn.shopify.com/s/files/1/0699/8736/9247/files/riftbound-league-of-legends-tcg-legacy-booster-display-pre-order-league-of-legends-810155276980-1333544.png?v=1786733950",
    "releaseDate": "2027-01-29"
   },
   {
@@ -162,6 +162,20 @@
    "store": "Card Dynasty",
    "image": "https://cdn.shopify.com/s/files/1/0936/4737/2569/files/31_fb56433c-1637-4b96-90b9-3e527d2c5728.png?v=1782416366",
    "refCents": 3999,
+   "refLabel": "median store price",
+   "savingPct": 38
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "CA",
+   "title": "Riftbound Origins Booster Box",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Booster%20Box",
+   "cents": 24995,
+   "currency": "CAD",
+   "store": "The CG Realm",
+   "image": "https://cdn.shopify.com/s/files/1/0438/1130/7678/files/a_b851f2f2-e452-47ed-9941-b69a0f389b25.jpg?v=1759949656",
+   "refCents": 39995,
    "refLabel": "median store price",
    "savingPct": 38
   },
@@ -206,20 +220,6 @@
    "refCents": 3495,
    "refLabel": "median store price",
    "savingPct": 34
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "CA",
-   "title": "Riftbound Spirit Forged Booster Pack",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Spirit%20Forged%20Booster%20Pack",
-   "cents": 999,
-   "currency": "CAD",
-   "store": "Level Up Games",
-   "image": "https://cdn.shopify.com/s/files/1/0533/4912/2222/files/raw_394x_572eeb0a-59f8-4a5b-b4e3-d9fd2929264c.webp?v=1771002617",
-   "refCents": 1499,
-   "refLabel": "median store price",
-   "savingPct": 33
   },
   {
    "kind": "preorder",
@@ -267,13 +267,13 @@
    "region": "EU",
    "title": "Riftbound Unleashed Champion Deck (Vi)",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Unleashed%20Champion%20Deck%20(Vi)",
-   "cents": 1390,
+   "cents": 1400,
    "currency": "EUR",
-   "store": "Fire and Dice",
-   "image": "https://cdn.shopify.com/s/files/1/0910/2639/1365/files/877275.jpg?v=1778868660",
-   "refCents": 2099,
+   "store": "SpellNexus",
+   "image": "https://cdn.shopify.com/s/files/1/1048/0061/6789/files/RiftboundUnleashedChampionDeckViEnglish.png?v=1786011105",
+   "refCents": 2297,
    "refLabel": "median store price",
-   "savingPct": 34
+   "savingPct": 39
   },
   {
    "kind": "deal",
@@ -367,9 +367,9 @@
    "currency": "GBP",
    "store": "Thistle Tavern",
    "image": "https://cdn.shopify.com/s/files/1/0714/2041/2194/files/28808a.jpg?v=1756210322",
-   "refCents": 1750,
+   "refCents": 1800,
    "refLabel": "median store price",
-   "savingPct": 31
+   "savingPct": 33
   },
   {
    "kind": "deal",
@@ -449,9 +449,9 @@
    "currency": "USD",
    "store": "Triad Cards and Gaming",
    "image": "https://cdn.shopify.com/s/files/1/0713/8007/4695/files/653154_in_1000x1000_aa30a575-6cf8-4a9b-8e9d-09e83a951f2b.jpg?v=1782501582",
-   "refCents": 5850,
+   "refCents": 5550,
    "refLabel": "median store price",
-   "savingPct": 49
+   "savingPct": 46
   },
   {
    "kind": "deal",
@@ -459,13 +459,13 @@
    "region": "US",
    "title": "Riftbound Vendetta Showdown Decks",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks",
-   "cents": 1412,
+   "cents": 1373,
    "currency": "USD",
    "store": "Shippin Texas",
    "image": "https://cdn.shopify.com/s/files/1/0676/9413/3386/files/697971.jpg?v=1785959826",
    "refCents": 2499,
    "refLabel": "median store price",
-   "savingPct": 43
+   "savingPct": 45
   },
   {
    "kind": "deal",
