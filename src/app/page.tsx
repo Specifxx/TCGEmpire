@@ -11,6 +11,8 @@ import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { ReviewsSection } from "@/components/ReviewsSection";
+import { RiotDrawingsRow } from "@/components/home/RiotDrawingsRow";
+import { sydneyDayKey } from "@/lib/price-history";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EbayPicks } from "@/components/EbayPicks";
@@ -328,6 +330,8 @@ export default async function HomePage() {
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
   const sealedShelves = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, sealedShelf(sealedArr[i], COUNTRIES[c].currency)])) as Record<Country, SealedShelf>;
+  // Riot's drawing products that have a resale row in any market (RiotDrawingsRow).
+  const pricedDrawingKeys = new Set(sealedArr.flat().map((g) => g.groupKey));
   // A market with no sealed rows of its own shows the US shelf in USD, as /sealed does.
   for (const c of COUNTRY_CODES) if (sealedShelves[c].groups.length === 0) sealedShelves[c] = sealedShelves.US;
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
@@ -349,6 +353,10 @@ export default async function HomePage() {
           visible on the home page"). Nothing at all when there are none.
           HomeSections gets showReviews={false} so it appears once. */}
       <ReviewsSection rating={rating} />
+
+      {/* Riot's drawing-only drops (the K/DA Couture Collection, the Worlds 2026
+          Edition), near the top (owner, 2026-11-04). Facts in lib/riot-drawings.ts. */}
+      <RiotDrawingsRow pricedKeys={pricedDrawingKeys} today={sydneyDayKey()} />
 
       {/* eBay Picks (the newest set's chase cards, cheapest live listing
           each) directly under the hero, above Today's Top Deals (owner,

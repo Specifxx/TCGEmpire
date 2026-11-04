@@ -140,7 +140,7 @@ export function sealedReportTarget(
   groupKey: string,
   row: { title: string; productType: string; setCode: string | null },
 ): { name: string; path: string } {
-  const override = own(SEALED_GROUP_NAME, groupKey);
+  const override = own(SEALED_GROUP_NAME, groupKey) ?? own(SEALED_DRAWING_GROUP_NAME, groupKey);
   if (row.setCode) {
     return {
       name: override ?? joinOverlapping(own(SEALED_SET_NAMES, row.setCode) ?? row.setCode, typeLabel(row.setCode, row.productType)),
@@ -165,6 +165,15 @@ export const SEALED_GROUP_NAME: Readonly<Record<string, string>> = {
   "T1S|T1 Signature Edition|EN": "T1 2025 Worlds Champion Signature Edition",
   "T1S|T1 Signature Edition|CN": "T1 2025 Worlds Champion Signature Edition (Chinese)",
   "T1S|T1 Signature Edition|KR": "T1 2025 Worlds Champion Signature Edition (Korean)",
+};
+
+/**
+ * Mirror of lib/riot-drawings.ts RIOT_DRAWINGS (groupKey → name), the same
+ * override for Riot's 2026 drawing products; tests/riot-drawings.test.ts pins it.
+ */
+export const SEALED_DRAWING_GROUP_NAME: Readonly<Record<string, string>> = {
+  "KDA|K/DA Couture Collection|EN": "Riftbound x K/DA: Couture Collection",
+  "W26|Worlds 2026 Edition|EN": "Riftbound x Worlds 2026 Edition",
 };
 
 // Own keys only: a groupKey is a stored string, and "constructor" must not

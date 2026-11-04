@@ -29,6 +29,10 @@ const MSRP: Record<string, MsrpByMarket> = {
   // buyer who missed the drawing wants.
   "T1 Signature Edition": { US: 36000 },
   "T1 Player Bundle": { US: 7000 },
+  // Riot's 2026 drawing products (lib/riot-drawings.ts), US only for the same
+  // reason: Riot publishes both in USD, plus shipping, and nowhere else.
+  "K/DA Couture Collection": { US: 15000 },
+  "Worlds 2026 Edition": { US: 8000 },
 };
 
 // The MSRP for a product type in a market, or null if we don't publish one.

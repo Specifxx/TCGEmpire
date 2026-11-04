@@ -8,6 +8,7 @@ import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
 import { LEGACY_SEASON_ARTICLES } from "./content/legacy-season-articles";
+import { RIOT_DRAWINGS_ARTICLES } from "./content/riot-drawings-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
 import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE } from "./alert-limits";
@@ -7824,7 +7825,7 @@ For everything else that is genuinely confirmed about the set — dates, product
     ],
     body: `> **Registration for the English Signature Edition is closed.** The window ran 14-17 August 2026; selection emails went out from 20 August, with boxes arriving from 2 September. This page is the lasting product explainer — what the collection is, what's in it, what actually makes it scarce, and what it costs — for anyone who missed the window, is deciding on the still-open Player Bundle drawing, or just wants to know what these cards are.
 
-Riot did something in July it had never done in Riftbound before: partner with a single esports team, rather than the league as a whole, on a dedicated card collection. The **Riftbound × T1 2025 Worlds Champion Collection** honours T1's sixth World Championship title — and third in a row — with signed, serialised cards picked by the players themselves.
+Riot did something in July it had never done in Riftbound before: partner with a single esports team, rather than the league as a whole, on a dedicated card collection. The same drawing now sells Riot's two newer boxes, the [K/DA Couture Collection and the Worlds 2026 Edition](/blog/riftbound-kda-couture-collection-worlds-2026-edition), and the Player Bundle's own November window shares their dates. The **Riftbound × T1 2025 Worlds Champion Collection** honours T1's sixth World Championship title — and third in a row — with signed, serialised cards picked by the players themselves.
 
 ## Two products, two very different audiences
 
@@ -12697,6 +12698,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
   ...SEO_PACK_ARTICLES,
   ...RADIANCE_TIER_GUIDES,
   ...LEGACY_SEASON_ARTICLES,
+  ...RIOT_DRAWINGS_ARTICLES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",
     category: "blog",
