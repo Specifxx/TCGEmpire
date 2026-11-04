@@ -1,7 +1,7 @@
 # Daily triage of visitor reports from every Compare Empire site
 # (scripts/reports-triage.mjs). Each site saves "wrong price" and "suggest a
 # store" reports on the `reports` branch of its own public repo; this job reads
-# all twelve, keeps one issue per site here with what is open and what needs a
+# all fourteen, keeps one issue per site here with what is open and what needs a
 # look, comments once a day on "Reports digest" when new reports arrive, and
 # fails (GitHub emails the owner) when the sites' write token stops working or
 # expires within 14 days, or a site has no reports branch.

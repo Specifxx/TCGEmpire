@@ -36,6 +36,9 @@ export async function POST(req: Request) {
   const country = COUNTRIES.has(body?.country) ? body.country : "AU";
   const email = typeof body?.email === "string" ? body.email.trim().slice(0, 200) : "";
   const note = typeof body?.note === "string" ? body.note.trim().slice(0, 1000) : "";
+  // The store's own owner asking (owner, 2026-11-04: stores that come to us are
+  // encouraged): flagged first in the owner's email and in the reports copy.
+  const owner = body?.owner === true;
 
   if (!storeName || !rawUrl) {
     return NextResponse.json({ error: "Please enter the store name and website." }, { status: 400 });
@@ -63,13 +66,13 @@ export async function POST(req: Request) {
       });
       await notifyOwnerBounded({
         kind: "store-suggestion",
-        headline: `${storeName} (${country})`,
+        headline: `${owner ? "STORE OWNER ASKED: " : ""}${storeName} (${country})`,
         from: email || "anonymous",
-        fields: [["Store", storeName], ["Website", storeUrl], ["Market", country]],
+        fields: [["Store", storeName], ["Website", storeUrl], ["Market", country], ["Who", owner ? "the store's owner (reply within two days)" : "a visitor"]],
         body: note || null,
       });
       // Also filed in the private reports repo (lib/reports-github.ts), without the email or IP.
-      const copy = cleanReport({ kind: "suggest-store", store: storeName, storeUrl, region: country, note }, "riftcompare");
+      const copy = cleanReport({ kind: "suggest-store", issue: owner ? "owner" : null, store: storeName, storeUrl, region: country, note }, "riftcompare");
       if (copy.ok) await saveReport(copy.report);
     }
   } catch {

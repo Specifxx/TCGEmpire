@@ -33,6 +33,8 @@ export const SITE_REPOS = {
   gundamcompare: "Specifxx/GundamCompare",
   lorcanacompare: "Specifxx/lorcanacompare",
   ygocompare: "Specifxx/ygocompare",
+  cyberpunkcompare: "Specifxx/cyberpunkcompare",
+  bandaicompare: "Specifxx/bandaicompare",
   compareempire: "Specifxx/compareempiretake2",
   camcompare: "Specifxx/Camcompare",
   wargamecompare: "Specifxx/wargamecompare",
@@ -48,6 +50,8 @@ const SITE_NAMES = {
   gundamcompare: "Gundam Compare",
   lorcanacompare: "Lorcana Compare",
   ygocompare: "YGO Compare",
+  cyberpunkcompare: "Cyberpunk Compare",
+  bandaicompare: "BandaiCompare",
   compareempire: "Compare Empire",
   camcompare: "CamCompare",
   wargamecompare: "WargameCompare",
@@ -62,6 +66,8 @@ const SITE_URLS = {
   gundamcompare: "https://gundamcompare.com",
   lorcanacompare: "https://lorcanacompare.com",
   ygocompare: "https://ygocompare.com",
+  cyberpunkcompare: "https://cyberpunkcompare.com",
+  bandaicompare: "https://bandaicompare.com",
   compareempire: "https://compareempire.com",
   camcompare: "https://camcompare.com",
   wargamecompare: "https://wargamecompare.com",
@@ -116,6 +122,10 @@ export function flag(reports, now = NOW) {
         score += 1;
         const n = storeCounts.get(norm(r.storeUrl || r.store)) ?? 1;
         if (n > 1) (why.push(`suggested ${n} times`), (score += 2));
+        // The store's own owner asked (the "List your store" page on every site,
+        // owner 2026-11-04: stores that come to us are encouraged): first in the
+        // queue, and answered within two days.
+        if (r.issue === "owner") (why.unshift("store owner asked: check the store and reply within two days"), (score += 6));
       } else if (r.kind === "unreadable") {
         (why.push("unreadable file"), (score += 5));
       } else score += 1;
@@ -124,7 +134,7 @@ export function flag(reports, now = NOW) {
       if (r.issue === "store-problem" || r.issue === "STORE_UNTRUSTED") (why.unshift("store trust: check the store now"), (score += 8));
       if (age >= 7) (why.push(`open ${Math.floor(age)} days`), (score += 2));
       if (r.at && age < 1) why.push("new");
-      return { ...r, why, score, age, attention: r.kind === "wrong-price" || r.kind === "unreadable" || r.issue === "store-problem" || r.issue === "STORE_UNTRUSTED" || score >= 3 };
+      return { ...r, why, score, age, attention: r.kind === "wrong-price" || r.kind === "unreadable" || r.issue === "store-problem" || r.issue === "STORE_UNTRUSTED" || r.issue === "owner" || score >= 3 };
     })
     .sort((a, b) => b.score - a.score || String(b.at).localeCompare(String(a.at)));
 }
@@ -242,7 +252,8 @@ async function main() {
     const f = flag(reports);
     const newOnes = f.filter((r) => r.age < 1);
     if (reports.length) summary.push(`| ${name} | ${reports.length} | ${f.filter((r) => r.attention).length} | ${newOnes.length} |`);
-    if (newOnes.length) fresh.push(`- **${name}**: ${newOnes.length} new (${newOnes.filter((r) => r.kind === "wrong-price").length} wrong price, ${newOnes.filter((r) => r.kind === "suggest-store").length} store), ${reports.length} open in all`);
+    const owners = newOnes.filter((r) => r.kind === "suggest-store" && r.issue === "owner").length;
+    if (newOnes.length) fresh.push(`- **${name}**: ${newOnes.length} new (${newOnes.filter((r) => r.kind === "wrong-price").length} wrong price, ${newOnes.filter((r) => r.kind === "suggest-store").length} store${owners ? `, **${owners} from a store owner: reply within two days**` : ""}), ${reports.length} open in all`);
   }
   const tok = await tokenCheck();
   const table = summary.length ? ["| Site | Open | Need a look | New today |", "|---|---|---|---|", ...summary].join("\n") : "No open reports on any site.";

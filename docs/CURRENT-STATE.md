@@ -129,6 +129,9 @@ longer lands on its entry.
   `store-vetting.yml` checks every site's store domains from outside (red: banned, dead, parked, new domain with no
   contact); `data/store-vetting/banned.json` is the shared ban list (TCG Synergy; HBT Collectables, who asked not to be linked, 2026-11-04); Rift store singles under a quarter of
   TCGplayer's US market are dropped (`lib/price-sanity.ts`). [2026-11-02](../DECISIONS.md#L21642)
+- **Stores come to us (2026-11-04):** every site has `/list-your-store`; an owner's request is a `suggest-store`
+  report with `issue: "owner"`, first in the daily triage, answered within two days; no cold outreach
+  ([entry](../DECISIONS.md#2026-11-04--list-your-store-stores-come-to-us)).
 - **The sister sites' price alerts run here (2026-11-02):** one shared service (`lib/sister-alerts/`): their form
   posts to `/api/sister-alerts` (exact-origin CORS, double opt-in), the daily `sister-alerts.yml` reads each site's own
   static `/alert-feed.json` from its CDN (never its repo or a database) and emails under the shared alert budget plus a

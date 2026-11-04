@@ -20,6 +20,7 @@ export function SuggestStoreForm() {
   const [country, setCountry] = useState("AU");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
+  const [owner, setOwner] = useState(false);
   const [state, setState] = useState<State>({ kind: "idle" });
 
   async function submit(e: React.FormEvent) {
@@ -30,7 +31,7 @@ export function SuggestStoreForm() {
       const res = await fetch("/api/stores/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeName, storeUrl, country, email, note }),
+        body: JSON.stringify({ storeName, storeUrl, country, email, note, owner }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -102,6 +103,13 @@ export function SuggestStoreForm() {
           ))}
         </select>
       </Field>
+
+      <label className="flex items-start gap-2 text-sm text-slate-300">
+        <input type="checkbox" checked={owner} onChange={(e) => setOwner(e.target.checked)} className="mt-1" />
+        <span>
+          I own or run this store. <span className="text-slate-500">Owner requests go to the front of the queue; we reply within a couple of days.</span>
+        </span>
+      </label>
 
       <Field label="Your email" hint="Optional — only if you'd like us to reply.">
         <input
