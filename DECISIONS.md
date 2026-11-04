@@ -22199,6 +22199,18 @@ Store drawing and its event stands. So they follow the T1 collection's arrangeme
   market), no forecast, and the T1 Player Bundle's shared November window noted. The T1 explainer links it.
   `tests/riot-drawings.test.ts` pins the chain.
 
+## 2026-11-04 — HBT Collectables is removed from every site and banned: they asked not to be linked
+
+HBT Collectables (hbtcollectables.com, AU) answered the store outreach email on 4 November by saying they had
+sent it to their lawyers as "unauthorised linking" under their site's terms. The owner's call the same hour:
+take them off, apologise, send them no more visitors. So, on every site that listed them (Rift, OP, MTG, Dex,
+Gundam, Lorcana, Cyberpunk, Bandai), the store leaves the registry and the shipping tables, its cached rows
+leave `data/public/`, and here it joins `DECOMMISSIONED_RETAILERS` so the next import purges its Neon rows.
+`data/store-vetting/banned.json` lists both hosts, so the weekly vetting goes red if any site lists them again,
+and the outreach do-not-contact list has their address. The ban is not a judgement on the store: it is a store
+that does not want the traffic, and we don't send it. Rift released this at once ([urgent]) because it is a
+legal matter; the other sites ride their next release.
+
 ## 2026-11-04 — List your store: stores come to us
 
 The owner stopped cold email outreach ("not really doing anything") and set the aim: be popular enough that stores

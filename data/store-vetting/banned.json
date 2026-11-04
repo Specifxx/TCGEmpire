@@ -1,4 +1,6 @@
 [
-  { "domain": "tcgsynergy.myshopify.com", "name": "TCG Synergy", "why": "scam store (owner, 2026-10-31)", "added": "2026-10-31" },
-  { "domain": "tcgsynergy.com", "name": "TCG Synergy", "why": "scam store (owner, 2026-10-31)", "added": "2026-10-31" }
+  {"domain": "tcgsynergy.myshopify.com", "name": "TCG Synergy", "why": "scam store (owner, 2026-10-31)", "added": "2026-10-31"},
+  {"domain": "tcgsynergy.com", "name": "TCG Synergy", "why": "scam store (owner, 2026-10-31)", "added": "2026-10-31"},
+  {"domain": "hbtcollectables.com", "name": "HBT Collectables", "why": "asked not to be linked; legal notice to the owner (2026-11-04)", "added": "2026-11-04"},
+  {"domain": "www.hbtcollectables.com", "name": "HBT Collectables", "why": "asked not to be linked; legal notice to the owner (2026-11-04)", "added": "2026-11-04"}
 ]

@@ -3097,15 +3097,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.00 · free over $50",
   }, // sweep 2026-10-28: 212 in-stock singles, cur=AUD
-  hbtcollectables: {
-    key: "hbtcollectables",
-    name: "HBT Collectables",
-    base: "https://hbtcollectables.com",
-    collections: ["riftbound-league-of-legends", "riftbound-tcg-singles"],
-    shippingFlatCents: 200,
-    freeOverCents: 5000,
-    shippingNote: "est. $2.00 · free over $50",
-  }, // sweep 2026-10-28: 132 in-stock singles, cur=AUD
   groovycollectables: {
     key: "groovycollectables",
     name: "Groovy Collectables",
@@ -3465,6 +3456,9 @@ export const RETAILER_LIST = Object.values(RETAILERS);
 //            Four of the 109 ghosts are back in the registry and are not here:
 //            fireanddice (EU), onecollectiblestcg, manapro and sccollection (SG).
 export const DECOMMISSIONED_RETAILERS: readonly string[] = [
+  // HBT Collectables (hbtcollectables.com, AU) asked not to be linked (2026-11-04,
+  // legal notice to the owner). Removed from every site; see DECISIONS.md.
+  "hbtcollectables",
   // Failed store vetting 2026-11-02 (docs/store-vetting.md): a domain under a year
   // old with no contact details, policies or footprint anywhere.
   "foxandfable",
