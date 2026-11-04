@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { Inter, JetBrains_Mono, Cinzel } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
@@ -95,7 +95,22 @@ const ReferralCapture = dynamic(() => import("@/components/ReferralCapture").the
 // keeps the system fallback whenever the font misses the ~100ms first-paint
 // window. adjustFontFallback (next/font default) size-matches the fallback so the
 // swap-in causes negligible layout shift.
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+// SELF-HOSTED (2026-11-05): these were next/font/google until the 09:45 AEDT
+// production build died in next/font ("Cannot read properties of null (reading
+// '1')"): the loader fetches each family's CSS from fonts.googleapis.com at
+// build time and crashes when the response is not the @font-face list it
+// expects. A gated site that builds once a day cannot have its one build
+// depend on a third-party fetch, so the latin woff2 files Google served (the
+// same variable fonts, same unicode range) live in src/app/fonts/ and load
+// through next/font/local. Nothing changes for visitors: same families, same
+// CSS variables, same display: swap and size-matched fallbacks.
+const inter = localFont({
+  src: "./fonts/inter-latin-wght.woff2",
+  weight: "100 900",
+  variable: "--font-sans",
+  display: "swap",
+  adjustFontFallback: "Arial",
+});
 // Monospace for prices / tabular figures / tickers — the "market terminal" voice.
 // preload: false (2026-09-21): next/font preloads every family as a HIGH-priority
 // fetch in <head>, so three ~40KB font files were competing with the
@@ -104,13 +119,21 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 // arrive with the stylesheet and swap in; adjustFontFallback keeps the widths
 // matched, so the swap does not move anything. Inter (body) and Cinzel (the
 // H1) stay preloaded.
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
+const jetbrainsMono = localFont({
+  src: "./fonts/jetbrains-mono-latin-wght.woff2",
+  weight: "100 800",
+  variable: "--font-mono",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Arial",
+});
 // Roman titling serif for headings only — the Beaufort-style look-alike (see note above).
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["700", "800"],
+const cinzel = localFont({
+  src: "./fonts/cinzel-latin-wght.woff2",
+  weight: "700 800",
   variable: "--font-display",
   display: "swap",
+  adjustFontFallback: "Times New Roman",
 });
 
 export const metadata: Metadata = {
