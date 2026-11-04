@@ -22168,3 +22168,33 @@ retailers) lists 24 Riftbound sealed products, 17 in stock, and no singles: adde
 type now admits the two page-read platforms). Game Goblins has no Riftbound category. Magic Madhouse (UK) serves a bot challenge on
 every page but its sitemap, and Star City Games, ToyWiz and Game Nerdz draw their grids in the browser: none is readable this way,
 none is worked around, and each was fetched once for this check and nothing else.
+
+## 2026-11-04 — The K/DA Couture Collection and the Worlds 2026 Edition, drawing-only, on the front page
+
+The owner asked for Riot's two new products, "the kDa coulture collection as well as the new worlds 2026
+bundle", featured near the top of the home page, with a blog post, as soon as possible. Neither is a store
+product: Riot sells the **Riftbound x K/DA: Couture Collection** (US$150; four K/DA Legends and Packed
+Amphitheater with new Fortiche art, playmat, deck box, sleeves, four metal dice, a FIRESTARTER KiT keychain;
+registration 27–30 October, emails from 3 November, also at Convergence Fest) and the **Riftbound x Worlds 2026
+Edition** (US$80; a Worlds-art Yasuo, Unforgiven promo, three host-city Battlefields, deck box, foil sleeves;
+registration 13–16 November, emails from 17 November, also at the Worlds venues) only through the Riot Merch
+Store drawing and its event stands. So they follow the T1 collection's arrangement, not a set's:
+
+- `src/lib/riot-drawings.ts` holds every fact, from Riot's "Riftbound's 2026 Drawings" announcement only, and
+  Riot's own product renders on its CDN (`cmsassets.rgpub.io`, already the card-art host, hotlinked; the
+  session's network could not fetch them to self-host, and a workflow that pushes files was refused). The sealed
+  importer gates the titles (`KDA_COLLECTION`, `WORLDS_2026`, anchored on the product's name, never on "K/DA" or
+  "Worlds" alone: the catalogue holds five K/DA specials and resellers title the loose Legends by the group),
+  types them (`K/DA Couture Collection`, `Worlds 2026 Edition`, above the generic Bundle rule), seeds an
+  English eBay search each (`RIOT_DRAWING_SEEDS`; the Chinese K/DA edition waits for a real listing to check a
+  query against), floors them (`SEALED_MIN_CENTS` US$60 / US$35, so a loose card never becomes the box) and
+  names and pictures the group from Riot, with Riot's USD price as the US-only RRP. `price-report.ts` mirrors
+  the names. Until a listing clears the checks, the product has no page rather than a guessed price.
+- `RiotDrawingsRow` sits under the hero (and the reviews) on all six homes, above eBay Picks: Riot's render,
+  the price, a status chip from the drawing dates (the page is cached six hours, so the dates are printed
+  beside it), what is in the box, Riot's page for entering, and the product's `/sealed` page only once a
+  resale row exists in that market.
+- One post for both boxes, `/blog/riftbound-kda-couture-collection-worlds-2026-edition`, over the
+  1,500-word policy, with the regular printings of all six cards embedded and priced (4 November TCGplayer
+  market), no forecast, and the T1 Player Bundle's shared November window noted. The T1 explainer links it.
+  `tests/riot-drawings.test.ts` pins the chain.

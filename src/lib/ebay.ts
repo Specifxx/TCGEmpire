@@ -1056,6 +1056,10 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
   Bundle: /bundle|gift|\bvault\b/i,
   "T1 Signature Edition": /t1|worlds\s*champion/i,
   "T1 Player Bundle": /t1|worlds\s*champion/i,
+  // Riot's 2026 drawing products (lib/riot-drawings.ts): the product's own name,
+  // which a listing of a single card pulled from the box rarely carries whole.
+  "K/DA Couture Collection": /couture/i,
+  "Worlds 2026 Edition": /worlds\s*2026|2026\s*worlds/i,
   "Proving Grounds": /proving\s*grounds/i,
   "Promo Pack": /nexus\s*night|promo\s*pack/i,
   "Starter Set": /starter|two[-\s]?player/i,
@@ -1141,6 +1145,11 @@ const SEALED_MIN_CENTS: Record<string, number> = {
   // above the generic 300c default that would have let a $5 promo card through.
   "T1 Signature Edition": 15000,
   "T1 Player Bundle": 3000,
+  // The same idea for Riot's 2026 drawing products (US$150 and US$80 at the
+  // Merch Store): a single K/DA Legend or the Yasuo promo on its own sells for
+  // far less than the box, and these keep a loose card out of the box's row.
+  "K/DA Couture Collection": 6000,
+  "Worlds 2026 Edition": 3500,
   "Pre-Rift Event Kit": 1500,
   "Pre-Rift Kit": 800,
   "Proving Grounds": 800,

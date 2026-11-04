@@ -21,6 +21,7 @@ import { sealedSlug } from "./sealed-slug";
 import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
 import { convertCents } from "./fx";
 import { joinOverlapping, typeLabel } from "./price-report";
+import { RIOT_DRAWINGS } from "./riot-drawings";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
@@ -97,6 +98,26 @@ const RIFTBOUND_HINT =
 const T1_COLLECTION =
   /worlds\s*champion\s*(?:collection|signature\s*edition|player\s*bundle)|\bt1\b[\s\S]{0,30}?(?:signature\s*(?:edition|set)|player\s*bundle)/i;
 
+// Riot's two late-2026 drawing products (owner, 2026-11-04; lib/riot-drawings.ts
+// holds the facts). Both are sold only by the Riot Merch Store drawing, so like
+// the T1 collection they carry no set code and few of the usual product words:
+// "Riftbound x K/DA Couture Collection" has none at all, and "Riftbound Worlds
+// 2026 Edition" only its "Edition". Each gets its own title gate here, its own
+// product type (classifySealed) and an eBay seed (RIOT_DRAWING_SEEDS).
+//
+// ANCHORED ON THE PRODUCT'S OWN NAME, never on "K/DA" or "Worlds" alone. The
+// catalogue already holds five K/DA special cards (RAD SP1–SP5, "Ahri,
+// Confident" …) and Radiance's K/DA alt arts, and resellers title their singles
+// "Riftbound K/DA Ahri Nine-Tailed Fox Legend promo"; a bare /k\/?da/ would
+// scrape every one of them into the sealed table. "Couture Collection" is the
+// product; "Worlds 2026 Edition" / "2026 Worlds Bundle" is the product (Riot's
+// own posts use both orders and both nouns). A single card pulled from either
+// box still names the card, which SEALED_EXCLUDE and the eBay pass's per-type
+// keyword and floor reject as they do the T1 singles.
+export const KDA_COLLECTION = /couture\s*collection|\bk\/?da\b[\s\S]{0,30}?\bcouture\b/i;
+export const WORLDS_2026 = /worlds\s*2026\s*(?:edition|bundle)|2026\s*worlds\s*(?:edition|bundle)/i;
+const RIOT_DRAWING_TITLE = (title: string) => KDA_COLLECTION.test(title) || WORLDS_2026.test(title);
+
 // Riftbound's unreleased sets ARE imported now — as pre-orders. They used to be
 // dropped here wholesale, which was right while nothing could tell a pre-order from
 // stock on a shelf: an unshipped box listed beside real inventory reads as buyable,
@@ -119,7 +140,7 @@ const T1_COLLECTION =
 const FOREIGN_RADIANCE = /\bastral\s*radiance\b/i;
 
 function isRiftboundSealed(title: string): boolean {
-  return (RIFTBOUND_HINT.test(title) || T1_COLLECTION.test(title)) && !FOREIGN_RADIANCE.test(title);
+  return (RIFTBOUND_HINT.test(title) || T1_COLLECTION.test(title) || RIOT_DRAWING_TITLE(title)) && !FOREIGN_RADIANCE.test(title);
 }
 
 /**
@@ -146,7 +167,7 @@ function looksSealed(title: string): boolean {
 }
 
 function looksSealedAnyLanguage(title: string): boolean {
-  return (SEALED_TITLE.test(title) || T1_COLLECTION.test(title)) && !SEALED_EXCLUDE.test(title) && !EVENT_ENTRY.test(title);
+  return (SEALED_TITLE.test(title) || T1_COLLECTION.test(title) || RIOT_DRAWING_TITLE(title)) && !SEALED_EXCLUDE.test(title) && !EVENT_ENTRY.test(title);
 }
 
 // The T1 Signature Edition's Chinese and Korean groups ("…|CN", "…|KR") are
@@ -501,6 +522,11 @@ export function classifySealed(title: string): string {
   // different product types. Two distinct types, not one: they are different
   // products at different prices ($360 vs $70) with different contents, and the
   // Signature Edition is the serialised/signed one people are actually searching for.
+  // Riot's 2026 drawing products (lib/riot-drawings.ts), ahead of the T1 and
+  // generic Bundle rules for the same reason as the T1 Player Bundle: "Worlds
+  // 2026 Bundle" carries the bare word "bundle".
+  if (KDA_COLLECTION.test(title)) return "K/DA Couture Collection";
+  if (WORLDS_2026.test(title)) return "Worlds 2026 Edition";
   if (T1_COLLECTION.test(t) && /signature\s*edition|signature\s*set/.test(t)) return "T1 Signature Edition";
   if (T1_COLLECTION.test(t) && /player\s*bundle/.test(t)) return "T1 Player Bundle";
   // A bare "Vault" IS the Vault Bundle (2026-09-24). This rule used to return a
@@ -929,6 +955,21 @@ async function refreshEbaySealedMarket(
     { groupKey: "SFD|Nexus Night Pack", setCode: "SFD", name: "Spiritforged Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
     { groupKey: "UNL|Nexus Night Pack", setCode: "UNL", name: "Unleashed Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
   ];
+  // Riot's 2026 drawing products (lib/riot-drawings.ts): the same arrangement as
+  // the T1 seeds, one English group each (Riot sells the K/DA box in Chinese
+  // too, but no CN resale listing had been seen on 2026-11-04 to check a query
+  // against, so that edition waits until one has). setCode null for the T1
+  // reason: no seller writes a set code these products do not have.
+  const RIOT_DRAWING_SEEDS = RIOT_DRAWINGS.map((d) => ({
+    groupKey: d.groupKey,
+    setCode: null as string | null,
+    // The eBay query ("Riftbound " is prepended): the product's own words, no
+    // leading brand and no colon, as sellers title it.
+    name: d.name.replace(/^Riftbound x /, "").replace(":", ""),
+    productType: d.productType,
+    imageUrl: d.imageUrl as string | null,
+    language: undefined as "CN" | "KR" | undefined,
+  }));
   // The T1 Signature Edition, drawing-only via a Riot Merch Store giveaway (see
   // T1_COLLECTION's comment up top) — no store or TCGplayer will ever list it, so
   // like the Nexus seeds above, the ONLY way any of its three language editions
@@ -1003,6 +1044,7 @@ async function refreshEbaySealedMarket(
     ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl, language: undefined as "CN" | "KR" | undefined, referenceCents: trustedRef(g) })),
     ...NEXUS_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, language: undefined as "CN" | "KR" | undefined, referenceCents: null as number | null })),
     ...T1_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, referenceCents: null as number | null })),
+    ...RIOT_DRAWING_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, referenceCents: null as number | null })),
   ].filter((g) => ebaySealedWorthSearching(g.productType));
   const ebayRows: any[] = [];
   let truncated = false;
@@ -1326,6 +1368,9 @@ const SEALED_TYPE_IMAGE: Record<string, string> = {
   // thumbnail otherwise. Self-hosted from Riot's own reveal render (public/
   // t1-worlds-cards/, same approach as the T1 card images in prisma/manual-cards.json).
   "T1 Signature Edition": "/t1-worlds-cards/t1-worlds-signature-edition.jpg",
+  // Riot's own renders of its 2026 drawing products (lib/riot-drawings.ts), the
+  // same reasoning: drawing-only, so no catalogue photo will ever out-rank them.
+  ...Object.fromEntries(RIOT_DRAWINGS.map((d) => [d.productType, d.imageUrl])),
   "Showdown Decks": "/sealed/sealed-deck.png",
   "Showdown Decks Display": "/sealed/sealed-box.png",
 };
@@ -1371,6 +1416,11 @@ const T1_GROUP_NAME: Record<string, string> = {
   "T1S|T1 Signature Edition|CN": "T1 2025 Worlds Champion Signature Edition (Chinese)",
   "T1S|T1 Signature Edition|KR": "T1 2025 Worlds Champion Signature Edition (Korean)",
 };
+// The same two overrides for Riot's 2026 drawing products, from lib/riot-drawings.ts
+// (Riot's own render and Riot's own product name), applied in the same loop.
+// price-report.ts mirrors the names (SEALED_DRAWING_GROUP_NAME; tests/riot-drawings.test.ts).
+const RIOT_DRAWING_IMAGE: Record<string, string> = Object.fromEntries(RIOT_DRAWINGS.map((d) => [d.groupKey, d.imageUrl]));
+const RIOT_DRAWING_NAME: Record<string, string> = Object.fromEntries(RIOT_DRAWINGS.map((d) => [d.groupKey, d.name]));
 
 // Every sealed group in a market, pre-orders included. Not exported: callers pick a
 // side via getSealedGroups() (shipped) or getPreorderGroups() (not yet), so nothing
@@ -1483,6 +1533,13 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
     }
     const name = T1_GROUP_NAME[g.groupKey];
     if (name) g.name = name;
+    const drawingImg = RIOT_DRAWING_IMAGE[g.groupKey];
+    if (drawingImg) {
+      g.imageUrl = drawingImg;
+      imgRank.set(g.groupKey, 0);
+    }
+    const drawingName = RIOT_DRAWING_NAME[g.groupKey];
+    if (drawingName) g.name = drawingName;
   }
   // Type-correct branded fallback: if the only image is a STORE photo of a pack-family
   // product (stores reuse the box photo on pack listings → the reported "pack shows a
