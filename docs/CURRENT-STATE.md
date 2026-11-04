@@ -127,7 +127,7 @@ longer lands on its entry.
   `reports-triage.yml` here keeps one issue per site. [2026-10-31](../DECISIONS.md#L21011)
 - **Stores are vetted before listing and checked weekly (2026-11-02):** criteria in `docs/store-vetting.md`;
   `store-vetting.yml` checks every site's store domains from outside (red: banned, dead, parked, new domain with no
-  contact); `data/store-vetting/banned.json` is the shared ban list; Rift store singles under a quarter of
+  contact); `data/store-vetting/banned.json` is the shared ban list (TCG Synergy; HBT Collectables, who asked not to be linked, 2026-11-04); Rift store singles under a quarter of
   TCGplayer's US market are dropped (`lib/price-sanity.ts`). [2026-11-02](../DECISIONS.md#L21642)
 - **The sister sites' price alerts run here (2026-11-02):** one shared service (`lib/sister-alerts/`): their form
   posts to `/api/sister-alerts` (exact-origin CORS, double opt-in), the daily `sister-alerts.yml` reads each site's own
