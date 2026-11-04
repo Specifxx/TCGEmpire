@@ -1,0 +1,8 @@
+[
+  { "name": "Grand J Games", "base": "https://grandjgames.com", "country": "AU", "platform": "bigcommerce",
+    "paths": ["/tcgs/riftbound/riftbound-singles/", "/tcgs/riftbound/riftbound-singles/other-sets/pg01-ogs-origins-proving-grounds/", "/tcgs/riftbound/riftbound-sealed/", "/tcgs/riftbound/riftbound-preorders/", "/tcgs/riftbound/"] },
+  { "name": "Miniature Market", "base": "https://www.miniaturemarket.com", "country": "US", "platform": "shopware",
+    "paths": ["/trading-card/riftbound"] },
+  { "name": "Game Goblins", "base": "https://gamegoblins.com", "country": "US", "platform": "bigcommerce",
+    "paths": ["/collectible-games/riftbound/", "/collectible-games/"] }
+]

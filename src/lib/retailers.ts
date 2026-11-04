@@ -54,7 +54,17 @@ export interface RetailerInfo {
   // "cardhive" is ONE store's own Firebase shop (The Card Hive), read from its
   // public Firestore `shop` list and matched by Riot's card picture — see
   // lib/cardhive.ts. Singles only: the sealed importer skips it.
-  platform?: "shopify" | "woocommerce" | "cardhive";
+  //
+  // "bigcommerce" and "shopware" read the store's server-rendered category
+  // pages (lib/storefront-html.ts, 2026-11-04): `collections` are then the
+  // category PATHS holding singles ("/tcgs/riftbound/riftbound-singles/"), and
+  // `sealedCollections` the paths the sealed importer reads. A theme that draws
+  // its grid in the browser cannot be read; the probe
+  // (scripts/probe-html-stores.ts) proves a store before it is added.
+  platform?: "shopify" | "woocommerce" | "cardhive" | "bigcommerce" | "shopware";
+  // BigCommerce / Shopware only: category paths holding Riftbound SEALED product,
+  // read by lib/sealed-import.ts (the Shopify path discovers these itself).
+  sealedCollections?: string[];
   // The currency the storefront actually CHARGES, when it is not the market's
   // own. Omitted = currencyOf(country). Shopify Markets converts for most
   // stores, but not all: Sky Fox Games returned the same CAD prices for
