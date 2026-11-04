@@ -184,7 +184,7 @@ Two things stand out. **Blade of the Exile was the dearest Epic everywhere,** in
 
 ## How we measured
 
-Every figure here comes from our public data export of 23 October 2026 (02:07 UTC), the day Radiance went on sale. "Cheapest" is the lowest in-stock listing for that exact printing in that market, from the stores we track; "stores in stock" counts each store once per market across all six. They are listing prices from our two imports a day, not sales, and they change through the day: the gallery above is today's.
+Every figure here comes from our public data export of 23 October 2026 (02:07 UTC), the day Radiance went on sale. "Cheapest" is the lowest in-stock listing for that exact printing in that market, from the stores we track; "stores in stock" counts each store once per market across all six. They are listing prices from our two imports a day, not sales, and they change through the day: the gallery above is today's. Release-day prices are the top of the curve: [how fast Radiance's prices settled](/blog/riftbound-market-radiance-launch-curve-legacy-outlook) follows the same figures through the weeks after launch.
 
 ## Buying Radiance Epics
 
@@ -350,7 +350,7 @@ The Legends themselves, and their own Showcase printings, are in [the Radiance L
 
 ## How we measured
 
-All prices come from our public data export of 23 October 2026 (02:07 UTC), release day: the lowest in-stock listing of that exact printing per market, from the stores we track. They are listing prices from our two imports a day. Because an alt art and its base share a name, our matching keys on the collector number, which is also what to check on a listing before you buy.
+All prices come from our public data export of 23 October 2026 (02:07 UTC), release day: the lowest in-stock listing of that exact printing per market, from the stores we track. They are listing prices from our two imports a day. Because an alt art and its base share a name, our matching keys on the collector number, which is also what to check on a listing before you buy. Release-day prices are the top of the curve: [how fast Radiance's prices settled](/blog/riftbound-market-radiance-launch-curve-legacy-outlook) follows the same figures through the weeks after launch.
 
 ## Buying Radiance alt arts
 
@@ -520,7 +520,7 @@ The three printings are one card in a game, so the question is only what you are
 
 ## How we measured
 
-All prices come from our public data export of 23 October 2026 (02:07 UTC), the day Radiance went on sale: the lowest in-stock listing of each exact printing per market, from the stores we track, with each store counted once per market. They are listing prices from our two imports a day, not sales. A signed printing with only a handful of listings is shown as "too few listings" rather than given a figure we can't stand behind.
+All prices come from our public data export of 23 October 2026 (02:07 UTC), the day Radiance went on sale: the lowest in-stock listing of each exact printing per market, from the stores we track, with each store counted once per market. They are listing prices from our two imports a day, not sales. A signed printing with only a handful of listings is shown as "too few listings" rather than given a figure we can't stand behind. Release-day prices are the top of the curve: [how fast Radiance's prices settled](/blog/riftbound-market-radiance-launch-curve-legacy-outlook) follows the same figures through the weeks after launch.
 
 ## Picking a Radiance Legend
 

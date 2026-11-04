@@ -34,7 +34,7 @@ export const TREND_ARTICLES: Article[] = [
     ],
     browseCta: {
       href: "/movers",
-      label: "See today's price movers →",
+      label: "See the price movers →",
       blurb: "Every number in this post came out of the same history behind the Price movers page. Watch it move day by day instead of waiting for the next write-up.",
     },
     body: `Two weeks after Radiance released, the question in every Discord is the same one that followed Vendetta in August and Spirit Forged before it: *is this the bottom?* We can't tell you that. What we can do, now that RiftCompare holds a daily price for every Riftbound card back to June 2026, is show you the shape of a set launch, compare the last two side by side, and explain why the shape keeps repeating. That turns out to be more useful than any single prediction.
