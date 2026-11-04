@@ -22137,3 +22137,13 @@ merchant listing Google rejects the AggregateOffer beside it.
   an image when its set's gallery supplies one, not a placeholder in the markup.
 - `tests/card-product-snippet.test.ts` fails if a per-store `Offer` node
   returns to the card page's JSON-LD.
+
+## 2026-11-04 — Big-store gap: one Singapore store, and why the rest can't be read
+
+The owner asked for every big store captured with no gaps, on every site. For Riftbound, research per region named 114
+TCG hosts not in `retailers.ts`; a platform sniff on the runners (no dependencies, homepage signature, robots.txt,
+`products.json`, the WooCommerce Store API, one JSON-LD product page) found 23 readable, and `scripts/sweep-registry.ts`
+swept those. One cleared `MIN_SINGLES_FOR_STORE`: **Capybara Cards** (SG, Shopify, 294 in-stock singles, SGD). Game Roost
+(NZ) was already tracked. The other 22 readable stores sell no Riftbound singles (Eclipse Games AU and Magic Traders NL
+sell other games; Hobbyco, Mind Games, Card Chasers, Leisure Games, Card Giants have no Riftbound collection).
+Not addable, and why (the same list every card site hit): the biggest US and UK names run platforms with no public feed or a robots.txt that forbids reading — BigCommerce (Star City Games, Game Nerdz, Game Goblins, ToyWiz, Magic Madhouse), CrystalCommerce stores whose robots.txt disallows everything (Three Kings Loot, Carta Magica, Gamekeeper, The Connection, Card Titan, Collector's Cache, Nerd Rage, Pastimes), bot walls that answer 403 or a Cloudflare challenge (Chaos Cards, Big Orbit, Wayland, Firestorm, Mighty Ape AU and NZ, Gamesmen, EB Games, MTG Mate, Imaginaire, Le Valet, Bazaar of Magic, FantasyWelt, Keepseven, Nedgame, Poromagia, Dave & Adam's, Pro-Play, Pokémon Center, Red Hobby) and custom storefronts (Card Kingdom, CoolStuffInc, ABUGames, CoreTCG, Ideal808, Noble Knight, Miniature Market, Play-in, Parkage, Agora Hobby, Hobby Master NZ). A bot wall is never worked around. A BigCommerce reader would unlock the most (Star City Games, Miniature Market, Game Nerdz, Magic Madhouse, Game Goblins) and is the next adapter worth writing.

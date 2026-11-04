@@ -1646,6 +1646,19 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "SG",
   },
 
+  // ---- Big-store gap research 2026-11-04 (scripts/sweep-registry.ts on a runner;
+  // DECISIONS.md "Big-store gap: one Singapore store") ----
+  capybaracards: {
+    key: "capybaracards",
+    name: "Capybara Cards",
+    base: "https://capybaracards.com",
+    collections: ["ogn-riftbound-origins-singles", "sfd-riftbound-spiritforged-singles", "unl-riftbound-unleashed-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  }, // sweep 2026-11-04: 294 in-stock singles, cur=SGD
+
   // ---- SG leads checked and NOT added ----------------------------------------
   //   - cardscentral.com, duellerspoint.com, cardconnectsg.com, metagamestcg.com
   //     — real SG shops openly selling Riftbound SINGLES, but none is Shopify
