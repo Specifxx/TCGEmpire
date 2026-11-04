@@ -22147,3 +22147,24 @@ swept those. One cleared `MIN_SINGLES_FOR_STORE`: **Capybara Cards** (SG, Shopif
 (NZ) was already tracked. The other 22 readable stores sell no Riftbound singles (Eclipse Games AU and Magic Traders NL
 sell other games; Hobbyco, Mind Games, Card Chasers, Leisure Games, Card Giants have no Riftbound collection).
 Not addable, and why (the same list every card site hit): the biggest US and UK names run platforms with no public feed or a robots.txt that forbids reading — BigCommerce (Star City Games, Game Nerdz, Game Goblins, ToyWiz, Magic Madhouse), CrystalCommerce stores whose robots.txt disallows everything (Three Kings Loot, Carta Magica, Gamekeeper, The Connection, Card Titan, Collector's Cache, Nerd Rage, Pastimes), bot walls that answer 403 or a Cloudflare challenge (Chaos Cards, Big Orbit, Wayland, Firestorm, Mighty Ape AU and NZ, Gamesmen, EB Games, MTG Mate, Imaginaire, Le Valet, Bazaar of Magic, FantasyWelt, Keepseven, Nedgame, Poromagia, Dave & Adam's, Pro-Play, Pokémon Center, Red Hobby) and custom storefronts (Card Kingdom, CoolStuffInc, ABUGames, CoreTCG, Ideal808, Noble Knight, Miniature Market, Play-in, Parkage, Agora Hobby, Hobby Master NZ). A bot wall is never worked around. A BigCommerce reader would unlock the most (Star City Games, Miniature Market, Game Nerdz, Magic Madhouse, Game Goblins) and is the next adapter worth writing.
+
+## 2026-11-04 — Stores without a feed: BigCommerce and Shopware read from their category pages
+
+The big-store gap entry above named BigCommerce as the one platform worth an adapter. `src/lib/storefront-html.ts` (ported from OP
+Compare's `lib/bigcommerce.ts`, shared with MTG Compare and DexCompare the same day) reads a BigCommerce Stencil category page
+(`/<path>/?limit=100&page=N`: one `<article class="card">` per product with its title, price and "Add to Cart" / "Out of stock"
+button) and a Shopware 6 listing (`<div class="card product-box">`, paged with `?p=N`, a `btn-buy` button or a stock-notify form) into
+the Shopify product shape, so the singles importer's resolveCardId, MULTI_CARD and condition rules and the sealed importer's title gates
+and floors run over it unchanged. `RetailerInfo.platform` gains "bigcommerce" and "shopware"; `collections` are then the singles
+category paths and `sealedCollections` the sealed ones (the Shopify path discovers those itself). A first page with no product grid is
+a FAILED read (the theme draws it in the browser, or the path is gone), so the store keeps yesterday's rows rather than publishing
+none; a price that names another currency than the market's is refused, never converted. `scripts/probe-html-stores.ts` proves a
+store before it is added.
+
+Probed from a runner the same day (bot User-Agent, robots.txt honoured): **Grand J Games** (AU, BigCommerce) lists 1,200 Riftbound
+products in the first 12 pages of its singles category, 721 in stock, 719 of them singles, every price stated in AUD: added to
+RETAILERS, with its sealed category read by the sealed importer. **Miniature Market** (US, Shopware, one of the biggest US game
+retailers) lists 24 Riftbound sealed products, 17 in stock, and no singles: added to SEALED_ONLY_SHOPIFY (the list keeps its name; its
+type now admits the two page-read platforms). Game Goblins has no Riftbound category. Magic Madhouse (UK) serves a bot challenge on
+every page but its sitemap, and Star City Games, ToyWiz and Game Nerdz draw their grids in the browser: none is readable this way,
+none is worked around, and each was fetched once for this check and nothing else.

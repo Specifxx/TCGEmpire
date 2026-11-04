@@ -38,7 +38,8 @@ export interface ProductPageStore {
 export type ShopifySealedStore = RetailerInfo & {
   currency: string;
   country: NonNullable<RetailerInfo["country"]>;
-  platform?: "shopify";
+  /** "bigcommerce" / "shopware": read from category pages (lib/storefront-html.ts), `sealedCollections` being the paths. */
+  platform?: "shopify" | "bigcommerce" | "shopware";
   /** Pages of 250 to read per configured collection (default 10). Only for a
    *  store whose Riftbound products sit deep in a big general collection. */
   maxPages?: number;
@@ -51,6 +52,25 @@ export type ShopifySealedStore = RetailerInfo & {
 // Shopify stores, sealed only. Probed 2026-09-24: storefront currency from
 // /cart.js, collections from the store's own sitemap (discoverCollections).
 export const SEALED_ONLY_SHOPIFY: ShopifySealedStore[] = [
+  {
+    // Miniature Market, St. Louis: one of the biggest US game retailers, on
+    // Shopware 6 (no feed). Its Riftbound category is read from its listing
+    // pages (lib/storefront-html.ts): 24 products, 17 in stock on 2026-11-04
+    // (Radiance Booster Box US$114.99, Origins Booster Pack US$9.49), sealed only,
+    // no singles. Prices are shown as "$4.99" with no code; the page is a US
+    // store's and the probe read USD on the day.
+    key: "miniaturemarket",
+    name: "Miniature Market",
+    base: "https://www.miniaturemarket.com",
+    collections: [],
+    sealedCollections: ["/trading-card/riftbound"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "US",
+    currency: "USD",
+    platform: "shopware",
+  },
   {
     // No Riftbound collection at all: Radiance sits in the general "preorders"
     // collection (Booster Display US$159.99, Vault US$49.99 on 2026-09-24).

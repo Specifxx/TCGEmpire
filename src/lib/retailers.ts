@@ -1669,6 +1669,26 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "SG",
   }, // sweep 2026-11-04: 294 in-stock singles, cur=SGD
 
+  // ---- BigCommerce (lib/storefront-html.ts), 2026-11-04 ----------------------
+  // Grand J Games, Melbourne: the first store read from its category pages
+  // rather than a feed. Probed from a runner the same day: 1,200 Riftbound
+  // products in the first 12 pages of its singles category (721 in stock, 719
+  // singles, prices stated in AUD: "1.75$ AUD"), titled "|PG01|[OGS-003/024](C)
+  // Incinerate". Its sealed category (32 products, sleeves included) is read by
+  // the sealed importer through `sealedCollections`. Postage not measured.
+  grandjgames: {
+    key: "grandjgames",
+    name: "Grand J Games",
+    base: "https://grandjgames.com",
+    collections: ["/tcgs/riftbound/riftbound-singles/"],
+    sealedCollections: ["/tcgs/riftbound/riftbound-sealed/"],
+    shippingFlatCents: 995,
+    freeOverCents: 0,
+    shippingNote: "est. A$9.95",
+    country: "AU",
+    platform: "bigcommerce",
+  },
+
   // ---- SG leads checked and NOT added ----------------------------------------
   //   - cardscentral.com, duellerspoint.com, cardconnectsg.com, metagamestcg.com
   //     — real SG shops openly selling Riftbound SINGLES, but none is Shopify
