@@ -790,6 +790,27 @@
     ],
     "fingerprint": "9ff9bbe81cbe5b70"
   },
+  "/blog/riftbound-market-radiance-launch-curve-legacy-outlook.png": {
+    "src": "/blog/riftbound-market-radiance-launch-curve-legacy-outlook.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 41125,
+    "webp": "/blog/riftbound-market-radiance-launch-curve-legacy-outlook.webp",
+    "webpBytes": 30636,
+    "avif": "/blog/riftbound-market-radiance-launch-curve-legacy-outlook.avif",
+    "avifBytes": 20475,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-market-radiance-launch-curve-legacy-outlook-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-market-radiance-launch-curve-legacy-outlook-768w.webp"
+      }
+    ],
+    "fingerprint": "124fc78f576feae8"
+  },
   "/blog/riftbound-metal-cards.jpg": {
     "src": "/blog/riftbound-metal-cards.jpg",
     "width": 1200,
