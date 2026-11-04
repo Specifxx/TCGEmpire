@@ -60,7 +60,14 @@ type Motif =
    * rather than decoration and is why it was worth a fourth motif instead of
    * reusing checklist. Up to 9 items, 3 per row.
    */
-  | { kind: "grid"; label: string; items: { text: string; color: string }[] };
+  | { kind: "grid"; label: string; items: { text: string; color: string }[] }
+  /**
+   * A real price series, drawn as a line: for a post whose subject IS a trend.
+   * `points` are the values in order (the generator scales them); `from`/`to`
+   * label the ends; `label` names the series. Only ever a series the post
+   * itself prints, never a sketch of one.
+   */
+  | { kind: "line"; label: string; points: number[]; from: string; to: string; start: string; end: string };
 
 interface Hero {
   slug: string;
@@ -78,6 +85,21 @@ interface Hero {
  * the two, and Article.hero.src is `/blog/<slug>.png`.
  */
 const HEROES: Hero[] = [
+  {
+    slug: "riftbound-market-radiance-launch-curve-legacy-outlook",
+    kicker: "Analysis · Market",
+    title: "How Fast a Riftbound Set's Prices Settle",
+    chips: ["Radiance: −74% in 21 days", "Vendetta: −57% in 90", "Legacy previews 13 Dec"],
+    // The series the post's first table prints: the median Radiance Showcase
+    // price per day from the first preorder listings (15 Oct 2026) to 5 Nov,
+    // from data/price-history/cards. The chart IS the post's claim.
+    motif: {
+      kind: "line",
+      label: "Radiance Showcase median, US$",
+      points: [166.67, 166.66, 145, 111.17, 92.33, 101.25, 82.97, 73.06, 66.72, 65.94, 57.88, 54.77, 51.67, 49.79, 48, 48, 45.92, 43.52, 42.26, 41.66, 42.5, 42.51],
+      from: "15 Oct", to: "5 Nov", start: "$167", end: "$43",
+    },
+  },
   {
     slug: "riftbound-card-values",
     kicker: "Explainer · Prices",
@@ -541,6 +563,36 @@ function motifSvg(m: Motif): string {
     <path d="M ${R - 44} ${y - 10} l 9 10 l 18 -20" fill="none" stroke="${BRAND}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
       })
       .join("\n    ")}
+  </g>`;
+  }
+
+  if (m.kind === "line") {
+    const W = 400;
+    const H = 150;
+    const left = R - W;
+    const top = 600 - H;
+    const max = Math.max(...m.points);
+    const min = Math.min(...m.points);
+    const span = max - min || 1;
+    const pts = m.points.map((v, i) => {
+      const x = left + (i / (m.points.length - 1)) * W;
+      const y = top + (1 - (v - min) / span) * (H - 20) + 10;
+      return [x, y] as const;
+    });
+    const d = pts.map(([x, y], i) => `${i ? "L" : "M"} ${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+    const area = `${d} L ${pts[pts.length - 1][0].toFixed(1)} ${top + H} L ${left} ${top + H} Z`;
+    const [sx, sy] = pts[0];
+    const [ex, ey] = pts[pts.length - 1];
+    return `<g ${FONT}>
+    <text x="${R}" y="${top - 22}" fill="#94a3b8" font-size="22" letter-spacing="4" text-anchor="end">${esc(m.label.toUpperCase())}</text>
+    <path d="${area}" fill="${BRAND}" opacity="0.12"/>
+    <path d="${d}" fill="none" stroke="${BRAND}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="8" fill="${ACCENT}"/>
+    <circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="8" fill="${BRAND}"/>
+    <text x="${(sx + 14).toFixed(1)}" y="${(sy + 9).toFixed(1)}" fill="#ffffff" font-size="26" font-weight="bold">${esc(m.start)}</text>
+    <text x="${(ex - 14).toFixed(1)}" y="${(ey - 16).toFixed(1)}" fill="#ffffff" font-size="26" font-weight="bold" text-anchor="end">${esc(m.end)}</text>
+    <text x="${left}" y="${top + H + 26}" fill="#94a3b8" font-size="22">${esc(m.from)}</text>
+    <text x="${R}" y="${top + H + 26}" fill="#94a3b8" font-size="22" text-anchor="end">${esc(m.to)}</text>
   </g>`;
   }
 

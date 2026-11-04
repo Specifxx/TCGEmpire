@@ -9,6 +9,7 @@ import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
 import { LEGACY_SEASON_ARTICLES } from "./content/legacy-season-articles";
 import { RIOT_DRAWINGS_ARTICLES } from "./content/riot-drawings-articles";
+import { TREND_ARTICLES } from "./content/trend-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
 import { DECK_WATCH_LIMIT, SEALED_CHECK_CADENCE } from "./alert-limits";
@@ -12699,6 +12700,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
   ...RADIANCE_TIER_GUIDES,
   ...LEGACY_SEASON_ARTICLES,
   ...RIOT_DRAWINGS_ARTICLES,
+  ...TREND_ARTICLES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",
     category: "blog",
