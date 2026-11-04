@@ -151,6 +151,16 @@
       "added": "2026-11-03",
       "prompt": "amazon/chrome-prompt-amazon-earnings-upload.md",
       "done": "2026-11-03"
+    },
+    {
+      "id": "ce-big-chain-feeds",
+      "site": "ce",
+      "kind": "chrome",
+      "title": "Compare Empire: apply to Commission Factory, Awin, Impact, CJ and Rakuten for the big chains' product feeds; add each approved feed URL as a GitHub secret",
+      "why": "Big W, Kogan, Catch, Bing Lee, Myer, David Jones, Target, Currys, Argos, AO, John Lewis, Best Buy, Walmart and the rest block server reads; their affiliate product feed is the only door, and the code already reads it (Officeworks is live without one).",
+      "added": "2026-11-04",
+      "prompt": "compare-empire/chrome-prompt-affiliate-feeds-big-chains.md",
+      "done": null
     }
   ]
 }
