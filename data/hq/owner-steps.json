@@ -161,6 +161,16 @@
       "added": "2026-11-04",
       "prompt": "compare-empire/chrome-prompt-affiliate-feeds-big-chains.md",
       "done": null
+    },
+    {
+      "id": "awin-programmes-feeds",
+      "site": "all",
+      "kind": "chrome",
+      "title": "Awin is live (publisher 3144410): complete the profile, apply to the UK chains and sister-site stores, create the API token, add one feed secret per approved chain",
+      "why": "Currys, Argos, AO, John Lewis, Very, Scan, Ebuyer, Smyths, GAME, Richer Sounds and more block server reads; their Awin product feeds are the only door and pay per click. The code reads each feed the moment its secret exists.",
+      "added": "2026-11-05",
+      "prompt": "compare-empire/chrome-prompt-awin-feeds.md",
+      "done": null
     }
   ]
 }
