@@ -17,6 +17,16 @@ import { dirname, join, relative, resolve } from "node:path";
 
 const ROOT = process.cwd();
 const PAGE = "src/app/card/[id]/page.tsx";
+// Every other force-dynamic page that next.config.js keeps at the CDN, with its
+// rule's source and value. These read ?market= (part of the CDN key) and
+// nothing else about the visitor (2026-11-05, "The searchParams pages join the
+// CDN").
+const QUERY_CDN = "public, s-maxage=21600, stale-while-revalidate=86400";
+const CDN_PAGES: { page: string; source: string; value: string }[] = [
+  { page: "src/app/auctions/page.tsx", source: "/auctions", value: QUERY_CDN },
+  { page: "src/app/market/page.tsx", source: "/market", value: QUERY_CDN },
+  { page: "src/app/market/records/page.tsx", source: "/market/records", value: QUERY_CDN },
+];
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
 function resolveSpec(from: string, spec: string): string | null {
@@ -65,3 +75,30 @@ test("nothing the card page's server render reaches reads the visitor (one CDN c
   }
   assert.deepEqual(offenders, [], "a per-visitor read here would put one visitor's page in every visitor's CDN copy");
 });
+
+for (const { page, source, value } of CDN_PAGES) {
+  test(`${source} is force-dynamic, carries no ISR window, and the CDN keeps one copy per URL`, async () => {
+    const src = read(page);
+    assert.match(src, /^export const dynamic = "force-dynamic";$/m);
+    assert.doesNotMatch(src, /^export const revalidate\b|^export (?:async )?function generateStaticParams/m);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const cfg = require(join(ROOT, "next.config.js")) as { headers: () => Promise<{ source: string; headers: { key: string; value: string }[] }[]> };
+    const rule = (await cfg.headers()).find((h) => h.source === source);
+    assert.deepEqual(rule?.headers, [{ key: "Vercel-CDN-Cache-Control", value }]);
+  });
+
+  test(`nothing ${source}'s server render reaches reads the visitor (one CDN copy per URL serves everyone)`, () => {
+    const dir = page.replace(/\/page\.tsx$/, "");
+    const layouts = ["src/app/layout.tsx", `${dirname(dir)}/layout.tsx`, `${dir}/layout.tsx`].filter((p) => existsSync(join(ROOT, p)));
+    const files = serverClosure([page, ...layouts]);
+    assert.ok(files.length > 10, `walked ${files.length} files`);
+    const offenders: string[] = [];
+    for (const f of files) {
+      const src = read(f).replace(/\/\/.*$/gm, "");
+      if (/from ["']next\/headers["']/.test(src)) offenders.push(`${f}: imports next/headers`);
+      const call = /(?<![.\w])(getCountry|getCurrentUser|getSessionUser|readSession)\s*\(/.exec(src);
+      if (call) offenders.push(`${f}: calls ${call[1]}()`);
+    }
+    assert.deepEqual(offenders, [], "a per-visitor read here would put one visitor's page in every visitor's CDN copy");
+  });
+}

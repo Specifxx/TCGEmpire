@@ -290,17 +290,19 @@ test("the auction table stores no cardId — reverse-matching a title to a card 
 
 // ── The page ─────────────────────────────────────────────────────────────────
 
-test("the page's cache TTL is not lower than the page's own revalidate (egress rule 5)", () => {
+test("the page is force-dynamic behind a CDN copy, and carries no ISR window of its own", async () => {
+  // 2026-11-05: the page reads ?market=, so an `export const revalidate` never
+  // cached it; it is cached by Vercel's CDN instead (next.config.js CDN_PAGES,
+  // tests/card-cdn.test.ts walks its tree for per-visitor reads).
   const page = read(PAGE);
-  const pageTtl = Number(/export const revalidate = (\d+)/.exec(page)![1]);
+  assert.match(page, /^export const dynamic = "force-dynamic";$/m);
+  assert.doesNotMatch(page, /^export const revalidate\b/m);
   const loaderTtl = Number(/revalidate: (\d+), tags: \[CONTENT_TAG\]/.exec(read(LIB))![1]);
-  // The rule that cost five database projects: an unstable_cache revalidate
-  // applies to the whole route segment, so a shorter one here would drag every
-  // query on this page to that cadence.
-  assert.ok(
-    loaderTtl >= pageTtl,
-    `the auction loader caches for ${loaderTtl}s on a page that revalidates every ${pageTtl}s`,
-  );
+  assert.ok(loaderTtl >= 1800, `the auction loader caches for ${loaderTtl}s`);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const cfg = require(join(ROOT, "next.config.js")) as { headers: () => Promise<{ source: string; headers: { key: string; value: string }[] }[]> };
+  const rule = (await cfg.headers()).find((h) => h.source === "/auctions");
+  assert.ok(rule, "/auctions has no Vercel-CDN-Cache-Control rule in next.config.js");
 });
 
 test("the per-request read is capped and narrowly selected", () => {

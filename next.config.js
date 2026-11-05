@@ -123,6 +123,16 @@ const PUBLIC_DATA_FILES = !PUBLIC_DATA_BUNDLED ? [] : PUBLIC_DATA_PACKED ? ["./.
 const POKEMON_DATA_BUILT = require("node:fs").existsSync(require("node:path").join(__dirname, "data", "pokemon", "products.json")) ? "1" : "0";
 
 const CARD_CDN_CACHE = "public, s-maxage=86400, stale-while-revalidate=86400";
+// THE searchParams PAGES (2026-11-05, DECISIONS.md "The searchParams pages join
+// the CDN"): /auctions, /market and /market/records take their market from
+// ?market=, which makes them dynamic, so the ISR windows they carried never
+// cached anything and every visit was a function render. Vercel's CDN keys on
+// the full URL, so one copy per market is right for everyone; nothing in their
+// trees reads a cookie, a header or the session (tests/card-cdn.test.ts). Six
+// hours, a day stale: the auction sweep runs every four hours and the market
+// index moves with the twice-daily import (the pages' six-hour floor).
+const QUERY_CDN_CACHE = "public, s-maxage=21600, stale-while-revalidate=86400";
+const QUERY_CDN_PAGES = ["/auctions", "/market", "/market/records"];
 
 const nextConfig = {
   env: { POKEMON_DATA_BUILT },
@@ -638,6 +648,7 @@ const nextConfig = {
         source: "/sealed/:slug",
         headers: [{ key: "Vercel-CDN-Cache-Control", value: CARD_CDN_CACHE }],
       },
+      ...QUERY_CDN_PAGES.map((source) => ({ source, headers: [{ key: "Vercel-CDN-Cache-Control", value: QUERY_CDN_CACHE }] })),
     ];
   },
 };
