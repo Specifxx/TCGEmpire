@@ -22347,3 +22347,32 @@ filter, sort and sold-out code in `app/sealed/page.tsx` now read `lib/sealed-vie
 Next on the same shape, one page at a time: `/browse`, `/sets/[set]`, `/price-guide`, the tools and the Pokémon
 pages. `/api/search` stays private (per-account quota, cookie).
 
+## 2026-11-05 — The price guide becomes one CDN copy per URL
+
+The second market-cookie page on the `/sealed` shape (the entry above). `/price-guide` read the market cookie
+and the EUR-display cookie (`getCountry()`, `getDisplayCurrency()`) as well as searchParams, so every visit was
+a function render; its catalogue was cached, the render was not, and at 100 rows a render it was one of the
+dearer pages to run per visit.
+
+- **`lib/price-guide-view.ts`** computes the view for ANY market: the filter, the sort, the page of rows, the
+  stat strip, prices by set, the counts, the 30-day coverage and the "as of" date, from the same cached
+  catalogue and weekly history the page always read (`loadPriceGuideRows`, `getPriceGuideChanges`, at page
+  level, never inside a cache callback). JSON-safe: the change maps become per-row numbers. The page and
+  **`/api/price-guide-view`** share it.
+- **The page** renders the baseline market (the US) into its HTML and JSON-LD, or the market a **`?market=`
+  link pins**: that parameter is part of the URL, so part of the CDN key, and it outranked the cookie before
+  too. `QUERY_CDN_PAGES` keeps the response six hours; `tests/card-cdn.test.ts` walks its server tree.
+- **`PriceGuideMarketBoard`** (client) draws the stat strip, prices by set, filters, toolbar, table and pager:
+  the baseline on the server, the visitor's market after hydration from the API, with the page's own query
+  repeated. Fetched views are keyed by market, display currency AND query, because a filter, sort or page
+  change is a soft navigation that keeps the island mounted with new searchParams (the sealed island was
+  re-keyed the same way the same day). The UK-in-EUR display is a `cur=EUR` answer of its own, since the
+  min/max filter compares against the currency the visitor types. A pinned `?market=` fetches nothing and keeps
+  "Use my market". The two market words in the "How to read" prose come from `PriceGuideMarketWord`, the
+  baseline's in the HTML.
+- A market's page is ~57 KB of JSON (100 rows); the baseline's rows travel as the island's props, which is the
+  same order of size the compact row props were, so page weight for a US visitor is unchanged within a few KB.
+
+Nothing indexable moved: URL, title, description, canonical, robots, h1, intro, FAQ and JSON-LD are as they
+were. Tests that pinned the filters, the 30-day note and "Back to page 1" in the page now read the island.
+Next: `/browse`, `/sets/[set]`, the tools and the Pokémon pages.
