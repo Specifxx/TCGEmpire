@@ -50,14 +50,15 @@ export async function GET(req: Request) {
 
   // Without an explicit market, the response depends on an invisible cookie, so
   // it must stay private/uncached. With one, it's the same response for every
-  // caller in that market — safe to cache briefly and to expose cross-origin
+  // caller in that market — safe to cache (six hours, a day stale: prices move
+  // with the twice-daily import; cost, 2026-11-05) and to expose cross-origin
   // for the documented public search use.
   return NextResponse.json(
     { cards, page },
     {
       headers: marketParam
         ? {
-            "Cache-Control": "public, s-maxage=300, stale-while-revalidate=1800",
+            "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400",
             "Access-Control-Allow-Origin": "*",
           }
         : { "Cache-Control": "private, no-store" },

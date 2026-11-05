@@ -22283,3 +22283,30 @@ date, as a product line entry the search API returns with its set name, so it is
 signal we already read daily. Riot's announcements still need a human (a code, a date, a hub), which is what
 the email asks for. The sister card sites need none of this: their sets come from TCGplayer's group list
 (OP Compare, the card engine), Scryfall (MTG) or tcgcsv (Dex) and page themselves.
+
+## 2026-11-05 — The searchParams pages join the CDN, and the quick-view API stops refreshing every two minutes
+
+The owner asked for Vercel's function and ISR spend to come down: CDN headers on API and data routes, hours
+of cache on price pages. An audit of what actually reaches the CDN (fetched live, `x-vercel-cache`) found
+most of it already there (the card and sealed pages, the per-card and v1 APIs, embeds, feeds), and three
+leaks:
+
+- **`/auctions`, `/market` and `/market/records` were rendered on every visit.** Each reads `?market=`, which
+  makes a route dynamic whatever it exports, so `/auctions`' `revalidate = 1800` (and the windows the market
+  pages once had) cached nothing: every visit was a function render, the ISR window only a comment. They are
+  now `force-dynamic` on purpose, with a `Vercel-CDN-Cache-Control` rule in `next.config.js`
+  (`QUERY_CDN_PAGES`: six hours, a day stale). The CDN keys on the full URL, so one copy per market is right
+  for everyone, and `tests/card-cdn.test.ts` now walks these trees as it walks the card page's: nothing they
+  reach may read a cookie, a header or the session. Six hours, not a day: the auction sweep runs every four
+  hours and the index moves with the twice-daily import. The 1800 exception leaves `tests/page-ttl-floor`.
+- **`/api/card/[id]` (the quick view) was cached two minutes, `/api/cards?market=` five.** Both comments
+  still said prices refreshed every three hours; they refresh twice a day and the release empties the CDN.
+  Six hours, a day stale, the per-card floor.
+
+What stays as it is, and why: `/browse`, `/sets/[set]`, `/price-guide`, `/sealed`, the tools and the Pokémon
+pages read the market cookie (`getCountry()`), so one CDN copy would hand one visitor's market to everyone;
+their loaders are cached, the render is not. Moving them to the card page's shape (every market computed
+server-side, the client island picking one) is the next lever and a page-by-page job. `/api/search` is
+metered per account and reads the cookie, so it stays private. MTG Compare needed nothing: every page and
+route there has been one CDN copy a day since 2026-10-17, and the live check shows HITs.
+

@@ -16,11 +16,10 @@ import { join, relative } from "node:path";
 const ROOT = process.cwd();
 const FLOOR = 21600;
 
-// The one exception, and why: /auctions reads searchParams, so it is dynamic and
-// its export is not a page cache; getLiveAuctions' 30-minute data cache is the
-// board's cadence against a sweep every four hours, and tests/ebay-auctions
-// requires that loader to be at least the page's export.
-const EXCEPTIONS: Record<string, number> = { "src/app/auctions/page.tsx": 1800 };
+// No exceptions. /auctions used to carry `revalidate = 1800` as the one
+// exception, but it reads searchParams, so that export never cached anything;
+// since 2026-11-05 it is force-dynamic and cached by the CDN (next.config.js).
+const EXCEPTIONS: Record<string, number> = {};
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const e of readdirSync(dir)) {

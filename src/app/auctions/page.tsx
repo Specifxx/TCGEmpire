@@ -20,17 +20,20 @@ import { pageAlternates } from "@/lib/seo";
 
 // /auctions — every live Riftbound auction on eBay, soonest-ending first.
 //
-// ISR at 30 minutes, which is the whole trick to making this page cheap. The
-// countdown people come here for ticks CLIENT-side (AuctionsBoard), so the
-// freshness the page needs and the freshness the database pays for are two
-// different things. Going lower would drag every query on this route segment to
-// that cadence — egress rule 5 in lib/db.ts, the one that cost five database
-// projects — and buy nothing the clock doesn't already give for free.
+// ONE CDN COPY PER MARKET, KEPT SIX HOURS (cost, 2026-11-05, DECISIONS.md
+// "The searchParams pages join the CDN"). The page reads ?market=, which made
+// it dynamic all along: the old `revalidate = 1800` here never cached anything,
+// so every visit was a function render. Now it is force-dynamic on purpose and
+// next.config.js (`/auctions`, CDN_PAGES) keeps the response at Vercel's CDN,
+// one copy per URL (the query string is part of the key). Nothing in its tree
+// reads a cookie, a header or the session (tests/card-cdn.test.ts walks it).
 //
-// The sweep that fills the table runs every 4 hours
-// (.github/workflows/refresh-auctions.yml), so a lot appears here within a few
-// hours of being listed and its clock is exact from the moment it does.
-export const revalidate = 1800;
+// The countdown people come here for ticks CLIENT-side (AuctionsBoard), so the
+// freshness the page needs and the freshness the database pays for are two
+// different things. The sweep that fills the table runs every 4 hours
+// (.github/workflows/refresh-auctions.yml); getLiveAuctions keeps its own
+// 30-minute data cache behind the CDN copy.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Chase Auctions Closing Today | RiftCompare" },

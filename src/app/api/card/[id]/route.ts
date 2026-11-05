@@ -5,7 +5,9 @@ import { INTL_ENABLED } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
 
 // Card detail (incl. live retailer prices) for the quick-view modal. Resolves by
-// slug or legacy id. Short CDN cache since prices refresh every ~3h.
+// slug or legacy id. Cached at the CDN for six hours, a day stale (cost,
+// 2026-11-05): prices change with the twice-daily import, and the release
+// that follows the morning one empties the CDN anyway.
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   // While intl is off, hard-filter to AU so no non-AU rows ever reach the client
   // (the client still filters by country, but this is defence-in-depth). When
@@ -84,6 +86,6 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const body = { ...card, imageUrl: cardImageSrc(card, { full: true, absolute: true }), imageThumbUrl: cardImageSrc(card, { absolute: true }) };
 
   return NextResponse.json(body, {
-    headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },
+    headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },
   });
 }
