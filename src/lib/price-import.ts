@@ -188,6 +188,21 @@ function parseNumber(title: string): { setCode: string | null; key: string; tota
     const named = SET_FROM_TITLE.find(([re]) => re.test(hash[1]));
     if (named) return { setCode: named[1], key: numKey(hash[2] + hash[3]), total: "" };
   }
+  // A BRACKETED NUMBER WITH NO "/total" beside a set name — "Evelynn, In Control
+  // (Alternate Art) (109a) Foil - Radiance" (Silver Goblin, reported 2026-11-05 as
+  // a wrong item: with no number read, the name path chose between the 109a
+  // alternate art and the K/DA special art SP3/005 by catalogue order and priced
+  // the C$9.99 alt art as the SP3 card). The set name is required, as it is for
+  // "Origins #43" above, so a lone "(12)" is a lot number or a SKU, never a
+  // printing; two digits or a print letter keep a "(1)" quantity out. Without a
+  // set name only a LETTERED number counts ("(109a)" is a print letter, which no
+  // SKU or lot number carries), and the set still has to come from elsewhere.
+  const paren = title.match(/[[(]\s*(\d{1,3})([a-z]?)\s*[\])]/i);
+  if (paren && (paren[1].length >= 2 || paren[2]) && !ACCESSORY_TITLE.test(title)) {
+    const named = SET_FROM_TITLE.find(([re]) => re.test(title));
+    if (named) return { setCode: named[1], key: numKey(paren[1] + paren[2]), total: "" };
+    if (paren[2] && paren[1].length >= 2) return { setCode: null, key: numKey(paren[1] + paren[2]), total: "" };
+  }
   // No "/total" anywhere — the shape a rune number has. `total` stays "" so
   // setFromTotal() simply declines and the set still has to come from the title.
   const rune = title.match(RUNE_BARE);
@@ -1688,6 +1703,17 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
     // overnumbered chase card — those only match explicit special-print titles.
     const pool = cand.filter((c) => !isStar(c) && !isOverCard(c));
     const search = pool.length ? pool : cand;
+    if (isAlt && !num) {
+      // "Alternate art" with no number names the LETTERED printing (109a), not a
+      // special-art card numbered outside the set (SP3/005): the two are
+      // different cards at different prices, and catalogue order must never pick
+      // between them. One lettered printing wins; several, or none while two
+      // other specials remain, is ambiguous and stays unmatched.
+      const specials = search.filter((c) => c.variant || c.rarity === "Showcase");
+      const lettered = specials.filter((c) => /^\d+[a-z]\//.test(c.collectorNumber));
+      if (lettered.length === 1) return lettered[0].id;
+      if (lettered.length > 1 || specials.length > 1) return null;
+    }
     const v = search.find((c) => (isAlt ? c.variant || c.rarity === "Showcase" : !c.variant && c.rarity !== "Showcase"));
     if (v) return v.id;
     return search[0].id;
