@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
+import { COUNTRIES, type Country } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
 import type { SealedGroup } from "@/lib/sealed-import";
 import type { SealedView, SealedViewGroup } from "@/lib/sealed-view";
@@ -28,20 +28,26 @@ import { SealedTile } from "./SealedTile";
 // US visitor is byte-for-byte the HTML a crawler sees.
 export function SealedMarketBoard({ baseline, query }: { baseline: SealedView; query: Record<string, string> }) {
   const { country, isEurDisplay } = useCountry();
-  const [views, setViews] = useState<Partial<Record<Country, SealedView>>>({ [baseline.country]: baseline });
-  const [loading, setLoading] = useState<Country | null>(null);
-
   const qs = useMemo(() => new URLSearchParams(query).toString(), [query]);
+  // Fetched views keyed by market AND query: a filter change is a soft
+  // navigation that keeps this island mounted (same route, new searchParams),
+  // so state keyed by market alone would show the old query's grid for a
+  // visitor outside the baseline market. The baseline is never stored: it is
+  // the prop, and the prop is always the current URL's.
+  const [fetched, setFetched] = useState<Record<string, SealedView>>({});
+  const [loading, setLoading] = useState<Country | null>(null);
+  const key = `${country}|${qs}`;
+  const wanted = country === baseline.country ? baseline : fetched[key];
 
   useEffect(() => {
-    if (views[country]) return;
+    if (wanted) return;
     let cancelled = false;
     setLoading(country);
     fetch(`/api/sealed-view?market=${country}${qs ? `&${qs}` : ""}`)
       .then((r) => (r.ok ? (r.json() as Promise<SealedView>) : null))
       .then((v) => {
         if (cancelled || !v) return;
-        setViews((prev) => ({ ...prev, [country]: v }));
+        setFetched((prev) => ({ ...prev, [key]: v }));
       })
       .catch(() => {})
       .finally(() => {
@@ -50,10 +56,9 @@ export function SealedMarketBoard({ baseline, query }: { baseline: SealedView; q
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [country, qs]);
+  }, [wanted, country, qs, key]);
 
-  const view = views[country] ?? views[DEFAULT_COUNTRY] ?? baseline;
+  const view = wanted ?? baseline;
   const info = COUNTRIES[view.country];
   const q = query.q ?? "";
 
