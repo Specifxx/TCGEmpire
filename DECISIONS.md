@@ -22499,7 +22499,7 @@ the quick view (no Amazon link in a pop-up). The credentials (`AMAZON_CREATORS_A
 The ops monitor asks the route for the most-stocked US product (`amazon:prices`: unknown without credentials, warn when
 refused, ok otherwise, never crit). `tests/amazon-api.test.ts` keeps the client behind the route alone.
 
-## 2026-11-05 — Pro goes back to what worked in August: $4.99 a month, 14 days free
+## 2026-11-05 — Premium goes back to what worked in August: $4.99 a month, 14 days free, and its name
 
 The owner: "I don't think anyone's buying premium for Riftcompare. I think we need to use something that we used
 early on which had the best retention and fastest turnaround." Supersedes the Pro price of 2026-10-26 and the 3-day
@@ -22524,6 +22524,10 @@ long enough to form the habit, and $4.99 is the one price nobody called too expe
   per account and never for anyone who has paid (`trialOfferedTo`); the daily *Premium trial reminders* run emails
   each trialist 24–48 hours before the charge. A Vercel `PREMIUM_TRIAL_DAYS` still overrides it and must not exist;
   `0` is the kill switch. The button says "Start 14-day free trial", the plan card "14 days free · Cancel anytime".
+- **The plan is called RiftCompare Premium again** (owner, same evening: "We should call it Riftcompare premium not
+  pro"), in every user-facing string, title, JSON-LD, email and article; the 2026-10-26 "Pro" name is gone. Routes
+  (`/premium`), identifiers, tier keys and database columns were never renamed, so nothing moves. Collectr's own
+  plan is still called PRO where the entry that copied it is quoted.
 - No pop-up, slider or banner (pop-up policy); no reward for a review; AdSense stays off. Nothing a free account has
   is taken away. `PREMIUM_COPY_VERSION` is `pro-499-14day-2026-11-05`.
 

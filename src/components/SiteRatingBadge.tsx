@@ -1,7 +1,7 @@
 import { ratingLine, type SiteRating } from "@/lib/site-rating";
 
 // The site's star rating, Collectr-style, wherever it earns its place: the
-// homepage hero and the Pro page (owner, 2026-10-27: "once we have like 100
+// homepage hero and the Premium page (owner, 2026-10-27: "once we have like 100
 // people provide us feedback … put the feedback on the website in the best
 // positions"; the same day: show it now). Renders nothing until there is a
 // real rating (lib/site-rating.ts).

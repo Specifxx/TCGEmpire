@@ -79,7 +79,7 @@ function Row({ brand, accent, all, tiles, retailer, pageType, country }: { brand
  * A set's chase cards as 56px tiles in one slim box: an eBay row (the cheapest
  * live listing in the visitor's market) and a TCGplayer row (US market price).
  * Fetched after hydration from /api/mini-picks, so no host page gains a server
- * read; renders nothing until it has tiles. Ad-free for Plus and Pro, like
+ * read; renders nothing until it has tiles. Ad-free for Plus and Premium, like
  * every ad. Clicks report as surface `mini_picks`.
  */
 export function MiniPicks({ setCode = "", pageType, className = "" }: { setCode?: string; pageType: string; className?: string }) {

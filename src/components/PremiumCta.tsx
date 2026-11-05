@@ -34,7 +34,7 @@ import { recallPremiumSurface } from "@/lib/premium-surface";
 // text-center + leading-tight because this label wraps to two lines in the
 // narrower of the two pricing cards; without them the second line sits badly.
 const CTA_BTN = "btn-buy w-full py-3.5 text-center text-base leading-tight";
-// The Pro page's button: the site's own flat orange primary (owner, 2026-11-02:
+// The Premium page's button: the site's own flat orange primary (owner, 2026-11-02:
 // "themed like the website with the website colours"; it replaced the
 // 2026-10-26 Collectr gold pill). Only ProLanding asks for it.
 const CTA_PRO = "btn-primary w-full py-3 text-center text-base leading-tight";
@@ -80,7 +80,7 @@ export function PremiumCta({
   // on the first screen of a phone. A trial's disclosure, the waitlist state
   // and every error line are unchanged: they are never compacted away.
   compact?: boolean;
-  /** The Pro page's orange primary button instead of the green buy button. */
+  /** The Premium page's orange primary button instead of the green buy button. */
   pro?: boolean;
 }) {
   const btn = pro ? CTA_PRO : CTA_BTN;
@@ -127,7 +127,7 @@ export function PremiumCta({
     markSignupSource("premium_cta");
   };
   const startHref = premiumStartHref({ tier, plan, src: "premium-page" });
-  // The Pro page's button says "Upgrade to Pro" (2026-10-26).
+  // The Premium page's button says "Upgrade to Premium" (2026-10-26).
   const getLabel = pro ? `Upgrade to ${TIER_NAMES[tier]}` : `Get ${TIER_NAMES[tier]}`;
 
   if (!signedIn) {

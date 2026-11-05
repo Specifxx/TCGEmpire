@@ -23,7 +23,7 @@ import { prisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "You're in — RiftCompare Pro",
+  title: "You're in — RiftCompare Premium",
   robots: { index: false, follow: false },
 };
 

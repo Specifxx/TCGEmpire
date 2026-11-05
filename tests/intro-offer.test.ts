@@ -29,7 +29,7 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 test("half price is the price's cents halved, rounded so the charge rounds down", () => {
   // The rule, on the pre-cut prices the live intro coupons were sized for…
   assert.equal(introAmountOffCents(999), 500);
-  assert.equal(999 - introAmountOffCents(999), 499, "Pro $9.99 → $4.99");
+  assert.equal(999 - introAmountOffCents(999), 499, "Premium $9.99 → $4.99");
   assert.equal(introAmountOffCents(499), 250);
   assert.equal(499 - introAmountOffCents(499), 249, "Plus $4.99 → $2.49");
   // …and on today's (2026-09-26) prices, should the env ever re-arm the offer.

@@ -256,14 +256,14 @@ longer lands on its entry.
   after entitlement and never fatal. The intro coupon, when on, keeps the one
   discount slot. Paid out by hand ("Mark paid"). All four tables private.
   [2026-10-16](../DECISIONS.md#L17655)
-- **Pro at $4.99/mo or $39.99/yr with a free 14-day trial again (owner,
+- **RiftCompare Premium at $4.99/mo or $39.99/yr with a free 14-day trial again (owner,
   2026-11-05: "use something that we used early on which had the best
   retention"; August's setup, 7 of 7 trials paid):** the
-  paid plan is called Pro in every user-facing string (identifiers, `/premium`
-  and tier keys unchanged); nobody is moved up in Stripe, the $6.99
+  paid plan is called Premium again in every user-facing string (it was Pro
+  from 2026-10-26; identifiers, `/premium` and tier keys unchanged); nobody is moved up in Stripe, the $6.99
   subscribers move down at renewal. Trial: free, 14 days, card-gated, on both
   plans, one per account (`PREMIUM_TRIAL_DAYS` default 14; 3 from 11-03, 0 from 10-26)
-  ([2026-11-05](../DECISIONS.md#2026-11-05--pro-goes-back-to-what-worked-in-august-499-a-month-14-days-free),
+  ([2026-11-05](../DECISIONS.md#2026-11-05--premium-goes-back-to-what-worked-in-august-499-a-month-14-days-free-and-its-name),
   [2026-11-03](../DECISIONS.md#a-3-day-free-trial-on-pro-2026-11-03)). Before it: $6.99/mo or $47.88/yr, Collectr's model
   ([2026-10-26](../DECISIONS.md#pro-collectrs-model-699-or-399-a-month-yearly--2026-10-26)). `FREE_LIMITS_ON = false`: free watchlist and portfolio
   are unlimited and no copy quotes a limit; free price history is 90 days.

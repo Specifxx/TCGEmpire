@@ -9,11 +9,11 @@ import type { SiteRating } from "@/lib/site-rating";
 //
 // WHERE (owner, 2026-11-03: "we have a couple reviews published … we need it
 // visible on the home page and the pricing page"): directly under the homepage
-// hero and directly under the Pro page's hero, with the site's rating (the
+// hero and directly under the Premium page's hero, with the site's rating (the
 // average of every star rating sent, and how many) beside them. Before that it
-// sat below the popular-cards carousel and below the nine Pro feature panels,
+// sat below the popular-cards carousel and below the nine Premium feature panels,
 // where nobody scrolled to it. In the site's own theme, like the 2026-11-02
-// Pro page: flat ink panels, hairline borders, the brand orange for the stars.
+// Premium page: flat ink panels, hairline borders, the brand orange for the stars.
 // No pop-up, no ask beyond the quiet "Rate & review" button.
 //
 // DELIBERATELY NO schema.org Review or aggregate-rating MARKUP. Google's

@@ -68,7 +68,7 @@ test("isPremium's min argument defaults to plus, so every pre-existing call site
   const plusUser = { premiumUntil: future, premiumTier: "plus" };
   assert.equal(PLUS_ON_SALE, false, "this test pins the off-sale behaviour; revisit it if Plus goes back on sale");
   assert.equal(isPremium(plusUser), true, "isPremium(user) with no min arg must mean ANY paid tier");
-  assert.equal(isPremium(plusUser, "premium"), true, "a billed-Plus subscriber is treated as Pro while Plus is off sale");
+  assert.equal(isPremium(plusUser, "premium"), true, "a billed-Plus subscriber is treated as Premium while Plus is off sale");
 
   // A Premium subscriber: entitled at both thresholds.
   const premiumUser = { premiumUntil: future, premiumTier: "premium" };
@@ -272,7 +272,7 @@ test("TIER_COMPARISON's paid columns agree with the real gates", () => {
   })) {
     const r = row(feature);
     assert.equal(r.account, "Top 3");
-    assert.equal(r.plus, r.premium, `${feature}: Plus gets the same list as Pro`);
+    assert.equal(r.plus, r.premium, `${feature}: Plus gets the same list as Premium`);
     assert.equal(r.plus, "Full", "short cells since 2026-10-22: the whole list");
     assert.doesNotMatch(read(file), /isPremium\(user,\s*"premium"\)/, `${file} must not require the premium minimum — Plus gets the full list here`);
   }
@@ -303,9 +303,9 @@ test("TIER_COMPARISON's paid columns agree with the real gates", () => {
   assert.equal(buy.premium, "Unlimited");
   const route = read("src/app/api/basket/route.ts");
   assert.match(route, /const full = isPremium\(user,\s*"premium"\)/, "the Best Basket API must require the premium minimum for the unlimited plan");
-  assert.match(route, /const reveal = !full && request\.reveal;/, "below Pro a plan is a reveal…");
+  assert.match(route, /const reveal = !full && request\.reveal;/, "below Premium a plan is a reveal…");
   assert.match(route, /takeFreePlan\(meter, user\.id\)/, "…that spends one of the month's free plans, server-side");
-  assert.match(route, /if \(!full\) \{\s*const preview = basketPreview\(/, "…and an ordinary run below Pro gets the preview");
+  assert.match(route, /if \(!full\) \{\s*const preview = basketPreview\(/, "…and an ordinary run below Premium gets the preview");
   assert.doesNotMatch(read("src/lib/basket-request.ts"), /isPremium|premiumTierOf|user/, "what may be sent never depends on the tier");
 
   // Demand Finder: the premium minimum on the page; below it, the free
@@ -431,7 +431,7 @@ test("billingStateFor never holds /api/me on Stripe, and never pins a failed rea
   forgetBillingState();
 });
 
-test("/api/me reads billing state for Plus viewers only — Pro never waits on Stripe for adFree", () => {
+test("/api/me reads billing state for Plus viewers only — Premium never waits on Stripe for adFree", () => {
   const src = read("src/app/api/me/route.ts");
   assert.match(src, /billingStateFor\(user, premiumTierOf\(user\) === "plus"\)/);
   assert.doesNotMatch(src, /billingStateFor\(user, isPremium\(user\)\)/);
@@ -447,8 +447,8 @@ test("Plus's display prices and helpers are real and match the decided figures",
   assert.equal(premiumFromLine("plus"), "from $2.00/mo billed yearly, or $2.99/month month-to-month");
 });
 
-test("Pro's display prices and helpers match the 2026-11-05 figures (August's $4.99 / $39.99 again)", () => {
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$4.99", "Pro at $4.99 again from 2026-11-05 (August's price; $6.99 from 2026-10-26 to 11-05)");
+test("Premium's display prices and helpers match the 2026-11-05 figures (August's $4.99 / $39.99 again)", () => {
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$4.99", "Premium at $4.99 again from 2026-11-05 (August's price; $6.99 from 2026-10-26 to 11-05)");
   assert.equal(PREMIUM_ANNUAL_AMOUNT, "$39.99");
   // $39.99 vs 12 × $4.99 = $59.88: a 33% saving.
   assert.equal(annualSavingPct("premium"), 33);
@@ -595,7 +595,7 @@ test("the dashboard's tool list tags each tool with the tier that opens it in fu
   assert.match(src, /\{t\.freeTaste\} →/, "a free taste renders as an open link labelled with what it is");
 });
 
-test("the dashboard never calls a Plus member Pro", () => {
+test("the dashboard never calls a Plus member Premium", () => {
   const src = read("src/app/dashboard/page.tsx");
   // Everything that names the viewer's own plan must interpolate the tier.
   assert.match(src, /Your \{tierName\} tools/, "the tools heading must name the member's real tier");
@@ -639,7 +639,7 @@ test("the subscription actions card states the money consequence of every button
   // Plus member keeps the upgrade after Plus went off sale (2026-10-23).
   assert.match(src, /canUpgrade = upgradeLive && tier === "plus"/, "only a Plus member can upgrade");
   assert.match(read("src/app/premium/page.tsx"), /upgradeLive=\{plusConfigured\(\) && !user\.premiumTierFloor\}/);
-  assert.match(src, /canDowngrade = plusLive && tier === "premium"/, "only a Pro member can move down");
+  assert.match(src, /canDowngrade = plusLive && tier === "premium"/, "only a Premium member can move down");
   assert.match(src, /canGoAnnual = annualAvailable && interval === "month"/, "annual is only offered to a monthly subscriber");
   // The three consequence lines must match what the routes actually do — the
   // upgrade invoices now, the downgrade credits forward.
@@ -661,7 +661,7 @@ test("the admin revoke route clears the entitlement and nothing else", () => {
   assert.match(src, /console\.log\(/, "an entitlement change by hand must be traceable in the logs");
 });
 
-test("the admin accounts page separates Plus from Pro and only ever counts an ACTIVE entitlement as either", () => {
+test("the admin accounts page separates Plus from Premium and only ever counts an ACTIVE entitlement as either", () => {
   const src = read("src/app/admin/accounts/page.tsx");
   // premiumTier is a plain column defaulting to "premium", so counting it
   // without an active premiumUntil would report every free account as Premium.
@@ -669,10 +669,10 @@ test("the admin accounts page separates Plus from Pro and only ever counts an AC
   // …and on the EFFECTIVE tier, so a grandfathered account billed Plus but
   // pinned to Premium counts as Premium here, the same as it reads on the site.
   assert.match(src, /const effPlus = \{ AND: \[active, isEffPlus\] \}/, "the Plus count must be active AND effectively plus");
-  assert.match(src, /const effPremium = \{ AND: \[active, \{ NOT: isEffPlus \}\] \}/, "the Pro count must be active AND not effectively plus");
+  assert.match(src, /const effPremium = \{ AND: \[active, \{ NOT: isEffPlus \}\] \}/, "the Premium count must be active AND not effectively plus");
   assert.match(src, /premiumTierFloor: null/, "the effective-tier query must account for an unset floor");
   assert.match(src, /label="Plus \(active\)"/, "Plus must get its own stat, not be folded into a single paid number");
-  assert.match(src, /label="Pro \(active\)"/);
+  assert.match(src, /label="Premium \(active\)"/);
   // "When was this account last seen", the other thing the page gained. That
   // was Last LOGIN until 2026-09-11 and is now Last ACTIVE — sessions are
   // long-lived JWTs, so a login date could be months stale for a daily

@@ -32,10 +32,10 @@ import { ENTRY_TIER_NAME } from "./site";
 export const FREE_WATCHLIST_LIMIT = 10;
 export const FREE_PORTFOLIO_LIMIT = 50;
 
-// OFF SINCE 2026-10-26 (owner, decision card: "Full copy: Pro, $3.99, free
+// OFF SINCE 2026-10-26 (owner, decision card: "Full copy: Premium, $3.99, free
 // tracker"). Collectr's model: the watchlist and collection tracker are free
 // and unlimited, and the paid plan sells what sits on top of them
-// (DECISIONS.md, "Pro: Collectr's model at $3.99"). While this is false no
+// (DECISIONS.md, "Premium: Collectr's model at $3.99"). While this is false no
 // add is refused, no counter shows and no copy may quote the two numbers
 // above; the machinery stays (tests pass `on` explicitly), so turning the
 // limits back on is this one line.

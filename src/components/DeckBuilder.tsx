@@ -501,7 +501,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
 
         {/* Watch this deck's delivered price (Premium, 2026-09-29): the paid
             run re-prices the list after every import, lib/deck-watch.ts. The
-            form for a Pro member; the PremiumButton gate for anyone else. */}
+            form for a Premium member; the PremiumButton gate for anyone else. */}
         {lines.length > 0 && <DeckWatchForm listText={listText} defaultName={lines[0] ? `${cardDisplayName(lines[0].card.name, lines[0].card)} deck` : "My deck"} />}
 
         {/* Publish to the public deck library (2026-09-26). */}
@@ -527,7 +527,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
               Priced the first {bulkLimit.limit} of {bulkLimit.lines} lines.
             </p>
             <p className="mt-1 text-xs text-slate-300">
-              Pricing a whole binder or collection at once is a Pro feature, up to 200 lines a list, along with unlimited Best Basket plans.
+              Pricing a whole binder or collection at once is a Premium feature, up to 200 lines a list, along with unlimited Best Basket plans.
             </p>
             <div className="mt-3">
               <PremiumButton surface="limit:bulk" />
@@ -671,7 +671,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
         {/* After a list is priced, under it (2026-09-30, "The sign-up slider
             is gone"): what a free account adds to the list they just priced.
             Best Basket's delivered total is any signed-in account's (api/basket;
-            the store-by-store plan and the deck price watch are Pro's, and
+            the store-by-store plan and the deck price watch are Premium's, and
             neither is promised here). Signed-out visitors only; ?next= brings
             them back to this list. */}
         {lines.length > 0 && (

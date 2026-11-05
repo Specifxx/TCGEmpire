@@ -83,7 +83,7 @@ const ReferralCapture = dynamic(() => import("@/components/ReferralCapture").the
 
 // Emulates the official Riftbound site's typographic DNA (a Roman titling serif
 // for every heading over a clean sans for body/UI) using free, properly-licensed
-// fonts. Riot's actual "Beaufort for LoL" (headings) and "TT Norms Pro Compact"
+// fonts. Riot's actual "Beaufort for LoL" (headings) and "TT Norms Premium Compact"
 // (body) are licensed typefaces — there is no legitimate self-hosted or
 // hotlinked @font-face source for them on a third-party site, so this uses
 // look-alikes instead:
@@ -437,7 +437,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </main>
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
-                {/* No uninvited Pro or sign-up prompt anywhere (owner, 2026-11-03:
+                {/* No uninvited Premium or sign-up prompt anywhere (owner, 2026-11-03:
                     "get rid of all the sliders regarding the premium and the
                     signups. People can do it if they want to"): the corner
                     Premium slider went 2026-10-25, the header's Pricing callout

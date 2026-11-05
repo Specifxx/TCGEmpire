@@ -522,7 +522,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
       <section className="mt-8">
         <h2 className="text-lg font-extrabold text-white">Costs</h2>
         <p className="mt-1 text-sm text-slate-400">
-          One-off costs (ads, a domain) and repeating ones (Vercel Pro, your Claude plan). Changed plan? Stop the old entry and add the new one, so past months keep the old price.
+          One-off costs (ads, a domain) and repeating ones (Vercel Premium, your Claude plan). Changed plan? Stop the old entry and add the new one, so past months keep the old price.
         </p>
         <CostEntriesForm
           entries={costs.flatMap((c) => (c.entry ? [c.entry] : []))}

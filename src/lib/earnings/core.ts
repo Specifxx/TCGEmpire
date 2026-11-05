@@ -17,7 +17,7 @@ import { convertCents } from "../fx";
 export type EarningsSourceKey = "stripe" | "tcgplayer" | "ebay" | "amazon" | "adsense" | "mediavine";
 
 export const SOURCE_LABELS: Record<EarningsSourceKey, string> = {
-  stripe: "Stripe (Pro + Stores)",
+  stripe: "Stripe (Premium + Stores)",
   tcgplayer: "TCGplayer (Impact)",
   ebay: "eBay Partner Network",
   amazon: "Amazon Associates",
@@ -840,7 +840,7 @@ export function windows(from: string, to: string, maxDays: number): [string, str
   return out;
 }
 
-// ── Costs (2026-10-25, owner: "add costs … Vercel Pro plan … Anthropic plan …
+// ── Costs (2026-10-25, owner: "add costs … Vercel Premium plan … Anthropic plan …
 // an ability to add costs manually … Reddit ads or Meta ads … one-off") ──────
 // A cost is either automatic (Anthropic API usage, from the Admin API's Cost
 // report) or an entry on the dashboard: once, or repeating monthly/yearly from a

@@ -31,12 +31,12 @@ export function FeedbackForm({ days, initialRating = 0 }: { days: number; initia
                 <Link href="/login?next=/feedback&src=feedback" className="text-brand-400 hover:underline">
                   sign in first
                 </Link>
-                , your first feedback also unlocks <strong className="text-gold">{dayLabel} of Pro</strong>.
+                , your first feedback also unlocks <strong className="text-gold">{dayLabel} of Premium</strong>.
               </p>
             )}
             {days > 0 && user && !premium && (
               <p className="text-center text-xs text-slate-500">
-                Your first feedback unlocks <strong className="text-gold">{dayLabel} of Pro</strong>, one per account.
+                Your first feedback unlocks <strong className="text-gold">{dayLabel} of Premium</strong>, one per account.
               </p>
             )}
           </>

@@ -98,10 +98,10 @@ test("the browser can only claim the tasks it alone can see; watching and referr
   assert.match(read("src/lib/referral.ts"), /await rewardReferral\(referrer\.id, newUserId\);/);
   assert.match(read("src/components/ShareButton.tsx"), /earnCoin\("share"\)/);
   assert.match(read("src/components/OutboundLink.tsx"), /earnCoin\("visit"\)/);
-  assert.match(read("src/lib/coins-client.ts"), /if \(me\.tier !== "premium"\) return;/, "nobody but a Pro member sends a claim");
+  assert.match(read("src/lib/coins-client.ts"), /if \(me\.tier !== "premium"\) return;/, "nobody but a Premium member sends a claim");
 });
 
-test("every reward is idempotent and every write is gated on Pro", () => {
+test("every reward is idempotent and every write is gated on Premium", () => {
   const schema = read("prisma/schema.prisma");
   assert.match(schema, /model CoinTask \{[\s\S]*?@@unique\(\[userId, task, key\]\)/);
   const server = read("src/lib/coins-server.ts");
@@ -111,7 +111,7 @@ test("every reward is idempotent and every write is gated on Pro", () => {
   assert.match(server, /randomInt\(/, "the roll uses crypto randomness, on the server");
   for (const f of ["src/app/api/coins/claim/route.ts", "src/app/api/coins/pull/route.ts"]) {
     const src = read(f);
-    assert.match(src, /if \(!coinsEnabledFor\(user\)\) return NextResponse\.json\(\{ error: "Coins are a Pro perk" \}, \{ status: 403 \}\);/, f);
+    assert.match(src, /if \(!coinsEnabledFor\(user\)\) return NextResponse\.json\(\{ error: "Coins are a Premium perk" \}, \{ status: 403 \}\);/, f);
     assert.match(src, /rateLimit\(`coins:/, f);
   }
 });
@@ -134,7 +134,7 @@ test("/coins is a static shell cached a day and kept out of the index", () => {
 
 // Switched off 2026-10-29 (owner): hidden everywhere, data kept. DECISIONS.md,
 // "RiftCompare Coins switched off".
-test("coins are switched off: no page, no rewards, nowhere in the nav or Pro tables", async () => {
+test("coins are switched off: no page, no rewards, nowhere in the nav or Premium tables", async () => {
   const { COINS_ENABLED } = await import("../src/lib/coins");
   assert.equal(COINS_ENABLED, false);
   assert.match(read("src/app/coins/page.tsx"), /if \(!COINS_ENABLED\) notFound\(\);/);

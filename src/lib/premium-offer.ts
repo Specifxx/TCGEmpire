@@ -59,7 +59,7 @@ export interface PremiumOfferResult {
   dryRun: boolean;
   via: PremiumOfferProvider;
   users?: number; // registered accounts (excl. seed personas)
-  paying?: number; // excluded: currently Plus/Pro (isPremium)
+  paying?: number; // excluded: currently Plus/Premium (isPremium)
   admins?: number; // excluded: admin accounts
   suppressed?: number; // excluded: opted out of announcements
   audienceSize?: number; // in scope after dedupe + exclusions

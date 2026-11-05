@@ -312,7 +312,7 @@ export function TierComparisonTable({
               </th>
             )}
             <th scope="col" className={`${tierHead} ${premiumWash} text-center font-bold text-gold`}>
-              Pro
+              Premium
             </th>
           </tr>
         </thead>

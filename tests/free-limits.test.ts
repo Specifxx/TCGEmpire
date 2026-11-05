@@ -388,14 +388,14 @@ test("the email-only limit phase promises nothing a free member can't have", () 
   const modal = code("src/components/PriceAlertModal.tsx");
   const limitPhase = modal.slice(modal.indexOf('phase === "limit"'), modal.indexOf('phase === "error"'));
   assert.doesNotMatch(limitPhase, /as many cards|unlimited/i, "signing in doesn't lift a free account's limit");
-  assert.match(limitPhase, /Already a Plus or Pro member\?/);
+  assert.match(limitPhase, /Already a Plus or Premium member\?/);
 });
 
 test("the /tools FAQ says a free account's watchlist and portfolio are unlimited (2026-10-26)", () => {
   const tools = code("src/app/tools/page.tsx");
   assert.equal((tools.match(/adds an unlimited watchlist with weekly new-low alerts, an unlimited portfolio/g) ?? []).length, 2);
   assert.match(tools, /Plus adds an unlimited watchlist and portfolio/);
-  assert.match(tools, /Pro adds an unlimited watchlist and portfolio/);
+  assert.match(tools, /Premium adds an unlimited watchlist and portfolio/);
   assert.doesNotMatch(tools, /\b10 cards\b|\b50 cards\b/, "no hand-typed numbers");
 });
 
@@ -411,7 +411,7 @@ test("the basket saving line: real money at or above $1, no saving claim below i
   );
   assert.match(basketSavingPitch(100, fmt, { plusMember: false, priceLabel: "x" })!, /\$1\.00/);
   const upgrade = basketSavingPitch(1420, fmt, { plusMember: true, priceLabel: PREMIUM_PRICE_LABEL })!;
-  assert.match(upgrade, /saves you \$14\.20[\s\S]*Upgrade to Pro to unlock it\./, "Plus members see the same, as an upgrade");
+  assert.match(upgrade, /saves you \$14\.20[\s\S]*Upgrade to Premium to unlock it\./, "Plus members see the same, as an upgrade");
   for (const small of [99, 40, 0, -250, NaN]) {
     assert.equal(basketSavingPitch(small, fmt, { plusMember: false, priceLabel: "x" }), null, `${small}: no saving claim`);
   }
@@ -428,7 +428,7 @@ test("the basket saving line: real money at or above $1, no saving claim below i
 
 // ── No popup or header upsells ─────────────────────────────────────────────
 
-test("no corner Pro slider and no signed-out popup; the header callout and the at-limit prompts remain", () => {
+test("no corner Premium slider and no signed-out popup; the header callout and the at-limit prompts remain", () => {
   // Removed with the free limits on 2026-09-28 ("not in popups and headers");
   // restored 2026-09-29 at the owner's request ("make the sign up and premium
   // slider instant. I want to bring the instant feature back"). Only the
@@ -439,7 +439,7 @@ test("no corner Pro slider and no signed-out popup; the header callout and the a
   assert.ok(!existsSync(join(ROOT, "src/components/PremiumSlideIn.tsx")), "the slider is gone");
   const layout = code("src/app/layout.tsx");
   assert.doesNotMatch(layout, /<PremiumSlideIn/, "not mounted");
-  // The callout went too, 2026-11-03 (owner: no Pro or sign-up sliders).
+  // The callout went too, 2026-11-03 (owner: no Premium or sign-up sliders).
   assert.doesNotMatch(code("src/components/GetPremiumLink.tsx"), /PricingNudge/, "no header callout");
   // The signed-out sign-up popup stayed beside it until 2026-09-30, when the
   // owner removed it altogether: sign-up prompts are page content now
@@ -473,7 +473,7 @@ test("the rail and account menu link to /premium plainly; the header sells it (2
 // ── Copy ───────────────────────────────────────────────────────────────────
 
 test("no surface quotes a free limit while they are off, and price comparison stays free (2026-10-26)", () => {
-  assert.equal(FREE_LIMITS_ON, false, "Pro: Collectr's model at $3.99 — the tracker is free");
+  assert.equal(FREE_LIMITS_ON, false, "Premium: Collectr's model at $3.99 — the tracker is free");
   const row = (f: string) => TIER_COMPARISON.find((r) => r.feature === f)!;
   assert.deepEqual(
     { ...row("Watchlist & new-low alerts") },
@@ -514,7 +514,7 @@ test("no surface quotes a free limit while they are off, and price comparison st
   // then "one-plan-2026-10-23" when Plus went off sale and Premium went back to $9.99
   // then "rebrand-2026-10-23": the "Never overpay" promise, live proof and outcome cards
   // then "one-table-2026-10-25": /premium is the plan table and the comparison, nothing else
-  // then "pro-2026-10-26": Premium is Pro at $3.99, and the watchlist and portfolio are free and unlimited
+  // then "pro-2026-10-26": Premium is Premium at $3.99, and the watchlist and portfolio are free and unlimited
   // then "pro-theme-2026-11-02": the same plan, the page restyled
   // then "pro-trial-2026-11-03": a free 3-day trial
   assert.equal(PREMIUM_COPY_VERSION, "pro-499-14day-2026-11-05"); // then "pro-499-14day-2026-11-05": August's $4.99 + 14 days free again

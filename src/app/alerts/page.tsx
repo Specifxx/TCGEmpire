@@ -54,7 +54,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "How do I set a price alert for a Riftbound card?",
-    a: `Open the card's page or its quick view and tap the watch button — a free alert needs no price. We check the cheapest Near Mint (or unstated-condition) copy at the stores we track once a day, after the morning price update. You hear when it falls by at least 5% (and at least 50 cents or pence) from the price we last emailed you — or, if we haven't emailed you about that card in the last 30 days, from where it stood before it started falling, so a slow slide in small steps still adds up to an alert. If no store has the card yet, we email you when it's first listed instead, and if it sells out we email you when it's back. ${PLUS_ON_SALE ? `Plus members can also type their own price on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards (every card on Pro).` : "Pro members can also type their own price on any watched card."}`,
+    a: `Open the card's page or its quick view and tap the watch button — a free alert needs no price. We check the cheapest Near Mint (or unstated-condition) copy at the stores we track once a day, after the morning price update. You hear when it falls by at least 5% (and at least 50 cents or pence) from the price we last emailed you — or, if we haven't emailed you about that card in the last 30 days, from where it stood before it started falling, so a slow slide in small steps still adds up to an alert. If no store has the card yet, we email you when it's first listed instead, and if it sells out we email you when it's back. ${PLUS_ON_SALE ? `Plus members can also type their own price on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards (every card on Premium).` : "Premium members can also type their own price on any watched card."}`,
   },
   {
     q: "Can I watch a card with no price yet?",
@@ -189,10 +189,10 @@ export default function AlertsPage() {
           {PLUS_ON_SALE ? (
             <>
               Plus members can type a price on any watched card — &ldquo;Notify me at&rdquo; — on up to{" "}
-              {PLUS_TARGET_ALERT_LIMIT} cards, or every card on Pro.
+              {PLUS_TARGET_ALERT_LIMIT} cards, or every card on Premium.
             </>
           ) : (
-            <>Pro members can type a price on any watched card — &ldquo;Notify me at&rdquo; — with no limit on how many.</>
+            <>Premium members can type a price on any watched card — &ldquo;Notify me at&rdquo; — with no limit on how many.</>
           )}{" "}
           A free account sets one, on any card it watches, checked after the morning price update. For{" "}
           {ENTRY_TIER_NAME}, after each of the two daily price

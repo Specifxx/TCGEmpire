@@ -13,7 +13,7 @@ import { DECK_WATCH_LIMIT } from "@/lib/alert-limits";
 //
 // IN THE SITE'S OWN THEME (owner, 2026-11-02: "noone's buying pro … it might
 // look too gimmicky. We gotta make it look more professional and themed like
-// the website with the website colours"). DECISIONS.md, "The Pro page, in the
+// the website with the website colours"). DECISIONS.md, "The Premium page, in the
 // site's own theme". Replaces the 2026-10-26 Collectr copy's look (gold
 // gradients, a giant gradient headline, emoji icons, a made-up portfolio
 // mock-up with floating badges); the plan, the prices and the terms are
@@ -23,8 +23,8 @@ import { DECK_WATCH_LIMIT } from "@/lib/alert-limits";
 //      the star rating when there is one; beside it the plan card (Monthly /
 //      Annual, the price, one orange button).
 //   2. Real, approved reviews with the rating (none: no section).
-//   3. What Pro adds: nine flat panels, each a real Pro feature, line icons.
-//   4. Free and Pro side by side: one table with the real limits.
+//   3. What Premium adds: nine flat panels, each a real Premium feature, line icons.
+//   4. Free and Premium side by side: one table with the real limits.
 //
 // Flat ink panels with hairline borders, the brand orange for the action, the
 // numerals in the site's mono: the same surfaces every other page uses. Every
@@ -125,7 +125,7 @@ const FEATURES: { icon: keyof typeof ICONS; title: string; body: string }[] = [
   { icon: "shield", title: "No ads", body: "Every page, ad-free, for as long as you are a member." },
 ];
 
-// Free beside Pro. `true` is a tick, `false` a dash, a string the real limit.
+// Free beside Premium. `true` is a tick, `false` a dash, a string the real limit.
 const COMPARISON: { feature: string; free: string | boolean; pro: string | boolean }[] = [
   { feature: "Compare prices across every store", free: true, pro: true },
   { feature: "Watchlist and new-low emails", free: "Unlimited", pro: "Unlimited" },
@@ -171,10 +171,10 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
           the ticks, so the price and the button are on the first screens. */}
       <section className="grid items-start gap-x-12 gap-y-8 pt-2 md:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:grid-rows-[auto_1fr] md:gap-y-6 md:pt-6">
         <div className="md:col-start-1 md:row-start-1 md:pt-4">
-          <span className="chip bg-brand-500/15 text-[11px] font-bold uppercase tracking-wider text-brand-400">RiftCompare Pro</span>
+          <span className="chip bg-brand-500/15 text-[11px] font-bold uppercase tracking-wider text-brand-400">RiftCompare Premium</span>
           <h1 className="mt-4 text-3xl leading-tight text-white sm:text-4xl">Buy Riftbound for less, and let us watch the prices.</h1>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-300">
-            Pro plans the cheapest delivered order for any deck or list, emails you when a card or box hits your price, and keeps every
+            Premium plans the cheapest delivered order for any deck or list, emails you when a card or box hits your price, and keeps every
             day of price history. Comparing prices stays free.
           </p>
           {trialOn(cta) && (
@@ -187,7 +187,7 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
         <div id="pro-plan" className="card-surface scroll-mt-header p-6 md:col-start-2 md:row-span-2 md:row-start-1">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg text-white">
-              Pro
+              Premium
               {trialOn(cta) && (
                 <span className="rounded bg-buy/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-emerald-300">{cta.trialDays} days free</span>
               )}
@@ -231,11 +231,11 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
       </div>
 
       <section id="features" className="scroll-mt-header pt-16" aria-labelledby="pro-features">
-        <div className="rb-eyebrow text-brand-400">What Pro adds</div>
+        <div className="rb-eyebrow text-brand-400">What Premium adds</div>
         <h2 id="pro-features" className="mt-2 text-2xl text-white sm:text-3xl">
           Everything you need to buy at the right price
         </h2>
-        <p className="mt-2 max-w-2xl text-slate-400">From the cheapest way to buy a deck to every price we have recorded. Pro does the watching for you.</p>
+        <p className="mt-2 max-w-2xl text-slate-400">From the cheapest way to buy a deck to every price we have recorded. Premium does the watching for you.</p>
         <div className="mt-8 grid gap-px overflow-hidden rounded-lg border border-ink-800 bg-ink-800 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <div key={f.title} className="bg-ink-900 p-5">
@@ -254,12 +254,12 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
       <section id="compare" className="scroll-mt-header pt-16" aria-labelledby="pro-compare">
         <div className="rb-eyebrow text-brand-400">Plans</div>
         <h2 id="pro-compare" className="mt-2 text-2xl text-white sm:text-3xl">
-          Free and Pro, side by side
+          Free and Premium, side by side
         </h2>
         <p className="mt-2 max-w-2xl text-slate-400">Start free. Upgrade when you want the plans, alerts and history.</p>
         <div className="card-surface mt-8 overflow-hidden">
           <table className="w-full text-left text-sm">
-            <caption className="sr-only">What Free and Pro include</caption>
+            <caption className="sr-only">What Free and Premium include</caption>
             <thead>
               <tr className="border-b border-ink-800">
                 <th scope="col" className="px-4 py-4 font-semibold text-slate-400 sm:px-6">
@@ -270,7 +270,7 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
                   <div className="mt-1 text-lg font-bold tabular-nums text-white">$0</div>
                 </th>
                 <th scope="col" className="w-[30%] bg-brand-500/[0.06] px-2 py-4 text-center align-bottom sm:w-1/4 sm:px-4">
-                  <div className="font-semibold text-brand-400">Pro</div>
+                  <div className="font-semibold text-brand-400">Premium</div>
                   <div className="mt-1 text-lg font-bold tabular-nums text-white">
                     {prices.annualLive ? prices.perMonth : prices.monthly}
                     <span className="text-xs font-medium text-slate-400">/mo</span>
@@ -308,7 +308,7 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
                 </td>
                 <td className="bg-brand-500/[0.06] px-2 py-4 text-center sm:px-4">
                   <a href="#pro-plan" className="btn-primary w-full px-2 text-xs">
-                    {trialOn(cta) ? "Try Pro free" : "Get Pro"}
+                    {trialOn(cta) ? "Try Premium free" : "Get Premium"}
                   </a>
                 </td>
               </tr>

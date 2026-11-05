@@ -35,10 +35,10 @@ const CONTEXT_LINES: Record<string, string> = {
   // says exactly that and no more. Value Finder, Rising Sealed and the Bulk
   // Pricer had lines here until they left the product — their URLs 301 to
   // free pages now (next.config.js), so no ?next= can carry them.
-  "/tools/best-basket": "Create a free account to see what your list costs delivered. Pro shows which store to buy each card from.",
+  "/tools/best-basket": "Create a free account to see what your list costs delivered. Premium shows which store to buy each card from.",
   // Demand Finder (Premium again, 2026-09-25): the top 10 most searched are
   // free to everyone, signed in or not, so the line promises nothing more.
-  "/tools/demand": "Sign in to open Demand Finder. The top 10 most searched this week are free; the full most-searched and most-viewed lists are part of Pro.",
+  "/tools/demand": "Sign in to open Demand Finder. The top 10 most searched this week are free; the full most-searched and most-viewed lists are part of Premium.",
 };
 
 // Prefix matches, for destinations that are a family of paths: every game's
@@ -52,7 +52,7 @@ function contextLineFor(next: string): string | undefined {
   const path = next.split(/[?#]/)[0];
   // After a guest checkout (2026-10-20, lib/guest-checkout.ts): payment is done,
   // and signing in with the same email is what unlocks it.
-  if (path === "/premium/welcome") return "Payment received. Sign in with Google or Discord using the email you paid with, and your Pro is ready.";
+  if (path === "/premium/welcome") return "Payment received. Sign in with Google or Discord using the email you paid with, and your Premium is ready.";
   if (CONTEXT_LINES[path]) return CONTEXT_LINES[path];
   if (path === "/portfolio/sets" || path.startsWith("/portfolio/sets/") || path.startsWith("/sets/")) return SET_TRACKER_LINE;
   if (path === "/games" || path.startsWith("/games/") || path === "/riftle") return GAMES_LINE;

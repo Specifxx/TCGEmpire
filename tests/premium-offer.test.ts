@@ -76,7 +76,7 @@ test("the audience: not paying, not admin, not seed, not opted out; lapsed and n
   const a = priceDropAudience(ROWS, OPTED_OUT);
   const ids = a.audience.map((r) => r.id).sort();
   assert.deepEqual(ids, ["cancelled-trialist", "got-old-offer", "lapsed", "never-paid", "stamped"]);
-  assert.equal(a.paying, 3, "active Plus, active Pro and a floor-raised account are paying");
+  assert.equal(a.paying, 3, "active Plus, active Premium and a floor-raised account are paying");
   assert.equal(a.admins, 1);
   assert.equal(a.seeds, 2);
   assert.equal(a.suppressed, 1);
@@ -225,7 +225,7 @@ test("a yearly plan's per-month figure never appears without 'billed yearly'", (
   assert.ok(!email.subject.includes(premiumEffectiveMonthly("premium")), "the subject quotes the monthly price, never a bare per-month-of-a-year figure");
 });
 
-test("the Pro subscribe links through /premium/start with tier, plan, src and the campaign, plus a compare link", () => {
+test("the Premium subscribe links through /premium/start with tier, plan, src and the campaign, plus a compare link", () => {
   const links = priceDropLinks();
   // Plus's links still exist (re-enabling Plus is one line) but the email
   // carries none while Plus is off sale (2026-10-23).
@@ -276,7 +276,7 @@ test("each tier's one-line summary matches the current lineup", () => {
     assert.match(body, /only my cards/);
     assert.match(body, /full Rising Cards list/);
     assert.match(body, /unlimited target-price alerts and sealed watches/);
-    assert.doesNotMatch(body, /Everything in Plus/, "Pro is described on its own while Plus is off sale");
+    assert.doesNotMatch(body, /Everything in Plus/, "Premium is described on its own while Plus is off sale");
     assert.match(body, /Best Basket's store-by-store plan and Buy this list/);
     assert.match(body, /Demand Finder/);
     assert.match(body, /cancel from your account page/i);
@@ -302,14 +302,14 @@ test("it asks for a rating first: five star links to /feedback with that rating 
     assert.equal(u.searchParams.get("utm_campaign"), "feedback-pro-2026-10");
     assert.ok(email.html.includes(url) && email.text.includes(url), `star ${i + 1} is in both parts`);
   });
-  assert.ok(email.html.indexOf(stars[0]) < email.html.indexOf(priceDropLinks().premiumMonthly), "the rating comes before the Pro offer");
+  assert.ok(email.html.indexOf(stars[0]) < email.html.indexOf(priceDropLinks().premiumMonthly), "the rating comes before the Premium offer");
   // The page reads ?rating= into its form.
   assert.match(read("src/app/feedback/page.tsx"), /r >= 1 && r <= 5/);
   assert.match(read("src/components/FeedbackForm.tsx"), /source="page"[\s\S]*initialRating=\{initialRating\}/);
 });
 
 test("no reward is offered for a rating (an incentivised review must not be solicited unlabelled)", () => {
-  for (const body of [email.html, email.text]) assert.doesNotMatch(body, /thank-you|days of Pro|in return|reward/i);
+  for (const body of [email.html, email.text]) assert.doesNotMatch(body, /thank-you|days of Premium|in return|reward/i);
   assert.doesNotMatch(read("src/lib/premium-offer.ts"), /FEEDBACK_PREMIUM_DAYS|feedbackPremiumActive/);
 });
 

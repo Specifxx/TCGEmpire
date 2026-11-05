@@ -13,7 +13,7 @@ test("the billing export becomes one charge per project and day; domains are lef
   const jsonl = [
     focus({ ChargePeriodStart: "2026-10-28T00:00:00Z", BilledCost: 1.25, Tags: { ProjectId: "prj_1", ProjectName: "riftcompare" } }),
     focus({ ChargePeriodStart: "2026-10-28T00:00:00Z", BilledCost: "0.75", SkuId: "edge", Tags: { ProjectName: "riftcompare" } }),
-    focus({ ChargePeriodStart: "2026-10-28T00:00:00Z", BilledCost: 20, ChargeCategory: "Purchase", ServiceName: "Pro plan" }),
+    focus({ ChargePeriodStart: "2026-10-28T00:00:00Z", BilledCost: 20, ChargeCategory: "Purchase", ServiceName: "Premium plan" }),
     focus({ ChargePeriodStart: "2026-10-28T00:00:00Z", BilledCost: 13, ServiceName: "Domains", SkuId: "domain-renewal" }),
     focus({ ChargePeriodStart: "2026-10-29T00:00:00Z", BilledCost: 0, Tags: { ProjectName: "kaeyoung" } }),
     "not json",
@@ -86,7 +86,7 @@ test("the growth report carries the per-site table, and says when Vercel is not 
 
 test("only hand-entered Vercel invoices give way to the billing API, never domains", () => {
   assert.equal(isVercelInvoice("Vercel invoice 2026-09"), true);
-  assert.equal(isVercelInvoice("Vercel Pro"), true);
+  assert.equal(isVercelInvoice("Vercel Premium"), true);
   assert.equal(isVercelInvoice("Domain kaeyoung.com (purchase) via Vercel"), false);
   assert.equal(isVercelInvoice("Claude plan invoice 2026-09"), false);
 });

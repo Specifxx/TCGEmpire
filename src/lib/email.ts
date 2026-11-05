@@ -1097,7 +1097,7 @@ export function buildTrialEndingEmail(opts: {
   /** What the customer paid to start the trial (cents); 0 = a free trial. */
   paidCents?: number;
 }): { subject: string; heading: string; html: string } {
-  const planName = opts.planName ?? "Pro";
+  const planName = opts.planName ?? "Premium";
   const dateLabel = opts.chargeDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const charge = opts.thenLabel ? `${opts.amountLabel} (then ${opts.thenLabel})` : opts.amountLabel;
   const paid = (opts.paidCents ?? 0) > 0 ? ` You paid ${premiumTrialFee(opts.paidCents!)} to start it.` : "";
@@ -1119,7 +1119,7 @@ export async function sendTrialEndingEmail(
   to: string,
   chargeDate: Date,
   amountLabel: string,
-  planName = "Pro",
+  planName = "Premium",
   thenLabel?: string,
   paidCents = 0,
 ): Promise<boolean> {
@@ -1138,7 +1138,7 @@ export function buildTrialEndingNoChargeEmail(opts: {
   planName?: string;
   keepLine?: string | null;
 }): { subject: string; heading: string; html: string } {
-  const planName = opts.planName ?? "Pro";
+  const planName = opts.planName ?? "Premium";
   const keepLine = opts.keepLine ?? null;
   const dateLabel = opts.endsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const inner = `
@@ -1161,7 +1161,7 @@ export function buildTrialEndingNoChargeEmail(opts: {
 export async function sendTrialEndingNoChargeEmail(
   to: string,
   endsAt: Date,
-  planName = "Pro",
+  planName = "Premium",
   keepLine: string | null = null,
 ): Promise<boolean> {
   const { subject, html } = buildTrialEndingNoChargeEmail({ endsAt, planName, keepLine });
@@ -1189,9 +1189,9 @@ const CHECKOUT_RECOVERY_TOOLS = [
   "An email naming the store when a card you watch hits your target price",
   "No limit on your watchlist or portfolio, so a whole set fits in the set checklist",
   "Sealed watches: an email when a box is back in stock or at RRP",
-  "Pro: a deck price watch — a saved list re-priced delivered after every price update, emailed at your price",
-  "Pro: Best Basket, the cheapest delivered order for your whole deck, watchlist, binder or the rest of a set, at the condition you'll play",
-  "Pro: Demand Finder, the cards players are searching for and opening most",
+  "Premium: a deck price watch — a saved list re-priced delivered after every price update, emailed at your price",
+  "Premium: Best Basket, the cheapest delivered order for your whole deck, watchlist, binder or the rest of a set, at the condition you'll play",
+  "Premium: Demand Finder, the cards players are searching for and opening most",
 ];
 
 function checkoutRecoveryFooter(name: string): string {
@@ -1229,11 +1229,11 @@ export function buildCheckoutRecoveryEmail(
       ? PLUS_ON_SALE
         ? "Prefer something lighter? Plus is the cheaper plan, on the same page."
         : ""
-      : "Buying a whole deck? Pro adds Best Basket's store-by-store plan and Demand Finder, on the same page.";
+      : "Buying a whole deck? Premium adds Best Basket's store-by-store plan and Demand Finder, on the same page.";
   const bothPitch =
     PLUS_ON_SALE || tier === "plus"
-      ? "Plus and Pro are both ad-free and show every deal; Pro also works out the cheapest way to buy a whole want-list or decklist, postage included."
-      : "Pro is ad-free, shows every deal, and works out the cheapest way to buy a whole want-list or decklist, postage included.";
+      ? "Plus and Premium are both ad-free and show every deal; Premium also works out the cheapest way to buy a whole want-list or decklist, postage included."
+      : "Premium is ad-free, shows every deal, and works out the cheapest way to buy a whole want-list or decklist, postage included.";
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You started signing up for RiftCompare ${name} but didn't finish checkout. ${trialLine} ${bothPitch} ${otherPlan}
@@ -1300,7 +1300,7 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
       ? opts.trialFeeCents > 0
         ? `Start with ${trialDaysPhrase(opts.trialDays)} for ${premiumTrialFee(opts.trialFeeCents)}, then ${opts.fromLine}. Cancel before day ${opts.trialDays} and you pay nothing more.`
         : `Try it free for ${opts.trialDays} days — ${premiumTrialFee(0)} today, then ${opts.fromLine}. Cancel before the trial ends and you pay nothing.`
-      : `Pro is ${opts.fromLine}.`;
+      : `Premium is ${opts.fromLine}.`;
   const step = (n: number, title: string, body: string) =>
     `<tr><td style="padding:6px 32px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <strong style="color:#e6ebf2">${n}. ${title}</strong><br/>${body}
@@ -1316,7 +1316,7 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
     <tr><td style="padding:14px 32px 22px">
       <div style="border:1px solid #6b5a1f;border-radius:12px;padding:14px 16px;background:#1a1810">
         <div style="font-size:13px;line-height:1.55;color:#d8cfa8">
-          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> ${PLUS_ON_SALE ? "Plus and Pro both come with" : "Pro comes with"}:
+          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> ${PLUS_ON_SALE ? "Plus and Premium both come with" : "Premium comes with"}:
           <ul style="margin:6px 0;padding-left:18px">
             <li>No ads on any page</li>
             <li>No limit on your watchlist or portfolio, so a whole set fits in the set checklist</li>
@@ -1324,12 +1324,12 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
             <li>An email naming the store when a card you watch hits your target price</li>
             <li>Sealed watches: an email when a box is back in stock or at RRP (the price Riot sets), checked ${SEALED_CHECK_CADENCE}</li>
           </ul>
-          ${PLUS_ON_SALE ? "Pro plans" : "It also plans"} the order: Best Basket's store-by-store plan for your deck, watchlist or the rest of a set,
+          ${PLUS_ON_SALE ? "Premium plans" : "It also plans"} the order: Best Basket's store-by-store plan for your deck, watchlist or the rest of a set,
           skipping the cards you already own, at the minimum condition you set. It also adds a deck price watch,
           which re-prices a saved list after every price update and emails you when its delivered total reaches your
           price, and Demand Finder, the full list of what people are searching for. ${trialLine}
         </div>
-        <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Pro</a>
+        <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Premium</a>
       </div>
     </td></tr>`;
   const heading = "Welcome to RiftCompare";
@@ -1482,8 +1482,8 @@ export interface PremiumOfferEmailOpts {
 // like, are you enjoying the site … consider joining the pro plan"). The
 // function names stay (the admin console, its API route and the audience code
 // all read them). It leads with a one-tap star rating — each star opens
-// /feedback with that rating picked — and then states Pro at its own prices.
-// It never mentions the /feedback page's Pro-for-feedback reward: a review
+// /feedback with that rating picked — and then states Premium at its own prices.
+// It never mentions the /feedback page's Premium-for-feedback reward: a review
 // asked for with a reward is an incentivised review, which consumer law (FTC
 // 2024 rule, ACCC) does not allow us to solicit and then show unlabelled. There is no trial (PREMIUM_TRIAL_DAYS 0 since 2026-10-26), so
 // the email promises none. No eBay or other affiliate link: every link is our
@@ -1620,19 +1620,19 @@ export interface PremiumWinbackEmailOpts {
 }
 
 export function premiumWinbackSubject(days: number): string {
-  return `${days} days of RiftCompare Pro, free — no card needed`;
+  return `${days} days of RiftCompare Premium, free — no card needed`;
 }
 
 export function buildPremiumWinbackEmail(opts: PremiumWinbackEmailOpts): { subject: string; heading: string; html: string } {
   const name = opts.displayName.includes("@") ? "" : escapeHtml(opts.displayName.trim().split(/\s+/)[0] ?? "");
   const greeting = name ? `Hi ${name},` : "Hi there,";
-  const heading = `${opts.days} days of Pro, on us`;
+  const heading = `${opts.days} days of Premium, on us`;
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
       ${greeting}
     </td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You joined RiftCompare recently, so here's a proper look at what Pro adds on top of the free tools you're
+      You joined RiftCompare recently, so here's a proper look at what Premium adds on top of the free tools you're
       already using: no ads on any page, the full Deal Finder and Rising Cards lists, target-price alerts that name
       the store, Best Basket's cheapest delivered order for a whole deck, watchlist or binder, and Demand Finder's
       most searched and most viewed cards.

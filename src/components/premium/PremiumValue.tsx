@@ -91,7 +91,7 @@ export function PremiumBenefits({ proof, us }: { proof: PremiumProof; us: boolea
   return (
     <section aria-labelledby="premium-benefits" className="mx-auto mt-10 max-w-4xl">
       <h2 id="premium-benefits" className="text-center font-display text-xl font-extrabold text-white sm:text-2xl">
-        What Pro does for you
+        What Premium does for you
       </h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {order.map((b) => (

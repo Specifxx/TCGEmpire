@@ -4,7 +4,7 @@ import { EARNINGS_SINCE, scrubSecrets } from "./sources";
 import { projectDays, vercelCharges, type ProjectCharge } from "./sites";
 
 // The earnings dashboard's costs (2026-10-25, owner: "add costs on the website …
-// Vercel Pro plan … Anthropic plan … for as long as the site has been alive … an
+// Vercel Premium plan … Anthropic plan … for as long as the site has been alive … an
 // ability to add costs manually … Reddit ads or Meta ads … one-off … around $200
 // on ads in total"). DECISIONS.md, "Costs and profit on the earnings dashboard".
 //

@@ -356,6 +356,6 @@ test("dismissal snoozes: a dismissal is a week, a click a fortnight, two dismiss
   assert.ok(2 >= MAX_NUDGE_DISMISSALS, "the second dismissal is the last");
 });
 
-test("the annual corner offer is gone (owner, 2026-11-03: no Pro or sign-up sliders)", () => {
+test("the annual corner offer is gone (owner, 2026-11-03: no Premium or sign-up sliders)", () => {
   assert.ok(!existsSync(join(process.cwd(), "src/components/AnnualSwitchNudge.tsx")));
 });

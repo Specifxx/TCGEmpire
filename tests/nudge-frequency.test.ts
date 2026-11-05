@@ -38,7 +38,7 @@ const ANNUAL = "src/components/AnnualSwitchNudge.tsx";
 // The header's Pricing callout (PricingNudge) and the monthly→annual corner
 // card (AnnualSwitchNudge) went on 2026-11-03 (owner: "get rid of all the
 // sliders regarding the premium and the signups. People can do it if they
-// want to"). No uninvited Pro or sign-up prompt exists any more.
+// want to"). No uninvited Premium or sign-up prompt exists any more.
 test("the cap has exactly one definition", () => {
   assert.equal(MAX_NUDGE_DISMISSALS, 2, "two firm no's is a no");
   assert.equal(SNOOZE_AFTER_DISMISS_MS, 7 * 864e5, "a week of quiet after a dismissal");
@@ -46,7 +46,7 @@ test("the cap has exactly one definition", () => {
   assert.ok(SNOOZE_AFTER_CLICK_MS > SNOOZE_AFTER_DISMISS_MS, "engaging must buy MORE quiet than refusing, or the incentives are backwards");
 });
 
-test("no Pro or sign-up slider exists, and none may gate its own close control", () => {
+test("no Premium or sign-up slider exists, and none may gate its own close control", () => {
   for (const f of [SLIDE, ANNUAL, "src/components/PremiumSlideIn.tsx", "src/components/SignupPromoPopup.tsx"]) {
     assert.ok(!existsSync(join(process.cwd(), f)), `${f} stays gone`);
   }

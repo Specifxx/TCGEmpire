@@ -1,7 +1,7 @@
 import { prisma } from "./db";
 
-// THE SITE'S OWN STAR RATING, shown on the Pro page the way Collectr shows its
-// App Store rating (owner, 2026-10-26). DECISIONS.md, "Pro: Collectr's model,
+// THE SITE'S OWN STAR RATING, shown on the Premium page the way Collectr shows its
+// App Store rating (owner, 2026-10-26). DECISIONS.md, "Premium: Collectr's model,
 // $6.99 or $3.99/mo yearly".
 //
 // REAL RATINGS ONLY: the average of every star rating visitors sent through
