@@ -34,7 +34,7 @@ const PROMPT = "src/components/InlineSignupPrompt.tsx";
 
 // Where the prompt is placed, and the surface each placement reports.
 const PLACEMENTS: Record<string, string> = {
-  "src/app/browse/page.tsx": "inline_browse",
+  "src/components/browse/BrowseMarketBoard.tsx": "inline_browse",
   "src/components/DeckBuilder.tsx": "inline_deck",
   "src/app/decks/[slug]/page.tsx": "inline_published_deck",
   "src/app/movers/page.tsx": "inline_movers",
@@ -177,10 +177,10 @@ test("each placement's copy states only what a free account gets, and no limit w
   }
   // A watchlist claim says what a free account gets, and "drops in price" is
   // what the free alert run sends (lib/price-alerts.ts NEW LOW).
-  for (const file of ["src/app/browse/page.tsx", "src/app/movers/page.tsx", "src/app/champions/[slug]/page.tsx", "src/components/DeckBuilder.tsx"]) {
+  for (const file of ["src/components/browse/BrowseMarketBoard.tsx", "src/app/movers/page.tsx", "src/app/champions/[slug]/page.tsx", "src/components/DeckBuilder.tsx"]) {
     assert.match(promptBlocks(file)[0], /as many cards as you like|any of its cards/, file);
   }
-  for (const file of ["src/app/browse/page.tsx", "src/app/champions/[slug]/page.tsx"]) {
+  for (const file of ["src/components/browse/BrowseMarketBoard.tsx", "src/app/champions/[slug]/page.tsx"]) {
     assert.match(promptBlocks(file)[0], /for every card you own/, file);
   }
   // Best Basket: a free account sees its own delivered total (api/basket), and
@@ -191,7 +191,7 @@ test("each placement's copy states only what a free account gets, and no limit w
 });
 
 test("below the content it follows, never above the results", () => {
-  const browse = code("src/app/browse/page.tsx");
+  const browse = code("src/components/browse/BrowseMarketBoard.tsx");
   assert.ok(browse.indexOf("<InlineSignupPrompt") > browse.indexOf("{cards.map((c) =>"), "inside the grid, after tiles");
   assert.match(browse, /const promptAfterId = cards\[Math\.min\(BROWSE_PROMPT_AFTER, cards\.length\) - 1\]\?\.id;/);
   assert.match(browse, /\{c\.id === promptAfterId && \(\s*<InlineSignupPrompt/);

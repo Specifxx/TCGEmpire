@@ -86,5 +86,5 @@ test("search another game: every card-game sister site has a search link on its 
   assert.deepEqual(familySearchLinks("   "), []);
   const block = read("src/components/FamilySearch.tsx");
   assert.match(block, /rel="noopener nofollow"/);
-  assert.match(read("src/app/browse/page.tsx"), /\{q && <FamilySearch q=\{q\}/);
+  assert.match(read("src/components/browse/BrowseMarketBoard.tsx"), /\{q && <FamilySearch q=\{q\}/);
 });

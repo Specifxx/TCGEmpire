@@ -38,7 +38,10 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 // seo-gate.ts, scripts/crawl-check.ts) cannot gate a PR. These can.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BROWSE = "src/app/browse/page.tsx";
+// Since 2026-11-05 /browse's metadata is lib/browse-seo.ts (shared by the CDN
+// page and the search route) and its H1 is components/browse/BrowseView.tsx.
+const BROWSE_SEO = "src/lib/browse-seo.ts";
+const BROWSE = "src/components/browse/BrowseView.tsx";
 const HOME = "src/app/page.tsx";
 const HERO = "src/components/home/CinematicHero.tsx";
 const MAP = "docs/seo-keyword-map.md";
@@ -46,21 +49,21 @@ const MAP = "docs/seo-keyword-map.md";
 // ── `riftbound card list` → /browse ─────────────────────────────────────────
 
 test("/browse owns 'Riftbound Card List' in both its title and its H1", () => {
-  const src = read(BROWSE);
+  const src = read(BROWSE_SEO);
   assert.match(
     src,
     /title: q \? .* : `Riftbound Card List — Browse & Compare Prices\$\{pageSuffix\}`/,
     "the default (unsearched) /browse title must lead with the exact phrase",
   );
   assert.match(
-    src,
+    read(BROWSE),
     /<h1[^>]*>Riftbound Card List<\/h1>/,
     "the visible H1 must carry the same exact phrase as the title",
   );
 });
 
 test("/browse's own description carries the phrase too, and names every tracked market", () => {
-  const src = read(BROWSE);
+  const src = read(BROWSE_SEO);
   assert.match(src, /The full Riftbound card list/, "description must carry the phrase");
   // The market list here was three launches out of date ("AU, US, UK & SG") —
   // Canada and the EU both shipped in August. A description naming markets that
