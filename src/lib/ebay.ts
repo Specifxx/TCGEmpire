@@ -371,6 +371,7 @@ const SET_NAMES: Record<string, string> = {
   // Only ever asked about an LGC card's own listing (setMentioned(title, "LGC")),
   // whose eBay search already says Riftbound, so the bare word is enough here.
   LGC: "\\blegacy\\b",
+  REC: "\\breckoning\\b",
 };
 
 function delivered(it: any): number {

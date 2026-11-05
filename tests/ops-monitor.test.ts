@@ -504,3 +504,19 @@ test("DexCompare index: a readable index is ok, a changed format warns, an outag
   assert.equal(offResult.severity, "unknown");
   assert.deepEqual(off.calls, ["https://riftcompare.com/pokemon"]);
 });
+
+test("new set: TCGplayer listing a set SETS lacks is critical and names the runbook; an empty list is fine; no row is grey", async () => {
+  const { newSetDetected } = await import("../src/lib/ops/checks");
+  const mk = (row: { checkedAt: Date | null; sets: { setName: string; sample: string }[] } | null) =>
+    deps({ db: { unknownSets: async () => row } as unknown as OpsDeps["db"] });
+  const red = await newSetDetected(mk({ checkedAt: new Date(NOW.getTime() - 3_600_000), sets: [{ setName: "Set 8", sample: "Riftbound: League of Legends - Set 8 Booster Box" }] }));
+  assert.equal(red.severity, "crit");
+  assert.match(red.summary, /"Set 8"/);
+  assert.match(red.action ?? "", /add the Riftbound set Set 8/);
+  assert.match(red.action ?? "", /SET-LAUNCH-RUNBOOK/);
+  const ok = await newSetDetected(mk({ checkedAt: NOW, sets: [] }));
+  assert.equal(ok.severity, "ok");
+  const grey = await newSetDetected(mk(null));
+  assert.equal(grey.severity, "unknown");
+  assert.equal((await newSetDetected(deps())).severity, "unknown");
+});

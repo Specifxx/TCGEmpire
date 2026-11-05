@@ -22255,3 +22255,31 @@ SP3/005) by catalogue order. Two changes in `resolveCardId`, both narrow:
   decides between two cards at two prices again. `tests/price-import.test.ts` pins the reported title.
 
 The row is rewritten by the next import (GitHub Actions runs the matcher), so no deploy is needed for the fix.
+
+## 2026-11-05 — The next set is in SETS before any store lists it, and TCGplayer tells us about the one after
+
+The owner asked for the sites to update themselves for new releases and pre-orders. On this site the automatic
+pre-order page (2026-11-02 above) already builds itself for any coming-soon set in `SETS`, but SETS was the
+gap: The Reckoning (Riot's Set 7, 30 April 2027) sat only in the release calendar, so it had no
+`/preorders/the-reckoning`, no set mapping and no sealed group, and would have been added by hand on the day
+someone noticed a store listing it. Two changes:
+
+- **The Reckoning is in `SETS` now** (code `REC`, Riot's own, from the products-and-sets rundown that also
+  gave RAD and LGC; `comingSoon`, `releasedOn: "2027-04-30"`, no `totalCards` while Riot's 264 is an "around"
+  figure), with the mapper branches `tests/set-launch-readiness.test.ts` demands, each guarded by a Riftbound
+  marker the way Legacy's are ("reckoning" is a word on other games' products). Its pre-order page is in the
+  sitemap from this release; `/sets/the-reckoning` stays noindex until it earns a hub. Its one guide is the
+  2027 roadmap post until a Reckoning post exists.
+- **A new-set detector.** The TCGplayer sealed pass (`refreshTcgplayerSealed`) now records every TCGplayer
+  `setName` that `setCodeFromSetName` cannot map AND that carries a booster product (a real set has boosters;
+  promo and bundle groups do not) in the private OpsSnapshot row `tcgplayer:unknown-sets`. The ops monitor's
+  `data:new-set` check turns a non-empty list RED, so the owner is emailed the morning TCGplayer lists a set
+  this site lacks, with the runbook step (`docs/SET-LAUNCH-RUNBOOK.md`). Adding the set to `SETS` makes the
+  mapper recognise it and the row clears on the next import. Nothing here calls TCGplayer more often: the
+  detector reads the catalogue the import already fetched.
+
+Why TCGplayer and not Riot's site: TCGplayer carried Legacy by 25 October 2026 for a 29 January 2027 street
+date, as a product line entry the search API returns with its set name, so it is the earliest machine-readable
+signal we already read daily. Riot's announcements still need a human (a code, a date, a hub), which is what
+the email asks for. The sister card sites need none of this: their sets come from TCGplayer's group list
+(OP Compare, the card engine), Scryfall (MTG) or tcgcsv (Dex) and page themselves.

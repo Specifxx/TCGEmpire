@@ -114,6 +114,10 @@ export const SET_GUIDES: Readonly<Record<string, readonly GuideRef[]>> = {
     { slug: "riftbound-legacy-pack-changes-and-card-templating", reason: "How Legacy's packs change: a Legend-or-Battlefield slot in place of a Common" },
     { slug: "riftbound-2027-set-roadmap", reason: "Where Legacy sits in Riot's 2027 release calendar, with every announced date" },
   ],
+  // Coming soon since 2026-11-05: nothing written about The Reckoning yet beyond
+  // its row in the roadmap, so that post is its one guide until a spoiler or
+  // where-to-buy post exists.
+  REC: [{ slug: "riftbound-2027-set-roadmap", reason: "What Riot has said about The Reckoning so far, and where it sits in the 2027 release calendar" }],
 };
 
 function resolveGuides(refs: readonly GuideRef[]): RelatedGuide[] {

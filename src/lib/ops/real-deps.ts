@@ -4,6 +4,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { prisma } from "../db";
+import { UNKNOWN_SETS_KEY } from "../sealed-import";
 import { OPERATIONAL_VARS } from "../db-chains";
 import { getInboxCounts } from "./inbox-counts";
 import type { OpsDeps, WorkflowRun } from "./deps";
@@ -38,6 +39,12 @@ const opsDb = (): NonNullable<OpsDeps["db"]> => ({
       }),
     ]);
     return { total, unlinked };
+  },
+  unknownSets: async () => {
+    const row = await prisma.opsSnapshot.findUnique({ where: { key: UNKNOWN_SETS_KEY } });
+    if (!row) return null;
+    const j = row.json as { checkedAt?: string; sets?: { setName: string; sample: string }[] };
+    return { checkedAt: j.checkedAt ? new Date(j.checkedAt) : null, sets: Array.isArray(j.sets) ? j.sets : [] };
   },
 });
 

@@ -30,7 +30,8 @@ test("a coming-soon set without a page is served, then shows stock, then redirec
   try {
     assert.equal(preordersHrefForSet("TST", at("2027-04-01")), "/preorders/test-set");
     assert.deepEqual(autoPreorderState("test-set", at("2027-04-01")), { kind: "page", set: fake, upcoming: true });
-    assert.deepEqual(openAutoPreorderSets(at("2027-04-01")).map((s) => s.code), ["TST"]);
+    // REC (The Reckoning, 30 Apr 2027) is also open on 1 Apr 2027, so the list is checked for TST alone.
+    assert.deepEqual(openAutoPreorderSets(at("2027-04-01")).map((s) => s.code).filter((c) => c === "TST"), ["TST"]);
     assert.deepEqual(autoPreorderState("test-set", at("2027-05-10")), { kind: "page", set: fake, upcoming: false });
     assert.equal(openAutoPreorderSets(at("2027-05-10")).length, 0, "out of the sitemap from release day");
     const late = new Date(Date.parse("2027-05-01T00:00:00+11:00") + (AUTO_PREORDER_WINDOW_DAYS + 1) * 86_400_000);
