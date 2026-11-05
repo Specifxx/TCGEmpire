@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "rift",
- "generatedAt": "2026-11-04T16:44:14.832Z",
+ "generatedAt": "2026-11-05T16:31:14.080Z",
  "links": {
   "US": {
    "deals": "https://riftcompare.com/black-friday",
@@ -79,7 +79,7 @@
    "currency": "AUD",
    "store": "Raptor Games",
    "image": "https://cdn.shopify.com/s/files/1/0602/7021/5324/files/riftbound-s2-render-champion_deck-rumble-anr.jpg?v=1765954713",
-   "refCents": 3997,
+   "refCents": 3995,
    "refLabel": "median store price",
    "savingPct": 32
   },
@@ -131,11 +131,23 @@
    "region": "CA",
    "title": "Riftbound Legacy Booster Box",
    "url": "https://riftcompare.com/legacy-preorders",
-   "cents": 19995,
+   "cents": 17999,
    "currency": "CAD",
-   "store": "Cartes Sportives Rive Sud",
-   "image": "https://cdn.shopify.com/s/files/1/0699/8736/9247/files/riftbound-league-of-legends-tcg-legacy-booster-display-pre-order-league-of-legends-810155276980-1333544.png?v=1786733950",
+   "store": "Trinity Hobby",
+   "image": "https://cdn.shopify.com/s/files/1/0428/3347/7798/files/raw_7afcfd49-2660-455a-b997-2ed5d96b5979.png?v=1793858611",
    "releaseDate": "2027-01-29"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "CA",
+   "title": "Riftbound The Reckoning Booster Box",
+   "url": "https://riftcompare.com/the-reckoning-preorders",
+   "cents": 18999,
+   "currency": "CAD",
+   "store": "Screen Free Games",
+   "image": "https://cdn.shopify.com/s/files/1/0815/8786/3827/files/riftboundreckoning.webp?v=1786292684",
+   "releaseDate": "2027-04-30"
   },
   {
    "kind": "deal",
@@ -162,20 +174,6 @@
    "store": "Card Dynasty",
    "image": "https://cdn.shopify.com/s/files/1/0936/4737/2569/files/31_fb56433c-1637-4b96-90b9-3e527d2c5728.png?v=1782416366",
    "refCents": 3999,
-   "refLabel": "median store price",
-   "savingPct": 38
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "CA",
-   "title": "Riftbound Origins Booster Box",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Booster%20Box",
-   "cents": 24995,
-   "currency": "CAD",
-   "store": "The CG Realm",
-   "image": "https://cdn.shopify.com/s/files/1/0438/1130/7678/files/a_b851f2f2-e452-47ed-9941-b69a0f389b25.jpg?v=1759949656",
-   "refCents": 39995,
    "refLabel": "median store price",
    "savingPct": 38
   },
@@ -211,6 +209,20 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "CA",
+   "title": "Riftbound Radiance Bundle",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Bundle",
+   "cents": 4232,
+   "currency": "CAD",
+   "store": "L'Atelier TCG",
+   "image": "https://ateliertcg.com/img/68389-84907c8c/l.webp",
+   "refCents": 6499,
+   "refLabel": "median store price",
+   "savingPct": 35
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "CA",
    "title": "Riftbound Spirit Forged Champion Deck (Fiora)",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Spirit%20Forged%20Champion%20Deck%20(Fiora)",
    "cents": 2294,
@@ -232,6 +244,18 @@
    "store": "SpellNexus",
    "image": "https://cdn.shopify.com/s/files/1/1048/0061/6789/files/RiftboundLegacyBoosterBoxEnglish.png?v=1786358525",
    "releaseDate": "2027-01-29"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "EU",
+   "title": "Riftbound The Reckoning Booster Box",
+   "url": "https://riftcompare.com/the-reckoning-preorders",
+   "cents": 11900,
+   "currency": "EUR",
+   "store": "SpellNexus",
+   "image": "https://cdn.shopify.com/s/files/1/1048/0061/6789/files/Riftbound_Reckoning_Booster_Box_English.png?v=1786359371",
+   "releaseDate": "2027-04-30"
   },
   {
    "kind": "deal",
@@ -395,7 +419,7 @@
    "currency": "GBP",
    "store": "Living Realms",
    "image": "https://cdn.shopify.com/s/files/1/0949/0907/1697/files/CopyofProductshot1080x1080-2026-08-26T150304.143.png?v=1787752581",
-   "refCents": 1995,
+   "refCents": 1997,
    "refLabel": "median store price",
    "savingPct": 25
   },
@@ -440,6 +464,18 @@
    "releaseDate": "2027-01-29"
   },
   {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Riftbound The Reckoning Booster Box",
+   "url": "https://riftcompare.com/the-reckoning-preorders",
+   "cents": 15999,
+   "currency": "USD",
+   "store": "Kollect Korner",
+   "image": "https://cdn.shopify.com/s/files/1/0888/7913/7052/files/RB07BD01.jpg?v=1793760641",
+   "releaseDate": "2027-04-30"
+  },
+  {
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
@@ -459,13 +495,13 @@
    "region": "US",
    "title": "Riftbound Vendetta Showdown Decks",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks",
-   "cents": 1373,
+   "cents": 1441,
    "currency": "USD",
    "store": "Shippin Texas",
    "image": "https://cdn.shopify.com/s/files/1/0676/9413/3386/files/697971.jpg?v=1785959826",
    "refCents": 2499,
    "refLabel": "median store price",
-   "savingPct": 45
+   "savingPct": 42
   },
   {
    "kind": "deal",
@@ -487,13 +523,13 @@
    "region": "US",
    "title": "Riftbound Radiance Showdown Decks",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Showdown%20Decks",
-   "cents": 1799,
+   "cents": 1738,
    "currency": "USD",
-   "store": "Gator's Card Den",
-   "image": "https://cdn.shopify.com/s/files/1/0714/4774/0450/files/RiftboundEvelybbvsSeraphineShowdownDeck.png?v=1792590563",
+   "store": "Shippin Texas",
+   "image": "https://cdn.shopify.com/s/files/1/0676/9413/3386/files/711368.jpg?v=1792759811",
    "refCents": 2800,
    "refLabel": "median store price",
-   "savingPct": 36
+   "savingPct": 38
   },
   {
    "kind": "deal",
