@@ -5385,6 +5385,134 @@ Ready to list? **[Browse the database](/browse)** to price your collection first
 Not sure what the whole pile is worth? **[How much is your Riftbound collection worth?](/guides/how-much-is-your-riftbound-collection-worth)** walks through it, and **[finding price gaps](/guides/how-to-find-riftbound-arbitrage-opportunities)** covers why the same card ends up priced differently from one seller to the next, and how to tell a real gap from a mirage.`,
   },
   {
+    slug: "how-to-spot-fake-riftbound-cards",
+    category: "guide",
+    title: "How to Spot Fake Riftbound Cards",
+    seoTitle: "How to Spot Fake Riftbound Cards: 8 Checks Before You Buy",
+    excerpt: "Eight checks that catch almost every counterfeit Riftbound card, which sellers to avoid, and the chase cards most worth checking, with live prices.",
+    author: "RiftCompare",
+    date: "2026-11-05",
+    readMins: 9,
+    tags: ["collecting", "guide", "buying", "chase cards", "condition"],
+    hero: {
+      src: "/signature-cards/akali-rogue-assassin-ven189.jpg",
+      alt: "Akali, Rogue Assassin, a Signature printing from Riftbound's Vendetta set: the star-numbered tier counterfeiters copy most",
+    },
+    shop: [
+      { label: "Graded Riftbound cards (PSA & BGS)", query: "Riftbound PSA graded" },
+      { label: "Riftbound Signature cards", query: "Riftbound signature card" },
+    ],
+    embed: {
+      title: "The Signature tier: the cards fakes copy most",
+      note: "Every star-numbered Signature printing of the newest set in our database. Tap a card for its page and the live price at every store we track: the honest number to measure a cheap offer against.",
+      chaseSet: "RAD",
+      chaseTier: "signature",
+    },
+    topValue: { country: "US", take: 10, heading: "The cards most worth checking today" },
+    summary: [
+      "**Nobody fakes a Common.** Counterfeit Riftbound cards are copies of the Signature, Showcase, Overnumbered and promo printings, because those are the only ones worth the printer's time. Check those; relax about the rest.",
+      "**The quickest test is a real card.** Put the suspect card beside a known-real card from the same set and compare the back, the border, the font and the feel. Most fakes fail one of those in the first thirty seconds.",
+      "**A price far under every store is a warning, not a bargain.** The live table below shows what the most valuable cards cost at real stores today; an offer at a fraction of that number is where the fakes live.",
+      "**Buy from a store or a slab.** A card a store pulled from its own product, or one already in a PSA or BGS slab whose certification number checks out, has passed the test for you.",
+    ],
+    faq: [
+      {
+        q: "Are fake Riftbound cards common?",
+        a: "At stores, almost never: a store that opens its own product has nothing to fake. On marketplaces, in social-media sales and in cheap bulk lots, yes, in proportion to the price of the card. Signatures, Showcase alt-arts, Overnumbered prints and promos are the printings that turn up as counterfeits; Commons and ordinary Rares are not worth faking.",
+      },
+      {
+        q: "What is the fastest way to check a Riftbound card?",
+        a: "Compare it with a real card from the same set, back to back. Counterfeits get the card back wrong more often than the front: the colour, the sharpness of the logo and the border width. Then hold a phone torch behind each card in turn; a fake on different stock passes a different amount of light. Neither check needs equipment.",
+      },
+      {
+        q: "Can a Signature card be checked from the signature alone?",
+        a: "The printed signature is the part a fake copies most carefully, so no. Check the collector number (a Signature is written with a star, like 223★/221), the foil under the signature, the font of the card text and the back. A counterfeit Signature is usually a good front on the wrong card stock.",
+      },
+      {
+        q: "Does a PSA or BGS slab guarantee the card is real?",
+        a: "A real slab does: graders reject counterfeits. The slab itself can be faked, so check the certification number on PSA's or Beckett's own site and make sure it describes the same card and grade. A number that returns a different card, or no card, is the fake you were trying to avoid.",
+      },
+      {
+        q: "What should I do if I have bought a fake Riftbound card?",
+        a: "Photograph the checks (the back beside a real card, the light test, the font) and claim a refund. eBay's and PayPal's buyer protections treat a counterfeit as not as described, and a store will usually refund without argument. Do not resell it, even described as a proxy; proxies get resold without the description.",
+      },
+    ],
+    body: `Counterfeit trading cards follow the money, and Riftbound's money sits in a small number of printings: the star-numbered Signatures, the Showcase alternate arts, the Overnumbered cards whose collector number runs past the set total, and the promos. Those are the cards that appear as fakes on marketplaces, in social-media sales and, now and then, hidden in a bulk lot. Nobody prints a counterfeit Common.
+
+That shapes this guide. The eight checks below are the ones stores and graders use, none needs more than a phone torch and a real card to compare against, and together they catch almost every fake on the market. The live table further down shows what the most valuable cards cost at real stores today, because a price is the first check of all: an offer at a fraction of every store's price is not a bargain, it is a counterfeit's business model.
+
+## The eight checks, in the order to do them
+
+### 1. The back, beside a real card
+
+Every real Riftbound card has the same back, printed to the same colour, with the same sharpness and the same border width. A counterfeit printer has to match that from a photograph, and almost never does: the colour runs darker or lighter, the logo and the fine detail go soft, and the border comes out a fraction wider or narrower than the real card's. Put the suspect card next to any real card from the same set, backs up, under a good light. If the two backs are not identical, stop there. This one check catches most fakes, which is why it comes first.
+
+### 2. The light test
+
+Hold a phone torch flat against the back of the real card and look at the front in a dim room, then do the same with the suspect card. Card stock is the hardest thing for a counterfeiter to match, because it comes from a paper mill, not a printer, and a card on different stock passes a different amount of light. Judge the two side by side rather than against a rule: what matters is that the suspect card behaves like the real one, not how bright or dark either looks on its own.
+
+### 3. The feel and the thickness
+
+Real cards have a particular stiffness, a particular snap when flexed, and a surface finish that is the same across every card of a print run. Fakes are often glossier, thinner or softer. If you have ten real Commons, stack them beside ten suspect cards: a stack of fakes is usually a visibly different height, and a kitchen scale shows the difference in weight. This is the check most useful on a bulk lot, where the fakes are hidden among real cards.
+
+### 4. The collector number and the printing
+
+Riftbound labels its special printings in the collector number, and a counterfeiter who copies a photograph often copies the wrong one. A Signature card carries a star in its number, written like 223★/221, and is Overnumbered by design; an Overnumbered Showcase card has a number past the set total; an alternate-art printing carries a letter. [Understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity) lists every tier and how it is written. Check that the number on the card matches the printing the seller claims, and that it matches the card's own page on RiftCompare, where each printing is listed by name.
+
+### 5. The foil
+
+Real foil sits under the ink: the pattern is fine and even, and the card's art and text stay sharp as you tilt it. Counterfeits use a coarser rainbow foil, a pattern that runs over the text, or a printed shimmer with no movement at all. Compare against a real foil of the same tier, because a Showcase, a Signature and a promo are each finished differently, and a fake that is "foil" in the wrong way is still a fake. On a Signature, look at the foil around and under the printed signature: that is where the copy is usually weakest.
+
+### 6. The font and the text
+
+The card text is set in a specific typeface at a specific weight, and a counterfeit uses a near match rather than the real thing. Look at the smallest text on the card: the collector number, the artist credit and the rules text. Letter spacing a touch too wide, a stroke a touch too bold, a different style of hyphen or comma, or a line that wraps in a different place from the real card, all mark a fake. Spelling mistakes are a giveaway when they occur, but the better fakes do not make them, so do not rely on finding one.
+
+### 7. The print itself
+
+Under a magnifier, a real card shows a fine, regular dot pattern in the colour areas and clean, solid black in the text. A fake printed from a scan shows blurred edges on the text, colour that bleeds at boundaries, or a coarser dot pattern. By eye, fakes are usually either washed out or oversaturated beside a real copy of the same card, and the small details in the art, the kind that appear only on a print from the original file, go muddy.
+
+### 8. The cut and the corners
+
+Real cards have rounded corners with a consistent radius and smooth, clean edges from a professional die. Fakes often have a slightly different corner radius, a white line along one edge where the cut missed the printed border, or an edge rough enough to feel. Run a fingernail along each edge and compare the corners against a real card.
+
+## The cards most worth checking
+
+The checks above take a minute, so do them on any card worth more than a few dollars. The cards that are worth a counterfeiter's time are the ones at the top of the market, and that is a short list that changes with every set. The table below is built from our own price database each time this page loads: the most valuable Riftbound cards at US stores right now, with each one's cheapest live price. If a seller offers one of these well under the number in the table, treat it as a fake until the eight checks say otherwise.
+
+The Signature tier deserves its own gallery, because the printed artist signature is the single most-copied element in the game. Every star-numbered Signature of the newest set is below, with its live price at every store we track. For older sets, [the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards) keeps the full ranking, and [the price movers](/movers) show which cards are rising this week, which is where the newest fakes tend to appear.
+
+## Where fakes come from, and where they do not
+
+The risk depends far more on where you buy than on what you buy.
+
+- **A card store opening its own product: very low risk.** The store pulled the card from a sealed pack. The only exposure is a store that also buys collections from the public without checking them, and the good ones check.
+- **The stores RiftCompare compares: low risk.** Every price on this site is a real store's listing for a card it is accountable for, and the site shows [where each store sells](/stores) so you can see who you are buying from. A store's price is also the honest number to measure any other offer against.
+- **eBay: low to medium risk.** Buyer protection covers counterfeits, which is why this guide sends you to eBay for graded cards rather than away from it. Check the seller's feedback, insist on photos of the actual card rather than a stock image, and compare the price with the stores.
+- **Social media, marketplace apps and cash sales: high risk.** No protection, stock photos, and most of the fakes anyone reports. Do every check in person before paying, and walk away from a seller who will not let you.
+- **Bulk lots and "mystery" bundles: high risk.** The cheapest way to move fakes is to hide a few among a hundred real Commons. Check the stack with the thickness test before you check any single card.
+
+The same rule applies to sealed product: a booster box is only as real as the store it comes from. [How to store and protect Riftbound cards](/guides/how-to-store-and-protect-riftbound-cards) covers resealed boxes alongside sleeves and binders.
+
+## Graded cards and fake slabs
+
+A card in a PSA or BGS slab has already been through a counterfeit check, which is one reason the most expensive Riftbound cards trade graded, and why [the grading guide](/guides/riftbound-psa-bgs-grading-guide) recommends grading the chase tiers and nothing else. But slabs are faked too, usually around a fake card. Check the certification number on the grader's own site: it should return the same card, the same printing and the same grade, and where the grader publishes a photo, the same photo. A label that is scratched or printed on the wrong stock, a number that returns a different card, or a grading company you cannot find are all the fake you were trying to avoid.
+
+RiftCompare's price comparison covers raw cards. Graded listings appear beside them on a card's page where they exist, labelled as graded, and are never counted as a store's price.
+
+## If you have already bought one
+
+- **Photograph the checks.** The back beside a real card, the light test, the font and the corners. That is the evidence a refund claim needs, and a seller who sees it rarely argues.
+- **Claim inside the window.** eBay and PayPal treat a counterfeit as "significantly not as described"; marketplace apps and stores have their own windows, usually 14 to 30 days. A seller who is a store will almost always refund.
+- **Do not resell it**, even described as a proxy for casual play. Proxies get resold without the description, and the next buyer is not warned.
+- **Next time, compare the price first.** [Search the card database](/browse) for any card and every in-stock listing at the stores we track is ranked by price, with the cheapest first. A chase card at a real store's price is one click, and a "deal" far below it is the first check in this guide failing before you have even seen the card.
+
+## One real card is the best tool you own
+
+Every check in this guide is a comparison, and the comparison is only as good as the real card you hold it against. Keep one real Common and one real foil from a recent set at the front of your binder, and you can check a card at a store, a tournament or a meet-up in under a minute. For a card worth hundreds, add the price check and the slab check, and if the seller will not wait for either, let the card go.
+
+Still deciding what to buy? [The beginner mistakes that cost money](/blog/beginner-mistakes-buying-riftbound-cards) covers the other traps, and [buying singles vs opening packs](/blog/buying-singles-vs-opening-packs) explains why most of the chase cards in the table above are cheaper to buy outright than to chase.`,
+  },
+  {
     slug: "beginner-mistakes-buying-riftbound-cards",
     category: "blog",
     title: "5 Beginner Mistakes Buying Riftbound Cards",
@@ -5433,7 +5561,7 @@ A card that's 50c cheaper isn't a deal if it adds postage from a separate store.
 
 ## 3. Buying the wrong printing
 
-Alt-art, Showcase, Signature, Overnumbered and promo versions of a card can cost many times more than the base print — and they play identically. If you just want the card for your deck, buy the cheap base version. RiftCompare labels each printing right in the card name, so you always know exactly which one you're adding to cart.
+Alt-art, Showcase, Signature, Overnumbered and promo versions of a card can cost many times more than the base print — and they play identically. If you just want the card for your deck, buy the cheap base version. RiftCompare labels each printing right in the card name, so you always know exactly which one you're adding to cart. And if a chase printing is offered far under every store's price, read **[how to spot fake Riftbound cards](/guides/how-to-spot-fake-riftbound-cards)** before you pay: the expensive tiers are the ones that get counterfeited.
 
 ## 4. Ripping boxes hoping to pull what you need
 
