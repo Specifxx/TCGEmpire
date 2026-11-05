@@ -392,7 +392,7 @@ test("stripe: a rejected key is critical, and a missing webhook is critical", as
   assert.equal(noHook[1]!.severity, "crit");
 });
 
-test("stripe: failures that belong to a dead sister-site endpoint say Pro is fine and name it", async () => {
+test("stripe: failures that belong to a dead sister-site endpoint say Premium is fine and name it", async () => {
   const hooks = {
     data: [
       { status: "enabled", url: "https://riftcompare.com/api/marketplace/stripe/webhook" },
@@ -415,7 +415,7 @@ test("stripe: failures that belong to a dead sister-site endpoint say Pro is fin
   const dead = (await run(404))[1]!;
   assert.equal(dead.severity, "warn");
   assert.match(dead.summary, /gundamcompare\.com\/api\/stripe\/webhook/);
-  assert.match(dead.summary, /Pro is not affected/);
+  assert.match(dead.summary, /Premium is not affected/);
   const alive = (await run(400))[1]!;
   assert.match(alive.summary, /failed to reach the site/, "a live sister endpoint could be ours to fix: keep the old warning");
 });

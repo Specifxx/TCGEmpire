@@ -342,7 +342,7 @@ export default async function ChampionPage({ params }: { params: { slug: string 
             common on an 87-page programmatic surface where most champions have
             only a handful of printings — it is the ONLY thing on the page a
             reader can actually buy from. Carries its own disclosure, and unlike
-            the ad units renders for Pro too (see EbayBuyCta's header). */}
+            the ad units renders for Premium too (see EbayBuyCta's header). */}
         <EbayBuyCta query={champ.name} className="mt-4" />
       </section>
 

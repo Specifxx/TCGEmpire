@@ -767,7 +767,7 @@ export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
           area: "money",
           title: hookTitle,
           severity: "crit",
-          summary: "No enabled Stripe webhook points at the site, so a paid subscription would never unlock Pro.",
+          summary: "No enabled Stripe webhook points at the site, so a paid subscription would never unlock Premium.",
           action: "In Stripe → Developers → Webhooks, re-enable the riftcompare.com endpoint, or tell Claude: \"the Stripe webhook is missing\".",
         }),
       );
@@ -784,14 +784,14 @@ export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
       // account, and this account has also carried endpoints for sister sites
       // that later dropped payments (2026-10-27: gundamcompare.com and
       // lorcanacompare.com, both 404s). When every other endpoint is dead, the
-      // failures are theirs, not Pro's: say so, and name what to switch off.
+      // failures are theirs, not Premium's: say so, and name what to switch off.
       out.push(
         result(d, {
           id: "stripe:webhook",
           area: "money",
           title: hookTitle,
           severity: "warn",
-          summary: `${failed} Stripe events failed to reach endpoints that no longer exist (${dead.join(", ")}). RiftCompare's own webhook answers normally, so Pro is not affected.`,
+          summary: `${failed} Stripe events failed to reach endpoints that no longer exist (${dead.join(", ")}). RiftCompare's own webhook answers normally, so Premium is not affected.`,
           action: `In Stripe → Developers → Webhooks, disable ${dead.length === 1 ? "that endpoint" : "those endpoints"}. Or tell Claude: "Stripe webhooks are failing".`,
         }),
       );
@@ -804,7 +804,7 @@ export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
           title: hookTitle,
           severity: sev,
           summary: failed ? `${failed} Stripe event${failed === 1 ? "" : "s"} failed to reach the site in the last day.` : "Webhook enabled; every event in the last day was delivered.",
-          action: sev === "ok" ? undefined : "Payments may not be unlocking Pro. Tell Claude: \"Stripe webhooks are failing\".",
+          action: sev === "ok" ? undefined : "Payments may not be unlocking Premium. Tell Claude: \"Stripe webhooks are failing\".",
         }),
       );
     }

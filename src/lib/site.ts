@@ -46,18 +46,26 @@ export const SITE_URL = "https://riftcompare.com";
 // $4.99/$39.99 Prices stay on them (Stripe never re-prices a subscription by
 // itself) and are listed in STRIPE_PREMIUM_LEGACY_PRICE_IDS.
 // $6.99 a month or $47.88 a year ($3.99/mo) from 2026-10-26, and the plan is
-// called Pro (owner: "$6.99 a month … if you go yearly plan, then it's around
+// called Premium (owner: "$6.99 a month … if you go yearly plan, then it's around
 // $3.99 a month"). Collectr PRO is $7.99 a month or $59.99 a year ($4.99/mo).
 // $47.88 is exactly 12 × $3.99, so "$3.99/mo billed yearly" is literally true.
-// DECISIONS.md, "Pro: Collectr's model, $6.99 or $3.99/mo yearly". Current
+// DECISIONS.md, "Premium: Collectr's model, $6.99 or $3.99/mo yearly". Current
 // subscribers keep what they pay (none pays more than $6.99 a month).
-export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$6.99";
+// BACK TO $4.99 a month or $39.99 a year from 2026-11-05 (owner: "I don't think
+// anyone's buying premium … use something that we used early on which had the
+// best retention"): August's setup, $4.99 with a free 14-day card-gated trial,
+// converted 7 of 7 trials and lost none; nothing since has. DECISIONS.md,
+// "Premium goes back to what worked in August". The owner repoints
+// STRIPE_PREMIUM_PRICE_ID / _ANNUAL_PRICE_ID at the existing Sep 2026 $4.99 and
+// $39.99 Prices and lists the $6.99/$47.88 ids in STRIPE_PREMIUM_LEGACY_PRICE_IDS;
+// the subscribers on $6.99 move DOWN at renewal, nobody moves up.
+export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$4.99";
 export const PREMIUM_PRICE_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_PRICE_PERIOD || "month";
 export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${PREMIUM_PRICE_AMOUNT}/mo`;
 
 // Annual plan (display only; the actual charge comes from the Stripe annual price,
 // enabled via STRIPE_PREMIUM_ANNUAL_PRICE_ID — see lib/premium.ts).
-export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$47.88";
+export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$39.99";
 export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERIOD || "year";
 
 // ── Plus: the second, cheaper paid tier (2026-09-11) ────────────────────────
@@ -84,7 +92,7 @@ export const PLUS_ON_SALE = false;
 // Plus is on sale, "Premium" (which includes all of it) while it is not. For
 // upsell copy only — a sentence addressed to a CURRENT Plus member still says
 // "Plus".
-export const ENTRY_TIER_NAME: "Plus" | "Pro" = PLUS_ON_SALE ? "Plus" : "Pro";
+export const ENTRY_TIER_NAME: "Plus" | "Premium" = PLUS_ON_SALE ? "Plus" : "Premium";
 export const PLUS_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PLUS_PRICE_AMOUNT || "$2.99";
 export const PLUS_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PLUS_ANNUAL_AMOUNT || "$23.99";
 
@@ -98,7 +106,7 @@ export const PLUS_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PLUS_ANNUAL_AMOUNT || 
 // price banner says instead.
 
 export type PremiumTierKey = "plus" | "premium";
-export const TIER_NAMES: Record<PremiumTierKey, string> = { plus: "Plus", premium: "Pro" };
+export const TIER_NAMES: Record<PremiumTierKey, string> = { plus: "Plus", premium: "Premium" };
 
 function monthlyAmountFor(tier: PremiumTierKey): string {
   return tier === "plus" ? PLUS_PRICE_AMOUNT : PREMIUM_PRICE_AMOUNT;
@@ -211,7 +219,7 @@ export function trialThenLine(days: number, feeCents: number, then: string): str
   return `${trialOfferLead(days, feeCents)}, then ${then}`;
 }
 
-/** The buy button: "Start 30 days for $1", or "Start 3-day free trial" (2026-11-03). */
+/** The buy button: "Start 30 days for $1", or "Start 14-day free trial" (3 days 2026-11-03, 14 from 2026-11-05). */
 export function trialButtonLabel(days: number, feeCents: number): string {
   return feeCents > 0 ? `Start ${trialDaysPhrase(days)} for ${premiumTrialFee(feeCents)}` : `Start ${days}-day free trial`;
 }
@@ -331,14 +339,14 @@ export function premiumPriceIncreaseAnnounced(): boolean {
 // invented future figure (tests/premium-price-increase.test.ts).
 export function premiumLockInLine(): string {
   return premiumPriceIncreaseAnnounced()
-    ? `We're raising Pro's price soon, to ${PREMIUM_NEXT_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}. Subscribe now and keep ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} for as long as you stay subscribed — no action needed when the price changes.`
+    ? `We're raising Premium's price soon, to ${PREMIUM_NEXT_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}. Subscribe now and keep ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} for as long as you stay subscribed — no action needed when the price changes.`
     : `No contract: cancel anytime from your account page, in a couple of clicks.`;
 }
 
 export function premiumLockInHeadline(): string {
   return premiumPriceIncreaseAnnounced()
     ? `Price increasing soon — lock in ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} now`
-    : `Pro is ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
+    : `Premium is ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} — cancel anytime`;
 }
 
 // The compact tail for a small inline caption ("$4.99/month · …"), used by the
@@ -443,6 +451,6 @@ export function premiumLockInTail(): string {
 // "one-plan-2026-10-23": Premium only at $9.99/$79.99, 30-day free trial, Plus off sale
 // "rebrand-2026-10-23": "Never overpay for Riftbound again", live proof, outcome cards, one free alert
 // "one-table-2026-10-25": /premium is one plan table (Monthly, Annual) and the Free vs Premium comparison
-// "pro-theme-2026-11-02": the same Pro plan and prices, the page restyled in the site's own theme (orange, flat panels)
+// "pro-theme-2026-11-02": the same Premium plan and prices, the page restyled in the site's own theme (orange, flat panels)
 // "pro-trial-2026-11-03": the same page and prices with a free 3-day trial ("Start 3-day free trial").
-export const PREMIUM_COPY_VERSION = "pro-trial-2026-11-03";
+export const PREMIUM_COPY_VERSION = "pro-499-14day-2026-11-05";

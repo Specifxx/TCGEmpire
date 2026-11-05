@@ -1636,7 +1636,7 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // 749 in stock, 98% matched. Back under its old key.
   manapro: {
     key: "manapro",
-    name: "Mana Pro",
+    name: "Mana Premium",
     base: "https://sg-manapro.com",
     collections: ["riftbound-league-of-legends-trading-card-game"],
     shippingFlatCents: 300,

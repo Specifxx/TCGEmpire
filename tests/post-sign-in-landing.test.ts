@@ -48,7 +48,7 @@ test("a new account returned to its page gets one quiet 'account ready' toast po
   assert.match(w, /action=\{\s*toastAction \?/);
 });
 
-test("the header's Pro callout is gone for good (owner, 2026-11-03)", () => {
+test("the header's Premium callout is gone for good (owner, 2026-11-03)", () => {
   assert.ok(!existsSync(join(process.cwd(), "src/components/PricingNudge.tsx")));
 });
 

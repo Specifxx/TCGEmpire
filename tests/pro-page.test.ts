@@ -18,16 +18,16 @@ import {
 import { MIN_RATINGS_TO_SHOW, ratingLine, ratingToShow } from "../src/lib/site-rating";
 import { PREMIUM_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT, annualSavingPct, premiumEffectiveMonthly } from "../src/lib/site";
 
-// The Collectr-style Pro page and the "Rate RiftCompare" prompt (owner,
-// 2026-10-26). DECISIONS.md, "Pro: Collectr's model, $6.99 or $3.99/mo yearly".
+// The Collectr-style Premium page and the "Rate RiftCompare" prompt (owner,
+// 2026-10-26). DECISIONS.md, "Premium: Collectr's model, $6.99 or $3.99/mo yearly".
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const T0 = 1_800_000_000_000;
 
-test("Pro is $6.99 a month or $47.88 a year, which is exactly $3.99 a month", () => {
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$6.99");
-  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$47.88");
-  assert.equal(premiumEffectiveMonthly("premium"), "$3.99");
-  assert.equal(annualSavingPct("premium"), 43);
+test("Premium is $4.99 a month or $39.99 a year ($3.33 a month) again from 2026-11-05, August's price", () => {
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$4.99");
+  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$39.99");
+  assert.equal(premiumEffectiveMonthly("premium"), "$3.33");
+  assert.equal(annualSavingPct("premium"), 33, "$39.99 against 12 × $4.99 = $59.88");
 });
 
 const V = { pages: 2, otherPromptShown: false };
@@ -68,7 +68,7 @@ test("one interruption per visit, never on arrival: the rating drive is over (ow
   assert.equal(shouldShowPricingNudge(fresh, 5), false, "never in a first visit");
   assert.equal(shouldShowPricingNudge({ ...fresh, visits: 2 }, 1), false, "never on a visit's first page");
   assert.equal(shouldShowPricingNudge({ ...fresh, visits: 2 }, 2), true);
-  // The callout itself went on 2026-11-03 (owner: no Pro or sign-up sliders).
+  // The callout itself went on 2026-11-03 (owner: no Premium or sign-up sliders).
   assert.ok(!existsSync(join(process.cwd(), "src/components/PricingNudge.tsx")));
   assert.match(c, /otherPromptShown: otherPromptShown\(\)/, "the card still yields to the visit's slot");
 });
@@ -107,7 +107,7 @@ test("the prompt is a closable corner card, not a modal, and still posts a ratin
   assert.match(c, /<RatingReviewForm[\s\S]{0,80}source="rating"/, "the same form as every rating surface");
   const route = read("src/app/api/feedback/route.ts");
   assert.match(route, /"rating", "rating-review"\]\)/, "the API accepts both sources");
-  assert.match(route, /!source\.startsWith\("rating"\) && feedbackPremiumActive\(\)/, "a star tap or its review earns no free Pro");
+  assert.match(route, /!source\.startsWith\("rating"\) && feedbackPremiumActive\(\)/, "a star tap or its review earns no free Premium");
 });
 
 test("a tapped star counts even when the form is closed unsent, and never twice", () => {
@@ -141,7 +141,7 @@ test("the rating shown is real and only shown once there are enough", () => {
   assert.equal(ratingLine({ average: 4.7, count: 1234 }), "4.7 rating · 1,234 ratings");
   const landing = read("src/components/premium/ProLanding.tsx");
   assert.match(landing, /<SiteRatingBadge rating=\{rating\}/);
-  assert.match(landing, /<div className="pt-12 empty:hidden">\s*<ReviewsSection rating=\{rating\} \/>/, "approved reviews on the Pro page");
+  assert.match(landing, /<div className="pt-12 empty:hidden">\s*<ReviewsSection rating=\{rating\} \/>/, "approved reviews on the Premium page");
   assert.ok(landing.indexOf("<ReviewsSection") < landing.indexOf('id="features"'), "reviews sit under the hero, above the feature panels (owner, 2026-11-03)");
   const home = read("src/app/page.tsx");
   assert.match(home, /<ReviewsSection rating=\{rating\} \/>/, "the homepage shows the reviews too");
@@ -169,7 +169,7 @@ test("the landing reads its prices from the page, in the site's own theme (owner
   assert.match(page, /perMonth: premiumEffectiveMonthly\("premium"\)/);
   const landing = read("src/components/premium/ProLanding.tsx");
   assert.match(landing, /href="#features"[\s\S]{0,200}See all features/);
-  assert.match(landing, /id="compare"/, "Free and Pro in one table");
+  assert.match(landing, /id="compare"/, "Free and Premium in one table");
   // No made-up portfolio, no gold gradients, no emoji icons: "too gimmicky".
   assert.doesNotMatch(landing, /\$1,284|bg-gradient|bg-clip-text|#f6dc8f/);
   assert.doesNotMatch(landing, /\p{Extended_Pictographic}/u, "line icons, not emoji");

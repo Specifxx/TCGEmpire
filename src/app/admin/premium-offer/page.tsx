@@ -11,11 +11,11 @@ export const dynamic = "force-dynamic";
 
 // Admin-only — self-noindex (robots.ts doesn't block /admin) + gated below.
 export const metadata: Metadata = {
-  title: "Feedback and Pro email",
+  title: "Feedback and Premium email",
   robots: { index: false, follow: false },
 };
 
-// The owner's console for the feedback + Pro email (2026-10-27; the free-trial
+// The owner's console for the feedback + Premium email (2026-10-27; the free-trial
 // promotion of 2026-10-12 and the price-drop announcement of 2026-09-27 before it):
 // the reach before anything is sent (a dry run on every page load: audience,
 // already sent, remaining, opted out), a test send to one inbox, and the
@@ -53,12 +53,12 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
       <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
         <Link href={`/admin${keySuffix}`} className="hover:text-slate-300">Admin</Link>
         <span>/</span>
-        <span className="text-slate-300">Feedback and Pro email</span>
+        <span className="text-slate-300">Feedback and Premium email</span>
       </nav>
-      <h1 className="text-2xl font-bold text-white">Feedback and Pro email</h1>
+      <h1 className="text-2xl font-bold text-white">Feedback and Premium email</h1>
       <p className="mt-1 max-w-3xl text-sm text-slate-400">
         One email to every account that is not paying. Subject: <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It asks
-        for a one-tap star rating (each star opens /feedback with that rating picked) and then offers Pro at{" "}
+        for a one-tap star rating (each star opens /feedback with that rating picked) and then offers Premium at{" "}
         {PREMIUM_PRICE_AMOUNT}/month or {PREMIUM_ANNUAL_AMOUNT}/year, each button opening checkout for that plan. No trial
         and no affiliate links. Never emailed, whatever is ticked: paying accounts, admins, seed accounts and anyone who
         opted out of announcements. Accounts that got an earlier campaign can get this one.

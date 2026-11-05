@@ -80,7 +80,7 @@ test("the layout mounts no signed-out sign-up nudge, and the file is gone", () =
   }
 });
 
-test("no Pro or sign-up slider at all (owner, 2026-11-03: \"get rid of all the sliders regarding the premium and the signups\")", () => {
+test("no Premium or sign-up slider at all (owner, 2026-11-03: \"get rid of all the sliders regarding the premium and the signups\")", () => {
   const layout = code("src/app/layout.tsx");
   assert.doesNotMatch(layout, /<PremiumSlideIn/, "the Akali slider is gone (owner: \"it's not working\")");
   assert.ok(!exists("src/components/PremiumSlideIn.tsx"));
@@ -94,7 +94,7 @@ test("no Pro or sign-up slider at all (owner, 2026-11-03: \"get rid of all the s
   assert.equal(NUDGE_DELAY_MS, 12_000, "the rating card keeps the shared delay");
 });
 
-test("the nudge gate's old sign-up and Pro page-count rules are gone", () => {
+test("the nudge gate's old sign-up and Premium page-count rules are gone", () => {
   for (const name of ["signupPromoEligible", "signupEngagedNeededMs", "isLandingPage", "SIGNUP_ENGAGED_MS", "signupCardEligible", "premiumSlideInEligible", "PREMIUM_MIN_VIEWS"]) {
     assert.ok(!(name in gate), `${name} is gone from lib/nudge-gate.ts`);
   }
@@ -117,11 +117,11 @@ test("InlineSignupPrompt: no timer, no modal, not fixed or sticky, no dismiss", 
   assert.doesNotMatch(src, /Dismiss|Maybe later|localStorage|sessionStorage/, "nothing to dismiss, nothing remembered");
 });
 
-test("InlineSignupPrompt: the free account only: no price, no gold, no Pro, no pressure", () => {
+test("InlineSignupPrompt: the free account only: no price, no gold, no Premium, no pressure", () => {
   const src = code(PROMPT);
   assert.doesNotMatch(src, /PREMIUM_PRICE|premiumZeroToday|premiumFromLine|premiumLockIn|\$\d/, "no price");
   assert.doesNotMatch(src, /\bgold\b/, "gold is the paid tiers' colour");
-  assert.doesNotMatch(src, /PremiumButton|firePremiumClickBeacon|\/premium/, "no Pro ask");
+  assert.doesNotMatch(src, /PremiumButton|firePremiumClickBeacon|\/premium/, "no Premium ask");
   assert.doesNotMatch(src, /only \d+ (left|spots|seats)|expires? in|countdown|hurry|today only/i, "no scarcity or countdown");
   assert.doesNotMatch(src, /grantPremiumDays|grantPremiumMonths|signupPremiumDays/, "a link, never a grant");
   assert.match(src, /Create a free account/);

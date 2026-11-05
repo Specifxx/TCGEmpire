@@ -9,7 +9,7 @@ import { addDays, mergeDays, tagGroup, TAG_NAMES, toDisplay, type DayAmount, typ
 // Stripe, AdSense and Mediavine are RiftCompare's alone. Vercel cost per site
 // comes from Vercel's FOCUS billing export (GET /v1/billing/charges), which tags
 // every usage charge with the project it belongs to. A charge with no project
-// (the Pro plan itself, seats, tax) and every other cost line is "Shared".
+// (the Premium plan itself, seats, tax) and every other cost line is "Shared".
 //
 // PURE: costs.ts fetches the charges; this parses and adds them up.
 
@@ -84,7 +84,7 @@ export function siteForProject(project: string): string {
   return SITES.find((s) => s.project.test(p))?.key ?? `project:${p}`;
 }
 
-// Earnings that carry no tag but belong to one site: RiftCompare's Pro plan and Stores (Stripe), its ads.
+// Earnings that carry no tag but belong to one site: RiftCompare's Premium plan and Stores (Stripe), its ads.
 const SOURCE_SITE: Partial<Record<SourceResult["key"], string>> = { stripe: "rc", adsense: "rc", mediavine: "rc" };
 
 export interface SiteRow {

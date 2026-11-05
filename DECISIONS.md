@@ -22498,3 +22498,40 @@ the quick view (no Amazon link in a pop-up). The credentials (`AMAZON_CREATORS_A
 `_VERSION`, a market's own `AMAZON_CREATORS_<MARKET>_*` overriding) are Vercel Production variables, never in the repo.
 The ops monitor asks the route for the most-stocked US product (`amazon:prices`: unknown without credentials, warn when
 refused, ok otherwise, never crit). `tests/amazon-api.test.ts` keeps the client behind the route alone.
+
+## 2026-11-05 — Premium goes back to what worked in August: $4.99 a month, 14 days free, and its name
+
+The owner: "I don't think anyone's buying premium for Riftcompare. I think we need to use something that we used
+early on which had the best retention and fastest turnaround." Supersedes the Pro price of 2026-10-26 and the 3-day
+trial of 2026-11-03.
+
+**What "early on" was, from this file and the funnel reports.** From 2026-08-18 to 08-31 the paid plan was $4.99 a
+month ($39.99 a year) with a free 14-day card-gated trial. The 2026-10-12 entry read the matured cohorts: August, 7 of
+7 trials converted; the 2026-09-23 entry found no paying subscriber had churned. September at $9.99 with the same
+14-day trial lost 5 of 6 matured trials in the trial, "too expensive" the first reason given. Everything after it (the
+$4.99 cut with no trial, the $1 first month, $9.99 with 30 days, Pro at $6.99 with no trial, then with 3 days) made
+about fifteen trials in eight weeks and no new paying member (the 2026-10-26 entry). The trial converted when it was
+long enough to form the habit, and $4.99 is the one price nobody called too expensive. So the exact August pair.
+
+- **$4.99 a month or $39.99 a year** (`lib/site.ts` defaults; "$3.33/mo billed yearly", a 33% saving). The charge
+  comes from `STRIPE_PREMIUM_PRICE_ID` / `_ANNUAL_PRICE_ID`, which the owner repoints at the Sep 2026 "Premium
+  monthly (Sep 2026)" $4.99 and "Premium yearly (Sep 2026)" $39.99 Prices that already exist on the product, adding
+  the $6.99 / $47.88 ids to `STRIPE_PREMIUM_LEGACY_PRICE_IDS`. Nobody moves up: the subscribers on $6.99 move down to
+  $4.99 at their next renewal in the dashboard (no proration, no invoice now), everyone on $4.99, $3.99, $2.99 or
+  $39.99 stays. Until the two variables are repointed the page would quote $4.99 and Stripe Checkout show $6.99, so
+  the variables come FIRST and the release after (the Chrome prompt in the project files does both).
+- **A free 14-day trial** (`PREMIUM_TRIAL_DAYS` default 14, fee 0), on both plans, card required, auto-converts, one
+  per account and never for anyone who has paid (`trialOfferedTo`); the daily *Premium trial reminders* run emails
+  each trialist 24–48 hours before the charge. A Vercel `PREMIUM_TRIAL_DAYS` still overrides it and must not exist;
+  `0` is the kill switch. The button says "Start 14-day free trial", the plan card "14 days free · Cancel anytime".
+- **The plan is called RiftCompare Premium again** (owner, same evening: "We should call it Riftcompare premium not
+  pro"), in every user-facing string, title, JSON-LD, email and article; the 2026-10-26 "Pro" name is gone. Routes
+  (`/premium`), identifiers, tier keys and database columns were never renamed, so nothing moves. Collectr's own
+  plan is still called PRO where the entry that copied it is quoted.
+- No pop-up, slider or banner (pop-up policy); no reward for a review; AdSense stays off. Nothing a free account has
+  is taken away. `PREMIUM_COPY_VERSION` is `pro-499-14day-2026-11-05`.
+
+**Measure.** Trial starts per upgrade click and trial-to-paid by copy version, against the August row in the
+2026-10-12 entry, once the first 14-day cohort matures (from about 20 November). Leave price, trial and pitch alone
+until then: six changes since August meant no single setup was ever measured, and this one is the only setup that
+has already been.

@@ -32,7 +32,7 @@ test("the sign-up card never interrupts a visit's first pages (removed 09-30, re
   // 2026-10-17: the separate sign-up card is gone; the Akali slider asks everyone.
 });
 
-test("the header's Pricing callout is gone (owner, 2026-11-03: no Pro or sign-up sliders)", () => {
+test("the header's Pricing callout is gone (owner, 2026-11-03: no Premium or sign-up sliders)", () => {
   // Replaced the corner Premium slider on 2026-10-25 (PricingNudge); removed 2026-11-03.
   assert.ok(!existsSync(join(process.cwd(), "src/components/PricingNudge.tsx")));
   assert.doesNotMatch(code("src/components/GetPremiumLink.tsx"), /PricingNudge/);

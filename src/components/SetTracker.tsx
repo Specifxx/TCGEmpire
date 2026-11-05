@@ -297,7 +297,7 @@ function PlanThePurchase({
       </Link>
       <p className="mt-2 text-xs text-slate-400">
         Best Basket prices the {count} missing {setName} {count === 1 ? "card that has" : "cards that have"} a store listing, delivered, with each store&apos;s measured postage.
-        Any account sees its total; Pro shows which store to buy each card from.
+        Any account sees its total; Premium shows which store to buy each card from.
         {(count ?? 0) > SET_GAP_CHUNK ? ` A plan holds up to ${SET_GAP_CHUNK} cards, so it starts with the ${SET_GAP_CHUNK} cheapest and offers the next ${SET_GAP_CHUNK}.` : ""}
       </p>
     </section>

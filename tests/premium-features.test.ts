@@ -151,7 +151,7 @@ function auctionDb(opts: { premiumTier?: string; paused?: string[]; sent?: { ema
   return { db: db as never, created };
 }
 
-test("a Pro member gets one email with their market's matching auctions, soonest first, and each is sent once", async () => {
+test("a Premium member gets one email with their market's matching auctions, soonest first, and each is sent once", async () => {
   const { db, created } = auctionDb();
   const sends: { to: string; items: { itemId: string }[] }[] = [];
   const s = await runAuctionAlerts({ db, now: NOW, dailyBudget: 100, send: async (to, items) => (sends.push({ to, items: items as never }), true) });
@@ -165,7 +165,7 @@ test("a Pro member gets one email with their market's matching auctions, soonest
   assert.equal(s2.emails, 0);
 });
 
-test("a billed-Plus account is treated as Pro (grandfathered, PLUS_ON_SALE=false), and a paused address is skipped", async () => {
+test("a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false), and a paused address is skipped", async () => {
   // Plus is off sale; since 2026-10-23 a billed "plus" reads as Premium at its
   // Plus price (effectiveTier; DECISIONS.md, "Plus members get Premium"), so a
   // Plus member gets the same auction email a Premium member does.

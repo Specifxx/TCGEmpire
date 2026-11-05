@@ -50,21 +50,21 @@ const TOOLS: Tool[] = [
   },
   {
     href: "/admin/premium",
-    title: "Pro interest",
+    title: "Premium interest",
     icon: "💎",
-    desc: "Who clicked a Pro CTA or started checkout — interest ahead of conversion.",
+    desc: "Who clicked a Premium CTA or started checkout — interest ahead of conversion.",
   },
   {
     href: "/admin/premium-offer",
-    title: "Feedback and Pro email",
+    title: "Feedback and Premium email",
     icon: "🎁",
-    desc: "Ask every non-paying account for a one-tap rating and invite them to Pro: see the reach, send yourself a test, then send in daily batches.",
+    desc: "Ask every non-paying account for a one-tap rating and invite them to Premium: see the reach, send yourself a test, then send in daily batches.",
   },
   {
     href: "/admin/premium-winback",
-    title: "Pro win-back email",
+    title: "Premium win-back email",
     icon: "🔗",
-    desc: "Send recently-registered free accounts a single-use link that grants a few days of Pro instantly — no card, no checkout, no manual grant step.",
+    desc: "Send recently-registered free accounts a single-use link that grants a few days of Premium instantly — no card, no checkout, no manual grant step.",
   },
   {
     href: "/admin/growth",
@@ -130,7 +130,7 @@ const TOOLS: Tool[] = [
     href: "/admin/loyalty",
     title: "Loyal users",
     icon: "🏆",
-    desc: "Most active by days used, biggest collections, longest-tenured Pro members.",
+    desc: "Most active by days used, biggest collections, longest-tenured Premium members.",
   },
   {
     href: "/admin/store-health",

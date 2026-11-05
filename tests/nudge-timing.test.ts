@@ -27,8 +27,8 @@ const readCode = (p: string) =>
 // removed on 2026-09-30; two corner nudges remain, both signed-in.)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// The Pro callout (PricingNudge) and the annual corner card (AnnualSwitchNudge)
-// went on 2026-11-03 (owner: no Pro or sign-up sliders). The rating card is the
+// The Premium callout (PricingNudge) and the annual corner card (AnnualSwitchNudge)
+// went on 2026-11-03 (owner: no Premium or sign-up sliders). The rating card is the
 // one corner nudge left, and it keeps the shared timer.
 const NUDGES = ["src/components/RateUsPrompt.tsx"];
 const RUNTIME = "src/lib/nudge-runtime.ts";

@@ -47,9 +47,9 @@ test("today's decided price is what the site actually announces, with no increas
   // no announced future increase) so a careless edit changes it loudly rather
   // than silently. The cut is exactly the edit that would have announced a
   // FAKE increase had PREMIUM_NEXT_PRICE_AMOUNT stayed a hand-typed "$9.99".
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$6.99", "Pro at $6.99 from 2026-10-26");
-  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$47.88", "12 × $3.99");
-  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$6.99");
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$4.99", "Premium at $4.99 again from 2026-11-05 ($6.99 from 2026-10-26)");
+  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$39.99");
+  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$4.99");
   assert.equal(premiumPriceIncreaseAnnounced(), false);
 });
 
@@ -119,7 +119,7 @@ test("with no announcement live, the helpers say only what is true: cancel anyti
   // protection from a rise nobody had decided. The steady state now says the
   // one thing that is unconditionally true.
   assert.equal(premiumLockInLine(), "No contract: cancel anytime from your account page, in a couple of clicks.");
-  assert.equal(premiumLockInHeadline(), "Pro is $6.99/month — cancel anytime");
+  assert.equal(premiumLockInHeadline(), "Premium is $4.99/month — cancel anytime");
   for (const copy of [premiumLockInLine(), premiumLockInHeadline()]) {
     assert.doesNotMatch(copy, /lock|goes up|rises|rise|increas/i, `steady state must not imply a coming increase: "${copy}"`);
   }
@@ -196,7 +196,7 @@ test("every surface that pitches a price shares the ONE lock-in helper, rather t
   }
 });
 
-test("the full-banner treatment is gated on NOT already being Pro", () => {
+test("the full-banner treatment is gated on NOT already being Premium", () => {
   // An already-Premium visitor is grandfathered regardless of any announcement
   // — showing them urgency to \"lock in\" a price they're already locked into
   // is either confusing or, worse, reads as a threat that THEIR price might
@@ -215,7 +215,7 @@ test("the full-banner treatment is gated on NOT already being Pro", () => {
     const bannerAt = src.indexOf("{premiumLockInHeadline()}");
     assert.ok(bannerAt >= 0, `${file}: expected the price-increase banner`);
     const before = src.slice(Math.max(0, bannerAt - 900), bannerAt);
-    assert.match(before, /!already|!premium/, `${file}: the banner must be gated behind a "not already Pro" check`);
+    assert.match(before, /!already|!premium/, `${file}: the banner must be gated behind a "not already Premium" check`);
   }
 });
 
@@ -265,7 +265,7 @@ test("the terms no longer claim existing subscribers are never moved; the no-ris
 // test's own existence predicts it always will.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the Pro-explained article states the price the site actually charges, not a stale one", () => {
+test("the Premium-explained article states the price the site actually charges, not a stale one", () => {
   const article = ARTICLES.find((a) => a.slug === "riftcompare-premium-explained");
   assert.ok(article, "expected the riftcompare-premium-explained article to exist");
 
@@ -300,12 +300,13 @@ test("the Pro-explained article states the price the site actually charges, not 
   // intro. ($4.99 and $39.99 are legitimately still in the article — they are
   // today's Premium prices, which were Plus's before the cut.)
   // $9.99/$79.99 are today's prices again (2026-10-23); the cut's $39.99 annual is retired.
-  // Pro at $6.99/$47.88 from 2026-10-26: $9.99 and $79.99 are retired again.
+  // Premium at $6.99/$47.88 from 2026-10-26: $9.99 and $79.99 are retired again.
   assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
   assert.ok(!haystack.includes("$79.99"), "article must not still quote the retired $79.99 annual price anywhere");
   assert.ok(!/half price for their first/i.test(haystack), "no intro while it is off");
-  // The free 3-day trial is on again from 2026-11-03.
-  assert.ok(/3[- ]days?\b[^.]{0,40}free|free[^.]{0,20}3[- ]day/i.test(haystack), "the article quotes the 3-day free trial now that it is on");
+  // The free 14-day trial is back from 2026-11-05 (3 days from 2026-11-03).
+  assert.ok(/14[- ]days?\b[^.]{0,40}free|free[^.]{0,20}14[- ]day/i.test(haystack), "the article quotes the 14-day free trial now that it is on");
+  assert.ok(!haystack.includes("$6.99") && !haystack.includes("$47.88"), "the retired $6.99 / $47.88 Premium prices are not quoted");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -318,7 +319,7 @@ test("the Pro-explained article states the price the site actually charges, not 
 // benefit from a one-click checkout without leaving the page they're on.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("every literal 'Pro' nav entry point navigates straight to /premium, not the dialog", () => {
+test("every literal 'Premium' nav entry point navigates straight to /premium, not the dialog", () => {
   // CinematicNavMenu's gold spotlight was removed on 2026-09-28; its /premium
   // entry is a plain NAV_GROUPS link now.
   for (const file of [
@@ -328,7 +329,7 @@ test("every literal 'Pro' nav entry point navigates straight to /premium, not th
   ]) {
     const src = read(file);
     // Navbar's links go through GetPremiumLink (2026-10-15), itself a PremiumNavLink.
-    assert.match(src, /PremiumNavLink|GetPremiumLink/, `${file} must use PremiumNavLink, not the dialog, for its "Pro" link`);
+    assert.match(src, /PremiumNavLink|GetPremiumLink/, `${file} must use PremiumNavLink, not the dialog, for its "Premium" link`);
     assert.ok(!/usePremiumDialog/.test(src), `${file} must no longer import the dialog hook at all`);
   }
   assert.ok(!/usePremiumDialog/.test(read("src/components/CinematicNavMenu.tsx")));
@@ -369,7 +370,7 @@ test("the premium-interest beacon still fires from every retired dialog entry po
 // popup was removed on 2026-09-30. Its replacement, InlineSignupPrompt, carries
 // the same no-price guarantee in tests/signup-inline.test.ts.
 
-test("the dialog's Pro lock-in copy shows only while Pro is the plan selected", () => {
+test("the dialog's Premium lock-in copy shows only while Premium is the plan selected", () => {
   // QA, 2026-09-25: every Plus gate opens the dialog on Plus, which then led
   // with "Lock in $9.99/month" over a $4.99 Plus checkout, under a PREMIUM badge.
   const src = read("src/components/PremiumDialog.tsx");

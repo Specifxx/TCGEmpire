@@ -107,7 +107,7 @@ export default async function WatchingPage() {
             anchor: where the price stood before the slide), a first listing (labelled pre-order before release) or a
             restock; the paid triggers — a target (free: FREE_TARGET_ALERT_LIMIT
             card, checked by the daily run; Plus: PLUS_TARGET_ALERT_LIMIT cards,
-            Pro: any), a card at least 15% below TCGplayer market,
+            Premium: any), a card at least 15% below TCGplayer market,
             and restocks — send after each price update, without the weekly
             wait. Snooze and pause are lib/alert-actions.ts and
             lib/alert-mute.ts. Plus is described as ad-free wherever it is
@@ -130,7 +130,7 @@ export default async function WatchingPage() {
               {PLUS_ON_SALE ? (
                 <>With Plus (ad-free), set your own price on up to {PLUS_TARGET_ALERT_LIMIT} cards and hear as soon as</>
               ) : (
-                <>With Pro (ad-free), set your own price on every card you watch and hear as soon as</>
+                <>With Premium (ad-free), set your own price on every card you watch and hear as soon as</>
               )}{" "}
               it&apos;s met, after every price update, and when one drops below TCGplayer market.
             </>
@@ -158,11 +158,11 @@ export default async function WatchingPage() {
         <ul className="mt-2 grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
           <li>
             <strong className="text-white">Cards</strong> — free, as many as you like. An email when a card you watch hits a new
-            low at a store. <strong className="text-white">A target</strong> ({quotePlus ? `free: ${FREE_TARGET_ALERT_LIMIT} card, Plus: ${PLUS_TARGET_ALERT_LIMIT}, Pro: any` : `free: ${FREE_TARGET_ALERT_LIMIT} card, Pro: any`}) is your
+            low at a store. <strong className="text-white">A target</strong> ({quotePlus ? `free: ${FREE_TARGET_ALERT_LIMIT} card, Plus: ${PLUS_TARGET_ALERT_LIMIT}, Premium: any` : `free: ${FREE_TARGET_ALERT_LIMIT} card, Premium: any`}) is your
             own price: we email you as soon as a store has it there.
           </li>
           <li>
-            <strong className="text-white">Sealed products</strong> — {quotePlus ? `free: ${FREE_SEALED_WATCH_LIMIT}, Plus: up to ${SEALED_WATCH_LIMIT_PLUS}, Pro: any` : `free: ${FREE_SEALED_WATCH_LIMIT} product, Pro: any number`}. Tap the
+            <strong className="text-white">Sealed products</strong> — {quotePlus ? `free: ${FREE_SEALED_WATCH_LIMIT}, Plus: up to ${SEALED_WATCH_LIMIT_PLUS}, Premium: any` : `free: ${FREE_SEALED_WATCH_LIMIT} product, Premium: any number`}. Tap the
             heart on a box on /sealed: an email when it is back in stock after selling out everywhere, at RRP (the price Riot sets;
             {SEALED_RRP_ONLY}), or at your price. Checked {SEALED_CHECK_CADENCE}, and every email says when the store was last read; a Discord stock bot
             may be faster.
@@ -175,13 +175,13 @@ export default async function WatchingPage() {
             )}
           </li>
           <li>
-            <strong className="text-white">A whole deck</strong> — Pro, up to {DECK_WATCH_LIMIT} lists. Save a list from Best Basket
+            <strong className="text-white">A whole deck</strong> — Premium, up to {DECK_WATCH_LIMIT} lists. Save a list from Best Basket
             or the deck pricer: we re-price it delivered (cards + postage) after every price update and email you when the total
             reaches your price.
             {!onPremium && (
               <div className="mt-1.5">
                 <PremiumButton surface="tip:watching" className="text-xs font-semibold text-brand-300 hover:underline">
-                  See Pro →
+                  See Premium →
                 </PremiumButton>
               </div>
             )}

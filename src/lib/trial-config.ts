@@ -23,11 +23,15 @@ export function parseTrialEnv(raw: string | undefined, fallback: number): number
 // 30 days from 2026-10-23 (owner: "offer like one month free for premium
 // instead of 14 days … that's more attractive"). Still free, still card-gated.
 // 0 from 2026-10-26 (owner: "if Collector doesn't do a trial, then we don't do a
-// trial"): Pro is bought straight, monthly or annual, like Collectr PRO.
+// trial"): Premium is bought straight, monthly or annual, like Collectr PRO.
 // 3 from 2026-11-03 (owner: "noone is signing up to premium … give a couple days
 // free trial"): a FREE 3-day trial on both plans, card required, auto-converts,
-// one per account (trialOfferedTo). DECISIONS.md, "A 3-day free trial on Pro".
-export const PREMIUM_TRIAL_DAYS = parseTrialEnv(process.env.PREMIUM_TRIAL_DAYS, 3);
+// one per account (trialOfferedTo). DECISIONS.md, "A 3-day free trial on Premium".
+// 14 again from 2026-11-05 (owner: "use something that we used early on which
+// had the best retention"): August's free 14-day card-gated trial at $4.99
+// converted 7 of 7 and lost none; the 3-day trial at $6.99 converted nobody.
+// DECISIONS.md, "Premium goes back to what worked in August".
+export const PREMIUM_TRIAL_DAYS = parseTrialEnv(process.env.PREMIUM_TRIAL_DAYS, 14);
 export function premiumTrialEnabled(): boolean {
   return PREMIUM_TRIAL_DAYS > 0;
 }

@@ -273,7 +273,7 @@ export default async function PortfolioPage() {
           {pro && <PortfolioReplacementCost currency={info.currency} geoRegion={geoRegion} />}
 
           {/* Cost basis vs. today, and how that tracks the market. Free via
-              PORTFOLIO_FREE; the blurred Pro gate that sat in the else-branch
+              PORTFOLIO_FREE; the blurred Premium gate that sat in the else-branch
               could never render and is gone (see the chart note above). */}
           {pro && (
             <section className="card-surface p-5">

@@ -18,7 +18,7 @@ const NUDGE = "src/components/AnnualSwitchNudge.tsx";
 
 test("the switch endpoint charges once, upfront, and never double-bills an annual sub", () => {
   const code = codeOnly(read(SWITCH));
-  assert.match(code, /premiumAnnualEnabled\(\)/, "must refuse when Pro annual billing isn't configured");
+  assert.match(code, /premiumAnnualEnabled\(\)/, "must refuse when Premium annual billing isn't configured");
   assert.match(code, /plusAnnualEnabled\(\)/, "must also know about Plus's own annual billing");
   assert.match(code, /priceIdFor\(tier,\s*"annual"\)/, "must switch onto the target tier's annual price");
   assert.match(code, /getCurrentUser\(\)/, "must be authenticated");
@@ -41,7 +41,7 @@ test("the subscription read treats only PAID subs as switch candidates (trials e
 // The header's Pricing callout (PricingNudge) and the monthly→annual corner
 // card (AnnualSwitchNudge) went on 2026-11-03 (owner: "get rid of all the
 // sliders regarding the premium and the signups. People can do it if they
-// want to"). No uninvited Pro or sign-up prompt exists any more.
+// want to"). No uninvited Premium or sign-up prompt exists any more.
 test("the corner nudge is gone; the switch stays available on /premium and the account page", () => {
   assert.ok(!existsSync(join(process.cwd(), NUDGE)), "AnnualSwitchNudge.tsx was removed on 2026-11-03");
   assert.doesNotMatch(read("src/app/layout.tsx"), /<AnnualSwitchNudge\s*\/>/, "not mounted");
