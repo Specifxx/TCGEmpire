@@ -22238,3 +22238,20 @@ mono faces, Times New Roman for Cinzel). Visitors see the same fonts; the build 
 for them. `tests/critical-path.test.ts` fails if `next/font/google` comes back. Released at once under the
 owner's standing rule for RiftCompare (deploy all RiftCompare changes urgently, 2026-11-03): the failed build
 also held back the #314 post and the list-your-store page (#316).
+
+## 2026-11-05 — A bracketed collector number is a collector number; "alternate art" with no number takes the lettered printing
+
+A visitor's wrong-price report (the first through the `reports` branch to name a wrong item): Silver Goblin's
+"Evelynn, In Control (Alternate Art) (109a) Foil - Radiance", C$9.99, sat on the K/DA special art card's page
+(RAD SP3/005). `parseNumber` only read numbers with a "/total", a set-code prefix, "Origins #43" or a rune, so
+"(109a)" read as nothing, and the name path then chose between the two Showcase printings of the name (109a and
+SP3/005) by catalogue order. Two changes in `resolveCardId`, both narrow:
+
+- A bracketed number beside a set name ("(109a)", "[109]" with "Radiance" in the title) is the collector number,
+  the same evidence rule as `SET_HASH_NUMBER`; accessories never qualify, a lone "(1)" is a quantity, and without
+  a set name only a lettered number counts (a print letter is nothing a SKU or lot number carries).
+- An "alternate art" title with no number takes the one lettered printing ("109a"); with several lettered
+  printings, or none while two other special printings share the name, it stays unmatched. Catalogue order never
+  decides between two cards at two prices again. `tests/price-import.test.ts` pins the reported title.
+
+The row is rewritten by the next import (GitHub Actions runs the matcher), so no deploy is needed for the fix.

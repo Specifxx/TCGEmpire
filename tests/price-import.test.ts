@@ -267,3 +267,39 @@ test("discovery rejects a mixed-game collection handle even when it says riftbou
     "discoverRiftboundCollections must reject mixed-game handles",
   );
 });
+
+// Silver Goblin, reported 2026-11-05 through the wrong-price form: "Evelynn, In
+// Control (Alternate Art) (109a) Foil - Radiance" (C$9.99) was shown on the K/DA
+// special art card's page (SP3/005). The title's number has no "/total", so
+// parseNumber read nothing, and the name path chose between the two Showcase
+// printings by catalogue order. A bracketed number beside a set name is now a
+// collector number, and an alt-art title with no number takes the lettered
+// printing or nothing.
+test("a bracketed collector number beside a set name picks the printing", () => {
+  const ev = buildCardIndex([
+    card("ev-sp3", "Evelynn, In Control", "RAD", "SP3/005", "Showcase"),
+    card("ev-109", "Evelynn, In Control", "RAD", "109/167", "Rare"),
+    card("ev-109a", "Evelynn, In Control", "RAD", "109a/167", "Showcase", "a"),
+  ]);
+  const r = (title: string) => resolveCardId({ title, handle: "h", variants: [] } as never, ev);
+  // THE REPORTED TITLE, and the store's base print beside it.
+  assert.equal(r("Evelynn, In Control (Alternate Art) (109a) Foil - Radiance"), "ev-109a");
+  assert.equal(r("Evelynn, In Control (109) Foil - Radiance"), "ev-109");
+  // No number at all: "alternate art" is the lettered printing, never the SP card.
+  assert.equal(r("Evelynn, In Control (Alternate Art) - Radiance"), "ev-109a");
+  assert.equal(r("Evelynn, In Control - Radiance"), "ev-109");
+  // A bracketed number without a set name is a SKU or a lot number, not a printing.
+  assert.equal(r("Evelynn, In Control (109a)"), "ev-109a");
+  assert.equal(r("Riftbound Art Sleeves (109) - Radiance"), null);
+});
+
+test("an alt-art title with no number and two lettered printings stays unmatched", () => {
+  const two = buildCardIndex([
+    card("x-010", "Some Card", "RAD", "010/167", "Common"),
+    card("x-010a", "Some Card", "RAD", "010a/167", "Showcase", "a"),
+    card("x-010b", "Some Card", "RAD", "010b/167", "Showcase", "b"),
+  ]);
+  const r = (title: string) => resolveCardId({ title, handle: "h", variants: [] } as never, two);
+  assert.equal(r("Some Card (Alternate Art) - Radiance"), null);
+  assert.equal(r("Some Card (010b) - Radiance"), "x-010b");
+});
