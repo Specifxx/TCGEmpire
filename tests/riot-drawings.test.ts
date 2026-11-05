@@ -108,20 +108,46 @@ test("drawing dates are Riot's, and the status chip follows them", () => {
   assert.equal(drawingWindow(kda), "27–30 October 2026");
 });
 
-test("the row sits near the top of every home, links the post, and never links a sealed page that may 404", () => {
+test("the row sits near the top of every home and draws each product as the real sealed tile (quick view)", () => {
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = read(f);
     const hero = src.indexOf("<CinematicHero");
     const row = src.indexOf("<RiotDrawingsRow");
     const picks = src.indexOf("<EbayPicks");
     assert.ok(hero >= 0 && hero < row && row < picks, `${f}: hero, drawings row, eBay Picks`);
-    assert.match(src, /<RiotDrawingsRow pricedKeys=\{pricedDrawingKeys\} today=\{sydneyDayKey\(\)\} \/>/);
+    assert.match(src, /<RiotDrawingsRow groupsByCountry=\{drawingGroups\} today=\{sydneyDayKey\(\)\} \/>/);
   }
   const row = read("src/components/home/RiotDrawingsRow.tsx");
-  assert.match(row, /priced \? \(\s*<Link href=\{sealedPath\(d\.groupKey\)\}/, "the sealed link is gated on a resale row existing");
   assert.doesNotMatch(row, /from "@\/lib\/db"|prisma\./, "a server component with no query");
+  const tiles = read("src/components/home/RiotDrawingTiles.tsx");
+  assert.match(tiles, /^"use client";/);
+  assert.match(tiles, /<SealedTile group=\{hit\.group\} currency=\{hit\.currency\} \/>/, "the product IS the sealed tile, whose click opens the quick view");
   const post = ARTICLES.find((a) => a.slug === RIOT_DRAWINGS[0].blogSlug);
   assert.ok(post && !post.draft, "the post the row links is published");
   for (const d of RIOT_DRAWINGS) assert.equal(d.blogSlug, post!.slug);
   assert.ok(post!.tags.includes("news"));
+});
+
+test("each product is an item in every market before any resale row exists", () => {
+  // Owner, 2026-11-05: "It must be listed as an item". computeAllSealedGroups
+  // synthesises the group from lib/riot-drawings.ts when the table has no row
+  // for it, so the tile, /sealed/<slug> and the quick view exist from day one.
+  const src = read("src/lib/sealed-import.ts");
+  assert.match(src, /for \(const d of RIOT_DRAWINGS\) \{\s*if \(groups\.has\(d\.groupKey\)\) continue;\s*groups\.set\(d\.groupKey, \{[\s\S]{0,600}?listings: \[\],/);
+  // Before the image/name override loops, so Riot's render and name still win.
+  assert.ok(src.indexOf("for (const d of RIOT_DRAWINGS) {") < src.indexOf("const drawingImg = RIOT_DRAWING_IMAGE[g.groupKey]"));
+});
+
+test("an art book or a loose Couture card never becomes the box (eBay SG and UK, 2026-11-05)", () => {
+  // Both were taken as the US$150 box by the first pass.
+  for (const t of [
+    "LoL League of Legends Riftbound K/DA Couture Art Book Concept Art Collection",
+    "Preorder - Riftbound K/DA Akali Couture Collection KDA-004s-005 (Confirmed)",
+  ]) {
+    assert.equal(isTrackableSealedTitle(t), false, t);
+  }
+  const ebay = read("src/lib/ebay.ts");
+  assert.match(ebay, /SEALED_EXCLUDE_EBAY_BASE =\s*\/[^\n]*art\\s\*book\|concept\\s\*art\|\\bKDA-\\d\{3\}/);
+  // The real box still passes.
+  assert.ok(isTrackableSealedTitle("Riftbound K/DA Couture Collection Premium Set - SHIPS STRAIGHT TO YOU FROM RIOT"));
 });

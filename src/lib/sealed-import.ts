@@ -198,7 +198,7 @@ const SEALED_TITLE =
 // through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
 // (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
 const SEALED_EXCLUDE =
-  /\bsingle\b|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|radiance|proving\s*grounds)\b[^)]*\)/i;
+  /\bsingle\b|\bKDA-\d{3}|art\s*book|concept\s*art|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|radiance|proving\s*grounds)\b[^)]*\)/i;
 
 async function fetchText(url: string): Promise<string | null> {
   try {
@@ -1551,6 +1551,30 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
       inStock: r.inStock,
       lastSeen: r.lastSeen.toISOString(),
     });
+  }
+  // Riot's drawing products are ITEMS whether or not a resale row exists yet
+  // (owner, 2026-11-05: "It must be listed as an item"). A group with no
+  // listing in this market still gets its tile, its /sealed page and its quick
+  // view ("No store is listing this right now"), with Riot's name, render and
+  // RRP; the eBay pass fills the rows in as they appear. Only these: every other
+  // product exists because a store or eBay listed it.
+  for (const d of RIOT_DRAWINGS) {
+    if (groups.has(d.groupKey)) continue;
+    groups.set(d.groupKey, {
+      groupKey: d.groupKey,
+      name: d.name,
+      productType: d.productType,
+      setCode: null,
+      imageUrl: d.imageUrl,
+      lowestPriceCents: null,
+      storeCount: 0,
+      msrpCents: null,
+      atMsrp: false,
+      overMsrpPct: null,
+      firstSeenAt: firstSeen.get(`${d.groupKey}|${country}`) ?? null,
+      listings: [],
+    });
+    imgRank.set(d.groupKey, 0);
   }
   // Override with the official TCGplayer catalogue image where we have one — correct
   // per-product art, market-agnostic, so it fixes markets (AU/UK) whose only
