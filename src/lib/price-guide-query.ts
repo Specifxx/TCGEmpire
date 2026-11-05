@@ -123,7 +123,7 @@ export interface GuideQuery {
   market?: string;
 }
 
-const GUIDE_QUERY_KEYS = [
+export const GUIDE_QUERY_KEYS = [
   "q", "set", "rarity", "domain", "type", "variant", "sig", "over", "ult", "promo",
   "printing", "priced", "min", "max", "sort", "page", "size", "market",
 ] as const satisfies readonly (keyof GuideQuery)[];

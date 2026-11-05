@@ -149,7 +149,7 @@ test("search={false} leaves the box out (the price guide, whose toolbar already 
   const html = render(h(Filters, { basePath: "/price-guide", currency: "USD", search: false }), "/price-guide", "q=jinx");
   assert.equal(searchForm(html), "");
   assert.doesNotMatch(html, /filters-q/);
-  assert.match(read("src/app/price-guide/page.tsx"), /<Filters basePath=\{PRICE_GUIDE_PATH\}[^>]*search=\{false\}/);
+  assert.match(read("src/components/price-guide/PriceGuideMarketBoard.tsx"), /<Filters basePath=\{PRICE_GUIDE_PATH\}[^>]*search=\{false\}/);
   assert.match(read("src/components/price-guide/PriceGuideToolbar.tsx"), /id="price-guide-q"/, "the guide's own box is still there");
 });
 

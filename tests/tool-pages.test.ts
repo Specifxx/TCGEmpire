@@ -70,7 +70,7 @@ const LAYOUT: Record<string, { data: string; before?: string }> = {
   "/decks": { data: "<DeckLibrary" },
   "/trade": { data: "<TradeCalculator" },
   "/deck": { data: "<DeckBuilder" },
-  "/price-guide": { data: "<PriceGuideTable", before: "<AdSlot" },
+  "/price-guide": { data: "<PriceGuideMarketBoard", before: "<AdSlot" },
 };
 
 const published = new Map(getArticles().map((a) => [a.slug, a]));

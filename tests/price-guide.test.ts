@@ -349,6 +349,9 @@ test("the FAQ makes no claim the site does not", () => {
 // ── Source pins ──────────────────────────────────────────────────────────────
 
 const PAGE = "src/app/price-guide/page.tsx";
+// The market-dependent body (2026-11-05): the page's HTML carries the baseline
+// market, the island swaps in the visitor's from /api/price-guide-view.
+const BOARD = "src/components/price-guide/PriceGuideMarketBoard.tsx";
 const COMPONENTS = readdirSync(join(ROOT, "src/components/price-guide")).map((f) => `src/components/price-guide/${f}`);
 
 test("the route: force-dynamic, Next's names only, no prewarming, no loading.tsx, no query of its own", () => {
@@ -394,8 +397,8 @@ test("TCGplayer and eBay on every row: buttons via OutboundLink with their own s
   assert.match(rows, /ebaySearchUrl\(market, riftboundEbayQuery\(r\.q\), "price-guide"\)/);
   assert.match(rows, /affiliateUrl\(TCG_SEARCH/);
   assert.match(rows, /btn-ebay-ghost/);
-  const page = code(PAGE);
-  assert.ok(page.indexOf("<AffiliateDisclosure") < page.indexOf("<PriceGuideTable"), "disclosure sits above the table");
+  const board = code(BOARD);
+  assert.ok(board.indexOf("<AffiliateDisclosure") < board.indexOf("<PriceGuideTable"), "disclosure sits above the table");
   // Lowest is never re-ranked by eBay or TCGplayer: no new sorts.
   assert.doesNotMatch(read("src/lib/price-guide-query.ts"), /"(ebay|tcg)[a-z_]*"/);
 });
@@ -445,18 +448,18 @@ test("price-guide rows ship as compact client props, not a server element tree",
 });
 
 test("the price guide's Set facet hides pre-order sets it never lists, and explains the 30-day column", () => {
-  const page = read("src/app/price-guide/page.tsx");
-  assert.match(page, /<Filters[^>]*hidePreorderSets/);
-  assert.match(page, /30-day change: the same US-dollar basis/);
+  const board = read(BOARD);
+  assert.match(board, /<Filters[^>]*hidePreorderSets/);
+  assert.match(board, /30-day change: the same US-dollar basis/);
   const filters = read("src/components/Filters.tsx");
   assert.match(filters, /hidePreorderSets \? SETS\.filter\(\(s\) => !isPreorderSetCode\(s\.code\)\)/);
 });
 
 test("out-of-range page: Back to page 1 keeps filters and toolbar never shows start > end", () => {
-  const src = readFileSync("src/app/price-guide/page.tsx", "utf8");
+  const src = readFileSync(BOARD, "utf8");
   assert.match(src, /href: pageOneHref, label: "Back to page 1"/);
   assert.match(src, /e\[0\] !== "page"/);
-  assert.match(src, /\{pageRows\.length > 0 \? \(\s*<p>\s*Showing/);
+  assert.match(src, /\{view\.items\.length > 0 \? \(\s*<p>\s*Showing/);
 });
 
 test("price guide row links and sort buttons get 48px on coarse pointers", () => {

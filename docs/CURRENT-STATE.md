@@ -71,9 +71,10 @@ longer lands on its entry.
   (reads `request.url`, or a dynamic segment with no `generateStaticParams`)
   caches through its CDN header, which moves with it. `/auctions` no longer
   carries 1800: since 2026-11-05 it, `/market`, `/market/records` (the pages
-  that read `?market=`) and `/sealed` (baseline market in the HTML, the
-  visitor's from `/api/sealed-view`) are force-dynamic behind a six-hour CDN
-  copy per URL. [2026-10-14](../DECISIONS.md#L17060)
+  that read `?market=`), `/sealed` (baseline market in the HTML, the
+  visitor's from `/api/sealed-view`) and `/price-guide` (the same, from
+  `/api/price-guide-view`; a `?market=` link pins its market) are
+  force-dynamic behind a six-hour CDN copy per URL. [2026-10-14](../DECISIONS.md#L17060)
 - **Guards:** `cachedOrDirect` logs nested-cache, cache-miss and oversize
   (past ~1.2 MB, where an `unstable_cache` entry silently drops).
   `BIG_RESULT_ROWS` / `_BYTES` are temporarily 200 rows / 400 KB; restore
