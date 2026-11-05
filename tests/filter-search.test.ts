@@ -180,7 +180,8 @@ test("every page with a card or sealed panel shows the box, except the price gui
     assert.ok(tag, f);
     assert.doesNotMatch(tag, /search=\{false\}/, f);
   }
-  for (const f of ["src/app/sealed/page.tsx", "src/app/pokemon/sealed/page.tsx"]) assert.match(read(f), /<SealedFilters\b/, f);
+  // /sealed draws its filters in the SealedMarketBoard island since 2026-11-05 (one CDN copy per URL).
+  for (const f of ["src/components/SealedMarketBoard.tsx", "src/app/pokemon/sealed/page.tsx"]) assert.match(read(f), /<SealedFilters\b/, f);
 });
 
 // ── Applied on submit, and metered like any other /browse search ─────────────
@@ -233,8 +234,12 @@ test("/browse and /sets/[set] answer q through buildCardWhere, ANDed with the ti
 });
 
 test("/sealed filters its already-loaded groups by q in memory: no new query, no new cache", () => {
-  const page = code("src/app/sealed/page.tsx");
+  // The computation is lib/sealed-view.ts since 2026-11-05: the page (baseline market) and
+  // /api/sealed-view (the visitor's market) share it, each from the same cached loader.
+  const page = code("src/lib/sealed-view.ts");
   assert.match(page, /const q = one\(searchParams\.q\)\.trim\(\);/);
+  assert.match(code("src/app/sealed/page.tsx"), /await buildSealedView\(DEFAULT_COUNTRY, searchParams\)/);
+  assert.match(code("src/app/api/sealed-view/route.ts"), /await buildSealedView\(market, sp\)/);
   assert.match(page, /g\.name\.toLowerCase\(\)\.includes\(ql\) \|\|\s*g\.productType\.toLowerCase\(\)\.includes\(ql\) \|\|\s*\(g\.setCode \?\? ""\)\.toLowerCase\(\)\.includes\(ql\)/);
   assert.equal((page.match(/getSealedGroups\(/g) ?? []).length, 2, "the market read and its default-market fallback, as before");
   assert.doesNotMatch(page, /unstable_cache|prisma/);

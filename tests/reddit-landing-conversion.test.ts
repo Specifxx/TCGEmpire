@@ -111,7 +111,7 @@ test("QuickView has no eBay link that skips buy_click", () => {
 });
 
 test("sealed eBay links go to the visitor's own eBay in all six markets", () => {
-  for (const f of ["src/app/sealed/page.tsx", "src/components/SealedQuickView.tsx"]) {
+  for (const f of ["src/components/SealedMarketplaceSearches.tsx", "src/components/SealedQuickView.tsx"]) {
     const src = read(f);
     // A host MAP is quoted string values; prose explaining the old bug is fine.
     assert.doesNotMatch(src, /"ebay\.com\.au"|"ebay\.co\.uk"/, `${f} must not carry its own eBay host map`);

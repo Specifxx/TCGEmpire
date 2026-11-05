@@ -408,7 +408,8 @@ test("sealed: the quick view names the game, and /sealed's set search follows th
   assert.doesNotMatch(code("src/app/sealed/page.tsx"), /"Vendetta sealed"|"Riftbound Vendetta sealed"/);
   assert.match(page, /const current = newestReleasedSet\(now\);/);
   assert.match(page, /label: `\$\{current\.name\} sealed`, q: riftboundEbayQuery\(`\$\{current\.name\} sealed`\)/);
-  assert.match(page, /ebaySearchUrl\(country, x\.q, "sealed-page"\)/);
+  // The rows are drawn in the browser since 2026-11-05 (the page is one CDN copy for every market).
+  assert.match(read("src/components/SealedMarketplaceSearches.tsx"), /ebaySearchUrl\(country, x\.q, "sealed-page"\)/);
   // Every literal query names the game.
   for (const m of page.matchAll(/\bq: "([^"]+)"/g)) assert.match(m[1], /^Riftbound\b/, m[1]);
   // Nothing on the page says eBay or Amazon is cheaper.

@@ -132,7 +132,11 @@ const CARD_CDN_CACHE = "public, s-maxage=86400, stale-while-revalidate=86400";
 // hours, a day stale: the auction sweep runs every four hours and the market
 // index moves with the twice-daily import (the pages' six-hour floor).
 const QUERY_CDN_CACHE = "public, s-maxage=21600, stale-while-revalidate=86400";
-const QUERY_CDN_PAGES = ["/auctions", "/market", "/market/records"];
+// /sealed joined on 2026-11-05 ("The sealed page becomes one CDN copy per URL"):
+// its HTML carries the baseline market and the SealedMarketBoard island fetches
+// the visitor's from /api/sealed-view. The source is the page alone (one
+// segment); /sealed/:slug keeps its own day-long rule below.
+const QUERY_CDN_PAGES = ["/auctions", "/market", "/market/records", "/sealed"];
 
 const nextConfig = {
   env: { POKEMON_DATA_BUILT },

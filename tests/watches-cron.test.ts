@@ -118,7 +118,7 @@ test("the discovery lines are inline — no Dialog, no overlay, no portal — an
   assert.match(code("src/components/DeckWatchForm.tsx"), /<PremiumButton surface="gate:deck-watch" \/>/);
   assert.match(code("src/components/SealedWatchButton.tsx"), /tier="plus" surface="gate:sealed-watch"/);
   // The placements the owner asked for: /sealed, the sealed quick view, the Best Basket result, /watching, the card watch button.
-  assert.match(code("src/app/sealed/page.tsx"), /<DiscoveryTip id="sealed" surface="tip:sealed" tier="plus"/);
+  assert.match(code("src/components/SealedMarketBoard.tsx"), /<DiscoveryTip id="sealed" surface="tip:sealed" tier="plus"/);
   // The quick view is an overlay whose watch button already sells Plus: no second, tip line there.
   assert.doesNotMatch(code("src/components/SealedQuickView.tsx"), /DiscoveryTip|tip:sealed-quickview/);
   assert.match(code("src/components/SealedQuickView.tsx"), /<SealedWatchButton /);

@@ -369,7 +369,7 @@ test("the sealed naming mirror still matches getAllSealedGroups", () => {
   assert.match(route, /rows\.find\(\(r\) => r\.priceCents >= sealedFloorCents\(r\.productType\)\)/);
   assert.match(route, /sealedReportTarget\(report\.sealedGroupKey, row\)/);
   // And the ?q= link finds a tile by its name.
-  assert.match(read("src/app/sealed/page.tsx"), /g\.name\.toLowerCase\(\)\.includes\(ql\)/);
+  assert.match(read("src/lib/sealed-view.ts"), /g\.name\.toLowerCase\(\)\.includes\(ql\)/);
 });
 
 test("the email never repeats a store name the reporter's form supplied", () => {

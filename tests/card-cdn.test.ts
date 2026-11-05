@@ -26,6 +26,7 @@ const CDN_PAGES: { page: string; source: string; value: string }[] = [
   { page: "src/app/auctions/page.tsx", source: "/auctions", value: QUERY_CDN },
   { page: "src/app/market/page.tsx", source: "/market", value: QUERY_CDN },
   { page: "src/app/market/records/page.tsx", source: "/market/records", value: QUERY_CDN },
+  { page: "src/app/sealed/page.tsx", source: "/sealed", value: QUERY_CDN },
 ];
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 

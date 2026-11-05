@@ -55,7 +55,7 @@ const PAGE: Record<string, string> = {
 // For each page: the element that IS its data, and (where the page has one)
 // the first commercial block that must come after "Read next".
 const LAYOUT: Record<string, { data: string; before?: string }> = {
-  "/sealed": { data: "<SealedTile", before: "sealedSearches().map" },
+  "/sealed": { data: "<SealedMarketBoard", before: "<SealedMarketplaceSearches" },
   "/movers": { data: "<MostSearchedStrip", before: "<MoversToolsCta" },
   "/market": { data: "<IndexConstituents", before: "<AdSlot" },
   "/market/records": { data: "<RecordsBoard", before: "<HubFaq" },
@@ -228,9 +228,11 @@ test("/sealed names no set in code, states its real fallback and carries Amazon'
   assert.doesNotMatch(src, /"VEN"|Vendetta/, "the newest set comes from SETS, never a literal");
   assert.match(src, /const newest = newestReleasedSet\(\);/);
   assert.doesNotMatch(src, /Australian listings|prices in AUD|ship internationally/);
-  assert.match(src, /\{COUNTRIES\[priceCountry\]\.adjective\} listings/);
-  const panel = src.slice(src.indexOf("sealedSearches().map"), src.indexOf("</section>", src.indexOf("sealedSearches().map")));
-  assert.match(panel, /amazon_sealed_search/);
+  // The fallback note and the marketplace rows are drawn in the browser since 2026-11-05 (one CDN copy per URL).
+  assert.match(code("src/components/SealedMarketBoard.tsx"), /\{COUNTRIES\[view\.priceCountry\]\.adjective\} listings/);
+  assert.doesNotMatch(code("src/components/SealedMarketBoard.tsx"), /Australian listings|prices in AUD|ship internationally/);
+  const panel = src.slice(src.indexOf("<SealedMarketplaceSearches"), src.indexOf("</section>", src.indexOf("<SealedMarketplaceSearches")));
+  assert.match(code("src/components/SealedMarketplaceSearches.tsx"), /amazon_sealed_search/);
   assert.match(panel, /<AffiliateDisclosure partner="amazon" \/>/);
   // MSRP is described as the code keeps it: approximate launch RRPs for three
   // markets, never for pre-orders (lib/msrp.ts, lib/sealed-import.ts).
