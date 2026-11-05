@@ -1,4 +1,5 @@
 [
-  { "domain": "thecardhive.co.uk", "checked": "2026-10-30", "why": "asked to be listed through the suggest form; custom shop whose contact details load in the browser; verified by email (DECISIONS.md, 2026-10-30)" },
-  { "domain": "sephigames.com", "checked": "2026-10-15", "why": "new web store of a seller with thousands of Cardmarket sales; asked to be listed and built its own feed (DECISIONS.md, 2026-10-15)" }
+  {"domain": "thecardhive.co.uk", "checked": "2026-10-30", "why": "asked to be listed through the suggest form; custom shop whose contact details load in the browser; verified by email (DECISIONS.md, 2026-10-30)"},
+  {"domain": "sephigames.com", "checked": "2026-10-15", "why": "new web store of a seller with thousands of Cardmarket sales; asked to be listed and built its own feed (DECISIONS.md, 2026-10-15)"},
+  {"domain": "collectorsguild.com.au", "checked": "2026-11-05", "why": "store owner asked to be listed on DexCompare by email; ABN 53 881 293 731 active (business name registered 23 Sep 2026, Dandenong VIC), contact page, own shipping and refund policies, Trustpilot profile claimed; young domain (six weeks), prices at market; listed on the owner's direct instruction before the three-month mark, recheck around 2026-12-23 (CompareEmpire #126)"}
 ]
