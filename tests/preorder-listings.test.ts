@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { isPreorderSetCode } from "../src/lib/constants";
+import { SETS, isPreorderSetCode } from "../src/lib/constants";
 import { classifySealed, detectSet, isTrackableSealedTitle } from "../src/lib/sealed-import";
 import { setCodeFromSetName } from "../src/lib/tcgplayer";
 import { withRadianceUpcoming } from "./helpers/upcoming-set";
@@ -223,4 +223,34 @@ test("'legacy' alone never names the set: other games' Legacy products stay out"
   assert.equal(classifySealed("Riftbound: League Of Legends TCG - Proving Grounds [Reprint] - EN"), "Proving Grounds");
   // TCGplayer's setName is read inside the Riftbound product line, where the word is the set.
   assert.equal(setCodeFromSetName("Legacy"), "LGC");
+});
+
+// The Reckoning (Set 7, REC, 30 Apr 2027; added 2026-11-05 so its page and set
+// mapping exist before the first store lists it).
+test("The Reckoning: in SETS as a pre-order, mapped from store, TCGplayer and eBay titles only with a Riftbound marker", async () => {
+  const { detectSet, isTrackableSealedTitle, classifySealed, noteUnknownSet, RECKONING_TITLE } = await import("../src/lib/sealed-import");
+  const { setCodeFromSetName } = await import("../src/lib/tcgplayer");
+  const { autoPreorderState, openAutoPreorderSets } = await import("../src/lib/release-calendar");
+  const rec = SETS.find((s) => s.code === "REC");
+  assert.ok(rec?.comingSoon && rec.slug === "the-reckoning" && !rec.codeProvisional, "REC is Riot's published code");
+  assert.equal(autoPreorderState("the-reckoning", new Date("2026-11-05T12:00:00Z")).kind, "page");
+  assert.ok(openAutoPreorderSets(new Date("2026-11-05T12:00:00Z")).some((s) => s.code === "REC"), "in the sitemap now");
+  for (const t of ["Riftbound: League of Legends - The Reckoning Booster Box (Pre-Order)", "Riftbound The Reckoning Booster Display PREORDER", "League of Legends TCG Reckoning Booster Pack", "REC Booster Box"]) {
+    assert.equal(detectSet(t), "REC", t);
+    assert.ok(isTrackableSealedTitle(t), `gate rejects "${t}"`);
+    assert.equal(classifySealed(t).includes("Booster"), true, t);
+  }
+  // Other games' "Reckoning" products never become a Riftbound set.
+  for (const t of ["Day of Reckoning Booster Box", "Yu-Gi-Oh! Reckoning of the Dragon Booster Pack"]) {
+    assert.ok(!RECKONING_TITLE.test(t), t);
+    assert.notEqual(detectSet(t), "REC", t);
+  }
+  assert.equal(setCodeFromSetName("The Reckoning"), "REC");
+  // The detector: an unmapped set with a booster is noted once; promo and bundle groups are not.
+  const acc = new Map();
+  noteUnknownSet(acc, "Set 8", "Riftbound: League of Legends - Set 8 Booster Box", "Booster Box");
+  noteUnknownSet(acc, "Set 8", "Riftbound: League of Legends - Set 8 Booster Pack", "Booster Pack");
+  noteUnknownSet(acc, "Riftbound Promos", "Riftbound: Worlds Bundle 2025", "Bundle");
+  noteUnknownSet(acc, "", "Nameless Booster Box", "Booster Box");
+  assert.deepEqual([...acc.values()], [{ setName: "Set 8", sample: "Riftbound: League of Legends - Set 8 Booster Box" }]);
 });

@@ -36,6 +36,8 @@ export interface OpsDeps {
     inbox(): Promise<InboxCounts>;
     /** Stores plans (lib/store-plan.ts): how many exist, and the paid ones not yet linked to a tracked store. */
     storePlans?(): Promise<{ total: number; unlinked: { storeName: string; createdAt: Date; activeUntil: Date | null }[] }>;
+    /** TCGplayer Riftbound sets the sealed import could not map to SETS (lib/sealed-import.ts, recordUnknownSets); null before the first import wrote the row. */
+    unknownSets?(): Promise<{ checkedAt: Date | null; sets: { setName: string; sample: string }[] } | null>;
   };
 
   /** Files from a checkout of the repository; absent on the website. */

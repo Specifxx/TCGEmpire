@@ -154,7 +154,7 @@ export function sealedReportTarget(
 /** Mirror of lib/sealed-import.ts SET_NAMES — the set names sealed tiles use. */
 export const SEALED_SET_NAMES: Readonly<Record<string, string>> = {
   OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed", VEN: "Vendetta",
-  RAD: "Radiance", LGC: "Legacy",
+  RAD: "Radiance", LGC: "Legacy", REC: "The Reckoning",
 };
 
 /**

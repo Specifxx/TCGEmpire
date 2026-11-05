@@ -437,6 +437,22 @@ export const SETS: SetInfo[] = [
     hubReady: true,
     previewFrom: "2026-12-13",
   },
+  // Set 7, The Reckoning (2026-11-05): Riot's calendar row (lib/release-calendar.ts)
+  // dates it 30 April 2027 and its products-and-sets rundown publishes the code
+  // REC (see the RAD note above), so the code is not a guess. In SETS this early
+  // so the automatic pre-order page (/preorders/the-reckoning, app/preorders/
+  // [slug]) and the sealed importer's set mapping exist before the first store
+  // lists it, not after: the new-set check in lib/ops/checks.ts (data:new-set)
+  // flags any TCGplayer set this list lacks. No totalCards (Riot's 264 is an
+  // "around" figure, Showcase included) and no hub yet, so /sets/the-reckoning
+  // stays noindex until it earns hubReady the way Legacy did.
+  {
+    code: "REC",
+    name: "The Reckoning",
+    slug: "the-reckoning",
+    comingSoon: true,
+    releasedOn: "2027-04-30",
+  },
 ];
 
 /**

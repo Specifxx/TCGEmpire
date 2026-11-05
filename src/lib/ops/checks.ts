@@ -804,6 +804,35 @@ async function deadOtherEndpoints(d: OpsDeps, eps: { status?: string; url?: stri
   return others.map((e) => e.url!.replace(/^https:\/\//, ""));
 }
 
+// A new Riftbound set on TCGplayer that SETS does not know (lib/sealed-import.ts,
+// recordUnknownSets). Until it is added, its pre-orders are filed under no set
+// and it has no /preorders/<slug> page; RED, so the owner is emailed the day it
+// appears. Clears on the first import after the set is in SETS.
+export async function newSetDetected(d: OpsDeps): Promise<CheckResult> {
+  const id = "data:new-set";
+  const title = "New Riftbound set on TCGplayer";
+  if (!d.db?.unknownSets) return unknown(d, id, "data", title, "No database connection from here.");
+  try {
+    const row = await d.db.unknownSets();
+    if (!row) return unknown(d, id, "data", title, "The sealed import has not recorded TCGplayer's set list yet.");
+    const checked = row.checkedAt ? ` (TCGplayer read ${humanAge(hoursSince(row.checkedAt, d.now))} ago)` : "";
+    if (!row.sets.length) {
+      return result(d, { id, area: "data", title, severity: "ok", summary: `Every Riftbound set TCGplayer lists is in SETS${checked}.` });
+    }
+    const names = row.sets.map((s) => `"${s.setName}" (e.g. ${s.sample})`).join("; ");
+    return result(d, {
+      id,
+      area: "data",
+      title,
+      severity: "crit",
+      summary: `TCGplayer lists ${row.sets.length} Riftbound set${row.sets.length === 1 ? "" : "s"} this site does not know: ${names}${checked}.`,
+      action: `Tell Claude: "add the Riftbound set ${row.sets[0].setName}" (docs/SET-LAUNCH-RUNBOOK.md: SETS, the set mappers and the calendar row). Its pre-order page appears on the next release.`,
+    });
+  } catch (e) {
+    return unknown(d, id, "data", title, `Could not read it (${msg(e)}).`);
+  }
+}
+
 // A store that paid for the Stores plan gets nothing until the owner links it
 // to a tracked store at /admin/store-partners (that is what emails the report
 // link). The webhook emails the owner at purchase; this is the reminder when
@@ -1020,6 +1049,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
 
   await add("data:prices", "data", "Store prices", () => priceFreshness(d));
   await add("data:history", "data", "Daily price history", async () => historyFiles(d));
+  await add("data:new-set", "data", "New Riftbound set on TCGplayer", () => newSetDetected(d));
   await add("jobs", "site", "Scheduled jobs", () => scheduledJobs(d));
   await add("deploy:production", "site", "Latest production build", () => deployState(d));
   await add("site:live", "site", "Live site", () => siteProbe(d));

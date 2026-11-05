@@ -100,8 +100,8 @@ test("THE POINT: the priority expires on its own, with no code change", () => {
 test("sets released before we started dating them are never prioritised", () => {
   // OGN/OGS/SFD/UNL predate the priority mechanic and carry no date at all.
   // LGC (Legacy) carries its announced 29 Jan 2027 street date; it is pinned
-  // in its own test below.
-  for (const s of SETS.filter((x) => !["VEN", "RAD", "LGC"].includes(x.code))) {
+  // in its own test below. REC (The Reckoning) carries Riot's 30 Apr 2027.
+  for (const s of SETS.filter((x) => !["VEN", "RAD", "LGC", "REC"].includes(x.code))) {
     assert.equal(s.releasedOn, undefined, `${s.code} unexpectedly has a release date`);
   }
   assert.deepEqual(pricePrioritySetCodes(day("2026-08-03")), ["VEN"]);

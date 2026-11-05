@@ -93,6 +93,9 @@ export function setCodeFromSetName(setName?: string): string | null {
   // this reads TCGplayer's setName inside the Riftbound product line only
   // (fetchTcgplayerSealed / fetchTcgplayerProducts), where "Legacy" is the set.
   if (/\blegacy\b/.test(s)) return "LGC";
+  // The Reckoning (Set 7, 2026-11-05), the same way: inside the Riftbound
+  // product line "Reckoning" can only be the set.
+  if (/\breckoning\b/.test(s)) return "REC";
   if (/origins/.test(s)) return "OGN";
   return null;
 }

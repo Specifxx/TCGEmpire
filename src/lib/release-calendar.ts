@@ -148,6 +148,7 @@ export const RELEASES: ReleaseEntry[] = [
   },
   {
     name: "The Reckoning",
+    code: "REC",
     date: "2027-04-30",
     cards: 264,
     approxCards: true,

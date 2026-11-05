@@ -73,12 +73,15 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   // guard below (foreignTotal), so a bare /legacy/ would let a mixed-game
   // collection's "Legacy's Allure 123/350" MTG single reach the number path.
   [/^(?=[\s\S]*\b(?:riftbound|league\s*of\s*legends)\b)[\s\S]*\blegacy\b|\bLGC\b/i, "LGC"],
+  // The Reckoning (Set 7, 2026-11-05): the same Riftbound-marker rule as Legacy,
+  // since "reckoning" is a word other games' cards carry too ("Day of Reckoning").
+  [/^(?=[\s\S]*\b(?:riftbound|league\s*of\s*legends)\b)[\s\S]*\breckoning\b|\bREC\b/i, "REC"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 
 // Set/condition/qualifier tokens to strip when isolating the card name.
 const STOP =
-  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vendetta|vengeance|origins|radiance|legacy|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
+  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vendetta|vengeance|origins|radiance|legacy|reckoning|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
 
 function numKey(seg: string): string {
   // Riftbound collector numbers come in two shapes, and BOTH have to normalise

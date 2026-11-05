@@ -35,6 +35,9 @@ interface ShopifyProd { title: string; handle: string; variants: ShopifyVar[]; i
 // ("Riftbound Legacy Booster Box", "Legacy - Booster Display PREORDER |
 // Riftbound"). Exported for tests.
 export const LEGACY_TITLE = /^(?=[\s\S]*\b(?:riftbound|league\s*of\s*legends)\b)[\s\S]*\blegacy\b|\bLGC\b/i;
+// The Reckoning (Set 7, 30 Apr 2027; code REC from Riot's rundown), guarded the
+// same way: "reckoning" is a word on other games' products too.
+export const RECKONING_TITLE = /^(?=[\s\S]*\b(?:riftbound|league\s*of\s*legends)\b)[\s\S]*\breckoning\b|\bREC\b/i;
 
 // Proving Grounds 2nd Edition (PG2, Riot, due 19 Feb 2027) is a NEW product
 // announced with Legacy, not a reprint of Origins' Proving Grounds: until
@@ -63,11 +66,12 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   // Set (2nd Edition)" is the Proving Grounds product, not a Legacy one. Ahead
   // of Origins for the same reason as Radiance.
   [LEGACY_TITLE, "LGC"],
+  [RECKONING_TITLE, "REC"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 const SET_NAMES: Record<string, string> = {
   OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed", VEN: "Vendetta",
-  RAD: "Radiance", LGC: "Legacy",
+  RAD: "Radiance", LGC: "Legacy", REC: "The Reckoning",
 };
 
 // A sealed product must be identifiably RIFTBOUND. Other games slip in when a store
@@ -80,7 +84,7 @@ const SET_NAMES: Record<string, string> = {
 // title carries one), and FOREIGN_RADIANCE below drops the Pokémon ones outright.
 // RAD is in the code alternation because a bare set code is unambiguous.
 const RIFTBOUND_HINT =
-  /riftbound|league\s*of\s*legends|proving\s*grounds|nexus\s*night|spirit\s*forged|spiritforged|\borigins\b|\bunleashed\b|\bvendetta\b|\b(?:OGN|OGS|SFD|UNL|VEN|RAD)\b/i;
+  /riftbound|league\s*of\s*legends|proving\s*grounds|nexus\s*night|spirit\s*forged|spiritforged|\borigins\b|\bunleashed\b|\bvendetta\b|\b(?:OGN|OGS|SFD|UNL|VEN|RAD|LGC|REC)\b/i;
 
 // The Riftbound × T1 2025 Worlds Champion Collection — Riot's first single-team
 // collaboration, sold ONLY through a Riot Merch Store drawing (English Signature
@@ -1139,6 +1143,7 @@ export async function refreshTcgplayerSealed(): Promise<number> {
   });
   const missing = [...imageUrls.values()].filter((v) => v === null).length;
   if (missing) console.log(`TCGplayer sealed: ${missing} product(s) have no CDN image — using type fallbacks.`);
+  const unknownSets = new Map<string, UnknownSet>();
 
   const rows: any[] = [];
   for (const p of products) {
@@ -1157,6 +1162,7 @@ export async function refreshTcgplayerSealed(): Promise<number> {
     if (FOREIGN_RADIANCE.test(title)) continue;
     const setCode = setCodeFromSetName(p.setName ?? "");
     const type = classifySealed(title);
+    if (!setCode) noteUnknownSet(unknownSets, p.setName, title, type);
     const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
     rows.push({
       groupKey,
@@ -1175,7 +1181,46 @@ export async function refreshTcgplayerSealed(): Promise<number> {
   await prisma.sealedListing.deleteMany({ where: { retailer: "tcgplayer" } });
   if (rows.length) await prisma.sealedListing.createMany({ data: rows });
   console.log(`TCGplayer sealed: ${rows.length} products.`);
+  await recordUnknownSets(unknownSets);
   return rows.length;
+}
+
+// ── New-set detection (2026-11-05) ───────────────────────────────────────────
+// A Riftbound set reaches TCGplayer months before release (Legacy's listings
+// were up by 2026-10-25 for a 29 Jan 2027 street date), as a setName this
+// site's mappers do not know. Until SETS has it, its listings fall into the
+// title-keyed bucket above, no /preorders/<slug> page exists, and nobody is
+// told. So the TCGplayer pass notes every unmapped setName that carries a
+// BOOSTER product (a real set has boosters; a promo or bundle group has not)
+// and stores them for the ops monitor, whose data:new-set check goes RED and
+// emails the owner with the runbook step (docs/SET-LAUNCH-RUNBOOK.md). Adding
+// the set to SETS makes setCodeFromSetName map it, and the row clears on the
+// next import. Private operational detail, one OpsSnapshot row: never exported.
+export const UNKNOWN_SETS_KEY = "tcgplayer:unknown-sets";
+const BOOSTER_TYPES = new Set(["Booster Box", "Booster Case", "Booster Pack", "Sleeved Booster"]);
+
+export interface UnknownSet {
+  /** TCGplayer's setName, exactly as it lists it. */
+  setName: string;
+  /** One product title under it, for the email. */
+  sample: string;
+}
+
+/** Pure: adds `setName` when its product is a booster, once per name. Exported for tests. */
+export function noteUnknownSet(acc: Map<string, UnknownSet>, setName: string | undefined, title: string, productType: string): void {
+  const name = (setName ?? "").trim();
+  if (!name || !BOOSTER_TYPES.has(productType) || acc.has(name)) return;
+  acc.set(name, { setName: name, sample: title });
+}
+
+async function recordUnknownSets(acc: Map<string, UnknownSet>): Promise<void> {
+  const json = { checkedAt: new Date().toISOString(), sets: [...acc.values()] };
+  try {
+    await prisma.opsSnapshot.upsert({ where: { key: UNKNOWN_SETS_KEY }, create: { key: UNKNOWN_SETS_KEY, json }, update: { json } });
+    if (json.sets.length) console.warn(`TCGplayer lists ${json.sets.length} Riftbound set(s) SETS does not know: ${json.sets.map((s) => s.setName).join(", ")}`);
+  } catch (e) {
+    console.warn("Could not record unknown TCGplayer sets (continuing):", (e as Error).message);
+  }
 }
 
 // Delete stored sealed rows whose title should now be excluded — independent of
