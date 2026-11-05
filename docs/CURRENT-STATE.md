@@ -73,9 +73,11 @@ longer lands on its entry.
   carries 1800: since 2026-11-05 it, `/market`, `/market/records` (the pages
   that read `?market=`), `/sealed` (baseline market in the HTML, the
   visitor's from `/api/sealed-view`), `/price-guide` (the same, from
-  `/api/price-guide-view`; a `?market=` link pins its market) and `/browse`
+  `/api/price-guide-view`; a `?market=` link pins its market), `/browse`
   (the same, from `/api/browse-view`; a `?q=` search is rewritten to
-  `app/browse/search`, metered and rendered per visit, never cached) are
+  `app/browse/search`, metered and rendered per visit, never cached) and
+  `/sets/[set]` (the same, from `/api/set-view`; the hubs' per-market blocks
+  are drawn for every market and `MarketSlots` shows the visitor's) are
   force-dynamic behind a six-hour CDN copy per URL. [2026-10-14](../DECISIONS.md#L17060)
 - **Guards:** `cachedOrDirect` logs nested-cache, cache-miss and oversize
   (past ~1.2 MB, where an `unstable_cache` entry silently drops).
@@ -540,9 +542,9 @@ longer lands on its entry.
   `['set-checklist', code, country]`, 3600s, `CONTENT_TAG`, with no nested
   loader; owned copies are one user-scoped groupBy
   (`GET /api/collection/owned?set=CODE`, no-store). `/sets/[set]` reads neither
-  cookies nor the user: a released set's ticks are a client overlay portalled
-  into the tiles and price guide rows, so the page's HTML is unchanged and its
-  memo is shared. The tick is `POST /api/collection`, so card 51 opens the
+  cookies nor the user (nor, since 2026-11-05, the market: one CDN copy per
+  URL): a released set's ticks are a client overlay portalled into the tiles
+  and price guide rows, so the page's HTML is unchanged and its memo is shared. The tick is `POST /api/collection`, so card 51 opens the
   `limit:portfolio` panel inline ("Nobody loses cards they already have").
   Radiance shows "N cards revealed so far" with no denominator, percentage,
   bar or cost until it releases (its total is unsettled). The printing-aware

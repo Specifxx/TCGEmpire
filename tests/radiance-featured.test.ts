@@ -68,5 +68,6 @@ test("Radiance's singles are live before release day; its sealed product is stil
   assert.equal(singlesLive(setByCode("VEN")!, week), true, "a released set is always live");
   const hub = read("src/app/sets/[set]/page.tsx");
   assert.match(hub, /const live = singlesLive\(set\);/);
-  assert.match(hub, /\{live && totalInSet > 0 && \(/, "the price read-out shows once singles trade");
+  // The read-out is the SetMarketBoard island since 2026-11-05 (one CDN copy per URL).
+  assert.match(read("src/components/sets/SetMarketBoard.tsx"), /\{live && totalInSet > 0 && \(/, "the price read-out shows once singles trade");
 });

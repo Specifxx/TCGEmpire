@@ -42,13 +42,15 @@ const build = (kind: CollectionKind, members: CollectionMember[], siteMedianCent
 // ── The templates actually call it ───────────────────────────────────────────
 
 test("the set and domain templates render the generated intro", () => {
-  for (const [path, label] of [
-    ["src/app/sets/[set]/page.tsx", "set"],
-    ["src/app/domains/[slug]/page.tsx", "domain"],
+  // The set page's narrative is built in lib/set-view.ts and drawn by the
+  // SetMarketBoard island since 2026-11-05 (one CDN copy per URL).
+  for (const [path, drawn, label] of [
+    ["src/lib/set-view.ts", "src/components/sets/SetMarketBoard.tsx", "set"],
+    ["src/app/domains/[slug]/page.tsx", "src/app/domains/[slug]/page.tsx", "domain"],
   ] as const) {
     const src = read(path);
     assert.ok(src.includes("buildCollectionNarrative"), `${label} page must build a narrative`);
-    assert.match(src, /intro\.map\(\(p, i\) => \(/, `${label} page must render every paragraph`);
+    assert.match(read(drawn), /intro\.map\(\(p, i\) => \(/, `${label} page must render every paragraph`);
     assert.match(src, /kind: "(set|domain)"/, `${label} page must declare its collection kind`);
   }
 });
@@ -66,7 +68,7 @@ test("the domain page adds no extra query — it reuses the cards it already has
 });
 
 test("the set page's narrative query is lean, cached and default-view only", () => {
-  const src = read("src/app/sets/[set]/page.tsx");
+  const src = read("src/lib/set-view.ts");
   // Four scalar fields, not a tile payload — see the egress rules in lib/db.ts.
   // Renamed set-narrative-guide on 2026-09-24, when it also became the source
   // of the #price-guide table (four more scalar fields and one grouped count).

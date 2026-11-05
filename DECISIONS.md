@@ -22412,3 +22412,46 @@ In `next.config.js` the two new rules name the path through a constant (`BROWSE_
 `tests/content-links.test.ts` and `tests/watchlist.test.ts` read every literal `source: "/…"` in that file as a
 redirect source. Tests that pinned the page's code now read the lib, the island, the view and the search route.
 Next: `/sets/[set]`, the tools and the Pokémon pages.
+
+## 2026-11-05 — The set pages become one CDN copy per URL
+
+`/sets/[set]` on the `/sealed` shape (the entries above). It read the market cookie as well as searchParams, so
+every visit was a function render with five Postgres reads (the default view memoised per market, but the render
+itself never cached), on the pages that rank for every "<set> card list" and "<set> price guide" query.
+
+- **`lib/set-view.ts`** computes the set's view for ANY market: the totals, the filtered and paged grid (the
+  per-set, per-market `unstable_cache` of the default view, unchanged), the data-derived intro, the `#price-guide`
+  rows and the facts "How to read … prices" states (dearest, cheapest, the rarity filling the top ten). The page
+  and **`/api/set-view`** share it; the API takes `set=`, `market=` and the card query, `q` included (the panel's
+  keyword narrows one set's grid and was never metered: a set page is not a site search), noindexed, kept by the
+  CDN six hours like the page.
+- **The page** renders the baseline market (the US, or a pinned `?market=`) into its HTML and JSON-LD;
+  `next.config.js` keeps `/sets/:set` six hours (the query string is part of the key, so a filtered or paged
+  view is its own copy). **`SetViewProvider`** (client) fetches the visitor's market once for the whole page,
+  keyed by market and query, and three readers draw it: the hero's priced count (`SetMarketValue`,
+  `SetCountUp`) and **`SetMarketBoard`**, the island that owns the filters, the count row, the grid with the
+  owned ticks, the pager, the intro, the price guide and the read-out. The empty state (no cards yet) is not
+  about a market and stays in the page. The RiftboundStocks link is a server read, so it comes in as a slot.
+- **Server blocks that depend on the market but cannot move to a client file** — the Radiance hub's eBay
+  panel and the Legacy hub's pre-order table and eBay searches (`ebaySearchUrl` carries the campaign id the
+  browser never sees; the table reads the sealed loader), and the family block (the sisters' feeds) — are
+  drawn once per live market and **`components/MarketSlots.tsx`** shows the visitor's after hydration, the
+  baseline's in the HTML (`MarketPinProvider`, set by the page, pins a `?market=` link). The card page's
+  "computed for all six markets" shape, for a block rather than a number; each block is a few links or tiles.
+  `FamilyDeals` does this only with `allMarkets` (the pre-order and deals pages keep their per-request market).
+  The hubs no longer read `getDisplayCurrency` (a cookie read): a UK visitor who prefers euros sees Legacy's
+  pre-order table in GBP until release day. Radiance's table retired on release day.
+- **The owned tick in the price guide's "Stores" cell** now sits beside a `<span>`, not a bare text node: when
+  the visitor's market landed, React rewrote the cell with `textContent` (its only child was text) and dropped
+  the portalled tick, and the layer's next scan threw `removeChild` ~400 times. `SetTickLayer`'s `scanKey` is
+  the view's key plus whether the view is still the baseline, so it re-pairs when the market lands.
+- Unchanged for a crawler and a US visitor: URL, title, description, canonical, robots, h1, the hero, the hubs,
+  the FAQ, JSON-LD, the grid, the intro, the price guide. A visitor elsewhere sees the US numbers until their
+  market's answer lands, as on /sealed; a pinned `?market=` view fetches nothing and its pager keeps the pin.
+
+Driven in a files-mode dev server: the AU island fetched `/api/set-view?set=origins&market=AU` (six-hour CDN
+header) and swapped the read-out to Australia/AUD and the guide to A$ prices; a page-size change refetched with
+the new query; `?market=UK` with an AU cookie fetched nothing and kept `market=UK` on the pager; `/sets/legacy`
+drew its hub and eBay searches; an unknown set is a 404 from the API; no page errors. Tests that pinned the
+page's code now read the lib and the island; `tests/card-cdn.test.ts` walks the page's server imports. Next:
+the tools and the Pokémon pages.

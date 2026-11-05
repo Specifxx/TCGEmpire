@@ -25,22 +25,31 @@ const code = (p: string) => read(p).replace(/\{\/\*[\s\S]*?\*\/\}/g, "").replace
 const SET_PAGE = "src/app/sets/[set]/page.tsx";
 
 test("/sets/[set] never imports cookies or the session: the owned overlay is client-side", () => {
+  // The grid and the price guide are the SetMarketBoard island since 2026-11-05
+  // (one CDN copy per URL), fed by lib/set-view.ts: the page, the lib and the
+  // island read no session.
   const c = code(SET_PAGE);
-  assert.doesNotMatch(c, /getCurrentUser|@\/lib\/auth|from "next\/headers"|\bcookies\(|getSession|useMe\b/, "a session read here would break the shared memoised default view");
-  assert.doesNotMatch(c, /collectionCard|ownedBySet|set-owned/, "no per-request owned read on the page");
+  const view = code("src/lib/set-view.ts");
+  const board = code("src/components/sets/SetMarketBoard.tsx");
+  for (const src of [c, view, board]) {
+    assert.doesNotMatch(src, /getCurrentUser|@\/lib\/auth|from "next\/headers"|\bcookies\(|getSession|useMe\b/, "a session read here would break the shared memoised default view");
+    assert.doesNotMatch(src, /collectionCard|ownedBySet|set-owned/, "no per-request owned read on the page");
+  }
   // It mounts the overlay and nothing else of the tracker.
   assert.match(c, /<SetOwnedProvider setCode=\{set\.code\} enabled=\{trackerOpen\}>/);
-  assert.match(c, /<SetTickLayer tileIds=\{cards\.map\(\(c\) => c\.id\)\} rowIds=\{priceGuide\.map\(\(r\) => r\.id\)\} scanKey=\{JSON\.stringify\(searchParams\)\} \/>/);
-  assert.match(c, /\{\.\.\.\(trackerOpen \? \{ "data-tick-grid": "" \} : \{\}\)\}/, "one marker on the grid, only when the set is open");
-  assert.doesNotMatch(c, /<OwnedTick|data-c=/, "no tick component or per-card attribute per tile: they added 147 KB and 101 KB to the page");
-  assert.match(c, /<SetOwnedStatus /);
-  assert.match(c, /ticks=\{trackerOpen\}/);
+  assert.match(board, /<SetTickLayer tileIds=\{cards\.map\(\(c\) => c\.id\)\} rowIds=\{priceGuide\.map\(\(r\) => r\.id\)\} scanKey=\{`\$\{key\}\|\$\{view === baseline\}`\} \/>/);
+  assert.match(board, /\{\.\.\.\(trackerOpen \? \{ "data-tick-grid": "" \} : \{\}\)\}/, "one marker on the grid, only when the set is open");
+  for (const src of [c, board]) assert.doesNotMatch(src, /<OwnedTick|data-c=/, "no tick component or per-card attribute per tile: they added 147 KB and 101 KB to the page");
+  assert.match(board, /<SetOwnedStatus /);
+  assert.match(board, /ticks=\{trackerOpen\}/);
   // Released sets only, decided by the date, not by the flag that outlives release day.
   assert.match(c, /const trackerOpen = totalInSet > 0 && \(!isPreorderSetCode\(set\.code\) \|\| singlesLive\(set\)\)/, "opens on release, or once singles trade (2026-10-17)");
   // The queries the page makes are the ones it made before: no new read was added.
   // Seven since 2026-10-23: the description's per-set store count (one groupBy
-  // in generateMetadata, not part of the tracker).
-  assert.equal((c.match(/prisma\./g) ?? []).length, 7, "the same prisma calls as before the tracker, plus the description's store count");
+  // in generateMetadata, not part of the tracker). Two stay in generateMetadata;
+  // the view lib runs the other five for the page and for /api/set-view alike.
+  assert.equal((c.match(/prisma\./g) ?? []).length, 2, "generateMetadata's count and store count");
+  assert.equal((view.match(/prisma\./g) ?? []).length, 5, "the same prisma calls as before the tracker");
   assert.doesNotMatch(c, /generateStaticParams/);
 });
 

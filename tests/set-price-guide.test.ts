@@ -29,9 +29,10 @@ test("every card is listed, dearest first, unpriced cards last by collector numb
 });
 
 test("the set page renders the guide under its H2 and anchor, from the cached intro query", () => {
-  const page = read("src/app/sets/[set]/page.tsx");
-  assert.match(page, /<SetPriceGuide setName=\{set\.name\} rows=\{priceGuide\}/);
-  assert.match(page, /storeCountsByCountry\(rows\.map\(\(r\) => r\.id\)\)/, "one grouped count, not per card");
+  // The island draws it from the view lib/set-view.ts computes (2026-11-05, one CDN copy per URL).
+  const page = read("src/components/sets/SetMarketBoard.tsx");
+  assert.match(page, /<SetPriceGuide setName=\{setName\} rows=\{priceGuide\}/);
+  assert.match(read("src/lib/set-view.ts"), /storeCountsByCountry\(rows\.map\(\(r\) => r\.id\)\)/, "one grouped count, not per card");
   const c = read("src/components/sets/SetPriceGuide.tsx");
   assert.match(c, /id="price-guide"/);
   assert.match(c, /Riftbound \{setName\} price guide/);

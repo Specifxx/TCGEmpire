@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { getPreorderGroups } from "@/lib/sealed-import";
-import { getDisplayCurrency } from "@/lib/get-country";
 import { PreorderPriceTable, preorderTableGroups } from "@/components/PreorderPriceTable";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { HubFaq } from "@/components/HubFaq";
 import { ebayLabel, ebaySealedQuery, ebaySearchUrl } from "@/lib/affiliate";
-import type { Country } from "@/lib/country";
+import { COUNTRIES, COUNTRY_LIST, type Country } from "@/lib/country";
+import { MarketSlots } from "@/components/MarketSlots";
 import { championBySlug } from "@/lib/champions";
 import {
   LEGACY_RELEASE_DATE,
@@ -49,13 +49,20 @@ const TIMELINE = [
 ] as const;
 
 export async function LegacyHub({ country }: { country: Country }) {
-  const currency = getDisplayCurrency(country);
   const preRelease = isBeforeLegacyRelease();
-  const groups = preRelease
-    ? (await getPreorderGroups(country).catch(() => [])).filter((g) => g.setCode === LEGACY_SET_CODE)
-    : [];
-  const listed = preorderTableGroups(groups);
-  const ebay = ebayLabel(country);
+  // The pre-order table and the eBay searches are drawn once per live market
+  // and MarketSlots shows the visitor's (2026-11-05: the set page is one CDN
+  // copy per URL, so `country` is the HTML's baseline market, never the
+  // visitor, and nothing here reads a cookie). getPreorderGroups caches itself
+  // per market; each market's currency is its own.
+  const markets = await Promise.all(
+    COUNTRY_LIST.map(async ({ code }) => {
+      const groups = preRelease
+        ? (await getPreorderGroups(code).catch(() => [])).filter((g) => g.setCode === LEGACY_SET_CODE)
+        : [];
+      return { country: code, currency: COUNTRIES[code].currency, listed: preorderTableGroups(groups), ebay: ebayLabel(code) };
+    }),
+  );
 
   // Server-computed "next" step, like RadianceHub: the crawler and the visitor
   // see the same state.
@@ -148,46 +155,55 @@ export async function LegacyHub({ country }: { country: Country }) {
           ))}
         </ul>
 
-        {preRelease && listed.length > 0 ? (
-          <div className="mt-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pre-order prices, every store</h3>
-            <div className="mt-2">
-              <PreorderPriceTable groups={listed} country={country} currency={currency} page="/sets/legacy" />
-            </div>
-          </div>
-        ) : preRelease ? (
-          <p className="mt-4 text-sm text-slate-400">
-            None of our tracked stores in your market has opened a Legacy pre-order yet.{" "}
-            <Link href="/legacy-preorders" className="text-brand-300 underline-offset-2 hover:underline">
-              See the full pre-order comparison →
-            </Link>
-          </p>
-        ) : (
-          <p className="mt-4 text-sm text-slate-400">
-            Legacy is out.{" "}
-            <Link href="/legacy-preorders" className="text-brand-300 underline-offset-2 hover:underline">
-              Compare every store&apos;s Legacy booster box price →
-            </Link>
-          </p>
-        )}
+        <MarketSlots
+          slots={Object.fromEntries(
+            markets.map(({ country, currency, listed, ebay }) => [
+              country,
+              <div key={country}>
+                {preRelease && listed.length > 0 ? (
+                  <div className="mt-4">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pre-order prices, every store</h3>
+                    <div className="mt-2">
+                      <PreorderPriceTable groups={listed} country={country} currency={currency} page="/sets/legacy" />
+                    </div>
+                  </div>
+                ) : preRelease ? (
+                  <p className="mt-4 text-sm text-slate-400">
+                    None of our tracked stores in your market has opened a Legacy pre-order yet.{" "}
+                    <Link href="/legacy-preorders" className="text-brand-300 underline-offset-2 hover:underline">
+                      See the full pre-order comparison →
+                    </Link>
+                  </p>
+                ) : (
+                  <p className="mt-4 text-sm text-slate-400">
+                    Legacy is out.{" "}
+                    <Link href="/legacy-preorders" className="text-brand-300 underline-offset-2 hover:underline">
+                      Compare every store&apos;s Legacy booster box price →
+                    </Link>
+                  </p>
+                )}
 
-        <EbaySearchPanel
-          heading="Also on eBay"
-          sub={`Searches of ${ebay}, separate from the store prices above. eBay sellers set their own prices and dispatch dates.`}
-          country={country}
-          pageType="set_hub"
-          headingLevel={3}
-          className="mt-4"
-          links={[
-            {
-              label: `Search ${ebay} for Legacy booster boxes`,
-              href: ebaySearchUrl(country, ebaySealedQuery("Legacy Booster Box", "Booster Box"), "legacy-hub-box"),
-            },
-            {
-              label: `Search ${ebay} for Legacy Vaults and Champion Decks`,
-              href: ebaySearchUrl(country, "Riftbound Legacy (vault,bundle,champion deck)", "legacy-hub-bundle"),
-            },
-          ]}
+                <EbaySearchPanel
+                  heading="Also on eBay"
+                  sub={`Searches of ${ebay}, separate from the store prices above. eBay sellers set their own prices and dispatch dates.`}
+                  country={country}
+                  pageType="set_hub"
+                  headingLevel={3}
+                  className="mt-4"
+                  links={[
+                    {
+                      label: `Search ${ebay} for Legacy booster boxes`,
+                      href: ebaySearchUrl(country, ebaySealedQuery("Legacy Booster Box", "Booster Box"), "legacy-hub-box"),
+                    },
+                    {
+                      label: `Search ${ebay} for Legacy Vaults and Champion Decks`,
+                      href: ebaySearchUrl(country, "Riftbound Legacy (vault,bundle,champion deck)", "legacy-hub-bundle"),
+                    },
+                  ]}
+                />
+              </div>,
+            ]),
+          )}
         />
         {preRelease && (
           <Link href="/legacy-preorders" className="mt-3 inline-block text-sm font-semibold text-brand-300 underline-offset-2 hover:underline">

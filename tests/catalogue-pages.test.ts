@@ -78,14 +78,19 @@ test("set pages and galleries show the set's guides from data, before the eBay b
     assert.equal(guides[0].slug, SET_GUIDES[s.code][0].slug, `${s.code}: its own guide first`);
     assert.equal(new Set(guides.map((g) => g.slug)).size, guides.length, `${s.code}: duplicate guide`);
   }
+  // The grid, the price guide and the read-out are the SetMarketBoard island
+  // since 2026-11-05 (one CDN copy per URL); the guides follow it in the page.
   const page = code("src/app/sets/[set]/page.tsx");
+  const board = code("src/components/sets/SetMarketBoard.tsx");
   const guidesAt = page.indexOf("<RelatedGuides guides={guidesForSet(set.code)}");
-  assert.ok(guidesAt > page.indexOf("<SetPriceGuide "), "the set's guides follow the price guide");
+  assert.ok(guidesAt > page.indexOf("<SetMarketBoard"), "the set's guides follow the price guide");
   assert.ok(guidesAt < page.indexOf("<EbayPicks"), "…and lead the eBay block");
+  assert.ok(board.indexOf("How to read {setName} prices") > board.indexOf("<SetPriceGuide "), "the read-out follows the price guide");
   assert.doesNotMatch(page, /ranked by total delivered cost/);
+  assert.doesNotMatch(board, /ranked by total delivered cost/);
   // Under the grid, per the 2026-09-24 set-page decision: nothing new between
   // the hero and the card grid.
-  assert.ok(page.indexOf("How to read {set.name} prices") > page.indexOf("<Reveal stagger"));
+  assert.ok(board.indexOf("How to read {setName} prices") > board.indexOf("<Reveal stagger"));
 
   const gallery = code("src/app/sets/[set]/gallery/page.tsx");
   assert.match(gallery, /<RelatedGuides guides=\{guidesForSet\(set\.code\)\}/);

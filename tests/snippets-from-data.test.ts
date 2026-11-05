@@ -86,7 +86,9 @@ test("set pages: 'Card List: All N Cards + Prices' leads, and the grid is not pu
   const previewDesc = src.slice(src.indexOf("const previewDescCandidates"), src.indexOf("const descCandidates"));
   assert.ok(previewDesc.length > 0);
   assert.doesNotMatch(previewDesc, /compared across stores|Updated daily|complete/);
-  const grid = src.indexOf("{totalInSet === 0 ? (");
-  const intro = src.indexOf("{intro.length > 0 && (");
+  // The grid and the intro are the SetMarketBoard island since 2026-11-05 (one CDN copy per URL).
+  const board = read("src/components/sets/SetMarketBoard.tsx");
+  const grid = board.indexOf("<Reveal stagger");
+  const intro = board.indexOf("{intro.length > 0 && (");
   assert.ok(grid > 0 && intro > grid, "the data-derived intro renders under the grid");
 });

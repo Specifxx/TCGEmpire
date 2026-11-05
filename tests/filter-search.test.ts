@@ -175,7 +175,7 @@ test("the sealed panel draws the same box on /sealed and /pokemon/sealed, worded
 });
 
 test("every page with a card or sealed panel shows the box, except the price guide", () => {
-  for (const f of ["src/components/browse/BrowseView.tsx", "src/app/sets/[set]/page.tsx"]) {
+  for (const f of ["src/components/browse/BrowseView.tsx", "src/components/sets/SetMarketBoard.tsx"]) {
     const tag = read(f).match(/<Filters\b[^>]*\/>/)?.[0] ?? "";
     assert.ok(tag, f);
     assert.doesNotMatch(tag, /search=\{false\}/, f);
@@ -224,15 +224,18 @@ test("/browse and /sets/[set] answer q through buildCardWhere, ANDed with the ti
   assert.ok(w.OR?.some((c) => c.nameNormalized?.contains === "jinx"), "name");
   assert.ok(w.OR?.some((c) => c.collectorNumber?.contains === "Jinx"), "collector number");
   // The set page pins its own set over anything the words imply ("crystal rose" names Vendetta).
+  // Its query is lib/set-view.ts since 2026-11-05 (one CDN copy per URL); the island draws the count.
   const page = read("src/app/sets/[set]/page.tsx");
-  assert.match(page, /const where = \{ \.\.\.buildCardWhere\(searchParams, country\), setCode: set\.code \};/);
+  const view = read("src/lib/set-view.ts");
+  const board = read("src/components/sets/SetMarketBoard.tsx");
+  assert.match(view, /const where = \{ \.\.\.buildCardWhere\(searchParams, country\), setCode: set\.code \};/);
   const scoped = { ...(buildCardWhere({ q: "crystal rose jinx" }, "US") as W), setCode: "OGN" };
   assert.equal(scoped.setCode, "OGN");
   // A searched set view says what it was searched for, and stays noindex like any filtered view.
-  assert.match(page, /\{searchQ && \(\s*<> for <span className="text-brand-400">“\{searchQ\}”<\/span><\/>/);
+  assert.match(board, /\{searchQ && \(\s*<> for <span className="text-brand-400">“\{searchQ\}”<\/span><\/>/);
   assert.match(page, /const filtered = !isCleanPagination\(searchParams\);/);
   // A set page is never metered (tests/search-limits.test.ts).
-  assert.doesNotMatch(page, /search-quota/);
+  for (const src of [page, view, board]) assert.doesNotMatch(src, /search-quota/);
 });
 
 test("/sealed filters its already-loaded groups by q in memory: no new query, no new cache", () => {
