@@ -79,6 +79,7 @@ export const HQ_SITES: HqSite[] = [
   { key: "wgc", label: "WargameCompare", url: "https://wargamecompare.com", host: "wargamecompare.com", repo: "wargamecompare", tags: ["wgc"], monitor: { workflow: "ops-monitor.yml", everyH: 6 } },
   { key: "figure", label: "FigureCompare", url: "https://figurecompare.com", host: "figurecompare.com", repo: "figurecompare", tags: ["figure"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   { key: "ky", label: "KaeYoung", url: "https://kaeyoung.com", host: "kaeyoung.com", repo: "kaeyoung", tags: ["ky"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
+  { key: "sc", label: "ScentCompare", url: "https://scentcompare.app", host: "scentcompare.app", repo: "scentcompare", tags: ["sc"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   {
     key: "cc",
     label: "CamCompare",
