@@ -56,6 +56,7 @@ export const AMAZON_TRACKING_SITES: Record<string, string> = {
   "figurecompare-22": "figure",
   "kaeyoung-22": "ky",
   "kypinterest-22": "ky",
+  "scentcompare-22": "sc",
   "camcompare-22": "cc",
   // Shared by several sites (2026-11-03): riftcompare-20 (US), compareempire-22
   // (AU, the engine default), compareempi03-21 (UK), compareempire-20 (CA),
