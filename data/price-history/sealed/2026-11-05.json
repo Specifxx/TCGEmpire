@@ -29,7 +29,7 @@
     },
     "LGC|Booster Box": {
       "AU": 24000,
-      "CA": 19995,
+      "CA": 17999,
       "EU": 11900,
       "SG": 20000,
       "US": 15999
@@ -261,7 +261,18 @@
       "US": 799
     },
     "RAD|Sleeved Booster (Art Set)": {
-      "US": 3488
+      "US": 2994
+    },
+    "REC|Booster Box": {
+      "CA": 18999,
+      "EU": 11900,
+      "US": 15999
+    },
+    "REC|Bundle": {
+      "US": 4999
+    },
+    "REC|Sealed": {
+      "EU": 71400
     },
     "SFD|Booster Box": {
       "AU": 28000,
@@ -474,7 +485,7 @@
       "CA": 119999,
       "EU": 61200,
       "UK": 63999,
-      "US": 70000
+      "US": 71998
     },
     "VEN|Booster Pack": {
       "AU": 999,
@@ -592,6 +603,9 @@
     "originsnexusnightpromobooster": {
       "EU": 1000
     },
+    "preorderriftboundgiftoftheriftbundle": {
+      "CA": 24995
+    },
     "replacementcardbooster": {
       "EU": 3299
     },
@@ -696,12 +710,6 @@
     "riftboundoriginviktorchampiondeck": {
       "AU": 3500
     },
-    "riftboundreckoningboosterboxenglishpresa": {
-      "EU": 11900
-    },
-    "riftboundreckoningcaseenglishpresale": {
-      "EU": 71400
-    },
     "riftboundshowdowndeck": {
       "US": 1788
     },
@@ -737,15 +745,6 @@
     },
     "riftboundtcgrumblechampiondeck": {
       "CA": 3199
-    },
-    "riftboundtcgthereckoningboosterboxpreord": {
-      "CA": 18999
-    },
-    "riftboundthereckoningboosterdisplaypreor": {
-      "US": 15999
-    },
-    "riftboundthereckoningvaultpreorder": {
-      "US": 4999
     },
     "riftboundvandettashowdowndeckzedvsshenle": {
       "CA": 2999
