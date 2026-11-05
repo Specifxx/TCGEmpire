@@ -27,7 +27,11 @@ export function parseTrialEnv(raw: string | undefined, fallback: number): number
 // 3 from 2026-11-03 (owner: "noone is signing up to premium … give a couple days
 // free trial"): a FREE 3-day trial on both plans, card required, auto-converts,
 // one per account (trialOfferedTo). DECISIONS.md, "A 3-day free trial on Pro".
-export const PREMIUM_TRIAL_DAYS = parseTrialEnv(process.env.PREMIUM_TRIAL_DAYS, 3);
+// 14 again from 2026-11-05 (owner: "use something that we used early on which
+// had the best retention"): August's free 14-day card-gated trial at $4.99
+// converted 7 of 7 and lost none; the 3-day trial at $6.99 converted nobody.
+// DECISIONS.md, "Pro goes back to what worked in August".
+export const PREMIUM_TRIAL_DAYS = parseTrialEnv(process.env.PREMIUM_TRIAL_DAYS, 14);
 export function premiumTrialEnabled(): boolean {
   return PREMIUM_TRIAL_DAYS > 0;
 }

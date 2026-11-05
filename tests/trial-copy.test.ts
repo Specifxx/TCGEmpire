@@ -20,8 +20,8 @@ import { premiumTrialFee, trialButtonLabel, trialThenLine, trialOfferLead } from
 const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ");
 const ENDS = new Date("2026-10-30T12:00:00Z");
 
-test("the default is a free 3-day trial (2026-11-03; none from 2026-10-26, a free 30 days before, the $1 first month before that)", () => {
-  assert.equal(PREMIUM_TRIAL_DAYS, 3);
+test("the default is a free 14-day trial (2026-11-05, August's trial; 3 days from 2026-11-03, none from 2026-10-26, a free 30 days before, the $1 first month before that)", () => {
+  assert.equal(PREMIUM_TRIAL_DAYS, 14);
   assert.equal(PREMIUM_TRIAL_FEE_CENTS, 0);
   // The free-trial copy still exists for a length set in the environment.
   assert.equal(trialButtonLabel(30, 0), "Start 30-day free trial");

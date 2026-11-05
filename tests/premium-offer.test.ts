@@ -185,10 +185,10 @@ const email = buildPremiumOfferEmail({
   oneClickUrl: "https://riftcompare.com/api/announcements/unsubscribe?token=abc",
 });
 
-test("the prices are the site's own constants (2026-10-26: $3.99 billed yearly)", () => {
-  assert.equal(premiumEffectiveMonthly("premium"), "$3.99");
+test("the prices are the site's own constants (2026-11-05: $4.99, $3.33 billed yearly)", () => {
+  assert.equal(premiumEffectiveMonthly("premium"), "$3.33");
   assert.equal(premiumEffectiveMonthly("plus"), "$2.00");
-  assert.equal(annualSavingPct("premium"), 43, "$47.88 against 12 × $6.99");
+  assert.equal(annualSavingPct("premium"), 33, "$39.99 against 12 × $4.99");
   assert.equal(annualSavingPct("plus"), 33);
   assert.equal(premiumOfferSubject(), "How's RiftCompare working for you?");
   assert.equal(email.subject, premiumOfferSubject());

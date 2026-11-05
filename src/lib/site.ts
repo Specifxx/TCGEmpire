@@ -51,13 +51,21 @@ export const SITE_URL = "https://riftcompare.com";
 // $47.88 is exactly 12 × $3.99, so "$3.99/mo billed yearly" is literally true.
 // DECISIONS.md, "Pro: Collectr's model, $6.99 or $3.99/mo yearly". Current
 // subscribers keep what they pay (none pays more than $6.99 a month).
-export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$6.99";
+// BACK TO $4.99 a month or $39.99 a year from 2026-11-05 (owner: "I don't think
+// anyone's buying premium … use something that we used early on which had the
+// best retention"): August's setup, $4.99 with a free 14-day card-gated trial,
+// converted 7 of 7 trials and lost none; nothing since has. DECISIONS.md,
+// "Pro goes back to what worked in August". The owner repoints
+// STRIPE_PREMIUM_PRICE_ID / _ANNUAL_PRICE_ID at the existing Sep 2026 $4.99 and
+// $39.99 Prices and lists the $6.99/$47.88 ids in STRIPE_PREMIUM_LEGACY_PRICE_IDS;
+// the subscribers on $6.99 move DOWN at renewal, nobody moves up.
+export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$4.99";
 export const PREMIUM_PRICE_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_PRICE_PERIOD || "month";
 export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${PREMIUM_PRICE_AMOUNT}/mo`;
 
 // Annual plan (display only; the actual charge comes from the Stripe annual price,
 // enabled via STRIPE_PREMIUM_ANNUAL_PRICE_ID — see lib/premium.ts).
-export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$47.88";
+export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$39.99";
 export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERIOD || "year";
 
 // ── Plus: the second, cheaper paid tier (2026-09-11) ────────────────────────
@@ -211,7 +219,7 @@ export function trialThenLine(days: number, feeCents: number, then: string): str
   return `${trialOfferLead(days, feeCents)}, then ${then}`;
 }
 
-/** The buy button: "Start 30 days for $1", or "Start 3-day free trial" (2026-11-03). */
+/** The buy button: "Start 30 days for $1", or "Start 14-day free trial" (3 days 2026-11-03, 14 from 2026-11-05). */
 export function trialButtonLabel(days: number, feeCents: number): string {
   return feeCents > 0 ? `Start ${trialDaysPhrase(days)} for ${premiumTrialFee(feeCents)}` : `Start ${days}-day free trial`;
 }
@@ -445,4 +453,4 @@ export function premiumLockInTail(): string {
 // "one-table-2026-10-25": /premium is one plan table (Monthly, Annual) and the Free vs Premium comparison
 // "pro-theme-2026-11-02": the same Pro plan and prices, the page restyled in the site's own theme (orange, flat panels)
 // "pro-trial-2026-11-03": the same page and prices with a free 3-day trial ("Start 3-day free trial").
-export const PREMIUM_COPY_VERSION = "pro-trial-2026-11-03";
+export const PREMIUM_COPY_VERSION = "pro-499-14day-2026-11-05";

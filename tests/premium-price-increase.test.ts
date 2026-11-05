@@ -47,9 +47,9 @@ test("today's decided price is what the site actually announces, with no increas
   // no announced future increase) so a careless edit changes it loudly rather
   // than silently. The cut is exactly the edit that would have announced a
   // FAKE increase had PREMIUM_NEXT_PRICE_AMOUNT stayed a hand-typed "$9.99".
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$6.99", "Pro at $6.99 from 2026-10-26");
-  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$47.88", "12 × $3.99");
-  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$6.99");
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$4.99", "Pro at $4.99 again from 2026-11-05 ($6.99 from 2026-10-26)");
+  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$39.99");
+  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$4.99");
   assert.equal(premiumPriceIncreaseAnnounced(), false);
 });
 
@@ -119,7 +119,7 @@ test("with no announcement live, the helpers say only what is true: cancel anyti
   // protection from a rise nobody had decided. The steady state now says the
   // one thing that is unconditionally true.
   assert.equal(premiumLockInLine(), "No contract: cancel anytime from your account page, in a couple of clicks.");
-  assert.equal(premiumLockInHeadline(), "Pro is $6.99/month — cancel anytime");
+  assert.equal(premiumLockInHeadline(), "Pro is $4.99/month — cancel anytime");
   for (const copy of [premiumLockInLine(), premiumLockInHeadline()]) {
     assert.doesNotMatch(copy, /lock|goes up|rises|rise|increas/i, `steady state must not imply a coming increase: "${copy}"`);
   }
@@ -304,8 +304,9 @@ test("the Pro-explained article states the price the site actually charges, not 
   assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
   assert.ok(!haystack.includes("$79.99"), "article must not still quote the retired $79.99 annual price anywhere");
   assert.ok(!/half price for their first/i.test(haystack), "no intro while it is off");
-  // The free 3-day trial is on again from 2026-11-03.
-  assert.ok(/3[- ]days?\b[^.]{0,40}free|free[^.]{0,20}3[- ]day/i.test(haystack), "the article quotes the 3-day free trial now that it is on");
+  // The free 14-day trial is back from 2026-11-05 (3 days from 2026-11-03).
+  assert.ok(/14[- ]days?\b[^.]{0,40}free|free[^.]{0,20}14[- ]day/i.test(haystack), "the article quotes the 14-day free trial now that it is on");
+  assert.ok(!haystack.includes("$6.99") && !haystack.includes("$47.88"), "the retired $6.99 / $47.88 Pro prices are not quoted");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

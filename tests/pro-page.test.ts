@@ -23,11 +23,11 @@ import { PREMIUM_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT, annualSavingPct, premiumEf
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const T0 = 1_800_000_000_000;
 
-test("Pro is $6.99 a month or $47.88 a year, which is exactly $3.99 a month", () => {
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$6.99");
-  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$47.88");
-  assert.equal(premiumEffectiveMonthly("premium"), "$3.99");
-  assert.equal(annualSavingPct("premium"), 43);
+test("Pro is $4.99 a month or $39.99 a year ($3.33 a month) again from 2026-11-05, August's price", () => {
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$4.99");
+  assert.equal(PREMIUM_ANNUAL_AMOUNT, "$39.99");
+  assert.equal(premiumEffectiveMonthly("premium"), "$3.33");
+  assert.equal(annualSavingPct("premium"), 33, "$39.99 against 12 × $4.99 = $59.88");
 });
 
 const V = { pages: 2, otherPromptShown: false };

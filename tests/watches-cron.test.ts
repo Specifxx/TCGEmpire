@@ -71,7 +71,8 @@ test("the tier table carries both watches before Ad-free, from the constants; th
   // then "rebrand-2026-10-23": the "Never overpay" promise, live proof and outcome cards
   // then "one-table-2026-10-25": /premium is the plan table and the comparison, nothing else
   // then "pro-theme-2026-11-02": the page restyled in the site theme
-  assert.equal(PREMIUM_COPY_VERSION, "pro-trial-2026-11-03");
+  // then "pro-trial-2026-11-03": a free 3-day trial
+  assert.equal(PREMIUM_COPY_VERSION, "pro-499-14day-2026-11-05");
   // Every surface that quotes a watch number reads the constant.
   for (const f of ["src/app/premium/page.tsx", "src/app/llms.txt/route.ts", "src/lib/email.ts", "src/lib/articles.ts", "src/app/watching/page.tsx"]) {
     assert.match(read(f), /DECK_WATCH_LIMIT/, `${f} quotes the deck watch limit from the constant`);
