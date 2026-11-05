@@ -22,12 +22,15 @@ const PAGE = "src/app/card/[id]/page.tsx";
 // nothing else about the visitor (2026-11-05, "The searchParams pages join the
 // CDN").
 const QUERY_CDN = "public, s-maxage=21600, stale-while-revalidate=86400";
-const CDN_PAGES: { page: string; source: string; value: string }[] = [
+const CDN_PAGES: { page: string; source: string; value: string; missing?: { type: string; key: string }[] }[] = [
   { page: "src/app/auctions/page.tsx", source: "/auctions", value: QUERY_CDN },
   { page: "src/app/market/page.tsx", source: "/market", value: QUERY_CDN },
   { page: "src/app/market/records/page.tsx", source: "/market/records", value: QUERY_CDN },
   { page: "src/app/sealed/page.tsx", source: "/sealed", value: QUERY_CDN },
   { page: "src/app/price-guide/page.tsx", source: "/price-guide", value: QUERY_CDN },
+  // A text search is rewritten to app/browse/search/page.tsx (metered, per
+  // visit), so the rule must not apply when `q` is present.
+  { page: "src/app/browse/page.tsx", source: "/browse", value: QUERY_CDN, missing: [{ type: "query", key: "q" }] },
 ];
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
@@ -78,15 +81,25 @@ test("nothing the card page's server render reaches reads the visitor (one CDN c
   assert.deepEqual(offenders, [], "a per-visitor read here would put one visitor's page in every visitor's CDN copy");
 });
 
-for (const { page, source, value } of CDN_PAGES) {
+for (const { page, source, value, missing } of CDN_PAGES) {
   test(`${source} is force-dynamic, carries no ISR window, and the CDN keeps one copy per URL`, async () => {
     const src = read(page);
     assert.match(src, /^export const dynamic = "force-dynamic";$/m);
     assert.doesNotMatch(src, /^export const revalidate\b|^export (?:async )?function generateStaticParams/m);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const cfg = require(join(ROOT, "next.config.js")) as { headers: () => Promise<{ source: string; headers: { key: string; value: string }[] }[]> };
+    const cfg = require(join(ROOT, "next.config.js")) as {
+      headers: () => Promise<{ source: string; missing?: unknown; headers: { key: string; value: string }[] }[]>;
+      rewrites: () => Promise<{ beforeFiles: { source: string; has?: unknown; destination: string }[] }>;
+    };
     const rule = (await cfg.headers()).find((h) => h.source === source);
     assert.deepEqual(rule?.headers, [{ key: "Vercel-CDN-Cache-Control", value }]);
+    assert.deepEqual(rule?.missing, missing);
+    if (missing) {
+      // The excluded request is rewritten to a route of its own, before the filesystem.
+      const rw = (await cfg.rewrites()).beforeFiles.find((r) => r.source === source);
+      assert.deepEqual(rw?.has, missing);
+      assert.ok(rw?.destination && existsSync(join(ROOT, "src/app", rw.destination, "page.tsx")), `${rw?.destination} has a page`);
+    }
   });
 
   test(`nothing ${source}'s server render reaches reads the visitor (one CDN copy per URL serves everyone)`, () => {

@@ -124,7 +124,7 @@ test("a champion hub links that champion's own articles, matched on the whole ta
 
 test("each catalogue hub renders the guides for its own route, after its data", () => {
   const wiring: [string, string][] = [
-    ["src/app/browse/page.tsx", "/browse"],
+    ["src/components/browse/BrowseView.tsx", "/browse"],
     ["src/app/sets/page.tsx", "/sets"],
     ["src/app/stores/page.tsx", "/stores"],
     ["src/app/stores/tracked/page.tsx", "/stores/tracked"],
@@ -142,22 +142,27 @@ test("each catalogue hub renders the guides for its own route, after its data", 
     assert.ok(at > 0, `${file} must render guidesForTool("${route}")`);
     assert.ok(at > src.indexOf("<h1"), `${file}: the guides follow the page's own heading and data`);
   }
-  const browse = code("src/app/browse/page.tsx");
+  // Since 2026-11-05 the grid is the BrowseMarketBoard island; the guides reach
+  // it as a slot the island draws after the pager (one CDN copy per URL).
+  const browse = code("src/components/browse/BrowseView.tsx");
   const at = browse.indexOf('guidesForTool("/browse")');
-  assert.ok(at > browse.indexOf("<Pagination") && at < browse.indexOf("<AdSlot"), "/browse: under the grid, ahead of the ad");
+  assert.ok(at > browse.indexOf("<BrowseMarketBoard") && at < browse.indexOf("<AdSlot"), "/browse: under the grid, ahead of the ad");
+  const board = code("src/components/browse/BrowseMarketBoard.tsx");
+  assert.ok(board.indexOf("{!q && guides}") > board.indexOf("<Pagination"), "the island draws the guides after the pager");
 });
 
 test("/browse explains its prices under the H1, without giving up its H1 or its default sort", () => {
-  const src = code("src/app/browse/page.tsx");
-  const head = src.slice(src.indexOf("<h1"), src.indexOf("<EbayPicks"));
+  const src = code("src/components/browse/BrowseView.tsx");
+  const head = src.slice(src.indexOf("<h1"), src.indexOf("<BrowseMarketBoard"));
   assert.match(head, /<h1[^>]*>Riftbound Card List<\/h1>/);
   for (const phrase of ["before postage", "two imports a day", "07:00 and 19:00 UTC", "cheapest first by item price", "Stocked elsewhere"]) {
     assert.ok(head.includes(phrase), `/browse's explanation must say "${phrase}"`);
   }
-  assert.match(head, /country === "CA"[\s\S]{0,120}eBay US/, "Canada's converted eBay US rows are named, not denied");
+  // The market words are the BrowseMarketWord island's (2026-11-05): the baseline's in the HTML, the visitor's after hydration.
+  assert.match(code("src/components/browse/BrowseMarketBoard.tsx"), /country === "CA"[\s\S]{0,120}eBay US/, "Canada's converted eBay US rows are named, not denied");
   assert.match(head, /href="\/methodology#ordering"/);
   assert.match(head, /href="\/guides\/where-to-buy-riftbound-cards"/);
-  assert.match(src, /const BROWSE_DEFAULT_SORT = "popular";/);
+  assert.match(code("src/lib/browse-shared.ts"), /const BROWSE_DEFAULT_SORT = "popular";/);
   // Both /browse and the card page deep-link the ordering section.
   assert.match(read("src/app/methodology/page.tsx"), /id="ordering"/);
 });

@@ -108,7 +108,7 @@ test("the unit is on all five requested pages", () => {
   // rather than inline — see that file's own header comment.
   // pageType since 2026-09-26: the clicks name their page (buy_click and EPN).
   assert.match(read("src/components/home/HomeSections.tsx"), /<EbayPicks pageType="homepage" \/>/, "/ must render it");
-  assert.match(read("src/app/browse/page.tsx"), /<EbayPicks /, "/browse must render it");
+  assert.match(read("src/components/browse/BrowseView.tsx"), /<EbayPicks /, "/browse must render it");
 
   // The three articles opt in through data, not a slug check in the view.
   const wanted = [

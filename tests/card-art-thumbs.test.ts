@@ -60,9 +60,9 @@ test("/browse defaults to Most popular; ?sort=number still means set & number", 
   assert.deepEqual(buildCardOrderBy("popular", "US").slice(0, 2), [{ searchCount: "desc" }, { viewCount: "desc" }]);
   assert.deepEqual(buildCardOrderBy("number", "US"), [{ setCode: "asc" }, { collectorNumber: "asc" }]);
   assert.deepEqual(buildCardOrderBy(undefined, "US"), [{ setCode: "asc" }, { collectorNumber: "asc" }]);
-  const page = readFileSync("src/app/browse/page.tsx", "utf8");
-  assert.match(page, /const BROWSE_DEFAULT_SORT = "popular"/);
-  assert.match(page, /buildCardOrderBy\(searchParams\.sort \|\| BROWSE_DEFAULT_SORT/);
+  // /browse's query lives in lib/browse-view.ts since 2026-11-05 (one CDN copy per URL).
+  assert.match(readFileSync("src/lib/browse-shared.ts", "utf8"), /const BROWSE_DEFAULT_SORT = "popular"/);
+  assert.match(readFileSync("src/lib/browse-view.ts", "utf8"), /buildCardOrderBy\(sp\.sort \|\| BROWSE_DEFAULT_SORT/);
 });
 
 test("card page: phone buy block under the name, sticky bar hidden while the comparison is on screen", () => {

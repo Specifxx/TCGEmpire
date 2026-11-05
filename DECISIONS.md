@@ -4574,7 +4574,7 @@ not literally reskinning the site):
 
 **"Maybe the $0 was a bad idea."** The pricing cards no longer lead with
 `TrialPriceBlock`'s `$0` headline (added 2026-09-09, reasoned about at length
-in that day's two entries above). The headline number is now always the real
+in that day's the entries above). The headline number is now always the real
 recurring price — or its per-month equivalent under annual billing, via the
 existing `premiumEffectiveMonthly()` helper — with "Billed as $X/year" as a
 secondary caption, same as mtgstocks' own cards. The CTA button changed to
@@ -13393,7 +13393,7 @@ remains); `SealedWatch` (owner: later).
 
 ## Price alerts: review fixes — 2026-09-25
 
-A verification review of the two entries above found bugs that would have
+A verification review of the the entries above found bugs that would have
 sent false or duplicate alerts, one open redirect, and a workflow gate that
 could drop a day's alerts. Owner decisions unchanged: core now, sealed watches
 later (no `SealedWatch`), eBay never triggers an alert, tier split unchanged.
@@ -17452,7 +17452,7 @@ run to apply the BigCommerce fix above.
 
 ## The audit's "sell-outs" were stores we stopped reading; UK/EU sealed prices in dollars — 2026-10-15
 
-Correction to the two entries above ("Game Nerdz: sold out for a week, shown as
+Correction to the the entries above ("Game Nerdz: sold out for a week, shown as
 open" and "Thistle Tavern: in-store only, shown as open"). Both said the other
 false-open rows were sell-outs since our last read that **the next import
 corrects with no code change**. That was wrong. The audit's full synthesis,
@@ -22376,3 +22376,39 @@ dearer pages to run per visit.
 Nothing indexable moved: URL, title, description, canonical, robots, h1, intro, FAQ and JSON-LD are as they
 were. Tests that pinned the filters, the 30-day note and "Back to page 1" in the page now read the island.
 Next: `/browse`, `/sets/[set]`, the tools and the Pokémon pages.
+
+## 2026-11-05 — The card list becomes one CDN copy per URL
+
+`/browse` on the `/sealed` shape (the entries above): it read the market cookie as well as searchParams, so every
+visit was a function render and two Postgres queries, on the site's main landing page and deepest crawl surface.
+
+- **`lib/browse-view.ts`** runs the page's query for ANY market (the where, the market's sort, the count and the
+  page of tiles, the default view's per-market `unstable_cache`, the sealed matches of a text search) and the
+  page and **`/api/browse-view`** share it. `lib/browse-shared.ts` holds the client-safe constants and query
+  helper, because a value import of the server module from the island would drag Prisma into the browser.
+- **The page** renders the baseline market (the US, or a pinned `?market=`) into its HTML and JSON-LD;
+  `next.config.js` keeps it six hours (`missing: q`, below). **`BrowseMarketBoard`** (client) draws the
+  count, the controls, the eBay search by the count, the active filters, the sealed matches, the grid with the
+  sign-up prompt and the pager, fetching the visitor's market after hydration with the page's query repeated,
+  keyed by market and query. `EbayPicks` (reads the database) and `RelatedGuides` (reads the article index)
+  cannot live in a client file, so they come in as slots and are drawn where they always were. The intro's
+  market words and Canada's "eBay US" note are `BrowseMarketWord`. `components/browse/BrowseView.tsx` is the
+  one tree both routes draw.
+- **A text search stays per visit, on a route of its own.** `?q=` is metered per account
+  (lib/search-quota-server.ts: a session and cookie read the cached tree must never make), and an unmetered
+  JSON answer would be the allowance's back door. So `next.config.js` rewrites `/browse?q=…` (beforeFiles, the
+  URL unchanged) to **`app/browse/search/page.tsx`**, which meters, resolves the visitor's market from the
+  cookie or geo header as before, and draws the same `BrowseView` pinned; the `/browse` header rule carries
+  `missing: [{ type: "query", key: "q" }]`, so a search is never cached; the CDN page drops `q`, and
+  `/api/browse-view` answers a `q` with 400. Soft navigation into a search follows the rewrite (verified: a
+  keyword typed in the filter panel renders the search route without a reload). Metadata and canonicals are one
+  function, `lib/browse-seo.ts`, so the two routes cannot disagree.
+- Unchanged for a crawler and a US visitor: URL, title, description, canonical, robots, h1, intro, the champion
+  chips, JSON-LD, the grid. A visitor elsewhere sees the US order until their market's answer lands, as on
+  /sealed. Tile prices already followed the cookie in the browser (CardTile picks the market's column), so a
+  pinned `?market=` view looks exactly as it did.
+
+In `next.config.js` the two new rules name the path through a constant (`BROWSE_PATH`), not a literal:
+`tests/content-links.test.ts` and `tests/watchlist.test.ts` read every literal `source: "/…"` in that file as a
+redirect source. Tests that pinned the page's code now read the lib, the island, the view and the search route.
+Next: `/sets/[set]`, the tools and the Pokémon pages.

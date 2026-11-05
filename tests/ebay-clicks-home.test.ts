@@ -390,8 +390,9 @@ test("SearchBar: no matches offers an eBay search, outside the listbox and the o
 // ── /browse, Deal Finder, /movers ────────────────────────────────────────────
 
 test("/browse: a compact eBay search by the count, a full one when nothing matched", () => {
-  const src = code("src/app/browse/page.tsx");
-  assert.match(src, /const q = \(searchParams\.q \?\? ""\)\.trim\(\);/);
+  // The island draws /browse's results since 2026-11-05; the words are trimmed in lib/browse-view.ts.
+  const src = code("src/components/browse/BrowseMarketBoard.tsx");
+  assert.match(code("src/lib/browse-view.ts"), /const q = \(sp\.q \?\? ""\)\.trim\(\);/);
   assert.match(
     src,
     /\{q && hasResults && \(\s*<EbayBuyCta query=\{q\} freeText compact source="browse-search" pageType="browse" surface="ebay_search"/,
@@ -399,13 +400,14 @@ test("/browse: a compact eBay search by the count, a full one when nothing match
   // "Results" are single cards OR matching sealed products (2026-10-04): a search
   // that finds a box is not a dead end, so it gets the compact one, and the full
   // call is for a search that found neither.
-  assert.match(src, /const hasResults = total > 0 \|\| sealedMatches\.length > 0;/);
+  assert.match(src, /const hasResults = total > 0 \|\| view\.sealedMatches > 0;/);
   assert.match(src, /\{q && !hasResults && \(\s*<EbayBuyCta query=\{q\} freeText source="browse-no-results" pageType="browse" surface="ebay_search"/);
   const countAt = src.indexOf('id="results"');
   const compactAt = src.indexOf('source="browse-search"');
   const gridAt = src.indexOf("cards.map((c) =>");
   assert.ok(countAt > 0 && compactAt > countAt && compactAt < gridAt, "by the results count, above the grid");
-  assert.match(src, /<EbayPicks className="mb-6" pageType="browse" \/>/, "EbayPicks never gets the visitor's query");
+  assert.match(src, /\{picks\}/, "EbayPicks reaches the island as a slot, drawn in the same place");
+  assert.match(code("src/components/browse/BrowseView.tsx"), /picks=\{<EbayPicks className="mb-6" pageType="browse" \/>\}/, "EbayPicks never gets the visitor's query");
   // The homepage's call names its page (2026-09-26), never the query.
   assert.match(read("src/components/home/HomeSections.tsx"), /<EbayPicks pageType="homepage" \/>/, "the homepage's call carries no query");
 });
@@ -449,7 +451,7 @@ test("nothing this package added claims an eBay guarantee, urgency or scarcity",
   for (const f of [
     "src/components/TodaysTopDeals.tsx",
     "src/components/SearchBar.tsx",
-    "src/app/browse/page.tsx",
+    "src/components/browse/BrowseMarketBoard.tsx",
     "src/app/tools/deal-finder/page.tsx",
     "src/app/movers/page.tsx",
     "src/lib/top-deals.ts",

@@ -115,22 +115,25 @@ test("a sealed row in the dropdown opens the sealed quick view instead of naviga
 });
 
 test("/browse?q= lists the matching sealed products above the cards, each opening the sealed quick view", () => {
-  const page = code("src/app/browse/page.tsx");
+  // The read is lib/browse-view.ts's and the tiles the BrowseMarketBoard island's (2026-11-05, one CDN copy per URL).
+  const lib = code("src/lib/browse-view.ts");
+  const page = code("src/components/browse/BrowseMarketBoard.tsx");
   // Only a plain text search's first page; never under a card-only filter.
-  assert.match(page, /const wantsSealed = q\.length >= 2 && page === 1 && CARD_ONLY_FILTERS\.every\(\(k\) => !searchParams\[k\]\)/);
+  assert.match(lib, /const wantsSealed = q\.length >= 2 && page === 1 && CARD_ONLY_FILTERS\.every\(\(k\) => !sp\[k\]\)/);
   for (const k of ["rarity", "domain", "printing", "set", "priced", "min", "max"]) {
-    assert.match(page, new RegExp(`"${k}"`), `${k} is a card-only filter`);
+    assert.match(code("src/lib/browse-shared.ts"), new RegExp(`"${k}"`), `${k} is a card-only filter`);
   }
-  assert.match(page, /loadSealedForSearch\(country, getSealedGroups\)\.catch\(\(\) => null\)/, "a failed read only drops the section");
-  assert.match(page, /matchSealedGroups\(sealedRead\.groups, q\)/);
-  assert.match(page, /<SealedTile[\s\S]{0,200}currency=\{sealedCurrency\}[\s\S]{0,120}soldOutEverywhere=\{soldOutEverywhere\(g\.listings\)\}/);
+  assert.match(lib, /loadSealedForSearch\(country, getSealedGroups\)\.catch\(\(\) => null\)/, "a failed read only drops the section");
+  assert.match(lib, /matchSealedGroups\(sealedRead\.groups, q\)/);
+  assert.match(lib, /soldOutKeys: sealedShown\.filter\(\(g\) => soldOutEverywhere\(g\.listings\)\)/);
+  assert.match(page, /<SealedTile[\s\S]{0,200}currency=\{view\.sealedCurrency\}[\s\S]{0,120}soldOutEverywhere=\{soldOut\.has\(g\.groupKey\)\}/);
   // The sealed read happens at page level, never inside the default view's cache.
-  const cacheCall = page.slice(page.indexOf("unstable_cache(runQuery"), page.indexOf("unstable_cache(runQuery") + 200);
+  const cacheCall = lib.slice(lib.indexOf("unstable_cache(runQuery"), lib.indexOf("unstable_cache(runQuery") + 200);
   assert.doesNotMatch(cacheCall, /getSealedGroups/);
   // The count line, the compact eBay CTA and the empty state all know about sealed.
-  assert.match(page, /sealedMatches\.length > 0 &&/);
+  assert.match(page, /view\.sealedMatches > 0 &&/);
   assert.match(page, /q && hasResults && \(\s*<EbayBuyCta query=\{q\} freeText compact/);
-  assert.match(page, /total === 0 && sealedMatches\.length > 0 \?/);
+  assert.match(page, /total === 0 && view\.sealedMatches > 0 \?/);
   assert.match(page, /q && !hasResults && \(\s*<EbayBuyCta query=\{q\} freeText source="browse-no-results"/);
   // The sealed quick view's provider is global, so a tile opens it from here.
   assert.match(read("src/app/layout.tsx"), /<SealedQuickViewProvider>/);

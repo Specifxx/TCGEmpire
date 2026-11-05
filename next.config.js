@@ -137,6 +137,15 @@ const QUERY_CDN_CACHE = "public, s-maxage=21600, stale-while-revalidate=86400";
 // the visitor's from /api/sealed-view. The source is the page alone (one
 // segment); /sealed/:slug keeps its own day-long rule below.
 const QUERY_CDN_PAGES = ["/auctions", "/market", "/market/records", "/sealed", "/price-guide"];
+// /browse joined the same day ("The card list becomes one CDN copy per URL"),
+// except for a text search: `/browse?q=…` is rewritten below to
+// app/browse/search/page.tsx, which meters the search per account (a cookie and
+// session read) and renders the visitor's own market, so it must never be
+// cached. The header rule carries `missing: q`; the rewrite keeps the URL.
+const BROWSE_SEARCH_QUERY = [{ type: "query", key: "q" }];
+// A name, not a literal: tests/content-links.test.ts and tests/watchlist.test.ts
+// read every literal `source: "/…"` in this file as a REDIRECT source.
+const BROWSE_PATH = "/browse";
 
 const nextConfig = {
   env: { POKEMON_DATA_BUILT },
@@ -653,7 +662,15 @@ const nextConfig = {
         headers: [{ key: "Vercel-CDN-Cache-Control", value: CARD_CDN_CACHE }],
       },
       ...QUERY_CDN_PAGES.map((source) => ({ source, headers: [{ key: "Vercel-CDN-Cache-Control", value: QUERY_CDN_CACHE }] })),
+      { source: BROWSE_PATH, missing: BROWSE_SEARCH_QUERY, headers: [{ key: "Vercel-CDN-Cache-Control", value: QUERY_CDN_CACHE }] },
     ];
+  },
+  async rewrites() {
+    return {
+      // Before the filesystem, or /browse itself would answer. The query string
+      // travels with the rewrite; the visitor's URL stays /browse.
+      beforeFiles: [{ source: BROWSE_PATH, has: BROWSE_SEARCH_QUERY, destination: "/browse/search" }],
+    };
   },
 };
 

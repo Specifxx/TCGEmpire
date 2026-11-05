@@ -333,7 +333,7 @@ test("the board is a tile grid matching the database's, not a row list", () => {
   // 10.5rem grid) because the permanent rail had squeezed /browse to 94px tiles.
   const board = read(BOARD);
   const browseGrid = /grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-\[repeat\(auto-fill,minmax\(10\.5rem,1fr\)\)\]/;
-  assert.match(read("src/app/browse/page.tsx"), browseGrid, "expected /browse's grid to still be the reference");
+  assert.match(read("src/components/browse/BrowseMarketBoard.tsx"), browseGrid, "expected /browse's grid to still be the reference");
   assert.match(board, browseGrid, "the auction board must use the database's own grid");
   assert.match(board, /aspect-\[5\/7\]/, "tiles must share CardTile's aspect box so rows line up");
   assert.doesNotMatch(board, /<ul className="space-y-2">/, "the old vertical row list must be gone");

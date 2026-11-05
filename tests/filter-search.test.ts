@@ -175,7 +175,7 @@ test("the sealed panel draws the same box on /sealed and /pokemon/sealed, worded
 });
 
 test("every page with a card or sealed panel shows the box, except the price guide", () => {
-  for (const f of ["src/app/browse/page.tsx", "src/app/sets/[set]/page.tsx"]) {
+  for (const f of ["src/components/browse/BrowseView.tsx", "src/app/sets/[set]/page.tsx"]) {
     const tag = read(f).match(/<Filters\b[^>]*\/>/)?.[0] ?? "";
     assert.ok(tag, f);
     assert.doesNotMatch(tag, /search=\{false\}/, f);
@@ -207,10 +207,12 @@ test("on /browse the panel's q is the same metered search as the header's: the p
   assert.match(code("src/components/Filters.tsx"), /basePath = "\/browse"/);
   // /browse meters a first-page q before querying and counts it from the client
   // (tests/search-limits.test.ts pins the order); applyKeyword always lands on page 1.
-  const page = read("src/app/browse/page.tsx");
+  // A /browse?q= search is rewritten to its own route since 2026-11-05 (the card
+  // list is one CDN copy per URL; the metered search renders per visit).
+  const page = read("src/app/browse/search/page.tsx");
   assert.match(page, /const searchQ = \(searchParams\.q \?\? ""\)\.trim\(\);/);
   assert.match(page, /searchQ\.length >= 2 && page === 1 \? await quotaContext\(\)/);
-  assert.match(page, /\{quota\?\.metered && <SearchQuotaTick q=\{searchQ\} \/>\}/);
+  assert.match(page, /before=\{quota\?\.metered && <SearchQuotaTick q=\{searchQ\} \/>\}/);
 });
 
 // ── Every page with a panel filters by q on the server ───────────────────────

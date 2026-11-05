@@ -113,10 +113,20 @@ test("the search API meters everything except the store tools, and never caches 
 });
 
 test("/browse refuses a search before querying, and counts an allowed one from the client", () => {
-  const page = read("src/app/browse/page.tsx");
+  // /browse?q= is rewritten to this route since 2026-11-05 (the card list is one
+  // CDN copy per URL that reads nothing about the visitor; the search renders
+  // per visit). The CDN page never meters and never answers a search, and
+  // neither does the market API the island fetches.
+  const page = read("src/app/browse/search/page.tsx");
   const refuse = page.indexOf("if (quota && refusedNow(quota, searchQ))");
-  assert.ok(refuse > 0 && refuse < page.indexOf("const runQuery = () =>"), "no database query for a refused search");
-  assert.match(page, /\{quota\?\.metered && <SearchQuotaTick q=\{searchQ\} \/>\}/);
+  assert.ok(refuse > 0 && refuse < page.indexOf("await buildBrowseView("), "no database query for a refused search");
+  assert.match(page, /before=\{quota\?\.metered && <SearchQuotaTick q=\{searchQ\} \/>\}/);
+  const cdn = read("src/app/browse/page.tsx");
+  assert.doesNotMatch(cdn, /from "@\/lib\/(search-quota-server|get-country)"|getCountry\(/);
+  assert.match(cdn, /const \{ q: _q, \.\.\.rest \} = searchParams;/, "the CDN page drops q");
+  assert.match(read("src/app/api/browse-view/route.ts"), /if \(url\.searchParams\.get\("q"\)\) return new Response\([^)]*status: 400/);
+  const cfg = read("next.config.js");
+  assert.match(cfg, /beforeFiles: \[\{ source: BROWSE_PATH, has: BROWSE_SEARCH_QUERY, destination: "\/browse\/search" \}\]/);
   assert.match(page, /searchQ\.length >= 2 && page === 1 \? await quotaContext\(\)/, "only a text search's first page is metered");
 });
 
