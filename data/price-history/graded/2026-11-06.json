@@ -22,6 +22,7 @@
       "BGS 10": 331467
     },
     "cmsmrj4yt000hkx4mxx1nvx0p": {
+      "BGS 10": 299900,
       "BGS 9.5": 189900,
       "PSA 10": 357380,
       "PSA 9": 78164
@@ -38,7 +39,7 @@
       "BGS 10": 75000
     },
     "cmsmrj5250010kx4mllfwegen": {
-      "BGS 10": 92811
+      "BGS 10": 86075
     },
     "cmsmrsi7m000u2ouxl9lk9pft": {
       "PSA 10": 65405
@@ -74,6 +75,9 @@
     "cmsmrsr4r002e2ouxtzxrq7fp": {
       "PSA 10": 29133,
       "PSA 9": 4999
+    },
+    "cmsmrsrlo002h2ouxu7to8cmr": {
+      "PSA 10": 16900
     },
     "cmsmrsrrd002i2ouxsvo5tlt2": {
       "PSA 10": 9962
@@ -145,17 +149,17 @@
     },
     "cmsmrttti00972ouxhcguf5qm": {
       "BGS 10": 399999,
-      "PSA 10": 177215,
+      "PSA 10": 173267,
       "PSA 9": 82879
     },
     "cmsmrttz500982ouxqwc7lnfp": {
       "BGS 10": 52096,
-      "PSA 10": 25000,
+      "PSA 10": 23900,
       "PSA 9": 22713
     },
     "cmsmrtu4v00992ouxwfg7mqo9": {
       "BGS 10": 994402,
-      "PSA 10": 300000
+      "PSA 10": 280000
     },
     "cmsmrtuaj009a2oux1mrguo97": {
       "PSA 10": 12499
@@ -178,8 +182,7 @@
       "PSA 10": 265174
     },
     "cmsmrtv8g009g2ouxo7oca3y0": {
-      "PSA 10": 19422,
-      "PSA 9": 16454
+      "PSA 10": 19422
     },
     "cmsmrtve3009h2ouxqdcoqfxg": {
       "PSA 10": 221519
@@ -207,8 +210,7 @@
       "PSA 10": 194221
     },
     "cmsmrtwht009o2ouxhnrqspt3": {
-      "PSA 10": 36416,
-      "PSA 9": 17720
+      "PSA 10": 36416
     },
     "cmsmrtwng009p2ouxtvzzmxl8": {
       "BGS 10": 650000,
@@ -255,7 +257,7 @@
     },
     "cmsmrv43m00hc2ouxhdgi2flo": {
       "BGS 10": 195652,
-      "BGS 9.5": 194900,
+      "BGS 9.5": 209900,
       "PSA 10": 265174
     },
     "cmsmrv49900hd2ouxfu22swh5": {
@@ -264,7 +266,7 @@
     },
     "cmsmrv4kk00hf2ouxknl8v6lf": {
       "BGS 10": 83000,
-      "PSA 10": 28313
+      "PSA 10": 56810
     },
     "cmsmrv4qc00hg2oux0tk88az1": {
       "PSA 10": 248601,
@@ -276,21 +278,20 @@
     "cmsmrv51o00hi2ouxn930i3tc": {
       "BGS 10": 242775,
       "BGS 9": 79145,
-      "BGS 9.5": 81500,
       "PSA 10": 117835,
       "PSA 9": 58266
     },
     "cmsmrv57c00hj2ouxyjs797c9": {
-      "BGS 10": 1090000,
+      "BGS 10": 1290000,
       "BGS 9.5": 700000,
       "PSA 10": 865000
     },
     "cmsmrv5d000hk2ouxnh8seidl": {
       "BGS 10": 33271,
-      "PSA 10": 13499
+      "PSA 10": 12999
     },
     "cmsmrv5in00hl2oux0ogf0cf8": {
-      "PSA 10": 53411
+      "PSA 10": 52500
     },
     "cmsmrv5ob00hm2ouxinbgokdd": {
       "PSA 10": 28161
@@ -299,14 +300,12 @@
       "PSA 10": 27726
     },
     "cmsmrv5zn00ho2oux276uamgs": {
-      "BGS 10": 399999,
       "PSA 10": 135468
     },
     "cmsmrv65a00hp2oux2l9860i0": {
       "PSA 10": 9999
     },
     "cmsmrv6ax00hq2ouxx18hetiu": {
-      "BGS 10": 35000,
       "PSA 10": 16304
     },
     "cmsmrv6gk00hr2ouxft3dhkz9": {
@@ -328,7 +327,7 @@
     },
     "cmsmrv78v00hw2ouxuw2ubwqt": {
       "BGS 9.5": 75000,
-      "PSA 10": 88606
+      "PSA 10": 89888
     },
     "cmsmrv7ei00hx2ouxi4qr5m54": {
       "PSA 10": 20793
@@ -349,11 +348,11 @@
     },
     "cmsmrv86s00i22ouxlafudfv8": {
       "BGS 10": 42738,
-      "PSA 10": 25315
+      "PSA 10": 29133
     },
     "cmsmrv8cf00i32ouxsrqneich": {
       "BGS 10": 390000,
-      "PSA 10": 172500
+      "PSA 10": 120000
     },
     "cmsmrv8i300i42ouxnkkhvang": {
       "CGC 9.5": 19421,
@@ -373,7 +372,7 @@
       "BGS 10": 56831
     },
     "cmsmrv9ab00i92ouxfqno0ipq": {
-      "PSA 10": 24277
+      "PSA 10": 20000
     },
     "cmsmrv9fz00ia2ouxg1l8stal": {
       "BGS 9": 29133,
@@ -382,7 +381,7 @@
       "PSA 8": 16304
     },
     "cmsmrv9rb00ic2oux0il2m3l8": {
-      "PSA 10": 24049
+      "PSA 10": 35992
     },
     "cmsmrv9yd00id2ouxbudmrngw": {
       "PSA 10": 19000
@@ -422,28 +421,27 @@
       "PSA 9": 4900
     },
     "cmsmrweny00pj2ouxzi7c976j": {
-      "BGS 9.5": 40000,
-      "PSA 10": 31644
+      "BGS 9.5": 40000
     },
     "cmsmrwetm00pk2ouxhg0wx7q3": {
       "CGC 10": 77399
     },
     "cmsmrwezb00pl2ouxtmclf91x": {
-      "PSA 10": 33503
+      "PSA 10": 27900
     },
     "cmsmrwf5000pm2ouxh6spa3z5": {
       "CGC 10": 21850,
-      "PSA 9": 16454
+      "PSA 9": 25000
     },
     "cmsmrwfap00pn2ouxfdmrasbg": {
       "BGS 9": 57198,
       "BGS 9.5": 55000,
       "CGC 10": 29133,
-      "PSA 10": 34176,
+      "PSA 10": 106821,
       "PSA 9": 20793
     },
     "cmsmrwfgd00po2oux6r22cogr": {
-      "PSA 10": 29113
+      "PSA 10": 43700
     },
     "cmsmrwfm100pp2ouxhkc3fcxr": {
       "PSA 10": 36901
@@ -457,8 +455,7 @@
     },
     "cmsmrwgeh00pu2oux8x4useb3": {
       "BGS 9": 138383,
-      "BGS 9.5": 142500,
-      "PSA 10": 101265
+      "BGS 9.5": 142500
     },
     "cmsmrwhi700q12ouxoc681dhw": {
       "PSA 10": 28161
@@ -472,9 +469,6 @@
     "cmsmrwhz700q42ouxxc6mzwcw": {
       "PSA 10": 112500
     },
-    "cmsmrwi4v00q52ouxg93q29aj": {
-      "PSA 10": 37973
-    },
     "cmsmrwiay00q62ouxtnqj8wag": {
       "BGS 10": 250000,
       "BGS 9.5": 158228,
@@ -482,8 +476,10 @@
     },
     "cmsmrwigm00q72oux65gdklgo": {
       "BGS 9.5": 177772,
-      "PSA 10": 40786,
-      "PSA 9": 16454
+      "PSA 10": 40786
+    },
+    "cmsmrwima00q82ouxaocqtdlv": {
+      "BGS 9.5": 125000
     },
     "cmsmrwj3g00qb2ouxce6ovtba": {
       "PSA 10": 33150
@@ -496,7 +492,7 @@
     },
     "cmsmrwjes00qd2oux65ls2ni9": {
       "BGS 9.5": 340987,
-      "PSA 10": 265000
+      "PSA 10": 250000
     },
     "cmsms3552000211ehab5le80n": {
       "BGS 9.5": 18584,
@@ -515,7 +511,7 @@
       "PSA 10": 20392
     },
     "cmsms3djr001p11ehlyrzr8p1": {
-      "PSA 10": 12657
+      "PSA 10": 16774
     },
     "cmsms3eos001x11eh8808z4pz": {
       "PSA 10": 38845
@@ -561,12 +557,12 @@
       "PSA 10": 14999
     },
     "cmsms3xg8005k11ehpa56g07t": {
-      "PSA 10": 14000,
+      "PSA 10": 12500,
       "PSA 9": 10000
     },
     "cmsms3xle005l11ehpb0voqv7": {
       "BGS 9": 33989,
-      "BGS 9.5": 33152
+      "BGS 9.5": 30000
     },
     "cmsms3yg7005r11ehlszcdcnv": {
       "PSA 10": 47359
@@ -593,7 +589,7 @@
     "cmsmscety0017bsjx38kea5r8": {
       "BGS 9": 194221,
       "BGS 9.5": 360000,
-      "PSA 10": 400000
+      "PSA 10": 300000
     },
     "cmsmscev5001absjx5sedx36x": {
       "BGS 10": 410000,
@@ -606,7 +602,6 @@
       "PSA 10": 16000
     },
     "cmvbs1elr0002eo5o8p87ptjd": {
-      "BGS 9.5": 79900,
       "PSA 10": 250000
     },
     "cmvbs1f510004eo5otp5fz371": {
