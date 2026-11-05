@@ -107,6 +107,16 @@ have no database or mail key, so their "Email me when it drops below" form posts
 (`src/lib/sister-alerts/`, DECISIONS.md 2026-11-02). Keep it double opt-in, exact-origin CORS, inside
 the shared alert budget and its 30-a-day cap, and never take a product name from the form.
 
+## Amazon's price on the sealed page's Amazon row (owner, 2026-11-05)
+
+The sealed page's Amazon row (`SealedOffers` → `AmazonLiveSlot`) asks `/api/amazon/sealed/<slug>?c=<market>` from the
+browser; the route (`lib/amazon-live.ts`, `lib/amazon-creators.ts`) makes ONE Creators API search, keeps the first
+result the sealed classifier reads as this product (same set, same product type) within 60–160% of the market's store
+median, and the CDN holds the answer six hours: nothing is stored, the row shows the price with its time for 24 hours
+(Amazon's licence), and a store whose account has no API access yet keeps the search link. Never a store row, the best
+price, a deal, an alert, a watch, history or the quick view. Credentials `AMAZON_CREATORS_AU_*` are Vercel Production
+variables only; `tests/amazon-api.test.ts` and the ops monitor's `amazon:prices` check pin it.
+
 ## Checks
 
 ```

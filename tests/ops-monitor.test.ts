@@ -520,3 +520,17 @@ test("new set: TCGplayer listing a set SETS lacks is critical and names the runb
   assert.equal(grey.severity, "unknown");
   assert.equal((await newSetDetected(deps())).severity, "unknown");
 });
+
+test("Amazon prices: unknown without credentials, warn when refused, ok with or without a match, never crit", async () => {
+  const { amazonPrices } = await import("../src/lib/ops/checks");
+  const list = json({ groups: [{ groupKey: "OGN|Booster Pack", storeCount: 3 }, { groupKey: "OGN|Booster Box", storeCount: 12 }] });
+  const ask = (status: unknown) =>
+    amazonPrices(deps({ fetch: fakeFetch({ "https://riftcompare.com/api/v1/sealed.json": list, "https://riftcompare.com/api/amazon/sealed/": typeof status === "number" ? json({}, status) : json({ status }) }).f }));
+  assert.equal((await ask("no-credentials")).severity, "unknown");
+  assert.equal((await ask("refused")).severity, "warn");
+  assert.equal((await ask("ok")).severity, "ok");
+  assert.equal((await ask("none")).severity, "ok");
+  assert.equal((await ask(500)).severity, "warn");
+  const nolist = await amazonPrices(deps({ fetch: fakeFetch({ "https://riftcompare.com/api/v1/sealed.json": json({}, 503) }).f }));
+  assert.equal(nolist.severity, "unknown");
+});

@@ -22473,3 +22473,28 @@ release went out hours before that pass ran, and the homepage row linked the pos
 - The first eBay pass took an art book ("K/DA Couture Art Book Concept Art Collection", SG, S$166) and a loose card
   ("K/DA Akali Couture Collection KDA-004s-005", UK, £140) as the US$150 box. `art book`, `concept art` and a
   `KDA-###` card number are excluded on both the eBay and the store side; the next pass replaces those rows.
+
+## 2026-11-05 — Amazon's own price on the sealed page's Amazon row, fetched at request time
+
+The owner (2026-11-05): "We need all the sites especially compare empire showing the API prices as price rows." The
+owner's Associates accounts (AU approved 2026-11-03, US 2026-11-05) give ONE Creators API credential that serves every
+Amazon store, but each store opens only once its own account has qualifying sales, so the site switches on by itself per
+store and keeps working without it.
+
+The sealed page's Amazon row asks `/api/amazon/sealed/<slug>?c=<market>` from the browser (`AmazonLiveSlot`): the
+route makes one Creators API search for the product's name on the market's Amazon, keeps the first result whose title
+the sealed classifier reads as THIS product (`isTrackableSealedTitle`, the same `detectSet` and `classifySealed` as the
+import: a case, a pack or another set is passed over) and whose new, in-stock price in the market's currency sits within
+60–160% of the market's in-stock store median, and answers the price, the time and a `/dp/<ASIN>` link with the tag and
+sub id. The CDN keeps the answer six hours (a day stale), so a product costs at most four API calls a day per market;
+nothing is written anywhere (Amazon's licence lets a price be shown 24 hours with its time, never kept), and the browser
+shows it only while under 24 hours old, with the required "accurate as of" disclaimer. Without credentials, with a store
+Amazon refuses (401/403/429), with no match or on an error, the route answers a status and the row keeps its tagged
+search and "Price shows on Amazon"; an error is not cached, everything else six hours. Request time rather than
+a build-time fetch because the sealed pages are CDN copies that outlive a build day.
+
+The price is Amazon's row's alone: never a store row, the best price, a deal, an alert, a watch, history, metadata or
+the quick view (no Amazon link in a pop-up). The credentials (`AMAZON_CREATORS_AU_CLIENT_ID` / `_CLIENT_SECRET` /
+`_VERSION`, a market's own `AMAZON_CREATORS_<MARKET>_*` overriding) are Vercel Production variables, never in the repo.
+The ops monitor asks the route for the most-stocked US product (`amazon:prices`: unknown without credentials, warn when
+refused, ok otherwise, never crit). `tests/amazon-api.test.ts` keeps the client behind the route alone.

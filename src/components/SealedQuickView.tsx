@@ -20,7 +20,8 @@ import { SealedWatchButton } from "./SealedWatchButton";
 import { PaidLinkTag } from "./AffiliateDisclosure";
 import { pinMarketplaces } from "@/lib/market-rows";
 import { amazonFor, amazonSearchUrl } from "@/lib/amazon";
-import { sealedPath } from "@/lib/sealed-slug";
+import { sealedPath, sealedSlug } from "@/lib/sealed-slug";
+import { AmazonLiveSlot } from "./AmazonLiveSlot";
 import Link from "next/link";
 
 // Quick-view popup for sealed products — the sealed twin of QuickView.tsx (cards).
@@ -160,7 +161,8 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
  * A sealed product's price comparison: every tracked store, eBay and TCGplayer pinned first (the cheaper on top), then
  * the rest by stock and price. Shared by the quick view and the product page, /sealed/<slug> (2026-11-03). `amazon` adds
  * a tagged search of the visitor's Amazon as the third pinned row, after eBay and TCGplayer (owner, 2026-11-03: "the
- * third row out of the three"): no price, never ranked or the best price. Product page only: the quick view is an
+ * third row out of the three"), with Amazon's own price from the Creators API where the store's account has access
+ * (AmazonLiveSlot, 2026-11-05): never ranked or the best price. Product page only: the quick view is an
  * overlay, and Amazon's rules bar its links from pop-ups and layer ads, so it never passes `amazon`.
  */
 export function SealedOffers({ group, currency, amazon = false, source = "sealed-quickview" }: { group: SealedGroup; currency: string; amazon?: boolean; source?: "sealed-quickview" | "sealed-page" }) {
@@ -195,18 +197,8 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
   const amazonRow =
     amazonStore && amazonHref ? (
       <li key="amazon" data-amazon-row className="flex items-center gap-3 py-2.5">
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate text-sm font-semibold text-white">{amazonStore.label}</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500">
-            <span>Price shows on Amazon</span>
-            <PaidLinkTag />
-          </div>
-        </div>
-        <OutboundLink href={amazonHref} retailer="amazon_sealed" country={country} kind="sealed" pageType="sealed" surface="amazon_search" className="btn-buy px-3 py-1.5 text-xs">
-          Check price →
-        </OutboundLink>
+        {/* Amazon's own price from the Creators API where this store's account has access (owner, 2026-11-05), else the search. */}
+        <AmazonLiveSlot country={country} slug={sealedSlug(group.groupKey)} label={amazonStore.label} searchHref={amazonHref} />
       </li>
     ) : null;
 

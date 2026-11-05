@@ -686,6 +686,34 @@ export async function familyFeedsCheck(d: OpsDeps): Promise<CheckResult> {
   });
 }
 
+/**
+ * Amazon's Creators API prices on the sealed pages (DECISIONS.md 2026-11-05): ask the live route for the most
+ * widely stocked US sealed product and read the status it answers. "no-credentials" is unknown (the Vercel
+ * variables are not set yet), "refused" a warn (the store's account has no API access yet, or the limit was hit:
+ * the row keeps its search link), "ok" and "none" ok, anything else a warn. Never crit: the row works without a price.
+ */
+export async function amazonPrices(d: OpsDeps): Promise<CheckResult> {
+  const id = "amazon:prices";
+  const area: OpsArea = "money";
+  const title = "Amazon prices (Creators API)";
+  const ua = { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } };
+  const list = await d.fetch(`${SITE}/api/v1/sealed.json?market=US`, ua);
+  if (!list.ok) return unknown(d, id, area, title, `The sealed list answered HTTP ${list.status}; the route was not asked.`);
+  const { groups } = (await list.json()) as { groups: { groupKey: string; storeCount: number }[] };
+  const top = [...groups].sort((a, b) => b.storeCount - a.storeCount)[0];
+  if (!top) return unknown(d, id, area, title, "No US sealed product to ask about.");
+  const { sealedSlug } = await import("../sealed-slug");
+  const slug = sealedSlug(top.groupKey);
+  const r = await d.fetch(`${SITE}/api/amazon/sealed/${slug}?c=US`, ua);
+  const st = r.ok ? ((await r.json()) as { status?: string }).status ?? "error" : `HTTP ${r.status}`;
+  const action = 'Set AMAZON_CREATORS_AU_CLIENT_ID / _CLIENT_SECRET / _VERSION in Vercel (Production) once Associates Central shows the credential; a 403 means the US store\'s account has no qualifying sales yet. Tell Claude: "the Amazon prices check says <status>".';
+  if (st === "no-credentials") return unknown(d, id, area, title, "No AMAZON_CREATORS_* variables in Vercel: the Amazon rows are search links.");
+  if (st === "ok") return result(d, { id, area, title, severity: "ok", summary: `Amazon US priced /sealed/${slug}.` });
+  if (st === "none") return result(d, { id, area, title, severity: "ok", summary: `Amazon US answered for /sealed/${slug}; no listing matched it (the row keeps its search link).` });
+  if (st === "refused") return result(d, { id, area, title, severity: "warn", summary: "Amazon refused the request (no API access for this store yet, or the rate limit): the rows keep their search links.", action });
+  return result(d, { id, area, title, severity: "warn", summary: `The route answered "${st}" for /sealed/${slug}.`, action });
+}
+
 // ── Money ───────────────────────────────────────────────────────────────────
 
 export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
@@ -1060,6 +1088,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("stripe", "money", "Stripe", () => stripeChecks(d));
   await add("stores:unlinked", "money", "Stores plan: stores waiting for their report", () => storePlansUnlinked(d));
   await add("stores:codes", "money", "Store partner codes", async () => storeCodesRecheck(d));
+  await add("amazon:prices", "money", "Amazon prices (Creators API)", () => amazonPrices(d));
   await add("site:self", "email", "Email and site settings", () => siteSelfChecks(d));
   await add("inbox:waiting", "inbox", "Inbox", () => inboxWaiting(d));
   return out;
