@@ -58,7 +58,11 @@ export function SetPriceGuide({
                 <td className="num whitespace-nowrap px-3 py-1.5 text-right font-semibold text-white">
                   {r.priceCents != null ? formatMoney(r.priceCents, currency) : <span className="font-normal text-slate-600">—</span>}
                 </td>
-                <td className="num px-4 py-1.5 text-right text-slate-300">{r.stores || "—"}</td>
+                {/* The count sits in its own span: SetTickLayer (components/SetOwned.tsx)
+                    appends the owned tick to this cell, and React rewrites a cell whose
+                    only child is text with textContent when the number changes (the
+                    visitor's market landing, 2026-11-05), which would drop the tick. */}
+                <td className="num px-4 py-1.5 text-right text-slate-300"><span>{r.stores || "—"}</span></td>
               </tr>
             ))}
           </tbody>

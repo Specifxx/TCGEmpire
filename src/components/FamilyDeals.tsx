@@ -1,5 +1,7 @@
 import { getFamilyTiles } from "@/lib/family";
-import { blockHeading, familyMoney, tileNote } from "@/lib/family-network";
+import { blockHeading, familyMoney, tileNote, type FamilyTile } from "@/lib/family-network";
+import { COUNTRY_LIST, type Country } from "@/lib/country";
+import { MarketSlots } from "@/components/MarketSlots";
 
 /**
  * "Other card games on sale" (DECISIONS.md "Sites that grow each other", 2026-11-02): one tile per card-game
@@ -7,9 +9,37 @@ import { blockHeading, familyMoney, tileNote } from "@/lib/family-network";
  * from the sisters' own daily feeds on GitHub (lib/family.ts, cached six hours). One block per page;
  * nothing at all when no sister has anything real to show. Plain followed links: our own sites, no tag.
  */
-export async function FamilyDeals({ kind, country, className = "mt-8" }: { kind: "deal" | "preorder"; country: string; className?: string }) {
-  const tiles = await getFamilyTiles(kind, country).catch(() => []);
-  if (!tiles.length) return null;
+export async function FamilyDeals({
+  kind,
+  country,
+  className = "mt-8",
+  allMarkets = false,
+}: {
+  kind: "deal" | "preorder";
+  country: string;
+  className?: string;
+  /**
+   * On a page the CDN keeps as one copy per URL (/sets/[set] since 2026-11-05): the block is drawn for
+   * every live market and MarketSlots shows the visitor's (`country` is the HTML's baseline). Off, the
+   * page's own per-request market is the only one drawn.
+   */
+  allMarkets?: boolean;
+}) {
+  if (!allMarkets) {
+    const tiles = await getFamilyTiles(kind, country).catch(() => []);
+    if (!tiles.length) return null;
+    return <FamilyDealsBlock kind={kind} tiles={tiles} className={className} />;
+  }
+  const perMarket = await Promise.all(
+    COUNTRY_LIST.map(async ({ code }) => [code, await getFamilyTiles(kind, code).catch(() => [])] as [Country, FamilyTile[]]),
+  );
+  const slots: Partial<Record<Country, React.ReactNode>> = {};
+  for (const [code, tiles] of perMarket) if (tiles.length) slots[code] = <FamilyDealsBlock kind={kind} tiles={tiles} className={className} />;
+  if (!Object.keys(slots).length) return null;
+  return <MarketSlots slots={slots} />;
+}
+
+function FamilyDealsBlock({ kind, tiles, className }: { kind: "deal" | "preorder"; tiles: FamilyTile[]; className: string }) {
   return (
     <section data-family-deals className={`card-surface p-4 ${className}`} aria-labelledby={`family-${kind}`}>
       <h2 id={`family-${kind}`} className="text-lg font-extrabold text-white">{blockHeading("cards", kind)}</h2>

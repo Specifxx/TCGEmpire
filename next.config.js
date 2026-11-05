@@ -136,7 +136,7 @@ const QUERY_CDN_CACHE = "public, s-maxage=21600, stale-while-revalidate=86400";
 // its HTML carries the baseline market and the SealedMarketBoard island fetches
 // the visitor's from /api/sealed-view. The source is the page alone (one
 // segment); /sealed/:slug keeps its own day-long rule below.
-const QUERY_CDN_PAGES = ["/auctions", "/market", "/market/records", "/sealed", "/price-guide"];
+const QUERY_CDN_PAGES = ["/auctions", "/market", "/market/records", "/sealed", "/price-guide", "/sets/:set"];
 // /browse joined the same day ("The card list becomes one CDN copy per URL"),
 // except for a text search: `/browse?q=…` is rewritten below to
 // app/browse/search/page.tsx, which meters the search per account (a cookie and

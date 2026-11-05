@@ -1,34 +1,20 @@
 import type { Metadata } from "next";
 import { TcgplayerPicks } from "@/components/TcgplayerPicks";
-import type { Prisma } from "@prisma/client";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
-import { CONTENT_TAG } from "@/lib/revalidate-content";
-import { CardTile } from "@/components/CardTile";
 import { EbayPicks } from "@/components/EbayPicks";
 import { CountUp } from "@/components/CountUp";
-import { Reveal } from "@/components/Reveal";
-import { Filters } from "@/components/Filters";
-import { ActiveFilters } from "@/components/ActiveFilters";
-import { SortSelect } from "@/components/SortSelect";
-import { PageSizeSelect } from "@/components/PageSizeSelect";
-import { Pagination } from "@/components/Pagination";
-import {
-  buildCardOrderBy,
-  buildCardWhere,
-  cardTileSelect,
-  CardQuery,
-  parsePageNum,
-  parsePageSize,
-} from "@/lib/cards";
-import { getCountry } from "@/lib/get-country";
-import { priceField, COUNTRIES } from "@/lib/country";
-import { formatMoney } from "@/lib/format";
-import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
-import { getSiteMedianCents } from "@/lib/content/site-median";
+import { type CardQuery, parsePageNum, parsePageSize } from "@/lib/cards";
+import { DEFAULT_COUNTRY, normalizeCountry, type Country } from "@/lib/country";
+import { buildSetView, setQuery } from "@/lib/set-view";
+import { SetOwnedProvider } from "@/components/SetOwned";
+import { SetCountUp, SetMarketBoard, SetMarketValue, SetViewProvider } from "@/components/sets/SetMarketBoard";
+import { MarketPinProvider } from "@/components/MarketSlots";
+
+/** The page's searchParams: the card query, and the market a link may pin. */
+type SetParams = CardQuery & { market?: string };
 import { SETS, isPreorderSetCode, setBySlug, singlesLive } from "@/lib/constants";
 import { getSetRevealCount } from "@/lib/set-reveal-count";
 import { preordersHrefForSet, releaseDateLabel as calendarDateLabel } from "@/lib/release-calendar";
@@ -37,13 +23,8 @@ import { LegacyHub } from "@/components/sets/LegacyHub";
 import { LEGACY_FAQ } from "@/lib/sets/legacy";
 import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
 import { RadiancePreorderCta } from "@/components/RadiancePreorderCta";
-import { SetPriceGuide } from "@/components/sets/SetPriceGuide";
-import { SetOwnedProvider, SetOwnedStatus, SetTickLayer } from "@/components/SetOwned";
-import { FREE_PORTFOLIO_LIMIT } from "@/lib/free-limits";
 import { RadianceReveals } from "@/components/sets/RadianceReveals";
 import { getRadianceReveals } from "@/lib/radiance-reveals";
-import { setPriceGuideRows } from "@/lib/set-price-guide";
-import { storeCountsByCountry } from "@/lib/cards";
 import { RADIANCE_FAQ } from "@/lib/sets/radiance";
 import { faqPage } from "@/lib/jsonld";
 import { RelatedGuides } from "@/components/RelatedGuides";
@@ -362,132 +343,36 @@ export default async function SetPage({
   searchParams,
 }: {
   params: { set: string };
-  searchParams: CardQuery;
+  searchParams: SetParams;
 }) {
   const set = setBySlug(params.set);
   if (!set) notFound();
 
-  const country = getCountry();
+  // ONE CDN COPY PER URL (2026-11-05, DECISIONS.md "The set pages become one
+  // CDN copy per URL"). Until then this page read the market cookie
+  // (getCountry) as well as searchParams, so every visit was a function render
+  // with the set's queries. Now it reads NOTHING about the visitor: the HTML
+  // carries the baseline market (DEFAULT_COUNTRY, the US; or the market a
+  // `?market=` link pins, which outranks the cookie as it always did), Vercel's
+  // CDN keeps it six hours (next.config.js QUERY_CDN_PAGES; the query string
+  // is part of the key), and the market-dependent body is the SetMarketBoard
+  // island, which swaps in the visitor's market from /api/set-view after
+  // hydration. tests/card-cdn.test.ts walks this page's server imports.
+  const country: Country = searchParams.market ? normalizeCountry(searchParams.market) : DEFAULT_COUNTRY;
+  const pinned = !!searchParams.market;
+  const query = setQuery(searchParams);
   const chaseCards = set.slug === "radiance" ? await getRadianceChaseCards() : [];
   // Sister-site link map (lib/riftboundstocks.ts): started now, awaited at
   // render; never rejects, null when unreachable.
   const rbsLinks = getRiftboundStocksLinks();
 
-  // Unfiltered totals for the set (hero copy + the "not released yet" empty
-  // state) — distinct from the filtered/paginated grid below.
-  const where = { ...buildCardWhere(searchParams, country), setCode: set.code };
-  // A-Z by default here (unlike /browse's "set & card number") — this page is
-  // already scoped to one set, so a numeric ordering isn't the useful default.
-  const orderBy = buildCardOrderBy(searchParams.sort ?? "name", country);
-  const size = parsePageSize(searchParams.size);
-  const page = parsePageNum(searchParams.page);
-  // The words typed in the filter panel's search box, for the count line.
-  const searchQ = (searchParams.q ?? "").trim();
-
-  // EGRESS: same fix as /browse (also force-dynamic, also both the landing page
-  // for a set AND a deep crawl surface). The DEFAULT view — no filters, sort or
-  // paging — is identical for every visitor in a market, so it's memoised per
-  // (set, country). Any filtered/sorted/paged view still queries live. Tagged
-  // CONTENT_TAG so the price import purges it immediately.
-  const isDefaultView = Object.values(searchParams).every((v) => v == null || v === "");
-  const runQuery = () =>
-    Promise.all([
-      prisma.card.count({ where: { setCode: set.code } }),
-      prisma.card.count({ where: { setCode: set.code, [priceField(country)]: { not: null } } }),
-      prisma.card.count({ where }),
-      prisma.card.findMany({
-        where,
-        orderBy,
-        select: cardTileSelect(country),
-        skip: (page - 1) * size,
-        take: size,
-      }),
-    ]);
-  const [totalInSet, priced, totalFiltered, cardsFiltered] = isDefaultView
-    ? await unstable_cache(runQuery, ["set-default", set.code, country], {
-        revalidate: 3600,
-        tags: [CONTENT_TAG],
-      })()
-    : await runQuery();
-  const [total, cards] = totalInSet === 0 ? [0, []] : [totalFiltered, cardsFiltered];
-  const totalPages = Math.max(1, Math.ceil(total / size));
-
-  // ── Data-derived editorial intro (GROWTH-AUDIT.md § 3) ─────────────────────
-  // This template measured 459 median prose words while carrying 347 inbound
-  // internal links — the best-linked thin page on the site. buildCollectionNarrative
-  // already supported kind: "set" and had simply never been called here; it is
-  // the same generator the champion hubs and facets use, so the analytical tone
-  // matches by construction.
-  //
-  // DEFAULT VIEW ONLY, and its own lean query. The grid above is one page of 60
-  // cards, which cannot describe a set's price distribution — the narrative needs
-  // every card's price, but only four scalar fields of each, so this pulls ~60
-  // bytes a row instead of a full tile payload (see the egress rules in lib/db.ts).
-  // Filtered and paged views skip it entirely: they canonicalise elsewhere, so
-  // they are not the indexed page this prose exists for, and they must not pay
-  // for a query they don't render.
-  // ALSO THE PRICE GUIDE's source (2026-09-24): the same one read, widened by
-  // the four fields the "#price-guide" table needs (id/slug to link, variant/
-  // isPromo to name the printing), plus ONE grouped in-stock count over the
-  // set's ids. Still ~100 bytes a row for a set of ~300, far under the 1.2 MB
-  // unstable_cache ceiling (lib/db.ts rule 2).
-  const narrativeMembers = isDefaultView
-    ? await unstable_cache(
-        async () => {
-          const rows = (await prisma.card.findMany({
-            where: { setCode: set.code },
-            select: {
-              id: true, slug: true, name: true, rarity: true, collectorNumber: true, setCode: true,
-              variant: true, isPromo: true, [priceField(country)]: true,
-            } as Prisma.CardSelect,
-          })) as unknown as ({ id: string } & Record<string, unknown>)[];
-          const counts = await storeCountsByCountry(rows.map((r) => r.id));
-          return rows.map((r) => ({ ...r, stores: counts.get(r.id)?.[country] ?? 0 }));
-        },
-        ["set-narrative-guide", set.code, country],
-        { revalidate: 3600, tags: [CONTENT_TAG] },
-      )().catch((e) => {
-        // A narrative is worth less than the page. Degrade to no intro.
-        console.error(`sets/${set.slug}: narrative query failed, rendering without the intro:`, e);
-        return [] as Record<string, unknown>[];
-      })
-    : [];
-  const siteMedianCents = isDefaultView ? await getSiteMedianCents(country) : null;
-  const intro =
-    narrativeMembers.length > 0
-      ? buildCollectionNarrative({
-          kind: "set",
-          label: set.name,
-          currency: COUNTRIES[country].currency,
-          place: COUNTRIES[country].place,
-          members: narrativeMembers.map((c) => {
-            const row = c as Record<string, unknown>;
-            return {
-              name: String(row.name),
-              priceCents: (row[priceField(country)] as number | null) ?? null,
-              rarity: row.rarity as string | undefined,
-              collectorNumber: row.collectorNumber as string | undefined,
-            };
-          }),
-          siteMedianCents,
-        })
-      : [];
+  // The set's view in the baseline market (lib/set-view.ts): totals, the
+  // filtered and paged grid, the intro, the price guide. The same function
+  // /api/set-view runs for the visitor's market.
+  const view = await buildSetView(set, country, query);
+  const { totalInSet, page, totalPages } = view;
 
   const radianceReveals = set.slug === "radiance" ? await getRadianceReveals(country) : null;
-  const priceGuide = setPriceGuideRows(narrativeMembers as Record<string, unknown>[], priceField(country));
-  // Facts for "How to read … prices" that only this set has: its dearest and
-  // cheapest priced cards, and which rarity fills its ten dearest. A sentence
-  // that reads the same on every set page counts as template chrome in the
-  // AdSense audit (scripts/adsense-audit.ts, sentences on >35% of a template).
-  const pricedGuide = priceGuide.filter((r) => r.priceCents != null);
-  const guideTop = pricedGuide[0] ?? null;
-  const guideLow = pricedGuide.length > 1 ? pricedGuide[pricedGuide.length - 1] : null;
-  const topTenRarity = (() => {
-    const tally = new Map<string, number>();
-    for (const r of pricedGuide.slice(0, 10)) if (r.rarity) tally.set(r.rarity, (tally.get(r.rarity) ?? 0) + 1);
-    const [rarity, n] = [...tally].sort((x, y) => y[1] - x[1])[0] ?? [null, 0];
-    return rarity && pricedGuide.length >= 10 && n >= 5 ? { rarity, n } : null;
-  })();
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
   // A comingSoon set (singles not on sale yet) can still be FULLY revealed —
@@ -507,9 +392,8 @@ export default async function SetPage({
   // flag outlives release day still opens), never on a set still revealing. The
   // page reads NEITHER cookies nor the user for this: the ticks are a client
   // overlay (components/SetOwned.tsx) fed by GET /api/collection/owned, because
-  // this route is force-dynamic with a memoised default view shared by every
-  // visitor and a session read here would break that memo. tests/set-tracker.test.ts
-  // pins it.
+  // this route is one CDN copy per URL shared by every visitor and a session
+  // read here would break that. tests/set-tracker.test.ts pins it.
   const trackerOpen = totalInSet > 0 && (!isPreorderSetCode(set.code) || singlesLive(set));
   // Singles on sale (released, or trading ahead of release: lib/constants.ts
   // singlesLive). Everything on this page about card PRICES reads this, not
@@ -557,7 +441,8 @@ export default async function SetPage({
 
   return (
     <SetOwnedProvider setCode={set.code} enabled={trackerOpen}>
-    {trackerOpen && <SetTickLayer tileIds={cards.map((c) => c.id)} rowIds={priceGuide.map((r) => r.id)} scanKey={JSON.stringify(searchParams)} />}
+    <SetViewProvider baseline={view} query={query} pinned={pinned} setSlug={set.slug}>
+    <MarketPinProvider baseline={country} pinned={pinned}>
     <div className="flex flex-col gap-8">
       <script
         type="application/ld+json"
@@ -616,7 +501,7 @@ export default async function SetPage({
                 )}
               </>
             ) : (
-              <>The complete Riftbound <strong className="text-slate-200">{set.name}</strong> card list — all {totalInSet.toLocaleString()} cards, sortable and filterable, with live prices compared across stores so you can find the cheapest singles. {priced.toLocaleString()} cards are priced right now, updated twice a day — switch your country at the top to see local prices.
+              <>The complete Riftbound <strong className="text-slate-200">{set.name}</strong> card list — all {totalInSet.toLocaleString()} cards, sortable and filterable, with live prices compared across stores so you can find the cheapest singles. <SetMarketValue what="priced" /> cards are priced right now, updated twice a day — switch your country at the top to see local prices.
                 {preordersHref && (
                   <> Sealed {set.name} product is still on pre-order — <Link href={preordersHref} className="text-brand-300 underline-offset-2 hover:underline">compare every store&apos;s pre-order price</Link>.</>
                 )}
@@ -654,7 +539,7 @@ export default async function SetPage({
                 <CountUp value={totalInSet} className="num font-bold" />&nbsp;cards
               </span>
               <span className="chip bg-gold/20 text-gold">
-                <CountUp value={priced} className="num font-bold" />&nbsp;priced
+                <SetCountUp what="priced" className="num font-bold" />&nbsp;priced
               </span>
             </div>
           ) : totalInSet > 0 ? (
@@ -696,7 +581,10 @@ export default async function SetPage({
 
       {/* Card grid — shown whenever cards EXIST, even for a comingSoon set: through
           spoiler season the official-gallery importer populates revealed cards early
-          (unpriced), which is exactly what pre-release searchers want to browse. */}
+          (unpriced), which is exactly what pre-release searchers want to browse.
+          The grid, the intro, the price guide and "How to read" are the
+          SetMarketBoard island (the visitor's market); the empty state is not
+          about a market. */}
       {totalInSet === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
@@ -749,177 +637,24 @@ export default async function SetPage({
           </div>
         </div>
       ) : (
-        // xl, not lg: the filter sidebar sits beside the grid only from 1280, as
-        // on /browse (Filters.tsx, 2026-09-23). currency is the market column's.
-        <div className="flex flex-col gap-6 xl:flex-row">
-          <Filters basePath={`/sets/${set.slug}`} hideSet currency={COUNTRIES[country].currency} />
-
-          <section className="min-w-0 flex-1">
-            {!live && (
-              <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3 text-sm text-slate-300">
-                {fullyRevealed ? (
-                  <><strong className="text-emerald-300">All revealed.</strong> Every one of the {completeAt} official {set.name} cards is confirmed below — live store prices appear here the moment singles go on sale.</>
-                ) : (
-                  <><strong className="text-emerald-300">Revealed so far.</strong> These are the {set.name} cards officially
-                  revealed to date — more land through spoiler season, and live store prices appear here the moment singles
-                  go on sale.</>
-                )}
-                {/* The same PRE_RELEASE_LINKS the empty-state branch renders. They used
-                    to live ONLY there, so the moment the first card imported (Neeko,
-                    2026-09-19) the hub silently lost every link into the Radiance
-                    cluster — the spoiler tracker, the confirmed-facts post, the
-                    pre-order comparison — for the whole of spoiler season, which is
-                    exactly when it has the most visitors. Found on the live page after
-                    the tracker deploy (tests/radiance-spoiler-tracker.test.ts). */}
-                {preReleaseLinks.length > 0 && (
-                  <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                    {preReleaseLinks.map((l) => (
-                      <li key={l.href}>
-                        <Link href={l.href} className="text-brand-400 hover:underline">{l.label} →</Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-
-            {trackerOpen && <SetOwnedStatus setName={set.name} trackerHref={`/portfolio/sets/${set.slug}`} freeLimit={FREE_PORTFOLIO_LIMIT} />}
-
-            {/* Filters' "Show results" target, on the count row rather than the
-                section; scroll-mt-36 clears the 125px sticky header (2026-09-23). */}
-            <div id="results" className="mb-4 flex scroll-mt-36 flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-slate-400">
-                <span className="font-semibold text-white">{total.toLocaleString()}</span>{" "}
-                {total === 1 ? "card" : "cards"}
-                {/* The panel's keyword box narrows the set's grid (buildCardWhere
-                    reads `q`; never metered: a set page is not a site search). */}
-                {searchQ && (
-                  <> for <span className="text-brand-400">“{searchQ}”</span></>
-                )}
-                {total > 0 && <span className="text-slate-600"> · page {page} of {totalPages}</span>}
-              </p>
-              <div className="flex items-center gap-3">
-                <PageSizeSelect size={size} basePath={`/sets/${set.slug}`} />
-                <SortSelect basePath={`/sets/${set.slug}`} defaultSort="name" />
-              </div>
-            </div>
-
-            <ActiveFilters basePath={`/sets/${set.slug}`} />
-
-            {cards.length === 0 ? (
-              <div className="card-surface grid place-items-center p-16 text-center">
-                <p className="text-lg font-semibold text-white">Nothing matches those filters</p>
-                <p className="mt-1 text-sm text-slate-400">Try clearing a filter or two.</p>
-                <Link href={`/sets/${set.slug}`} className="btn-primary mt-4">Reset</Link>
-              </div>
-            ) : (
-              <>
-                {/* Sized from the column's own width from lg, as on /browse
-                    (2026-09-23): the rail and the sidebar squeeze it, and the
-                    10.5rem floor keeps CardTile's min-w-[6.5rem] price block
-                    inside the tile. */}
-                {/* The ticks are portalled into the tiles on the client
-                    (components/SetOwned.tsx SetTickLayer), found through this
-                    one marker and paired with the ids by position, so the
-                    page's HTML carries no tick markup. */}
-                <div {...(trackerOpen ? { "data-tick-grid": "" } : {})} className="contents">
-                <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
-                    {cards.map((c) => (
-                      <CardTile key={c.id} card={c} />
-                    ))}
-                  </Reveal>
-                </div>
-                <Pagination
-                  page={page}
-                  totalPages={totalPages}
-                  params={searchParams as Record<string, string | undefined>}
-                  basePath={`/sets/${set.slug}`}
-                />
-              </>
-            )}
-          </section>
-        </div>
+        <SetMarketBoard
+          setSlug={set.slug}
+          setName={set.name}
+          trackerOpen={trackerOpen}
+          live={live}
+          fullyRevealed={fullyRevealed}
+          completeAt={completeAt}
+          preReleaseLinks={preReleaseLinks}
+          marketParam={searchParams.market || undefined}
+          query={query}
+          rbs={<RbsSetLink href={rbsSetUrl(await rbsLinks, set.code)} name={set.name} />}
+        />
       )}
 
-      {/* The set's marketplace path. Tailored rather than generic: EbayPicks
-          resolves this set's chase cards to their cheapest live listing, and
-          falls back to a plain affiliate search when a market has no cached
-          rows — which is what makes it safe on a comingSoon set, where that
-          fallback is the honest answer.
-
-          A pre-release set is the strongest case for it on the whole page: no
-          store has stock to compare, so the grid above is a card list rather
-          than a shopping surface, and eBay presale/preorder listings are the
-          only thing a reader can act on. */}
-      {/* Data-derived intro: scale and price coverage, the range and where the
-          value is concentrated, the cards worth knowing about by name. Every
-          figure comes from this set's own rows. Default view only. Moved below
-          the grid on 2026-09-24 so the grid is above the fold. */}
-      {intro.length > 0 && (
-        <section aria-label={`About ${set.name}`} className="card-surface p-5" data-set-intro>
-          <div className="max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
-            {intro.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* The set's full price list (2026-09-24). "price guide" queries rank this
-          page at 7-9 with no clicks, and the page had a 60-card grid but no
-          list of every card's price on it. Default view only — it reads the
-          same cached query as the intro above. */}
-      <SetPriceGuide setName={set.name} rows={priceGuide} currency={COUNTRIES[country].currency} adjective={COUNTRIES[country].adjective} ticks={trackerOpen} />
-
-      {/* How to read the prices above, and the set's own guides (2026-09-26,
-          "Blog and tools, joined up" in DECISIONS.md). Under the grid and the
-          price guide like the intro — the list stays above the fold (the
-          2026-09-24 set-page decision) — and ahead of the eBay block, so our
-          own writing leads the commercial one. Replaces a 51-word "About"
-          paragraph that said every store was "ranked by total delivered cost",
-          which computeMarket (lib/market-rows.ts) has never done. The middle
-          paragraph is built from this set's own price guide (its dearest and
-          cheapest cards, the rarity filling its top ten); the method sentences
-          around it are shared on purpose. Released sets only: a set still in preview has no prices
-          to read, and its reading list is PRE_RELEASE_LINKS above. */}
-      {live && totalInSet > 0 && (
-        <section aria-labelledby="set-read-h" className="card-surface p-5 sm:p-6">
-          <h2 id="set-read-h" className="text-xl font-extrabold text-white">How to read {set.name} prices</h2>
-          <div className="mt-2 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
-            <p>
-              Each price on this page is the cheapest in-stock listing we have for that card in{" "}
-              {COUNTRIES[country].place}, in {COUNTRIES[country].currency}: the item price, before postage.{" "}
-              {priced.toLocaleString()} of {set.name}&apos;s {totalInSet.toLocaleString()} cards have one right now
-              {priced < totalInSet ? `; the other ${(totalInSet - priced).toLocaleString()} show no price until a seller in ${COUNTRIES[country].place} lists them in stock` : ""}.
-              Prices come from two imports a day, at 07:00 and 19:00 UTC.
-            </p>
-            {guideTop && (
-              <p>
-                The dearest {set.name} card in {COUNTRIES[country].place} right now is {guideTop.name}, at{" "}
-                {formatMoney(guideTop.priceCents!, COUNTRIES[country].currency)}
-                {guideLow && (
-                  <>
-                    ; the cheapest priced one is {guideLow.name}, at{" "}
-                    {formatMoney(guideLow.priceCents!, COUNTRIES[country].currency)}
-                  </>
-                )}
-                .{topTenRarity && <> {topTenRarity.n} of the ten dearest are {topTenRarity.rarity} cards.</>} The
-                price guide lists all {priceGuide.length.toLocaleString()} cards dearest first; the grid above opens A–Z
-                and can be re-sorted and filtered.
-              </p>
-            )}
-            <p>
-              Open any card for every store&apos;s price in {COUNTRIES[country].place}, cheapest first by item price,
-              with the delivered total shown where the store publishes its postage — most stores quote it only at
-              checkout. To cost a whole want-list with each store&apos;s measured postage, use{" "}
-              <Link href="/tools/best-basket" className="text-brand-400 hover:underline">Best Basket</Link>; to weigh
-              buying these singles against opening sealed product, the{" "}
-              <Link href="/tools/box-ev" className="text-brand-400 hover:underline">box EV calculator</Link>.
-            </p>
-            <RbsSetLink href={rbsSetUrl(await rbsLinks, set.code)} name={set.name} />
-          </div>
-        </section>
-      )}
+      {/* The set's own guides, after the price read-out and ahead of the eBay
+          block (2026-09-26, "Blog and tools, joined up"): our own writing
+          leads the commercial one. Released sets only: a set still in preview
+          has its reading list in PRE_RELEASE_LINKS above. */}
       {live && <RelatedGuides guides={guidesForSet(set.code)} className="card-surface p-5" />}
 
       <EbayPicks
@@ -960,8 +695,10 @@ export default async function SetPage({
       )}
 
       {/* One block per page (DECISIONS.md "Sites that grow each other"): the next set's page shows other games' pre-orders. */}
-      <FamilyDeals kind={set.comingSoon ? "preorder" : "deal"} country={country} className="" />
+      <FamilyDeals kind={set.comingSoon ? "preorder" : "deal"} country={country} allMarkets className="" />
     </div>
+    </MarketPinProvider>
+    </SetViewProvider>
     </SetOwnedProvider>
   );
 }

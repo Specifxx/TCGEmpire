@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { getPreorderGroups } from "@/lib/sealed-import";
-import { getDisplayCurrency } from "@/lib/get-country";
 import { PreorderPriceTable, preorderTableGroups } from "@/components/PreorderPriceTable";
 import { RadianceEbayPanel } from "@/components/RadianceEbayPanel";
 import { HubFaq } from "@/components/HubFaq";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
-import type { Country } from "@/lib/country";
+import { COUNTRIES, COUNTRY_LIST, type Country } from "@/lib/country";
+import { MarketSlots } from "@/components/MarketSlots";
 import {
   RADIANCE_TAGLINE,
   RADIANCE_RELEASE_DATE,
@@ -53,7 +53,10 @@ const TIMELINE = [
 ] as const;
 
 export async function RadianceHub({ country }: { country: Country }) {
-  const currency = getDisplayCurrency(country);
+  // The market's own currency (2026-11-05): the set page is one CDN copy per
+  // URL, so nothing here may read the visitor's display preference. The
+  // pre-order table this feeds retired on release day anyway.
+  const currency = COUNTRIES[country].currency;
   // Released (from the start of 23 Oct in Australia, isBeforeRadianceRelease):
   // the pre-order table, its link and the release-day capture go, and the
   // products section points at the live sealed and singles prices instead.
@@ -179,9 +182,17 @@ export async function RadianceHub({ country }: { country: Country }) {
         {/* "Also on eBay" (2026-09-26, "Pushing eBay clicks" in DECISIONS.md):
             the same panel /radiance-preorders carries, directly under the store
             table or its empty state — beside the ranking, never in it. The
-            country is the server's (the set page reads it per request), so the
-            hrefs are built here. */}
-        <RadianceEbayPanel country={country} pageType="set_hub" besideRanking={listed.length > 0} headingLevel={3} className="mt-4" />
+            hrefs are built here, once per live market, and MarketSlots shows the
+            visitor's (2026-11-05: the set page is one CDN copy per URL, so
+            `country` is the HTML's baseline market, never the visitor). */}
+        <MarketSlots
+          slots={Object.fromEntries(
+            COUNTRY_LIST.map(({ code: country }) => [
+              country,
+              <RadianceEbayPanel country={country} pageType="set_hub" besideRanking={listed.length > 0} headingLevel={3} className="mt-4" key={country} />,
+            ]),
+          )}
+        />
         {preRelease ? (
           <Link href="/radiance-preorders" className="mt-3 inline-block text-sm font-semibold text-brand-300 underline-offset-2 hover:underline">
             Compare every store&apos;s pre-order price →

@@ -31,6 +31,8 @@ const CDN_PAGES: { page: string; source: string; value: string; missing?: { type
   // A text search is rewritten to app/browse/search/page.tsx (metered, per
   // visit), so the rule must not apply when `q` is present.
   { page: "src/app/browse/page.tsx", source: "/browse", value: QUERY_CDN, missing: [{ type: "query", key: "q" }] },
+  // The filter panel's `q` narrows one set's grid and was never metered, so it stays part of the key.
+  { page: "src/app/sets/[set]/page.tsx", source: "/sets/:set", value: QUERY_CDN },
 ];
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
