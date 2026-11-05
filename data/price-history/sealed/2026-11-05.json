@@ -97,7 +97,7 @@
     },
     "OGN|Booster Box": {
       "AU": 40000,
-      "CA": 24995,
+      "CA": 23995,
       "EU": 6497,
       "UK": 13437,
       "US": 6000
@@ -168,7 +168,7 @@
       "EU": 2900,
       "SG": 5622,
       "UK": 2999,
-      "US": 3995
+      "US": 3994
     },
     "OGN|Sealed": {
       "EU": 485
@@ -238,7 +238,7 @@
       "CA": 4999,
       "EU": 3199,
       "UK": 2500,
-      "US": 2979
+      "US": 2799
     },
     "RAD|Sealed": {
       "EU": 399
@@ -383,7 +383,7 @@
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 59990,
-      "US": 101497
+      "US": 99000
     },
     "UNL|Booster Pack": {
       "AU": 1100,
@@ -529,7 +529,7 @@
     "VEN|Showdown Decks Display": {
       "AU": 4499,
       "CA": 4995,
-      "US": 4999
+      "US": 4000
     },
     "VEN|Sleeved Booster": {
       "EU": 3750,
@@ -559,7 +559,7 @@
       "CA": 10000
     },
     "giftoftheriftbundle": {
-      "US": 27191
+      "US": 27188
     },
     "jinxchampiondeckriftboundleagueoflegends": {
       "EU": 6399
