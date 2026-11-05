@@ -11,5 +11,7 @@
  "shown": "C$9.99",
  "actual": null,
  "issue": "WRONG_ITEM",
- "note": null
+ "note": null,
+ "resolution": "Confirmed: the listing is the 109a alternate art, not SP3/005. Matcher fixed in TCGEmpire #321 (bracketed collector numbers; alt art never lands on a special-art card); the row is rewritten by the next import.",
+ "closedAt": "2026-11-05"
 }
