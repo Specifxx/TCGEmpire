@@ -192,6 +192,11 @@ longer lands on its entry.
   or a pop-up/quick view); every page's footer carries Amazon's statement and its
   trademark notice; no Amazon colours, logo, prices in alerts or tracking, and no
   Amazon link or trademark in any email. [2026-11-02](../DECISIONS.md#L21603)
+- **Amazon's own price on the sealed row (2026-11-05, owner):** the sealed page's
+  Amazon row asks `/api/amazon/sealed/<slug>` (one Creators API search, CDN six
+  hours, classifier-matched, 60–160% of the store median) and shows the price
+  with its time for 24 hours; never stored, ranked, in alerts or the quick view;
+  credentials in Vercel only. [2026-11-05](../DECISIONS.md#L22477)
 - **Earnings dashboard (2026-10-24):** `/admin/earnings` shows Stripe, TCGplayer
   (Impact API), eBay Partner Network (Performance by Day report), AdSense
   (Management API) and Mediavine (entered by hand) for today / 7 / 30 / 90 days /

@@ -151,9 +151,12 @@ export function OutboundLink({
    *  - `deck_cart`: a published deck's "Buy all on TCGplayer" (one Mass Entry
    *    cart for the whole list, 2026-10-27);
    *  - `amazon_search`: a price board's "Check price on Amazon" search
-   *    (lib/amazon.ts, 2026-10-29). */
+   *    (lib/amazon.ts, 2026-10-29);
+   *  - `amazon_live`: the same row with Amazon's own price from the Creators
+   *    API and a link to its item page (lib/amazon-live.ts, 2026-11-05). */
   surface?:
     | "deck_cart"
+    | "amazon_live"
     | "table"
     | "modal"
     | "ebay_strip"

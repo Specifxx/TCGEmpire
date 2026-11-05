@@ -81,7 +81,8 @@ test("Amazon is the third pinned row on the product page only, never in the quic
   const modal = qv.slice(qv.indexOf("function SealedQuickViewModal"), qv.indexOf("export function SealedOffers"));
   assert.match(modal, /<SealedOffers group=\{group\} currency=\{currency\} \/>/, "the quick view passes no amazon");
   assert.match(read("src/components/SealedProductView.tsx"), /<SealedOffers [^>]*amazon source="sealed-page"/);
-  assert.doesNotMatch(qv, /priceCents[^\n]*amazon|amazon[^\n]*priceCents/i, "no Amazon price");
+  assert.doesNotMatch(qv, /priceCents[^\n]*amazon|amazon[^\n]*priceCents/i, "no Amazon price in the board's own code");
+  assert.match(qv, /<AmazonLiveSlot country=\{country\} slug=\{sealedSlug\(group\.groupKey\)\}/, "Amazon's own price comes only through the live slot (2026-11-05)");
 });
 
 test("tiles and the quick view link to the page, and the sitemap lists every product", () => {
