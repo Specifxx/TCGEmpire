@@ -22310,3 +22310,40 @@ server-side, the client island picking one) is the next lever and a page-by-page
 metered per account and reads the cookie, so it stays private. MTG Compare needed nothing: every page and
 route there has been one CDN copy a day since 2026-10-17, and the live check shows HITs.
 
+## 2026-11-05 — The sealed page becomes one CDN copy per URL
+
+The first of the market-cookie pages to leave per-visit rendering (the lever named in the entry above). `/sealed`
+read the market cookie (`getCountry()`) and searchParams, so every visit was a function render that no cache
+could share: the loaders behind it were cached, the render was not. The owner asked for the function bill to
+come down, and the rule the card page settled on 2026-10-17 applies: one copy for everyone, nothing on the server
+reads the visitor.
+
+The shape, which the next pages will copy:
+
+- **`lib/sealed-view.ts`** computes the page's view for ANY market from the same cached `getSealedGroups()` read
+  the page always made: the default-market fallback, the facets, the filters, the sort, the sold-out mark and the
+  newest-set callout. The page and the API share it, so there is exactly one implementation; the result is
+  JSON-safe (`firstSeenAt` as ISO) because it also travels over fetch.
+- **The page** renders the baseline market (`DEFAULT_COUNTRY`, the US) into its HTML and JSON-LD, is
+  `force-dynamic`, and is kept by the CDN six hours plus a day stale (`QUERY_CDN_PAGES` in `next.config.js`,
+  one copy per URL including the filter query). `tests/card-cdn.test.ts` walks its server tree as it walks the
+  card page's: no cookie, header or session read may reach it.
+- **`SealedMarketBoard`** (client) draws the filters, count, sort and grid. On the server it draws the baseline,
+  so the HTML a crawler sees is the US grid; after hydration, if the visitor's market differs, it fetches
+  **`/api/sealed-view?market=…&<the page's query>`**, the same computation, which the CDN also keeps six hours.
+  So a market's grid is rendered once per six hours per filter combination, however many visit; the baseline
+  stays on screen until the answer lands (never an empty grid), and a fetched market is kept for the life of the
+  page. The UK-in-EUR display preference is applied in the island from `CountryProvider`, never on the server.
+- **`SealedMarketplaceSearches`** (client) draws the eBay and Amazon search rows for the visitor's market; the
+  searches themselves still come from the page's `sealedSearches()`.
+
+Why fetch rather than ship every market: the six markets' groups with their listings are ~1 MB of props (CA
+alone 400 KB); the baseline alone is what the page shipped before, so page weight is unchanged for a US visitor
+and one cached JSON for everyone else. The fallback note moved from the hero into the island (it depends on the
+market); nothing indexable moved: the URL, title, description, canonical, robots, h1, intro and JSON-LD are as
+they were, the latter now explicitly the baseline market's, as the card page's is. Tests that pinned the
+filter, sort and sold-out code in `app/sealed/page.tsx` now read `lib/sealed-view.ts` and the two components.
+
+Next on the same shape, one page at a time: `/browse`, `/sets/[set]`, `/price-guide`, the tools and the Pokémon
+pages. `/api/search` stays private (per-account quota, cookie).
+

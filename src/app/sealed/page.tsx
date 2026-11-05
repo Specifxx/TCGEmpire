@@ -1,59 +1,36 @@
 import type { Metadata } from "next";
-import { amazonFor } from "@/lib/amazon";
 import Link from "next/link";
-import { getSealedGroups } from "@/lib/sealed-import";
-import { soldOutEverywhere } from "@/lib/sealed-offers";
-import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
-import { gbpCentsToEur } from "@/lib/fx";
-import { affiliateUrl, ebaySearchUrl, riftboundEbayQuery } from "@/lib/affiliate";
-import { newestReleasedSet } from "@/lib/constants";
-import { OutboundLink } from "@/components/OutboundLink";
-import { Reveal } from "@/components/Reveal";
-import { SealedFilters } from "@/components/SealedFilters";
-import { SealedSort } from "@/components/SealedSort";
-import { SealedTile } from "@/components/SealedTile";
-import { DiscoveryTip } from "@/components/DiscoveryTip";
+import { riftboundEbayQuery } from "@/lib/affiliate";
+import { newestReleasedSet, SETS } from "@/lib/constants";
+import { buildSealedView, isFilteredParams, one, sealedQuery, type SealedParams } from "@/lib/sealed-view";
+import { SealedMarketBoard } from "@/components/SealedMarketBoard";
+import { SealedMarketplaceSearches } from "@/components/SealedMarketplaceSearches";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { HubIntro } from "@/components/HubIntro";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
-import { SITE_URL, ENTRY_TIER_NAME } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 
-// searchParams-driven (q/type/set/min/max/instock/atmsrp/sort), so the route is
-// per-request dynamic regardless — same reasoning as /browse, /market and
-// /sets/[set]. DB load is unaffected: getSealedGroups() keeps its own 15-minute
-// per-market in-process memo (see lib/sealed-import.ts), so this is one DB pull
-// per market per warm lambda per TTL either way.
+// ONE CDN COPY PER URL, KEPT SIX HOURS (2026-11-05, DECISIONS.md "The sealed page
+// becomes one CDN copy per URL"). The page reads searchParams (q/type/set/min/max/
+// instock/atmsrp/sort), which made it dynamic all along: until 2026-11-05 it ALSO
+// read the market cookie (getCountry), so every visit was a function render that no
+// cache could share. Now it is force-dynamic on purpose, renders the baseline
+// market (DEFAULT_COUNTRY, the US) into its HTML, and next.config.js (`/sealed`,
+// QUERY_CDN_PAGES) keeps the response at Vercel's CDN, one copy per URL (the query
+// string is part of the key). The market-dependent body is the SealedMarketBoard
+// island, which swaps in the visitor's market from /api/sealed-view (the same
+// computation, lib/sealed-view.ts, also CDN-kept). Nothing in this page's server
+// tree reads a cookie, a header or the session (tests/card-cdn.test.ts walks it).
 //
-// This was `revalidate = 86400` alongside a sealed/loading.tsx. That pair — an
-// ISR window on a page that ALSO reads searchParams, with a route-level Suspense
-// boundary — meant the first request for any filter combination the cache hadn't
-// seen returned the loading spinner as the COMPLETE response, with real content
-// only on a second visit. A crawler's first look at a URL saw no products.
+// It was `revalidate = 86400` alongside a sealed/loading.tsx before that. That
+// pair — an ISR window on a page that ALSO reads searchParams, with a route-level
+// Suspense boundary — meant the first request for any filter combination the
+// cache hadn't seen returned the loading spinner as the COMPLETE response.
 export const dynamic = "force-dynamic";
 
-interface SealedParams {
-  q?: string | string[];
-  type?: string | string[];
-  set?: string | string[];
-  min?: string | string[];
-  max?: string | string[];
-  instock?: string | string[];
-  atmsrp?: string | string[];
-  sort?: string | string[];
-}
-const one = (v?: string | string[]) => (Array.isArray(v) ? v[0] ?? "" : v ?? "");
-const csvParam = (v?: string | string[]) => one(v).split(",").map((s) => s.trim()).filter(Boolean);
-const isFilteredParams = (sp: SealedParams) =>
-  Boolean(one(sp.q) || one(sp.type) || one(sp.set) || one(sp.min) || one(sp.max) || one(sp.instock) || one(sp.atmsrp));
-
-// Amazon per site market comes from lib/amazon.ts (2026-10-29): Amazon US and
-// Amazon AU, each with ITS account's tag (riftcompare-20 earns only on
-// amazon.com; Australians used to get amazon.com.au with it, and earned
-// nothing), the UK, Canada and the EU only once their tag is set. Nowhere
-// else, so a market without an Amazon account shows no Amazon button.
 // The first search follows the newest released set (2026-09-26, "Pushing eBay
 // clicks" in DECISIONS.md) instead of naming one: it read "Vendetta sealed"
 // and would have kept pointing at Vendetta after Radiance shipped. A function,
@@ -90,91 +67,15 @@ export async function generateMetadata({ searchParams }: { searchParams: SealedP
 }
 
 export default async function SealedPage({ searchParams }: { searchParams: SealedParams }) {
-  const country = getCountry();
-  const info = COUNTRIES[country];
-  // Sealed data is sourced per market (AU stores + US TCGplayer). For a market
-  // with no rows of its own (e.g. UK), fall back to the default market so the page
-  // is never blank — and price it in that market's currency so the currency stays
-  // honest.
-  //
-  // The fallback was AU, chosen when AU was the default market. US is now both the
-  // default AND the market with the broadest sealed coverage (TCGplayer), so an
-  // unserved visitor lands somewhere fuller rather than in AUD for no reason.
-  let all = await getSealedGroups(country);
-  let priceCountry = country;
-  if (all.length === 0 && country !== DEFAULT_COUNTRY) {
-    all = await getSealedGroups(DEFAULT_COUNTRY);
-    priceCountry = DEFAULT_COUNTRY;
-  }
-  const usingFallback = priceCountry !== country;
+  // The baseline market's view goes into the HTML (and the JSON-LD); the island
+  // fetches any other market's. The same filters, sort and sold-out mark for both.
+  const view = await buildSealedView(DEFAULT_COUNTRY, searchParams);
+  const { groups, priceCountry } = view;
   const q = one(searchParams.q).trim();
-  const ql = q.toLowerCase();
-  const typesSel = csvParam(searchParams.type);
-  const setsSel = csvParam(searchParams.set);
-  const minCents = one(searchParams.min) ? Math.round(parseFloat(one(searchParams.min)) * 100) : null;
-  const maxCents = one(searchParams.max) ? Math.round(parseFloat(one(searchParams.max)) * 100) : null;
-  const instock = one(searchParams.instock) === "1";
-  const atMsrpOnly = one(searchParams.atmsrp) === "1";
-  const sort = one(searchParams.sort);
-  const isFiltered = isFilteredParams(searchParams);
-  // The newest released set, read from SETS (2026-09-26, "Blog and tools,
-  // joined up" in DECISIONS.md). The default order floats its sealed to the
-  // top and the callout below names it. Both said "Vendetta" in code — the
-  // callout still announced "Vendetta sealed is here" two months on — and code
-  // stays set-agnostic: a new set is a data row, not an edit here.
   const newest = newestReleasedSet();
-
-  // Facet options — only the product types / sets that actually exist in the feed.
-  const typeOptions = [...new Set(all.map((g) => g.productType))].sort((a, b) => a.localeCompare(b));
-  const setOptions = [...new Set(all.map((g) => g.setCode).filter((c): c is string => !!c))]
-    .sort()
-    .map((code) => ({ code, name: code }));
-
-  let groups = all;
-  if (typesSel.length) groups = groups.filter((g) => typesSel.includes(g.productType));
-  if (setsSel.length) groups = groups.filter((g) => g.setCode != null && setsSel.includes(g.setCode));
-  if (instock) groups = groups.filter((g) => g.storeCount > 0);
-  if (atMsrpOnly) groups = groups.filter((g) => g.atMsrp);
-  if (minCents != null) groups = groups.filter((g) => g.lowestPriceCents != null && g.lowestPriceCents >= minCents);
-  if (maxCents != null) groups = groups.filter((g) => g.lowestPriceCents != null && g.lowestPriceCents <= maxCents);
-  if (ql)
-    groups = groups.filter(
-      (g) =>
-        g.name.toLowerCase().includes(ql) ||
-        g.productType.toLowerCase().includes(ql) ||
-        (g.setCode ?? "").toLowerCase().includes(ql)
-    );
-
-  if (sort === "price_asc") groups = [...groups].sort((a, b) => (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity));
-  else if (sort === "price_desc") groups = [...groups].sort((a, b) => (b.lowestPriceCents ?? -1) - (a.lowestPriceCents ?? -1));
-  else if (sort === "name") groups = [...groups].sort((a, b) => a.name.localeCompare(b.name));
-  else if (sort === "new")
-    // Newest first. A null firstSeenAt (the tracking row hasn't been written yet —
-    // see recordSealedFirstSeen) sorts LAST, not first: "unknown" must never look
-    // like "just added" the way it would if missing sorted as epoch-0 descending.
-    groups = [...groups].sort((a, b) => (b.firstSeenAt?.getTime() ?? -1) - (a.firstSeenAt?.getTime() ?? -1));
-  else
-    // Default: float the newest released set's sealed to the top via a stable
-    // sort, leaving every other group in its (already-filtered) order.
-    groups = groups
-      .map((g, i) => [g, i] as const)
-      .sort((a, b) => {
-        const av = newest && a[0].setCode === newest.code ? 0 : 1;
-        const bv = newest && b[0].setCode === newest.code ? 0 : 1;
-        return av - bv || a[1] - b[1];
-      })
-      .map(([g]) => g);
-
-  // "Sold out at every store we track" (free, 2026-09-25): every store listing
-  // the product in this market says sold out on a fresh read. Computed from the
-  // getSealedGroups() result already read at the top of this page, never from a
-  // second loader nested in another cache (egress rule 6), and it needs no price
-  // history, unlike the Rising Sealed trend it replaces.
-  const soldOutKeys = new Set(all.filter((g) => soldOutEverywhere(g.listings)).map((g) => g.groupKey));
-
   // The newest-set callout shows only on the unfiltered view, and only when
   // that set's sealed actually exists in the feed.
-  const featuredSet = !isFiltered && newest && all.some((g) => g.setCode === newest.code) ? newest : null;
+  const featuredSet = view.featuredSetCode ? SETS.find((s) => s.code === view.featuredSetCode) ?? null : null;
 
   // Structured data: BreadcrumbList (mirrors the visible nav) + an ItemList of the
   // rendered groups. Google requires a Product to carry "offers", "review", or
@@ -184,19 +85,8 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   // has a live price AND ≥1 in-stock listing to back a real AggregateOffer;
   // out-of-stock/unpriced groups are omitted from the structured data entirely
   // (they still render as a normal, visible "out of stock" tile on the page).
+  // It states the baseline market's REAL currency, as the card page's does.
   const currency = COUNTRIES[priceCountry].currency;
-  // A European shopper browsing the UK market's real GBP sealed listings sees them
-  // converted to EUR for display — the JSON-LD above stays in the REAL currency
-  // (what Google/the offer actually is), only the visible tiles/filters convert.
-  const displayCurrency = getDisplayCurrency(priceCountry);
-  const showEur = priceCountry === "UK" && displayCurrency === "EUR";
-  const displayGroups = showEur
-    ? groups.map((g) => ({
-        ...g,
-        lowestPriceCents: g.lowestPriceCents != null ? gbpCentsToEur(g.lowestPriceCents) : null,
-        listings: g.listings.map((l) => ({ ...l, priceCents: gbpCentsToEur(l.priceCents) })),
-      }))
-    : groups;
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -264,16 +154,6 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
               "Blog and tools, joined up"): lib/content/hub-intros.ts. It
               replaced a one-line lede; the box EV link moved into it. */}
           <HubIntro path="/sealed" />
-          {/* The fallback is DEFAULT_COUNTRY's listings, named from the data:
-              this said "Australian listings (prices in AUD)" for months after
-              the fallback became the US, and promised boxes "ship
-              internationally", which nothing here checks. */}
-          {usingFallback && (
-            <p className="mt-2 text-xs text-slate-500">
-              We don&apos;t track {info.adjective} sealed stores yet, so these are {COUNTRIES[priceCountry].adjective} listings,
-              priced in {COUNTRIES[priceCountry].currency}. Check that a store ships to you before you order.
-            </p>
-          )}
           {q && (
             <p className="mt-2 text-sm text-slate-400">
               Showing matches for <span className="text-brand-400">“{q}”</span>.{" "}
@@ -286,7 +166,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       {/* Newest-set callout — only on the default (unfiltered) view. "Newest
           set", not "NEW": newestReleasedSet() is the newest set however long
           ago it shipped. Brand, not gold: gold marks Pro. */}
-      {featuredSet && (
+      {featuredSet && newest && (
         <div className="card-surface mb-5 flex flex-wrap items-center gap-3 border-l-2 border-brand-500 bg-ink-900 px-5 py-4">
           <span className="chip bg-brand-500/15 font-semibold text-brand-300">Newest set</span>
           {/* basis-56 (2026-09-23): flex-1 alone is a 0 basis, so this flex-wrap
@@ -302,55 +182,9 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
         </div>
       )}
 
-      {/* xl, not lg: the filter sidebar sits beside the grid only from 1280
-          (SealedFilters.tsx, 2026-09-23). At 1024 it left 3 columns of 131px. */}
-      <div className="flex flex-col gap-6 xl:flex-row">
-        <SealedFilters types={typeOptions} sets={setOptions} currency={displayCurrency} />
-        <section className="min-w-0 flex-1">
-          {/* SealedFilters' "Show results" target; scroll-mt-36 clears the 125px
-              sticky header (2026-09-23). */}
-          <div id="results" className="mb-4 flex scroll-mt-36 flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-400">
-              <span className="num font-semibold text-white">{groups.length.toLocaleString()}</span>{" "}
-              {groups.length === 1 ? "product" : "products"}
-              {q && <> for <span className="text-brand-400">&ldquo;{q}&rdquo;</span></>}
-            </p>
-            <SealedSort />
-          </div>
-          {/* One inline line for a signed-in free account (2026-09-29), never
-              a popup: the heart on every tile is a Plus feature. */}
-          <DiscoveryTip id="sealed" surface="tip:sealed" tier="plus" cta={`See ${ENTRY_TIER_NAME}`} className="mb-4">
-            {ENTRY_TIER_NAME} can email you when a box is back in stock or at RRP — tap the heart on a product to watch it.
-          </DiscoveryTip>
-          {groups.length === 0 ? (
-            <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
-              <div>
-                <p className="text-lg font-semibold text-white">
-                  {isFiltered ? "No sealed products match your filters" : "No sealed products yet"}
-                </p>
-                <p className="mt-1 text-sm">
-                  {isFiltered ? (
-                    <Link href="/sealed" className="text-brand-400 hover:underline">Clear filters</Link>
-                  ) : (
-                    "Our feeds refresh regularly — check back soon."
-                  )}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <Reveal stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-              {displayGroups.map((g) => (
-                <SealedTile
-                  key={g.groupKey}
-                  group={g}
-                  currency={displayCurrency}
-                  soldOutEverywhere={soldOutKeys.has(g.groupKey)}
-                />
-              ))}
-            </Reveal>
-          )}
-        </section>
-      </div>
+      {/* The filters, count, sort and grid for the visitor's market; the HTML
+          carries the baseline market's (see the island). */}
+      <SealedMarketBoard baseline={view} query={sealedQuery(searchParams)} />
 
       {/* The guides that explain this page, after its own data and before the
           marketplace searches below: our content leads, the affiliate block
@@ -358,7 +192,8 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       <RelatedGuides guides={guidesForTool("/sealed")} className="card-surface mt-8 p-5" />
 
       {/* High-AOV marketplace searches: sealed boxes are the biggest baskets on the
-          site, and eBay/Amazon both carry them. Affiliate-tagged per market. */}
+          site, and eBay/Amazon both carry them. Affiliate-tagged per market, in the
+          browser (SealedMarketplaceSearches). */}
       <section className="card-surface mt-8 p-5">
         <h2 className="text-lg font-extrabold text-white">Search the big marketplaces too</h2>
         {/* Reworded 2026-09-26: it said eBay and Amazon "often have stock (or
@@ -369,38 +204,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
           Boxes sell out and restock constantly, so it can be worth searching eBay and Amazon as well
           before you buy.
         </p>
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {sealedSearches().map((x) => {
-            const amazon = amazonFor(country);
-            return (
-              <div key={x.q} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2.5">
-                <span className="text-sm font-semibold text-white">{x.label}</span>
-                <span className="flex gap-1.5">
-                  <OutboundLink
-                    href={ebaySearchUrl(country, x.q, "sealed-page")}
-                    retailer="ebay_sealed_search"
-                    country={country}
-                    kind="sealed"
-                    className="btn-ghost px-2.5 py-1 text-xs"
-                  >
-                    eBay →
-                  </OutboundLink>
-                  {amazon && (
-                    <OutboundLink
-                      href={affiliateUrl(`https://${amazon.host}/s?k=${encodeURIComponent(x.q)}`, "amazon_sealed", "/sealed")}
-                      retailer="amazon_sealed_search"
-                      country={country}
-                      kind="sealed"
-                      className="btn-ghost px-2.5 py-1 text-xs"
-                    >
-                      Amazon →
-                    </OutboundLink>
-                  )}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+        <SealedMarketplaceSearches searches={sealedSearches()} />
         {/* Amazon's own required statement, beside the Amazon links it covers;
             the eBay line is the "both" disclosure at the foot of the page. */}
         <AffiliateDisclosure partner="amazon" />

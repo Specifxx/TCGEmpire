@@ -203,9 +203,10 @@ test("Sealed: sold out everywhere means every tracked store says so on a fresh r
 });
 
 test("Sealed: the badge is computed from the page's own top-level getSealedGroups read", () => {
-  const page = codeOnly("src/app/sealed/page.tsx");
+  // lib/sealed-view.ts computes it (the page and /api/sealed-view share it since 2026-11-05); the island marks the tile.
+  const page = codeOnly("src/lib/sealed-view.ts");
   assert.match(page, /all\.filter\(\(g\) => soldOutEverywhere\(g\.listings\)\)/);
-  assert.match(page, /soldOutEverywhere=\{soldOutKeys\.has\(g\.groupKey\)\}/);
+  assert.match(codeOnly("src/components/SealedMarketBoard.tsx"), /soldOutEverywhere=\{soldOut\.has\(g\.groupKey\)\}/);
   assert.match(read("src/components/SealedTile.tsx"), /Sold out at every store we track/);
 });
 

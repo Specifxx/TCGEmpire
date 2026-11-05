@@ -33,9 +33,10 @@ test("where: US, AU, UK, CA and EU (amazon.de), never Singapore", () => {
 });
 
 test("/sealed: Amazon only where the market has an account, never the AU fallback", () => {
-  const page = readFileSync(new URL("../src/app/sealed/page.tsx", import.meta.url), "utf8");
-  assert.doesNotMatch(page, /AMAZON_HOSTS/);
-  assert.match(page, /const amazon = amazonFor\(country\);/);
+  // The marketplace rows moved to a client component on 2026-11-05 (the page is one CDN copy for every market).
+  for (const f of ["../src/app/sealed/page.tsx", "../src/components/SealedMarketplaceSearches.tsx"]) assert.doesNotMatch(readFileSync(new URL(f, import.meta.url), "utf8"), /AMAZON_HOSTS/);
+  const rows = readFileSync(new URL("../src/components/SealedMarketplaceSearches.tsx", import.meta.url), "utf8");
+  assert.match(rows, /const amazon = amazonFor\(country\);/);
 });
 
 test("the Pokémon board: an Amazon search in the US and AU, none in Singapore; no price", () => {

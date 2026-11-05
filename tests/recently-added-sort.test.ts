@@ -95,7 +95,8 @@ test("SealedSort offers Recently Added, and /sealed sorts nulls last (not first)
   const sortSrc = read("src/components/SealedSort.tsx");
   assert.match(sortSrc, /\{ value: "new", label: "Recently Added" \}/);
 
-  const pageSrc = read("src/app/sealed/page.tsx");
+  // The sort lives in lib/sealed-view.ts since 2026-11-05 (the page and /api/sealed-view share it).
+  const pageSrc = read("src/lib/sealed-view.ts");
   assert.match(pageSrc, /sort === "new"/);
   // Pin the exact comparator so a future edit can't silently flip which side
   // "unknown" lands on — re-implemented below and checked against real data,
