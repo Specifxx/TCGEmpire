@@ -22455,3 +22455,21 @@ the new query; `?market=UK` with an AU cookie fetched nothing and kept `market=U
 drew its hub and eBay searches; an unknown set is a 404 from the API; no page errors. Tests that pinned the
 page's code now read the lib and the island; `tests/card-cdn.test.ts` walks the page's server imports. Next:
 the tools and the Pokémon pages.
+
+## 2026-11-05 — The drawing products are items from day one, and the front-page row is their tiles
+
+The owner, a day after the K/DA entry above: "why is the couture collection not listed as an item on riftcompare? It
+must be listed as an item and i want it to be on the front page as a clickable quickview open." It was not an item
+because, like the T1 seeds, its group existed only once the eBay pass had written a row for it; the 4 November
+release went out hours before that pass ran, and the homepage row linked the post, not a tile.
+
+- `computeAllSealedGroups` now synthesises a group for each `RIOT_DRAWINGS` product the table has no row for, in
+  every market: Riot's name, render and RRP, no listing, so the /sealed tile, `/sealed/<slug>` and the quick view
+  ("No store is listing this right now", with the eBay search) exist before resale does. Only these two products:
+  everything else on /sealed still exists because a store or eBay listed it.
+- `RiotDrawingsRow` draws each product as the ordinary `SealedTile` (click = quick view, modified click = its page)
+  through a client half that follows the visitor's market, with the facts beside it; both homes pass every
+  market's groups as the sealed shelf does.
+- The first eBay pass took an art book ("K/DA Couture Art Book Concept Art Collection", SG, S$166) and a loose card
+  ("K/DA Akali Couture Collection KDA-004s-005", UK, £140) as the US$150 box. `art book`, `concept art` and a
+  `KDA-###` card number are excluded on both the eBay and the store side; the next pass replaces those rows.

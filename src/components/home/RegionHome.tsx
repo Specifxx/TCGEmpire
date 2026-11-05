@@ -13,7 +13,8 @@ import { HomeSections } from "./HomeSections";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EbayPicks } from "@/components/EbayPicks";
 import { RiotDrawingsRow } from "@/components/home/RiotDrawingsRow";
-import { getSealedGroups } from "@/lib/sealed-import";
+import { getSealedGroups, type SealedGroup } from "@/lib/sealed-import";
+import { RIOT_DRAWINGS } from "@/lib/riot-drawings";
 import { sydneyDayKey } from "@/lib/price-history";
 import { EditorialHub } from "./EditorialHub";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
@@ -59,7 +60,7 @@ export async function RegionHome({ region }: { region: Country }) {
     recentlyUpdated,
     moversArr,
     chaseCards,
-    sealedGroups,
+    sealedArr,
   ] = await Promise.all([
     getHomeStats(),
     getPopularCards(12, region),
@@ -67,11 +68,14 @@ export async function RegionHome({ region }: { region: Country }) {
     getRecentlyUpdated(region, 24),
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
     chaseSet ? getSetChaseTiles(chaseSet.code, 16, region) : Promise.resolve([]),
-    // This market's sealed groups (the /sealed loader, cached and memoised), only
-    // to tell RiotDrawingsRow which drawing products have a resale row here.
-    getSealedGroups(region).catch(() => []),
+    // Every market's sealed groups (the /sealed loader, cached and memoised),
+    // for RiotDrawingsRow's tiles, which follow the visitor's market as on "/".
+    Promise.all(COUNTRY_CODES.map((c) => getSealedGroups(c).catch(() => []))),
   ]);
-  const pricedDrawingKeys = new Set(sealedGroups.map((g) => g.groupKey));
+  const drawingKeys = new Set(RIOT_DRAWINGS.map((d) => d.groupKey));
+  const drawingGroups = Object.fromEntries(
+    COUNTRY_CODES.map((c, i) => [c, sealedArr[i].filter((g) => drawingKeys.has(g.groupKey))]),
+  ) as Record<Country, SealedGroup[]>;
   const trendingCards = popularCards.slice(0, 6);
   const stat = statsByCountry[region];
   const storeWord = stat.stores === 1 ? "store" : "stores";
@@ -112,7 +116,7 @@ export async function RegionHome({ region }: { region: Country }) {
       />
 
       {/* Riot's drawing-only drops, near the top, as on "/" (owner, 2026-11-04). */}
-      <RiotDrawingsRow pricedKeys={pricedDrawingKeys} today={sydneyDayKey()} />
+      <RiotDrawingsRow groupsByCountry={drawingGroups} today={sydneyDayKey()} />
 
       {/* eBay Picks directly under the hero, above Today's Top Deals, as on "/"
           (owner, 2026-10-19). HomeSections gets showEbayPicks={false}. */}

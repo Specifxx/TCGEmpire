@@ -1107,7 +1107,11 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
 // against every real sealed title in the database on the day (~200 across six
 // markets): not one legitimate English listing uses either word.
 const SEALED_EXCLUDE_EBAY_BASE =
-  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card|\bjumbo\b|\bslim\b|\bdelgad[ao]s?\b/i;
+  /\bsingle\b|proxy|art\s*book|concept\s*art|\bKDA-\d{3}|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card|\bjumbo\b|\bslim\b|\bdelgad[ao]s?\b/i;
+// "art book" / "concept art" / a KDA-### card number (2026-11-05): the first
+// K/DA Couture Collection pass took a "K/DA Couture Art Book Concept Art
+// Collection" (eBay SG) and "K/DA Akali Couture Collection KDA-004s-005" (a single
+// card, eBay UK) as the US$150 box. The box's own cards are numbered KDA-00N.
 // A listing calling itself Chinese/Japanese/Korean is (almost always) a foreign
 // printing of an English product being searched for — excluded by default. The T1
 // Signature Edition's CN/KR seeds are the one deliberate exception: for those two
