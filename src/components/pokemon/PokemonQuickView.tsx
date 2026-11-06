@@ -159,9 +159,10 @@ function QuickViewPanel({ tile, currency, onClose, onLeave }: { tile: PkTile; cu
         <div className="p-4">
           {board ? (
             <PokemonBoardView
-              // No Amazon link in a pop-up window (Associates Operating Agreement; owner, 2026-11-02):
-              // the full product page carries it.
-              board={{ ...board, amazonSearch: null }}
+              // The board's own tagged Amazon search, as on the full page (owner, 2026-11-06: a visitor-opened view of this one
+              // product is the Associates policy's "pop-up windows in conjunction with your Site promoting Products closely
+              // associated with the materials on your Site").
+              board={board}
               preorder={tile.presale}
               pageType="pokemon_quickview"
               surface="modal"

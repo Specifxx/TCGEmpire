@@ -189,9 +189,11 @@ longer lands on its entry.
 
 - **Amazon Associates rules (2026-11-02, owner):** every Amazon link is tagged,
   labelled beside it, and goes to one specific product (never a category search
-  or a pop-up/quick view); every page's footer carries Amazon's statement and its
+  or an uninvited overlay); every page's footer carries Amazon's statement and its
   trademark notice; no Amazon colours, logo, prices in alerts or tracking, and no
-  Amazon link or trademark in any email. [2026-11-02](../DECISIONS.md#L21603)
+  Amazon link or trademark in any email. [2026-11-02](../DECISIONS.md#L21603) Since
+  2026-11-06 (owner) the visitor-opened quick view carries the page's tagged Amazon
+  link, never its price. [2026-11-06](../DECISIONS.md#L22848)
 - **Amazon's own price on the sealed row (2026-11-05, owner):** the sealed page's
   Amazon row asks `/api/amazon/sealed/<slug>` (one Creators API search, CDN six
   hours, classifier-matched, 60–160% of the store median) and shows the price

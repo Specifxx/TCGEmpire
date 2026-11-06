@@ -147,7 +147,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
           <div className="p-4">
             {/* The small eBay + TCGplayer pair (owner, 2026-10-29). */}
             <MiniPicks setCode={group.setCode ?? ""} pageType="sealed_quickview" className="mb-3" />
-            <SealedOffers group={group} currency={currency} />
+            <SealedOffers group={group} currency={currency} amazon />
             <p className="mt-3 text-center text-xs">
               <Link href={sealedPath(group.groupKey)} prefetch={false} onClick={onClose} className="font-semibold text-brand-400 hover:underline">
                 Open the full price page →
@@ -164,8 +164,9 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
  * the rest by stock and price. Shared by the quick view and the product page, /sealed/<slug> (2026-11-03). `amazon` adds
  * a tagged search of the visitor's Amazon as the third pinned row, after eBay and TCGplayer (owner, 2026-11-03: "the
  * third row out of the three"), with Amazon's own price from the Creators API where the store's account has access
- * (AmazonLiveSlot, 2026-11-05): never ranked or the best price. Product page only: the quick view is an
- * overlay, and Amazon's rules bar its links from pop-ups and layer ads, so it never passes `amazon`.
+ * (AmazonLiveSlot, 2026-11-05): never ranked or the best price. The quick view carries the same tagged link (owner,
+ * 2026-11-06: a visitor-opened view of this one product is the Associates policy's "pop-up windows in conjunction with
+ * your Site promoting Products closely associated with the materials on your Site"), but never Amazon's price.
  */
 export function SealedOffers({ group, currency, amazon = false, source = "sealed-quickview" }: { group: SealedGroup; currency: string; amazon?: boolean; source?: "sealed-quickview" | "sealed-page" }) {
   const { country } = useCountry();
@@ -200,7 +201,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
     amazonStore && amazonHref ? (
       <li key="amazon" data-amazon-row className={`-mx-2 flex items-center gap-3 px-2 py-2.5 ${PIN_OUTLINE.amazon}`}>
         {/* Amazon's own price from the Creators API where this store's account has access (owner, 2026-11-05), else the search. */}
-        <AmazonLiveSlot country={country} slug={sealedSlug(group.groupKey)} label={amazonStore.label} searchHref={amazonHref} cart={{ title: group.name, currency, image: group.imageUrl }} />
+        <AmazonLiveSlot country={country} slug={sealedSlug(group.groupKey)} label={amazonStore.label} searchHref={amazonHref} cart={{ title: group.name, currency, image: group.imageUrl }} priced={source === "sealed-page"} />
       </li>
     ) : null;
 
