@@ -27,5 +27,22 @@ export async function claimAlertsForUser(userId: string, email: string): Promise
   const res = await prisma.priceAlert
     .updateMany({ where: { email: addr, userId: null }, data: { userId } })
     .catch(() => ({ count: 0 }));
-  return res.count;
+  // Sealed watches made from the sealed page's email form (2026-11-06) are
+  // adopted the same way. The account may already watch the same product in
+  // the same market (the unique key on userId, groupKey, market): that
+  // anonymous twin is dropped first, since the account's row is the one the
+  // member can see and edit. A failure here never blocks a sign-in.
+  const sealed = await prisma.sealedWatch
+    .findMany({ where: { email: addr, userId: null }, select: { id: true, groupKey: true, market: true }, take: 200 })
+    .then(async (rows) => {
+      if (!rows.length) return 0;
+      const owned = await prisma.sealedWatch.findMany({ where: { userId }, select: { groupKey: true, market: true }, take: 500 });
+      const has = new Set(owned.map((r) => `${r.market}|${r.groupKey}`));
+      const dupes = rows.filter((r) => has.has(`${r.market}|${r.groupKey}`)).map((r) => r.id);
+      if (dupes.length) await prisma.sealedWatch.deleteMany({ where: { id: { in: dupes } } });
+      const out = await prisma.sealedWatch.updateMany({ where: { email: addr, userId: null }, data: { userId } });
+      return out.count;
+    })
+    .catch(() => 0);
+  return res.count + sealed;
 }

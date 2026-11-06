@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMe } from "@/lib/use-me";
 import { useSealedWatches } from "@/lib/use-sealed-watches";
 import { useCountryMaybe } from "./CountryProvider";
@@ -8,6 +8,8 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { PremiumButton } from "./PremiumButton";
 import { FREE_SEALED_WATCH_IN_USE, FREE_SEALED_WATCH_LIMIT, SEALED_CHECK_CADENCE, SEALED_RRP_ONLY, SEALED_WATCH_LIMIT_PLUS } from "@/lib/alert-limits";
 import { ENTRY_TIER_NAME } from "@/lib/site";
+import { sealedPath } from "@/lib/sealed-slug";
+import { trackEvent } from "@/lib/analytics";
 
 // "Watch this sealed product" (2026-09-29): a toggle for any signed-in account
 // — an email when it is back in stock after selling out everywhere, when a
@@ -47,22 +49,23 @@ export function SealedWatchButton({
   const freeInUse = !!user && !premium && !watching && (refused || (rows?.length ?? 0) >= FREE_SEALED_WATCH_LIMIT);
 
   if (!user) {
+    // No account: the tile's heart links to the product page's form (below);
+    // the full button is the form itself (2026-11-06, DECISIONS.md "Sealed
+    // watches without an account"). Never a pop-up.
     if (compact) {
       return (
-        <PremiumButton tier="plus" surface="gate:sealed-watch" className={`tap-icon rounded-full bg-ink-950/80 text-slate-300 hover:text-white ${className}`}>
+        <a
+          href={`${sealedPath(groupKey)}#sealed-watch`}
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`Watch ${name}: email me on a restock, at RRP, or on a price drop`}
+          title="Watch: email me when it's back in stock, at RRP, or on a price drop"
+          className={`tap-icon rounded-full bg-ink-950/80 text-slate-300 hover:text-white ${className}`}
+        >
           <span aria-hidden="true">♡</span>
-          <span className="sr-only">Watch this product with {ENTRY_TIER_NAME}</span>
-        </PremiumButton>
+        </a>
       );
     }
-    return (
-      <div className={className}>
-        <p className="text-xs text-slate-400">{ENTRY_TIER_NAME} emails you when this is back in stock, at RRP, or at your price, checked {SEALED_CHECK_CADENCE}. At-RRP alerts: {SEALED_RRP_ONLY}.</p>
-        <div className="mt-1.5">
-          <PremiumButton tier="plus" surface="gate:sealed-watch" />
-        </div>
-      </div>
-    );
+    return <AnonymousSealedWatchForm groupKey={groupKey} name={name} market={country} className={className} />;
   }
 
   if (freeInUse) {
@@ -139,5 +142,129 @@ export function SealedWatchButton({
         </p>
       )}
     </div>
+  );
+}
+
+// The address PriceAlertModal remembers (its EMAIL_KEY): one email door, one
+// remembered address, so a visitor who already gets card alerts sees it filled.
+const EMAIL_KEY = "rc_alert_email";
+
+// "bill.jyang101@gmail.com" → "bi***@gmail.com" (lib/alert-mute.ts maskEmail, kept out of this client file).
+const maskEmail = (email: string) => {
+  const [local = "", domain] = email.split("@");
+  if (!domain) return "your email";
+  return `${local.slice(0, 2)}${local.length > 2 ? "***" : "*"}@${domain}`;
+};
+
+const readEmail = () => {
+  try {
+    return window.localStorage.getItem(EMAIL_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+
+// "Email me when it drops": the sealed page's form for a visitor with no
+// account (2026-11-06). One input, no gate; POST /api/watches/sealed writes a
+// row with no account (one live watch per address, as a free account) and
+// sends one confirmation. Past the one free watch the route answers 402 and
+// the same spot sells Premium, as it does for a free account. Inline in the
+// page, never a pop-up (the pop-up policy).
+function AnonymousSealedWatchForm({ groupKey, name, market, className }: { groupKey: string; name: string; market: string; className: string }) {
+  const [email, setEmail] = useState("");
+  const [phase, setPhase] = useState<"form" | "busy" | "done" | "limit">("form");
+  const [error, setError] = useState<string | null>(null);
+  const [remembered, setRemembered] = useState(false);
+  useEffect(() => {
+    const e = readEmail();
+    if (e) {
+      setEmail(e);
+      setRemembered(true);
+    }
+  }, []);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (phase === "busy") return;
+    const addr = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) {
+      setError("Enter the email address to send the alert to.");
+      return;
+    }
+    setPhase("busy");
+    setError(null);
+    const res = await fetch("/api/watches/sealed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: addr, groupKey }),
+    }).catch(() => null);
+    const body = res ? ((await res.json().catch(() => null)) as Record<string, unknown> | null) : null;
+    if (res?.ok) {
+      try {
+        window.localStorage.setItem(EMAIL_KEY, addr);
+      } catch {
+        /* private mode */
+      }
+      setPhase("done");
+      trackEvent("sealed_watch_add", { product: groupKey, account: "none" });
+      return;
+    }
+    if (res?.status === 402) {
+      setPhase("limit");
+      return;
+    }
+    setPhase("form");
+    setError((body?.error as string | undefined) ?? "Couldn't save that — try again.");
+  }
+
+  if (phase === "done") {
+    return (
+      <div className={className}>
+        <p role="status" className="text-xs text-brand-400">
+          ♥ Watching {name} for {maskEmail(email.trim().toLowerCase())}. We email you when it&apos;s back in stock, at RRP, or on a real drop, checked {SEALED_CHECK_CADENCE}.
+        </p>
+        <p className="mt-1 text-[11px] text-slate-500">Every email has a stop link. A free account keeps all your watches in one place.</p>
+      </div>
+    );
+  }
+  if (phase === "limit") {
+    return (
+      <div className={className}>
+        <p className="text-xs text-slate-400">This address already gets one free sealed alert. Stop it from the link in its email, or watch every product with {ENTRY_TIER_NAME}.</p>
+        <div className="mt-1.5">
+          <PremiumButton surface="gate:sealed-watch" />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <form id="sealed-watch" onSubmit={submit} className={`${className} scroll-mt-header`} onClick={(e) => e.stopPropagation()}>
+      <label htmlFor={`sealed-watch-email-${groupKey.replace(/[^a-z0-9]/gi, "-")}`} className="text-xs text-slate-400">
+        Email me when it&apos;s back in stock, at RRP, or on a real drop ({market}). No account needed.
+      </label>
+      <div className="mt-1.5 flex gap-2">
+        <input
+          id={`sealed-watch-email-${groupKey.replace(/[^a-z0-9]/gi, "-")}`}
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="input min-w-0 flex-1 text-sm"
+        />
+        <button type="submit" disabled={phase === "busy"} className="btn-primary shrink-0 text-xs">
+          {phase === "busy" ? "Saving…" : remembered ? "♡ Watch" : "Notify me"}
+        </button>
+      </div>
+      <p className="mt-1 text-[11px] text-slate-500">Checked {SEALED_CHECK_CADENCE}; a Discord stock bot may be faster. At-RRP alerts: {SEALED_RRP_ONLY}. One free sealed alert per address.</p>
+      {error && (
+        <p role="alert" className="mt-1 text-xs text-amber-300">
+          {error}
+        </p>
+      )}
+    </form>
   );
 }

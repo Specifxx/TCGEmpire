@@ -6,6 +6,7 @@ import { alertListHeaders, checkedLabel, emailButton, emailShell, escapeHtml, se
 import type { WatchActionLinks } from "./alert-actions";
 import { MIN_CONDITION_PHRASE } from "./basket-condition";
 import { SEALED_CHECK_CADENCE, SEALED_CHECK_SENTENCE } from "./alert-limits";
+import { sealedPath } from "./sealed-slug";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE DECK PRICE WATCH AND SEALED WATCH EMAILS (2026-09-29, "Premium works
@@ -40,7 +41,7 @@ function watchFooter(kind: "deck" | "sealed", links: WatchActionLinks, manage: s
   const what = kind === "deck" ? "this list's delivered price" : "this sealed product";
   const cadence = kind === "deck" ? "it is checked after every price update" : `sealed products are checked ${SEALED_CHECK_CADENCE}`;
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;line-height:1.6;color:#6b7585">
-    You're getting this because you asked RiftCompare to watch ${what}${kind === "deck" ? " (Premium)" : " (Plus or Premium)"}; ${cadence}.<br/>
+    You're getting this because you asked RiftCompare to watch ${what}${kind === "deck" ? " (Premium)" : ""}; ${cadence}.<br/>
     <a href="${escapeHtml(links.stop)}" style="color:#9aa4b2;text-decoration:underline">Stop watching</a>
     &nbsp;·&nbsp; <a href="${escapeHtml(links.snooze)}" style="color:#9aa4b2;text-decoration:underline">Snooze 30 days</a>
     &nbsp;·&nbsp; <a href="${escapeHtml(manage)}" style="color:#9aa4b2;text-decoration:underline">Manage your watches</a><br/>
@@ -322,6 +323,70 @@ export function buildSealedWatchEmail(item: SealedWatchItem): BuiltWatchEmail {
 
 export async function sendSealedWatchEmail(to: string, item: SealedWatchItem): Promise<boolean> {
   const e = buildSealedWatchEmail(item);
+  return sendEmail(to, e.subject, e.html, { text: e.text, headers: e.headers });
+}
+
+// ── Sealed watch confirmation (2026-11-06, the sealed page's email form) ─────
+// Sent once, when an address with no account starts watching a product: what
+// we will email about, today's cheapest real-store price with its buy button
+// (the confirmation is itself a way back to the listing), and the stop link.
+// Capped with the card confirmations (lib/alert-confirmations.ts).
+
+export interface SealedWatchConfirmation {
+  watchId: string;
+  groupKey: string;
+  name: string;
+  productType: string;
+  market: Country;
+  currency: string;
+  /** Today's cheapest open real-store listing, affiliate-tagged (loc /email-alert-sealed-confirm); null when none is open. */
+  open: { priceCents: number; storeName: string; url: string; storeCount: number; checkedAt: Date } | null;
+  rrpCents: number | null;
+  actions: WatchActionLinks | null;
+}
+
+export function buildSealedWatchConfirmationEmail(c: SealedWatchConfirmation): BuiltWatchEmail {
+  const m = (x: number) => formatMoney(x, c.currency);
+  const subject = `Watching ${c.name}: we'll email you when it drops`;
+  const heading = "You're watching a sealed product";
+  const preheader = c.open ? `${m(c.open.priceCents)} at ${c.open.storeName} today · checked ${SEALED_CHECK_CADENCE}` : `Sold out at every store we track · checked ${SEALED_CHECK_CADENCE}`;
+  const product = `${SITE_URL}${sealedPath(c.groupKey)}?${utm("sealed-confirm")}`;
+  const gap = c.open ? rrpGapText(c.open.priceCents, c.rrpCents, c.currency) : "";
+  const today = c.open
+    ? `<span style="font-size:22px;font-weight:800;color:#34d17e">${escapeHtml(m(c.open.priceCents))}</span> at <strong style="color:#fff">${escapeHtml(c.open.storeName)}</strong>${c.open.storeCount > 1 ? `, the cheapest of ${c.open.storeCount} stores with it in stock` : ""} today.${gap ? `<br/>${escapeHtml(gap)}.` : ""}<br/><strong style="color:#fff">Checked ${escapeHtml(checkedLabel(c.open.checkedAt, c.market))} at ${escapeHtml(c.open.storeName)}.</strong>`
+    : `Sold out at every store we track right now. The restock email is the one most people are waiting for.`;
+  const inner = `
+    <tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <strong style="color:#fff;font-size:15px">${escapeHtml(c.name)}</strong> <span style="border:1px solid #233047;border-radius:6px;padding:0 5px;font-size:12px;color:#6b7585">${c.market}</span><br/>
+      <span style="font-size:12px;color:#6b7585">${escapeHtml(c.productType)}</span><br/>
+      ${today}
+    </td></tr>
+    ${c.open ? `<tr><td style="padding:14px 32px 4px">${emailButton(c.open.url, `Buy at ${c.open.storeName}`)}</td></tr>` : ""}
+    <tr><td style="padding:10px 32px 16px;font-size:13px;line-height:1.7;color:#9aa4b2">
+      We email you when it is back in stock after selling out everywhere, at RRP, or on a real price drop, at most once a day. ${escapeHtml(SEALED_CHECK_SENTENCE)}
+      <div style="margin-top:8px"><a href="${escapeHtml(product)}" style="color:#f29733;font-weight:700;text-decoration:none">Every store's price for it →</a></div>
+    </td></tr>`;
+  const text = [
+    heading,
+    `${c.name} (${c.productType} · ${c.market})`,
+    c.open ? `${m(c.open.priceCents)} at ${c.open.storeName} today${gap ? ` (${gap})` : ""}. Buy: ${c.open.url}` : "Sold out at every store we track right now.",
+    `We email you when it is back in stock after selling out everywhere, at RRP, or on a real price drop, at most once a day. ${SEALED_CHECK_SENTENCE}`,
+    `Every store's price for it: ${product}`,
+    ...(c.actions ? [`Stop watching: ${c.actions.stop}`] : []),
+  ].join("\n");
+  const links = c.actions ?? { stop: product, snooze: product };
+  return {
+    subject,
+    heading,
+    preheader,
+    html: emailShell(heading, inner, watchFooter("sealed", links, `${SITE_URL}/watching?${utm("sealed-confirm")}`), preheader),
+    text,
+    headers: c.actions ? watchHeaders(c.actions) : {},
+  };
+}
+
+export async function sendSealedWatchConfirmationEmail(to: string, c: SealedWatchConfirmation): Promise<boolean> {
+  const e = buildSealedWatchConfirmationEmail(c);
   return sendEmail(to, e.subject, e.html, { text: e.text, headers: e.headers });
 }
 

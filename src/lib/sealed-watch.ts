@@ -262,15 +262,18 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
 
   // Entitlement and the tier's cap (oldest first), then the markets to read. A
   // free or lapsed owner is tier null: its oldest FREE_SEALED_WATCH_LIMIT row is
-  // live, the rest count as `lapsed` (kept, not evaluated, not written).
+  // live, the rest count as `lapsed` (kept, not evaluated, not written). A row
+  // with NO account (the sealed page's email form, 2026-11-06) is a free
+  // owner's: its address is the owner, and it gets the same one live watch.
   const perUser = new Map<string, number>();
   const live: (typeof rows[number] & { market: Country })[] = [];
   for (const w of rows) {
-    const user: EntitlementUser = { ...w.user, isAdmin: w.user.isAdmin || isAdminEmail(w.user.email) };
-    const paid = isPremium(user);
-    const n = (perUser.get(w.userId) ?? 0) + 1;
-    perUser.set(w.userId, n);
-    if (n > sealedWatchCeiling(premiumTierOf(user))) {
+    const user: EntitlementUser | null = w.user ? { ...w.user, isAdmin: w.user.isAdmin || isAdminEmail(w.user.email) } : null;
+    const paid = user != null && isPremium(user);
+    const owner = w.userId ?? `email:${w.email}`;
+    const n = (perUser.get(owner) ?? 0) + 1;
+    perUser.set(owner, n);
+    if (n > sealedWatchCeiling(user ? premiumTierOf(user) : null)) {
       if (paid) summary.overLimit++;
       else summary.lapsed++;
       continue;
@@ -309,7 +312,7 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
 
   interface Candidate {
     id: string;
-    userId: string;
+    userId: string | null;
     email: string;
     item: SealedWatchItem;
     order: number;
@@ -453,7 +456,8 @@ export async function runSealedWatches(deps: SealedWatchRunDeps = {}): Promise<S
     }
     summary.emails++;
     notified.add(c.id);
-    if (deps.notifyUsers !== false) {
+    // The in-app bell, only for a watch linked to an account.
+    if (deps.notifyUsers !== false && c.userId) {
       const money = formatMoney(c.item.priceCents, c.item.currency);
       const title =
         c.item.kind === "sealed_restock"
@@ -500,6 +504,9 @@ export interface WatchRouteResult {
 
 export type RouteUser = EntitlementUser & { id: string; email: string };
 
+/** What the create route answers for a watch with no account (api/watches/sealed, signed out). */
+export type AnonymousSealedWatch = { id: string; market: string; groupKey: string; targetCents: number | null; createdAt: Date };
+
 const SEALED_WATCH_SELECT = {
   id: true,
   market: true,
@@ -517,11 +524,13 @@ const SEALED_WATCH_SELECT = {
 const GROUP_KEY = /^[A-Za-z0-9|_\- .]{1,80}$/;
 const asInt = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.round(v) : typeof v === "string" && /^\d+$/.test(v) ? Number(v) : null);
 
-function freeWatchInUse(count: number): WatchRouteResult {
+function freeWatchInUse(count: number, anonymous = false): WatchRouteResult {
   return {
     status: 402,
     body: {
-      error: `Free accounts get ${FREE_SEALED_WATCH_LIMIT} sealed watch, and yours is in use. Stop it to watch this one, or move to ${ENTRY_TIER_NAME} to watch every product.`,
+      error: anonymous
+        ? `This address already gets ${FREE_SEALED_WATCH_LIMIT} free sealed alert. Stop it from the link in its email to watch this one, or move to ${ENTRY_TIER_NAME} to watch every product.`
+        : `Free accounts get ${FREE_SEALED_WATCH_LIMIT} sealed watch, and yours is in use. Stop it to watch this one, or move to ${ENTRY_TIER_NAME} to watch every product.`,
       code: "free_alert_limit",
       tier: "premium",
       limit: FREE_SEALED_WATCH_LIMIT,
@@ -566,6 +575,32 @@ export async function createSealedWatch(db: SealedWatchRouteDb, user: RouteUser,
     };
   }
   const watch = await db.sealedWatch.create({ data: { userId: user.id, email: user.email, market, groupKey, targetCents }, select: SEALED_WATCH_SELECT });
+  return { status: 201, body: { ok: true, watch } };
+}
+
+/**
+ * POST, signed out (2026-11-06, DECISIONS.md "Sealed watches without an
+ * account"): the sealed page's "Email me" form. The address is the owner: one
+ * live watch per address, like a free account (FREE_SEALED_WATCH_LIMIT; past
+ * it 402 code "free_alert_limit", the same answer a free account gets). A row
+ * this address already has for the product, account or not, is answered
+ * `existed` and never re-baselined: re-submitting is a no-op, so a stranger
+ * posting someone's address cannot change their alert, only (at most) add one
+ * watch they can stop from its email. The caller validates the address and
+ * rate-limits by IP; `claimAlertsForUser` adopts the row at sign-in.
+ */
+export async function createAnonymousSealedWatch(db: SealedWatchRouteDb, email: string, raw: unknown, market: Country): Promise<WatchRouteResult> {
+  const body = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const groupKey = typeof body.groupKey === "string" && GROUP_KEY.test(body.groupKey) ? body.groupKey : null;
+  if (!groupKey) return { status: 400, body: { error: "Which product?" } };
+  const targetRaw = body.targetCents == null ? null : asInt(body.targetCents);
+  if (body.targetCents != null && targetRaw == null) return { status: 400, body: { error: "The target must be a whole number of cents." } };
+  const targetCents = targetRaw == null ? null : clampTargetCents(targetRaw);
+  const existing = await db.sealedWatch.findFirst({ where: { email, groupKey, market }, select: { id: true } });
+  if (existing) return { status: 200, body: { ok: true, watch: { id: existing.id, market, groupKey }, existed: true } };
+  const count = await db.sealedWatch.count({ where: { email, userId: null } });
+  if (count >= FREE_SEALED_WATCH_LIMIT) return freeWatchInUse(count, true);
+  const watch = await db.sealedWatch.create({ data: { userId: null, email, market, groupKey, targetCents }, select: SEALED_WATCH_SELECT });
   return { status: 201, body: { ok: true, watch } };
 }
 

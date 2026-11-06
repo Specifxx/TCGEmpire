@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createDeckWatch, deleteDeckWatch, listDeckWatches, updateDeckWatch, type DeckWatchRouteDb } from "../src/lib/deck-watch";
-import { createSealedWatch, deleteSealedWatch, listSealedWatches, updateSealedWatch, type SealedWatchRouteDb } from "../src/lib/sealed-watch";
+import { createAnonymousSealedWatch, createSealedWatch, deleteSealedWatch, listSealedWatches, updateSealedWatch, type SealedWatchRouteDb } from "../src/lib/sealed-watch";
 import { DECK_WATCH_LIMIT, FREE_SEALED_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS } from "../src/lib/alert-limits";
 import {
   ALERT_ACTION_KINDS,
@@ -30,7 +30,7 @@ function deckDb(seed: Record<string, unknown>[] = []) {
   const calls: string[] = [];
   const db = {
     deckWatch: {
-      count: async ({ where }: { where: { userId: string } }) => rows.filter((r) => r.userId === where.userId).length,
+      count: async ({ where }: { where: Record<string, unknown> }) => rows.filter((r) => Object.entries(where).every(([k, v]) => r[k] === v)).length,
       create: async ({ data }: { data: Record<string, unknown> }) => {
         const row = { id: `d${rows.length + 1}`, lastTotalCents: null, lastCheckedAt: null, lastEmailedCents: null, lastNotifiedAt: null, snoozedUntil: null, createdAt: NOW, ...data };
         rows.push(row);
@@ -237,6 +237,39 @@ test("sealed watches: a free or lapsed account creates ONE (402 past it, 2026-10
   assert.equal((await deleteSealedWatch(db, u("p", lapsed), "s1")).status, 200, "a lapsed owner can stop a watch");
   assert.equal((await deleteSealedWatch(db, u("p", plus), "s1")).status, 404, "idempotent");
   assert.equal(rows.length, 1);
+});
+
+test("sealed watches without an account (2026-11-06): one per address (402 past it, the free answer), re-submitting is a no-op that never re-baselines, an account's own row for the product counts as watched, and the product is validated", async () => {
+  const { db, rows, calls } = sealedDb();
+  assert.equal((await createAnonymousSealedWatch(db, "a@example.com", {}, "US")).status, 400, "which product?");
+  assert.equal((await createAnonymousSealedWatch(db, "a@example.com", { groupKey: "<script>" }, "US")).status, 400);
+  assert.equal((await createAnonymousSealedWatch(db, "a@example.com", { groupKey: "OGN|Booster Box", targetCents: "x" }, "US")).status, 400);
+  const first = await createAnonymousSealedWatch(db, "a@example.com", { groupKey: "OGN|Booster Box" }, "US");
+  assert.equal(first.status, 201);
+  assert.equal(rows[0]!.userId, null, "no account behind it");
+  assert.equal(rows[0]!.email, "a@example.com");
+  assert.equal(rows[0]!.market, "US");
+  const again = await createAnonymousSealedWatch(db, "a@example.com", { groupKey: "OGN|Booster Box", targetCents: 9000 }, "US");
+  assert.equal(again.status, 200);
+  assert.equal(again.body.existed, true);
+  assert.equal(rows[0]!.targetCents, null, "a re-submit changes nothing: a stranger posting the address cannot edit the alert");
+  assert.deepEqual(calls, ["create:s1"], "no update on a re-submit");
+  const second = await createAnonymousSealedWatch(db, "a@example.com", { groupKey: "SFD|Booster Box" }, "US");
+  assert.equal(second.status, 402);
+  assert.equal(second.body.code, "free_alert_limit");
+  assert.equal(second.body.limit, FREE_SEALED_WATCH_LIMIT);
+  assert.match(String(second.body.error), /already gets 1 free sealed alert/);
+  assert.equal(rows.length, 1);
+  // Another market is another watch for the same product, and the one free watch is per address, so it is refused too.
+  assert.equal((await createAnonymousSealedWatch(db, "a@example.com", { groupKey: "OGN|Booster Box" }, "AU")).status, 402);
+  // An account already watching the product under this address: answered as watched, not duplicated.
+  const owned = sealedDb([{ id: "o1", userId: "acct", email: "b@example.com", market: "US", groupKey: "OGN|Booster Box", targetCents: null }]);
+  const dup = await createAnonymousSealedWatch(owned.db, "b@example.com", { groupKey: "OGN|Booster Box" }, "US");
+  assert.equal(dup.status, 200);
+  assert.equal(dup.body.existed, true);
+  assert.equal(owned.rows.length, 1);
+  // The account's rows do not use up the address's free anonymous watch for another product.
+  assert.equal((await createAnonymousSealedWatch(owned.db, "b@example.com", { groupKey: "SFD|Booster Box" }, "US")).status, 201);
 });
 
 test("sealed watches: a billed-Plus account is treated as Premium (grandfathered, PLUS_ON_SALE=false) and is not stopped at SEALED_WATCH_LIMIT_PLUS; Premium is not either", async () => {

@@ -45,7 +45,7 @@ test("the paid alert step runs AFTER the sealed import, and the paid route runs 
   assert.match(deck, /basketStoresFor\(opts\.market, postageOptionsFrom\(/, "…with the measured postage for the saved delivery");
   const sealed = read("src/lib/sealed-watch.ts");
   assert.match(sealed, /isPremium\(user\)/, "any paid tier");
-  assert.match(sealed, /sealedWatchCeiling\(premiumTierOf\(user\)\)/, "the Plus cap (and Premium's sanity ceiling) is honoured in the run too");
+  assert.match(sealed, /sealedWatchCeiling\(user \? premiumTierOf\(user\) : null\)/, "the Plus cap (and Premium's sanity ceiling) is honoured in the run too");
 });
 
 test("the tier table carries both watches before Ad-free, from the constants; the copy version is bumped", () => {
@@ -117,7 +117,10 @@ test("the discovery lines are inline — no Dialog, no overlay, no portal — an
   for (const s of used) assert.ok((TIP_SURFACES as readonly string[]).includes(s), `${s} is registered in lib/premium-surface.ts`);
   for (const s of WATCH_GATE_SURFACES) assert.ok(isPremiumClickSource(s));
   assert.match(code("src/components/DeckWatchForm.tsx"), /<PremiumButton surface="gate:deck-watch" \/>/);
-  assert.match(code("src/components/SealedWatchButton.tsx"), /tier="plus" surface="gate:sealed-watch"/);
+  // Signed out, the button is the email form, not a gate (2026-11-06): the sale is the free-watch-in-use spot below.
+  assert.doesNotMatch(code("src/components/SealedWatchButton.tsx"), /tier="plus" surface="gate:sealed-watch"/);
+  assert.match(code("src/components/SealedWatchButton.tsx"), /if \(!user\) \{[\s\S]*?<AnonymousSealedWatchForm /);
+  assert.match(code("src/components/SealedWatchButton.tsx"), /href=\{`\$\{sealedPath\(groupKey\)\}#sealed-watch`\}/);
   // The placements the owner asked for: /sealed, the sealed quick view, the Best Basket result, /watching, the card watch button.
   assert.match(code("src/components/SealedMarketBoard.tsx"), /<DiscoveryTip id="sealed" surface="tip:sealed" tier="plus"/);
   // The quick view is an overlay whose watch button already sells Plus: no second, tip line there.

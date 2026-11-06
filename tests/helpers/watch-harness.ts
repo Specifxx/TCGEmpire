@@ -6,7 +6,7 @@ import { runSealedWatches, type SealedWatchDb, type SealedWatchRunDeps } from ".
 import type { DeckWatchItem, SealedWatchItem } from "../../src/lib/watch-emails";
 import type { SealedGroup } from "../../src/lib/sealed-import";
 import { normalizeSearch } from "../../src/lib/format";
-import { NOW, type User } from "./alert-harness";
+import { NOW, free, type User } from "./alert-harness";
 
 export { NOW, DAY, HOUR, daysAgo, hoursAgo, plus, premium, lapsed, free } from "./alert-harness";
 
@@ -49,6 +49,11 @@ export function deckRow(id: string, user: User, over: Partial<DeckRow> = {}): De
     ...over,
     user: { ...user, email: over.user?.email ?? `${id}@example.com` },
   };
+}
+
+/** A sealed watch with no account behind it: the address is the owner. */
+export function anonymousSealedRow(id: string, email: string, over: Partial<SealedRow> = {}): SealedRow {
+  return sealedRow(id, free, { ...over, userId: null, email, user: null });
 }
 
 export interface StoreRow {
@@ -149,7 +154,7 @@ export function deckHarness(rows: DeckRow[], opts: DeckHarnessOpts = {}) {
 
 export interface SealedRow {
   id: string;
-  userId: string;
+  userId: string | null;
   email: string;
   market: string;
   groupKey: string;
@@ -162,7 +167,7 @@ export interface SealedRow {
   lastAtRrp: boolean | null;
   snoozedUntil: Date | null;
   createdAt: Date;
-  user: User & { email: string };
+  user: (User & { email: string }) | null; // null: a watch with no account (the sealed page's email form, 2026-11-06)
 }
 
 export function sealedRow(id: string, user: User, over: Partial<SealedRow> = {}): SealedRow {

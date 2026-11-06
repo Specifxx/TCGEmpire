@@ -12,7 +12,7 @@ import {
 import { FREE_SEALED_WATCH_LIMIT, SEALED_WATCH_LIMIT_PLUS, sealedWatchLimit } from "../src/lib/alert-limits";
 import { buildSealedWatchEmail, rrpGapText, sealedWatchCopy } from "../src/lib/watch-emails";
 import { verifyAlertAction } from "../src/lib/alert-actions";
-import { NOW, daysAgo, hoursAgo, free, group, lapsed, offer, plus, premium, sealedHarness, sealedRow } from "./helpers/watch-harness";
+import { NOW, anonymousSealedRow, daysAgo, hoursAgo, free, group, lapsed, offer, plus, premium, sealedHarness, sealedRow } from "./helpers/watch-harness";
 import { withRadianceUpcoming } from "./helpers/upcoming-set";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -224,6 +224,27 @@ test("entitlement and the caps: a lapsed or free owner's oldest watch is evaluat
   assert.ok(h.writes.some((w) => w.id === "gone") && h.writes.some((w) => w.id === "never"), "the oldest free watch is checked");
   assert.ok(!h.writes.some((w) => w.id === "gone2" || w.id === "never2"), "the free accounts' second watches are untouched");
   assert.ok(h.writes.some((w) => w.id === "p10") && h.writes.some((w) => w.id === "p11"), "the billed-Plus account's newest watches are evaluated");
+});
+
+test("a watch with no account (2026-11-06) is a free owner's: its oldest row is evaluated and emailed with its stop link, a second row for the address is kept untouched, and the pause honours the address", async () => {
+  const rows = [
+    anonymousSealedRow("anon", "anon@example.com", { lastPriceCents: 16000, createdAt: new Date(NOW.getTime() - 200 * 3_600_000) }),
+    anonymousSealedRow("anon2", "anon@example.com", { lastPriceCents: 16000, groupKey: "SFD|Booster Box", createdAt: new Date(NOW.getTime() - 199 * 3_600_000) }),
+    anonymousSealedRow("quiet", "quiet@example.com", { lastPriceCents: 16000 }),
+    sealedRow("acct", free, { userId: "u-free", email: "acct@example.com", lastPriceCents: 16000 }),
+  ];
+  const h = sealedHarness(rows, { groups: [group([offer(15000)]), group([offer(15000)], { groupKey: "SFD|Booster Box" })], mutes: ["quiet@example.com"] });
+  const s = await h.run();
+  assert.equal(s.lapsed, 1, "the address's second row is kept, not evaluated");
+  assert.equal(s.drops, 3);
+  assert.equal(s.paused, 1);
+  assert.equal(s.emails, 2, "the anonymous watch and the free account's");
+  assert.deepEqual(h.sent.map((x) => x.to).sort(), ["acct@example.com", "anon@example.com"]);
+  const mail = h.sent.find((x) => x.to === "anon@example.com")!;
+  assert.equal(mail.item.watchId, "anon");
+  assert.ok(mail.item.actions?.stop, "the stop link is the watch's own signed token, so it needs no account");
+  assert.ok(h.writes.some((w) => w.id === "anon" && w.data.lastNotifiedAt), "the anonymous row is written like any other");
+  assert.ok(!h.writes.some((w) => w.id === "anon2"), "its second row is untouched");
 });
 
 test("snoozed and paused advance their baseline without an email; a failed groups read aborts the pass unwritten", async () => {
