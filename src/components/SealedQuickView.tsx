@@ -1,5 +1,6 @@
 "use client";
 
+import { StoreVote } from "./StoreVote";
 import { MiniPicks } from "./MiniPicks";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
@@ -242,6 +243,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
               <div className="min-w-0 flex-1">
                 <div className="flex min-w-0 items-center gap-1.5">
                   <span className="truncate text-sm font-semibold text-white">{l.retailerName}</span>
+                  <StoreVote url={l.url} name={l.retailerName} className="shrink-0 text-slate-400" />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
                   <span className={isOpen ? "text-up" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>

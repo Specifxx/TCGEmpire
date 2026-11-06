@@ -26,6 +26,7 @@ export interface MarketRow {
   lastSeen: string; // ISO — timeAgo() accepts strings
   buyHref: string; // affiliate-tagged outbound URL (country-independent)
   policyUrl: string | null; // store shipping-policy page, when verified
+  storeUrl?: string | null; // the store's own listing URL, for the store thumbs (components/StoreVote.tsx)
 }
 
 export interface ComputedRow extends MarketRow {

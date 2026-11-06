@@ -292,6 +292,15 @@ longer lands on its entry.
   `/api/site-reviews/<site>` (CDN six hours). `Feedback.site` keeps
   RiftCompare's own reads to its own rows.
   [2026-11-03](../DECISIONS.md#every-sites-reviews-approved-in-one-queue)
+- **Store thumbs up / down, one tally for every site (2026-11-06):** every
+  site's store rows carry the same tiny thumbs (`components/StoreVote.tsx`,
+  one file copied to each site), keyed by the store's host without "www.";
+  votes go to `/api/store-votes` here (`StoreVote` table, one per browser per
+  store, three browsers per network per store, hashes only) and one public
+  tally comes back (CDN six hours). "Trusted" from 3 thumbs up and 80%.
+  Votes never order prices, hide a store or decide "cheapest"; marketplaces
+  (eBay, Amazon, TCGplayer, Cardmarket) get none.
+  [2026-11-06](../DECISIONS.md#store-thumbs-up-and-down-one-tally-for-every-site)
 - **One paid plan again (2026-10-23, supersedes the trial and tier bullets
   below):** Premium $9.99/mo or $79.99/yr with a free 30-day card-gated trial;
   existing $4.99/$39.99 subscribers are grandfathered by not migrating them.

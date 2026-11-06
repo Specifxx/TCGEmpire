@@ -2220,3 +2220,25 @@ model ManualCost {
 
   @@index([removedAt])
 }
+
+// STORE THUMBS UP / DOWN, ONE TALLY FOR EVERY SITE (owner, 2026-11-06;
+// lib/store-votes/, /api/store-votes). Private: only the per-store counts are
+// public (the GET route); the hashes and the site never leave this table.
+model StoreVote {
+  id        String   @id @default(cuid())
+  /// the store's listing host without "www." (lib/store-votes/core.ts storeKey)
+  store     String
+  /// keyed hash of the browser's random id: one vote per browser per store
+  voter     String
+  /// keyed hash of the network address: at most a few browsers per network per store
+  ipHash    String
+  /// 1 thumbs up, -1 thumbs down
+  vote      Int
+  /// which site the vote came from (riftcompare or a lib/site-reviews/sites.ts key)
+  site      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([store, voter])
+  @@index([store, ipHash])
+}

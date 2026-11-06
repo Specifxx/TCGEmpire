@@ -1,5 +1,6 @@
 "use client";
 
+import { StoreVote } from "./StoreVote";
 import { MiniPicks } from "./MiniPicks";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
@@ -635,6 +636,7 @@ function QuickViewModal({
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 flex-wrap items-center gap-1.5 gap-y-0.5">
                           <span className="min-w-0 truncate text-sm font-semibold text-white">{p.retailerName}</span>
+                          <StoreVote url={p.url} name={p.retailerName} className="shrink-0 text-slate-400" />
                           {i === 0 && inStock.length > 1 && (
                             <span className="chip shrink-0 bg-buy/20 text-[9px] font-bold uppercase tracking-wide text-brand-300">
                               Cheapest

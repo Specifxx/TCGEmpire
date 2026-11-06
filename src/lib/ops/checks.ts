@@ -746,6 +746,25 @@ export async function awinProgrammes(d: OpsDeps): Promise<CheckResult> {
 
 // ── Money ───────────────────────────────────────────────────────────────────
 
+/**
+ * Store thumbs up and down (DECISIONS.md 2026-11-06): every site's price rows read the one public tally at
+ * /api/store-votes. A tally that does not answer JSON is a warn (the thumbs still draw, without counts or
+ * "Trusted", and votes may not save). Never crit: prices and links work without it.
+ */
+export async function storeVotes(d: OpsDeps): Promise<CheckResult> {
+  const id = "site:store-votes";
+  const area: OpsArea = "site";
+  const title = "Store thumbs up / down (every site)";
+  const r = await d.fetch(`${SITE}/api/store-votes`, { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+  const action = 'Open riftcompare.com/api/store-votes; tell Claude: "the store thumbs tally is down".';
+  if (!r.ok) return result(d, { id, area, title, severity: "warn", summary: `The tally answered HTTP ${r.status}.`, action });
+  const j = (await r.json().catch(() => null)) as { stores?: Record<string, [number, number]> } | null;
+  if (!j || typeof j.stores !== "object" || j.stores === null) return result(d, { id, area, title, severity: "warn", summary: "The tally did not answer JSON.", action });
+  const stores = Object.keys(j.stores).length;
+  const votes = Object.values(j.stores).reduce((n, [u, dn]) => n + u + dn, 0);
+  return result(d, { id, area, title, severity: "ok", summary: `${votes} vote${votes === 1 ? "" : "s"} on ${stores} store${stores === 1 ? "" : "s"}.` });
+}
+
 export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
   const key = d.env.STRIPE_SECRET_KEY;
   const authTitle = "Stripe connection";
@@ -1111,6 +1130,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("jobs", "site", "Scheduled jobs", () => scheduledJobs(d));
   await add("deploy:production", "site", "Latest production build", () => deployState(d));
   await add("site:live", "site", "Live site", () => siteProbe(d));
+  await add("site:store-votes", "site", "Store thumbs up / down (every site)", () => storeVotes(d));
   await add("discord:bot", "site", "Discord price bot", () => discordBot(d));
   await add("partner:dexcompare", "data", "DexCompare store prices (Pokémon)", () => dexcompareIndex(d));
   await add("data:family-feeds", "data", "Sister-site deal feeds", () => familyFeedsCheck(d));
