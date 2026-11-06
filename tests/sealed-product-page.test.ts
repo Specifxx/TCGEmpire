@@ -72,14 +72,16 @@ test("nothing the page's server render reaches reads the visitor (one CDN copy s
   assert.deepEqual(offenders, []);
 });
 
-test("Amazon is the second row, right under eBay, on the product page only, never in the quick view (owner, 2026-11-06)", () => {
+test("Amazon is the second row, right under eBay; the quick view has its tagged link but never its price (owner, 2026-11-06)", () => {
   const qv = read("src/components/SealedQuickView.tsx");
   assert.match(qv, /\{!pin\.ebay && amazonRow\}/, "right after eBay's search row when eBay has no listing");
   assert.match(qv, /pin\.ebay && l === pin\.ebay \? amazonRow : null/, "right after the eBay row");
   assert.match(qv, /const amazonStore = amazon \? amazonFor\(country\) : null;/);
   assert.match(qv, /<AffiliateDisclosure partner="amazon" \/>/, "Amazon's statement beside its link");
   const modal = qv.slice(qv.indexOf("function SealedQuickViewModal"), qv.indexOf("export function SealedOffers"));
-  assert.match(modal, /<SealedOffers group=\{group\} currency=\{currency\} \/>/, "the quick view passes no amazon");
+  assert.match(modal, /<SealedOffers group=\{group\} currency=\{currency\} amazon \/>/, "the quick view carries the Amazon link");
+  assert.match(qv, /priced=\{source === "sealed-page"\}/, "Amazon's price stays on the product page");
+  assert.match(read("src/components/AmazonLiveSlot.tsx"), /if \(!priced\) return;/, "the quick view never asks for Amazon's price");
   assert.match(read("src/components/SealedProductView.tsx"), /<SealedOffers [^>]*amazon source="sealed-page"/);
   assert.doesNotMatch(qv, /priceCents[^\n]*amazon|amazon[^\n]*priceCents/i, "no Amazon price in the board's own code");
   assert.match(qv, /<AmazonLiveSlot country=\{country\} slug=\{sealedSlug\(group\.groupKey\)\}/, "Amazon's own price comes only through the live slot (2026-11-05)");

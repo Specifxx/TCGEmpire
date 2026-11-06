@@ -20,9 +20,10 @@ export const AMAZON_PRICE_DISCLAIMER =
 
 interface Live { status: string; url?: string; price?: string; priceCents?: number; currency?: string; at?: string; timeZone?: string; zoneLabel?: string }
 
-export function AmazonLiveSlot({ country, slug, label, searchHref, cart }: { country: Country; slug: string; label: string; searchHref: string; cart?: { title: string; currency: string; image?: string | null } }) {
+export function AmazonLiveSlot({ country, slug, label, searchHref, cart, priced = true }: { country: Country; slug: string; label: string; searchHref: string; cart?: { title: string; currency: string; image?: string | null }; /** false in the quick view: the link only, Amazon's price stays on the page */ priced?: boolean }) {
   const [live, setLive] = useState<Live | null>(null);
   useEffect(() => {
+    if (!priced) return;
     let on = true;
     fetch(`/api/amazon/sealed/${encodeURIComponent(slug)}?c=${encodeURIComponent(country)}`)
       .then((r) => (r.ok ? r.json() : null))
@@ -33,7 +34,7 @@ export function AmazonLiveSlot({ country, slug, label, searchHref, cart }: { cou
     return () => {
       on = false;
     };
-  }, [country, slug]);
+  }, [country, slug, priced]);
   const cartInput =
     live?.url && cart && live.priceCents ? { href: live.url, productUrl: live.url, storeName: "Amazon", title: cart.title, priceCents: live.priceCents, currency: live.currency ?? cart.currency, image: cart.image ?? null } : null;
   const when = live?.at ? new Date(live.at).toLocaleString("en-GB", { timeZone: live.timeZone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";

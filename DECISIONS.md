@@ -22844,3 +22844,16 @@ RiftCompare: `tcgplayerLeads` now always answers false, so eBay leads every card
 from the shared files; the sealed page's Amazon row (`AmazonLiveSlot`) gets thumbs, and with a live price the stock line
 and cart. `/api/store-votes` accepts eBay and Amazon domains (`marketKey`: one tally per domain), and no other marketplace.
 Store rows elsewhere in the family get the same through the identical `cart-list.ts` and `StoreVote.tsx`.
+
+## 2026-11-06: The quick view carries the tagged Amazon link (owner)
+
+Since 2026-11-02 the quick view showed no Amazon link (or, on KaeYoung and ScentCompare, an "Amazon" row that opened our
+own product page), read as Amazon's ban on links in pop-ups. The owner noticed the quick view sends nobody to Amazon and
+chose (2026-11-06) to put the product page's own tagged Amazon link there. Amazon's Participation Requirements, item
+(o): "You will not post or serve any Special Links … within any pop-up or pop-under windows, transitional page ads, or
+layer ads, except for pop-up windows in conjunction with your Site promoting Products closely associated with the
+materials on your Site." A quick view the visitor opens for one product, showing that same product, fits the exception;
+the owner accepted the remaining risk. The quick view shows the link only (the item's own page where the ASIN is known,
+else the tagged search), never Amazon's price: that stays on the product page under the 24-hour licence. Uninvited
+overlays (a phone ad dock, a corner card, an exit pop-up) still never carry Amazon, and an Amazon page is never framed
+(item (n)).
