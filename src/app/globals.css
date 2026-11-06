@@ -1995,6 +1995,19 @@ ins.adsbygoogle[data-ad-status="unfilled"],
   --fm-radius: 12px;
 }
 
+/* ── The side rails (components/SideRails.tsx; owner, 2026-11-06) ───────────
+   DexCompare's and MTG Compare's layout: from 1280px (every regular 16:9 and
+   16:10 screen) every content column (container-app: main, the ad zone and the
+   footer) is a little thinner, leaving 160px on each side (a 136px rail and a
+   12px gutter either side of it) for an eBay rail beside the navigation rail
+   and a TCGplayer rail at the right. Pure CSS, the same on the server and in
+   the browser, so nothing shifts when the rails mount. Ad-free members get no
+   rails and keep the full width (data-adfree is set before first paint). */
+@media (min-width: 1280px) {
+  :root:not([data-adfree]) .container-app { max-width: min(1400px, calc(100% - 320px)); }
+}
+.rail-scroll { scrollbar-width: thin; scrollbar-color: rgb(var(--c-ink-700, 51 65 85)) transparent; }
+
 
 /* The header's "Try Premium" callout (PricingNudge, 2026-10-25): slides in under
    the Pricing link a few seconds into a visit, its arrow bobbing towards it. */
@@ -2030,3 +2043,4 @@ ins.adsbygoogle[data-ad-status="unfilled"],
     animation: none;
   }
 }
+

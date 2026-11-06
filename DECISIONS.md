@@ -22693,6 +22693,21 @@ name, with counts once a store has votes and a green "Trusted" mark from 3 thumb
   ops monitor's `site:store-votes` check reads the tally.
 - The same `src/components/StoreVote.tsx` is copied into every site; change it here first and copy it.
 
+## 2026-11-06 — Side rails: eBay left, TCGplayer right, a thinner column from 1280px
+
+**Decision (owner: DexCompare's and MTG Compare's layout, "the actual site is a little thinner and then you have the two ad
+banners, one for eBay, one for TCGplayer, on the sides … on the home page … and when you go to other pages"):** from
+1280px (every regular 16:9 and 16:10 screen) `container-app` (main, the ad zone, the footer) narrows to
+`min(1400px, 100% - 320px)`, and `components/SideRails.tsx` fixes a 136px rail 12px outside each side of it, under the
+header to the window's foot, on every page: MiniPicks' chase cards (`/api/mini-picks`, the same CDN-held answer) with
+eBay's cheapest live listing in the visitor's market on the left, beside the navigation rail, and TCGplayer's market
+price on the right, ten tiles each that scroll.
+
+- Browser only: mounted after hydration, only at 1280px+ and a window tall enough for one whole tile. Nothing in the
+  server HTML, so URLs, titles, metadata, h1/h2 and text are unchanged; CLS 0 (the room is CSS).
+- Ad-free for Plus and Premium like every ad (`usePremium()`, `data-ad-placement`), and members keep the full-width
+  column: the narrowing is `:root:not([data-adfree])`, which the boot script sets before first paint.
+- Labelled "Ad", affiliate links through `OutboundLink`, surface `side_rails` (sub-ids `side_<market>`, `tcg_side`).
 ## 2026-11-06 — Anyone who pays can reach their account: emailed sign-in links
 
 **Decision (owner: "code red … we must get this fixed immediately"):** a buyer paid for Premium as a guest with Apple
