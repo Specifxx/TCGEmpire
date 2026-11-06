@@ -38,6 +38,10 @@
     {
       "path": "/api/cron/stripe-reconcile",
       "schedule": "15 7 * * *"
+    },
+    {
+      "path": "/api/cron/earnings-refresh",
+      "schedule": "40 */3 * * *"
     }
   ]
 }
