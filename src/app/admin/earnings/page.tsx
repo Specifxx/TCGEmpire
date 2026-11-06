@@ -32,6 +32,9 @@ import { EarningsLineChart } from "@/components/admin/EarningsLineChart";
 import { EarningsForecast } from "@/components/admin/EarningsForecast";
 
 export const dynamic = "force-dynamic";
+// Visits read the stored copy (lib/earnings/stored.ts) in one query; only Refresh
+// (or a source with no stored copy yet) waits on the reporting APIs.
+export const maxDuration = 300;
 
 export const metadata: Metadata = {
   title: "Earnings",
@@ -489,7 +492,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
         </table>
       </div>
       <p className="mt-2 text-xs text-slate-500">
-        All time = since {EARNINGS_SINCE}. Data refreshes every 30 minutes (oldest read {new Date(oldest).toLocaleTimeString("en-AU", { timeZone: "Australia/Sydney", hour: "2-digit", minute: "2-digit" })} Sydney). Stripe is net of fees and refunds; TCGplayer and eBay include pending commissions until approved (reversed ones excluded); AdSense is its estimate.
+        All time = since {EARNINGS_SINCE}. Figures are fetched from each network every three hours, or when you press Refresh (oldest read {new Date(oldest).toLocaleString("en-AU", { timeZone: "Australia/Sydney", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} Sydney). Stripe is net of fees and refunds; TCGplayer and eBay include pending commissions until approved (reversed ones excluded); AdSense is its estimate.
       </p>
 
       {/* Setup and status, per source */}

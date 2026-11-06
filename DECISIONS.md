@@ -22792,3 +22792,24 @@ a word, so phones show one at a time.
 
 **Measure:** the dock's placements against the strips' in the ~11-10 / ~11-17 checks. If pages per visit drop on phones,
 raise DOCK_ARM or drop the dock from that site first.
+
+## 2026-11-06 — The earnings dashboard reads a stored copy
+
+Owner: "admin/earnings now takes 10 minutes to load, can we improve that please."
+
+**Why it was slow:** every visit asked Stripe, Impact, EPN (two reports), AdSense, Anthropic and Vercel for everything
+since `EARNINGS_SINCE`, walking each API in 31- to 44-day windows ONE AFTER ANOTHER, page by page. The 30-minute memo
+that was meant to stop that lived in one server instance's memory, so on Vercel almost every visit landed on a fresh
+instance and did the whole walk again. The same walk sat behind Empire HQ and the owner's digest emails, whose 20-second
+caps meant they often went without earnings.
+
+**Now:** each API source's last answer (Stripe, TCGplayer, eBay, AdSense, Anthropic, Vercel) is kept in one private
+`OpsSnapshot` row (`earnings:<key>`, `lib/earnings/stored.ts`), never exported. Visits read those rows in one query and
+never wait on an API (unless a source has no row yet). `/api/cron/earnings-refresh` (every three hours, `vercel.json`)
+and the dashboard's Refresh link ask every API and store the answers; inside each source the date windows now run four
+at a time (`mapLimit`, results kept in date order so the duplicate folding is unchanged). A failed fetch keeps the last
+good figures, marked as an error. Mediavine and Amazon are typed in and still read Neon directly, so a new entry shows at
+once. No figure changed: the same fetchers, the same parsing, only when and how often they run.
+
+**Watched:** the ops monitor's existing earnings check turns RED when a stored copy is more than 12 hours old (the cron
+stopped). Cost: eight cron runs a day of mostly waiting on APIs, against a page that used to do the same walk per visit.

@@ -899,3 +899,23 @@ export function anthropicCostDays(json: unknown): DayAmount[] {
   }
   return mergeDays(rows);
 }
+
+/**
+ * Run `fn` over `items` with at most `limit` in flight, results in input order
+ * (2026-11-06: the dashboard's date windows were fetched one after another, which
+ * made a cold load take minutes). Order is kept so folding duplicates across
+ * windows (uniqueActions, uniqueRecords, latestPerSale) gives the same result as
+ * the sequential walk did.
+ */
+export async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (item: T, i: number) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i], i);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
+  return out;
+}

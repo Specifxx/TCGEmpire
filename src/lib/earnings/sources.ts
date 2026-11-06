@@ -8,6 +8,7 @@ import {
   impactTagDays,
   impactActions,
   latestReportDay,
+  mapLimit,
   reportRecords,
   uniqueActions,
   uniqueRecords,
@@ -27,13 +28,17 @@ import {
   type StripeTxn,
 } from "./core";
 import { AMAZON_STORES, amazonDays, amazonTagDays } from "./amazon";
+import { STORED_OVERDUE_MS, readStored, writeStored } from "./stored";
 
 // The earnings dashboard's fetchers (/admin/earnings; DECISIONS.md "One
 // earnings dashboard"). Each source is read from its own reporting API with
 // credentials that live only in Vercel, independently guarded: one failing or
-// unconfigured source shows as such and never hides the others. Results are kept
-// for 30 minutes per server instance (a globalThis memo, lib/db.ts rule 2) so the
-// page can be reloaded freely; "Refresh" bypasses it.
+// unconfigured source shows as such and never hides the others. The API sources'
+// answers are STORED (lib/earnings/stored.ts, 2026-11-06): the page reads the
+// stored copy, /api/cron/earnings-refresh and "Refresh" fetch the APIs. The
+// typed-in sources (Mediavine, Amazon) read Neon, kept 30 minutes per server
+// instance (a globalThis memo, lib/db.ts rule 2). Date windows are fetched a few
+// at a time (mapLimit), not one after another.
 //
 // NONE OF THIS READS NEON except Mediavine's manual entries (one small table).
 // The external APIs are each bounded: Stripe pages of 100 balance transactions
@@ -84,9 +89,12 @@ const fetchStripe: Fetcher = async () => {
 // event-date query runs instead.
 const isoSec = (ms: number) => new Date(ms).toISOString().slice(0, 19) + "Z";
 
+/** How many date windows of one API are in flight at once. */
+const WINDOW_CONCURRENCY = 4;
+
 async function impactPages(sid: string, headers: Record<string, string>, query: (from: string, to: string) => string): Promise<ImpactAction[]> {
-  const out: ImpactAction[] = [];
-  for (const [from, to] of windows(EARNINGS_SINCE, dayIn(Date.now()), 44)) {
+  const perWindow = await mapLimit(windows(EARNINGS_SINCE, dayIn(Date.now()), 44), WINDOW_CONCURRENCY, async ([from, to]) => {
+    const out: ImpactAction[] = [];
     let url: string | null = `https://api.impact.com/Mediapartners/${encodeURIComponent(sid)}/Actions?${query(from, to)}&PageSize=1000`;
     for (let page = 0; url && page < 50; page++) {
       const json = (await getJson(url, { headers })) as { "@nextpageuri"?: string } | null;
@@ -94,8 +102,9 @@ async function impactPages(sid: string, headers: Record<string, string>, query: 
       const next: string | undefined = json?.["@nextpageuri"];
       url = next ? `https://api.impact.com${next}` : null;
     }
-  }
-  return uniqueActions(out);
+    return out;
+  });
+  return uniqueActions(perWindow.flat());
 }
 
 const fetchImpact: Fetcher = async () => {
@@ -152,17 +161,24 @@ const EPN_TDR_REPORTS = ["ebay_partner_transaction_detail", "ebay_partner_transa
 async function epnPages(sid: string, headers: Record<string, string>, report: string, params: string, onPage: (json: unknown) => void): Promise<{ rows: number; columns: string[] }> {
   let rows = 0;
   let columns: string[] = [];
-  for (const [from, to] of windows(EARNINGS_SINCE, dayIn(Date.now()), 31)) {
+  // Windows run a few at a time; their pages are then handed over in date order,
+  // exactly as the one-at-a-time walk did.
+  const perWindow = await mapLimit(windows(EARNINGS_SINCE, dayIn(Date.now()), 31), WINDOW_CONCURRENCY, async ([from, to]) => {
+    const pages: unknown[] = [];
     let url: string | null = `https://api.partner.ebay.com/Mediapartners/${encodeURIComponent(sid)}/Reports/${report}.json?${params}&START_DATE=${from}&END_DATE=${to}`;
     for (let page = 0; url && page < 20; page++) {
       const json = (await getJson(url, { headers })) as { "@nextpageuri"?: string } | null;
-      const shape = reportShape(json);
-      rows += shape.rows;
-      if (!columns.length) columns = shape.columns;
-      onPage(json);
+      pages.push(json);
       const next: string | undefined = json?.["@nextpageuri"];
       url = next ? `https://api.partner.ebay.com${next}` : null;
     }
+    return pages;
+  });
+  for (const json of perWindow.flat()) {
+    const shape = reportShape(json);
+    rows += shape.rows;
+    if (!columns.length) columns = shape.columns;
+    onPage(json);
   }
   return { rows, columns };
 }
@@ -324,19 +340,36 @@ const FETCHERS: Record<EarningsSourceKey, Fetcher> = {
 
 export const SOURCE_KEYS = Object.keys(FETCHERS) as EarningsSourceKey[];
 
-async function load(key: EarningsSourceKey, fresh: boolean): Promise<SourceResult> {
-  const hit = memo.get(key);
-  if (!fresh && hit && Date.now() - hit.fetchedAt < TTL_MS) return hit;
+/** The sources read from a reporting API, whose answers are stored (lib/earnings/stored.ts). */
+export const STORED_SOURCES: readonly EarningsSourceKey[] = ["stripe", "tcgplayer", "ebay", "adsense"];
+const isStored = (key: EarningsSourceKey) => STORED_SOURCES.includes(key);
+
+/** Ask the source itself. On failure the last good figures stay, marked as an error. */
+async function fetchLive(key: EarningsSourceKey, prev: SourceResult | undefined): Promise<SourceResult> {
   let res: SourceResult;
   try {
     res = { key, fetchedAt: Date.now(), ...(await FETCHERS[key]()) };
   } catch (e) {
     console.error(`[earnings] ${key} failed:`, e);
     // An error message from the API, never the credentials (they are only ever in headers).
-    res = { key, fetchedAt: Date.now(), status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed", days: hit?.days ?? [], reportedThrough: hit?.reportedThrough };
+    const detail = e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed";
+    res = prev?.days.length ? { ...prev, key, status: "error", detail } : { key, fetchedAt: Date.now(), status: "error", detail, days: [] };
   }
   memo.set(key, res);
+  // An unconfigured source costs nothing to ask again, so only real answers are kept.
+  if (isStored(key) && res.status !== "not-configured") await writeStored(key, res);
   return res;
+}
+
+async function loadOne(key: EarningsSourceKey, fresh: boolean, stored: Map<string, SourceResult>): Promise<SourceResult> {
+  if (isStored(key)) {
+    const kept = stored.get(key);
+    if (!fresh && kept && Array.isArray(kept.days)) return { ...kept, key };
+    return fetchLive(key, kept ?? memo.get(key));
+  }
+  const hit = memo.get(key);
+  if (!fresh && hit && Date.now() - hit.fetchedAt < TTL_MS) return hit;
+  return fetchLive(key, hit);
 }
 
 /**
@@ -351,18 +384,33 @@ export function scrubSecrets(msg: string): string {
     .replace(/(Basic|Bearer)\s+[A-Za-z0-9+/=._\-]+/gi, "$1 [hidden]");
 }
 
-/** Every source, fetched in parallel. `fresh` skips the 30-minute memo. */
-export function loadEarnings(fresh = false): Promise<SourceResult[]> {
-  return Promise.all(SOURCE_KEYS.map((k) => load(k, fresh)));
+/**
+ * Every source. By default the API sources come from their stored copy (one small
+ * query; an API is asked only when it has none yet). `fresh` asks every API now,
+ * in parallel, and stores the answers: the Refresh link and the refresh cron.
+ */
+export async function loadEarnings(fresh = false): Promise<SourceResult[]> {
+  const stored = await readStored<SourceResult>(STORED_SOURCES);
+  return Promise.all(SOURCE_KEYS.map((k) => loadOne(k, fresh, stored)));
+}
+
+/** A stored answer the refresh cron should have replaced by now. */
+export function overdueDetail(fetchedAt: number, now = Date.now()): string | undefined {
+  if (!(now - fetchedAt > STORED_OVERDUE_MS)) return undefined;
+  return `Not refreshed since ${new Date(fetchedAt).toISOString().slice(0, 16).replace("T", " ")} UTC: the earnings-refresh cron (every 3 hours) may have stopped.`;
 }
 
 /** For the ops monitor: which sources are set up and whether they answer. Names and status only. */
 export async function earningsHealth(): Promise<{ key: EarningsSourceKey; status: SourceResult["status"]; detail?: string }[]> {
   const all = await loadEarnings(false);
-  return all.map((s) => ({ key: s.key, status: s.status, detail: s.status === "error" ? s.detail : undefined }));
+  return all.map((s) => {
+    const overdue = s.status === "ok" && isStored(s.key) ? overdueDetail(s.fetchedAt) : undefined;
+    if (overdue) return { key: s.key, status: "error" as const, detail: overdue };
+    return { key: s.key, status: s.status, detail: s.status === "error" ? s.detail : undefined };
+  });
 }
 
-/** Drop the memo for one source (after a manual entry changes). */
+/** Drop the memo for one typed-in source (after a manual entry changes). */
 export function forgetEarnings(key: EarningsSourceKey): void {
   memo.delete(key);
 }

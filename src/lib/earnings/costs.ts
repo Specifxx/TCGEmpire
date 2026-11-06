@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
-import { addDays, anthropicCostDays, dayIn, expandCost, mergeDays, windows, type CostEntry, type CostRecurrence, type DayAmount } from "./core";
-import { EARNINGS_SINCE, scrubSecrets } from "./sources";
+import { addDays, anthropicCostDays, dayIn, expandCost, mapLimit, mergeDays, windows, type CostEntry, type CostRecurrence, type DayAmount } from "./core";
+import { EARNINGS_SINCE, scrubSecrets, overdueDetail } from "./sources";
+import { readStored, writeStored } from "./stored";
 import { projectDays, vercelCharges, type ProjectCharge } from "./sites";
 
 // The earnings dashboard's costs (2026-10-25, owner: "add costs on the website …
@@ -58,11 +59,36 @@ async function ensureSeeded(): Promise<void> {
   seeded = true;
 }
 
-// ── Anthropic API usage ──────────────────────────────────────────────────────
-const TTL_MS = 30 * 60_000;
-let anthropicMemo: { at: number; line: CostLine } | null = null;
+// ── Automatic lines: stored like the earnings sources (lib/earnings/stored.ts) ─
+// The page reads the stored line; the refresh cron and "Refresh" ask the API.
+// A line remembers when it was fetched so the ops monitor can tell a stopped cron.
+type StoredLine = CostLine & { fetchedAt?: number };
+const AUTO_KEYS = ["cost:anthropic-api", "cost:vercel"] as const;
 
-async function anthropicLine(fresh: boolean): Promise<CostLine> {
+async function autoLine(
+  storeKey: (typeof AUTO_KEYS)[number],
+  base: { key: string; label: string; category: string },
+  fresh: boolean,
+  stored: Map<string, StoredLine>,
+  fetchLine: () => Promise<Omit<CostLine, "key" | "label" | "category" | "status">>,
+): Promise<StoredLine> {
+  const kept = stored.get(storeKey);
+  if (!fresh && kept && Array.isArray(kept.days)) return kept;
+  let line: StoredLine;
+  try {
+    line = { ...base, status: "ok", ...(await fetchLine()), fetchedAt: Date.now() };
+  } catch (e) {
+    console.error(`[costs] ${base.key} failed:`, e);
+    const detail = e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed";
+    // The last good figures stay, marked as an error.
+    line = kept?.days.length ? { ...kept, status: "error", detail } : { ...base, status: "error", detail, days: [], fetchedAt: Date.now() };
+  }
+  await writeStored(storeKey, line);
+  return line;
+}
+
+// ── Anthropic API usage ──────────────────────────────────────────────────────
+async function anthropicLine(fresh: boolean, stored: Map<string, StoredLine>): Promise<StoredLine> {
   const base = { key: "anthropic-api", label: "Anthropic API usage", category: "AI" };
   const key = process.env.ANTHROPIC_ADMIN_API_KEY;
   if (!key) {
@@ -73,11 +99,10 @@ async function anthropicLine(fresh: boolean): Promise<CostLine> {
       days: [],
     };
   }
-  if (!fresh && anthropicMemo && Date.now() - anthropicMemo.at < TTL_MS) return anthropicMemo.line;
-  try {
-    const days: DayAmount[] = [];
+  return autoLine("cost:anthropic-api", base, fresh, stored, async () => {
     const headers = { "x-api-key": key, "anthropic-version": "2023-06-01", "User-Agent": "RiftCompare-earnings/1.0 (https://riftcompare.com)" };
-    for (const [from, to] of windows(EARNINGS_SINCE, dayIn(Date.now()), 31)) {
+    const perWindow = await mapLimit(windows(EARNINGS_SINCE, dayIn(Date.now()), 31), 4, async ([from, to]) => {
+      const days: DayAmount[] = [];
       let page: string | null = null;
       for (let i = 0; i < 20; i++) {
         const q = new URLSearchParams({ starting_at: `${from}T00:00:00Z`, ending_at: `${to}T23:59:59Z`, bucket_width: "1d", limit: "31" });
@@ -90,14 +115,10 @@ async function anthropicLine(fresh: boolean): Promise<CostLine> {
         if (!json.has_more || !json.next_page) break;
         page = json.next_page;
       }
-    }
-    const line: CostLine = { ...base, status: "ok", days: mergeDays(days), detail: "API usage only, from the Admin API." };
-    anthropicMemo = { at: Date.now(), line };
-    return line;
-  } catch (e) {
-    console.error("[costs] anthropic failed:", e);
-    return { ...base, status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed", days: anthropicMemo?.line.days ?? [] };
-  }
+      return days;
+    });
+    return { days: mergeDays(perWindow.flat()), detail: "API usage only, from the Admin API." };
+  });
 }
 
 // ── Vercel usage and plan, per project ──────────────────────────────────────
@@ -105,9 +126,8 @@ async function anthropicLine(fresh: boolean): Promise<CostLine> {
 // at most a year per request). 120 days in 31-day requests keeps each response
 // a few MB. The token needs only a Billing (or Viewer-like) role on the team.
 export const VERCEL_DAYS = 120;
-let vercelMemo: { at: number; line: CostLine } | null = null;
 
-async function vercelLine(fresh: boolean): Promise<CostLine> {
+async function vercelLine(fresh: boolean, stored: Map<string, StoredLine>): Promise<StoredLine> {
   const base = { key: "vercel", label: "Vercel (per project)", category: "Hosting" };
   const token = process.env.VERCEL_BILLING_TOKEN;
   const team = process.env.VERCEL_TEAM_ID;
@@ -119,12 +139,10 @@ async function vercelLine(fresh: boolean): Promise<CostLine> {
       days: [],
     };
   }
-  if (!fresh && vercelMemo && Date.now() - vercelMemo.at < TTL_MS) return vercelMemo.line;
-  try {
+  return autoLine("cost:vercel", base, fresh, stored, async () => {
     const today = dayIn(Date.now(), "UTC");
     const from = addDays(today, -(VERCEL_DAYS - 1));
-    const projects: ProjectCharge[] = [];
-    for (const [a, b] of windows(from, today, 31)) {
+    const perWindow = await mapLimit(windows(from, today, 31), 4, async ([a, b]) => {
       const q = new URLSearchParams({ teamId: team, from: `${a}T00:00:00Z`, to: `${addDays(b, 1)}T00:00:00Z` });
       const r = await fetch(`https://api.vercel.com/v1/billing/charges?${q}`, {
         headers: { Authorization: `Bearer ${token}`, "Accept-Encoding": "gzip" },
@@ -133,15 +151,11 @@ async function vercelLine(fresh: boolean): Promise<CostLine> {
       });
       const text = await r.text();
       if (!r.ok) throw new Error(`${r.status} ${text.slice(0, 160).replace(/\s+/g, " ")}`);
-      projects.push(...vercelCharges(text));
-    }
-    const line: CostLine = { ...base, status: "ok", days: projectDays(projects), projects, detail: `Last ${VERCEL_DAYS} days from the billing API (domains excluded: enter those by hand).` };
-    vercelMemo = { at: Date.now(), line };
-    return line;
-  } catch (e) {
-    console.error("[costs] vercel failed:", e);
-    return { ...base, status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed", days: vercelMemo?.line.days ?? [], projects: vercelMemo?.line.projects ?? [] };
-  }
+      return vercelCharges(text);
+    });
+    const projects: ProjectCharge[] = perWindow.flat();
+    return { days: projectDays(projects), projects, detail: `Last ${VERCEL_DAYS} days from the billing API (domains excluded: enter those by hand).` };
+  });
 }
 
 /** A hand-entered Vercel invoice (not a domain) that the billing API now covers from `from` on. */
@@ -151,9 +165,10 @@ export const isVercelInvoice = (label: string) => /\bvercel\b/i.test(label) && !
 export async function loadCosts(fresh = false): Promise<CostLine[]> {
   await ensureSeeded();
   const today = dayIn(Date.now());
+  const stored = await readStored<StoredLine>(AUTO_KEYS);
   const [auto, vercel, rows] = await Promise.all([
-    anthropicLine(fresh),
-    vercelLine(fresh),
+    anthropicLine(fresh, stored),
+    vercelLine(fresh, stored),
     prisma.manualCost
       .findMany({
         where: { removedAt: null },
@@ -177,11 +192,11 @@ export async function loadCosts(fresh = false): Promise<CostLine[]> {
 
 /** For the ops monitor: the automatic cost sources' status only. */
 export async function costsHealth(): Promise<{ key: string; status: CostLine["status"]; detail?: string }[]> {
-  const lines = await Promise.all([anthropicLine(false), vercelLine(false)]);
-  return lines.map((a) => ({ key: a.key, status: a.status, detail: a.status === "error" ? a.detail : undefined }));
-}
-
-export function forgetCosts(): void {
-  anthropicMemo = null;
-  vercelMemo = null;
+  const stored = await readStored<StoredLine>(AUTO_KEYS);
+  const lines = await Promise.all([anthropicLine(false, stored), vercelLine(false, stored)]);
+  return lines.map((a) => {
+    const overdue = a.status === "ok" && a.fetchedAt ? overdueDetail(a.fetchedAt) : undefined;
+    if (overdue) return { key: a.key, status: "error" as const, detail: overdue };
+    return { key: a.key, status: a.status, detail: a.status === "error" ? a.detail : undefined };
+  });
 }
