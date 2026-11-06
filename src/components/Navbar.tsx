@@ -433,7 +433,7 @@ export function Navbar() {
               for. */}
           {/* THE CART LIST (components/cart, owner 2026-11-06: "visible on the
               header … and on phone"): every width, with its count. */}
-          <CartHeaderLink className="text-slate-300 hover:text-white" />
+          <CartHeaderLink className="hidden text-slate-300 hover:text-white sm:inline-flex" />
           <HeaderWatchButton className="hidden sm:inline-flex" />
           <HeaderMenuButton className="lg:hidden" />
         </nav>
@@ -448,12 +448,17 @@ export function Navbar() {
             alongside the desktop row, until 2026-09-21) — see that
             component's own doc comment for why both rows are now always
             visible. */}
-        <div className="pb-3 xl:hidden">
+        <div className="flex items-center gap-1 pb-3 xl:hidden">
+          {/* Below sm the cart sits beside the search, not in the top row: the top row has no
+              44px to spare at 320-430px (owner, 2026-11-06: "Pricing" ran under the flag). */}
+          <div className="min-w-0 flex-1">
           <HeaderSearchSlot mobile>
             <Suspense fallback={<div className="input" />}>
               <SearchBar />
             </Suspense>
           </HeaderSearchSlot>
+          </div>
+          <CartHeaderLink className="shrink-0 text-slate-300 hover:text-white sm:hidden" />
         </div>
       </div>
     </NavbarShell>
