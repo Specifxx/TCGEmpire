@@ -44,8 +44,8 @@ jobs:
       - run: npx prisma generate
       - name: Export from the history project
         env:
-          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
-          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
+          DATABASE_URL: ${{ secrets.RM11 || vars.RM11 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM11 || vars.RM11) && 'RM11' || 'UNSET' }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: npx tsx scripts/export-history-files.ts ${{ inputs.overwrite && '--overwrite' || '' }}
