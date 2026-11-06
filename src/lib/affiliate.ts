@@ -3,6 +3,7 @@
 // via env if you ever rotate them).
 
 import { amazonTagForHost } from "./amazon";
+import { awinProgrammeFor, awinUrl, clickref } from "./awin";
 import { SITE_URL } from "./site";
 import { normalizeCardmarketUrl } from "@/lib/cardmarket-url";
 import { partnerRefUrl } from "@/lib/store-partner-deals";
@@ -420,7 +421,14 @@ export function affiliateUrl(
     // A signed per-store direct program (STORE_PARTNER_DEALS) rewrites the URL here.
     const direct = directProgramUrl(u);
     if (direct) return direct;
-    return withStoreUtm(u, page);
+    const plain = withStoreUtm(u, page);
+    // A store that accepted the family on Awin (src/lib/awin.ts): the same page through its tracked deep link.
+    // Never in an email: most Awin advertisers allow email only by separate approval.
+    if (!page?.startsWith("email")) {
+      const awin = awinUrl(plain, clickref("rift", page));
+      if (awin) return awin;
+    }
+    return plain;
   } catch {
     /* not an absolute URL — leave it untouched */
   }
@@ -451,6 +459,7 @@ export function isPaidLink(href: string | null | undefined): boolean {
     if (/(?:^|\.)ebay\./i.test(u.hostname)) return true;
     if (/(?:^|\.)amazon\./i.test(u.hostname)) return true;
     if (TCGPLAYER_IMPACT_LINK && /(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) return true;
+    if (/(?:^|\.)awin1\.com$/i.test(u.hostname) || awinProgrammeFor(href)) return true;
     return directProgramUrl(u) != null;
   } catch {
     return false;
