@@ -166,8 +166,8 @@ test("the admin pages are admin-only and degrade to 'nothing yet' instead of fai
 
 test("the monitor workflow runs on the live database, every few hours, and digests on Sundays", () => {
   const wf = read(".github/workflows/ops-monitor.yml");
-  assert.match(wf, /DATABASE_URL: \$\{\{ secrets\.RM10 \|\| vars\.RM10 \}\}/, "tests/db-chain.test.ts keeps this on the chain head");
-  assert.match(wf, /DB_SOURCE_NAME: \$\{\{ \(secrets\.RM10 \|\| vars\.RM10\) && 'RM10' \|\| 'UNSET' \}\}/);
+  assert.match(wf, /DATABASE_URL: \$\{\{ secrets\.RM11 \|\| vars\.RM11 \}\}/, "tests/db-chain.test.ts keeps this on the chain head");
+  assert.match(wf, /DB_SOURCE_NAME: \$\{\{ \(secrets\.RM11 \|\| vars\.RM11\) && 'RM11' \|\| 'UNSET' \}\}/);
   // Asked hourly, run about every three hours: GitHub drops many scheduled runs (2026-11-02, 10-hour gap).
   assert.match(wf, /cron: "17 \* \* \* \*"/);
   assert.match(wf, /actions\/caches\?key=ops-state-&sort=created_at&direction=desc/, "the gate reads when the last real check saved its memory");

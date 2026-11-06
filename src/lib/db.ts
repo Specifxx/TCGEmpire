@@ -90,7 +90,8 @@ import { routeQuery } from "./public-data/route";
 const BIG_RESULT_ROWS = 200; // was 500
 const BIG_RESULT_BYTES = 400_000; // was 1_000_000
 
-// RM10 is the ONLY operational Neon project, cut over 2026-09-14 (RM9 exhausted
+// (RM11 since 2026-11-06 — db-chains.ts is the source of truth; the history
+// below is kept as written.) RM10 was the ONLY operational Neon project, cut over 2026-09-14 (RM9 exhausted
 // its 5 GB monthly transfer allowance after three days live) — a
 // deliberate departure from the old multi-entry FALLBACK CHAIN era
 // (DATABASE_URL → DATABASE_URL_2 → RM3 → RM4 → RM5 → DATABASE_URL →
@@ -153,9 +154,9 @@ const BIG_RESULT_BYTES = 400_000; // was 1_000_000
 // THE NAME HAZARD, and it is worth reading before touching anything here.
 // prisma/schema.prisma reads env("DATABASE_URL") directly, and nearly every
 // script assigns `DATABASE_URL=<something> npx tsx …` to aim Prisma at a
-// database. The operational variable is RM10, so anything that runs Prisma MUST
-// copy RM10 into DATABASE_URL first or it will talk to whatever DATABASE_URL
-// happens to hold while the app talks to RM10. scripts/build-db-push.sh does
+// database. The operational variable is RM11, so anything that runs Prisma MUST
+// copy RM11 into DATABASE_URL first or it will talk to whatever DATABASE_URL
+// happens to hold while the app talks to RM11. scripts/build-db-push.sh does
 // exactly that copy. Locally this all still resolves to the dev Postgres in
 // .env.local, which is why local dev is unaffected.
 //
@@ -166,7 +167,7 @@ const BIG_RESULT_BYTES = 400_000; // was 1_000_000
 // that moment — with a bare `Error: Command "npm run build" exited with 1` and
 // nothing in it naming a database.
 //
-// RM3 through RM11 (bar RM10 itself) and DATABASE_URL_2 are retired and reachable
+// RM3 through RM12 (bar RM11 itself) and DATABASE_URL_2 are retired and reachable
 // BY NAME from the migrate-* tasks in .github/workflows/maintenance.yml, which
 // is where draining a project before switching it off belongs. Draining must
 // not depend on the runtime chain — and there is no runtime chain to depend on now.

@@ -22813,3 +22813,17 @@ once. No figure changed: the same fetchers, the same parsing, only when and how 
 
 **Watched:** the ops monitor's existing earnings check turns RED when a stored copy is more than 12 hours old (the cron
 stopped). Cost: eight cron runs a day of mostly waiting on APIs, against a page that used to do the same walk per visit.
+
+## The operational database moves to RM11 — 2026-11-06
+
+Owner: "Perform a full migration to rm11 for Riftcompare and deploy urgently as we are at limit." RM10 had been live since 2026-10-25, twelve days, the longest life yet (RM9 lasted eight, RM8 three). The rotation still buys days, not a fix.
+
+**Before touching anything.** `probe-databases` (19:57 UTC) found RM11 reachable and behind the live RM10 on every table it counts, with exactly the numbers it held when it was retired in early September: User 281 vs 592, CollectionCard 1,029 vs 3,749, PriceAlert 131 vs 501, Card 1,429 vs 1,741, RetailerPrice 90,721 vs 233,849, SealedListing 2,163 vs 3,270; MarketplaceListing, Order and SellerProfile equal (57, 9, 3). Nothing was ahead, so `--clean` had nothing unique to destroy. RM10 still answered.
+
+**The task.** `migrate-main-db-rm10-to-rm11`, generated from the RM9 → RM10 step with the names moved one along: source RM10, target RM11, the same guards. RM9 → RM10 is relabelled LEGACY. Run from the working branch by `workflow_dispatch`.
+
+**The runs.** Pass 1 copied and verified every table; a final pass ran from the working branch after the flip commit was pushed there (so it needed `overwrite_live_db`; production was still on RM10, so nothing live was overwritten), immediately before the merge.
+
+**The flip.** `OPERATIONAL_VARS = ["RM11"]` in `src/lib/db-chains.ts`; `CURRENT_OP` and the production gate in `scripts/build-db-push.sh`; every workflow's `DATABASE_URL`, `OPERATIONAL_URL`, `DB_SOURCE_NAME` and `RM11` forward; `ci-build.yml`'s service variable; `package.json`'s preview condition; `tests/ops-wiring.test.ts`. A Vercel production build without `RM11` set **fails** (the 2026-10-04 guard), so the previous deployment keeps serving on RM10 until it is set. Rollback is one commit: RM10 still holds the data. Deployed with `[deploy] [urgent]`: a database cutover at the limit is the standing exception to the 12-hour gate.
+
+**Writes in the gap.** Anything written to RM10 between the final pass and the new build going live is not on RM11: a few minutes of signups, alerts and notifications.

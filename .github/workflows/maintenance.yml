@@ -191,17 +191,15 @@ jobs:
       group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
-      # RM10 is the ONLY operational variable (back in service 2026-10-25, when RM9
-      # reached its allowance again; first cut over 2026-09-14, RM9 spent its
-      # 5 GB monthly transfer allowance after only three days live — same
-      # single-name shape, no fallback chain; see the header of OPERATIONAL_VARS
-      # in src/lib/db-chains.ts for why the chain shape itself was retired, not
-      # just rotated). That file is the source of truth here, and
-      # tests/db-chain.test.ts pins this value to it. RM10 is a RECYCLED project
-      # (live once already, 2026-08-26..08-29), not a fresh one — a 2026-09-14
-      # probe-databases run found it answering but BEHIND RM9 on every metric,
-      # so migrate-main-db-rm9-to-rm10's `--clean` pass wiped that stale August
-      # snapshot and replaced it with a row-count-verified copy of RM9.
+      # RM11 is the ONLY operational variable (in service 2026-11-06, when RM10
+      # reached its 5 GB monthly transfer allowance after twelve days live —
+      # same single-name shape, no fallback chain; see the header of
+      # OPERATIONAL_VARS in src/lib/db-chains.ts for why the chain shape itself
+      # was retired, not just rotated). That file is the source of truth here,
+      # and tests/db-chain.test.ts pins this value to it. RM11 is a RECYCLED
+      # project (last live 2026-08-29..09-03), so migrate-main-db-rm10-to-rm11's
+      # `--clean` pass wiped its stale snapshot and replaced it with a
+      # row-count-verified copy of RM10.
       #
       # The migrate-* steps below deliberately do NOT use this default: each pins
       # its own SOURCE (the OLD project it reads FROM) and TARGET, and aborts if
@@ -212,15 +210,15 @@ jobs:
       # like import-prices would happily operate against a still-empty target.
       # This is not hypothetical: on 2026-08-22 RM8 was set but completely empty
       # at cutover, and every in-stock listing on the site vanished as a result.
-      # migrate-main-db-rm9-to-rm10 was run twice (once for the bulk copy, once
+      # migrate-main-db-rm10-to-rm11 was run twice (once for the bulk copy, once
       # immediately before this flip) and verified every table matching before
       # this shipped.
-      DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+      DATABASE_URL: ${{ secrets.RM11 || vars.RM11 }}
       # There is only one value now, but this stays for the same reason it did
       # under the old chain: lib/db.ts cannot work this out inside Actions
       # itself (everything collapses into one DATABASE_URL before the job
       # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM11 || vars.RM11) && 'RM11' || 'UNSET' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -296,9 +294,9 @@ jobs:
           # database is set") without it — this step's env block never carried it,
           # so the task has been failing before it could copy a single row. Found
           # 2026-09-02 running the top-up ahead of the RH11 → RH6 cutover. Must be
-          # kept in lockstep with OPERATIONAL_VARS's head (RM10 as of 2026-10-25) —
+          # kept in lockstep with OPERATIONAL_VARS's head (RM11 as of 2026-11-06) —
           # this env var's NAME, not just its value, is what the script looks up.
-          RM10: ${{ secrets.RM10 || vars.RM10 }}
+          RM11: ${{ secrets.RM11 || vars.RM11 }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
@@ -374,7 +372,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
+          OPERATIONAL_URL: ${{ secrets.RM11 || vars.RM11 }}
         run: |
           set -uo pipefail
 
@@ -749,7 +747,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH11 || vars.RH11 }}
           # Only for the "did RH11 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
+          OPERATIONAL_URL: ${{ secrets.RM11 || vars.RM11 }}
         run: |
           set -uo pipefail
 
@@ -1821,7 +1819,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH6 || vars.RH6 }}
           # Only for the "did RH6 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
+          OPERATIONAL_URL: ${{ secrets.RM11 || vars.RM11 }}
         run: |
           set -uo pipefail
 
@@ -1973,7 +1971,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH10 || vars.RH10 }}
           # Only for the "did RH10 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
+          OPERATIONAL_URL: ${{ secrets.RM11 || vars.RM11 }}
         run: |
           set -uo pipefail
 
@@ -2130,7 +2128,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH9 || vars.RH9 }}
           # Only for the "did RH9 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
+          OPERATIONAL_URL: ${{ secrets.RM11 || vars.RM11 }}
         run: |
           set -uo pipefail
 
@@ -2314,7 +2312,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_4 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
+          OPERATIONAL_URL: ${{ secrets.RM11 || vars.RM11 }}
         run: |
           set -uo pipefail
 
@@ -5740,7 +5738,7 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          DATABASE_URL: ${{ secrets.RM11 || vars.RM11 }}
           # There is only one value now, but this stays for the same reason it did
           # under the old chain: lib/db.ts cannot work this out inside Actions
           # itself (everything collapses into one DATABASE_URL before the job
@@ -5811,7 +5809,7 @@ jobs:
       - name: Audit sealed price history (read-only)
         if: inputs.task == 'audit-sealed-history'
         env:
-          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          DATABASE_URL: ${{ secrets.RM11 || vars.RM11 }}
           DB_SOURCE_NAME: ${{ (secrets.RM4 || vars.RM4) && 'RM4' || 'UNSET' }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
@@ -5885,14 +5883,14 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # The orphan check needs the LIVE operational database to compare card
           # ids against — this script iterates OPERATIONAL_VARS from
-          # src/lib/db-chains.ts directly, which is now just ["RM10"] (the
+          # src/lib/db-chains.ts directly, which is now just ["RM11"] (the
           # 2026-09-14 RM9→RM10 cutover — this line still said RM9 until the
           # 2026-09-17 history rotation caught it, the exact drift class this
           # file's own header warns about: the script resolved OPERATIONAL_VARS
           # correctly, but this env block never forwarded the variable it
           # actually asked for, so the head of the chain read back as unset here even with the
           # secret genuinely configured in Actions).
-          RM10: ${{ secrets.RM10 || vars.RM10 }}
+          RM11: ${{ secrets.RM11 || vars.RM11 }}
         run: npx tsx scripts/probe-history-dbs.ts
 
       # Dry run unless dry_run is explicitly false — the inverse of every other
@@ -5912,7 +5910,7 @@ jobs:
           # The orphan check needs the LIVE operational database to compare card
           # ids against — this script iterates OPERATIONAL_VARS from
           # src/lib/db-chains.ts directly, which is now just ["RM10"] (2026-10-25).
-          RM10: ${{ secrets.RM10 || vars.RM10 }}
+          RM11: ${{ secrets.RM11 || vars.RM11 }}
         run: |
           ARGS=""
           if [ -n "${{ inputs.source }}" ] && [ "${{ inputs.source }}" != "RM4" ]; then
