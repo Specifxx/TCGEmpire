@@ -28,8 +28,12 @@ import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAll
 import { fetchCardHiveProducts } from "./cardhive";
 import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { fetchHtmlStoreProducts } from "./storefront-html";
+import { isShopify, withShopifyVariant, withoutShopifyVariant } from "./checkout-link";
 
-export interface ShopifyVariant { title: string; price: string; available: boolean }
+// `id` is Shopify's variant id (products.json carries it; other platforms' adapters
+// leave it out). It becomes `?variant=<id>` on an in-stock row's URL, which the buy
+// link turns into a checkout (lib/checkout-link.ts).
+export interface ShopifyVariant { id?: number; title: string; price: string; available: boolean }
 export interface ShopifyProduct {
   title: string;
   handle: string;
@@ -395,7 +399,7 @@ async function fetchCollection(
 export function bestVariantPrice(
   variants: ShopifyVariant[],
   sameConditionAs?: { condition: string | null },
-): { priceCents: number; condition: string | null } | null {
+): { priceCents: number; condition: string | null; variantId?: number } | null {
   let priced = variants.filter((v) => parseFloat(v.price) > 0 && (v.available as boolean | null | undefined) !== false);
   if (sameConditionAs) {
     const rank = conditionRank(sameConditionAs.condition ?? "");
@@ -412,6 +416,7 @@ export function bestVariantPrice(
     priceCents: Math.round(parseFloat(best.price) * 100),
     // The same rule the feed write uses below.
     condition: best.title && best.title !== "Default Title" ? best.title : null,
+    ...(best.id != null ? { variantId: best.id } : {}),
   };
 }
 
@@ -436,7 +441,7 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
   // Fetch a product's authoritative price. Uses the CLEAN product.json URL (no
   // cache-bust query param — that returned a stale/blocked response from the runner;
   // the plain URL returns the live price) with a browser UA, and one retry.
-  async function fetchProductPrice(url: string, country: string, condition: string | null): Promise<{ priceCents: number; condition: string | null } | null> {
+  async function fetchProductPrice(url: string, country: string, condition: string | null): Promise<{ priceCents: number; condition: string | null; variantId?: number } | null> {
     // `${url}.json` is a SHOPIFY convention. A WooCommerce product URL is a
     // WordPress permalink (/producto/<slug>/ …) with no .json sibling, so this
     // would spend two requests per listing to get two 404s and return null —
@@ -451,7 +456,7 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
     if (!/\/products\//.test(url)) return null;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const res = await fetch(`${url}.json?country=${isoCountry(country as Country)}`, {
+        const res = await fetch(`${withoutShopifyVariant(url)}.json?country=${isoCountry(country as Country)}`, {
           headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" },
           cache: "no-store",
         });
@@ -478,9 +483,12 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
           // Only correct the PRICE — never flip availability from this endpoint
           // (its `available` is unreliable). Guard against absurd values too.
           if ((v.priceCents !== t.priceCents || v.condition !== t.condition) && v.priceCents > 0) {
+            // A row that opens checkout follows the corrected price to its variant,
+            // so the cart holds the copy at the price shown (lib/checkout-link.ts).
+            const variant = new URL(t.url).searchParams.has("variant") && v.variantId != null ? withShopifyVariant(t.url, v.variantId) : t.url;
             await prisma.retailerPrice.update({
               where: { id: t.id },
-              data: { priceCents: v.priceCents, condition: v.condition },
+              data: { priceCents: v.priceCents, condition: v.condition, ...(variant !== t.url ? { url: variant } : {}) },
             });
             corrected++;
           }
@@ -1916,7 +1924,9 @@ export async function importPrices(): Promise<ImportSummary> {
         retailer: store.key,
         retailerName: store.name,
         title: p.title,
-        url: productUrl(store.base, p),
+        // The priced variant on the URL, for an in-stock Shopify row only: the buy
+        // link opens checkout with exactly this copy (lib/checkout-link.ts).
+        url: inStock && isShopify(store) && !p.url ? withShopifyVariant(productUrl(store.base, p), best.id) : productUrl(store.base, p),
         condition,
         isFoil: /foil/i.test(p.title),
         priceCents,

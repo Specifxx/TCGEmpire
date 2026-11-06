@@ -1094,6 +1094,10 @@ longer lands on its entry.
 
 ## Prices & data
 
+- **In-stock Shopify store rows open the store's checkout** (cart permalink with the
+  priced variant, `lib/checkout-link.ts`), except stores on Awin or a partner
+  programme, emails and the public API. eBay, TCGplayer and Amazon keep product
+  pages. Clicks are tagged `link_type` checkout/product. [2026-11-06](../DECISIONS.md#L22649)
 - **Only English prints are priced.** `FOREIGN_LANG` (`lib/scrape-http.ts`) is
   the one non-English list every source reads (singles, store sealed, eBay,
   Cardmarket, TCGplayer): CJK in any script or word, and French (`french`,

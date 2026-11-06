@@ -159,6 +159,7 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
     out.push(series("clicks-ebay", "eBay link clicks", "count", note, days, get("ebay")));
     out.push(series("clicks-tcgplayer", "TCGplayer link clicks", "count", note, days, get("tcgplayer")));
     out.push(series("clicks-store", "Store link clicks", "count", note, days, get("store")));
+    out.push(series("clicks-checkout", "Store clicks that opened checkout", "count", "Part of the store clicks above: the link put the item in the store's cart (since 6 Nov 2026).", days, get("checkout")));
   } catch {
     errors.push("Clicks: could not read the click counters.");
   }

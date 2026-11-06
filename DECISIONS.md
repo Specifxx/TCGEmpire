@@ -22646,6 +22646,29 @@ and partner-code branches, and `isPaidLink` marks it "Paid link". Order and pric
 advertisers allow email promotion only by separate approval. The ops monitor's `awin:programmes` check shows how many
 stores accepted us and warns when the list is three days old.
 
+## 2026-11-06 — Buy links open the store's checkout
+
+**Decision (owner: "when a user clicks a link it brings them straight to checkout … test how it works with
+riftcompare first"):** a Shopify store row that is in stock opens that store's checkout with the priced copy in the
+cart, through Shopify's own cart permalink (`/cart/<variant id>:1`). The importers (`price-import.ts`,
+`sealed-import.ts`) record the variant they priced as `?variant=<id>` on the product URL, in-stock Shopify rows only,
+so the stored URL is still the product page (with that variant picked) for everything else that reads it; the verify
+pass strips it for `<url>.json` and follows a corrected price to its variant. `affiliateUrl` turns it into the cart
+link at render time, keeping `utm_source=riftcompare` and adding `utm_content=checkout` (Shopify carries both into the
+checkout URL: tried on Cherry Collectables and Danireon, 6 Nov). `lib/checkout-link.ts` holds the rules.
+
+**Never where tracking or freshness would be lost:** a store on Awin or a partner programme keeps its product page
+(its tracking runs on the store's own pages, which checkout skips); emails and the public API keep it (a link can be
+days old); a sold-out row or an unknown variant keeps it. eBay (EPN has no checkout link), TCGplayer (Impact deep links
+to product pages; its cart needs a seller and SKU per listing) and Amazon keep their pages: Amazon's Associates
+"Add to Cart" form URL could not be tried, because Amazon refuses automated browsers, and that row is the one Amazon
+earns on.
+
+**Measured:** `buy_click` carries `link_type` (checkout / product) in GA4, and `/api/click` counts checkout clicks as
+their own daily line (`click:<day>:checkout`, a subset of store clicks) on `/admin/growth` and in the weekly report.
+Judge it by store click share and stores' `utm_content=checkout` orders; if checkout drops clicks or stores complain,
+revert by returning `plain` before the cart rewrite.
+
 ## 2026-11-06 — Store thumbs up and down, one tally for every site
 
 **Decision (owner: "a little mini area where you can rate a shop … thumbs up a store or thumbs down a store … it's

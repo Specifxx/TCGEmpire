@@ -125,7 +125,7 @@ export function buildGrowthReport(
       addTo(market, `${p.site} · ${p.market}`, wi, cents, r.sales, n, last);
     }
   }
-  const clickLines = (["ebay", "tcgplayer", "store"] as const).map((group) => ({
+  const clickLines = (["ebay", "tcgplayer", "store", "checkout"] as const).map((group) => ({
     group,
     weeks: weeks.map((w) => {
       let c = 0;
