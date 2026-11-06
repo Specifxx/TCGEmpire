@@ -106,6 +106,7 @@ on:
           - probe-history    # READ-ONLY survey of PriceHistory across EVERY history project (HISTORY_DATABASE_URL_3 / _2 / HISTORY_DATABASE_URL / RH11 / RH10 / RH9 / RH8 / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4): row counts, day ranges, per-country coverage, and — the number that actually matters — how many of each project's cardIds still resolve against the LIVE Card table. A project can be full of rows and still render empty charts if its cardIds belong to a retired operational database. RUN THIS FIRST when price history looks stale or a card's chart is blank.
           - probe-databases  # READ-ONLY survey of EVERY database in both rotations (RM5/RM4/RM3/DATABASE_URL_2/DATABASE_URL + RH7…RH5 + the older history vars): which ones still answer, and how many User/MarketplaceListing/Order/SellerProfile rows each holds. Writes nothing. RUN THIS FIRST when data appears to be missing — it tells you which source is worth restoring from.
           - restore-accounts-into-rm5 # copy ONLY the account/marketplace tables from a chosen source (source input: RM4/RM3/DATABASE_URL_2/DATABASE_URL/RH7/RH6/RH5) into RM5, leaving RM5's freshly-rebuilt Card/RetailerPrice catalogue untouched. Aborts before writing anything if the dump fails or the source holds no rows.
+          - reconcile-rm10-into-rm11 # AFTER the 2026-11-06 cutover: find rows written to RM10 between the final migrate pass and the RM11 build going live (new users, alerts, watches, reviews, votes, orders …) and, with apply ticked, copy them into RM11. Rows missing from RM11 are inserted; a row on both sides that differs is taken from RM10 only when its updatedAt is newer, otherwise reported. Scrape caches and counters are skipped. Report only by default.
           - migrate-main-db-rm10-to-rm11 # CURRENT operational cutover (2026-11-06): full pg_dump/restore of the live RM10 project into RM11 + all-table row-count verification + a schema re-push. RM10 reached its 5 GB monthly transfer allowance (live since 2026-10-25). RM11 is a RECYCLED project (last live 2026-08-29..09-03), so --clean wipes it once probe-databases confirms it sits behind RM10 on every metric that holds user data. Run probe-databases first, run this twice (the second immediately before the chain flip), then ship the OPERATIONAL_VARS = ["RM11"] commit.
           - migrate-main-db-rm9-to-rm10 # LEGACY (superseded by migrate-main-db-rm10-to-rm11 on 2026-11-06) operational cutover (2026-10-25): full pg_dump/restore of the live RM9 project into RM10 + all-table row-count verification + a schema re-push. RM9 reached its 5 GB monthly transfer allowance (live since 2026-10-17). RM10 is a RECYCLED project on its third term (last live 2026-09-14..09-18), so --clean wipes it once probe-databases confirms it sits behind RM9 on every metric that holds user data. Run probe-databases first, run this twice (the second immediately before the chain flip), then ship the OPERATIONAL_VARS = ["RM10"] commit. Replaces the 2026-09-14 task of the same name.
           - migrate-main-db-rm8-to-rm9 # LEGACY (superseded by migrate-main-db-rm9-to-rm10 on 2026-10-25) operational cutover (2026-10-17): full pg_dump/restore of the live RM8 project into RM9 + all-table row-count verification + a schema re-push. RM8 reached its 5 GB monthly transfer allowance three days into service (live since 2026-10-14). RM9 is a RECYCLED project on its third term (last live 2026-09-11..09-14), so --clean wipes it once probe-databases confirms it sits behind RM8 on every metric. Run probe-databases first, run this twice (the second immediately before the chain flip), then ship the OPERATIONAL_VARS = ["RM9"] commit. Replaces the 2026-09-11 task of the same name.
@@ -142,7 +143,7 @@ on:
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
       apply:
-        description: "grant-premium: also push the Stripe subscription's next charge to premium_until (free months). audit-premium-vs-stripe / fix-promo-variants / close-inbox-items / fix-card-names / apply-intro-to-trialists / backfill-card-text: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
+        description: "reconcile-rm10-into-rm11: actually copy the gap rows into RM11. grant-premium: also push the Stripe subscription's next charge to premium_until (free months). audit-premium-vs-stripe / fix-promo-variants / close-inbox-items / fix-card-names / apply-intro-to-trialists / backfill-card-text: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
         type: boolean
         default: false
       premium_until:
@@ -2580,6 +2581,92 @@ jobs:
           echo "  4. getEmptyCardIds() (lib/card-price-state.ts) is bounded/cached —"
           echo "     if the allowance still drains fast, grep Vercel logs for"
           echo "     [egress-guard:history] to find the next offender."
+
+      - name: Reconcile writes made to RM10 during the RM11 cutover
+        # The 2026-11-06 cutover's final migrate pass dumped RM10 at ~20:08 UTC
+        # and the RM11 build went live at ~20:17 UTC; anything the site wrote to
+        # RM10 in between is not on RM11. This compares every small table row
+        # for row (whole-row text, keyed by primary key) and, with `apply`,
+        # inserts the rows RM11 lacks and takes RM10's version of a changed row
+        # only when its updatedAt is newer. A changed row without updatedAt is
+        # REPORTED, never overwritten (RM11 may have changed it since, and
+        # RM11 is live). Scrape caches, snapshots and counters are skipped: the
+        # next import rewrites them. Never deletes anything on either side.
+        if: inputs.task == 'reconcile-rm10-into-rm11'
+        env:
+          SRC: ${{ secrets.RM10 || vars.RM10 }}
+          DST: ${{ secrets.RM11 || vars.RM11 }}
+          APPLY: ${{ inputs.apply && '1' || '' }}
+        run: |
+          set -euo pipefail
+          [ -n "$SRC" ] && [ -n "$DST" ] || { echo "::error::RM10 or RM11 not visible to Actions"; exit 1; }
+          pip install -q "psycopg[binary]==3.2.3"
+          cat > /tmp/reconcile.py <<'PY'
+          import os, psycopg
+          from psycopg import sql
+          SKIP = {"RetailerPrice","DemandSnapshot","StoreHealthSnapshot","SealedListing","SealedPriceHistory",
+                  "EbayGradedListing","EbayAuctionListing","EbayAdListing","PriceHistory","ClickEvent",
+                  "RisingSnapshot","SealedGroupFirstSeen","Card","_prisma_migrations"}
+          apply = os.environ.get("APPLY") == "1"
+          src = psycopg.connect(os.environ["SRC"], autocommit=True); dst = psycopg.connect(os.environ["DST"], autocommit=True)
+          def pk(conn, t):
+              return [r[0] for r in conn.execute("""SELECT a.attname FROM pg_index i JOIN pg_attribute a
+                ON a.attrelid=i.indrelid AND a.attnum=ANY(i.indkey) WHERE i.indrelid=%s::regclass AND i.indisprimary
+                ORDER BY array_position(i.indkey, a.attnum)""", (f'public."{t}"',))]
+          def cols(conn, t):
+              return [r[0] for r in conn.execute("""SELECT column_name FROM information_schema.columns
+                WHERE table_schema='public' AND table_name=%s ORDER BY ordinal_position""", (t,))]
+          def rows(conn, t, cs, k):
+              q = sql.SQL("SELECT {} FROM {}").format(sql.SQL(",").join(map(sql.Identifier, cs)), sql.Identifier(t))
+              out = {}
+              for r in conn.execute(q):
+                  out[tuple(r[cs.index(c)] for c in k)] = r
+              return out
+          tables = [r[0] for r in src.execute("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")]
+          pending = []
+          for t in tables:
+              if t in SKIP: print(f"skip  {t} (cache/counter)"); continue
+              k = pk(src, t)
+              if not k: print(f"skip  {t} (no primary key)"); continue
+              cs = [c for c in cols(src, t) if c in set(cols(dst, t))]
+              a, b = rows(src, t, cs, k), rows(dst, t, cs, k)
+              missing = [key for key in a if key not in b]
+              changed = [key for key in a if key in b and a[key] != b[key]]
+              take, report = [], []
+              ui = cs.index("updatedAt") if "updatedAt" in cs else None
+              for key in changed:
+                  if ui is not None and a[key][ui] and b[key][ui] and a[key][ui] > b[key][ui]: take.append(key)
+                  else: report.append(key)
+              print(f"table {t}: RM10-only rows={len(missing)} changed-newer-on-RM10={len(take)} changed-unresolved={len(report)}")
+              for key in report[:20]:
+                  diff = [c for i, c in enumerate(cs) if a[key][i] != b[key][i]]
+                  print(f"   unresolved {t} {key}: differs in {diff}")
+              if missing or take: pending.append((t, cs, k, [a[x] for x in missing + take]))
+          if not apply:
+              print("REPORT ONLY. Re-run with apply ticked to copy the rows above into RM11."); raise SystemExit(0)
+          # Parents before children: retry tables whose FK target arrives later.
+          for attempt in range(4):
+              left = []
+              for t, cs, k, rs in pending:
+                  q = sql.SQL("INSERT INTO {} ({}) VALUES ({}) ON CONFLICT ({}) DO UPDATE SET {}").format(
+                      sql.Identifier(t), sql.SQL(",").join(map(sql.Identifier, cs)),
+                      sql.SQL(",").join(sql.Placeholder() * len(cs)), sql.SQL(",").join(map(sql.Identifier, k)),
+                      sql.SQL(",").join(sql.SQL("{0}=EXCLUDED.{0}").format(sql.Identifier(c)) for c in cs if c not in k) if len(cs) > len(k)
+                      else sql.SQL("{0}=EXCLUDED.{0}").format(sql.Identifier(k[0])))
+                  try:
+                      with dst.transaction():
+                          with dst.cursor() as cur: cur.executemany(q, rs)
+                      print(f"wrote {t}: {len(rs)} rows")
+                  except psycopg.errors.ForeignKeyViolation as e:
+                      print(f"retry {t}: {str(e).splitlines()[0]}"); left.append((t, cs, k, rs))
+              pending = left
+              if not pending: break
+
+          if pending:
+              print("::error::could not write: " + ", ".join(t for t, *_ in pending)); raise SystemExit(1)
+          print("Reconciled. Nothing was deleted on either side.")
+          PY
+          python3 /tmp/reconcile.py
 
       - name: Migrate main (operational) database to RM11
         # CURRENT operational cutover (2026-11-06). RM10 is at its 5 GB monthly
