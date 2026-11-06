@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { markSignupSource, readSignupSource, stashSignupSource } from "@/lib/signup-source";
 import { trackAuthStart } from "@/lib/growth-events";
+import { EmailSignInForm } from "./EmailSignInForm";
 
 // Sign-in is OAUTH ONLY — Google and Discord. The email/password form, /register,
 // /forgot and /reset were removed along with their API routes.
@@ -15,9 +16,11 @@ import { trackAuthStart } from "@/lib/growth-events";
 // with Google or Discord on the same address and lands on their existing account,
 // wallet, listings and orders intact.
 //
-// The one group this cannot serve is someone whose account email is at a provider
-// they don't use for Google or Discord. They need support to link an identity —
-// hence the note at the bottom of the card rather than a dead end.
+// The one group this could not serve was someone whose account email is at a
+// provider they don't use for Google or Discord — the iCloud address an Apple
+// Pay guest checkout was paid with, above all (2026-11-06, a paying member
+// locked out). EmailSignInForm now emails any address a one-time sign-in link
+// (lib/email-sign-in.ts); the contact note stays for anything else.
 
 const OAUTH_ERRORS: Record<string, string> = {
   provider_unavailable: "That sign-in option isn't available right now — try the other one.",
@@ -196,6 +199,14 @@ export function AuthForm({
           )}
         </div>
 
+        {/* Any address, no Google or Discord needed (2026-11-06). Not in the
+            compact row (the Premium slider's ask), which has no room. */}
+        {!row && (
+          <div className="mt-2.5">
+            <EmailSignInForm next={next} />
+          </div>
+        )}
+
         {/* Both providers are configured in production; this is the fence for a
             misconfigured preview or a rotated secret, so the page still says
             something true instead of rendering an empty card. */}
@@ -207,7 +218,7 @@ export function AuthForm({
 
         {!row && (
           <p className={`${compact ? "mt-3" : "mt-5"} text-center text-xs text-slate-500`}>
-            New here? Either button creates your account on the spot.
+            New here? Any of these creates your account on the spot.
           </p>
         )}
         {/* The password-migration note is genuinely useful on /login, where
@@ -216,12 +227,12 @@ export function AuthForm({
             dialog past the height of a phone screen; /login remains one tap away. */}
         {!compact && (
           <p className="mt-2 text-center text-xs text-slate-500">
-            Signed up with a password before? Use the same email address with Google or Discord and you&apos;ll
-            land straight back on your existing account. If that address isn&apos;t on either,{" "}
+            Paid for Premium, or signed up with a password before? Use the same email address, with Google,
+            Discord or a sign-in link, and you&apos;ll land straight back on your account. Still stuck?{" "}
             <a href="/contact" className="text-brand-400 hover:underline">
-              contact us
+              Contact us
             </a>{" "}
-            and we&apos;ll link it for you.
+            and we&apos;ll sort it out.
           </p>
         )}
       </div>

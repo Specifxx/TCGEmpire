@@ -201,6 +201,35 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
   );
 }
 
+// The emailed sign-in link (2026-11-06, lib/email-sign-in.ts). `paid` is the
+// version a guest Premium checkout sends the moment it is paid: their account
+// already exists and this link is how they reach it, whatever their email is.
+export function buildSignInLinkEmail(url: string, opts: { paid?: boolean; minutes?: number; days?: number } = {}): { subject: string; html: string; text: string } {
+  const life = opts.days ? `${opts.days} days` : `${opts.minutes ?? 30} minutes`;
+  if (opts.paid) {
+    const body =
+      "Thanks for joining RiftCompare Premium. Your payment went through and your account is ready. " +
+      `Tap the button to sign in. It works once and lasts ${life}. Any time after that, go to ` +
+      `${SITE_URL}/login and choose "Email me a sign-in link" with this address.`;
+    return {
+      subject: "Your RiftCompare Premium is ready: sign in here",
+      html: layout("Your Premium is ready", body, { label: "Sign in to RiftCompare", url }),
+      text: `Your RiftCompare Premium is ready.\n\n${body}\n\nSign in: ${url}\n`,
+    };
+  }
+  const body = `Tap the button to sign in to RiftCompare. The link works once and lasts ${life}. No password needed.`;
+  return {
+    subject: "Your RiftCompare sign-in link",
+    html: layout("Sign in to RiftCompare", body, { label: "Sign in", url }),
+    text: `${body}\n\nSign in: ${url}\n\nIf you didn't ask for this, you can ignore this email.\n`,
+  };
+}
+
+export async function sendSignInLinkEmail(to: string, url: string, opts: { paid?: boolean; minutes?: number; days?: number } = {}): Promise<boolean> {
+  const e = buildSignInLinkEmail(url, opts);
+  return sendEmail(to, e.subject, e.html, { text: e.text });
+}
+
 export async function sendPasswordResetEmail(to: string, token: string): Promise<boolean> {
   return sendEmail(
     to,

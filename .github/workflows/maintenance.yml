@@ -141,7 +141,7 @@ on:
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
       apply:
-        description: "audit-premium-vs-stripe / fix-promo-variants / close-inbox-items / fix-card-names / apply-intro-to-trialists / backfill-card-text: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
+        description: "grant-premium: also push the Stripe subscription's next charge to premium_until (free months). audit-premium-vs-stripe / fix-promo-variants / close-inbox-items / fix-card-names / apply-intro-to-trialists / backfill-card-text: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
         type: boolean
         default: false
       premium_until:
@@ -6012,6 +6012,8 @@ jobs:
           TARGET_EMAIL: ${{ inputs.email }}
           PREMIUM_UNTIL: ${{ inputs.premium_until }}
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+          # apply: also move the Stripe subscription's next charge to premium_until (a free comp).
+          FREE_IN_STRIPE: ${{ inputs.apply && '1' || '' }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: npx tsx scripts/grant-premium.ts
 
