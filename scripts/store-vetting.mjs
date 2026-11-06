@@ -60,7 +60,7 @@ export const SITES = {
   camcompare: { repo: "Specifxx/Camcompare", files: ["src/lib/retailers.ts"] },
   compareempire: {
     repo: "Specifxx/compareempiretake2",
-    files: ["src/lib/retailers.ts", "src/lib/retailers-uk.ts", "src/lib/retailers-us.ts", "scripts/scrapers/categories/"],
+    files: ["src/lib/retailers.ts", "src/lib/retailers-uk.ts", "src/lib/retailers-us.ts", "src/lib/retailers-ca.ts", "src/lib/retailers-sg.ts", "scripts/scrapers/categories/"],
   },
 };
 
