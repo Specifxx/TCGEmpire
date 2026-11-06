@@ -37,7 +37,7 @@
     },
     "LGC|Booster Case": {
       "UK": 62995,
-      "US": 132379
+      "US": 132180
     },
     "LGC|Booster Pack": {
       "CA": 2400
@@ -116,6 +116,7 @@
       "US": 1095
     },
     "OGN|Box Set": {
+      "EU": 47990,
       "UK": 50000
     },
     "OGN|Bulk Runes": {
@@ -169,7 +170,7 @@
       "CA": 5500,
       "EU": 2900,
       "UK": 2999,
-      "US": 2970
+      "US": 3200
     },
     "OGN|Sealed": {
       "EU": 485
@@ -188,7 +189,7 @@
     },
     "OGS|Proving Grounds": {
       "AU": 2675,
-      "CA": 862,
+      "CA": 878,
       "EU": 895,
       "SG": 3761,
       "UK": 1163,
@@ -211,7 +212,7 @@
       "CA": 144995,
       "EU": 59900,
       "UK": 61999,
-      "US": 66894
+      "US": 65994
     },
     "RAD|Booster Pack": {
       "AU": 1099,
@@ -228,7 +229,7 @@
       "US": 2999
     },
     "RAD|Bundle Case": {
-      "US": 45999
+      "US": 45997
     },
     "RAD|Pre-Rift Event Kit": {
       "CA": 4995,
@@ -250,12 +251,12 @@
       "EU": 1810,
       "SG": 3956,
       "UK": 2189,
-      "US": 1738
+      "US": 1551
     },
     "RAD|Showdown Decks Display": {
       "AU": 5500,
       "CA": 4499,
-      "US": 6288
+      "US": 6088
     },
     "RAD|Sleeved Booster": {
       "EU": 2000,
@@ -267,10 +268,13 @@
     "REC|Booster Box": {
       "CA": 18999,
       "EU": 11900,
-      "US": 15999
+      "US": 13499
     },
     "REC|Bundle": {
       "US": 4999
+    },
+    "REC|Champion Deck": {
+      "US": 1599
     },
     "REC|Sealed": {
       "EU": 71400
@@ -486,7 +490,7 @@
       "CA": 119999,
       "EU": 61200,
       "UK": 63999,
-      "US": 71998
+      "US": 74293
     },
     "VEN|Booster Pack": {
       "AU": 999,
@@ -536,7 +540,7 @@
       "EU": 904,
       "SG": 2971,
       "UK": 1615,
-      "US": 1441
+      "US": 975
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -567,7 +571,7 @@
       "CA": 4500
     },
     "giftoftheriftbundle": {
-      "US": 27182
+      "US": 27177
     },
     "jinxchampiondeckriftboundleagueoflegends": {
       "EU": 6399
