@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "rift",
- "generatedAt": "2026-11-05T16:31:14.080Z",
+ "generatedAt": "2026-11-06T16:04:28.359Z",
  "links": {
   "US": {
    "deals": "https://riftcompare.com/black-friday",
@@ -131,10 +131,10 @@
    "region": "CA",
    "title": "Riftbound Legacy Booster Box",
    "url": "https://riftcompare.com/legacy-preorders",
-   "cents": 17999,
+   "cents": 19995,
    "currency": "CAD",
-   "store": "Trinity Hobby",
-   "image": "https://cdn.shopify.com/s/files/1/0428/3347/7798/files/raw_7afcfd49-2660-455a-b997-2ed5d96b5979.png?v=1793858611",
+   "store": "Cartes Sportives Rive Sud",
+   "image": "https://cdn.shopify.com/s/files/1/0699/8736/9247/files/riftbound-league-of-legends-tcg-legacy-booster-display-pre-order-league-of-legends-810155276980-1333544.png?v=1786733950",
    "releaseDate": "2027-01-29"
   },
   {
@@ -195,6 +195,20 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "CA",
+   "title": "Riftbound Radiance Bundle",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Bundle",
+   "cents": 4122,
+   "currency": "CAD",
+   "store": "L'Atelier TCG",
+   "image": "https://ateliertcg.com/img/68389-84907c8c/l.webp",
+   "refCents": 6497,
+   "refLabel": "median store price",
+   "savingPct": 37
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "CA",
    "title": "Riftbound Origins Champion Deck (Lee Sin)",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Champion%20Deck%20(Lee%20Sin)",
    "cents": 2899,
@@ -204,20 +218,6 @@
    "refCents": 4548,
    "refLabel": "median store price",
    "savingPct": 36
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "CA",
-   "title": "Riftbound Radiance Bundle",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Bundle",
-   "cents": 4232,
-   "currency": "CAD",
-   "store": "L'Atelier TCG",
-   "image": "https://ateliertcg.com/img/68389-84907c8c/l.webp",
-   "refCents": 6499,
-   "refLabel": "median store price",
-   "savingPct": 35
   },
   {
    "kind": "deal",
@@ -469,10 +469,10 @@
    "region": "US",
    "title": "Riftbound The Reckoning Booster Box",
    "url": "https://riftcompare.com/the-reckoning-preorders",
-   "cents": 15999,
+   "cents": 13499,
    "currency": "USD",
-   "store": "Kollect Korner",
-   "image": "https://cdn.shopify.com/s/files/1/0888/7913/7052/files/RB07BD01.jpg?v=1793760641",
+   "store": "Many Realms",
+   "image": "https://cdn.shopify.com/s/files/1/0680/9947/3574/files/reckoning-small_7b2066a7-716a-4393-b521-ca1a4164a9ee.webp?v=1793896059",
    "releaseDate": "2027-04-30"
   },
   {
@@ -485,9 +485,9 @@
    "currency": "USD",
    "store": "Triad Cards and Gaming",
    "image": "https://cdn.shopify.com/s/files/1/0713/8007/4695/files/653154_in_1000x1000_aa30a575-6cf8-4a9b-8e9d-09e83a951f2b.jpg?v=1782501582",
-   "refCents": 5550,
+   "refCents": 5450,
    "refLabel": "median store price",
-   "savingPct": 46
+   "savingPct": 45
   },
   {
    "kind": "deal",
@@ -495,13 +495,13 @@
    "region": "US",
    "title": "Riftbound Vendetta Showdown Decks",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks",
-   "cents": 1441,
+   "cents": 1421,
    "currency": "USD",
    "store": "Shippin Texas",
    "image": "https://cdn.shopify.com/s/files/1/0676/9413/3386/files/697971.jpg?v=1785959826",
-   "refCents": 2499,
+   "refCents": 2500,
    "refLabel": "median store price",
-   "savingPct": 42
+   "savingPct": 43
   },
   {
    "kind": "deal",
@@ -523,13 +523,13 @@
    "region": "US",
    "title": "Riftbound Radiance Showdown Decks",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Showdown%20Decks",
-   "cents": 1738,
+   "cents": 1799,
    "currency": "USD",
-   "store": "Shippin Texas",
-   "image": "https://cdn.shopify.com/s/files/1/0676/9413/3386/files/711368.jpg?v=1792759811",
+   "store": "Gator's Card Den",
+   "image": "https://cdn.shopify.com/s/files/1/0714/4774/0450/files/RiftboundEvelybbvsSeraphineShowdownDeck.png?v=1792590563",
    "refCents": 2800,
    "refLabel": "median store price",
-   "savingPct": 38
+   "savingPct": 36
   },
   {
    "kind": "deal",
