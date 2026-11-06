@@ -950,6 +950,11 @@ longer lands on its entry.
 
 ## Content & SEO
 
+- **Black Friday and Cyber Monday pages:** `/black-friday` and `/cyber-monday` are one
+  component (`HolidaySalePage`), each kept all year, with the sealed deals table and
+  the price watch (sealed boxes, biggest price drops, graded slabs, chase auctions, each
+  row ending in a live eBay listing; `lib/price-watch.ts`). The US is the default market.
+  Never a "was" price or a countdown. [2026-11-06](../DECISIONS.md#L22606)
 - **Pre-order pages:** every coming-soon set in `SETS` without a hand-built
   page gets `/preorders/<slug>` automatically, from data only; a calendar
   row's `preordersHref` wins and links go through `preorderRouteForSet`.

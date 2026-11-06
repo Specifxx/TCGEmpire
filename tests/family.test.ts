@@ -47,7 +47,7 @@ test("pre-orders: the next set's booster box, cheapest in-stock store, with its 
 });
 
 test("the block sits on the deals, pre-order and set pages, and the report links every card sister", () => {
-  for (const p of ["src/app/black-friday/page.tsx", "src/app/legacy-preorders/page.tsx", "src/app/radiance-preorders/page.tsx", "src/app/sets/[set]/page.tsx"]) {
+  for (const p of ["src/components/HolidaySalePage.tsx", "src/app/legacy-preorders/page.tsx", "src/app/radiance-preorders/page.tsx", "src/app/sets/[set]/page.tsx"]) {
     assert.equal((readFileSync(p, "utf8").match(/<FamilyDeals /g) ?? []).length, 1, `${p}: one block`);
   }
   const report = readFileSync("src/app/market/report/page.tsx", "utf8");

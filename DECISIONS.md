@@ -22602,3 +22602,32 @@ second corner ask, no email capture on the home page (pop-up policy).
 **Measure.** `sealed_watch_add` with `account: "none"` against sealed watches created by accounts, and the sealed
 pass's `watches` / `emails` in the paid alert run's log, a fortnight on. Then the `/email-alert-sealed` and
 `/email-alert-sealed-confirm` buy clicks on the network dashboards.
+
+## 2026-11-06 — Black Friday and Cyber Monday price watch pages
+
+The owner's October numbers (2026-11-06): the US made 73% of affiliate earnings at a US$108 average order
+(Australia US$73, the UK US$62); one US$6.4k order earned as much as about twelve ordinary days; eBay
+credits only a purchase made within 24 hours of the click. His asks: build the Black Friday pages for US
+buyers, publish them this week so Google has indexed them by 27 November, make them "price watch" pages
+(sealed boxes, big price drops, graded cards, each linking to live eBay listings), and give the high-end
+(graded, sealed, chase) its own prominent sections.
+
+- **`/cyber-monday` is a page of its own** (`src/app/cyber-monday/page.tsx`): the Black Friday page under
+  Cyber Monday's URL, title, description and first FAQ, so the Monday query has a page to rank. Both routes
+  render one component, `src/components/HolidaySalePage.tsx` (the old `/black-friday` body, unchanged in
+  URL, h1 and title). In the sitemap and the Prices menu beside Black Friday; the static-page date moved.
+- **The price watch** (`src/components/SalePriceWatch.tsx`, rules in `src/lib/price-watch.ts`, loaders in
+  `src/lib/price-watch-data.ts`, `tests/price-watch.test.ts`) sits under the sealed deals table on both
+  pages, four sections each ending in a live eBay listing through the EPN campaign: in-stock sealed boxes
+  with the cheapest store beside the cheapest eBay row, dearest first (the high-end shelf, not a deals
+  list); the week's steepest falls (`getPriceMovers` plummeting) with the cheapest tracked eBay copy
+  (`getCheapestOnEbayFor`); the dearest live slab per card from `EbayGradedListing` (one new read,
+  `getGradedWatch`: two bounded selects held six hours, stale rows and asking prices over US$5,000 left
+  out: a US$539,923 "PSA 10" was live that day); and the biggest bids closing today from `/auctions`'
+  rows. Every row is server HTML. Each eBay link is one `OutboundLink` with the page's source
+  (`black-friday` / `cyber-monday`), labelled "Paid link", with the disclosure under the sections.
+- **US first.** A visitor without a market cookie, and every crawler, gets `DEFAULT_COUNTRY` (the US); a
+  visitor with one gets their own market's rows, as on every page. Nothing here reads a new cookie.
+- The rules the site keeps hold: an eBay row is never a store, never a deal, never "the cheapest"; no
+  "was" price, countdown or "ends soon"; asking prices, not sales; no loader wrapped in another cache.
+  Riftbound has no vintage (it launched in 2025), so the high-end sections are graded, sealed and chase.
