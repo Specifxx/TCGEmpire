@@ -7,6 +7,7 @@ import { markBuyClick, registerBuyLink } from "@/lib/buy-intent";
 import { reportOutboundConversion } from "@/lib/google-ads";
 import { readEntrySource } from "@/lib/entry-source";
 import { earnCoin } from "@/lib/coins-client";
+import { isCheckoutLink } from "@/lib/checkout-link";
 
 // An outbound "buy" link. It fires a click beacon to /api/click, which adds one
 // to a per-day, per-network Counter row (2026-10-27, "Click counts by day" in
@@ -199,7 +200,11 @@ export function OutboundLink({
   function onClick(e: React.MouseEvent<HTMLAnchorElement>) {
     // Before the event, so a consumer reading the flag cannot race the beacon.
     markBuyClick();
+    // Straight-to-checkout test (lib/checkout-link.ts): did this click open the
+    // store's checkout with the item in it, or its product page?
+    const checkout = isCheckoutLink(href);
     trackEvent("buy_click", {
+      link_type: checkout ? "checkout" : "product",
       retailer,
       country,
       kind,
@@ -220,7 +225,7 @@ export function OutboundLink({
     });
     // Our own daily click count per network for /admin/growth (lib/click-counter.ts).
     try {
-      navigator.sendBeacon?.(`/api/click?r=${encodeURIComponent(retailer)}`);
+      navigator.sendBeacon?.(`/api/click?r=${encodeURIComponent(retailer)}${checkout ? "&t=checkout" : ""}`);
     } catch {}
     // Paid Google Ads conversion tracking (lib/google-ads.ts) — a no-op unless a
     // conversion action is configured in env, and gated by the same Consent Mode

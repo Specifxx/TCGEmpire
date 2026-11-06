@@ -13,6 +13,9 @@ export async function POST(req: Request) {
   const retailer = new URL(req.url).searchParams.get("r") ?? "";
   const group = clickGroup(retailer);
   if (group) await countClick(group).catch(() => {});
+  // The straight-to-checkout test: a click whose link opened a checkout, counted
+  // beside its network (never instead of it). Only a store link can be one.
+  if (group === "store" && new URL(req.url).searchParams.get("t") === "checkout") await countClick("checkout").catch(() => {});
   // Per-store monthly count for the partner pitch, known stores only.
   if (group === "store" && Object.prototype.hasOwnProperty.call(RETAILERS, retailer)) {
     await countStoreClick(retailer).catch(() => {});

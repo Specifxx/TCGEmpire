@@ -7,7 +7,10 @@ import { prisma } from "./db";
 // only by /admin/growth. Counts can be inflated by anyone who posts to the
 // route; they are a trend line, never a payout.
 
-export const CLICK_GROUPS = ["ebay", "tcgplayer", "store"] as const;
+// "checkout" is not a network: it counts the store clicks whose link
+// opened a checkout with the item in it (lib/checkout-link.ts, 2026-11-06), so it
+// is a SUBSET of the others and is never added to them.
+export const CLICK_GROUPS = ["ebay", "tcgplayer", "store", "checkout"] as const;
 export type ClickGroup = (typeof CLICK_GROUPS)[number];
 export const CLICK_KEY_PREFIX = "click:";
 

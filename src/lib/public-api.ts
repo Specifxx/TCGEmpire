@@ -202,7 +202,8 @@ export async function getCardListingsData(idOrSlug: string, market: Country = DE
     isFoil: p.isFoil,
     inStock: p.inStock,
     lastSeen: p.lastSeen.toISOString(),
-    buyHref: affiliateUrl(p.url, p.retailer, pageUrl),
+    // Product pages, not checkout: a third party may keep this link for days.
+    buyHref: affiliateUrl(p.url, p.retailer, pageUrl, { checkout: false }),
     policyUrl: shippingPolicyUrl(p.retailer),
   }));
   const view = computeMarket(rows, market);

@@ -13,6 +13,7 @@ import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
 import { withLiveStock } from "./preorder-live-stock";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { fetchHtmlStoreProducts } from "./storefront-html";
+import { isShopify, withShopifyVariant } from "./checkout-link";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
@@ -24,7 +25,7 @@ import { joinOverlapping, typeLabel } from "./price-report";
 import { RIOT_DRAWINGS } from "./riot-drawings";
 
 interface ShopifyImg { src?: string }
-interface ShopifyVar { price: string; available: boolean }
+interface ShopifyVar { id?: number; price: string; available: boolean }
 // `url` is the product's real page URL — see ShopifyProduct.url in
 // price-import.ts for why a WooCommerce product must carry one and a Shopify
 // product need not.
@@ -699,7 +700,8 @@ export async function importSealed(): Promise<number> {
         const floor = sealedFloorCents(type);
         const inFloor = pool.filter((v) => Math.round(parseFloat(v.price) * 100) >= floor);
         if (!inFloor.length) continue;
-        const priceCents = Math.round(Math.min(...inFloor.map((v) => parseFloat(v.price))) * 100);
+        const cheapestVar = inFloor.reduce((a, b) => (parseFloat(b.price) < parseFloat(a.price) ? b : a));
+        const priceCents = Math.round(parseFloat(cheapestVar.price) * 100);
         const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
         const key = `${groupKey}|${store.key}`;
         const prev = rows.get(key);
@@ -712,7 +714,9 @@ export async function importSealed(): Promise<number> {
           retailer: store.key,
           retailerName: store.name,
           priceCents,
-          url: productUrl(store.base, p),
+          // The priced variant on the URL, in-stock Shopify rows only: the buy link
+          // opens checkout with exactly it (lib/checkout-link.ts).
+          url: inStock && isShopify(store) && !p.url ? withShopifyVariant(productUrl(store.base, p), cheapestVar.id) : productUrl(store.base, p),
           imageUrl: p.images?.[0]?.src ?? null,
           country: cc,
           inStock,
