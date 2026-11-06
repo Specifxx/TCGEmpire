@@ -47,7 +47,11 @@ const APPS: Array<[string, RegExp]> = [
   ["Partnerize", /partnerize\.com|prf\.hn/i],
   ["FlexOffers", /flexoffers\.com/i],
 ];
-const BLOCK = /cf-browser-verification|challenge-platform|just a moment|access denied|captcha|incapsula|_Incapsula_Resource|perimeterx|px-captcha|datadome/i;
+// A challenge page, judged by its TITLE: an ordinary Shopify page loads Cloudflare's
+// challenge-platform script and a reCAPTCHA on its contact form, so matching the body
+// called 1,316 of 1,391 stores "blocked" on the first run (2026-11-06).
+const BLOCK = /<title>[^<]*(just a moment|access denied|attention required|security check|are you (a )?human|verify you are|bot verification|pardon our interruption)[^<]*<\/title>/i;
+const BLOCK_BODY = /_Incapsula_Resource|px-captcha|captcha-delivery\.com|geo\.captcha-delivery/i;
 const AFFILIATE_LINK = /href="([^"]*affiliat[^"]*)"/i;
 const PAGES = ["/pages/affiliate", "/pages/affiliates", "/pages/affiliate-program"];
 const UA = "Mozilla/5.0 (compatible; RiftCompare affiliate-programme check; +https://riftcompare.com/stores)";
@@ -77,7 +81,7 @@ async function scan(e: HostEntry): Promise<Result> {
   const base = `https://${e.host}`;
   const home = await get(base);
   if (!home) return { host: e.host, sites: e.sites, status: "error", note: "unreachable" };
-  if (home.status === 403 || home.status === 429 || BLOCK.test(home.text)) {
+  if (home.status === 403 || home.status === 429 || BLOCK.test(home.text) || (home.text.length < 20_000 && BLOCK_BODY.test(home.text))) {
     return { host: e.host, sites: e.sites, status: "blocked", note: `home ${home.status}` };
   }
   if (home.status >= 400) return { host: e.host, sites: e.sites, status: "error", note: `home ${home.status}` };
