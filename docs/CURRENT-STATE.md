@@ -222,6 +222,11 @@ longer lands on its entry.
   shared IDs on their own row); no schedule: the dashboard hands out a Chrome
   prompt with each store's missing date range filled in, run whenever.
   [2026-11-03](../DECISIONS.md#L21971)
+  Since 2026-11-06 nothing is downloaded or uploaded: the prompt has Claude in
+  Chrome read each store's Daily trends and Tracking ID summary and type them
+  into the dashboard's "Amazon figures" box (`/api/admin/earnings/amazon/entry`);
+  per-ID totals are spread over the days by the days' totals, the rest shared.
+  [2026-11-06](../DECISIONS.md#L22539)
   A growth line sits under the columns; eBay's Today shows its latest reported
   day, dated, because EPN has no same-day data. [2026-10-28](../DECISIONS.md#L20647)
   A forecast panel projects this quarter and the next four (and this year and

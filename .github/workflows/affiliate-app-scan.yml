@@ -1,0 +1,34 @@
+name: Affiliate programme scan
+
+# By hand only. Finds which of the stores every Compare site compares run a self-serve
+# affiliate programme (scripts/affiliate-app-scan.ts): at most four polite requests per
+# store, a 403 is a result. The table lands in the job summary and results.json in the
+# run's artifact. Nothing is committed and nothing touches the database.
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Scan only the first N hosts (0 = all)"
+        default: "0"
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --ignore-scripts
+      - run: npx tsx scripts/affiliate-app-scan.ts
+        env:
+          SCAN_LIMIT: ${{ github.event.inputs.limit }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: affiliate-scan-results
+          path: data/affiliate-scan/results.json

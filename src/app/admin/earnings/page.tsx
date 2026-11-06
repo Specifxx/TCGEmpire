@@ -532,9 +532,9 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
       </section>
 
       <section className="mt-8" data-amazon-upload>
-        <h2 className="text-lg font-extrabold text-white">Amazon Associates (uploaded reports)</h2>
+        <h2 className="text-lg font-extrabold text-white">Amazon Associates (read from Associates Central)</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Amazon gives accounts our size no reporting API. Whenever you like, download the Chrome prompt below (it already carries each store&apos;s dates, from the day after its last upload to today) and run it, or do it by hand: Associates Central → Reports → Download reports → tick only Earnings, CSV → Generate → Download, then upload the ZIP here. Each upload replaces that store&apos;s days in the report&apos;s range, so overlap never double counts.
+          Amazon gives accounts our size no reporting API, so Claude in Chrome reads each store&apos;s Reports page and types the figures in here. Whenever you like, copy the Chrome prompt below (it already carries each store&apos;s dates, from the day after the last figures to today) and run it. Each save replaces that store&apos;s days in its range, so overlap never double counts; per-tracking-ID totals are spread over the days in proportion to the days&apos; totals.
         </p>
         <AmazonUploadForm stores={amazonCoverage} prompt={amazonChromePrompt(amazonCoverage, today)} adminKey={keyOk && !me?.isAdmin ? token! : null} />
       </section>
