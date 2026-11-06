@@ -22566,3 +22566,39 @@ a ZIP out of a Downloads folder.
   the two views and types the blocks; it never downloads. The report upload
   stays under a collapsed "Or upload a downloaded Earnings report" as the
   fallback, same route as before.
+
+## 2026-11-06 — Sealed watches without an account: the sealed page's "Email me" form
+
+The owner's growth list (2026-11-06, point 5): eBay only credits a purchase made within 24 hours of the click, so a
+visitor who comes back later and buys earns nothing; price-alert emails on the best-earning site bring them back and
+send them to a listing. RiftCompare already had this for cards (`api/alerts/subscribe`, no account: 490 watches, about
+five digests a day), but the sealed watch, the one on the highest-value orders (booster boxes, Black Friday's product),
+asked for an account first and had eight rows in all. Signed out, `SealedWatchButton` sold Premium. So:
+
+- **`SealedWatch.userId` is nullable** (an additive change `prisma db push` makes on the next deploy), with a second
+  unique key on `(email, groupKey, market)`. A row with no account is "an email-only watcher from the form", the same
+  meaning `PriceAlert.userId` NULL has had since August.
+- **POST `/api/watches/sealed` signed out** takes `{ email, groupKey }` (zod, IP rate-limited):
+  `createAnonymousSealedWatch` writes the row, one live watch per address (the free account's own limit, 402
+  `free_alert_limit` past it), and a product the address already watches, with or without an account, is answered
+  `existed` and never re-baselined (a stranger posting someone's address can add at most one watch they can stop
+  from its email, never change one). The new row gets ONE confirmation under the shared confirmation cap
+  (`lib/alert-confirmations.ts`): today's cheapest real-store price with its buy button, what we will email about,
+  and the watch's own signed stop link (`buildSealedWatchConfirmationEmail`). No double opt-in, as the card door.
+- **The run** (`runSealedWatches`) treats a row with no account as a free owner's, keyed by address: oldest row live,
+  the rest kept and not evaluated; the in-app bell is only for a row with an account. Stop and snooze were already
+  per-watch signed tokens, so the alert emails needed nothing new; the footer no longer says "(Plus or Premium)".
+- **`claimAlertsForUser`** adopts the address's sealed rows at sign-in as it adopts card alerts, dropping an anonymous
+  twin of a product the account already watches.
+- **The button**: signed out, the full-size button is the inline form (`AnonymousSealedWatchForm`, `#sealed-watch` on
+  the product page and the quick view: one input, "No account needed", the remembered `rc_alert_email` filled in,
+  one line of success with the masked address); the tile's heart links to the product page's form. Never a pop-up.
+  Past the one free alert the same spot sells Premium, as it does for a free account.
+
+**Not done, on purpose.** Graded and auction emails still link the eBay listing plain (EPN allows no tracked eBay
+link in email without messaging approval); each already carries the card page, where the tagged links are. No
+second corner ask, no email capture on the home page (pop-up policy).
+
+**Measure.** `sealed_watch_add` with `account: "none"` against sealed watches created by accounts, and the sealed
+pass's `watches` / `emails` in the paid alert run's log, a fortnight on. Then the `/email-alert-sealed` and
+`/email-alert-sealed-confirm` buy clicks on the network dashboards.

@@ -455,8 +455,12 @@ longer lands on its entry.
   `gate:sealed-watch` PremiumButton; never before. The oldest one is live
   (`honouredTargetIds`; the sealed run's per-owner ceiling). A free card target
   is checked by the daily "all" run, not the paid runs; the sealed run reads
-  every owner's watches, capped. Signed-out visitors sign in first.
-  [2026-10-23](../DECISIONS.md#L19200)
+  every owner's watches, capped. Signed out, a card is watched by email from
+  the pop-up (since August) and, since 2026-11-06, a sealed product from the
+  product page's inline "Email me" form (`SealedWatch.userId` null, one live
+  watch per address, adopted at sign-in by `claimAlertsForUser`).
+  [2026-10-23](../DECISIONS.md#L19200),
+  [2026-11-06](../DECISIONS.md#sealed-watches-without-an-account-the-sealed-pages-email-me-form)
 - **Search is unlimited for everyone (2026-10-15, owner: "completely remove the search limit"):** the meter below is dormant; it runs only with `SEARCH_CAPS=on`, and no pricing surface mentions searches. [2026-10-15](../DECISIONS.md#L17561)
   **Was — search allowance (2026-10-09, owner: "make it 10 / 30 / 100 / unlimited", now 25 / 100 / 500;
   reverses "search is unmetered"):** signed out 10 searches a UTC day, a free

@@ -1075,8 +1075,15 @@ model DeckWatch {
 // lapsed owner's rows are kept untouched. Nullable past the key, no backfill.
 model SealedWatch {
   id               String    @id @default(cuid())
-  userId           String
-  // The account's address at creation (the mail-routing key, as PriceAlert).
+  // The account that owns this watch, when there is one. NULLABLE since
+  // 2026-11-06 (DECISIONS.md "Sealed watches without an account"): the sealed
+  // page's "Email me" form writes a row with no account, exactly as PriceAlert's
+  // email-only door does, and claimAlertsForUser adopts it at sign-in. The
+  // run treats a row with no account as a free owner's (one live watch per
+  // address); only the account-scoped routes filter on this column.
+  userId           String?
+  // The address at creation (the mail-routing key, as PriceAlert): the
+  // account's, or the one typed into the form.
   email            String
   market           String    @default("AU")
   groupKey         String
@@ -1097,9 +1104,12 @@ model SealedWatch {
   snoozedUntil     DateTime?
   createdAt        DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, groupKey, market])
+  // One row per address, product and market, account or not (an account's
+  // address is unique to it, so this never conflicts with the key above).
+  @@unique([email, groupKey, market])
   @@index([userId])
   @@index([email])
 }
