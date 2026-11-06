@@ -534,3 +534,16 @@ test("Amazon prices: unknown without credentials, warn when refused, ok with or 
   const nolist = await amazonPrices(deps({ fetch: fakeFetch({ "https://riftcompare.com/api/v1/sealed.json": json({}, 503) }).f }));
   assert.equal(nolist.severity, "unknown");
 });
+
+test("Awin programmes: unknown before the token, ok when read today, warn when stale, never crit", async () => {
+  const { awinProgrammes } = await import("../src/lib/ops/checks");
+  const URL_ = "https://raw.githubusercontent.com/Specifxx/compareempiretake2/HEAD/data/awin/programmes.json";
+  const ask = (body: unknown, status = 200) => awinProgrammes(deps({ fetch: fakeFetch({ [URL_]: json(body, status) }).f }));
+  const now = deps().now;
+  assert.equal((await ask({ checkedAt: null, joined: [] })).severity, "unknown");
+  const fresh = await ask({ checkedAt: now.toISOString(), joined: [{ name: "Stylevana" }] });
+  assert.equal(fresh.severity, "ok");
+  assert.match(fresh.summary, /Stylevana/);
+  assert.equal((await ask({ checkedAt: new Date(now.getTime() - 5 * 86_400_000).toISOString(), joined: [] })).severity, "warn");
+  assert.equal((await ask({}, 404)).severity, "unknown");
+});

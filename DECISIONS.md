@@ -22631,3 +22631,17 @@ buyers, publish them this week so Google has indexed them by 27 November, make t
 - The rules the site keeps hold: an eBay row is never a store, never a deal, never "the cheapest"; no
   "was" price, countdown or "ends soon"; asking prices, not sales; no loader wrapped in another cache.
   Riftbound has no vintage (it launched in 2025), so the high-end sections are graded, sealed and chase.
+
+## 2026-11-06 — Awin: a store that accepts the family pays from the next build, with no step by hand
+
+**Decision (owner: "check if we are making the most of Awin, and if it's not there, just do it"):** the family's Awin
+account (Compare Empire, publisher 3144410) is read each morning by Compare Empire's `scripts/awin-sync.ts`, which
+publishes the programmes that accepted us, with their tracked domains, in its public `data/awin/programmes.json`. Every
+site copies that file first in its build (`scripts/fetch-awin.ts` → `src/lib/awin-programmes.json`; the committed copy
+is an empty list, so a failed fetch only leaves links untracked). Here `affiliateUrl` turns a link to a joined
+advertiser's own domain into its Awin deep link (`clickref=rift-<page>`) after the eBay, Amazon, TCGplayer, Cardmarket
+and partner-code branches, and `isPaidLink` marks it "Paid link". Order and prices never change.
+
+**Never in an email:** a `loc` under `/email…` (price and sealed alerts) keeps the plain store link, because most Awin
+advertisers allow email promotion only by separate approval. The ops monitor's `awin:programmes` check shows how many
+stores accepted us and warns when the list is three days old.

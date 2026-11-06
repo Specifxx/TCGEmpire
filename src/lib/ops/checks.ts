@@ -714,6 +714,36 @@ export async function amazonPrices(d: OpsDeps): Promise<CheckResult> {
   return result(d, { id, area, title, severity: "warn", summary: `The route answered "${st}" for /sealed/${slug}.`, action });
 }
 
+/**
+ * Awin (DECISIONS.md 2026-11-06): Compare Empire's daily job reads the family's Awin account and publishes the joined
+ * programmes in its public data/awin/programmes.json, which every site copies at build to track those stores' links.
+ * No token yet is unknown (the owner's step); a list not refreshed for three days is a warn (links keep yesterday's
+ * list, so a new approval does not earn yet). Never crit: untracked links still work for the visitor.
+ */
+export async function awinProgrammes(d: OpsDeps): Promise<CheckResult> {
+  const id = "awin:programmes";
+  const area: OpsArea = "money";
+  const title = "Awin programmes";
+  const r = await d.fetch("https://raw.githubusercontent.com/Specifxx/compareempiretake2/HEAD/data/awin/programmes.json", { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+  if (!r.ok) return unknown(d, id, area, title, `The joined-programmes file answered HTTP ${r.status}.`);
+  const f = (await r.json()) as { checkedAt?: string | null; joined?: { name: string }[] };
+  const joined = Array.isArray(f.joined) ? f.joined : [];
+  if (!f.checkedAt) return unknown(d, id, area, title, "No AWIN_API_TOKEN secret on compareempiretake2 yet: Awin approvals are not turned into tracked links.");
+  const age = hoursSince(new Date(f.checkedAt), d.now);
+  const names = joined.map((p) => p.name).slice(0, 12).join(", ");
+  if (age > 72) {
+    return result(d, {
+      id,
+      area,
+      title,
+      severity: "warn",
+      summary: `The Awin list was last read ${humanAge(age)} ago; new approvals do not earn until it refreshes.`,
+      action: 'Tell Claude: "the Awin programmes check is stale; look at the Awin programmes step of Compare Empire\'s Refresh prices run".',
+    });
+  }
+  return result(d, { id, area, title, severity: "ok", summary: joined.length ? `${joined.length} Awin stores accepted us and earn on every site: ${names}${joined.length > 12 ? "…" : ""}.` : "Awin read today: no programme has accepted us yet." });
+}
+
 // ── Money ───────────────────────────────────────────────────────────────────
 
 export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
@@ -1089,6 +1119,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("stores:unlinked", "money", "Stores plan: stores waiting for their report", () => storePlansUnlinked(d));
   await add("stores:codes", "money", "Store partner codes", async () => storeCodesRecheck(d));
   await add("amazon:prices", "money", "Amazon prices (Creators API)", () => amazonPrices(d));
+  await add("awin:programmes", "money", "Awin programmes", () => awinProgrammes(d));
   await add("site:self", "email", "Email and site settings", () => siteSelfChecks(d));
   await add("inbox:waiting", "inbox", "Inbox", () => inboxWaiting(d));
   return out;
