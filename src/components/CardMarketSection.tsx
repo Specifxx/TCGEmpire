@@ -8,6 +8,7 @@ import { CardmarketPrice } from "./CardmarketPrice";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
 import { formatMoney, timeAgo } from "@/lib/format";
+import { CartAddButton } from "@/components/cart/CartAddButton";
 import { computeMarket, pinMarketplaces, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
 import { convertUsdCents } from "@/lib/fx";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
@@ -339,8 +340,11 @@ export function CardPriceComparison({
   ebayQuery,
   preRelease = false,
   emptyState,
+  image = null,
 }: {
   rows: MarketRow[];
+  /** The card's picture, for the cart list's line (components/cart). */
+  image?: string | null;
   cardId: string;
   /** Replaces the "No prices found yet" panel when this market has no listing
    *  at all — a Radiance card page passes its release-alert signup (2026-09-26). */
@@ -534,6 +538,21 @@ export function CardPriceComparison({
                     clears the widest label ("Buy on TCGplayer →", 177px). A
                     min-width, not a fixed width, so a wider fallback font grows
                     the button instead of wrapping its label. */}
+                {/* The cart list (components/cart, owner 2026-11-06): add this row,
+                    then check out store by store from /cart. Beside the buy button,
+                    on its line on phones. */}
+                <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
+                <CartAddButton
+                  href={p.buyHref}
+                  productUrl={p.storeUrl}
+                  storeName={p.retailerName}
+                  title={displayName}
+                  detail={[p.condition, p.isFoil ? "Foil" : null].filter(Boolean).join(" · ") || null}
+                  priceCents={p.priceCents}
+                  currency={m.currency}
+                  image={image}
+                  className="text-slate-300"
+                />
                 <OutboundLink
                   href={p.buyHref}
                   retailer={p.retailer}
@@ -546,10 +565,11 @@ export function CardPriceComparison({
                   variant={p.isFoil ? "foil" : "nonfoil"}
                   condition={p.condition}
                   surface={pinned ? "table_pinned" : "table"}
-                  className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]`}
+                  className={`${buyButtonClass(p.retailer)} flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]`}
                 >
                   {buyButtonLabel(p.retailer)}
                 </OutboundLink>
+                </div>
               </li>
     );
   };
