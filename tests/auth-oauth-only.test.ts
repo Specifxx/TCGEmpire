@@ -57,7 +57,10 @@ test("both providers are still offered", () => {
 test("the sign-in form no longer collects credentials", () => {
   const src = read("src/components/AuthForm.tsx");
   assert.ok(!/type="password"/.test(src), "no password field");
-  assert.ok(!/name="email"|type="email"/.test(src), "no email field");
+  // The one email field (2026-11-06) is EmailSignInForm's, which asks for an
+  // emailed one-time link, never a password (tests/email-sign-in.test.ts).
+  assert.ok(!/name="email"|type="email"/.test(src), "the email field lives in EmailSignInForm, not here");
+  assert.ok(!/type="password"/.test(read("src/components/EmailSignInForm.tsx")), "no password field");
   assert.ok(!/\/api\/auth\/(login|register)/.test(src), "must not post to removed routes");
 });
 

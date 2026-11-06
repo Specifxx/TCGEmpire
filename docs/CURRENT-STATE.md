@@ -642,6 +642,9 @@ longer lands on its entry.
   `GetPremiumLink` since 2026-10-15 (see "Gold marks Premium"); rail and account
   menu stay plain "Pricing" links. [2026-10-15](../DECISIONS.md#L17561) [2026-09-28](../DECISIONS.md#L14549),
   [2026-09-29](../DECISIONS.md#L15178)
+- **Sign-in (2026-11-06):** Google, Discord, or a one-time link emailed to any
+  address (passwordless; no passwords, no forgot-password); a paid guest checkout
+  emails that link at once. [2026-11-06](../DECISIONS.md#L22696)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
   signed out; OAuth only). `/premium` defaults to ANNUAL (per-month equivalent
   headlined, since 2026-10-22, [2026-10-22](../DECISIONS.md#L18914); the dialog stays

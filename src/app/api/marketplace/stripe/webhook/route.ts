@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { guestAccountFor } from "@/lib/guest-checkout";
+import { signInLinkUrl, signInTokenForUser, PAID_SIGN_IN_LINK_DAYS } from "@/lib/email-sign-in";
+import { sendSignInLinkEmail } from "@/lib/email";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { stripe, stripeEnabled, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
@@ -160,6 +162,20 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
       await stripe()
         .subscriptions.update(guestSubId, { metadata: { userId } })
         .catch((e) => console.error(`stripe webhook: could not stamp userId on guest subscription ${guestSubId}:`, e));
+    }
+    // THE WAY IN (2026-11-06, a paying member locked out): a guest paid
+    // without an account, often with Apple Pay on an iCloud address that is
+    // on neither Google nor Discord. Email them a sign-in link now, so
+    // paying always ends in a reachable account (lib/email-sign-in.ts).
+    // Best-effort: entitlement below never waits on, or fails with, the email.
+    const guestEmail = (session.customer_details?.email ?? session.customer_email ?? "").trim().toLowerCase();
+    if (userId && guestEmail) {
+      await signInTokenForUser(userId)
+        .then((token) => sendSignInLinkEmail(guestEmail, signInLinkUrl(token, `/premium/welcome?session_id=${session.id}`), { paid: true, days: PAID_SIGN_IN_LINK_DAYS }))
+        .then((ok) => {
+          if (!ok) console.error(`stripe webhook: sign-in email for guest checkout ${session.id} was not sent`);
+        })
+        .catch((e) => console.error(`stripe webhook: sign-in email for guest checkout ${session.id} failed:`, e));
     }
   }
   if (!userId) {
