@@ -5,6 +5,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
+import { SideRails } from "@/components/SideRails";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT, MOBILE_NO_VIGNETTE_SCRIPT } from "@/lib/ad-free-boot";
@@ -414,6 +415,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <WatchlistDrawerProvider>
                 <Navbar />
                 <SideNav />
+                {/* eBay and TCGplayer side rails from 1280px (SideRails.tsx; owner, 2026-11-06): browser-only, fixed beside the
+                    column, nothing in the server HTML; none for ad-free members. */}
+                <SideRails />
                 {/* No announcement ribbon here any more — the homepage's Vendetta
                     block (right under the hero) carries the "it's here" message
                     with real prices instead of a repeating marquee claim. */}

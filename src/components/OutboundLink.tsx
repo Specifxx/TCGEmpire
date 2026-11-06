@@ -172,6 +172,7 @@ export function OutboundLink({
     | "ebay_picks"
     | "tcg_strip"
     | "mini_picks"
+    | "side_rails"
     | "ebay_carousel"
     | "ebay_graded"
     | "preorder_cta_ebay"
