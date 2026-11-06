@@ -7,6 +7,7 @@ import { awinProgrammeFor, awinUrl, clickref } from "./awin";
 import { SITE_URL } from "./site";
 import { normalizeCardmarketUrl } from "@/lib/cardmarket-url";
 import { partnerRefUrl } from "@/lib/store-partner-deals";
+import { shopifyCartUrl } from "./checkout-link";
 
 // eBay Partner Network campaign id. Passed to the Browse API so listing URLs come
 // back already affiliate-tagged (itemAffiliateWebUrl). See lib/ebay.ts.
@@ -372,6 +373,7 @@ export function affiliateUrl(
   url: string | null | undefined,
   subId = "riftcompare",
   loc: string = SITE_URL,
+  opts: { checkout?: boolean } = {},
 ): string {
   if (!url) return "#";
   // `subId` is the retailer key the caller already had ("ebay_us", "tcgplayer",
@@ -427,6 +429,18 @@ export function affiliateUrl(
     if (!page?.startsWith("email")) {
       const awin = awinUrl(plain, clickref("rift", page));
       if (awin) return awin;
+    }
+    // Straight to checkout (lib/checkout-link.ts): a Shopify row whose priced variant
+    // the importer recorded opens the store's checkout with it in the cart. Only for a
+    // store with no programme of its own (both returned above: their tracking runs on
+    // the store's pages), never in an email, and not where the caller says no.
+    if (opts.checkout !== false && !page?.startsWith("email")) {
+      const cart = shopifyCartUrl(plain);
+      if (cart) {
+        const c = new URL(cart);
+        c.searchParams.set("utm_content", "checkout");
+        return c.toString();
+      }
     }
     return plain;
   } catch {
