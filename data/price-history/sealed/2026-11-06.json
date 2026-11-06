@@ -91,7 +91,8 @@
     },
     "LGC|Proving Grounds 2nd Edition": {
       "CA": 4795,
-      "EU": 4000
+      "EU": 4000,
+      "US": 3500
     },
     "LGC|Sealed": {
       "EU": 71400
@@ -157,7 +158,7 @@
     "OGN|Champion Deck (Viktor)": {
       "AU": 2826,
       "CA": 5997,
-      "EU": 699,
+      "EU": 700,
       "SG": 6828,
       "UK": 1500,
       "US": 4899
@@ -202,7 +203,7 @@
     "RAD|Booster Box": {
       "AU": 20000,
       "CA": 16995,
-      "EU": 9400,
+      "EU": 9350,
       "SG": 20000,
       "UK": 9950,
       "US": 8000
@@ -210,9 +211,9 @@
     "RAD|Booster Case": {
       "AU": 135000,
       "CA": 144995,
-      "EU": 59900,
+      "EU": 58000,
       "UK": 61999,
-      "US": 65994
+      "US": 65993
     },
     "RAD|Booster Pack": {
       "AU": 1099,
@@ -233,7 +234,7 @@
     },
     "RAD|Pre-Rift Event Kit": {
       "CA": 4995,
-      "EU": 80000,
+      "EU": 2490,
       "US": 4500
     },
     "RAD|Pre-Rift Kit": {
@@ -248,7 +249,7 @@
     "RAD|Showdown Decks": {
       "AU": 4999,
       "CA": 2499,
-      "EU": 1810,
+      "EU": 1560,
       "SG": 3956,
       "UK": 2189,
       "US": 1551
@@ -256,7 +257,7 @@
     "RAD|Showdown Decks Display": {
       "AU": 5500,
       "CA": 4499,
-      "US": 6088
+      "US": 5787
     },
     "RAD|Sleeved Booster": {
       "EU": 2000,
@@ -282,7 +283,7 @@
     "SFD|Booster Box": {
       "AU": 28000,
       "CA": 23268,
-      "EU": 9800,
+      "EU": 9899,
       "SG": 8339,
       "UK": 10999,
       "US": 4699
@@ -307,7 +308,7 @@
       "US": 7492
     },
     "SFD|Bundle": {
-      "EU": 14495
+      "EU": 13500
     },
     "SFD|Champion Deck": {
       "AU": 2299,
@@ -366,7 +367,7 @@
       "US": 7500
     },
     "SFD|Sealed": {
-      "EU": 390
+      "EU": 375
     },
     "SFD|Sleeved Booster": {
       "EU": 1200,
@@ -391,7 +392,7 @@
     "UNL|Booster Box": {
       "AU": 22000,
       "CA": 21944,
-      "EU": 9499,
+      "EU": 9800,
       "SG": 25000,
       "UK": 17398,
       "US": 4200
@@ -562,7 +563,7 @@
       "SG": 34835
     },
     "arcaneboxset": {
-      "EU": 44500
+      "EU": 43000
     },
     "arcaneimmersivemusicexperiencebooster": {
       "EU": 6500
@@ -571,7 +572,7 @@
       "CA": 4500
     },
     "giftoftheriftbundle": {
-      "US": 27177
+      "US": 27176
     },
     "jinxchampiondeckriftboundleagueoflegends": {
       "EU": 6399
@@ -593,7 +594,7 @@
       "EU": 490
     },
     "legacyboosterbox": {
-      "EU": 12499
+      "EU": 12000
     },
     "legacyvault": {
       "EU": 3850
@@ -770,7 +771,7 @@
       "EU": 8299
     },
     "worlds25commemorativebooster": {
-      "EU": 1399
+      "EU": 1200
     },
     "worldsbundle2025": {
       "EU": 33900
