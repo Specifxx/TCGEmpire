@@ -3,19 +3,24 @@
 // six hours) for Amazon's own price of this product. With one, the row shows the price with the time it was fetched and
 // Amazon's disclaimer, as its licence requires, and the button opens Amazon's own item page; without one (no API access
 // for this store yet, no match, or a price older than 24 hours) it keeps "Price shows on Amazon" and the tagged search.
-// The price is drawn here alone: never a store row, the best price, a deal, an alert or a watch.
+// The price is drawn here alone: never a store row, the best price, a deal, an alert or a watch. Since 2026-11-06 (owner:
+// eBay and Amazon rows "function exactly like a normal store price row") the row carries the store row's thumbs and, with a
+// live price, its stock line and cart button (a manual line; lib/cart-list.ts drops its price after 24 hours). Without a
+// price it reads "Also check on Amazon".
 import { useEffect, useState } from "react";
 import type { Country } from "@/lib/country";
 import { OutboundLink } from "./OutboundLink";
 import { PaidLinkTag } from "./AffiliateDisclosure";
+import { StoreVote } from "./StoreVote";
+import { CartAddButton } from "@/components/cart/CartAddButton";
 
 const MAX_AGE_MS = 24 * 3600_000;
 export const AMAZON_PRICE_DISCLAIMER =
   "Product prices and availability are accurate as of the date/time indicated and are subject to change. Any price and availability information displayed on Amazon at the time of purchase will apply to the purchase of this product.";
 
-interface Live { status: string; url?: string; price?: string; at?: string; timeZone?: string; zoneLabel?: string }
+interface Live { status: string; url?: string; price?: string; priceCents?: number; currency?: string; at?: string; timeZone?: string; zoneLabel?: string }
 
-export function AmazonLiveSlot({ country, slug, label, searchHref }: { country: Country; slug: string; label: string; searchHref: string }) {
+export function AmazonLiveSlot({ country, slug, label, searchHref, cart }: { country: Country; slug: string; label: string; searchHref: string; cart?: { title: string; currency: string; image?: string | null } }) {
   const [live, setLive] = useState<Live | null>(null);
   useEffect(() => {
     let on = true;
@@ -29,16 +34,21 @@ export function AmazonLiveSlot({ country, slug, label, searchHref }: { country: 
       on = false;
     };
   }, [country, slug]);
+  const cartInput =
+    live?.url && cart && live.priceCents ? { href: live.url, productUrl: live.url, storeName: "Amazon", title: cart.title, priceCents: live.priceCents, currency: live.currency ?? cart.currency, image: cart.image ?? null } : null;
   const when = live?.at ? new Date(live.at).toLocaleString("en-GB", { timeZone: live.timeZone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
   return (
     <>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="truncate text-sm font-semibold text-white">{label}</span>
+          <StoreVote url={live?.url ?? searchHref} name="Amazon" className="shrink-0 text-slate-400" />
         </div>
         <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500">
-          <span>{live ? `Amazon's own listing · as of ${when} ${live.zoneLabel}*` : "Price shows on Amazon"}</span>
+          {live && <span className="text-up">● In stock</span>}
+          <span>{live ? `Amazon's own listing · as of ${when} ${live.zoneLabel}*` : "Also check the price on Amazon"}</span>
           <PaidLinkTag />
+          {live && cartInput && <CartAddButton inline {...cartInput} className="sm:hidden" />}
         </div>
         {live && <p className="mt-0.5 text-[10px] leading-4 text-slate-600">* {AMAZON_PRICE_DISCLAIMER}</p>}
       </div>
@@ -47,8 +57,9 @@ export function AmazonLiveSlot({ country, slug, label, searchHref }: { country: 
           {live.price}
         </span>
       )}
+      {live && cartInput && <CartAddButton {...cartInput} className="hidden text-slate-300 sm:inline-flex" />}
       <OutboundLink href={live?.url ?? searchHref} retailer="amazon_sealed" country={country} kind="sealed" pageType="sealed" surface={live ? "amazon_live" : "amazon_search"} className="btn-buy px-3 py-1.5 text-xs">
-        {live ? "View →" : "Check price →"}
+        {live ? "View →" : "Check Amazon →"}
       </OutboundLink>
     </>
   );

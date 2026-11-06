@@ -20,7 +20,7 @@ import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/se
 import { isPreorderSetCode } from "@/lib/constants";
 import { SealedWatchButton } from "./SealedWatchButton";
 import { PaidLinkTag } from "./AffiliateDisclosure";
-import { pinMarketplaces } from "@/lib/market-rows";
+import { PIN_OUTLINE, pinMarketplaces } from "@/lib/market-rows";
 import { amazonFor, amazonSearchUrl } from "@/lib/amazon";
 import { sealedPath, sealedSlug } from "@/lib/sealed-slug";
 import { AmazonLiveSlot } from "./AmazonLiveSlot";
@@ -198,9 +198,9 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
   const amazonHref = amazonStore ? amazonSearchUrl(country, riftboundEbayQuery(group.name), `${source}-amazon`) : null;
   const amazonRow =
     amazonStore && amazonHref ? (
-      <li key="amazon" data-amazon-row className="flex items-center gap-3 py-2.5">
+      <li key="amazon" data-amazon-row className={`-mx-2 flex items-center gap-3 px-2 py-2.5 ${PIN_OUTLINE.amazon}`}>
         {/* Amazon's own price from the Creators API where this store's account has access (owner, 2026-11-05), else the search. */}
-        <AmazonLiveSlot country={country} slug={sealedSlug(group.groupKey)} label={amazonStore.label} searchHref={amazonHref} />
+        <AmazonLiveSlot country={country} slug={sealedSlug(group.groupKey)} label={amazonStore.label} searchHref={amazonHref} cart={{ title: group.name, currency, image: group.imageUrl }} />
       </li>
     ) : null;
 
@@ -218,7 +218,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
     ) : (
       <ul className="divide-y divide-ink-800">
         {!pin.ebay && (
-          <li className="flex items-center gap-3 py-2.5">
+          <li className={`-mx-2 flex items-center gap-3 px-2 py-2.5 ${PIN_OUTLINE.ebay}`}>
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-1.5">
                 <span className="truncate text-sm font-semibold text-white">eBay</span>
@@ -233,14 +233,15 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
             </OutboundLink>
           </li>
         )}
-        {lead.length === 0 && amazonRow}
+        {/* Amazon is the second row, right under eBay (owner, 2026-11-06). */}
+        {!pin.ebay && amazonRow}
         {shown.map((l, i) => {
           const state = offerStock(l);
           const isOpen = state === "open";
           const isBest = l === best;
           const pinned = lead.includes(l);
           return [
-            <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"}`}>
+            <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"} ${pinned && l === pin.ebay ? `-mx-2 px-2 ${PIN_OUTLINE.ebay}` : ""}`}>
               <div className="min-w-0 flex-1">
                 <div className="flex min-w-0 items-center gap-1.5">
                   <span className="truncate text-sm font-semibold text-white">{l.retailerName}</span>
@@ -299,7 +300,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
                 View →
               </OutboundLink>
             </li>,
-            i === lead.length - 1 ? amazonRow : null,
+            pin.ebay && l === pin.ebay ? amazonRow : null,
           ];
         })}
       </ul>

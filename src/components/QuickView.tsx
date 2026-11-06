@@ -35,7 +35,7 @@ import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
 import type { PricePoint } from "@/lib/price-history";
 import { lastKnownLabel, lastKnownPrice, lastKnownTitle, type LastKnownPrice } from "@/lib/last-known-price";
-import { hasAnyMarketPrice, pinMarketplaces } from "@/lib/market-rows";
+import { PIN_OUTLINE, hasAnyMarketPrice, pinMarketplaces } from "@/lib/market-rows";
 import { ShareButton } from "@/components/ShareButton";
 import { Dialog } from "./ui/Dialog";
 import { Spinner } from "./ui/Skeleton";
@@ -623,7 +623,7 @@ function QuickViewModal({
                   })().map(({ p, pinned }) => {
                     const i = inStock.indexOf(p);
                     return (
-                    <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 md:flex-nowrap">
+                    <li key={p.id} className={`flex flex-wrap items-center gap-x-3 gap-y-2 py-2 md:flex-nowrap ${pinned && p.retailer.startsWith("ebay") ? `-mx-2 px-2 ${PIN_OUTLINE.ebay}` : ""}`}>
                       {/* Wraps below md, with the buy button on its own
                           full-width line (2026-09-23): an inline button squeezed
                           store names to 51px at 390, and eBay's to 0px at 320.
