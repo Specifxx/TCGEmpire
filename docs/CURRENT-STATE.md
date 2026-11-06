@@ -300,8 +300,9 @@ longer lands on its entry.
   votes go to `/api/store-votes` here (`StoreVote` table, one per browser per
   store, three browsers per network per store, hashes only) and one public
   tally comes back (CDN six hours). "Trusted" from 3 thumbs up and 80%.
-  Votes never order prices, hide a store or decide "cheapest"; marketplaces
-  (eBay, Amazon, TCGplayer, Cardmarket) get none.
+  Votes never order prices, hide a store or decide "cheapest"; TCGplayer,
+  Cardmarket and affiliate hosts get none. eBay and Amazon rows get thumbs like a
+  store row, one tally per domain (`marketKey`), since [2026-11-06](../DECISIONS.md#2026-11-06--ebay-and-amazon-rows-are-full-price-rows-on-top-outlined).
   [2026-11-06](../DECISIONS.md#store-thumbs-up-and-down-one-tally-for-every-site)
 - **One paid plan again (2026-10-23, supersedes the trial and tier bullets
   below):** Premium $9.99/mo or $79.99/yr with a free 30-day card-gated trial;
@@ -789,9 +790,10 @@ longer lands on its entry.
   [2026-09-26](../DECISIONS.md#L13751)
 - **eBay and TCGplayer lead every price list** (owner, 2026-10-27): the card
   page's comparison and the QuickView draw the cheapest eBay row and the
-  cheapest TCGplayer row, the cheaper of the two on top (TCGplayer on a tie,
-  `tcgFirst`), then the stores by price (`pinMarketplaces`); with no eBay row,
-  a live TCGplayer row leads, else eBay's search; outside the US TCGplayer's US market price is a
+  cheapest TCGplayer row, eBay always on top since [2026-11-06](../DECISIONS.md#2026-11-06--ebay-and-amazon-rows-are-full-price-rows-on-top-outlined) (green
+  outline; `tcgFirst` is always false; the sealed page's Amazon row second, amber),
+  then the stores by price (`pinMarketplaces`); with no eBay row, eBay's search
+  leads; outside the US TCGplayer's US market price is a
   labelled reference row. A "Paid link" tag (no "Shown first" chip since [2026-10-30](../DECISIONS.md#L20903)), the price rank in
   the number column, "+N% vs cheapest", and "Cheapest" on the real cheapest.
   The headline, `CardTopBuy`, the sticky bar and JSON-LD still read the price

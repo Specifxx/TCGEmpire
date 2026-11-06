@@ -22827,3 +22827,20 @@ Owner: "Perform a full migration to rm11 for Riftcompare and deploy urgently as 
 **The flip.** `OPERATIONAL_VARS = ["RM11"]` in `src/lib/db-chains.ts`; `CURRENT_OP` and the production gate in `scripts/build-db-push.sh`; every workflow's `DATABASE_URL`, `OPERATIONAL_URL`, `DB_SOURCE_NAME` and `RM11` forward; `ci-build.yml`'s service variable; `package.json`'s preview condition; `tests/ops-wiring.test.ts`. A Vercel production build without `RM11` set **fails** (the 2026-10-04 guard), so the previous deployment keeps serving on RM10 until it is set. Rollback is one commit: RM10 still holds the data. Deployed with `[deploy] [urgent]`: a database cutover at the limit is the standing exception to the 12-hour gate.
 
 **Writes in the gap.** Anything written to RM10 between the final pass and the new build going live is not on RM11: a few minutes of signups, alerts and notifications.
+
+## 2026-11-06 — eBay and Amazon rows are full price rows, on top, outlined
+
+**Decision (owner: "eBay prices and Amazon prices should function exactly like a normal store price row. So you can also
+add to cart … if it's in stock … it just sits on the very top. And it has a different colored outline"):** the eBay row
+is always the first row, with a green outline, and Amazon the second, with an amber one. Both carry everything a store
+row has: the stock line, the store thumbs (one tally per eBay / Amazon domain, `ebay.com.au`, `amazon.com`…) and the
+cart button. They are "manual" cart lines on their own tagged links (`src/lib/cart-list.ts`), never a Shopify checkout;
+an Amazon line's price is dropped from the visitor's list after 24 hours (Amazon's licence), and the cart then says to
+see today's price on Amazon. With no Amazon price the row reads "Also check on Amazon", a tagged link. Unchanged: neither
+is counted as a store, "Best price", a deal, an alert price or the reference price; TCGplayer and Cardmarket stay
+references (no thumbs, no cart line); no Amazon link in a pop-up.
+RiftCompare: `tcgplayerLeads` now always answers false, so eBay leads every card and sealed list and TCGplayer follows
+(until now the cheaper of the two led); the card rows already had the stock line, thumbs and cart, so eBay rows get them
+from the shared files; the sealed page's Amazon row (`AmazonLiveSlot`) gets thumbs, and with a live price the stock line
+and cart. `/api/store-votes` accepts eBay and Amazon domains (`marketKey`: one tally per domain), and no other marketplace.
+Store rows elsewhere in the family get the same through the identical `cart-list.ts` and `StoreVote.tsx`.

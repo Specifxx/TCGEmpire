@@ -10,8 +10,9 @@
 // public tally back (CDN six hours). Pure, so tests/store-votes.test.ts pins it.
 
 export const MAX_KEY = 80;
-/** Marketplaces and networks are not one store: no thumbs for them (eBay, Amazon, TCGplayer, Cardmarket…). */
-export const NOT_A_STORE = /(?:^|\.)(?:ebay|amazon)\.[a-z.]+$|(?:^|\.)(?:tcgplayer|cardmarket|etsy|aliexpress|walmart|awin1|anrdoezrs|dpbolvw|jdoqocy|kqzyfj|tkqlhce|linksynergy|shareasale|rakuten)\.com$|(?:^|\.)(?:sjv|pxf)\.io$/;
+/** Networks and references are not one store: no thumbs for them (TCGplayer, Cardmarket, affiliate hosts…).
+ *  eBay and Amazon rows get thumbs like a store row (owner, 2026-11-06), one tally per eBay / Amazon domain (marketKey). */
+export const NOT_A_STORE = /(?:^|\.)(?:tcgplayer|cardmarket|etsy|aliexpress|walmart|awin1|anrdoezrs|dpbolvw|jdoqocy|kqzyfj|tkqlhce|linksynergy|shareasale|rakuten)\.com$|(?:^|\.)(?:sjv|pxf)\.io$/;
 /** A store's host: letters, digits, dots and hyphens, at least one dot. */
 const HOST = /^(?=.{3,80}$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
 /** The browser's random id (localStorage), never a person's name or address. */
@@ -28,6 +29,11 @@ export const TRUSTED_SHARE = 0.8;
 export const MAX_TALLY_STORES = 5000;
 
 /** "https://www.Example.com/products/x" → "example.com"; null for anything that is not an http(s) host. */
+/** rover.ebay.com, m.ebay.co.uk, smile.amazon.com… → ebay.com, ebay.co.uk, amazon.com: one tally per domain. */
+export function marketKey(host: string): string {
+  return host.replace(/^(?:[a-z0-9-]+\.)+((?:ebay|amazon)\.[a-z.]+)$/, "$1");
+}
+
 export function storeKey(url: string | null | undefined): string | null {
   if (!url) return null;
   let host: string;
@@ -38,7 +44,7 @@ export function storeKey(url: string | null | undefined): string | null {
   } catch {
     return null;
   }
-  host = host.replace(/^www\./, "").replace(/\.$/, "");
+  host = marketKey(host.replace(/^www\./, "").replace(/\.$/, ""));
   return HOST.test(host) && !NOT_A_STORE.test(host) ? host : null;
 }
 
@@ -47,7 +53,7 @@ export type ParsedStoreVote = { kind: "ok"; store: string; vote: 1 | -1 | 0; vid
 export function parseStoreVote(body: unknown): ParsedStoreVote {
   if (!body || typeof body !== "object") return { kind: "error", error: "Nothing to send." };
   const b = body as Record<string, unknown>;
-  const store = typeof b.store === "string" && b.store.length <= MAX_KEY && HOST.test(b.store) && !NOT_A_STORE.test(b.store) ? b.store : null;
+  const store = typeof b.store === "string" && b.store.length <= MAX_KEY && HOST.test(b.store) && !NOT_A_STORE.test(b.store) && marketKey(b.store) === b.store ? b.store : null;
   if (!store) return { kind: "error", error: "Unknown store." };
   const vote = b.vote === 1 || b.vote === -1 || b.vote === 0 ? b.vote : null;
   if (vote === null) return { kind: "error", error: "A vote is 1, -1 or 0." };

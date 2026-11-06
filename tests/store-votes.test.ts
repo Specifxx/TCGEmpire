@@ -13,9 +13,11 @@ test("a store is its host without www, the same on the server and in the browser
     assert.equal(f("https://www.CherryCollectables.com.au/products/x?y=1"), "cherrycollectables.com.au");
     assert.equal(f("https://us.althea.kr/products/a"), "us.althea.kr");
     assert.equal(f("bemusedkorea.com"), "bemusedkorea.com");
-    assert.equal(f("https://www.ebay.com/itm/1"), null, "eBay is a marketplace, not a store");
-    assert.equal(f("https://rover.ebay.co.uk/x"), null);
-    assert.equal(f("https://www.amazon.com.au/dp/x"), null);
+    // eBay and Amazon rows are full price rows with thumbs (owner, 2026-11-06), one tally per domain
+    assert.equal(f("https://www.ebay.com/itm/1"), "ebay.com");
+    assert.equal(f("https://rover.ebay.co.uk/x"), "ebay.co.uk");
+    assert.equal(f("https://www.amazon.com.au/dp/x"), "amazon.com.au");
+    assert.equal(f("https://smile.amazon.com/dp/x"), "amazon.com");
     assert.equal(f("https://www.tcgplayer.com/product/1"), null);
     assert.equal(f("https://www.awin1.com/cread.php?x"), null, "an affiliate redirect is never a store");
     assert.equal(f("javascript:alert(1)"), null);
@@ -29,7 +31,9 @@ test("a vote is a known host, 1, -1 or 0, and a browser id", () => {
   assert.equal(parseStoreVote({ store: "example.com", vote: 0, vid: "a".repeat(32) }).kind, "ok");
   assert.equal(parseStoreVote({ store: "example.com", vote: 2, vid: "a".repeat(32) }).kind, "error");
   assert.equal(parseStoreVote({ store: "Example.com", vote: 1, vid: "a".repeat(32) }).kind, "error");
-  assert.equal(parseStoreVote({ store: "ebay.com", vote: 1, vid: "a".repeat(32) }).kind, "error");
+  assert.equal(parseStoreVote({ store: "ebay.com", vote: 1, vid: "a".repeat(32) }).kind, "ok");
+  assert.equal(parseStoreVote({ store: "rover.ebay.com", vote: 1, vid: "a".repeat(32) }).kind, "error", "one tally per eBay domain");
+  assert.equal(parseStoreVote({ store: "tcgplayer.com", vote: 1, vid: "a".repeat(32) }).kind, "error");
   assert.equal(parseStoreVote({ store: "example.com", vote: 1, vid: "short" }).kind, "error");
   assert.equal(parseStoreVote({ store: "x".repeat(90) + ".com", vote: 1, vid: "a".repeat(32) }).kind, "error");
   assert.equal(parseStoreVote(null).kind, "error");

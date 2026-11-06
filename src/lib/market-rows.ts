@@ -122,11 +122,20 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
  * eBay and TCGplayer first (owner, 2026-10-27: "the top rows should be eBay
  * and TCGplayer, even if they are not the cheapest"). Takes `prices` cheapest
  * first (computeMarket) and returns the cheapest eBay row and the cheapest
- * TCGplayer row (the cheaper of the two on top: `tcgFirst`), plus every other
+ * TCGplayer row (eBay on top since 2026-11-06: `tcgFirst` is always false), plus every other
  * row in its price order. Display only: the
  * ranking itself, `lowest`, the headline, CardTopBuy, the sticky bar and the
  * JSON-LD all keep reading `prices`, so the cheapest is still the cheapest.
  */
+/**
+ * The pinned rows' outlines (owner, 2026-11-06: eBay and Amazon rows work exactly like a store row, "sit on the very
+ * top. And it has a different colored outline"): eBay green, Amazon amber. Inset, so the row keeps its layout.
+ */
+export const PIN_OUTLINE = {
+  ebay: "rounded-lg outline outline-2 -outline-offset-2 outline-[#16a34a]",
+  amazon: "rounded-lg outline outline-2 -outline-offset-2 outline-[#f59e0b]",
+} as const;
+
 export function pinMarketplaces<T extends { retailer: string; priceCents: number }>(
   prices: T[],
 ): { ebay: T | null; tcgplayer: T | null; tcgFirst: boolean; rest: T[] } {
@@ -144,9 +153,11 @@ export function pinMarketplaces<T extends { retailer: string; priceCents: number
  * US cards (TCGplayer is the cheapest row on about half of them) and pushed the
  * partner that pays about 2.5 times more per click to the second row.
  */
-export function tcgplayerLeads(ebay: { priceCents: number } | null, tcgplayer: { priceCents: number } | null): boolean {
-  if (!tcgplayer) return false;
-  return !ebay || tcgplayer.priceCents <= ebay.priceCents;
+export function tcgplayerLeads(_ebay?: { priceCents: number } | null, _tcgplayer?: { priceCents: number } | null): boolean {
+  // Since 2026-11-06 eBay always leads (owner: eBay and Amazon rows "sit on the very top",
+  // eBay first, Amazon second), so TCGplayer never goes above it. Kept as a function so
+  // every caller's `tcgFirst` branch stays one switch.
+  return false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
