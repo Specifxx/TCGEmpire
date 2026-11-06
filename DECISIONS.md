@@ -22732,3 +22732,14 @@ checkout emails that link the moment it is paid. Owner then asked for "best prac
 - `src/lib/email-sign-in.ts`, `src/components/EmailSignInForm.tsx`, `tests/email-sign-in.test.ts`. `grant-premium`
   gained `apply` (FREE_IN_STRIPE): it also moves the live subscription's next charge to `premium_until`, so a comp
   (this buyer's two free months) is not billed.
+
+## 2026-11-06 — OP Compare signs in by email link, mailed from here
+
+**Decision (owner: carry the code-red email sign-in fix to every site with accounts; OP Compare is the only other one):**
+OP Compare has accounts but no mail service, so its "Email me a sign-in link" form posts to `/api/sister-sign-in` (exact
+`opcompare.app` origin only) and we mail the link from our verified domain under OP Compare's name, as the sister price
+alerts already are. The token is an EdDSA JWT (address, audience `https://opcompare.app`, one-time `jti`, 30 minutes)
+signed by a key pair derived from `AUTH_SECRET`; OP Compare verifies it with the public half from
+`/api/sister-sign-in/jwks` and refuses a `jti` it has seen. No new secret, no mail key on OP Compare. Same generic ok
+for every address, 8 asks an hour per network and 4 per address. `src/lib/sister-sign-in.ts`,
+`tests/sister-sign-in.test.ts`. Adding another sister with accounts is one line in `SIGN_IN_SITES`.
