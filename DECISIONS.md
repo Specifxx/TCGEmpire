@@ -22535,3 +22535,34 @@ long enough to form the habit, and $4.99 is the one price nobody called too expe
 2026-10-12 entry, once the first 14-day cohort matures (from about 20 November). Leave price, trial and pitch alone
 until then: six changes since August meant no single setup was ever measured, and this one is the only setup that
 has already been.
+
+## 2026-11-06 — Amazon earnings typed in from the screen, no download and no upload
+
+Owner: "Make the uploading Amazon data onto the earnings dashboard much easier.
+I don't want to download and upload anything. I want the Claude Chrome
+extension prompt to just look at all the earnings and figure it out for me."
+
+Amazon still has no reporting API for us (2026-11-03), but the figures the
+report holds are also on screen: the Reports page's **Daily trends** (earnings
+and items shipped per day) and **Tracking ID summary** (each ID's earnings and
+items over the range). Claude in Chrome can read those; it cannot reliably pick
+a ZIP out of a Downloads folder.
+
+- `/admin/earnings` has an **Amazon figures** box (`AmazonUploadForm.tsx`) and a
+  `Save figures` button posting to `/api/admin/earnings/amazon/entry` (admin
+  session or `ADMIN_TOKEN`, JSON `{ text }` or a text/plain body). The format is
+  one block per store: `store: au`, `range: <from> to <to>`, a `day <date>
+  <earnings> <items>` line per day and an `id <tracking id> <earnings> <items>`
+  line per tracking ID (`parseAmazonEntry`, `src/lib/earnings/amazon.ts`; every
+  error names the line). A block REPLACES that store's range, like an upload.
+- **Day × tracking ID is an allocation.** Amazon shows per day and per ID, never
+  both at once, so `allocateAmazonEntry` spreads each ID's range total over the
+  days in proportion to the days' totals (largest-remainder rounding): every
+  day's total and every ID's total land exactly; only the cross is estimated,
+  which is all the 7/30/90-day views and the by-site split need. What the days
+  hold beyond the IDs goes on the shared row (`amazon-<store>-all`), never a
+  site. No day lines: an even spread. No id lines: the days stay shared.
+- The Chrome prompt the dashboard hands out (`amazonChromePrompt`) now reads
+  the two views and types the blocks; it never downloads. The report upload
+  stays under a collapsed "Or upload a downloaded Earnings report" as the
+  fallback, same route as before.

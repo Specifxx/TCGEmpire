@@ -141,11 +141,96 @@ test("the Chrome prompt starts each store the day after its last upload, 90 days
     ],
     "2026-11-03",
   );
-  assert.match(p, /Amazon\.com\.au: https:\/\/affiliate-program\.amazon\.com\.au — download 2026-10-21 to 2026-11-03 \(last upload covers through 2026-10-20\)/);
-  assert.match(p, /Amazon\.com: https:\/\/affiliate-program\.amazon\.com — download 2026-08-05 to 2026-11-03 \(no upload yet\)/);
+  assert.match(p, /Amazon\.com\.au \(store code "au"\): https:\/\/affiliate-program\.amazon\.com\.au — read 2026-10-21 to 2026-11-03 \(dashboard covered through 2026-10-20\)/);
+  assert.match(p, /Amazon\.com \(store code "us"\): https:\/\/affiliate-program\.amazon\.com — read 2026-08-05 to 2026-11-03 \(nothing on the dashboard yet\)/);
+  assert.match(p, /never download anything/, "owner 2026-11-06: no downloads, no uploads");
+  assert.doesNotMatch(p, /upload (a|the|it|them)/i, "nothing is uploaded");
+  assert.match(p, /Amazon figures/);
+  assert.match(p, /Save figures/);
   assert.match(p, /NEVER STOP PARTWAY/);
   assert.match(p, /SAFE TO RERUN/);
   assert.doesNotMatch(p, /week/i, "on demand, never a weekly task (owner, 2026-11-03)");
   const sources = readFileSync(new URL("../src/lib/earnings/sources.ts", import.meta.url), "utf8");
   assert.doesNotMatch(sources, /AMAZON_STALE|stale/, "no nag about the age of the last upload");
+});
+
+test("figures typed from the screen: one block per store, days and tracking IDs, errors name the line", async () => {
+  const { parseAmazonEntry } = await import("../src/lib/earnings/amazon");
+  const [au, us] = parseAmazonEntry(`store: au
+range: 2026-10-21 to 2026-10-23
+day 2026-10-21 3.40 2
+- day 2026-10-22 0 0
+day 23/10/2026 A$1.10 1
+id riftcompare-22 2.50 2
+id RiftCompare-22 3.50 2
+id compareempire-22 1.00 1
+
+Store: Amazon.com
+range: 10/01/2026 - 10/02/2026
+day 10/02/2026 $5 1
+`);
+  assert.equal(au.key, "au");
+  assert.deepEqual([au.from, au.to], ["2026-10-21", "2026-10-23"]);
+  assert.deepEqual(au.days, [
+    { day: "2026-10-21", cents: 340, items: 2 },
+    { day: "2026-10-22", cents: 0, items: 0 },
+    { day: "2026-10-23", cents: 110, items: 1 },
+  ]);
+  assert.deepEqual(au.ids, [
+    { trackingId: "riftcompare-22", cents: 350, items: 2 },
+    { trackingId: "compareempire-22", cents: 100, items: 1 },
+  ], "a repeated id replaces the earlier line");
+  assert.equal(us.key, "us");
+  assert.deepEqual([us.from, us.to], ["2026-10-01", "2026-10-02"]);
+  assert.deepEqual(us.days, [{ day: "2026-10-02", cents: 500, items: 1 }]);
+  assert.throws(() => parseAmazonEntry("day 2026-10-21 1 1"), /start with a "store: au" line/);
+  assert.throws(() => parseAmazonEntry("store: jp\n"), /unknown store/);
+  assert.throws(() => parseAmazonEntry("store: au\nday 2026-10-21 1 1"), /range/);
+  assert.throws(() => parseAmazonEntry("store: au\nrange: 2026-10-21 to 2026-10-22\nday 2026-10-25 1 1"), /outside its range/);
+  assert.throws(() => parseAmazonEntry("store: au\nrange: 2026-10-21 to 2026-10-22\nearnings 5"), /line 3/);
+  assert.throws(() => parseAmazonEntry(""), /Nothing to save/);
+});
+
+test("tracking-ID totals are spread over the days by the days' totals; day and ID totals land exactly; the rest is shared", async () => {
+  const { allocateAmazonEntry, amazonTag } = await import("../src/lib/earnings/amazon");
+  const rows = allocateAmazonEntry({
+    key: "au",
+    from: "2026-10-21",
+    to: "2026-10-23",
+    days: [
+      { day: "2026-10-21", cents: 300, items: 3 },
+      { day: "2026-10-22", cents: 0, items: 0 },
+      { day: "2026-10-23", cents: 100, items: 1 },
+    ],
+    ids: [
+      { trackingId: "riftcompare-22", cents: 301, items: 2 },
+      { trackingId: "compareempire-22", cents: 50, items: 1 },
+    ],
+  });
+  const sum = (f: (r: (typeof rows)[number]) => boolean) => rows.filter(f).reduce((n, r) => n + r.cents, 0);
+  assert.equal(sum((r) => r.trackingId === "riftcompare-22"), 301, "an ID's total lands exactly, to the cent");
+  assert.equal(sum((r) => r.trackingId === "compareempire-22"), 50);
+  assert.equal(sum((r) => r.day === "2026-10-21"), 300, "a day's total lands exactly");
+  assert.equal(sum((r) => r.day === "2026-10-22"), 0);
+  assert.equal(sum((r) => r.day === "2026-10-23"), 100);
+  assert.equal(sum((r) => r.trackingId === "all"), 49, "what the days hold beyond the IDs is shared");
+  assert.equal(amazonTag("all", "au"), "amazon-au-all", "the shared row, never a site");
+  assert.ok(!rows.some((r) => r.day === "2026-10-22"), "a zero day gets no rows");
+  assert.equal(rows.filter((r) => r.trackingId === "riftcompare-22").reduce((n, r) => n + r.items, 0), 2);
+
+  // No day lines: even spread. No id lines: the days stay on the shared row.
+  const even = allocateAmazonEntry({ key: "us", from: "2026-10-01", to: "2026-10-02", days: [], ids: [{ trackingId: "riftcompare-20", cents: 101, items: 1 }] });
+  assert.deepEqual(even.map((r) => r.cents), [51, 50]);
+  const shared = allocateAmazonEntry({ key: "us", from: "2026-10-01", to: "2026-10-02", days: [{ day: "2026-10-02", cents: 70, items: 1 }], ids: [] });
+  assert.deepEqual(shared, [{ day: "2026-10-02", trackingId: "all", cents: 70, items: 1 }]);
+});
+
+test("the typed-entry route is admin-only, replaces each store's range and marks coverage", () => {
+  const route = readFileSync(new URL("../src/app/api/admin/earnings/amazon/entry/route.ts", import.meta.url), "utf8");
+  assert.match(route, /if \(!\(await allowed\(key\)\)\) return NextResponse\.json\(\{ error: "Not allowed" \}, \{ status: 403 \}\);/);
+  assert.match(route, /deleteMany\(\{ where: \{ source: "amazon", currency: store\.currency, day: \{ gte: from, lte: to \} \} \}\)/);
+  assert.match(route, /day: to, amountCents: 0, currency: store\.currency, tag: ""/);
+  const form = readFileSync(new URL("../src/components/admin/AmazonUploadForm.tsx", import.meta.url), "utf8");
+  assert.match(form, /aria-label="Amazon figures"/);
+  assert.match(form, /Save figures/);
 });
