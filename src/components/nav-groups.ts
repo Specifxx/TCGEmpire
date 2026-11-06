@@ -88,7 +88,9 @@ export const NAV_GROUPS: NavGroup[] = [
       // pre-order searcher now wants Legacy. Same no-"prices" label rule.
       { href: "/legacy-preorders", label: "Legacy pre-orders", keywords: ["legacy", "set 6", "legacy booster box", "legacy preorder", "preorder", "pre-order", "upcoming set"] },
       // Black Friday sealed deals (2026-10-30, the weekly growth review). No "prices" or bare "deals" in the label: "deals" belongs to the Deal Finder (tests/nav-search.test.ts).
-      { href: "/black-friday", label: "Black Friday", keywords: ["black friday", "cyber monday", "black friday deals", "sale", "discount", "cheap booster box", "christmas", "holiday"] },
+      { href: "/black-friday", label: "Black Friday", keywords: ["black friday", "black friday deals", "sale", "discount", "cheap booster box", "christmas", "holiday"] },
+      // Cyber Monday's own page (2026-11-06): the same deals and price watch under the Monday query.
+      { href: "/cyber-monday", label: "Cyber Monday", keywords: ["cyber monday", "cyber monday deals", "cyber week", "online sale"] },
       // The seasonal sale pages (2026-11-02, DECISIONS.md "Seasonal sale pages"): same no-"deals"/"prices" label rule.
       { href: "/boxing-day", label: "Boxing Day", keywords: ["boxing day", "boxing day sale", "boxing day sales", "boxing day deals", "end of year sale"] },
       { href: "/january-sales", label: "January sales", keywords: ["january sale", "january sales", "new year sale", "after christmas sale"] },
