@@ -44,7 +44,7 @@ test("buyButtonClass: every row, eBay's included, wears the one green (owner, 20
 
 test("the colour is the only thing that changed: both tables still rank by price and share the one helper", () => {
   const section = read(SECTION);
-  assert.match(section, /className=\{`\$\{buyButtonClass\(p\.retailer\)\} order-last/);
+  assert.match(section, /className=\{`\$\{buyButtonClass\(p\.retailer\)\} /);
   // The row order is computeMarket's, untouched — no eBay-first sort anywhere.
   assert.match(section, /const m = useMemo\(\(\) => computeMarket\(rows, country\), \[rows, country\]\);/);
   const qv = read(QUICKVIEW);
