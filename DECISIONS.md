@@ -22708,6 +22708,41 @@ price on the right, ten tiles each that scroll.
 - Ad-free for Plus and Premium like every ad (`usePremium()`, `data-ad-placement`), and members keep the full-width
   column: the narrowing is `:root:not([data-adfree])`, which the boot script sets before first paint.
 - Labelled "Ad", affiliate links through `OutboundLink`, surface `side_rails` (sub-ids `side_<market>`, `tcg_side`).
+## 2026-11-06 — Anyone who pays can reach their account: emailed sign-in links
+
+**Decision (owner: "code red … we must get this fixed immediately"):** a buyer paid for Premium as a guest with Apple
+Pay on an iCloud address, and could not get into the account the webhook made for him: sign-in was Google or Discord
+only, and neither knew that address. Sign-in now also works by a one-time link emailed to ANY address, and a paid guest
+checkout emails that link the moment it is paid. Owner then asked for "best practices … like a very legitimate site".
+
+- **Passwordless on purpose, not passwords back.** A one-time emailed link is the sign-in Slack, Notion and Medium use:
+  no password to store, leak, reuse or forget, so there is no "forgot password" flow to need; asking for a new link IS
+  the recovery. The password routes stay gone (`tests/auth-oauth-only.test.ts`).
+- **The link proves the inbox**, like Google's "verified", so a consumed link stamps `emailVerified`. An existing account
+  gets a single-use `AuthToken` (purpose `login`; 30 minutes from the form, 7 days in the paid-checkout email). An address
+  with no account gets a signed 30-minute token carrying the address, and the row is created only when the link is
+  opened (`signupSource` `email_link`), so typing a stranger's address never creates an account. No new admin-address
+  account, ever (the guest checkout's fence).
+- **Never on a GET.** The link opens `/login/email`, whose button POSTs the token: mail scanners fetch every link and
+  would burn a GET token before the person clicks.
+- **No account enumeration, no inbox flooding.** `/api/auth/email-link` answers the same ok for every address; 8 asks an
+  hour per network, 4 per address.
+- **The name step.** `/login/email` asks for an optional name; it replaces only the address-derived placeholder a link or
+  guest checkout account starts with, never a chosen name.
+- `src/lib/email-sign-in.ts`, `src/components/EmailSignInForm.tsx`, `tests/email-sign-in.test.ts`. `grant-premium`
+  gained `apply` (FREE_IN_STRIPE): it also moves the live subscription's next charge to `premium_until`, so a comp
+  (this buyer's two free months) is not billed.
+
+## 2026-11-06 — OP Compare signs in by email link, mailed from here
+
+**Decision (owner: carry the code-red email sign-in fix to every site with accounts; OP Compare is the only other one):**
+OP Compare has accounts but no mail service, so its "Email me a sign-in link" form posts to `/api/sister-sign-in` (exact
+`opcompare.app` origin only) and we mail the link from our verified domain under OP Compare's name, as the sister price
+alerts already are. The token is an EdDSA JWT (address, audience `https://opcompare.app`, one-time `jti`, 30 minutes)
+signed by a key pair derived from `AUTH_SECRET`; OP Compare verifies it with the public half from
+`/api/sister-sign-in/jwks` and refuses a `jti` it has seen. No new secret, no mail key on OP Compare. Same generic ok
+for every address, 8 asks an hour per network and 4 per address. `src/lib/sister-sign-in.ts`,
+`tests/sister-sign-in.test.ts`. Adding another sister with accounts is one line in `SIGN_IN_SITES`.
 
 ## 2026-11-06 — The phone dock: the side rails' ads on screens too narrow for them
 

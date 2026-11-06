@@ -1,5 +1,5 @@
 [
 {"retailer":"cardmarket_eu","retailerName":"Cardmarket","title":"Brush","url":"https://www.cardmarket.com/en/Riftbound/Products?idProduct=886240","condition":"NM","isFoil":false,"priceCents":2,"shippingCents":null,"currency":"EUR","inStock":true,"derived":null,"country":"EU"},
-{"retailer":"fourelements","retailerName":"4elements","title":"Brush [UNL-T03] [Unleashed]","url":"https://www.4elements.sg/products/brush-unl-t03-unleashed","condition":"Near Mint","isFoil":false,"priceCents":100,"shippingCents":null,"currency":"SGD","inStock":true,"derived":null,"country":"SG"},
+{"retailer":"fourelements","retailerName":"4elements","title":"Brush [UNL-T03] [Unleashed]","url":"https://www.4elements.sg/products/brush-unl-t03-unleashed?variant=42950219956322","condition":"Near Mint","isFoil":false,"priceCents":100,"shippingCents":null,"currency":"SGD","inStock":true,"derived":null,"country":"SG"},
 {"retailer":"cardmarket","retailerName":"Cardmarket","title":"Brush","url":"https://www.cardmarket.com/en/Riftbound/Products?idProduct=886240","condition":"NM","isFoil":false,"priceCents":2,"shippingCents":null,"currency":"GBP","inStock":true,"derived":null,"country":"UK"}
 ]

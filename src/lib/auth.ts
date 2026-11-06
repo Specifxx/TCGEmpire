@@ -47,10 +47,12 @@ export interface SessionUser {
 }
 
 
-// One-time tokens for email verification / password reset.
+// One-time tokens: email verification, password reset (retired) and, since
+// 2026-11-06, the emailed sign-in link ("login", lib/email-sign-in.ts).
+export type AuthTokenPurpose = "verify" | "reset" | "login";
 export async function createAuthToken(
   userId: string,
-  purpose: "verify" | "reset",
+  purpose: AuthTokenPurpose,
   ttlMs = 60 * 60 * 1000
 ): Promise<string> {
   const token = randomBytes(32).toString("hex");
@@ -63,7 +65,7 @@ export async function createAuthToken(
 // Consume a token: returns the userId if valid+unexpired (and deletes it), else null.
 export async function consumeAuthToken(
   token: string,
-  purpose: "verify" | "reset"
+  purpose: AuthTokenPurpose
 ): Promise<string | null> {
   const row = await prisma.authToken.findUnique({ where: { token } });
   if (!row || row.purpose !== purpose) return null;

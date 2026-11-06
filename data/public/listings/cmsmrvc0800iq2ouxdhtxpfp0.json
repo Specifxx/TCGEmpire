@@ -1,5 +1,5 @@
 [
 {"retailer":"cardmarket_eu","retailerName":"Cardmarket","title":"Reflection","url":"https://www.cardmarket.com/en/Riftbound/Products?idProduct=886239","condition":"NM","isFoil":false,"priceCents":2,"shippingCents":null,"currency":"EUR","inStock":true,"derived":null,"country":"EU"},
-{"retailer":"fourelements","retailerName":"4elements","title":"Reflection [UNL-T06] [Unleashed]","url":"https://www.4elements.sg/products/reflection-unl-t06-unleashed","condition":"Near Mint","isFoil":false,"priceCents":50,"shippingCents":null,"currency":"SGD","inStock":true,"derived":null,"country":"SG"},
+{"retailer":"fourelements","retailerName":"4elements","title":"Reflection [UNL-T06] [Unleashed]","url":"https://www.4elements.sg/products/reflection-unl-t06-unleashed?variant=42950233817186","condition":"Near Mint","isFoil":false,"priceCents":50,"shippingCents":null,"currency":"SGD","inStock":true,"derived":null,"country":"SG"},
 {"retailer":"cardmarket","retailerName":"Cardmarket","title":"Reflection","url":"https://www.cardmarket.com/en/Riftbound/Products?idProduct=886239","condition":"NM","isFoil":false,"priceCents":2,"shippingCents":null,"currency":"GBP","inStock":true,"derived":null,"country":"UK"}
 ]

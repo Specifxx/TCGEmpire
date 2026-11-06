@@ -1,5 +1,5 @@
 [
 {"retailer":"cardmarket_eu","retailerName":"Cardmarket","title":"Gold","url":"https://www.cardmarket.com/en/Riftbound/Products?idProduct=886236","condition":"NM","isFoil":false,"priceCents":2,"shippingCents":null,"currency":"EUR","inStock":true,"derived":null,"country":"EU"},
-{"retailer":"fourelements","retailerName":"4elements","title":"Gold [UNL-T05] [Unleashed]","url":"https://www.4elements.sg/products/gold-unl-t05-unleashed","condition":"Near Mint","isFoil":false,"priceCents":50,"shippingCents":null,"currency":"SGD","inStock":true,"derived":null,"country":"SG"},
+{"retailer":"fourelements","retailerName":"4elements","title":"Gold [UNL-T05] [Unleashed]","url":"https://www.4elements.sg/products/gold-unl-t05-unleashed?variant=42950233718882","condition":"Near Mint","isFoil":false,"priceCents":50,"shippingCents":null,"currency":"SGD","inStock":true,"derived":null,"country":"SG"},
 {"retailer":"cardmarket","retailerName":"Cardmarket","title":"Gold","url":"https://www.cardmarket.com/en/Riftbound/Products?idProduct=886236","condition":"NM","isFoil":false,"priceCents":2,"shippingCents":null,"currency":"GBP","inStock":true,"derived":null,"country":"UK"}
 ]

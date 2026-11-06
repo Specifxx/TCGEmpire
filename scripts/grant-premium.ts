@@ -40,6 +40,11 @@
  *
  *   DRY_RUN=1   report the current state and the planned change, write nothing.
  *   SKIP_STRIPE=1  set the date only; do not touch Stripe (offline/no key).
+ *   FREE_IN_STRIPE=1  ALSO move the live subscription's next charge to
+ *                  PREMIUM_UNTIL (a free extension: Stripe trial_end, no
+ *                  proration), so the comped time is not billed. Added
+ *                  2026-11-06 for the locked-out Apple Pay buyer's two free
+ *                  months; the maintenance workflow sets it from `apply`.
  */
 import { prisma } from "../src/lib/db";
 import { isPremium, normalizeTier } from "../src/lib/premium";
@@ -49,6 +54,7 @@ const EMAIL = (process.env.TARGET_EMAIL ?? "").trim().toLowerCase();
 const UNTIL_RAW = (process.env.PREMIUM_UNTIL ?? "").trim();
 const DRY = process.env.DRY_RUN === "1";
 const SKIP_STRIPE = process.env.SKIP_STRIPE === "1";
+const FREE_IN_STRIPE = process.env.FREE_IN_STRIPE === "1";
 // Which tier to restore — defaults to "premium" (every incident this script
 // predates the tier split, and restoring what someone actually had is safest
 // as the top tier unless told otherwise). TIER=plus for a Plus subscriber.
@@ -176,6 +182,22 @@ async function main() {
             // THE load-bearing repair: premiumRenewed() reads this FIRST.
             await stripe().subscriptions.update(live.id, { metadata: { ...live.metadata, userId: user.id } });
             console.log(`  metadata.userId (after) : ${user.id}  ← re-linked`);
+          }
+
+          // A comp (FREE_IN_STRIPE): push the next charge out to the granted
+          // date, so the free time really is free. trial_end on a live
+          // subscription is Stripe's own way to add unbilled time; it never
+          // shortens what was paid, because it only ever moves later.
+          if (FREE_IN_STRIPE) {
+            const untilSec = Math.floor(until.getTime() / 1000);
+            if (untilSec <= live.current_period_end) {
+              console.log(`  next charge  : unchanged (${until.toISOString()} is not after the current period end)`);
+            } else if (DRY) {
+              console.log(`  next charge  : would move to ${until.toISOString()} (free, no proration)`);
+            } else {
+              const moved = await stripe().subscriptions.update(live.id, { trial_end: untilSec, proration_behavior: "none" });
+              console.log(`  next charge  : moved to ${new Date((moved.trial_end ?? untilSec) * 1000).toISOString()} (status ${moved.status})`);
+            }
           }
 
           // Restore trialStartedAt from STRIPE's own record rather than
