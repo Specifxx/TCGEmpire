@@ -2009,6 +2009,12 @@ ins.adsbygoogle[data-ad-status="unfilled"],
 .rail-scroll { scrollbar-width: thin; scrollbar-color: rgb(var(--c-ink-700, 51 65 85)) transparent; }
 
 
+/* The phone dock (AdDock.tsx: the side rails' tiles in a bar along the foot of a screen under 1280px) is showing: the corner
+   buttons lift above it, as they do for the card page's buy bar. */
+html[data-ad-dock] .above-bottombar {
+  bottom: calc(var(--native-banner-h, 0px) + env(safe-area-inset-bottom, 0px) + 4.75rem);
+}
+
 /* The header's "Try Premium" callout (PricingNudge, 2026-10-25): slides in under
    the Pricing link a few seconds into a visit, its arrow bobbing towards it. */
 @keyframes pricing-nudge-in {
