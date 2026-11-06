@@ -129,7 +129,7 @@ export function CartListView() {
           : checkedAt
             ? `Prices last checked ${checkedAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
             : "Prices are as they were when you added them."}{" "}
-        Each store is its own checkout, paid on the store's own site (we never take payment). The store charges its live price and postage, and opening a store&apos;s cart replaces anything already in your cart there.
+        Each store is its own checkout, paid on the store&apos;s own site (we never take payment). The store charges its live price and postage, and opening a store&apos;s cart replaces anything already in your cart there.
       </p>
 
       {groups.map((g) => {
