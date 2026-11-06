@@ -307,7 +307,7 @@ test("the header's inline card search waits for xl, because the rail leaves it n
   // full-width second row carries the search instead.
   const nav = codeOnly(read("src/components/Navbar.tsx"));
   assert.match(nav, /className="hidden min-w-0 flex-1 xl:block xl:w-\[36rem\]"/, "inline from xl, with a definite width to grow into");
-  assert.match(nav, /className="pb-3 xl:hidden"/, "the full-width row covers everything below xl, including 1024-1279");
+  assert.match(nav, /className="[^"]*\bpb-3 xl:hidden"/, "the full-width row covers everything below xl, including 1024-1279");
 });
 
 test("every group in the rail is reachable and nothing in NAV_GROUPS was lost to the rework", () => {
