@@ -1283,6 +1283,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               rows={rows}
               cardId={card.id}
               displayName={displayName}
+              image={cardImageSrc(card, { absolute: true }) ?? null}
               ebaySearch={ebaySearch}
               ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
               preRelease={preview}

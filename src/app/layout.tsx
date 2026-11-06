@@ -3,6 +3,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import localFont from "next/font/local";
 import "./globals.css";
+// The cart list's styles (components/cart): imported here, never from a component, so node tests can load them.
+import "@/components/cart/cart.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
 import { SideRails } from "@/components/SideRails";

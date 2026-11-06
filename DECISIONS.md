@@ -22744,6 +22744,27 @@ signed by a key pair derived from `AUTH_SECRET`; OP Compare verifies it with the
 for every address, 8 asks an hour per network and 4 per address. `src/lib/sister-sign-in.ts`,
 `tests/sister-sign-in.test.ts`. Adding another sister with accounts is one line in `SIGN_IN_SITES`.
 
+## 2026-11-06 — A cart list on every site
+
+**Decision (owner: "I really like the cart feature … all of our websites", modelled on TCG Snoop's list):** every store
+row gets an "Add to cart" button and the header a cart with its count, on every width. `/cart` groups the lines by
+store, one card per store with its subtotal and ONE "Check out at <store>" button: Shopify's cart permalink
+(`/cart/<variant>:<qty>,…`), which fills that store's cart and opens its checkout. A cart cannot span stores, so it is
+one button per store, and the top line reads "2 stores · 5 items · $X before postage".
+
+- **The list lives in the visitor's browser** (`localStorage` `ce_cart_v1`): no account, no server, no database, no
+  function. The page is a static, noindexed shell (`/cart`, out of the sitemap).
+- **The live check costs us nothing:** the page fetches each line's `/products/<handle>.js` straight from the store
+  (Shopify serves it with CORS open), shows a changed price and leaves a sold-out line out of the checkout.
+- **Which lines can be carted is the row's own buy link, never a second rule:** only a row whose link already is a cart
+  permalink (the single-click checkout links, "Buy links open the store's checkout") becomes a cart line. Awin and
+  partner-deal stores, and any row whose variant is unknown, stay "manual": listed with their own tracked link, so the
+  commission still lands. eBay, Amazon, TCGplayer and Cardmarket are never a line (`isMarketplace`).
+- The cart attribute `compare_ref` (`riftcompare-<random>`) and `utm_medium=cart` mark the store's order as ours. The
+  page warns that opening a store's cart replaces what is already in it there, and that the store charges its live price.
+- Shared files, the same in every site (port fixes by hand): `src/lib/cart-list.ts`, `src/components/cart/*`
+  (`cart-config.ts` is the one per-site file), styles imported once from the root layout. `tests/cart-list.test.ts`.
+
 ## 2026-11-06 — The phone dock: the side rails' ads on screens too narrow for them
 
 Owner: "how can we have those [eBay and TCGplayer side rail ads] on mobile phone … like I have a Z Fold 7 … but also iPhones.

@@ -1,5 +1,6 @@
 "use client";
 
+import { CartAddButton } from "@/components/cart/CartAddButton";
 import { StoreVote } from "./StoreVote";
 import { MiniPicks } from "./MiniPicks";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
@@ -250,6 +251,19 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
                   {isBest && <span className="font-semibold text-gold sm:hidden">Best price</span>}
                   <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
                   {isOpen && <StoreCodeChip href={l.url} className="text-[10px]" />}
+                  {isOpen && (
+                    <CartAddButton
+                      inline
+                      href={affiliateUrl(l.url, l.retailer, "/sealed")}
+                      productUrl={l.url}
+                      storeName={l.retailerName}
+                      title={group.name}
+                      priceCents={l.priceCents}
+                      currency={currency}
+                      image={group.imageUrl}
+                      className="sm:hidden"
+                    />
+                  )}
                 </div>
               </div>
               {/* On a phone the chip squeezed the store's name to three letters: the label moves under it there. */}
@@ -257,6 +271,18 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
               <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "text-slate-500 line-through" : ""}`}>
                 {fmt(l.priceCents)}
               </div>
+              {isOpen && (
+                <CartAddButton
+                  href={affiliateUrl(l.url, l.retailer, "/sealed")}
+                  productUrl={l.url}
+                  storeName={l.retailerName}
+                  title={group.name}
+                  priceCents={l.priceCents}
+                  currency={currency}
+                  image={group.imageUrl}
+                  className="hidden text-slate-300 sm:inline-flex"
+                />
+              )}
               <OutboundLink
                 href={affiliateUrl(l.url, l.retailer, "/sealed")}
                 retailer={l.retailer}

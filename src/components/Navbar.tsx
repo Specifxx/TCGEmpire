@@ -11,6 +11,7 @@ import { DISCORD_URL } from "@/lib/site";
 import { BrandLogo } from "./BrandLogo";
 import { HeaderMenuButton } from "./HeaderMenuButton";
 import { HeaderWatchButton } from "./HeaderWatchButton";
+import { CartHeaderLink } from "./cart/CartHeaderLink";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -430,6 +431,9 @@ export function Navbar() {
               control from the menu at every width it appears, which is what
               "the watchlist and the menu should be separate" actually asked
               for. */}
+          {/* THE CART LIST (components/cart, owner 2026-11-06: "visible on the
+              header … and on phone"): every width, with its count. */}
+          <CartHeaderLink className="text-slate-300 hover:text-white" />
           <HeaderWatchButton className="hidden sm:inline-flex" />
           <HeaderMenuButton className="lg:hidden" />
         </nav>
