@@ -2617,15 +2617,19 @@ jobs:
               return [r[0] for r in conn.execute("""SELECT column_name FROM information_schema.columns
                 WHERE table_schema='public' AND table_name=%s ORDER BY ordinal_position""", (t,))]
           def rows(conn, t, cs, k):
-              q = sql.SQL("SELECT {} FROM {}").format(sql.SQL(",").join(map(sql.Identifier, cs)), sql.Identifier(t))
+              q = sql.SQL("SELECT {} FROM {}").format(sql.SQL(",").join(map(sql.Identifier, cs)), sql.Identifier("public", t))
               out = {}
               for r in conn.execute(q):
                   out[tuple(r[cs.index(c)] for c in k)] = r
               return out
           tables = [r[0] for r in src.execute("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")]
+          dtables = {r[0] for r in dst.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'")}
+          print("RM11 search_path:", dst.execute("SHOW search_path").fetchone()[0], "| db:", dst.execute("SELECT current_database()").fetchone()[0])
+          print("tables on RM10 only:", sorted(set(tables) - dtables), "| on RM11 only:", sorted(dtables - set(tables)))
           pending = []
           for t in tables:
               if t in SKIP: print(f"skip  {t} (cache/counter)"); continue
+              if t not in dtables: print(f"MISSING ON RM11: {t}"); continue
               k = pk(src, t)
               if not k: print(f"skip  {t} (no primary key)"); continue
               cs = [c for c in cols(src, t) if c in set(cols(dst, t))]
@@ -2649,7 +2653,7 @@ jobs:
               left = []
               for t, cs, k, rs in pending:
                   q = sql.SQL("INSERT INTO {} ({}) VALUES ({}) ON CONFLICT ({}) DO UPDATE SET {}").format(
-                      sql.Identifier(t), sql.SQL(",").join(map(sql.Identifier, cs)),
+                      sql.Identifier("public", t), sql.SQL(",").join(map(sql.Identifier, cs)),
                       sql.SQL(",").join(sql.Placeholder() * len(cs)), sql.SQL(",").join(map(sql.Identifier, k)),
                       sql.SQL(",").join(sql.SQL("{0}=EXCLUDED.{0}").format(sql.Identifier(c)) for c in cs if c not in k) if len(cs) > len(k)
                       else sql.SQL("{0}=EXCLUDED.{0}").format(sql.Identifier(k[0])))
