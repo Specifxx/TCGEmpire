@@ -1,5 +1,6 @@
 "use client";
 
+import { StoreVote } from "./StoreVote";
 import { useEffect, useMemo, useState } from "react";
 import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
@@ -152,7 +153,7 @@ function OutOfStockDisclosure({
             <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 opacity-60 sm:flex-nowrap sm:p-4">
               <div className="w-5 shrink-0 text-center text-slate-600 sm:w-6">—</div>
               <div className="min-w-0 flex-1">
-                <div className="truncate font-semibold text-slate-300">{p.retailerName}</div>
+                <div className="flex min-w-0 items-center gap-2"><span className="truncate font-semibold text-slate-300">{p.retailerName}</span><StoreVote url={p.storeUrl} name={p.retailerName} className="shrink-0 text-slate-400" /></div>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                   {(() => {
                     const grade = normaliseCondition(p.condition);
@@ -442,6 +443,7 @@ export function CardPriceComparison({
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="min-w-0 truncate font-semibold text-white">{p.retailerName}</span>
+                    <StoreVote url={p.storeUrl} name={p.retailerName} className="shrink-0 text-slate-400" />
                     {/* The cheapest row is the one visitors should click — a small
                         badge draws the eye there, the same way a highlighted price
                         naturally pulls clicks. */}

@@ -22668,3 +22668,27 @@ earns on.
 their own daily line (`click:<day>:checkout`, a subset of store clicks) on `/admin/growth` and in the weekly report.
 Judge it by store click share and stores' `utm_content=checkout` orders; if checkout drops clicks or stores complain,
 revert by returning `plain` before the cart rewrite.
+
+## 2026-11-06 — Store thumbs up and down, one tally for every site
+
+**Decision (owner: "a little mini area where you can rate a shop … thumbs up a store or thumbs down a store … it's
+public data … across all the sites you can now see that these stores are trusted"; the point is buyer confidence, above
+all on KaeYoung, where shoppers worry about fakes):** every site's store rows carry two tiny thumbs beside the store's
+name, with counts once a store has votes and a green "Trusted" mark from 3 thumbs up and at least 80% of the votes.
+
+- **One tally, kept here.** A store is its listing host without "www." (`storeKey`, `src/lib/store-votes/core.ts`), so a
+  shop listed on RiftCompare, OP Compare and DexCompare shares its thumbs. Every site posts to `/api/store-votes`
+  (text/plain JSON, exact family origins only, `src/lib/store-votes/origin.ts`) and reads back one public JSON,
+  `{ at, stores: { host: [up, down] } }`, that the CDN keeps six hours and `getStoreTally` memoises six hours (one
+  grouped read of a small table). The browser adds its own vote to the counts until the tally catches up.
+- **Why not a GitHub file, as first suggested:** the counts are public (that route, readable by anyone), but stopping one
+  person voting a hundred times needs something private to compare against, and a JSON file committed per vote would
+  race and publish it. So the votes are rows in the operational database (`StoreVote`), the hashes never leave it.
+- **Abuse controls:** one vote per browser per store (a random id the browser keeps; a second vote changes the first, the
+  same thumb again takes it back); at most three browsers per network per store, answered like a counted vote; 40 sends
+  an hour per network; only keyed hashes (`AUTH_SECRET`) of the browser id and network are stored; a store key must be a
+  plain host, and marketplaces and affiliate hosts (eBay, Amazon, TCGplayer, Cardmarket, Awin…) are refused.
+- **What it never does:** order prices, hide a store, decide "cheapest" or "best price", enter an alert, a deal or
+  JSON-LD, or ask in a pop-up. Nothing is fetched on the server or at build, so no page gains a function or a read; the
+  ops monitor's `site:store-votes` check reads the tally.
+- The same `src/components/StoreVote.tsx` is copied into every site; change it here first and copy it.

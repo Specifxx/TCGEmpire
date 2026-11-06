@@ -395,6 +395,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     lastSeen: p.lastSeen.toISOString(),
     buyHref: affiliateUrl(p.url, p.retailer, `${SITE_URL}/card/${card.slug ?? params.id}`),
     policyUrl: shippingPolicyUrl(p.retailer),
+    storeUrl: p.url,
   }));
 
   // BASELINE view for the cached HTML — structured data, prose and FAQ. This is
