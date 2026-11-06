@@ -287,11 +287,161 @@ export function amazonDays(rows: readonly AmazonStoredRow[]): DayAmount[] {
   return rows.map((r) => ({ day: r.day, currency: r.currency, cents: r.amountCents }));
 }
 
-// ── The Chrome prompt, downloaded from the dashboard ────────────────────────
-// Owner (2026-11-03): the upload is impromptu, not weekly, and the dashboard
-// hands out the prompt every time. Each store's range starts the day after its
-// last covered day (or 90 days back for a first upload), so a run backfills
-// exactly what is missing; re-uploading overlap is harmless (it replaces).
+// ── Figures typed in from the screen (2026-11-06) ───────────────────────────
+// Owner: "I don't want to download and upload anything. I want the Claude Chrome
+// extension prompt to just look at all the earnings and figure it out for me."
+// So Claude in Chrome reads each store's Reports page on screen and types what it
+// saw into the dashboard's "Amazon figures" box in this small format, one block
+// per store:
+//
+//   store: au
+//   range: 2026-10-21 to 2026-11-06
+//   day 2026-10-21 3.40 2            ← date, earnings (fees) that day, items shipped
+//   day 2026-10-22 0 0
+//   id riftcompare-22 20.10 7        ← tracking ID, its earnings and items over the range
+//   id compareempire-22 1.05 1
+//
+// Amazon's Reports page shows earnings per day (Daily trends) and per tracking
+// ID over the range (Tracking ID summary), never per day AND ID at once. The
+// dashboard stores day × tracking ID, so `allocateAmazonEntry` spreads each ID's
+// range total over the days in proportion to the days' totals: every day's total
+// and every ID's total land exactly (largest-remainder rounding), only the cross
+// is an estimate, which is what a 7- or 30-day view needs. Whatever the day
+// totals hold beyond the IDs goes on the shared row. A block with no day lines
+// spreads evenly; a block with no id lines keeps the days on the shared row.
+// An entry REPLACES the store's range, like an upload.
+
+export interface AmazonEntryStore {
+  key: AmazonStoreKey;
+  from: string;
+  to: string;
+  days: { day: string; cents: number; items: number }[];
+  ids: { trackingId: string; cents: number; items: number }[];
+}
+
+const MAX_RANGE_DAYS = 400;
+
+/** The typed block(s). Throws, naming the line, on anything it can't read. */
+export function parseAmazonEntry(text: string): AmazonEntryStore[] {
+  const out: AmazonEntryStore[] = [];
+  let cur: (Omit<AmazonEntryStore, "from" | "to"> & { from?: string; to?: string }) | null = null;
+  const finish = () => {
+    if (!cur) return;
+    if (!cur.from || !cur.to) throw new Error(`Store ${cur.key}: add a "range: YYYY-MM-DD to YYYY-MM-DD" line.`);
+    if (Date.parse(cur.to) - Date.parse(cur.from) > MAX_RANGE_DAYS * 86_400_000) throw new Error(`Store ${cur.key}: that range is over a year; enter 90 days at a time.`);
+    for (const d of cur.days) if (d.day < cur.from || d.day > cur.to) throw new Error(`Store ${cur.key}: day ${d.day} is outside its range ${cur.from} to ${cur.to}.`);
+    out.push({ key: cur.key, from: cur.from, to: cur.to, days: cur.days, ids: cur.ids });
+    cur = null;
+  };
+  const lines = text.replace(/\r/g, "").split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim().replace(/^[-*•]\s*/, "");
+    if (!line || line.startsWith("#")) continue;
+    const at = `line ${i + 1} ("${line.slice(0, 60)}")`;
+    let m = /^store\s*[:=]?\s*([a-z.]+)$/i.exec(line);
+    if (m) {
+      finish();
+      const k = m[1].toLowerCase().replace(/^amazon\./, "");
+      const store = amazonStore(k) ?? AMAZON_STORES.find((s) => s.label.toLowerCase() === m![1].toLowerCase()) ?? AMAZON_STORES.find((s) => s.label.toLowerCase().endsWith(`.${k}`));
+      if (!store) throw new Error(`${at}: unknown store; use ${AMAZON_STORES.map((s) => s.key).join(", ")}.`);
+      cur = { key: store.key, days: [], ids: [] };
+      continue;
+    }
+    if (!cur) throw new Error(`${at}: start with a "store: au" line.`);
+    m = /^range\s*[:=]?\s*(\S+)\s+(?:to|-|–|—)\s+(\S+)$/i.exec(line);
+    if (m) {
+      const from = amazonReportDay(m[1], cur.key !== "us");
+      const to = amazonReportDay(m[2], cur.key !== "us");
+      if (!from || !to || from > to) throw new Error(`${at}: the range must be two dates, first to last.`);
+      cur.from = from;
+      cur.to = to;
+      continue;
+    }
+    m = /^day\s*[:=]?\s*(\S+)\s+(\S+)(?:\s+(\S+))?$/i.exec(line);
+    if (m) {
+      const day = amazonReportDay(m[1], cur.key !== "us");
+      if (!day) throw new Error(`${at}: can't read that date; write it as YYYY-MM-DD.`);
+      cur.days = cur.days.filter((d) => d.day !== day);
+      cur.days.push({ day, cents: amazonCents(m[2]), items: Math.round(Number((m[3] ?? "0").replace(/,/g, "")) || 0) });
+      continue;
+    }
+    m = /^id\s*[:=]?\s*(\S+)\s+(\S+)(?:\s+(\S+))?$/i.exec(line);
+    if (m) {
+      const trackingId = m[1].toLowerCase();
+      cur.ids = cur.ids.filter((d) => d.trackingId !== trackingId);
+      cur.ids.push({ trackingId, cents: amazonCents(m[2]), items: Math.round(Number((m[3] ?? "0").replace(/,/g, "")) || 0) });
+      continue;
+    }
+    throw new Error(`${at}: expected "range:", "day <date> <earnings> <items>" or "id <tracking id> <earnings> <items>".`);
+  }
+  finish();
+  if (!out.length) throw new Error('Nothing to save: start with a "store: au" line.');
+  return out;
+}
+
+/** The ids' totals spread over the days in proportion to the days' totals; what the days hold beyond the ids goes on the shared row. */
+export function allocateAmazonEntry(e: AmazonEntryStore): { day: string; trackingId: string; cents: number; items: number }[] {
+  const days: string[] = [];
+  for (let t = Date.parse(`${e.from}T00:00:00Z`); t <= Date.parse(`${e.to}T00:00:00Z`); t += 86_400_000) days.push(new Date(t).toISOString().slice(0, 10));
+  const dayCents = new Map(e.days.map((d) => [d.day, d.cents]));
+  const dayItems = new Map(e.days.map((d) => [d.day, d.items]));
+  const rows = new Map<string, { day: string; trackingId: string; cents: number; items: number }>();
+  const add = (day: string, trackingId: string, cents: number, items: number) => {
+    if (!cents && !items) return;
+    const k = `${day}|${trackingId}`;
+    const r = rows.get(k) ?? { day, trackingId, cents: 0, items: 0 };
+    r.cents += cents;
+    r.items += items;
+    rows.set(k, r);
+  };
+  // Weights: the days' totals when they are given and positive, else even.
+  const weightsFor = (of: Map<string, number>) => {
+    const w = days.map((d) => Math.max(0, of.get(d) ?? 0));
+    const sum = w.reduce((a, b) => a + b, 0);
+    return sum > 0 ? w.map((x) => x / sum) : days.map(() => 1 / days.length);
+  };
+  const wCents = weightsFor(dayCents);
+  const wItems = weightsFor(dayItems);
+  const spread = (total: number, w: number[]) => {
+    // Largest remainder: the parts sum to the total exactly.
+    const raw = w.map((x) => total * x);
+    const parts = raw.map((x) => (total >= 0 ? Math.floor(x) : Math.ceil(x)));
+    let left = total - parts.reduce((a, b) => a + b, 0);
+    const order = raw.map((x, i) => ({ i, f: Math.abs(x - parts[i]) })).sort((a, b) => b.f - a.f);
+    for (const { i } of order) {
+      if (!left) break;
+      const step = left > 0 ? 1 : -1;
+      parts[i] += step;
+      left -= step;
+    }
+    return parts;
+  };
+  const idCents = days.map(() => 0);
+  const idItems = days.map(() => 0);
+  for (const id of e.ids) {
+    const c = spread(id.cents, wCents);
+    const n = spread(id.items, wItems);
+    days.forEach((d, i) => {
+      add(d, id.trackingId, c[i], n[i]);
+      idCents[i] += c[i];
+      idItems[i] += n[i];
+    });
+  }
+  // The days' own totals beyond the ids: on the shared row, under "all".
+  days.forEach((d, i) => {
+    if (!dayCents.has(d)) return;
+    add(d, "all", (dayCents.get(d) ?? 0) - idCents[i], (dayItems.get(d) ?? 0) - idItems[i]);
+  });
+  return [...rows.values()].sort((a, b) => a.day.localeCompare(b.day) || a.trackingId.localeCompare(b.trackingId));
+}
+
+// ── The Chrome prompt, handed out by the dashboard ──────────────────────────
+// Owner (2026-11-03): on demand, not weekly, and the dashboard hands out the
+// prompt every time. Each store's range starts the day after its last covered
+// day (or 90 days back for a first run), so a run backfills exactly what is
+// missing; re-entering overlap is harmless (it replaces). Owner (2026-11-06):
+// no downloads and no uploads; Claude reads the figures on screen and types
+// them into the dashboard.
 
 export const AMAZON_PORTALS: Record<AmazonStoreKey, string> = {
   au: "https://affiliate-program.amazon.com.au",
@@ -305,7 +455,7 @@ const FIRST_UPLOAD_DAYS = 90;
 export interface AmazonCoverage {
   key: AmazonStoreKey;
   label: string;
-  /** The last day an upload covers, or null before the first one. */
+  /** The last day an entry covers, or null before the first one. */
   to: string | null;
 }
 
@@ -323,34 +473,44 @@ export function amazonNextFrom(cov: Pick<AmazonCoverage, "to">, today: string): 
 export function amazonChromePrompt(coverage: readonly AmazonCoverage[], today: string): string {
   const lines = coverage.map((c, i) => {
     const from = amazonNextFrom(c, today);
-    const gap = c.to ? `last upload covers through ${c.to}` : "no upload yet";
-    return `${i + 1}. ${c.label}: ${AMAZON_PORTALS[c.key]} — download ${from} to ${today} (${gap})`;
+    const gap = c.to ? `dashboard covered through ${c.to}` : "nothing on the dashboard yet";
+    return `${i + 1}. ${c.label} (store code "${c.key}"): ${AMAZON_PORTALS[c.key]} — read ${from} to ${today} (${gap})`;
   });
-  return `Get my Amazon Associates earnings onto my earnings dashboard at https://riftcompare.com/admin/earnings. Amazon has no API for my account, so the dashboard reads the Earnings report downloaded from each Amazon store's Associates Central. The date ranges below start where the last upload ended, so this run fills in exactly what is missing.
+  return `Put my Amazon Associates earnings onto my earnings dashboard at https://riftcompare.com/admin/earnings. Amazon has no API for my account, so read the figures on each store's Reports page in Associates Central and type them into the dashboard. No downloading and no uploading of files. The date ranges below start where the dashboard's figures end, so this run fills in exactly what is missing.
 
 RULES
 - NEVER STOP PARTWAY. If a step needs me (a sign-in, a code, a captcha, anything you are unsure about) or fails twice, leave that tab open on the exact screen where I need to act, note it, and carry on with every other store. Tell me only at the end.
-- SAFE TO RERUN. Uploading the same days again replaces them on the dashboard, so nothing double counts. Skip a store I have no Associates account for and say so.
-- Never change any setting in Associates Central, never apply for anything, never touch payment or tax pages. Only download reports.
-- Use a new tab for each site.
+- SAFE TO RERUN. Entering the same days again replaces them on the dashboard, so nothing double counts. Skip a store I have no Associates account for and say so.
+- Never change any setting in Associates Central, never apply for anything, never touch payment or tax pages, never download anything. Only read the reports.
+- Copy numbers exactly as shown: earnings are the fees/commission column (called "Total earnings", "Ad fees", "Fees" or "Commission income"), never revenue or clicks. Items are "Items shipped". A day with no row is 0.
+- Use a new tab for each store.
 
 STORES AND DATE RANGES (generated ${today})
 ${lines.join("\n")}
 
 For each store:
 a. Open the site. If it asks me to sign in, leave the tab open and move to the next store.
-b. Go to Reports. Click "Download reports" (on the Reports page, near the date picker; on amazon.de it is "Berichte herunterladen").
-c. Set the date range given above for that store. If the picker won't go that far back, use the longest range it allows ending today.
-d. Untick every report type except Earnings (amazon.de: "Einnahmen"). Set the format to CSV. Click Generate reports.
-e. When the Earnings (Fee-Earnings) row says it is ready, click Download. It saves a ZIP to my Downloads folder. Note the file name and the store.
+b. Open Reports. Set the date range to the one given above for that store (custom range; if the picker won't go that far back, use the longest range it allows ending today, and use that range on the "range:" line below).
+c. Open the "Daily trends" view (a tab or left-hand menu item on the Reports page; amazon.de calls it "Tägliche Trends"). Write down, for every day in the range, the day's earnings and items shipped. If there is no Daily trends view, use the "Earnings" view instead and add up its rows by ship date.
+d. Open the "Tracking ID summary" view (amazon.de: "Tracking-ID-Übersicht"). Write down each tracking ID's earnings and items shipped for the whole range. If there is no such view, skip this step for that store.
+e. Keep the tab open and move to the next store.
 
-Then upload:
+Then enter them:
 f. Open https://riftcompare.com/admin/earnings (I am signed in as admin; if not, leave the tab open for me).
-g. Scroll to "Amazon Associates (uploaded reports)". For each ZIP you downloaded: choose its store in "Amazon store", choose the ZIP in "Earnings report", click "Upload report", and copy the green line it shows (or the red error).
-h. If you cannot pick a file from my Downloads folder, leave this tab open and list the ZIPs for me to drag in myself, one per store.
+g. Scroll to "Amazon Associates" and find the box labelled "Amazon figures". Type one block per store, in exactly this format, dates as YYYY-MM-DD, amounts in the store's own currency without symbols, one line each:
+
+store: au
+range: 2026-10-21 to 2026-11-06
+day 2026-10-21 3.40 2
+day 2026-10-22 0 0
+id riftcompare-22 20.10 7
+id compareempire-22 1.05 1
+
+   ("day" lines: date, that day's earnings, items shipped. "id" lines: tracking ID, its earnings and items for the whole range. Leave out the id lines if you could not read a Tracking ID summary. You can put every store in the one box, one after the other.)
+h. Click "Save figures" and copy the green line the dashboard shows (or the red error; fix the line it names and save again).
 
 AT THE END tell me:
-1. For each store: downloaded (file name) or skipped (why), and what the dashboard said after upload.
+1. For each store: the range you read, its total earnings, and what the dashboard said after saving (or why it was skipped).
 2. A numbered list of tabs left open and exactly what each needs from me.
 `;
 }
