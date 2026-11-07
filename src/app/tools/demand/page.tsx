@@ -288,7 +288,7 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
             {user ? (
               <PremiumButton surface="gate:demand" />
             ) : (
-              <Link href="/login?next=/tools/demand&src=tool_gate" className="btn-primary text-sm">Sign in</Link>
+              <Link rel="nofollow" href="/login?next=/tools/demand&src=tool_gate" className="btn-primary text-sm">Sign in</Link>
             )}
             <Link href="/movers#most-searched" className="btn-ghost text-sm">Free on price movers →</Link>
           </div>
