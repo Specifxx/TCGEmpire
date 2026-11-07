@@ -5,6 +5,9 @@ import { OutboundLink } from "./OutboundLink";
 import { PaidLinkTag } from "./AffiliateDisclosure";
 import { affiliateUrl } from "@/lib/affiliate";
 import { formatMoney } from "@/lib/format";
+import { convertCents } from "@/lib/fx";
+import { currencyOf } from "@/lib/country";
+import { useCountryMaybe } from "./CountryProvider";
 import { featuredLapsesAt, type FeaturedListing } from "@/lib/featured-listings";
 
 const CHECKED_FMT = new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "long", timeZone: "UTC" });
@@ -70,6 +73,12 @@ export function FeaturedListingBox({
 }) {
   const endAt = featuredLapsesAt(listing);
   const now = useNow(endAt);
+  // The visitor's region (owner, 2026-11-07: "should also convert prices if I
+  // switch region"). The listing's own price stays beside it: the conversion is
+  // the site's reference rate (lib/fx.ts), marked ≈, never what eBay charges.
+  const region = useCountryMaybe()?.country;
+  const toCurrency = region ? currencyOf(region) : listing.currency;
+  const converted = toCurrency !== listing.currency ? convertCents(listing.priceCents, listing.currency, toCurrency) : null;
   if (now !== null && now >= endAt) return null;
   const href = affiliateUrl(listing.url, `${listing.retailer}-featured`, pageType === "homepage" ? "/" : "/card");
   const checked = CHECKED_FMT.format(new Date(`${listing.checked}T00:00:00Z`));
@@ -103,13 +112,20 @@ export function FeaturedListingBox({
             </p>
           )}
           <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
-            <span className="num text-xl font-extrabold text-gold">{formatMoney(listing.priceCents, listing.currency)}</span>
+            {converted !== null ? (
+              <>
+                <span className="num text-xl font-extrabold text-gold">≈ {formatMoney(converted, toCurrency)}</span>
+                <span className="num text-sm font-semibold text-slate-300">{formatMoney(listing.priceCents, listing.currency)}</span>
+              </>
+            ) : (
+              <span className="num text-xl font-extrabold text-gold">{formatMoney(listing.priceCents, listing.currency)}</span>
+            )}
             {auction ? (
               <span className="text-[11px] text-slate-500">
-                bid{listing.bids ? ` after ${listing.bids} bids` : ""} at our check on {checked}; open it for the current bid
+                bid{listing.bids ? ` after ${listing.bids} bids` : ""} at our check on {checked}; open it for the current bid{converted !== null ? "; ≈ at our reference rate" : ""}
               </span>
             ) : (
-              <span className="text-[11px] text-slate-500">on eBay at our check on {checked}; open it for today&apos;s price</span>
+              <span className="text-[11px] text-slate-500">on eBay at our check on {checked}; open it for today&apos;s price{converted !== null ? "; ≈ at our reference rate" : ""}</span>
             )}
           </p>
         </div>

@@ -22,6 +22,8 @@ test("the box hides itself in the browser at the end time, and both homes mount 
   const box = read("src/components/FeaturedListingBox.tsx");
   assert.match(box, /^"use client";/);
   assert.match(box, /now >= endAt\) return null/);
+  assert.match(box, /convertCents\(listing\.priceCents, listing\.currency, toCurrency\)/, "converted into the visitor's region");
+  assert.match(box, /≈ at our reference rate/);
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     assert.match(read(f), /<HomeFeaturedListing \/>/, f);
   }
