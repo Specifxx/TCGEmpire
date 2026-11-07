@@ -32,6 +32,8 @@ export interface OpsDeps {
     sealedNewest(): Promise<Date | null>;
     auctions(): Promise<{ newestUpdate: Date | null; count: number }>;
     ebayAdsNewest(): Promise<Date | null>;
+    /** Members' featured listings (lib/featured/): the oldest still waiting for its eBay check. Optional: older deps lack it. */
+    featuredOldestPending?(): Promise<Date | null>;
     storeHealthNewest(): Promise<Date | null>;
     inbox(): Promise<InboxCounts>;
     /** Stores plans (lib/store-plan.ts): how many exist, and the paid ones not yet linked to a tracked store. */

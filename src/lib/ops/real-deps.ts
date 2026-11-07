@@ -24,6 +24,8 @@ const opsDb = (): NonNullable<OpsDeps["db"]> => ({
     const a = await prisma.ebayAuctionListing.aggregate({ _max: { updatedAt: true }, _count: { _all: true } });
     return { newestUpdate: a._max.updatedAt, count: a._count._all };
   },
+  featuredOldestPending: async () =>
+    (await prisma.featuredSubmission.aggregate({ where: { status: "pending" }, _min: { createdAt: true } }))._min.createdAt,
   ebayAdsNewest: async () => (await prisma.ebayAdListing.aggregate({ _max: { updatedAt: true } }))._max.updatedAt,
   storeHealthNewest: async () => (await prisma.storeHealthSnapshot.aggregate({ _max: { day: true } }))._max.day,
   inbox: getInboxCounts,

@@ -35,6 +35,8 @@ export const SIGNUP_SOURCES = new Set<string>([
   "guest_checkout",
   // An account created by an emailed sign-in link (2026-11-06, lib/email-sign-in.ts).
   "email_link",
+  // /featured's "Sign in to feature a listing" (2026-11-07, lib/featured/).
+  "featured",
   // RETIRED 2026-09-30 with the sign-up popup ("The sign-up slider is gone").
   // Kept, like "gate" below, so accounts that carry it and a cookie set just
   // before the deploy still parse.
