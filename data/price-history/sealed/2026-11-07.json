@@ -36,7 +36,7 @@
       "US": 15999
     },
     "LGC|Booster Case": {
-      "US": 119798
+      "US": 109801
     },
     "LGC|Booster Pack": {
       "CA": 2400
@@ -212,7 +212,7 @@
       "CA": 144995,
       "EU": 58000,
       "UK": 61999,
-      "US": 63092
+      "US": 64295
     },
     "RAD|Booster Pack": {
       "AU": 1099,
@@ -256,14 +256,14 @@
     "RAD|Showdown Decks Display": {
       "AU": 5500,
       "CA": 4499,
-      "US": 6280
+      "US": 5769
     },
     "RAD|Sleeved Booster": {
       "EU": 2000,
       "US": 790
     },
     "RAD|Sleeved Booster (Art Set)": {
-      "US": 3487
+      "US": 2994
     },
     "REC|Booster Box": {
       "CA": 18999,
@@ -369,8 +369,8 @@
       "EU": 375
     },
     "SFD|Sleeved Booster": {
-      "EU": 1200,
-      "US": 1000
+      "EU": 1299,
+      "US": 999
     },
     "SFD|Sleeved Booster (Art Set)": {
       "US": 3200
@@ -399,7 +399,7 @@
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 59990,
-      "US": 99000
+      "US": 100500
     },
     "UNL|Booster Pack": {
       "AU": 1100,
@@ -480,7 +480,7 @@
     "VEN|Booster Box": {
       "AU": 20000,
       "CA": 17000,
-      "EU": 9280,
+      "EU": 9000,
       "SG": 19000,
       "UK": 8390,
       "US": 11599
@@ -497,7 +497,7 @@
       "CA": 795,
       "EU": 795,
       "UK": 499,
-      "US": 496
+      "US": 500
     },
     "VEN|Bundle": {
       "AU": 6000,
@@ -537,10 +537,10 @@
     "VEN|Showdown Decks": {
       "AU": 3500,
       "CA": 1999,
-      "EU": 904,
+      "EU": 1999,
       "SG": 2964,
       "UK": 1615,
-      "US": 1421
+      "US": 1360
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -580,7 +580,7 @@
       "EU": 6399
     },
     "kdacouturecollectionbox": {
-      "EU": 47000
+      "EU": 44999
     },
     "leagueoflegendsbundle24popvinyls": {
       "AU": 8396
@@ -762,7 +762,7 @@
       "CA": 3235
     },
     "secretgardenbox": {
-      "US": 22499
+      "US": 12100
     },
     "secretgardenboxset": {
       "EU": 6999
