@@ -1,0 +1,17 @@
+{
+ "v": 1,
+ "at": "2026-11-07T06:31:20Z",
+ "site": "riftcompare",
+ "kind": "wrong-price",
+ "page": "/sealed",
+ "product": "sealed VEN|Booster Box",
+ "store": "4elements",
+ "storeUrl": null,
+ "region": "SG",
+ "shown": "S$190.00",
+ "actual": null,
+ "issue": "OUT_OF_STOCK",
+ "note": null,
+ "resolution": "Confirmed: 4elements sold out of the Vendetta Booster Box after the last import (live .js says unavailable; its other 14 Riftbound sealed rows match). Not a reader bug; the next import (re-run by the #363 merge) marks it out of stock.",
+ "closedAt": "2026-11-07"
+}

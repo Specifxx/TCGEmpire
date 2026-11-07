@@ -1,0 +1,17 @@
+{
+ "v": 1,
+ "at": "2026-11-07T06:30:13Z",
+ "site": "riftcompare",
+ "kind": "wrong-price",
+ "page": "/card/last-rites-sfd-150-221",
+ "product": "Last Rites SFD 150/221",
+ "store": "TCGplayer",
+ "storeUrl": null,
+ "region": "SG",
+ "shown": "S$31.05",
+ "actual": null,
+ "issue": "PRICE_WRONG",
+ "note": null,
+ "resolution": "Confirmed: TCGplayer's three cheapest 'English NM' listings were sellers' custom photo listings of Chinese copies (US$23); cheapest real English copy US$32.80. Fixed in TCGEmpire #363 (custom listings never quoted, ~1 in 5 singles affected); the merge re-runs the import.",
+ "closedAt": "2026-11-07"
+}
