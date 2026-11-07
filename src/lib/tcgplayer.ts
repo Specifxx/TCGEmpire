@@ -120,7 +120,25 @@ export type TcgListing = {
   printing?: string;
   // The listing's own shipping in USD, as TCGplayer quotes it for a US buyer.
   shippingPrice?: number;
+  // "standard" | "custom". A CUSTOM listing is a seller's own photo listing,
+  // titled and described by the seller, and the field TCGplayer filters
+  // language on is NOT what it holds: sampled live 2026-11-07, 212 of the 213
+  // Riftbound singles whose cheapest "English" listing was custom were Chinese
+  // copies titled "CHINESE - Last Rites" and the like (the Last Rites, SFD
+  // 150/221 wrong-price report: US$23 Chinese listing quoted, cheapest real
+  // English copy US$32.80). Never quoted; see isQuotableListing.
+  listingType?: string;
 };
+
+/**
+ * Whether a preview listing may be quoted at all: a standard listing. The
+ * search already asks for standard listings only (searchBody), so this is the
+ * second lock, for an API that ignores or renames the filter. A listing with
+ * no listingType (older payloads, fixtures) is accepted.
+ */
+export function isQuotableListing(l: Pick<TcgListing, "listingType">): boolean {
+  return (l.listingType ?? "standard").toLowerCase() !== "custom";
+}
 
 export type TcgProduct = {
   productId: number;
@@ -146,7 +164,7 @@ export type TcgProduct = {
 // (our TCGplayer rows are labelled NM).
 export function englishNmLowest(p: TcgProduct): number | null {
   const ls = (p.listings ?? []).filter(
-    (l) => l.languageId === 1 && (l.quantity ?? 0) > 0 && /near mint/i.test(l.condition ?? "")
+    (l) => l.languageId === 1 && isQuotableListing(l) && (l.quantity ?? 0) > 0 && /near mint/i.test(l.condition ?? "")
   );
   return ls.length ? Math.min(...ls.map((l) => l.price)) : null;
 }
@@ -171,7 +189,7 @@ export function englishNmLowest(p: TcgProduct): number | null {
  * at all. See DECISIONS.md, 2026-09-24.
  */
 export function cheapestEnglishSealed(p: TcgProduct): TcgListing | null {
-  const ls = (p.listings ?? []).filter((l) => l.languageId === 1 && (l.quantity ?? 0) > 0 && l.price > 0);
+  const ls = (p.listings ?? []).filter((l) => l.languageId === 1 && isQuotableListing(l) && (l.quantity ?? 0) > 0 && l.price > 0);
   if (!ls.length) return null;
   return ls.reduce((a, b) => (b.price < a.price ? b : a));
 }
@@ -198,7 +216,7 @@ export function wantedPrinting(p: TcgProduct): "foil" | "normal" {
   if (FOIL_RARITIES.has(rarity)) return "foil";
   if (NORMAL_RARITIES.has(rarity)) return "normal";
   const printings = new Set(
-    (p.listings ?? []).filter((l) => l.languageId === 1 && l.printing != null).map((l) => l.printing!.toLowerCase()),
+    (p.listings ?? []).filter((l) => l.languageId === 1 && isQuotableListing(l) && l.printing != null).map((l) => l.printing!.toLowerCase()),
   );
   return printings.size === 1 && printings.has("foil") ? "foil" : "normal";
 }
@@ -208,6 +226,7 @@ export function cheapestEnglishNm(p: TcgProduct): TcgListing | null {
   const ls = (p.listings ?? []).filter(
     (l) =>
       l.languageId === 1 &&
+      isQuotableListing(l) &&
       (l.quantity ?? 0) > 0 &&
       /near mint/i.test(l.condition ?? "") &&
       (l.printing == null || l.printing.toLowerCase() === want),
@@ -221,7 +240,7 @@ export function cheapestEnglishNm(p: TcgProduct): TcgListing | null {
 // count. Returns null when the product has NO in-stock English listing at all, which
 // is the signal we use to skip non-English / unavailable products entirely.
 export function englishAnyLowest(p: TcgProduct): number | null {
-  const ls = (p.listings ?? []).filter((l) => l.languageId === 1 && (l.quantity ?? 0) > 0);
+  const ls = (p.listings ?? []).filter((l) => l.languageId === 1 && isQuotableListing(l) && (l.quantity ?? 0) > 0);
   return ls.length ? Math.min(...ls.map((l) => l.price)) : null;
 }
 
@@ -307,8 +326,10 @@ function searchBody(from: number, productTypeName?: string[]) {
       context: { cart: {} },
       // language:["English"] makes the per-product `listings` preview English-only, so
       // we can take the actual lowest ENGLISH price without foreign-language (e.g.
-      // Chinese) listings corrupting it.
-      filters: { term: { sellerStatus: "Live", channelId: 0, language: ["English"] }, range: { quantity: { gte: 1 } }, exclude: { channelExclusion: 0 } },
+      // Chinese) listings corrupting it. listingType "standard" drops sellers'
+      // custom photo listings, where Chinese copies sit under "English" (2026-11-07,
+      // see TcgListing.listingType); with it the preview is still three listings.
+      filters: { term: { sellerStatus: "Live", channelId: 0, language: ["English"], listingType: "standard" }, range: { quantity: { gte: 1 } }, exclude: { channelExclusion: 0 } },
     },
     context: { cart: {}, shippingCountry: "US", userProfile: {} },
     settings: { useFuzzySearch: true, didYouMean: {} },
