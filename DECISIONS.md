@@ -22921,3 +22921,16 @@ drops most of a five-minute schedule under load, so it ran two or three times a 
 run list on 2026-11-07: two runs in seven hours), which keeps nothing warm. `keep-warm.yml` is deleted. `/api/ping` stays
 (cheap, uncached, harmless) in case the owner ever points a free uptime monitor at it; that is his call, not a workflow.
 Nothing about prices, data or deploys changes. Reverses the "keep-warm stays" lines of 2026-09-11 and 2026-10-16.
+
+## 2026-11-07 — TCGplayer custom listings are never quoted (Last Rites wrong-price report)
+
+A Singapore visitor reported Last Rites (SFD 150/221) at S$31.05 on TCGplayer. The row was US$23: the three cheapest
+"English Near Mint" listings were sellers' CUSTOM photo listings of Chinese copies, titled "Chinese - Last Rites",
+"CHINESE", "CHINESE Last Rites - Spiritforged (SPF)". TCGplayer's language filter reads the listing's language field,
+which those sellers leave on English; the cheapest standard English listing was US$32.80. Sampled live the same day,
+212 of 999 Riftbound singles had a Chinese custom listing as their cheapest "English" copy, so about a fifth of TCGplayer
+rows (US, and the converted UK, SG, CA and EU rows built from it) were quoting a Chinese card.
+
+The search now asks for `listingType: "standard"` in its listing preview (the preview still returns three listings), and
+`isQuotableListing` in `lib/tcgplayer.ts` drops any `custom` listing from every pick as a second lock. A product whose
+preview holds no standard English NM copy falls back to market price, as before. `tests/tcgplayer-custom-listings.test.ts`.
