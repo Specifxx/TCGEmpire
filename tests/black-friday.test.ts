@@ -39,3 +39,13 @@ test("the page states no 'was' price or countdown", () => {
   assert.doesNotMatch(page, /ends soon|limited time|countdown/i);
   assert.match(page, /export const revalidate = 21600;/);
 });
+
+test("the holiday strip shows Black Friday from 1 November, then Cyber Monday, then nothing", async () => {
+  const { saleStrip } = await import("../src/lib/holiday-strip");
+  assert.equal(saleStrip("2026-10-31"), null);
+  assert.equal(saleStrip("2026-11-07")?.href, "/black-friday");
+  assert.equal(saleStrip("2026-11-28")?.href, "/black-friday");
+  assert.equal(saleStrip("2026-11-29")?.href, "/cyber-monday");
+  assert.equal(saleStrip("2026-12-01")?.href, "/cyber-monday");
+  assert.equal(saleStrip("2026-12-02"), null);
+});
