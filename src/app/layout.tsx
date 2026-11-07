@@ -24,7 +24,7 @@ import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
-import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
+import { IMPACT_SITE_VERIFICATION, IMPACT_SITE_VERIFICATION_2 } from "@/lib/affiliate";
 import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
@@ -342,6 +342,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
+        <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION_2 } as any)} />
         {/* Google AdSense site-ownership verification. The id comes from
             NEXT_PUBLIC_ADSENSE_CLIENT_ID (see lib/adsense.ts) — it is NEVER a
             literal here again. A hardcoded, out-of-date id on this exact line,
