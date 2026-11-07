@@ -15,7 +15,26 @@ import { createSign } from "node:crypto";
 import { appendFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-export const SITES = [{ site: "compareempire", property: "sc-domain:compareempire.com", repo: "Specifxx/compareempiretake2" }];
+// `property` is tried first, then `alt` (a URL-prefix property) when the domain property is not readable.
+// `required` sites fail the run when they cannot be exported; the rest are reported and skipped, so a
+// site whose property is still new, or whose repo the token cannot write yet, never pages the owner.
+// Added 2026-11-07 for every site's low-traction cull: a page that earns search traffic is never culled.
+export const SITES = [
+  { site: "compareempire", property: "sc-domain:compareempire.com", alt: "https://www.compareempire.com/", repo: "Specifxx/compareempiretake2", required: true },
+  { site: "opcompare", property: "sc-domain:opcompare.app", alt: "https://opcompare.app/", repo: "Specifxx/OpCompare" },
+  { site: "mtgcompare", property: "sc-domain:mtgcompare.app", alt: "https://mtgcompare.app/", repo: "Specifxx/mtgcompare" },
+  { site: "dexcompare", property: "sc-domain:dexcompare.app", alt: "https://dexcompare.app/", repo: "Specifxx/CompareEmpire" },
+  { site: "gundamcompare", property: "sc-domain:gundamcompare.com", alt: "https://gundamcompare.com/", repo: "Specifxx/GundamCompare" },
+  { site: "lorcanacompare", property: "sc-domain:lorcanacompare.com", alt: "https://lorcanacompare.com/", repo: "Specifxx/lorcanacompare" },
+  { site: "ygocompare", property: "sc-domain:ygocompare.com", alt: "https://ygocompare.com/", repo: "Specifxx/ygocompare" },
+  { site: "cyberpunkcompare", property: "sc-domain:cyberpunkcompare.com", alt: "https://cyberpunkcompare.com/", repo: "Specifxx/cyberpunkcompare" },
+  { site: "bandaicompare", property: "sc-domain:bandaicompare.com", alt: "https://bandaicompare.com/", repo: "Specifxx/bandaicompare" },
+  { site: "wargamecompare", property: "sc-domain:wargamecompare.com", alt: "https://wargamecompare.com/", repo: "Specifxx/wargamecompare" },
+  { site: "figurecompare", property: "sc-domain:figurecompare.com", alt: "https://figurecompare.com/", repo: "Specifxx/figurecompare" },
+  { site: "kaeyoung", property: "sc-domain:kaeyoung.com", alt: "https://kaeyoung.com/", repo: "Specifxx/Kaeyoung" },
+  { site: "scentcompare", property: "sc-domain:scentcompare.app", alt: "https://scentcompare.app/", repo: "Specifxx/scentcompare" },
+  { site: "camcompare", property: "sc-domain:camcompare.app", alt: "https://www.camcompare.app/", repo: "Specifxx/Camcompare" },
+];
 const BRANCH = "demand";
 const FILE = "gsc-pages.json";
 const DAYS = Math.max(14, Math.min(90, Number(process.env.DAYS || 56)));
@@ -117,15 +136,24 @@ async function main() {
   let failed = 0;
   for (const s of SITES) {
     try {
-      const agg = aggregate(await pages(tok, s.property));
+      let rows;
+      let used = s.property;
+      try {
+        rows = await pages(tok, s.property);
+      } catch (e) {
+        if (!s.alt) throw e;
+        used = s.alt;
+        rows = await pages(tok, s.alt);
+      }
+      const agg = aggregate(rows);
       const n = Object.keys(agg).length;
-      const json = JSON.stringify({ updatedAt: new Date().toISOString(), property: s.property, days: DAYS, pages: agg }) + "\n";
+      const json = JSON.stringify({ updatedAt: new Date().toISOString(), property: used, days: DAYS, pages: agg }) + "\n";
       const top = Object.entries(agg).sort((a, b) => b[1][1] - a[1][1]).slice(0, 5).map(([p, e]) => `${p} (${e[1]})`).join(", ");
       const how = DRY ? "dry run" : await publish(s.repo, json);
       lines.push(`- ${s.site}: ${n} pages with impressions in ${DAYS} days, ${how}. Top: ${top}`);
     } catch (e) {
-      failed++;
-      lines.push(`- ${s.site}: FAILED ${e.message}`);
+      if (s.required) failed++;
+      lines.push(`- ${s.site}: ${s.required ? "FAILED" : "skipped"} ${e.message}`);
     }
   }
   const txt = `### Sister-site search demand\n${lines.join("\n")}\n`;
