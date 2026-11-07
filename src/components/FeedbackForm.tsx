@@ -28,7 +28,7 @@ export function FeedbackForm({ days, initialRating = 0 }: { days: number; initia
             {days > 0 && !user && (
               <p className="text-center text-xs text-slate-500">
                 No account needed. If you{" "}
-                <Link href="/login?next=/feedback&src=feedback" className="text-brand-400 hover:underline">
+                <Link rel="nofollow" href="/login?next=/feedback&src=feedback" className="text-brand-400 hover:underline">
                   sign in first
                 </Link>
                 , your first feedback also unlocks <strong className="text-gold">{dayLabel} of Premium</strong>.

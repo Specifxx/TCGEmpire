@@ -53,7 +53,13 @@ const BLOCKED_BOTS = [
 // so each Allow beats "/*?".
 const QUERY_DISALLOW = "/*?";
 // A shared link (utm_source=share, lib/share-link.ts) too: X and Reddit fetch its preview and obey robots.txt.
-const QUERY_ALLOWS = ["/_next/", "/*opengraph-image", "/*twitter-image", "/icon", "/apple-icon", "/*utm_source=share"];
+// Clean pagination (?page=N and nothing else) is crawlable again (SEO audit, 2026-11-07): /browse and each set page
+// self-canonicalise page 2+ (BrowseView, sets/[set]), and with "/*?" blocking them the only path to a deep card was the
+// sitemap. Every other query (?q=, ?sort=, a page with another filter) stays blocked: each variant is a render we pay for,
+// and those views are noindex anyway. A bare "?page=" prefix also matches "?page=2&size=…", which still canonicalises to
+// the clean page, so nothing new reaches the index.
+const PAGINATION_ALLOWS = ["/browse?page=", "/sets/*?page="];
+const QUERY_ALLOWS = ["/_next/", "/*opengraph-image", "/*twitter-image", "/icon", "/apple-icon", "/*utm_source=share", ...PAGINATION_ALLOWS];
 
 export default function robots(): MetadataRoute.Robots {
   return {

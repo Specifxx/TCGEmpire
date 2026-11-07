@@ -41,7 +41,7 @@ export function WatchlistDrawer() {
             <p className="max-w-xs text-sm text-slate-400">
               Sign in to track cards and get an email when the price drops.
             </p>
-            <Link href="/login?next=/watching&src=watchlist_drawer" onClick={close} className="btn-primary">
+            <Link rel="nofollow" href="/login?next=/watching&src=watchlist_drawer" onClick={close} className="btn-primary">
               Sign in
             </Link>
           </div>

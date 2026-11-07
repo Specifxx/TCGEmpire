@@ -337,7 +337,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
                 {Math.min(40, analysis.picks.length)}, in every market or Global, with no ads on any page.
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                <Link href="/login?next=/tools/rising&src=tool_preview" className="btn-primary text-sm">Create a free account</Link>
+                <Link rel="nofollow" href="/login?next=/tools/rising&src=tool_preview" className="btn-primary text-sm">Create a free account</Link>
                 <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
               </div>
             </div>

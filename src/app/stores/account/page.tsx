@@ -44,7 +44,7 @@ export default async function StoreAccountPage({ searchParams }: { searchParams:
       <div className="mx-auto max-w-md py-16 text-center">
         <h1 className="text-xl font-extrabold text-white">Your Stores plan</h1>
         <p className="mt-2 text-sm text-slate-400">Sign in with the account you subscribed with.</p>
-        <Link href="/login?next=/stores/account&src=stores_plan" className="btn-primary mt-4 inline-block">
+        <Link rel="nofollow" href="/login?next=/stores/account&src=stores_plan" className="btn-primary mt-4 inline-block">
           Sign in →
         </Link>
       </div>
