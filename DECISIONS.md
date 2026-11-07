@@ -22901,3 +22901,13 @@ Saturday after Black Friday, then `/cyber-monday` to the day after Cyber Monday,
 links the season's page for crawlers as well as visitors; outside `<main>` so the homepage hero's negative margin never covers
 it. Not dismissible and not a pop-up (pop-up policy: nothing uninvited on a visit's first page), never a countdown or "ends
 soon". A cached page can show the day-old link for up to its revalidate window, which is why the switch falls on the Sunday.
+
+## 2026-11-07 — An eBay Booster Case of another quantity is not the case
+
+An eBay seller wrote to MTG Compare that a 120-pack sleeved case was a six-box case's "best price, 26% below the median"
+(mtgcompare #94, CompareEmpire #145 for DexCompare). RiftCompare's sealed eBay search (`searchEbaySealed`) now drops, for
+a Booster Case, a listing whose stated counts are none of a case's: six boxes or 144 packs ("Case of 4", "x2", "120 Packs")
+and any sleeved display (`wrongBoosterCaseQuantity`, `tests/ebay-case-quantity.test.ts`). Every Booster Case title stored on
+2026-11-07 (97, stores and eBay) says six or says nothing, so none was refused: this is a guard, not a cleanup. The low
+outlier guard (`pruneCheapOutliers`) already covered the price side here. It runs in the sealed import (GitHub Actions),
+so it needs no deploy.
