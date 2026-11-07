@@ -122,6 +122,15 @@ async function main() {
     for (const e of x.pages) console.log(`    ${e.page.slice(0, 66).padEnd(66)} ${String(e.clicks).padStart(5)} ${String(e.impr).padStart(7)}  pos ${e.pos.toFixed(1)}`);
   }
 
+  // The pages a title rewrite would move most: impressions first, with each page's top queries.
+  console.log("\nTOP PAGES BY IMPRESSIONS (full URL, then the page's five biggest queries)");
+  console.log(head(70));
+  for (const r of [...pages].sort((a, b) => b.impressions - a.impressions).slice(0, 30)) {
+    console.log(line({ ...r, keys: [r.keys[0].replace(/^https?:\/\//, "")] }, 70));
+    for (const q of qp.filter((x) => x.keys[1] === r.keys[0]).sort((a, b) => b.impressions - a.impressions).slice(0, 5))
+      console.log(`      ${q.keys[0].slice(0, 58).padEnd(58)} ${String(q.clicks).padStart(4)} ${String(q.impressions).padStart(6)}  pos ${q.position.toFixed(1)}`);
+  }
+
   console.log("\nBLOG AND GUIDE PAGES");
   console.log(head(70));
   for (const r of pages.filter((p) => /\/(blog|guides)\//.test(p.keys[0])).sort((a, b) => b.impressions - a.impressions))
