@@ -1,0 +1,15 @@
+{
+ "v": 1,
+ "at": "2026-11-07T06:30:13Z",
+ "site": "riftcompare",
+ "kind": "wrong-price",
+ "page": "/card/last-rites-sfd-150-221",
+ "product": "Last Rites SFD 150/221",
+ "store": "TCGplayer",
+ "storeUrl": null,
+ "region": "SG",
+ "shown": "S$31.05",
+ "actual": null,
+ "issue": "PRICE_WRONG",
+ "note": null
+}
