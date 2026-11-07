@@ -22857,3 +22857,20 @@ the owner accepted the remaining risk. The quick view shows the link only (the i
 else the tagged search), never Amazon's price: that stays on the product page under the 24-hour licence. Uninvited
 overlays (a phone ad dock, a corner card, an exit pop-up) still never carry Amazon, and an Amazon page is never framed
 (item (n)).
+
+## A featured auction on the homepage — 2026-11-07
+
+**Owner:** "can we feature this listing on the homepage of Riftcompare until it ends please" (ebay.io/m/dXigXF). The short link resolves to eBay AU item 117507452881: "Riftbound Radiance Seraphine, Starry-Eyed Songstress SIGNATURE 174*/167", an auction from bc-cards (Kellyville NSW), the same seller and card as the Buy It Now listing featured 20 to 22 October. At the 7 November check: A$1,526 after 33 bids, ending 2026-11-11T08:01:20Z (Wed 11 Nov, 7:01 pm Sydney). Read from eBay's own page in a browser (the cloud proxy blocks eBay).
+
+**How.** The same `FEATURED_LISTINGS` list and labelled `FeaturedListingBox` as "A featured eBay listing on a card page", with three additions:
+- `home: true` puts it on every home ("/" and the five region homes) under the reviews, through `HomeFeaturedListing`, with eBay's own photo. The card page and quick view show it too, since it names the card.
+- `format: "auction"`, `bids` and `endsAt`: the box says "Auction", prints the end time in Sydney time with a live time-left, calls the figure the bid at our check ("open it for the current bid") and the button "Bid on eBay".
+- **It ends when the listing does.** `featuredLapsesAt` is the earlier of `endsAt` and `until`. The homes are cached six hours and the card page six at the CDN, so the box is now a client component that checks the clock again in the browser and removes itself the moment `endsAt` passes. Nothing remains to take down by hand; the entry can be deleted at leisure.
+
+**Not done: a live "ended early or sold" check.** That needs a request-time eBay call or a stored status, and RiftCompare's pages never call eBay. An auction with 33 bids can rarely be ended early, so the end time is the cut-off. If the seller does end it, delete the entry.
+
+Link: `affiliateUrl` → campaign 5339155912, customid `rc-au-ebay_au-featured-home-product` on the homes. Clicks report `surface: "featured_listing"`, `page_type: "homepage"`.
+
+The October entry's open question still stands: if bc-cards is connected to RiftCompare, the box should say so.
+
+`tests/featured-listing.test.ts`.
