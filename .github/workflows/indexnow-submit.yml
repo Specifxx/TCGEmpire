@@ -5,6 +5,11 @@ name: IndexNow submit (Bing/Yandex) — RiftCompare
 # (so it works right after a deploy), then posts the sitemap URLs in batches.
 on:
   workflow_dispatch:
+    inputs:
+      urls:
+        description: "Extra URLs to submit (space separated). Each is also checked against the live sitemap."
+        required: false
+        default: ""
   schedule:
     # Daily resubmit of the whole sitemap to Bing/Yandex (belt-and-braces on top of
     # the per-import ping). 06:10 UTC.
@@ -15,10 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Submit sitemap URLs to IndexNow
+      - name: Submit changed sitemap URLs to IndexNow
+        env:
+          EXTRA_URLS: ${{ github.event.inputs.urls }}
         run: |
           python3 - <<'PY'
-          import urllib.request, json, time, re, sys
+          import urllib.request, json, time, re, sys, os
           HOST = "riftcompare.com"
           KEY  = "43ac93dd97a44d4894bedf52d621c57c"
           KEYLOC = f"https://{HOST}/indexnow.txt"
@@ -45,39 +52,68 @@ jobs:
           #    already this way when its sitemap layout changed. Reading
           #    robots.txt's Sitemap: line(s) keeps this correct even if
           #    riftcompare's sitemap layout ever changes too.
+          # ONLY CHANGED URLS (SEO audit, 2026-11-07): Bing flags a whole-sitemap
+          # submission every day as "batch mode" and discounts it. A URL goes in when
+          # its sitemap <lastmod> is in the last 48 hours (the import, a new or edited
+          # article, a new deck), plus anything named in the dispatch input.
+          import datetime
           def locs(xml): return re.findall(r"<loc>\s*(.*?)\s*</loc>", xml)
+          def entries(xml):
+              out = []
+              for block in re.findall(r"<url>(.*?)</url>", xml, re.S):
+                  loc = re.search(r"<loc>\s*(.*?)\s*</loc>", block)
+                  mod = re.search(r"<lastmod>\s*(.*?)\s*</lastmod>", block)
+                  if loc: out.append((loc.group(1), mod.group(1) if mod else None))
+              return out
           robots_txt = get(f"https://{HOST}/robots.txt")
           roots = re.findall(r"(?im)^sitemap:\s*(\S+)", robots_txt)
           if not roots:
               print("No Sitemap: line found in robots.txt — aborting."); sys.exit(0)
           print("Sitemap root(s) from robots.txt:", roots)
 
-          urls = []
+          seen, changed = set(), set()
+          cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=48)
+          def take(xml):
+              for loc, mod in entries(xml):
+                  if loc.endswith(".xml"): continue
+                  seen.add(loc)
+                  if not mod: continue
+                  try:
+                      t = datetime.datetime.fromisoformat(mod.replace("Z", "+00:00"))
+                      if t.tzinfo is None: t = t.replace(tzinfo=datetime.timezone.utc)
+                  except ValueError:
+                      continue
+                  if t >= cutoff: changed.add(loc)
+          children = set()
           for root_url in roots:
               try:
-                  found = locs(get(root_url))
+                  xml = get(root_url)
               except Exception as e:
                   print("root sitemap failed", root_url, e); continue
-              children = [u for u in found if u.endswith(".xml")]
-              urls += [u for u in found if not u.endswith(".xml")]
-              for c in children:
-                  try: urls += [u for u in locs(get(c)) if not u.endswith(".xml")]
-                  except Exception as e: print("child sitemap failed", c, e)
-          urls = sorted(set(urls))
-          print("Collected", len(urls), "URLs.")
+              take(xml)
+              children |= {u for u in locs(xml) if u.endswith(".xml")}
+          for c in sorted(children - set(roots)):
+              try: take(get(c))
+              except Exception as e: print("child sitemap failed", c, e)
+          extra = [u for u in os.environ.get("EXTRA_URLS", "").split() if u.startswith(f"https://{HOST}/")]
+          for u in extra:
+              print(("in sitemap:      " if u in seen else "NOT IN SITEMAP:  ") + u)
+          urls = sorted(changed | set(extra))
+          print(f"Sitemaps list {len(seen)} URLs; {len(changed)} changed in 48h; submitting {len(urls)}.")
           if not urls: sys.exit(0)
 
-          # 3) Submit in batches (IndexNow cap = 10k URLs/request).
-          for i in range(0, len(urls), 10000):
-              batch = urls[i:i+10000]
+          # 3) Small batches (Bing's advice), a pause between them.
+          for i in range(0, len(urls), 500):
+              batch = urls[i:i+500]
               body = json.dumps({"host": HOST, "key": KEY, "keyLocation": KEYLOC, "urlList": batch}).encode()
               req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
                                            headers={"Content-Type": "application/json; charset=utf-8"})
               try:
                   r = urllib.request.urlopen(req, timeout=30)
-                  print(f"batch {i//10000}: HTTP {r.status} ({len(batch)} URLs)")
+                  print(f"batch {i//500}: HTTP {r.status} ({len(batch)} URLs)")
               except urllib.error.HTTPError as e:
-                  print(f"batch {i//10000}: HTTP {e.code} ({len(batch)} URLs) — {e.read().decode('utf-8','replace')[:200]}")
+                  print(f"batch {i//500}: HTTP {e.code} ({len(batch)} URLs) — {e.read().decode('utf-8','replace')[:200]}")
               except Exception as e:
-                  print(f"batch {i//10000}: error {e}")
+                  print(f"batch {i//500}: error {e}")
+              time.sleep(5)
           PY
