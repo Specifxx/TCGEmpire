@@ -22911,3 +22911,13 @@ and any sleeved display (`wrongBoosterCaseQuantity`, `tests/ebay-case-quantity.t
 2026-11-07 (97, stores and eBay) says six or says nothing, so none was refused: this is a guard, not a cleanup. The low
 outlier guard (`pruneCheapOutliers`) already covered the price side here. It runs in the sealed import (GitHub Actions),
 so it needs no deploy.
+
+## 2026-11-07 — The five-minute keep-warm is gone (GitHub's Actions terms)
+
+The owner asked whether the account is at risk under GitHub's terms after a friend's account was suspended. GitHub's
+Actions terms name "part of a serverless application" and low-benefit load on its servers as misuse, and a cron that only
+pings our own site every five minutes is the plainest example of that in the whole family. It also did not work: GitHub
+drops most of a five-minute schedule under load, so it ran two or three times a day (`ops-monitor.yml`'s note, and the
+run list on 2026-11-07: two runs in seven hours), which keeps nothing warm. `keep-warm.yml` is deleted. `/api/ping` stays
+(cheap, uncached, harmless) in case the owner ever points a free uptime monitor at it; that is his call, not a workflow.
+Nothing about prices, data or deploys changes. Reverses the "keep-warm stays" lines of 2026-09-11 and 2026-10-16.

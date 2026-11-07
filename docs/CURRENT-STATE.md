@@ -88,7 +88,8 @@ longer lands on its entry.
   the pages serve the release's snapshot, so `/api/revalidate` answers 202
   "skipped" (`importPurgeIsNoop`) unless `?force=1`; the daily release is what
   refreshes them. In `db`/`fallback` mode card pages purge after each import as
-  before. The 5-minute keep-warm stays (compute, not transfer). Still the
+  before. The 5-minute keep-warm is gone (2026-11-07: GitHub's Actions terms, and it ran
+  two or three times a day). Still the
   owner's call: narrowing `refresh-prices.yml`'s `push` trigger, and the
   Pokémon section (off, or 301 to DexCompare).
   [2026-10-16](../DECISIONS.md#L18017)
@@ -1392,7 +1393,7 @@ longer lands on its entry.
 - **No AI calls, no Speed Insights (2026-10-16):** Trade Roast (and its
   Gremlin box) and the unrendered AI card insight are gone with the Anthropic
   SDK; the site makes no model call. Speed Insights is removed (billed, unread).
-  Web Analytics and the keep-warm stay. [2026-10-16](../DECISIONS.md#L18248)
+  Web Analytics stays; the keep-warm went on 2026-11-07. [2026-10-16](../DECISIONS.md#L18248)
   [2026-10-16](../DECISIONS.md#L18206)
 - **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz; open-ended paid ads (a measured test is allowed, 2026-10-16); a static rule-2
   egress test; a static landscape header or

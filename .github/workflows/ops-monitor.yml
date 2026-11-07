@@ -21,7 +21,7 @@ name: Ops monitor
 # the owner as a last resort.
 
 # GITHUB DROPS SCHEDULED RUNS. This repo has ~50 scheduled workflows and GitHub skips many of their
-# runs under load (Keep warm, every five minutes, gets two or three a day). The old "17 */3" schedule
+# runs under load (the old five-minute Keep warm got two or three a day). The old "17 */3" schedule
 # left gaps of 8-10 hours, which /admin/health rightly called a stopped monitor (2026-11-02). So the
 # cron now ASKS every hour and the gate job below lets a scheduled run through only when the last
 # real check is 150+ minutes old: the cadence (and the database reads) stay about every three hours,
