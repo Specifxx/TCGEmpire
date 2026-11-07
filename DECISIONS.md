@@ -22934,3 +22934,12 @@ rows (US, and the converted UK, SG, CA and EU rows built from it) were quoting a
 The search now asks for `listingType: "standard"` in its listing preview (the preview still returns three listings), and
 `isQuotableListing` in `lib/tcgplayer.ts` drops any `custom` listing from every pick as a second lock. A product whose
 preview holds no standard English NM copy falls back to market price, as before. `tests/tcgplayer-custom-listings.test.ts`.
+
+## 2026-11-07 — The side rails sit flush, no floating panels
+
+The owner, on the home page's eBay and TCGplayer rails: "I don't like how it's floating … I want it to be like no gap."
+Each rail (`components/SideRails.tsx`) is now a square, full-height panel from the header's foot to the window's foot,
+against the navigation rail on the left and the window's edge on the right, with one hairline on the side facing the page.
+Its tiles stack edge to edge with hairline dividers instead of rounded cards with gaps. The 160px each side of the column
+(globals.css "The side rails") is unchanged, so nothing on the page moves; only the rails' own drawing changed. The same
+look went to every sister site that has the rails, each in its own repo.

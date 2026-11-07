@@ -20,23 +20,23 @@ import { AdDock, DockGate, DockTile, DOCK_LINK, type DockSide } from "./AdDock";
 //     in the server HTML (no SEO change); the room beside the column is CSS (globals.css "The side rails"), so CLS is 0.
 //   • Ad-free for Plus and Premium, like every ad: no rails, and the column keeps its full width (:root[data-adfree]).
 //   • Labelled "Ad", every link an affiliate link through OutboundLink, surface `side_rails`.
+//   • Flush (owner, 2026-11-07: "I don't like how it's floating … no gap"): each rail is a full-height panel from the header to the
+//     window's foot, against the window's edge (or the navigation rail), square, its tiles stacked edge to edge with hairline
+//     dividers. No rounded card, no gutter, no gap between tiles.
 
 export const MIN_WIDTH = 1280;
 export const RAIL_W = 136;
-const GUTTER = 12;
-/** container-app's widest (1400px): from there the rails sit just outside the column instead of at the window's edges. */
-const COLUMN_MAX = 1400;
 const HDR = 64;
 const HEAD = 30;
 const NOTE = 34;
-const PAD = 16;
-export const TILE_H = 6 + Math.round(((RAIL_W - PAD - 12) * 7) / 5) + 4 + 18 + 20 + 6;
+const PAD = 0;
+export const TILE_H = 16 + Math.round(((RAIL_W - 1 - 16) * 7) / 5) + 4 + 18 + 20 + 1;
 export const MAX_TILES = 10;
 const TCG_SEARCH = "https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?view=grid";
 
 /** Whether a window this tall holds a rail with one whole tile in view. Pure, for the tests. */
 export function railFits(innerHeight: number): boolean {
-  return innerHeight - HDR - 2 * GUTTER - HEAD - NOTE - PAD >= TILE_H;
+  return innerHeight - HDR - HEAD - NOTE - PAD >= TILE_H;
 }
 
 interface MiniData {
@@ -157,17 +157,18 @@ export function SideRails() {
   );
 }
 
-const RAIL = "side-rail fixed z-30 hidden flex-col rounded-2xl border border-ink-700/70 bg-ink-900 p-2 min-[1280px]:flex";
-const LIST = "rail-scroll grid min-h-0 flex-1 grid-cols-1 content-start gap-2 overflow-y-auto overscroll-contain";
-const TILE = "group flex flex-col rounded-xl border border-ink-700 bg-ink-950/40 p-1.5 transition-colors hover:border-[var(--ad-accent)]";
+const RAIL = "side-rail fixed z-30 hidden flex-col border-ink-700/70 bg-ink-900 min-[1280px]:flex";
+const LIST = "rail-scroll grid min-h-0 flex-1 grid-cols-1 content-start overflow-y-auto overscroll-contain border-y border-ink-700/70";
+const TILE = "group flex flex-col border-b border-ink-700/70 px-2 py-2 transition-colors hover:bg-ink-950/50";
 
 const railStyle = (side: "left" | "right", accent: string): CSSProperties => ({
-  top: HDR + GUTTER,
-  bottom: GUTTER,
+  // Flush: from the header's foot to the window's, against the navigation rail (left) or the window's edge (right), one hairline
+  // on the side facing the page.
+  top: HDR,
+  bottom: 0,
   width: RAIL_W,
-  // GUTTER outside the column, never closer than GUTTER to the navigation rail or the window's edge. 100% is the window's width
-  // without its scrollbar (a fixed element's containing block), as the column's is.
-  [side]: `calc(${side === "left" ? "var(--sidenav-w) + " : ""}max(${GUTTER}px, (100% - var(--sidenav-w)) / 2 - ${COLUMN_MAX / 2 + GUTTER + RAIL_W}px))`,
+  [side]: side === "left" ? "var(--sidenav-w)" : 0,
+  [side === "left" ? "borderRightWidth" : "borderLeftWidth"]: 1,
   ["--ad-accent" as string]: accent,
 });
 
@@ -175,7 +176,7 @@ function Rail(props: { side: "left" | "right"; label: string; brand: ReactNode; 
   const { side, label, brand, accent, tiles, retailer, country, allHref, allLabel, note } = props;
   return (
     <aside data-ad-placement="side-rail" aria-label={label} className={RAIL} style={railStyle(side, accent)}>
-      <div className="mb-2 flex h-[22px] shrink-0 items-center justify-between px-1">
+      <div className="flex h-[30px] shrink-0 items-center justify-between px-2">
         {brand}
         <span className="rounded bg-ink-950/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Ad</span>
       </div>
@@ -195,7 +196,7 @@ function Rail(props: { side: "left" | "right"; label: string; brand: ReactNode; 
           </li>
         ))}
       </ul>
-      <p className="mt-2 flex h-[26px] shrink-0 flex-col justify-center px-1 text-[10px] leading-[13px] text-slate-400">
+      <p className="flex h-[34px] shrink-0 flex-col justify-center px-2 text-[10px] leading-[13px] text-slate-400">
         <OutboundLink href={allHref} retailer={retailer} country={country} pageType="side-rail" surface="side_rails" className="truncate font-bold">
           <span style={{ color: accent }}>{allLabel}</span>
         </OutboundLink>
