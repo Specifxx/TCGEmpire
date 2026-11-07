@@ -134,7 +134,15 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
 export const PIN_OUTLINE = {
   ebay: "rounded-lg outline outline-2 -outline-offset-2 outline-[#16a34a]",
   amazon: "rounded-lg outline outline-2 -outline-offset-2 outline-[#f59e0b]",
+  // The cheapest row (owner, 2026-11-07: "the cheapest listing should also have an outline too"): sky blue, so it never
+  // reads as eBay's green or Amazon's amber. It wins over eBay's outline when eBay is itself the cheapest.
+  cheapest: "rounded-lg outline outline-2 -outline-offset-2 outline-[#0ea5e9]",
 } as const;
+
+/** The outline a price row wears: the cheapest row's first, else eBay's when the row is the pinned eBay row. */
+export function rowOutline(o: { cheapest: boolean; ebay: boolean }): string {
+  return o.cheapest ? PIN_OUTLINE.cheapest : o.ebay ? PIN_OUTLINE.ebay : "";
+}
 
 export function pinMarketplaces<T extends { retailer: string; priceCents: number }>(
   prices: T[],
