@@ -22876,3 +22876,20 @@ The October entry's open question still stands: if bc-cards is connected to Rift
 `tests/featured-listing.test.ts`.
 
 **Same day, follow-up** (owner: "the featured listing should also convert prices if I switch region"). Outside the listing's own currency the box leads with the price in the visitor's region currency, marked "≈" and "at our reference rate" (`convertCents`, lib/fx.ts), with eBay's own A$ figure beside it. It is a featured ad, never a store row, so this sits with the other reference conversions (Canada's eBay US rows, the weekly history), not the store-price rule.
+
+## Premium members feature their own eBay listings — 2026-11-07
+
+**Owner:** "a premium feature could be for sellers to feature their listing on our website on a featured page … for premium users to enter a link to their listing and get it featured. This will be a premium feature people actually want."
+
+**What a member does.** On `/featured` (signed in, on Premium) they paste the link to their own eBay listing, or eBay's app share link (ebay.io/m/…, followed to the item server-side). Up to three at a time (`MEMBER_FEATURE_LIMIT`), each for as long as it is live, at most 30 days (`FEATURE_DAYS`); they can re-add it after.
+
+**What decides it is eBay, not the member.** Nothing typed is ever shown. The four-hourly auction sweep (`scripts/import-ebay-auctions.ts`, refresh-auctions.yml) asks Browse getItem for each pending or live row, on the sweep's own budget, at most 40 calls a sweep (`lib/featured/check.ts`). `judgeItem` (`lib/featured/core.ts`) puts it live only when eBay shows a live Riftbound listing (the title, or eBay's Game aspect) with a price and a photo, as an auction or Buy It Now; a sold, ended or removed listing ends, and anything else is refused with a reason the member sees. A member whose Premium lapses has their rows taken down at the next sweep. The workflow then purges `/featured` (`/api/cron/featured-listings`), so a listing appears within about four hours.
+
+- **Hosts:** eBay AU, US, UK, CA, ES and SG only, the six our EPN tags cover (`FEATURE_HOSTS`); every link goes out through `affiliateUrl` (campaign 5339155912, `rc-<market>-ebay_<market>-featured-featured-product`).
+- **Labels:** the same box as the hand-picked listings ("Featured listing", "Paid link", "Not part of the comparison"), plus "The seller's own listing". Never a comparison row, never ranked.
+- **No moderation queue:** eBay's check is the gate. `/admin/featured` lists every row with Remove and Recheck. The ops monitor's `ebay:featured` goes amber when a listing has waited 12 hours for its check, red at 24.
+- **Private:** `FeaturedSubmission.userId` never leaves the server; `/featured` reads live rows only, cached six hours (`getLiveFeatured`, tag `featured-listings`).
+- **Premium copy:** the plan list gains "Feature your own eBay listings on RiftCompare". No price, trial or other feature changed.
+- The home's featured box links to `/featured`.
+
+`tests/featured-submissions.test.ts`.

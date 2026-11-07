@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FeaturedListingBox } from "@/components/FeaturedListingBox";
 import { homeFeaturedListing } from "@/lib/featured-listings";
 
@@ -12,6 +13,11 @@ export function HomeFeaturedListing() {
   return (
     <section aria-label="Featured eBay listing">
       <FeaturedListingBox listing={listing} imageUrl={listing.imageUrl} className="" pageType="homepage" />
+      <p className="mt-2 text-right text-xs text-slate-500">
+        <Link href="/featured" className="font-semibold text-brand-400 hover:underline">
+          More featured listings · feature yours with Premium →
+        </Link>
+      </p>
     </section>
   );
 }
