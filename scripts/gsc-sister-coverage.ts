@@ -13,17 +13,15 @@
 import { createSign } from "node:crypto";
 
 const SAMPLE = Math.max(5, Math.min(200, Number(process.env.SAMPLE ?? 30)));
-// [Search Console property, site origin]. Domain properties accept any URL on the domain.
-const SITES: [string, string][] = [
-  ["https://www.dexcompare.app/", "https://www.dexcompare.app"],
-  ["sc-domain:opcompare.app", "https://opcompare.app"],
-  ["https://mtgcompare.app/", "https://mtgcompare.app"],
-  ["sc-domain:gundamcompare.com", "https://gundamcompare.com"],
-  ["sc-domain:lorcanacompare.com", "https://lorcanacompare.com"],
-  ["sc-domain:ygocompare.com", "https://ygocompare.com"],
-  ["https://www.camcompare.app/", "https://www.camcompare.app"],
-  ["https://www.compareempire.com/", "https://www.compareempire.com"],
+// Every Compare Empire site (2026-11-07). The Search Console property is found from the service account's own list:
+// the domain property when it has one, else a URL-prefix property on the same host.
+const ORIGINS = [
+  "https://riftcompare.com", "https://dexcompare.app", "https://opcompare.app", "https://mtgcompare.app",
+  "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://cyberpunkcompare.com",
+  "https://bandaicompare.com", "https://www.camcompare.app", "https://compareempire.com", "https://wargamecompare.com",
+  "https://figurecompare.com", "https://kaeyoung.com", "https://scentcompare.app", "https://riftboundstocks.com",
 ];
+const ONLY = (process.env.ONLY ?? "").split(",").map((x) => x.trim()).filter(Boolean);
 
 async function token(): Promise<string> {
   const sa = JSON.parse(process.env.GSC_SA_KEY ?? "") as { client_email: string; private_key: string };
@@ -72,15 +70,46 @@ async function inspect(tok: string, property: string, url: string) {
   }).catch(() => null);
   if (!r) return { state: "no answer in 30 s", crawled: "" };
   if (!r.ok) return { state: `HTTP ${r.status}`, crawled: "" };
-  const j = (await r.json()) as { inspectionResult?: { indexStatusResult?: { coverageState?: string; lastCrawlTime?: string } } };
+  type R = { coverageState?: string; lastCrawlTime?: string; robotsTxtState?: string; indexingState?: string; pageFetchState?: string; googleCanonical?: string; userCanonical?: string };
+  const j = (await r.json()) as { inspectionResult?: { indexStatusResult?: R } };
   const s = j.inspectionResult?.indexStatusResult;
-  return { state: s?.coverageState ?? "no result", crawled: s?.lastCrawlTime?.slice(0, 10) ?? "" };
+  // The blockers, only when one is present: a robots block, a noindex, a failed fetch, or Google picking another canonical.
+  const flags = [
+    s?.robotsTxtState === "DISALLOWED" ? "robots-blocked" : "",
+    s?.indexingState && s.indexingState !== "INDEXING_ALLOWED" && s.indexingState !== "INDEXING_STATE_UNSPECIFIED" ? s.indexingState : "",
+    s?.pageFetchState && s.pageFetchState !== "SUCCESSFUL" && s.pageFetchState !== "PAGE_FETCH_STATE_UNSPECIFIED" ? `fetch ${s.pageFetchState}` : "",
+    s?.googleCanonical && s.userCanonical && s.googleCanonical !== s.userCanonical ? `google canonical ${s.googleCanonical}` : "",
+  ].filter(Boolean);
+  return { state: s?.coverageState ?? "no result", crawled: [s?.lastCrawlTime?.slice(0, 10) ?? "", ...flags].filter(Boolean).join(", ") };
+}
+
+async function api<T>(tok: string, url: string): Promise<T | null> {
+  const r = await fetch(url, { headers: { Authorization: `Bearer ${tok}` }, signal: AbortSignal.timeout(30_000) }).catch(() => null);
+  return r && r.ok ? ((await r.json()) as T) : null;
+}
+
+/** The property for an origin: sc-domain:<host without www> first, else a URL-prefix property on that host. */
+function propertyFor(origin: string, props: string[]): string | null {
+  const host = new URL(origin).host;
+  const bare = host.replace(/^www\./, "");
+  return props.find((p) => p === `sc-domain:${bare}`) ?? props.find((p) => p === `${origin}/`) ?? props.find((p) => p.startsWith("http") && new URL(p).host.replace(/^www\./, "") === bare) ?? null;
 }
 
 async function main() {
   if (!process.env.GSC_SA_KEY) return console.log("GSC_SA_KEY is not set.");
   const tok = await token();
-  for (const [property, origin] of SITES) {
+  const list = await api<{ siteEntry?: { siteUrl: string }[] }>(tok, "https://www.googleapis.com/webmasters/v3/sites");
+  const props = (list?.siteEntry ?? []).map((e) => e.siteUrl);
+  console.log(`Search Console properties this account reads: ${props.length}`);
+  for (const origin of ORIGINS.filter((o) => !ONLY.length || ONLY.some((x) => o.includes(x)))) {
+    const property = propertyFor(origin, props);
+    if (!property) {
+      console.log(`\n=== ${origin}: no Search Console property this account can read`);
+      continue;
+    }
+    // What Search Console says about each submitted sitemap: last read, errors, warnings, URLs submitted.
+    type Sm = { path: string; lastDownloaded?: string; isPending?: boolean; errors?: string; warnings?: string; contents?: { type: string; submitted?: string }[] };
+    const sms = await api<{ sitemap?: Sm[] }>(tok, `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(property)}/sitemaps`);
     let urls: string[];
     let final: string;
     try {
@@ -89,16 +118,20 @@ async function main() {
       console.log(`\n=== ${origin}: sitemap not readable (${(e as Error).message})`);
       continue;
     }
-    console.log(`${final}: ${urls.length} sitemap URLs read`);
     const step = Math.max(1, Math.floor(urls.length / SAMPLE));
     const pick = [...new Set([`${final}/`, ...urls.filter((_, i) => i % step === 0).slice(0, SAMPLE)])];
     const tally = new Map<string, string[]>();
     for (const u of pick) {
       const { state, crawled } = await inspect(tok, property, u);
-      tally.set(state, [...(tally.get(state) ?? []), `${u.replace(final, "") || "/"}${crawled ? ` (crawled ${crawled})` : ""}`]);
+      tally.set(state, [...(tally.get(state) ?? []), `${u.replace(final, "") || "/"}${crawled ? ` (${crawled})` : ""}`]);
       await new Promise((res) => setTimeout(res, 150));
     }
-    console.log(`\n=== ${final} (${property}): ${urls.length} URLs in the sitemap, ${pick.length} inspected`);
+    console.log(`\n=== ${final} (${property}): ${urls.length} URLs in the live sitemap, ${pick.length} inspected`);
+    for (const sm of sms?.sitemap ?? []) {
+      const sub = (sm.contents ?? []).map((c) => `${c.submitted ?? "?"} ${c.type}`).join(", ");
+      console.log(`  sitemap ${sm.path}: read ${sm.lastDownloaded?.slice(0, 10) ?? "never"}${sm.isPending ? " (pending)" : ""}, ${sm.errors ?? 0} errors, ${sm.warnings ?? 0} warnings${sub ? `, ${sub}` : ""}`);
+    }
+    if (!sms?.sitemap?.length) console.log("  sitemap: NONE SUBMITTED in Search Console");
     for (const [state, us] of [...tally].sort((a, b) => b[1].length - a[1].length)) {
       console.log(`  ${String(us.length).padStart(3)}  ${state}`);
       for (const u of us.slice(0, 6)) console.log(`         ${u}`);

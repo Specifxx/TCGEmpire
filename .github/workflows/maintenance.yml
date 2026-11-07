@@ -77,6 +77,7 @@ on:
           - ensure-intro-coupons  # WRITES to Stripe (idempotent): creates the "first 3 months half price" coupon for each monthly price if missing, and prints what it will charge.
           - payment-failures-report # read-only: every Stripe charge in the last 30 days with WHO refused it (Radar block vs bank decline), Radar reason/rule/risk, CVC/postcode checks, card brand/funding/country, 3DS. Customers anonymised as #1, #2.
           - trial-cancel-report  # read-only: Premium trials cancelled mid-trial (cancel_at_period_end), hours to cancel, Stripe feedback, activity before cancelling. Anonymised.
+          - gsc-coverage     # read-only INDEX COVERAGE SAMPLE for EVERY Compare site: each property's submitted sitemaps (last read, errors), then ~30 sitemap URLs per site through URL Inspection (indexed / discovered / crawled-not-indexed, robots block, noindex, fetch failure, Google's own canonical). URLs and states only.
           - gsc-cannibal     # read-only SEARCH CONSOLE CANNIBALISATION REPORT for EVERY property GSC_SA_KEY can read (Rift Compare and the sister sites): queries where two or more of a site's own pages show, and the page pairs that share the most, so the weaker page is merged, redirected or retitled. Search terms only.
           - crawl-audit-sites # read-only: every Compare site read as Google's smartphone crawler (robots, sitemaps, server HTML of a sample, a 250-page crawl from the homepage) plus Search Console sitemaps and URL Inspection. SITES input via `url` (comma list of hosts) narrows it.
           - gsc-sites-daily  # read-only: every Search Console property's clicks/impressions per day (35d), weekly totals and pages with impressions. Counts only, no search terms. The family growth scoreboard.
@@ -5945,6 +5946,13 @@ jobs:
           STRIPE_PLUS_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PLUS_LEGACY_PRICE_IDS }}
           STRIPE_PREMIUM_LEGACY_PRICE_IDS: ${{ secrets.STRIPE_PREMIUM_LEGACY_PRICE_IDS }}
         run: npx tsx scripts/funnel-report.ts
+
+      - name: Search Console index coverage sample, every Compare site (read-only)
+        if: inputs.task == 'gsc-coverage'
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          SAMPLE: "30"
+        run: npx tsx scripts/gsc-sister-coverage.ts
 
       - name: Search Console cannibalisation report, every property (read-only)
         if: inputs.task == 'gsc-cannibal'
