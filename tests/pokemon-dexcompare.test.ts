@@ -121,16 +121,16 @@ test("tile figures and the open rule follow DexCompare's own (a store in stock, 
   assert.equal(dexOpen({ cents: 4999, inStock: 0, marketplace: true }), true);
 });
 
-test("links go to the visitor's market on DexCompare, tagged by surface", () => {
+test("links go to the visitor's market on DexCompare, as clean URLs Googlebot may follow (DexCompare disallows query strings)", () => {
   assert.equal(
     dexHref("UK", { kind: "product", slug: "x-booster-box", cents: 1, inStock: 1, listed: 1, marketplace: false, checkedAt: null }, "product"),
-    "https://dexcompare.app/uk/p/x-booster-box?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-product",
+    "https://dexcompare.app/uk/p/x-booster-box",
   );
   assert.equal(
     dexHref("EU", { kind: "set", setSlug: "surging-sparks", setName: "Surging Sparks" }, "quickview"),
-    "https://dexcompare.app/eu/sets/surging-sparks?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-quickview",
+    "https://dexcompare.app/eu/sets/surging-sparks",
   );
-  assert.equal(dexHomeHref("SG", "subnav"), "https://dexcompare.app/sg?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-subnav");
+  assert.equal(dexHomeHref("SG", "subnav"), "https://dexcompare.app/sg");
   assert.deepEqual(Object.keys(DEX_REGION).sort(), ["AU", "CA", "EU", "SG", "UK", "US"]);
 });
 
