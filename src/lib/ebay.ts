@@ -1200,6 +1200,22 @@ export function sealedFloorCents(productType: string, referenceCents?: number | 
 // TCGplayer price, or the published MSRP when no store carries it (see trustedRef in
 // sealed-import.ts) — listings priced implausibly below it (or below the per-type
 // floor) are dropped as accessories / mis-listings / undisclosed foreign printings.
+// A Booster Case is SIX booster boxes (every store title on 2026-11-07 says 6; 144 packs). An eBay seller wrote to MTG Compare
+// (2026-11-07) that a 120-pack sleeved case was a six-box case's cheapest offer there; the same shape here would be a "Case of 4",
+// "x2" cases or a sleeved display. A listing whose stated counts are none of a case's is another product. Only stated counts are
+// read ("6x", "x6", "case of 6", "6 Boxes", "6-Box", "144 Packs"); a decimal ("Set 2.5") is never a count. Silence passes.
+const CASE_X = /(?<![\d.])\b(\d{1,2})\s*x\b(?!\s*\d)|\bx\s*(\d{1,2})\b/g;
+const CASE_NAMED = /\bcase\s+(?:of|de|da|von)\s+(\d{1,2})\b|(?<![\d.])\b(\d{1,2})\s*(?:(?:booster|sealed)\s+){0,2}(?:boxes|displays|cajas|boîtes|displays)\b|(?<![\d.])\b(\d{1,2})-(?:box|display)\b/g;
+const CASE_PACKS = /\b(\d{2,3})\s*(?:x\s*)?(?:(?:sleeved|booster)\s*)*(?:packs?|boosters)\b/g;
+export function wrongBoosterCaseQuantity(title: string): boolean {
+  const t = title.toLowerCase();
+  if (/\bsleeved\b/.test(t)) return true;
+  const stated = [...t.matchAll(CASE_X), ...t.matchAll(CASE_NAMED)].map((m) => Number(m.slice(1).find((g) => g !== undefined))).filter((n) => n > 1);
+  if (stated.length && !stated.includes(6)) return true;
+  const packs = [...t.matchAll(CASE_PACKS)].map((m) => Number(m[1])).filter((n) => n >= 40);
+  return packs.length > 0 && !packs.includes(144);
+}
+
 export async function searchEbaySealed(
   name: string,
   productType: string,
@@ -1289,6 +1305,8 @@ export async function searchEbaySealed(
     // Price-sanity: drop anything below the per-type / reference floor (the $22
     // "booster box" accessory class).
     .filter((it) => Math.round(parseFloat(it.price.value) * 100) >= floor)
+    // A case of another quantity (a "Case of 4", two cases, a sleeved display) is not the six-box case.
+    .filter((it) => productType !== "Booster Case" || !wrongBoosterCaseQuantity(it.title ?? ""))
     .sort((a, b) => delivered(a) - delivered(b));
 
   // Secondary net for a low outlier that cleared the floor (e.g. a mis-listed item in
