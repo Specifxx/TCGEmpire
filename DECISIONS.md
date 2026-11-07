@@ -22874,3 +22874,5 @@ Link: `affiliateUrl` → campaign 5339155912, customid `rc-au-ebay_au-featured-h
 The October entry's open question still stands: if bc-cards is connected to RiftCompare, the box should say so.
 
 `tests/featured-listing.test.ts`.
+
+**Same day, follow-up** (owner: "the featured listing should also convert prices if I switch region"). Outside the listing's own currency the box leads with the price in the visitor's region currency, marked "≈" and "at our reference rate" (`convertCents`, lib/fx.ts), with eBay's own A$ figure beside it. It is a featured ad, never a store row, so this sits with the other reference conversions (Canada's eBay US rows, the weekly history), not the store-price rule.
