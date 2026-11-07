@@ -35,6 +35,7 @@ import { GAPageViewTracker } from "@/components/GAPageViewTracker";
 import { SignupWelcome } from "@/components/SignupWelcome";
 import { FeedbackLink } from "@/components/FeedbackLink";
 import { RadianceSeasonBanner } from "@/components/RadianceSeasonBanner";
+import { HolidayStrip } from "@/components/HolidayStrip";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { ShareArrival } from "@/components/ShareArrival";
@@ -433,6 +434,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     hidden; SideNav itself is `position: fixed`, not a layout
                     participant, so this is what actually reserves its space. */}
                 <div className="pl-[var(--sidenav-w)]">
+                  {/* Black Friday, then Cyber Monday (lib/holiday-strip.ts): one server-rendered line, outside <main> so the
+                      homepage's full-bleed hero (-mt-6) never slides over it. */}
+                  <HolidayStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
                     {/* Radiance preview season, 2026-09-24 → release day. Client-
                         decided and dismissible; renders nothing on the server. */}
