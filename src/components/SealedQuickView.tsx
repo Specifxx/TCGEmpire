@@ -20,7 +20,7 @@ import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/se
 import { isPreorderSetCode } from "@/lib/constants";
 import { SealedWatchButton } from "./SealedWatchButton";
 import { PaidLinkTag } from "./AffiliateDisclosure";
-import { PIN_OUTLINE, pinMarketplaces } from "@/lib/market-rows";
+import { PIN_OUTLINE, pinMarketplaces, rowOutline } from "@/lib/market-rows";
 import { amazonFor, amazonSearchUrl } from "@/lib/amazon";
 import { sealedPath, sealedSlug } from "@/lib/sealed-slug";
 import { AmazonLiveSlot } from "./AmazonLiveSlot";
@@ -242,7 +242,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
           const isBest = l === best;
           const pinned = lead.includes(l);
           return [
-            <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"} ${pinned && l === pin.ebay ? `-mx-2 px-2 ${PIN_OUTLINE.ebay}` : ""}`}>
+            <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"} ${(() => { const o = rowOutline({ cheapest: isBest && listings.length > 1, ebay: pinned && l === pin.ebay }); return o ? `-mx-2 px-2 ${o}` : ""; })()}`}>
               <div className="min-w-0 flex-1">
                 <div className="flex min-w-0 items-center gap-1.5">
                   <span className="truncate text-sm font-semibold text-white">{l.retailerName}</span>

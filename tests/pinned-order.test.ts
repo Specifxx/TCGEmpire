@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { pinMarketplaces, tcgplayerLeads } from "../src/lib/market-rows";
+import { PIN_OUTLINE, pinMarketplaces, rowOutline, tcgplayerLeads } from "../src/lib/market-rows";
 
 const row = (retailer: string, priceCents: number) => ({ retailer, priceCents });
 
@@ -28,4 +28,13 @@ test("the sealed QuickView pins eBay and TCGplayer the same way, open rows only,
   assert.match(src, /\{!pin\.ebay && \(/);
   assert.doesNotMatch(src, /Shown ?First/, "no wording about the order (owner, 2026-10-30)");
   assert.match(src, /const isBest = l === best;/, "Best price stays on the real cheapest");
+});
+
+test("the cheapest row wears its own outline, distinct from eBay's and Amazon's (owner, 2026-11-07)", () => {
+  assert.equal(rowOutline({ cheapest: true, ebay: false }), PIN_OUTLINE.cheapest);
+  assert.equal(rowOutline({ cheapest: false, ebay: true }), PIN_OUTLINE.ebay);
+  assert.equal(rowOutline({ cheapest: true, ebay: true }), PIN_OUTLINE.cheapest);
+  assert.equal(rowOutline({ cheapest: false, ebay: false }), "");
+  assert.notEqual(PIN_OUTLINE.cheapest, PIN_OUTLINE.ebay);
+  assert.notEqual(PIN_OUTLINE.cheapest, PIN_OUTLINE.amazon);
 });

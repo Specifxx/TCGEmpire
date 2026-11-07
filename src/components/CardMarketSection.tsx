@@ -9,7 +9,7 @@ import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { CartAddButton } from "@/components/cart/CartAddButton";
-import { PIN_OUTLINE, computeMarket, pinMarketplaces, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
+import { PIN_OUTLINE, computeMarket, rowOutline, pinMarketplaces, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
 import { convertUsdCents } from "@/lib/fx";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { ReportPriceButton } from "./ReportPriceButton";
@@ -441,7 +441,7 @@ export function CardPriceComparison({
     return (
               <li
                 key={p.id}
-                className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4 ${pinned && p.retailer.startsWith("ebay") ? PIN_OUTLINE.ebay : ""}`}
+                className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4 ${rowOutline({ cheapest: i === 0 && prices.length > 1, ebay: pinned && p.retailer.startsWith("ebay") })}`}
               >
                 <div className="w-5 shrink-0 text-center text-sm font-bold text-slate-500 sm:w-6">{i + 1}</div>
                 <div className="min-w-0 flex-1">
