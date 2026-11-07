@@ -203,6 +203,7 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
 
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>
+        <Link href="/blog/riftbound-gift-guide-2026" className="btn-ghost">Gift guide and Black Friday tips</Link>
         <Link href={event === "black-friday" ? "/cyber-monday" : "/black-friday"} className="btn-ghost">{event === "black-friday" ? "Cyber Monday deals" : "Black Friday deals"}</Link>
         <Link href="/graded" className="btn-ghost">Graded prices</Link>
         <Link href="/auctions" className="btn-ghost">Auctions</Link>
