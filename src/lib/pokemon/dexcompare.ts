@@ -185,8 +185,13 @@ export function dexOpen(d: { cents: number | null; inStock: number; marketplace:
 }
 
 // ── Links ─────────────────────────────────────────────────────────────────────
-// UTM on every link, so DexCompare's analytics count this section's referrals
-// by surface. `rel` is DEX_REL: our own site and no commission, but a data link
+// CLEAN URLS, NO UTM (2026-11-07). These links carried ?utm_source=riftcompare…,
+// and DexCompare's robots.txt disallows every query-string URL ("/*?"), so
+// Googlebot could follow none of the ~700 links from this, our best-crawled site:
+// Search Console showed 79 of 81 DexCompare sitemap URLs "unknown to Google".
+// DexCompare's analytics still see the referrer (riftcompare.com); the surface
+// tag is the one thing given up. `surface` stays in the signatures for callers.
+// `rel` is DEX_REL: our own site and no commission, but a data link
 // repeated across a thousand product pages, so nofollow (sister-sites.ts keeps
 // FOLLOWED links to the footer and a few articles; four look-alike sites
 // cross-linked sitewide read as a link network).
@@ -195,18 +200,18 @@ export const DEX_REL = "nofollow noopener";
 
 export type DexSurface = "product" | "quickview" | "markets" | "set" | "home" | "subnav";
 
-function withUtm(path: string, surface: DexSurface): string {
-  return `${DEX_ORIGIN}${path}?utm_source=riftcompare&utm_medium=referral&utm_campaign=pkmn-${surface}`;
+function dexUrl(path: string, _surface: DexSurface): string {
+  return `${DEX_ORIGIN}${path}`;
 }
 
 export function dexHref(market: Country, link: DexLink, surface: DexSurface): string {
   const region = DEX_REGION[market];
-  return withUtm(link.kind === "product" ? `/${region}/p/${link.slug}` : `/${region}/sets/${link.setSlug}`, surface);
+  return dexUrl(link.kind === "product" ? `/${region}/p/${link.slug}` : `/${region}/sets/${link.setSlug}`, surface);
 }
 
 /** DexCompare's home for the market: every product, every store. */
 export function dexHomeHref(market: Country, surface: DexSurface): string {
-  return withUtm(`/${DEX_REGION[market]}`, surface);
+  return dexUrl(`/${DEX_REGION[market]}`, surface);
 }
 
 /** "8 stores" / "1 store". */

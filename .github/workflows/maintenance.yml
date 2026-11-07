@@ -5587,6 +5587,8 @@ jobs:
           PROBE_CONTEXT_MARKER_END: ${{ inputs.context_marker_end }}
           PROBE_BASE64_DUMP: ${{ inputs.base64_dump }}
         run: |
+          echo "== redirect hops (Googlebot smartphone UA, headers only):"
+          curl -sSIL --max-time 30 -A "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" "${{ inputs.url }}" | grep -iE "^(HTTP/|location:)" || true
           curl -sSL --max-time 30 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36" "${{ inputs.url }}" -o page.html
           echo "== bytes: $(wc -c < page.html)"
           echo "== raw body sample (first 4000 chars — useful for API/JSON endpoints):"
