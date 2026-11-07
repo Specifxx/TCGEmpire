@@ -813,7 +813,7 @@ function LockedPreview() {
             A free account shows the top three cards on this list, updated daily. {PLUS_GATE_LINE}
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-            <Link href="/login?next=/tools/deal-finder&src=tool_preview" className="btn-primary text-sm">
+            <Link rel="nofollow" href="/login?next=/tools/deal-finder&src=tool_preview" className="btn-primary text-sm">
               Create a free account
             </Link>
             <PremiumButton surface="gate:deal-finder" tier="plus" className="btn-ghost text-sm">

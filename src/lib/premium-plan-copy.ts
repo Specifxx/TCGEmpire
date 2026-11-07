@@ -55,7 +55,9 @@ export function planBullets(tier: "plus" | "premium", market: string | null | un
     const deals = "Every deal below market, not just the top 3";
     const collection = "Unlimited watchlist and collection, with full price history";
     const ads = "No ads, anywhere on the site";
-    return us ? [alerts, deals, collection, basket, ads] : [basket, alerts, deals, collection, ads];
+    // Owner, 2026-11-07: sellers feature their own eBay listings on /featured.
+    const featured = "Feature your own eBay listings on RiftCompare";
+    return us ? [alerts, deals, collection, basket, featured, ads] : [basket, alerts, deals, collection, featured, ads];
   }
   const plan = "Store-by-store buying plan, postage included, as often as you like";
   const deck = "Deck price watch: an email when a deck's delivered total drops";

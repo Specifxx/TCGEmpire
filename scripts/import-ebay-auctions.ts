@@ -8,6 +8,7 @@
 import { prisma } from "../src/lib/db";
 import { isEbayEnabled } from "../src/lib/ebay";
 import { refreshAuctions } from "../src/lib/ebay-auctions";
+import { checkFeaturedSubmissions } from "../src/lib/featured/check";
 
 async function main() {
   if (!isEbayEnabled()) {
@@ -23,6 +24,14 @@ async function main() {
     // saying out loud, since "0 found" and "never asked" look identical in a
     // row count.
     console.log(`No answer from: ${failed.join(", ")} (their existing rows were left alone)`);
+  }
+  // Members' featured listings (lib/featured/check.ts), on the budget the sweep
+  // primed. Never fails the sweep: a missed check is the next sweep's.
+  try {
+    const f = await checkFeaturedSubmissions();
+    console.log(`Featured listings: ${f.checked} checked with eBay, ${f.live} live, ${f.changed} changed`);
+  } catch (e) {
+    console.log(`Featured listings check failed: ${e instanceof Error ? e.message : e}`);
   }
   await prisma.$disconnect();
 }

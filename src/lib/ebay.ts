@@ -1538,3 +1538,32 @@ export async function searchEbayAuctions(opts: {
   }
   return { items, ok: true };
 }
+
+const ITEM_URL = "https://api.ebay.com/buy/browse/v1/item";
+
+/**
+ * One listing by its legacy id (Browse getItem), for the member-featured check
+ * (lib/featured/check.ts). Budgeted like every other call here: run it after
+ * primeEbayBudget. `item` is eBay's JSON, null when eBay no longer lists it
+ * (404); ok:false means no answer (budget, 429, network) and changes nothing.
+ */
+export async function getEbayItem(itemId: string, marketplace: string): Promise<{ ok: boolean; item: any | null }> {
+  if (!/^\d{9,15}$/.test(itemId)) return { ok: false, item: null };
+  const token = await getToken();
+  if (!token) return { ok: false, item: null };
+  if (!spend()) return { ok: false, item: null };
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}`, "X-EBAY-C-MARKETPLACE-ID": marketplace };
+  let res: Response;
+  try {
+    res = await fetch(`${ITEM_URL}/${encodeURIComponent(`v1|${itemId}|0`)}`, { headers });
+  } catch {
+    return { ok: false, item: null };
+  }
+  if (res.status === 429) {
+    rateLimited = true;
+    return { ok: false, item: null };
+  }
+  if (res.status === 404) return { ok: true, item: null };
+  if (!res.ok) return { ok: false, item: null };
+  return { ok: true, item: await res.json() };
+}

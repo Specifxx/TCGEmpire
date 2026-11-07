@@ -43,6 +43,8 @@ export interface FeaturedListing {
   home?: boolean;
   /** eBay's own photo, for the homepage (the card page uses our card image). */
   imageUrl?: string;
+  /** A Premium member's own listing, put forward by them (lib/featured/). */
+  byMember?: boolean;
 }
 
 // The Seraphine 174* Buy It Now listing (eBay AU 117475654360) ran 20 to 22

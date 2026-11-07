@@ -2242,3 +2242,39 @@ model StoreVote {
   @@unique([store, voter])
   @@index([store, ipHash])
 }
+
+/// A Premium member's own eBay listing, put forward for /featured (owner,
+/// 2026-11-07: "the ability for premium users to enter a link to their listing
+/// and get it featured"). The member gives only the link; every figure shown is
+/// eBay's own, read by the auction sweep's getItem check (lib/featured-check.ts),
+/// and the row goes live only when that check reads a live Riftbound listing.
+/// Private: userId never leaves the server; /featured reads live rows only.
+model FeaturedSubmission {
+  id         String    @id @default(cuid())
+  userId     String
+  /// eBay legacy item id, from the link the member pasted
+  itemId     String    @unique
+  /// the marketplace host the link named ("ebay.com.au"), for the right Browse marketplace
+  host       String
+  /// pending | live | rejected | ended | removed
+  status     String    @default("pending")
+  /// why it is not live, in words the member can read ("Not a Riftbound listing")
+  reason     String?
+  title      String?
+  priceCents Int?
+  currency   String?
+  imageUrl   String?
+  /// "auction" | "buy_it_now"
+  format     String?
+  bids       Int?
+  endsAt     DateTime?
+  seller     String?
+  location   String?
+  condition  String?
+  checkedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status, endsAt])
+}

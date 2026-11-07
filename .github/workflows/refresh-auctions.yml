@@ -90,6 +90,22 @@ jobs:
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
         run: npx tsx scripts/import-ebay-auctions.ts
 
+      - name: Refresh /featured
+        # The sweep has just checked members' featured listings with eBay
+        # (lib/featured/check.ts); purge the page's cache so a listing that went
+        # live or ended shows now. Non-fatal, like the alert run below.
+        if: ${{ !cancelled() && steps.sweep.outcome == 'success' }}
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret, skipping the /featured purge."
+            exit 0
+          fi
+          curl -s --max-time 30 "$SITE_URL/api/cron/featured-listings" -H "Authorization: Bearer $CRON_SECRET" || true
+          echo
+
       - name: Premium auction alerts
         # After a successful sweep only (lib/auction-alerts.ts). Non-fatal: a
         # missed run is caught by the next sweep, and must never red one.

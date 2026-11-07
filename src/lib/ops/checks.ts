@@ -290,6 +290,28 @@ export async function ebayData(d: OpsDeps): Promise<CheckResult[]> {
   } catch (e) {
     out.push(unknown(d, "ebay:auctions", "ebay", "Auction sweep", `Could not read it (${msg(e)}).`));
   }
+  if (d.db.featuredOldestPending) {
+    try {
+      // A member's listing should be checked by the next four-hourly sweep;
+      // one waiting 12h means the check in scripts/import-ebay-auctions.ts is
+      // not running (or eBay is refusing it), and a paying member is waiting.
+      const at = await d.db.featuredOldestPending();
+      const h = at ? hoursSince(at, d.now) : null;
+      const sev = h == null ? "ok" : ageSeverity(h, 12, 24);
+      out.push(
+        result(d, {
+          id: "ebay:featured",
+          area: "ebay",
+          title: "Members' featured listings",
+          severity: sev,
+          summary: h == null ? "Nothing waiting for an eBay check." : `Oldest listing waiting for its eBay check: ${humanAge(h)}.`,
+          action: sev === "ok" ? undefined : "Premium members' featured listings are not being checked. Tell Claude: \"featured listings are stuck pending\".",
+        }),
+      );
+    } catch (e) {
+      out.push(unknown(d, "ebay:featured", "ebay", "Members' featured listings", `Could not read it (${msg(e)}).`));
+    }
+  }
   try {
     const at = await d.db.ebayAdsNewest();
     const h = hoursSince(at, d.now);

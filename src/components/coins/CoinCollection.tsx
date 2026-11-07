@@ -375,7 +375,7 @@ function Locked({ signedIn }: { signedIn: boolean }) {
           Get Premium
         </Link>
         {!signedIn && (
-          <Link href="/login?next=/coins&src=coins" className="rounded-full border border-white/15 px-6 py-2.5 text-sm font-bold text-white hover:bg-white/5">
+          <Link rel="nofollow" href="/login?next=/coins&src=coins" className="rounded-full border border-white/15 px-6 py-2.5 text-sm font-bold text-white hover:bg-white/5">
             Sign in
           </Link>
         )}
