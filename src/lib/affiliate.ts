@@ -20,6 +20,10 @@ export const EBAY_CAMPAIGN_ID = "5339155912";
 // <meta> in the document <head>.
 export const IMPACT_SITE_VERIFICATION = "ebb0400c-dec0-45ae-a56e-e7bb1596e965";
 
+// A second Impact programme's site verification (owner, 2026-11-07). Impact
+// reads every impact-site-verification tag on the page, so both stay.
+export const IMPACT_SITE_VERIFICATION_2 = "b0a3bf2e-0c8b-4a57-a2cc-02209020d340";
+
 // TCGplayer's affiliate program runs through Impact (APPROVED). Every
 // tcgplayer.com outbound link is wrapped through this deep-link base to earn
 // commission. `||` (not `??`) so an empty-string env var still falls back to the
