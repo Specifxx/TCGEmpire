@@ -281,6 +281,7 @@ export const ARTICLES: Article[] = [
       "What to buy a Riftbound player this holiday season, from a US$5 pack to a booster box, with real store prices and how to spot a real Black Friday deal.",
     author: "RiftCompare",
     date: "2026-10-29",
+    updated: "2026-11-07",
     readMins: 7,
     tags: ["gift guide", "black friday", "christmas", "sealed", "radiance", "buying", "beginners"],
     hero: {
@@ -405,7 +406,7 @@ Black Friday falls on 27 November this year. Some stores will discount Riftbound
 2. **Ignore the crossed-out price.** A "was US$180" tag means nothing if five other stores sold it for US$125 last week. Check the live price on [the Radiance set page](/sets/radiance) or [the sealed page](/sealed) before you buy.
 3. **Add postage.** A box that's US$5 cheaper but costs US$15 more to ship isn't a deal, so check each store's postage before you pay.
 
-If you're waiting for a particular card to drop, a free [price alert](/alerts) emails you when it does, so you don't have to watch for it.
+Our [Riftbound Black Friday deals](/black-friday) page lists the sealed product stores sell under the going price, updated every day through the sales, and [Cyber Monday deals](/cyber-monday) does the same for the Monday. If you're waiting for a particular card to drop, a free [price alert](/alerts) emails you when it does, so you don't have to watch for it.
 
 ## Ordering in time for Christmas
 

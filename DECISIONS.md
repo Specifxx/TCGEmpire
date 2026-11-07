@@ -22943,3 +22943,11 @@ against the navigation rail on the left and the window's edge on the right, with
 Its tiles stack edge to edge with hairline dividers instead of rounded cards with gaps. The 160px each side of the column
 (globals.css "The side rails") is unchanged, so nothing on the page moves; only the rails' own drawing changed. The same
 look went to every sister site that has the rails, each in its own repo.
+
+## 2026-11-07 — Black Friday pages and the gift guide link each other
+
+Owner: get the Black Friday pages indexed and ranking. /black-friday and /cyber-monday were already in the sitemap (their
+lastmod moves to 2026-11-07, the day their FAQ and strip changed) and in the daily whole-sitemap IndexNow run. The gift
+guide (`riftbound-gift-guide-2026`) already answers "is it a real Black Friday deal", so no second post was written to
+compete with the hub for the same query: the guide's Black Friday section now links both sale pages (`updated` 2026-11-07),
+and the sale pages link the guide.
