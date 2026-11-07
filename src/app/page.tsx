@@ -12,6 +12,7 @@ import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { RiotDrawingsRow } from "@/components/home/RiotDrawingsRow";
+import { HomeFeaturedListing } from "@/components/home/HomeFeaturedListing";
 import { sydneyDayKey } from "@/lib/price-history";
 import { RIOT_DRAWINGS } from "@/lib/riot-drawings";
 import { EditorialHub } from "@/components/home/EditorialHub";
@@ -357,6 +358,9 @@ export default async function HomePage() {
           visible on the home page"). Nothing at all when there are none.
           HomeSections gets showReviews={false} so it appears once. */}
       <ReviewsSection rating={rating} />
+
+      {/* A featured eBay listing, until it ends (owner, 2026-11-07). */}
+      <HomeFeaturedListing />
 
       {/* Riot's drawing-only drops (the K/DA Couture Collection, the Worlds 2026
           Edition), near the top (owner, 2026-11-04). Facts in lib/riot-drawings.ts. */}

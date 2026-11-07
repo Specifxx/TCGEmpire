@@ -9,6 +9,7 @@ import { COUNTRIES, COUNTRY_LIST, type Country } from "@/lib/country";
 import { COUNTRY_GUIDE_SLUGS } from "@/lib/seo";
 import { ebayLabel } from "@/lib/affiliate";
 import { CinematicHero } from "./CinematicHero";
+import { HomeFeaturedListing } from "./HomeFeaturedListing";
 import { HomeSections } from "./HomeSections";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EbayPicks } from "@/components/EbayPicks";
@@ -114,6 +115,9 @@ export async function RegionHome({ region }: { region: Country }) {
         freshnessAt={freshnessAt}
         region={{ code: region, adjective: info.adjective }}
       />
+
+      {/* A featured eBay listing, until it ends, as on "/" (owner, 2026-11-07). */}
+      <HomeFeaturedListing />
 
       {/* Riot's drawing-only drops, near the top, as on "/" (owner, 2026-11-04). */}
       <RiotDrawingsRow groupsByCountry={drawingGroups} today={sydneyDayKey()} />
