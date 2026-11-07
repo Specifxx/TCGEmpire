@@ -34,7 +34,6 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
 import { SignupWelcome } from "@/components/SignupWelcome";
 import { FeedbackLink } from "@/components/FeedbackLink";
-import { RadianceSeasonBanner } from "@/components/RadianceSeasonBanner";
 import { HolidayStrip } from "@/components/HolidayStrip";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
@@ -438,9 +437,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       homepage's full-bleed hero (-mt-6) never slides over it. */}
                   <HolidayStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
-                    {/* Radiance preview season, 2026-09-24 → release day. Client-
-                        decided and dismissible; renders nothing on the server. */}
-                    <RadianceSeasonBanner />
                     {children}
                     {/* "Rate us" at the end of every page's content: in the
                         page, never a pop-up; gone once this browser rated. */}

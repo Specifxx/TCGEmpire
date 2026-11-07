@@ -32,28 +32,7 @@ test("the callout sits on three real Radiance posts and retires with the season"
   assert.equal(isBeforeRadianceRelease(new Date("2026-10-23T00:00:01Z")), false);
 });
 
-test("the sitewide banner is slim, dismissible, client-decided, says 'out' from release day, then goes", () => {
-  const b = read("src/components/RadianceSeasonBanner.tsx");
-  // Since 2026-10-15 a "launch" phase (after previews end) has its own dismissal
-  // key, and since release (2026-10-22, owner: "Radiance is out now") so does
-  // the "out" phase, which runs from the start of release day in Australia
-  // until OUT_UNTIL.
-  assert.match(b, /const keyFor = \(p: Phase\) => \(p === "out" \? OUT_DISMISS_KEY : p === "launch" \? LAUNCH_DISMISS_KEY : DISMISS_KEY\);/);
-  assert.match(b, /localStorage\.getItem\(keyFor\(p\)\)/);
-  assert.match(b, /localStorage\.setItem\(keyFor\(was\), "1"\)/);
-  assert.match(b, /if \(now >= streetDateStartMs\(OUT_UNTIL\)\) return null;/);
-  assert.match(b, /if \(now >= streetDateStartMs\(RADIANCE_RELEASE_DATE\)\) return "out";/);
-  assert.match(b, /href=\{phase === "launch" \? "\/radiance-preorders" : phase === "out" \? "\/sets\/radiance\/gallery" : "\/sets\/radiance"\}/);
-  assert.doesNotMatch(b.slice(b.indexOf('phase === "out"\n')), /^\s*\? "is out 23 October/, "the out phase never says pre-order");
-  assert.match(b, /aria-label="Dismiss the Radiance banner"/);
-  assert.match(read("src/app/layout.tsx"), /<RadianceSeasonBanner \/>/);
-});
-
-test("on the homepages the banner sits inside the hero, not above it where the hero overlapped it", () => {
-  const b = read("src/components/RadianceSeasonBanner.tsx");
-  // 2026-10-16, owner: "fix this annoying overlap, can we bring it inside the hero".
-  assert.match(b, /const HERO_HOME_PATHS: readonly string\[\] = Object\.values\(REGION_HOME_PATH\);/, "every market homepage, from one list");
-  assert.match(b, /if \(placement === "page" && pathname && HERO_HOME_PATHS\.includes\(pathname\)\) return null;/, "the layout's copy steps aside there");
-  assert.match(read("src/components/home/CinematicHero.tsx"), /<CreatorsCornerBadge \/>\s*\{\/\*[\s\S]*?\*\/\}\s*<RadianceSeasonBanner placement="hero" \/>/, "the hero renders its own, at the top");
-  assert.match(b, /sm:mt-8/, "clear of the absolute creators badge from sm");
+test("the sitewide Radiance banner is gone (owner, 2026-11-07: \"get rid of the radiance is out now\")", () => {
+  assert.doesNotMatch(read("src/app/layout.tsx"), /RadianceSeasonBanner/);
+  assert.doesNotMatch(read("src/components/home/CinematicHero.tsx"), /RadianceSeasonBanner/);
 });
