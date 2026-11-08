@@ -119,7 +119,7 @@ function auctionDb(opts: { premiumTier?: string; paused?: string[]; sent?: { ema
     bidCount: 2,
     endsAt: new Date(NOW.getTime() + hours * 3600_000),
   });
-  const user = { email: "Fan@Example.com", isAdmin: false, premiumUntil: new Date(NOW.getTime() + 30 * DAY), premiumTier: opts.premiumTier ?? "premium", premiumTierFloor: null, auctionAlertsSnoozedUntil: null };
+  const user = { email: "Fan@Example.com", isAdmin: false, premiumUntil: new Date(Date.now() + 30 * DAY) /* isPremium reads the wall clock, not NOW: a NOW-relative date expired on 2026-11-08 */, premiumTier: opts.premiumTier ?? "premium", premiumTierFloor: null, auctionAlertsSnoozedUntil: null };
   const empty = async () => [];
   const db = {
     auctionAlertSent: {
