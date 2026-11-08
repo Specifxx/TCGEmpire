@@ -99,6 +99,11 @@ const GROUPS: ToolGroup[] = [
     label: "Buying & value",
     tools: [
       {
+        href: "/tools/is-this-a-good-price",
+        title: "Is This a Good Price?",
+        desc: "Paste any store's link to a single or a sealed product and see how its price compares with the cheapest and the typical in-stock price at every store we read in that country.",
+      },
+      {
         href: "/tools/deal-finder",
         title: "Deal Finder",
         desc: "Underpriced vs TCGplayer, Cheapest on eBay and Underpriced vs eBay: three lists of the cards a real store or eBay sells for less — narrowed, with " + LIST_BADGE + ", to only the cards you watch or own.",

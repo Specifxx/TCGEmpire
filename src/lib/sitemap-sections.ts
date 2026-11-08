@@ -153,6 +153,7 @@ async function core(): Promise<SitemapEntry[]> {
     // The pull tracker, one page per set (2026-10-16). Shared results (/s/…) are noindex and stay out.
     ...["radiance", "vendetta", "unleashed", "spiritforged", "origins"].map((s) => ({ url: `${SITE_URL}/tools/pull-tracker/${s}`, changeFrequency: "daily" as const, priority: 0.6, lastModified: day })),
     { url: `${SITE_URL}/tools/selling-fees`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/tools/selling-fees") },
+    { url: `${SITE_URL}/tools/is-this-a-good-price`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/tools/is-this-a-good-price") },
     // Raised from 0.6 to 0.8 when it briefly had a header nav item and a
     // homepage section — the homepage section stays (see HomeSections.tsx) even
     // though the header link didn't (Best Basket moved back to Premium — see

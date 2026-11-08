@@ -538,6 +538,12 @@ export function SearchBar({
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    // A pasted store link goes to the price checker, not a search for its words.
+    if (/^https?:\/\/\S+\.\S+/i.test(value.trim())) {
+      setOpen(false);
+      router.push(`/tools/is-this-a-good-price#link=${encodeURIComponent(value.trim())}`);
+      return;
+    }
     commitSearch(value, { resultsCount: results.length + sealed.length });
   }
 
