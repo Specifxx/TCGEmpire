@@ -55,21 +55,23 @@ test("the cross-game guides link their own game's site; buying reading links all
   assert.ok(linking.length <= published.length / 3, `${linking.length} of ${published.length} articles link the sister sites`);
 });
 
-test("footer and article block: plain followed links, rendered from the one list", () => {
+test("footer: two internal links (other-games hub, /our-sites); the article block keeps plain followed links", () => {
   const layout = read("src/app/layout.tsx");
   const footer = layout.slice(layout.indexOf("<footer"), layout.indexOf("</footer>"));
-  assert.match(footer, /SISTER_SITES\.filter\(\(s\) => !s\.notTcg\)\.map/);
-  // Short footer (owner, 2026-11-02): the card-game sisters only, plus one link to the network page.
-  assert.doesNotMatch(footer, /SISTER_SITES\.filter\(\(s\) => s\.notTcg\)\.map/);
-  assert.match(footer, /NETWORK_PAGE/);
+  // 2026-11-08: no sister site is linked from the footer; /our-sites lists each one once.
+  assert.doesNotMatch(footer, /SISTER_SITES|NETWORK_PAGE|footerSisters/);
+  assert.match(footer, /href="\/our-sites"/);
+  assert.match(footer, /href="\/tcg-price-comparison"/);
+  const page = read("src/app/our-sites/page.tsx");
+  assert.match(page, /FAMILY_SITES\.filter\(\(s\) => s\.id !== "rift"\)/);
+  assert.match(page, /rel="noopener"/);
+  assert.doesNotMatch(page, /nofollow|sponsored|prisma|@\/lib\/db/);
   const block = read("src/components/SisterSites.tsx");
-  for (const src of [footer.slice(footer.indexOf("SISTER_SITES.filter")), block]) {
-    const anchors = [...src.matchAll(/<a\b[^>]*>/g)].map((m) => m[0]);
-    assert.ok(anchors.length > 0);
-    for (const a of anchors.filter((x) => /s\.url|l\.href/.test(x))) {
-      assert.match(a, /rel="noopener"/, a);
-      assert.doesNotMatch(a, /nofollow|sponsored|noreferrer/, a);
-    }
+  const anchors = [...block.matchAll(/<a\b[^>]*>/g)].map((m) => m[0]);
+  assert.ok(anchors.length > 0);
+  for (const a of anchors.filter((x) => /s\.url|l\.href/.test(x))) {
+    assert.match(a, /rel="noopener"/, a);
+    assert.doesNotMatch(a, /nofollow|sponsored|noreferrer/, a);
   }
   assert.match(read("src/components/ArticleView.tsx"), /<SisterSites sites=\{sisterSitesFor\(article\)\} \/>/);
 });

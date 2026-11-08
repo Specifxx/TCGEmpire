@@ -22951,3 +22951,14 @@ lastmod moves to 2026-11-07, the day their FAQ and strip changed) and in the dai
 guide (`riftbound-gift-guide-2026`) already answers "is it a real Black Friday deal", so no second post was written to
 compete with the hub for the same query: the guide's Black Friday section now links both sale pages (`updated` 2026-11-07),
 and the sale pages link the guide.
+
+## 2026-11-08 — One Our sites page instead of footer cross-links
+
+From the owner's Search Console audit of DexCompare: its only links from other sites were ~9,000 site-wide footer
+links from our own sites, all to its home page, with the brand or a keyword as the anchor. They pass no authority,
+and a network of same-owner sites linking each other from every page is the pattern Google's link-spam policy warns
+about. CamCompare indexes well with more of them, so they are not what holds a site back, but they buy nothing.
+DexCompare's footer went first (CompareEmpire #153); every other site now does the same: the footer links one
+internal page, `/our-sites`, and that page links each other family site once, by its plain name, from
+`FAMILY_SITES` (`lib/family-network.ts`, unchanged; `footerSisters` stays for the shared test). Every other footer
+link, page URL and title is unchanged. Cross-traffic still comes from the price blocks on the deals and pre-order pages.

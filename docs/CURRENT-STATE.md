@@ -898,9 +898,9 @@ longer lands on its entry.
   Pairs) were replaced by Seraphine's Piano, a Radiance rhythm game timed on
   the Web Audio clock and drawn on one rAF canvas. Retired game routes 301 to
   it. [2026-10-16](../DECISIONS.md#L17753)
-- **Sister sites:** the footer is one line: the other card-game sites by name, then
-  "A Compare Empire site" to compareempire.com/network ([2026-11-02](../DECISIONS.md#L21572);
-  was the whole family, [2026-10-27](../DECISIONS.md#L20126)) (`SISTER_SITES`, `lib/sister-sites.ts`). The deals,
+- **Sister sites:** the footer links no sister site: two internal links, /tcg-price-comparison and
+  /our-sites, which lists every family site once by name ([2026-11-08](../DECISIONS.md#L22955); was the
+  card sites by name, [2026-11-02](../DECISIONS.md#L21572); the whole family, [2026-10-27](../DECISIONS.md#L20126)). The deals,
   pre-order and set pages carry one "Other card games on sale" block with the sisters' real prices
   from their daily feeds (`lib/family-network.ts`, `lib/family.ts`, six-hour cache; a day on
   /market/report). The cross-game guides and the
