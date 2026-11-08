@@ -50,7 +50,7 @@ export interface AnalyticsData {
 
 let memo: { at: number; data: AnalyticsData } | null = null;
 
-function credentials(): { token: string; team: string; tokenVar: string } | null {
+export function credentials(): { token: string; team: string; tokenVar: string } | null {
   const team = process.env.VERCEL_TEAM_ID?.trim();
   const own = process.env.VERCEL_ANALYTICS_TOKEN?.trim();
   const billing = process.env.VERCEL_BILLING_TOKEN?.trim();
@@ -68,7 +68,7 @@ class ApiError extends Error {
   }
 }
 
-async function get(path: string, q: Record<string, string>, token: string): Promise<unknown> {
+export async function get(path: string, q: Record<string, string>, token: string): Promise<unknown> {
   const r = await fetch(`${API}${path}?${new URLSearchParams(q)}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
@@ -79,7 +79,7 @@ async function get(path: string, q: Record<string, string>, token: string): Prom
   return JSON.parse(text) as unknown;
 }
 
-async function listProjects(token: string, team: string): Promise<{ id: string; name: string }[]> {
+export async function listProjects(token: string, team: string): Promise<{ id: string; name: string }[]> {
   const out: { id: string; name: string }[] = [];
   let until: string | null = null;
   for (let i = 0; i < 5; i++) {
@@ -95,7 +95,7 @@ async function listProjects(token: string, team: string): Promise<{ id: string; 
 }
 
 /** Run `fn` over `items`, at most `n` at a time. */
-async function pool<T, R>(items: readonly T[], n: number, fn: (t: T) => Promise<R>): Promise<R[]> {
+export async function pool<T, R>(items: readonly T[], n: number, fn: (t: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
   let next = 0;
   await Promise.all(

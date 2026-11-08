@@ -25,6 +25,7 @@ import { EARNINGS_SINCE, loadEarnings } from "@/lib/earnings/sources";
 import { loadCosts } from "@/lib/earnings/costs";
 import { siteLedger } from "@/lib/earnings/sites";
 import { ManualEarningsForm } from "@/components/admin/ManualEarningsForm";
+import { loadAmazonClicks } from "@/lib/earnings/amazon-clicks";
 import { AmazonUploadForm } from "@/components/admin/AmazonUploadForm";
 import { AMAZON_STORES, amazonChromePrompt } from "@/lib/earnings/amazon";
 import { CostEntriesForm } from "@/components/admin/CostEntriesForm";
@@ -116,6 +117,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
     const r = amazonRows.find((x) => x.currency === st.currency);
     return { key: st.key, label: st.label, from: r?._min.day ?? null, to: r?._max.day ?? null };
   });
+  const amazonClicks = await loadAmazonClicks().catch(() => null);
   const oldest = Math.min(...sources.map((s) => s.fetchedAt));
   // eBay by tracking tag (2026-10-25, owner): one EPN account, every site's links.
   // TCGplayer by tag (2026-10-26): Impact's sharedid, broken down the same way.
@@ -534,8 +536,42 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
         />
       </section>
 
+      <section className="mt-8" data-amazon-clicks>
+        <h2 className="text-lg font-extrabold text-white">Amazon clicks per site (automatic)</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          Counted from each site&apos;s Amazon link clicks in Vercel Web Analytics and refreshed every three hours, with nothing for you to do. Visitors who decline analytics are not counted, so treat it as a floor. Amazon earnings themselves are not available automatically; the optional figures box below is for actuals.
+        </p>
+        {amazonClicks && amazonClicks.sites.length > 0 ? (
+          <table className="mt-3 w-full max-w-md text-sm text-slate-200">
+            <thead>
+              <tr className="text-left text-slate-400">
+                <th className="py-1 pr-4 font-semibold">Site</th>
+                <th className="py-1 pr-4 text-right font-semibold">7 days</th>
+                <th className="py-1 text-right font-semibold">30 days</th>
+              </tr>
+            </thead>
+            <tbody>
+              {amazonClicks.sites.map((s) => (
+                <tr key={s.site} className="border-t border-slate-800">
+                  <td className="py-1 pr-4">{s.projects[0]}</td>
+                  <td className="py-1 pr-4 text-right tabular-nums">{s.d7}</td>
+                  <td className="py-1 text-right tabular-nums">{s.d30}</td>
+                </tr>
+              ))}
+              <tr className="border-t border-slate-700 font-bold">
+                <td className="py-1 pr-4">All sites</td>
+                <td className="py-1 pr-4 text-right tabular-nums">{amazonClicks.sites.reduce((n, s) => n + s.d7, 0)}</td>
+                <td className="py-1 text-right tabular-nums">{amazonClicks.sites.reduce((n, s) => n + s.d30, 0)}</td>
+              </tr>
+            </tbody>
+          </table>
+        ) : (
+          <p className="mt-3 text-sm text-slate-500">No counts yet. They appear after the next three-hourly refresh.</p>
+        )}
+      </section>
+
       <section className="mt-8" data-amazon-upload>
-        <h2 className="text-lg font-extrabold text-white">Amazon Associates (read from Associates Central)</h2>
+        <h2 className="text-lg font-extrabold text-white">Amazon Associates figures (optional, entered by hand)</h2>
         <p className="mt-1 text-sm text-slate-400">
           Amazon gives accounts our size no reporting API, so Claude in Chrome reads each store&apos;s Reports page and types the figures in here. Whenever you like, copy the Chrome prompt below (it already carries each store&apos;s dates, from the day after the last figures to today) and run it. Each save replaces that store&apos;s days in its range, so overlap never double counts; per-tracking-ID totals are spread over the days in proportion to the days&apos; totals.
         </p>

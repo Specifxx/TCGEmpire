@@ -23031,3 +23031,12 @@ there as `#link=`, a fragment so the CDN keeps one copy) and asks `/api/check/<h
   median come from the in-stock store prices in that store's own country, never converted.
 - **Cache.** The route is a plain function, so its CDN header is its cache: a day (`s-maxage=86400`), at least the
   six-hour floor. An unknown host is a 404 and the checker falls back to a `/browse` search from the link's words.
+
+## 2026-11-08: Amazon clicks per site come from Vercel, automatically
+
+Owner: tracking Amazon through a Claude prompt is too much work, and no estimates (only real figures). Amazon blocks
+agents from Associates Central and has no reporting API at our size, so earnings stay the optional "Amazon figures"
+entry. Clicks are real and hands-off: `/api/cron/earnings-refresh` asks Vercel's public Web Analytics API for `buy_click`
+grouped by `eventData/<key>` (retailer, placement, host, surface, source), keeps the rows naming Amazon per site
+(largest key per project, never a sum) in `earnings:amazon-clicks`, and /admin/earnings shows 7 and 30 days.
+Analytics under-counts visitors who decline consent. `src/lib/earnings/amazon-clicks.ts`.
