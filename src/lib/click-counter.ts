@@ -10,16 +10,19 @@ import { prisma } from "./db";
 // "checkout" is not a network: it counts the store clicks whose link
 // opened a checkout with the item in it (lib/checkout-link.ts, 2026-11-06), so it
 // is a SUBSET of the others and is never added to them.
-export const CLICK_GROUPS = ["ebay", "tcgplayer", "store", "checkout"] as const;
+// "amazon" (2026-11-08): Amazon rows and searches, counted apart from the stores
+// so the site's own Amazon clicks can be checked against Associates Central.
+export const CLICK_GROUPS = ["ebay", "tcgplayer", "amazon", "store", "checkout"] as const;
 export type ClickGroup = (typeof CLICK_GROUPS)[number];
 export const CLICK_KEY_PREFIX = "click:";
 
-/** Which network a link's `retailer` belongs to. Anything not eBay or TCGplayer is a store. */
+/** Which network a link's `retailer` belongs to. Anything not eBay, TCGplayer or Amazon is a store. */
 export function clickGroup(retailer: string): ClickGroup | null {
   const r = retailer.trim().toLowerCase();
   if (!r || r.length > 64) return null;
   if (r.includes("ebay")) return "ebay";
   if (r.startsWith("tcgplayer")) return "tcgplayer";
+  if (r.includes("amazon")) return "amazon";
   return "store";
 }
 
