@@ -2,7 +2,8 @@ name: Sister-site price alerts
 
 # The daily check for the price alerts the other Compare Empire sites collect
 # (lib/sister-alerts, DECISIONS.md "One price alert service for the sister
-# sites", 2026-11-02). The send happens ON VERCEL (/api/cron/sister-alerts),
+# sites", 2026-11-02), and the weekly biggest-drops email in the same call
+# (lib/sister-alerts/digest.ts, 2026-11-08). The send happens ON VERCEL (/api/cron/sister-alerts),
 # where the mail key lives; this job only calls it with CRON_SECRET, like
 # release-day-email.yml. The route reads each site's /alert-feed.json from its
 # CDN. It answers 500 (and this job fails, and the ops monitor's job check

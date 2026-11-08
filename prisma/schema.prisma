@@ -1016,6 +1016,37 @@ model SisterAlert {
   @@index([lastNotifiedAt])
 }
 
+// THE WEEKLY "BIGGEST DROPS" EMAIL for a sister site (2026-11-08, owner: build
+// the competitor scan's gaps). Opt-in only, from an unticked box on the alert
+// form or a button on the manage page, and it rides the address's double
+// opt-in (SisterAlertAddress.confirmedAt): nothing is sent to an unconfirmed
+// address. One row per (address, site), in one region. PRIVATE, never exported.
+model SisterDigest {
+  email       String
+  site        String
+  region      String
+  // The edition (SisterDigestEdition.edition) last emailed: each is sent once.
+  lastEdition String?
+  lastSentAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@id([email, site])
+  @@index([site])
+}
+
+// One row per sister site: last week's lowest in-stock store prices (from its
+// /alert-feed.json, items of 5.00 or more only) and the drops found against the
+// week before. Rebuilt once a week, only for a site with a digest subscriber, so
+// the big `prices` blob is read and written once a week; the daily run reads only
+// `builtAt` and the small `drops`. PRIVATE, never exported.
+model SisterDigestEdition {
+  site    String   @id
+  edition String
+  builtAt DateTime
+  prices  Json
+  drops   Json
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // DECK PRICE WATCH — Premium (2026-09-29, "Premium works while you're away").
 // ─────────────────────────────────────────────────────────────────────────────

@@ -68,6 +68,7 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
   if (stale.length && !dryRun) {
     const emails = stale.map((r) => r.email);
     await db.sisterAlert.deleteMany({ where: { email: { in: emails } } });
+    await db.sisterDigest.deleteMany({ where: { email: { in: emails } } });
     await db.sisterAlertAddress.deleteMany({ where: { email: { in: emails }, confirmedAt: null } });
   }
   summary.unconfirmedRemoved = stale.length;

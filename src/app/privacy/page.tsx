@@ -319,6 +319,10 @@ export default function PrivacyPage() {
             uses them only for those alerts. Nothing is sent until you click the link in the
             confirmation email; an unconfirmed address is deleted after a week. Each alert ends after
             six months, and every email has links to stop one alert or all of them, which deletes them.
+            The same form has an unticked box for that site&rsquo;s biggest price drops once a week:
+            only if you tick it (or press the button for it on your alert page) and confirm your
+            address do we send it, one email a week for the region you picked, each with a link to stop
+            it that deletes the subscription.
           </p>
         </section>
 

@@ -22989,3 +22989,29 @@ eBay, Amazon or TCGplayer link lost our tag, or a store we joined on Awin (`data
 without its deep link, since that is money already owed and lost; it lists untracked stores whose programme we know as
 the next applications. The ops monitor watches it in `JOBS`; the weekly check-in turns its table into the owner's
 report. `KNOWN_PROGRAMMES` grows when we learn a store's programme; it never decides a link, only names a gap.
+
+## 2026-11-08 — A weekly biggest-drops email for the sister sites
+
+Owner, on the 2026-11-08 competitor scan: "these are really, really good ideas … implement all of this", gap #5 being
+an opt-in weekly email of the biggest price drops (the big comparison sites keep buyers coming back with one). It rides
+the shared alert service (`lib/sister-alerts/digest.ts`), so the sister sites still keep no address and no mail key.
+
+- **Opt-in only.** An UNTICKED box on the sites' shared alert form ("Also email me this site's biggest price drops once
+  a week") sends `weekly: true` with the alert; the alert email's footer links to a button on the manage page that does
+  the same. It rides the address's double opt-in: nothing goes to an unconfirmed address. No pop-up, no new ask on any
+  page: it lives inside the form a visitor already opened.
+- **What a drop is.** Once a week per site (only while it has a subscriber), the daily run reads its
+  `/alert-feed.json` and compares each product's lowest in-stock store price with the one stored a week earlier
+  (`SisterDigestEdition`, one row per site; only prices of 5.00 or more are kept). A drop is 8–60% and at least 3.00;
+  over 60% is more likely a wrong match than a deal, so it is left out. Biggest share first, ten at most; a region with
+  fewer than three sends nothing that week. The daily run reads only the edition's date and its small `drops`; the
+  prices blob is read and written once a week (Neon transfer).
+- **Links.** Only the site's own product pages, `utm_campaign=weekly-drops`. No eBay link (EPN forbids tracked eBay
+  links in email without messaging approval) and no Amazon link.
+- **Mail.** After the day's alerts, inside the service's own cap but only while the day's counter is at or under 20 of
+  its 30 (`DIGEST_MAIL_CEILING`), so confirmations and alerts keep the rest; whoever is left gets it the next day, while
+  the edition is under four days old. Each email has a one-click List-Unsubscribe that stops that site's weekly email
+  only; "Unsubscribe from all" stops alerts and weekly emails. At Resend's free 100 a day this carries about 100
+  subscribers a week across every site: when it nears that, raise the mail budget, not the ceiling.
+- A site with confirmed subscribers whose due edition cannot be built fails the run, as a broken alert feed does.
+  `tests/sister-digest.test.ts` pins it; the privacy page's sister-alerts paragraph says it.

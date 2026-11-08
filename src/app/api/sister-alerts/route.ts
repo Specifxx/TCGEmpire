@@ -18,7 +18,9 @@ export const dynamic = "force-dynamic";
 //     day per address, under the service's daily cap) and nothing else until
 //     it clicks; an unconfirmed address is removed after a week;
 //   • a confirmed address's new alert starts at once.
-// Only the site key, product id, region and target are taken from the form.
+// Only the site key, product id, region, target and the weekly box are taken
+// from the form. The weekly box (unticked by default) also asks for the site's
+// weekly biggest-drops email (lib/sister-alerts/digest.ts), on the same opt-in.
 // The product's name and link come from the site's own feed at the daily
 // check, so nothing a stranger types ever reaches an inbox.
 
@@ -31,6 +33,7 @@ const schema = z.object({
   region: z.enum(SISTER_REGIONS),
   email: z.string().trim().toLowerCase().email().max(200),
   targetCents: z.number().int().min(1).max(100_000_000),
+  weekly: z.boolean().optional(),
 });
 
 export function OPTIONS(req: Request) {
@@ -48,7 +51,7 @@ export async function POST(req: Request) {
 
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Please check the email address and price." }, { status: 400, headers });
-  const { site, productId, region, email, targetCents } = parsed.data;
+  const { site, productId, region, email, targetCents, weekly } = parsed.data;
   // A site may only add alerts for itself.
   if (site !== fromSite.key) return NextResponse.json({ error: "Not allowed" }, { status: 403, headers });
   const rlEmail = rateLimit(`sister-alerts:e:${email}`, 10, 60 * 60_000);
@@ -71,13 +74,17 @@ export async function POST(req: Request) {
     } else {
       await prisma.sisterAlert.create({ data: { email, site, productId, region, targetCents } });
     }
+    // Only a ticked box subscribes; an unticked one never unsubscribes (the email's own links do).
+    if (weekly === true) {
+      await prisma.sisterDigest.upsert({ where: { email_site: { email, site } }, create: { email, site, region }, update: { region } });
+    }
 
     if (address.confirmedAt) return NextResponse.json({ ok: true, status: "active" }, { headers });
 
     const now = new Date();
     const due = !address.confirmSentAt || now.getTime() - address.confirmSentAt.getTime() > CONFIRM_RESEND_MS;
     if (due && (await claimMailSlot(prisma, now))) {
-      const mail = buildConfirmEmail(site, address.token, targetCents, region);
+      const mail = buildConfirmEmail(site, address.token, targetCents, region, weekly === true);
       const sent = await sendEmail(email, mail.subject, mail.html, { text: mail.text, from: fromFor(sisterSite(site)!) });
       if (sent) await prisma.sisterAlertAddress.update({ where: { email }, data: { confirmSentAt: now } });
     }
