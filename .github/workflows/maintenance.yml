@@ -33,6 +33,7 @@ on:
           - set-pipeline     # scrape playriftbound.com's official gallery for ONE set and import its reveals (set_slug input; defaults to the next announced-but-unreleased set — Radiance today). Replaced 'vendetta-pipeline', which could only ever do VEN.
           - backfill-card-text # FILL-ONLY: printed rules text (Card.description) for OGN/OGS/SFD/UNL from the official gallery, matched on externalId + name + collector number, written only where description is NULL. Report-only unless `apply` is ticked — read the format canary, match and mismatch counts in the job summary first. NEVER use set-pipeline for these sets instead: it keys rows differently and would create ~950 duplicate cards.
           - probe-sg         # read-only Singapore store scan (no DB writes)
+          - live-health      # read-only live check of EVERY Compare site (pages, robots, sitemaps, redirects, canonicals, affiliate tags, eBay deletion endpoints, console errors); url input = comma list of hosts
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
           - probe-imgur      # read-only: render an Imgur album (JS SPA — curl gets an empty shell) and dump every full-res image URL (url input)
           - probe-render     # read-only: render ANY page with a real browser and dump its heading outline, repeated item components, tables, images, palette + full-page screenshot (url input). For researching client-rendered sites that probe-url only sees as an empty shell.
@@ -5576,6 +5577,23 @@ jobs:
         env:
           ADSENSE_VERIFY_PATHS: ${{ inputs.context_marker }}
         run: npx tsx scripts/adsense-verify.ts "${{ inputs.url || 'https://riftcompare.com' }}"
+
+      - name: Live health check of every site (read-only)
+        if: inputs.task == 'live-health'
+        timeout-minutes: 25
+        env:
+          LIVE_HEALTH_SITES: ${{ inputs.url }}
+        run: |
+          npx playwright install chromium || true
+          npx tsx scripts/live-health.ts
+
+      - name: Upload live health report
+        if: inputs.task == 'live-health'
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-health
+          path: live-health.json
+          if-no-files-found: ignore
 
       - name: Probe URL (font/style diagnostics)
         # The dev sandbox's egress proxy blocks most external sites; runners don't.
