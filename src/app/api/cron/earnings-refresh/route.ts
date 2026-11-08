@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { loadEarnings } from "@/lib/earnings/sources";
 import { loadCosts } from "@/lib/earnings/costs";
+import { storeAmazonClicks } from "@/lib/earnings/amazon-clicks";
 import { liveRoute } from "@/lib/public-data/live-route";
 
 // Refreshes the earnings dashboard's stored copy (lib/earnings/stored.ts; DECISIONS.md
@@ -18,8 +19,8 @@ async function handleGET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const started = Date.now();
-  const [sources, costs] = await Promise.all([loadEarnings(true), loadCosts(true)]);
-  const status = [...sources.map((s) => ({ key: s.key, status: s.status })), ...costs.filter((c) => !c.entry).map((c) => ({ key: c.key, status: c.status }))];
+  const [sources, costs, clicks] = await Promise.all([loadEarnings(true), loadCosts(true), storeAmazonClicks()]);
+  const status = [...sources.map((s) => ({ key: s.key, status: s.status })), ...costs.filter((c) => !c.entry).map((c) => ({ key: c.key, status: c.status })), { key: "amazon-clicks", status: clicks.status }];
   return NextResponse.json({ ok: status.every((s) => s.status !== "error"), seconds: Math.round((Date.now() - started) / 1000), status });
 }
 
