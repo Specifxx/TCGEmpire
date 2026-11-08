@@ -1,0 +1,39 @@
+name: Affiliate gap audit
+
+# Weekly (2026-11-08, owner: "let me know if there are any gaps"). Reads every live Compare
+# site's outbound links from outside (scripts/affiliate-gap-audit.ts): fails red when an eBay,
+# Amazon or TCGplayer link lost our tag or a store we joined on Awin is linked untracked, and
+# lists untracked stores whose programme we know. Sunday evening, so the Monday report and the
+# weekly check-in see a fresh table. Read-only: nothing is committed.
+
+on:
+  schedule:
+    - cron: "17 19 * * 0"
+  workflow_dispatch:
+    inputs:
+      sites:
+        description: "Only these sites (comma-separated, part of the host), blank = all"
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --ignore-scripts
+      - run: npx tsx scripts/affiliate-gap-audit.ts
+        env:
+          SITES: ${{ github.event.inputs.sites }}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: affiliate-gaps
+          path: tmp/affiliate-gaps.json
+          if-no-files-found: ignore

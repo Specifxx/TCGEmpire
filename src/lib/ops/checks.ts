@@ -451,6 +451,8 @@ export const JOBS: { file: string; title: string; staleH: number; scheduledSince
   { file: "discord-commands.yml", title: "Discord bot setup job", staleH: 36, scheduledSince: "2026-11-03T00:49:00Z" },
   // Weekly (2026-11-02): every site's store domains checked from outside (docs/store-vetting.md).
   { file: "store-vetting.yml", title: "Store vetting job (weekly)", staleH: 200 },
+  // Weekly (2026-11-08): every site's outbound links; red when a tag is lost (lib/affiliate-gaps.ts).
+  { file: "affiliate-gap-audit.yml", title: "Affiliate gap audit (weekly)", staleH: 200, scheduledSince: "2026-11-08T12:00:00Z" },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {

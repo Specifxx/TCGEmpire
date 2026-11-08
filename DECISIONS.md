@@ -22974,3 +22974,18 @@ now a plain pill in the site's own ink colours with no gift icon or red glow. It
 (`lib/season.ts`); `tests/season.test.ts` pins that nothing else comes back. Black Friday and Cyber Monday (strip, pages,
 nav) are unchanged. The same rule went to every sister site: at most one quiet seasonal line, drawn in that site's
 colours, and the site's own identity first.
+
+## 2026-11-08 — A weekly affiliate gap audit for every site
+
+Owner: "we got to make sure all of our websites are making money … you gotta let me know if there are any gaps,
+because I can't always be finding them". A manual pass the same day read every live site's outbound links and found
+the tagging code sound everywhere (every eBay link on our EPN campaign, every Amazon link tagged, TCGplayer through
+Impact, Stylevana through Awin) but most store links unpaid: indie shops with no programme, and big stores whose
+programme we never joined (The Good Guys, JB Hi-Fi and digiDirect on Commission Factory; FragranceX and FragranceNet
+on CJ and FlexOffers; YesStyle pending on Awin). So the check is now a job, not a memory: *Affiliate gap audit*
+(`.github/workflows/affiliate-gap-audit.yml`, Sundays 19:17 UTC) reads each site's home page and six product pages,
+follows its own `/go` redirect one hop, and sorts each link with `src/lib/affiliate-gaps.ts`. It fails red when an
+eBay, Amazon or TCGplayer link lost our tag, or a store we joined on Awin (`data/awin/programmes.json`) is linked
+without its deep link, since that is money already owed and lost; it lists untracked stores whose programme we know as
+the next applications. The ops monitor watches it in `JOBS`; the weekly check-in turns its table into the owner's
+report. `KNOWN_PROGRAMMES` grows when we learn a store's programme; it never decides a link, only names a gap.
