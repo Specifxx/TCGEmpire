@@ -119,7 +119,9 @@ function auctionDb(opts: { premiumTier?: string; paused?: string[]; sent?: { ema
     bidCount: 2,
     endsAt: new Date(NOW.getTime() + hours * 3600_000),
   });
-  const user = { email: "Fan@Example.com", isAdmin: false, premiumUntil: new Date(NOW.getTime() + 30 * DAY), premiumTier: opts.premiumTier ?? "premium", premiumTierFloor: null, auctionAlertsSnoozedUntil: null };
+  // isPremium judges entitlement against the real clock, so the subscription runs 30 days past whichever is later, NOW or
+  // today (a fixed NOW + 30 days lapsed on 2026-11-08 and failed every branch).
+  const user = { email: "Fan@Example.com", isAdmin: false, premiumUntil: new Date(Math.max(NOW.getTime(), Date.now()) + 30 * DAY), premiumTier: opts.premiumTier ?? "premium", premiumTierFloor: null, auctionAlertsSnoozedUntil: null };
   const empty = async () => [];
   const db = {
     auctionAlertSent: {
