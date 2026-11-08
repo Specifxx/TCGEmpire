@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { SEASON_BOOT_SCRIPT, seasonAt, seasonMarkupLive } from "../src/lib/season";
 
@@ -168,42 +168,17 @@ test("the Halloween set dressing is season-gated decoration: hidden by default, 
   }
 });
 
-test("the Christmas night keeps every 4.5:1 text guarantee of the dark palette", () => {
+test("Christmas is one quiet line, not a costume (owner, 2026-11-08: the theme must match the domain)", () => {
   const css = read("src/app/globals.css");
-  const vars = (sel: string) => {
-    const i = css.indexOf(`${sel} {`);
-    assert.ok(i >= 0, `expected a "${sel} {" block`);
-    const out: Record<string, string> = {};
-    for (const m of css.slice(i, css.indexOf("\n}", i)).matchAll(/--(c-[a-z0-9-]+):\s*([^;]+);/g)) out[m[1]] = m[2].trim();
-    return out;
-  };
-  const dark = vars(":root");
-  const night = { ...dark, ...vars(':root[data-season="christmas"]:not([data-theme="light"])') };
-  for (const surface of ["c-ink-950", "c-ink-900", "c-ink-850"]) {
-    for (const text of ["c-white", "c-slate-300", "c-slate-400", "c-slate-500", "c-slate-600", "c-accent", "c-brand-400", "c-up", "c-down", "c-gold", "c-rose-300", "c-rose-400", "c-red-400", "c-emerald-400", "c-amber-300", "c-sky-300", "c-sky-400"]) {
-      const ratio = contrast(night[text], night[surface]);
-      assert.ok(ratio >= 4.5, `christmas: ${text} on ${surface} is ${ratio.toFixed(2)}:1`);
-    }
+  // No palette swap, no snow, lights, art, stocking or Santa hat.
+  assert.doesNotMatch(css, /data-season="christmas"\][^{]*\{[^}]*--c-ink-/, "the night keeps the site's own colours");
+  for (const gone of [".xmas-snow", ".xmas-lights", ".xmas-art", ".rb-xmas", ".rb-hat", ".rb-rail-stocking", "/xmas/"]) {
+    assert.ok(!css.includes(gone), `${gone} is gone`);
   }
-  assert.ok(lum(night["c-ink-950"]) < 0.01 && lum(night["c-ink-900"]) < 0.01, "still a dark theme");
-});
-
-test("the Christmas set dressing is season-gated decoration that never takes a tap", () => {
-  const css = read("src/app/globals.css");
-  assert.match(css, /\.xmas-only \{\s*display: none !important;/);
-  assert.match(css, /:root\[data-season="christmas"\] \.xmas-only \{\s*display: block !important;/);
-  for (const sel of [".xmas-snow {", ".xmas-lights {", ".xmas-art {", ".rb-xmas {"]) {
-    const i = css.indexOf(sel);
-    assert.ok(i >= 0, sel);
-    assert.match(css.slice(i, css.indexOf("}", i)), /pointer-events: none;/, `${sel} must not take taps`);
-  }
-  const decor = read("src/components/home/ChristmasDecor.tsx");
-  assert.match(decor, /if \(!seasonMarkupLive\("christmas"\)\) return null;/);
-  assert.match(decor, /aria-hidden="true"/);
-  assert.match(read("src/components/home/CinematicHero.tsx"), /<ChristmasDecor \/>/);
+  assert.ok(!existsSync(join(process.cwd(), "src/components/home/ChristmasDecor.tsx")));
+  assert.doesNotMatch(read("src/components/home/RiftEmbers.tsx"), /"christmas"|flake/, "the embers stay embers");
+  assert.doesNotMatch(read("src/components/BrandLogo.tsx"), /rb-hat|Santa/);
+  // The one touch: the gifts line, gated by the season.
+  assert.match(css, /:root\[data-season="christmas"\] \.rb-gifts-row \{\s*display: flex;/);
   assert.match(read("src/components/home/ChristmasGifts.tsx"), /if \(!seasonMarkupLive\("christmas"\)\) return null;/);
-  for (const f of ["lights", "santa-hat", "xmas-tree", "stocking", "candy-cane", "gift", "snowflake", "holly"]) {
-    const svg = read(`public/xmas/${f}.svg`);
-    assert.ok(svg.startsWith("<svg") && svg.length < 4000, `${f}.svg stays a small vector file`);
-  }
 });

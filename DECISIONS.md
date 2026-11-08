@@ -22962,3 +22962,15 @@ DexCompare's footer went first (CompareEmpire #153); every other site now does t
 internal page, `/our-sites`, and that page links each other family site once, by its plain name, from
 `FAMILY_SITES` (`lib/family-network.ts`, unchanged; `footerSisters` stays for the shared test). Every other footer
 link, page URL and title is unchanged. Cross-traffic still comes from the price blocks on the deals and pre-order pages.
+
+## 2026-11-08 — Christmas is one quiet line, not a costume
+
+Owner: "some of the christmas themes on our websites are a bit too much - the theme must match the domain". The
+2026-11-01 Christmas look turned RiftCompare into someone else's site for two months: the teal night went midnight blue,
+the embers became snow, and the hero, rail and logo carried lights, trees, a candy cane, a stocking and a Santa hat. All of
+that is gone (`ChristmasDecor`, `public/xmas/`, the palette swap, `.rb-hat`, `.rb-rail-stocking`, RiftEmbers' snow
+branch). The season keeps ONE touch, the "Christmas gifts" line under the hero's logo (`ChristmasGifts`, `.rb-gifts`),
+now a plain pill in the site's own ink colours with no gift icon or red glow. It still starts and ends by itself
+(`lib/season.ts`); `tests/season.test.ts` pins that nothing else comes back. Black Friday and Cyber Monday (strip, pages,
+nav) are unchanged. The same rule went to every sister site: at most one quiet seasonal line, drawn in that site's
+colours, and the site's own identity first.

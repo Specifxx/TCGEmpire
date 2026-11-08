@@ -10,9 +10,8 @@ export function ChristmasGifts() {
   return (
     <div className="rb-gifts-row mb-3 justify-center sm:mb-4">
       <Link href="/sealed" className="rb-gifts">
-        <span className="rb-gifts-icon" aria-hidden="true" />
         <b>Christmas gifts</b>
-        <span className="hidden sm:inline">· every booster box and bundle, cheapest first →</span>
+        <span className="hidden opacity-75 sm:inline">· every booster box and bundle, cheapest first →</span>
       </Link>
     </div>
   );

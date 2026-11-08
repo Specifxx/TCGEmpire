@@ -13,7 +13,6 @@ import { RiftEmbers } from "./RiftEmbers";
 import { BrandLogo } from "@/components/BrandLogo";
 import { NocturneComing } from "./NocturneComing";
 import { HalloweenDecor } from "./HalloweenDecor";
-import { ChristmasDecor } from "./ChristmasDecor";
 import { ChristmasGifts } from "./ChristmasGifts";
 import type { CardTileData } from "@/components/CardTile";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
@@ -117,7 +116,6 @@ export function CinematicHero({
         {/* Above the embers' dark, so the jack-o'-lanterns glow through it. */}
         <HalloweenDecor />
         {/* Christmas (1 November to Boxing Day): lights, trees, presents. */}
-        <ChristmasDecor />
         <div className="rb-paranoia absolute inset-0" />
       </div>
 
