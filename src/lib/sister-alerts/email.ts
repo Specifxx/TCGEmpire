@@ -8,8 +8,8 @@ import { SITE_URL } from "../site";
 import { REGION_CURRENCY, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
 import { resolvePath, type FeedDeal } from "./feed";
 
-const LOCALE: Record<SisterRegion, string> = { US: "en-US", UK: "en-GB", CA: "en-CA", AU: "en-AU", NZ: "en-NZ", EU: "en-IE", SG: "en-SG" };
-const REGION_LABEL: Record<SisterRegion, string> = { US: "US", UK: "UK", CA: "Canadian", AU: "Australian", NZ: "NZ", EU: "EU", SG: "Singapore" };
+export const LOCALE: Record<SisterRegion, string> = { US: "en-US", UK: "en-GB", CA: "en-CA", AU: "en-AU", NZ: "en-NZ", EU: "en-IE", SG: "en-SG" };
+export const REGION_LABEL: Record<SisterRegion, string> = { US: "US", UK: "UK", CA: "Canadian", AU: "Australian", NZ: "NZ", EU: "EU", SG: "Singapore" };
 
 export function money(cents: number, region: SisterRegion): string {
   const cur = REGION_CURRENCY[region];
@@ -34,7 +34,7 @@ export function siteLink(site: SisterAlertSite, path: string, campaign: string, 
   return u.toString();
 }
 
-function shell(site: SisterAlertSite, heading: string, inner: string, footer: string, preheader: string): string {
+export function shell(site: SisterAlertSite, heading: string, inner: string, footer: string, preheader: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px">${escapeHtml(preheader)}</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:28px 8px"><tr><td align="center">
@@ -46,7 +46,7 @@ function shell(site: SisterAlertSite, heading: string, inner: string, footer: st
     </table></td></tr></table></body></html>`;
 }
 
-const button = (site: SisterAlertSite, href: string, label: string) =>
+export const button = (site: SisterAlertSite, href: string, label: string) =>
   `<a href="${escapeHtml(href)}" style="display:inline-block;background:${site.color};color:#ffffff;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:9px">${escapeHtml(label)}</a>`;
 
 export interface BuiltMail {
@@ -55,17 +55,17 @@ export interface BuiltMail {
   text: string;
 }
 
-export function buildConfirmEmail(siteKey: string, token: string, targetCents: number, region: SisterRegion): BuiltMail {
+export function buildConfirmEmail(siteKey: string, token: string, targetCents: number, region: SisterRegion, weekly = false): BuiltMail {
   const site = sisterSite(siteKey)!;
   const url = serviceUrl("confirm", token);
   const target = money(targetCents, region);
   const subject = `Confirm your ${site.name} price alert`;
   const inner = `
-    <tr><td style="padding:8px 28px 6px;font-size:14px;line-height:1.6;color:#374151">Someone, hopefully you, asked ${escapeHtml(site.name)} to email this address when a product drops to ${escapeHtml(target)} or less at ${REGION_LABEL[region]} stores. Confirm and we'll start checking prices every day.</td></tr>
+    <tr><td style="padding:8px 28px 6px;font-size:14px;line-height:1.6;color:#374151">Someone, hopefully you, asked ${escapeHtml(site.name)} to email this address when a product drops to ${escapeHtml(target)} or less at ${REGION_LABEL[region]} stores${weekly ? `, and to send its biggest price drops once a week` : ""}. Confirm and we'll start checking prices every day.</td></tr>
     <tr><td style="padding:10px 28px 18px">${button(site, url, "Confirm my price alert")}</td></tr>
     <tr><td style="padding:0 28px 18px;font-size:13px;line-height:1.6;color:#6b7280">You only confirm once: alerts you add later on any of our sites start straight away. If you didn't ask for this, ignore this email and nothing will be sent.</td></tr>`;
   const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">${escapeHtml(site.name)} price alerts are sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
-  const text = `${subject}\n\nSomeone, hopefully you, asked ${site.name} to email this address when a product drops to ${target} or less at ${REGION_LABEL[region]} stores.\n\nConfirm: ${url}\n\nIf you didn't ask for this, ignore this email and nothing will be sent.`;
+  const text = `${subject}\n\nSomeone, hopefully you, asked ${site.name} to email this address when a product drops to ${target} or less at ${REGION_LABEL[region]} stores${weekly ? ", and to send its biggest price drops once a week" : ""}.\n\nConfirm: ${url}\n\nIf you didn't ask for this, ignore this email and nothing will be sent.`;
   return { subject, html: shell(site, "Confirm your price alert", inner, footer, `One click and we'll watch the price for you.`), text };
 }
 
@@ -120,7 +120,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
         </div></td></tr>`
     : "";
   const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Prices are the lowest in-stock store price we saw today, before postage. Stores change prices quickly, so check before you buy.</td></tr>`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/>Sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>Sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
   const text = [
     subject,
     "",

@@ -145,6 +145,10 @@ longer lands on its entry.
   static `/alert-feed.json` from its CDN (never its repo or a database) and emails under the shared alert budget plus a
   30-a-day cap. Private tables `SisterAlert`, `SisterAlertAddress`. KaeYoung, OP Compare, CamCompare and Compare Empire are not in it.
   [2026-11-02](../DECISIONS.md#L21386)
+- **A weekly biggest-drops email for the sister sites (2026-11-08):** opt-in only (an unticked box on their alert form,
+  or a button on the manage page), double opt-in, one edition a week per site from its feed (8–60% drops, three or
+  more), links only to the site (no eBay or Amazon), inside 20 of the service's 30 daily mails. `SisterDigest`, `SisterDigestEdition`.
+  [2026-11-08](../DECISIONS.md#L22993)
 - **Live names** (since 2026-11-06; `src/lib/db-chains.ts` is the source of
   truth): operational `RM11`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
