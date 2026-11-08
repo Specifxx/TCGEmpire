@@ -158,6 +158,7 @@ export async function loadGrowth(): Promise<{ series: Series[]; earningsBySource
     const note = "Counted by RiftCompare since 27 Oct 2026; the network's own dashboard can differ a little.";
     out.push(series("clicks-ebay", "eBay link clicks", "count", note, days, get("ebay")));
     out.push(series("clicks-tcgplayer", "TCGplayer link clicks", "count", note, days, get("tcgplayer")));
+    out.push(series("clicks-amazon", "Amazon link clicks", "count", "Counted apart from the stores since 8 Nov 2026 (before that they were in the store clicks).", days, get("amazon")));
     out.push(series("clicks-store", "Store link clicks", "count", note, days, get("store")));
     out.push(series("clicks-checkout", "Store clicks that opened checkout", "count", "Part of the store clicks above: the link put the item in the store's cart (since 6 Nov 2026).", days, get("checkout")));
   } catch {

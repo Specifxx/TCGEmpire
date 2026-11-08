@@ -23031,3 +23031,12 @@ there as `#link=`, a fragment so the CDN keeps one copy) and asks `/api/check/<h
   median come from the in-stock store prices in that store's own country, never converted.
 - **Cache.** The route is a plain function, so its CDN header is its cache: a day (`s-maxage=86400`), at least the
   six-hour floor. An unknown host is a 404 and the checker falls back to a `/browse` search from the link's words.
+
+## 2026-11-08 — Amazon clicks counted apart from the stores
+
+Bill asked which sites send clicks to Amazon. Associates Central blocks AI agents ("Access restricted" on sign-in in the
+Claude browser), so its per-tracking-ID clicks reach us only when Bill pastes the Reports page. To have a number of our
+own, `/api/click` now counts any retailer key containing "amazon" (`amazon_sealed`, `amazon_sealed_search`,
+`pkmn_amazon_search`) in its own `amazon` group instead of `store`, shown on /admin/growth and in the growth report.
+Store clicks drop by the same amount from today; the sum is unchanged. The other sites have no click counter, so this is
+RiftCompare only.
