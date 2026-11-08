@@ -148,7 +148,14 @@ async function checkSite(s: { host: string; canonicalHost: string }) {
     const p = await get(u);
     const can = canonicalOf(p.body);
     const rob = robotsMetaOf(p.body);
-    const L = linksIn(p.body);
+    // Engine sites route every buy button through their own /go?u=… redirect (it tags the link server-side and
+    // logs nothing), so resolve a few of those per source and check where they land.
+    const goLinks = [...p.body.matchAll(/href="(\/go\?[^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, "&"));
+    const bySource = new Map<string, string>();
+    for (const g of goLinks) { const src = new URLSearchParams(g.split("?")[1]).get("s") ?? "?"; const k = /^(ebay|amazon|tcgplayer)/.test(src) ? src.replace(/[-_].*/, "") : "store"; if (!bySource.has(k)) bySource.set(k, g); }
+    const resolved: string[] = [];
+    for (const g of bySource.values()) { const x = await get(base + g, { manual: true }); if (x.location) resolved.push(x.location); }
+    const L = linksIn(p.body + resolved.map((u) => ` href="${u.replace(/&/g, "&amp;")}"`).join(""));
     ebayTotal += L.ebay.length; ebayTagged += L.ebayTagged.length;
     amzTotal += L.amazon.length; amzTagged += L.amazonTagged.length;
     tcgTotal += L.tcg.length; tcgTagged += L.tcgTagged.length;
