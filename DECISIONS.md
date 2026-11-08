@@ -23015,3 +23015,19 @@ the shared alert service (`lib/sister-alerts/digest.ts`), so the sister sites st
   subscribers a week across every site: when it nears that, raise the mail budget, not the ceiling.
 - A site with confirmed subscribers whose due edition cannot be built fails the run, as a broken alert feed does.
   `tests/sister-digest.test.ts` pins it; the privacy page's sister-alerts paragraph says it.
+
+## 2026-11-08 — "Is this a good price?": paste a store link, read from the bundled files only
+
+The competitor scan's gap #7, built on every Compare Empire site the same day. `/tools/is-this-a-good-price`
+(`components/LinkChecker.tsx`) takes a pasted store product link (or one pasted into the header search, which sends it
+there as `#link=`, a fragment so the CDN keeps one copy) and asks `/api/check/<host>` for that store's listings.
+
+- **No Neon, ever.** `lib/link-check-index.ts` builds one index per server instance (a `globalThis` memo) from the
+  release's bundled public data files (`publicDataSource()`); in `db` mode the files are not bundled and the route
+  answers 503 (`no-store`) without a query. A pasted link never costs database transfer, and the store's page is
+  never fetched (`tests/link-check.test.ts`).
+- **What compares.** Singles at Near Mint only (a played copy is another price), one key per card, finish and country;
+  sealed per product group and country. eBay, TCGplayer, Amazon and Cardmarket are never a store here. Cheapest and
+  median come from the in-stock store prices in that store's own country, never converted.
+- **Cache.** The route is a plain function, so its CDN header is its cache: a day (`s-maxage=86400`), at least the
+  six-hour floor. An unknown host is a 404 and the checker falls back to a `/browse` search from the link's words.
