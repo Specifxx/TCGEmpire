@@ -81,7 +81,7 @@ test("sendUserDigestEmail dispatches on `via`, defaulting to Brevo, same pattern
   assert.match(body, /via: "brevo" \| "resend" = "brevo"/, "via must default to brevo");
   assert.match(
     body,
-    /return via === "resend" \? sendEmail\(to, subject, html\) : sendEmailBrevo\(to, subject, html\);/,
+    /return via === "resend" \? sendEmail\(to, subject, html, \{ marketing: true \}\) : sendEmailBrevo\(to, subject, html, \{ marketing: true \}\);/,
     "must actually branch on via, not ignore the parameter"
   );
 });

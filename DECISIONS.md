@@ -23062,3 +23062,21 @@ does the price alerts (2026-11-02).
   public feed `/api/sister-ads/<site>` is cached six hours, so a new ad appears within about six hours of approval.
 - **Honest label.** Banner reads "Featured listing", "Paid link", "Not part of the comparison"; it never enters a ranking,
   a best price, a deal or an alert. Private data (the seller's email) never leaves the service.
+
+## 2026-11-09: Email is for accounts, billing and the alerts people asked for
+
+Owner: stop the promotional and news mail, because every send eats the daily provider limit and the limit gets harder to
+track as the sites grow. Price alerts people set up, and the weekly biggest-drops email, stay.
+
+- **Stays:** sign-in, verification and password-reset mail, Stripe/trial notices (trial welcome, trial ending), support
+  tickets, the owner's own reports, every price-alert path (cards, sealed, deck, graded, auction, release alerts, their
+  confirmations) and the sister-site alerts and weekly drops.
+- **Off:** the weekly Index newsletter and its welcome, the daily user digest, the welcome email, the release-day blast,
+  the premium offer, the win-back and the checkout-recovery email. Each sender passes `marketing: true`; `sendEmail` and
+  `sendEmailBrevo` refuse it while `MARKETING_EMAIL_OFF` holds (`lib/email.ts`, `tests/email-policy.test.ts`). The four
+  workflows that called them and the two Vercel crons are deleted; the cron routes and admin consoles stay but cannot send.
+  To bring one back, change that one decision here, not the flag per call.
+- **Limits:** when Resend answers 429 (its daily quota), the same mail goes through Brevo, so an alert or a sign-in link is
+  not lost on a busy day. Brevo needs its "Authorised IPs" setting off (see the 2026-09-14 entry).
+- **Sister sites:** none changed. OP Compare's weekly newsletter workflow (`email-weekly.yml`) is dormant until its own
+  Resend secrets exist; leave them unset.

@@ -168,14 +168,6 @@ test("the checkout-recovery cron fails CLOSED, not open", () => {
   assert.match(src, /if \(!secret\) return false;/, "must fail closed when CRON_SECRET is unset — see premium-trial-reminders/route.ts's own fixed history");
 });
 
-test("the checkout-recovery workflow exists, is scheduled, and fails loudly with no CRON_SECRET", () => {
-  const src = read(".github/workflows/premium-checkout-recovery.yml");
-  assert.match(src, /schedule:/, "must run on a schedule, not only workflow_dispatch");
-  assert.match(src, /workflow_dispatch: \{\}/, "must also be manually triggerable, with no inputs (nothing for the flag-polarity test to check)");
-  assert.match(src, /::error::No CRON_SECRET secret set/, "must fail loudly rather than silently no-op when misconfigured");
-  assert.match(src, /api\/cron\/premium-checkout-recovery/, "must call the real endpoint");
-});
-
 test("User.checkoutRecoverySentAt is additive — nullable, no default", () => {
   const src = read("prisma/schema.prisma");
   assert.match(src, /checkoutRecoverySentAt\s+DateTime\?/, "must be nullable so `prisma db push` can add it with no backfill");
