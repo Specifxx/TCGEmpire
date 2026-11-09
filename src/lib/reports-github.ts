@@ -74,6 +74,7 @@ export const SITE_REPOS: Record<string, string> = {
   figurecompare: "Specifxx/figurecompare",
   kaeyoung: "Specifxx/Kaeyoung",
   scentcompare: "Specifxx/scentcompare",
+  waxcompare: "Specifxx/waxcompare",
 };
 export const reportsRepo = (site: string) => (process.env.REPORTS_REPO || SITE_REPOS[site] || "").trim();
 export const reportsBranch = () => (process.env.REPORTS_BRANCH || "reports").trim();

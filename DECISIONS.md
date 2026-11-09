@@ -23080,3 +23080,46 @@ track as the sites grow. Price alerts people set up, and the weekly biggest-drop
   not lost on a busy day. Brevo needs its "Authorised IPs" setting off (see the 2026-09-14 entry).
 - **Sister sites:** none changed. OP Compare's weekly newsletter workflow (`email-weekly.yml`) is dormant until its own
   Resend secrets exist; leave them unset.
+
+## 2026-11-09 — TokyoToys (UK) added for Riftbound
+
+TokyoToys (tokyotoys.com, Shopify, GBP, UK mainland delivery only; vetted for Cyberpunk Compare, see its DECISIONS.md) lists Riftbound sealed through its `riftbound-league-of-legends-tcg` collection (read by hand 2026-11-09, items in stock with tracked inventory). UK market only. Its titles carry a "RELEASE <date>:" prefix. Dex and MTG Compare already list it; One Piece, Pokemon (English) and Union Arena / Digimon / Fusion World sealed are not stocked, so those sites do not.
+
+## Navigation audit: the rail's open group is ordered by how a buyer looks things up — 2026-11-09
+
+**Owner (Bill):** navigation is very important; a collector deep in a space must reach their dimension fast.
+
+- **Finding.** The rail had 10 groups and about 75 links. Prices, the one group open on a first visit, held 18: the card
+  database, price guide, sealed, two set pages, five seasonal sale pages, the market tools and Pokémon in one run. The
+  Riftbound collector's own dimensions (set, domain, champion, type and rarity) sat in "The card database", closed by default
+  and fifth, so no page's server HTML linked them from the rail.
+- **Change (`nav-groups.ts` only; no URL, title, canonical or JSON-LD moves).** Prices now reads singles first (Card Database,
+  Price Guide, Sets & card lists, Domains, Champions, By type & rarity), then sealed (Sealed Products, Radiance, Legacy
+  pre-orders, Release dates), then market (Index, Movers, Auctions, Graded, Stores, Pokémon). The five seasonal sale pages moved
+  to the end of Deals & value, where they are deals. "Miscellaneous" (one link) and "For stores" (one link) are folded into
+  Prices and Help: ten groups became eight. The group order the owner set on 2026-10-20 and the open groups (Prices, Guides &
+  News) are untouched; the footer columns were re-bucketed to stay balanced ("Cards, decks & collection", "Tools & games").
+- **Not done on purpose.** No header dropdown: the header row is width-pinned on tablets (`tests/mobile-header-fit.test.ts`)
+  and the owner curated it. The rail is the facet menu from lg; below that the phone menu renders the same list.
+
+## Header dropdown menus: Singles, Sealed, Deals & market — 2026-11-09
+
+- **Owner.** Bill, 2026-11-09: he prefers drop-down menus for navigation across the engines, and wants state-of-the-art, neat
+  navigation. This supersedes the "header is owner-curated / width-pinned" caution in the entry above.
+- **Change.** `HeaderMegaMenu.tsx` draws three dropdowns from `HEADER_MENUS` (`nav-groups.ts`), each link picked BY HREF from
+  `NAV_GROUPS` with its own label, so the header, rail, phone menu and launcher stay in agreement (a href that leaves NAV_GROUPS
+  throws; `tests/header-menus.test.ts`). Singles: sets, domains, champions, type and rarity, plus the database, price guide,
+  A-Z, gallery and graded. Sealed: boxes and packs, Radiance, Legacy pre-orders, release dates, Box EV, Pull Tracker. Deals &
+  market: index, movers, auctions, Deal Finder, Rising, Best Basket, Demand. Header top level stays at 7 (Database, Singles,
+  Sealed, Deals & market, Blog, Tools, Pricing).
+- **Behaviour.** Every panel is in the server HTML as plain `<a href>` (closed panels use `hidden`, never unmounted). Hover with a
+  short intent delay, click, Enter/Space/ArrowDown to open, Left/Right between triggers, Escape closes and refocuses the
+  trigger, outside click or focus leaving closes. `aria-expanded`, `aria-controls`. No pop-up, no overlay.
+- **Width.** From 1440px only. From lg to 1439px the row has no slack (`tests/mobile-header-fit.test.ts`), so the plain Sealed
+  link stays there with complementary gates (`lg:block min-[1440px]:hidden` / `hidden min-[1440px]:flex`) and the rail carries the
+  facets. The phone menu (CinematicNavMenu) is unchanged. No URL, title, canonical, heading or JSON-LD moves; no query or cache.
+- **Not done.** The rail is kept: it is the only navigation between 1024 and 1439px and carries the full index.
+
+## 2026-11-09: MotorCompare joins the earnings dashboard and HQ
+
+`SportsCardCompare` was already in `SITES` (#380) but rides the next release; MotorCompare was missing from both the earnings by-site table and Empire HQ. Added both (`motor` prefix, project name `/motor/`, ops-monitor probed every 3 h). MotorCompare's links used `mc-`, which the dashboard reads as the old MTG singles site, so its eBay money would have landed on MTG Compare; MotorCompare now tags `motor-` (motorcompare PR). Amazon on both new sites is the shared AU ID (`compareempire-22`), so it shows under "Amazon, shared ID", never credited to one site it may not own.

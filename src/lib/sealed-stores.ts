@@ -191,6 +191,23 @@ export const SEALED_ONLY_SHOPIFY: ShopifySealedStore[] = [
     country: "CA",
     currency: "CAD",
   },
+  {
+    // TokyoToys, Birmingham (UK mainland only, GBP storefront), added 2026-11-09 on Bill's ask. Its
+    // riftbound-league-of-legends-tcg collection holds 14 products on 2026-11-09 (Radiance Booster Box
+    // £120, Booster Pack £5, Vendetta Box £120, Origins Box £160, showdown decks), all with tracked
+    // Shopify inventory; sealed only (singles are not a range). Titles are prefixed "RELEASE 23RD
+    // OCTOBER 2026:", so the Riftbound title gate stays on.
+    key: "tokyotoys",
+    name: "TokyoToys",
+    base: "https://tokyotoys.com",
+    collections: ["riftbound-league-of-legends-tcg"],
+    strictTitles: true,
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "UK",
+    currency: "GBP",
+  },
   // ── Moved here from RETAILERS, 2026-10-16 (store audit) ───────────────────
   // Each one's Riftbound collections hold sealed product, accessories and
   // event tickets, and few or no matchable singles, so as a singles store each

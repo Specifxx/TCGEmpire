@@ -855,6 +855,8 @@ longer lands on its entry.
 
 ## Navigation & chrome
 
+- **Header dropdowns (2026-11-09, owner):** Singles, Sealed, Deals & market from 1440px, picked by href from `NAV_GROUPS`
+  (`HEADER_MENUS`), links in server HTML; the plain Sealed link below that. [2026-11-09](../DECISIONS.md#L23088)
 - **Desktop rail:** 17rem from 1024px, always expanded (the collapse mode was
   deleted on 09-21). Group headers are disclosures; Prices and Guides & News
   (the second group) open on a first visit, because a collapsed group renders
@@ -862,6 +864,7 @@ longer lands on its entry.
   crawlers. The rail's search filters FEATURES; the header's searches
   CARDS. [2026-09-21](../DECISIONS.md#L9958),
   [2026-09-21](../DECISIONS.md#L10095), [2026-09-28](../DECISIONS.md#L15131)
+- **Rail order (2026-11-09):** Prices leads with the singles dimensions (set, domain, champion, type and rarity), then sealed, then market; seasonal sale pages live in Deals & value; no one-link groups. [2026-11-09](../DECISIONS.md)
 - **Header:** "Database" (→ `/browse`) shows at every width. Card search has
   its own row until xl, then sits inline. The theme toggle is in the header
   from lg, in the menu below that. "Tools" (→ `/tools`) joins Blog from xl

@@ -76,6 +76,12 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/browse", label: "Card Database", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"] },
       // The site-wide price guide (2026-10-02): every card in one sortable table.
       { href: "/price-guide", label: "Price Guide", keywords: ["price list", "price guide", "card values", "all prices", "value"] },
+      // By how a Riftbound buyer looks cards up: set, domain, champion, type and rarity (2026-11-09 nav audit; they sat in "The card
+      // database", closed by default, a click further than the search box). Then the sealed buyer's links, then the market.
+      { href: "/sets", label: "Sets & card lists", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
+      { href: "/domains", label: "Domains", keywords: ["domains", "colours", "colors", "fury", "calm", "mind", "body", "chaos", "order"] },
+      { href: "/champions", label: "Champions", keywords: ["champions", "by champion", "legends"] },
+      { href: "/cards", label: "By type & rarity", keywords: ["type", "rarity", "showcase", "epic", "signature", "promo", "printings", "facets", "alt art"] },
       { href: "/sealed", label: "Sealed Products", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"] },
       // Label deliberately omits the word "prices": nav search scores the label, and
       // "Radiance pre-order prices" outranked the Bulk Pricer on a bare "prices"
@@ -87,14 +93,10 @@ export const NAV_GROUPS: NavGroup[] = [
       // before Radiance shipped. The bare "preorder" keywords moved here: a
       // pre-order searcher now wants Legacy. Same no-"prices" label rule.
       { href: "/legacy-preorders", label: "Legacy pre-orders", keywords: ["legacy", "set 6", "legacy booster box", "legacy preorder", "preorder", "pre-order", "upcoming set"] },
+      { href: "/release-dates", label: "Release dates", keywords: ["release date", "release dates", "countdown", "when", "next set", "upcoming", "radiance", "legacy", "when does the next set come out"] },
       // Black Friday sealed deals (2026-10-30, the weekly growth review). No "prices" or bare "deals" in the label: "deals" belongs to the Deal Finder (tests/nav-search.test.ts).
-      { href: "/black-friday", label: "Black Friday", keywords: ["black friday", "black friday deals", "sale", "discount", "cheap booster box", "christmas", "holiday"] },
       // Cyber Monday's own page (2026-11-06): the same deals and price watch under the Monday query.
-      { href: "/cyber-monday", label: "Cyber Monday", keywords: ["cyber monday", "cyber monday deals", "cyber week", "online sale"] },
       // The seasonal sale pages (2026-11-02, DECISIONS.md "Seasonal sale pages"): same no-"deals"/"prices" label rule.
-      { href: "/boxing-day", label: "Boxing Day", keywords: ["boxing day", "boxing day sale", "boxing day sales", "boxing day deals", "end of year sale"] },
-      { href: "/january-sales", label: "January sales", keywords: ["january sale", "january sales", "new year sale", "after christmas sale"] },
-      { href: "/lunar-new-year", label: "Lunar New Year", keywords: ["lunar new year", "chinese new year", "cny sale", "lunar new year sale"] },
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
       { href: "/movers", label: "Weekly Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "most searched", "popular cards"] },
       { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },
@@ -123,6 +125,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/tools/box-ev", label: "Box EV Calc", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
       { href: "/tools/pull-tracker/radiance", label: "Pull Tracker", keywords: ["pulls", "what did i pull", "box value", "pack opening", "log my pulls", "radiance pulls"] },
       { href: "/tools/selling-fees", label: "Selling Fee Calc", keywords: ["tcgplayer fees", "ebay fees", "selling fees", "net proceeds", "marketplace commission"] },
+      // The seasonal sale pages (moved here from Prices in the 2026-11-09 nav audit: Prices opens on a first visit and is for
+      // how to look a card or product up; these are deals).
+      { href: "/black-friday", label: "Black Friday", keywords: ["black friday", "black friday deals", "sale", "discount", "cheap booster box", "christmas", "holiday"] },
+      { href: "/cyber-monday", label: "Cyber Monday", keywords: ["cyber monday", "cyber monday deals", "cyber week", "online sale"] },
+      { href: "/boxing-day", label: "Boxing Day", keywords: ["boxing day", "boxing day sale", "boxing day sales", "boxing day deals", "end of year sale"] },
+      { href: "/january-sales", label: "January sales", keywords: ["january sale", "january sales", "new year sale", "after christmas sale"] },
+      { href: "/lunar-new-year", label: "Lunar New Year", keywords: ["lunar new year", "chinese new year", "cny sale", "lunar new year sale"] },
       { href: "/tools", label: "All Tools", keywords: ["tools", "calculators", "utilities"] },
     ],
   },
@@ -190,9 +199,6 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "The card database",
     icon: "browse",
     links: [
-      { href: "/sets", label: "Sets & card lists", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
-      { href: "/champions", label: "Champions", keywords: ["champions", "by champion", "legends"] },
-      { href: "/cards", label: "By type & rarity", keywords: ["type", "rarity", "showcase", "epic", "signature", "promo", "printings", "facets", "alt art"] },
       { href: "/cards/all", label: "Every card (A-Z)", keywords: ["all cards", "every card", "full list", "complete list", "card index", "sitemap", "a-z", "list of all riftbound cards"] },
       // The set-agnostic hub for /sets/<set>/gallery (added 2026-08-20 to target
       // "riftbound card gallery" directly — see that route's own doc comment for
@@ -208,7 +214,6 @@ export const NAV_GROUPS: NavGroup[] = [
         const n = s.name.toLowerCase();
         return { href: `/sets/${s.slug}/gallery`, label: `${s.name} card gallery`, keywords: [`${n} gallery`, `${n} card gallery`, `${n} cards`, `${n} card images`] };
       }),
-      { href: "/domains", label: "Domains", keywords: ["domains", "colours", "colors", "fury", "calm", "mind", "body", "chaos", "order"] },
       // 2026-09-24: "riftbound ban list" is 8.7K impressions a month; the guide
       // now opens with the full banned-card table (lib/banlist.ts).
       { href: "/guides/riftbound-banlist-explained", label: "Ban list", keywords: ["ban list", "banlist", "banned", "banned cards", "bans", "restricted", "legal cards", "2v2 bans"] },
@@ -260,60 +265,13 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // The catch-all. A page belongs here when it answers a real question but is
-    // none of the things the other groups are about — not a price, not a view of
-    // the card database, not a tool, not our own writing.
-    //
-    // /release-dates is the founding member, and the reason the group exists. It
-    // had been filed under "The card database" (and under "Prices" before
-    // that), because a release countdown is adjacent to both and squarely in
-    // neither — it was the one entry in a database-views group that shows no
-    // cards, exactly as it had been the one entry in a prices group with nothing
-    // to do with comparing a price. Rather than move it a third time, it gets a
-    // group whose whole definition is "doesn't fit the others".
-    title: "Miscellaneous",
-    icon: "calendar",
-    links: [
-      // Deliberately NOT named after a set. Its two predecessors were
-      // (/vendetta-countdown, then /radiance-countdown) and both went stale on a
-      // known date, taking a nav label with them; this one reads the release
-      // calendar and rolls forward on its own. The keywords carry every
-      // set-specific phrasing people actually type, so "radiance release date"
-      // still lands here without the label having to say it.
-      { href: "/release-dates", label: "Release dates", keywords: ["release date", "release dates", "countdown", "when", "next set", "upcoming", "radiance", "legacy", "when does the next set come out"] },
-    ],
-  },
-  {
-    // The B2B side, and the only group here aimed at someone SELLING rather
-    // than buying. It exists as its own group instead of being folded into
-    // Help or Prices because both of those are read by players: a shop owner
-    // who lands on the site had no path to /stores from the navigation at all
-    // (2026-09-21 — the pages existed, nothing linked to them), and a store
-    // hunting for "do they have anything for retailers" will not think to
-    // look under Help. One group, one icon, one obvious answer.
-    //
-    // /stores/tracked stays under Prices and /stores/suggest stays under Help
-    // ON PURPOSE. Both are read by PLAYERS ("which stores do you compare?",
-    // "you're missing my local") far more than by retailers, and moving them
-    // here to tidy the URL prefix would bury them for the bigger audience. A
-    // link lives where its READER looks, not where its path says.
-    title: "For stores",
-    icon: "store",
-    links: [
-      {
-        href: "/stores",
-        label: "RiftCompare for Stores",
-        keywords: ["for stores", "retailers", "my store", "i own a store", "b2b", "sell riftbound", "repricing", "repricing report", "store report", "lgs", "game store", "shop owner"],
-      },
-    ],
-  },
-  {
     title: "Help",
     icon: "help",
     links: [
       { href: "/support", label: "Support", keywords: ["support", "help", "faq", "problem", "issue", "something is broken"] },
       { href: "/contact", label: "Contact", keywords: ["contact", "email", "get in touch", "reach us"] },
       { href: "/feedback", label: "Rate & review", keywords: ["feedback", "rate", "review", "rating", "suggest", "idea", "feature request"] },
+      { href: "/stores", label: "RiftCompare for Stores", keywords: ["for stores", "retailers", "my store", "i own a store", "b2b", "sell riftbound", "repricing", "repricing report", "store report", "lgs", "game store", "shop owner"] },
       { href: "/stores/suggest", label: "List your store", keywords: ["suggest a store", "add a store", "missing store", "list my store", "list your store", "get listed"] },
       { href: "/how-we-pick-stores", label: "How we pick stores", keywords: ["scam", "fake store", "trusted stores", "report a store", "how we pick stores", "vetting"] },
       { href: "/about", label: "About RiftCompare", keywords: ["about", "who we are", "riftcompare", "compare"] },
@@ -364,6 +322,46 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/blog", label: "Blog" },
 ];
 
+// The header's dropdown menus (HeaderMegaMenu.tsx, from 1440px; owner 2026-11-09). Picked BY HREF from NAV_GROUPS, with the link's
+// own label, so a rename or removal there reaches the header, rail, phone menu and launcher together; a href that is no longer
+// in NAV_GROUPS throws at import (tests/header-menus.test.ts). 7 top-level items or fewer in the header row.
+export interface HeaderMenu {
+  label: string;
+  columns: { title: string; links: { href: string; label: string }[] }[];
+}
+const ALL_NAV_LINKS = NAV_GROUPS.flatMap((g) => g.links);
+function pick(...hrefs: string[]): { href: string; label: string }[] {
+  return hrefs.map((href) => {
+    const l = ALL_NAV_LINKS.find((x) => x.href === href);
+    if (!l) throw new Error(`HEADER_MENUS: ${href} is not in NAV_GROUPS`);
+    return { href: l.href, label: l.label };
+  });
+}
+export const HEADER_MENUS: HeaderMenu[] = [
+  {
+    label: "Singles",
+    columns: [
+      { title: "Browse cards by", links: pick("/sets", "/domains", "/champions", "/cards") },
+      { title: "Find a card", links: pick("/browse", "/price-guide", "/cards/all", "/gallery", "/graded") },
+    ],
+  },
+  {
+    label: "Sealed",
+    columns: [
+      { title: "Boxes & packs", links: pick("/sealed", "/singles") },
+      { title: "Sets & pre-orders", links: pick("/sets/radiance", "/legacy-preorders", "/release-dates") },
+      { title: "Opening product", links: pick("/tools/box-ev", "/tools/pull-tracker/radiance") },
+    ],
+  },
+  {
+    label: "Deals & market",
+    columns: [
+      { title: "Market", links: pick("/market", "/movers", "/auctions") },
+      { title: "Deals", links: pick("/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand") },
+    ],
+  },
+];
+
 // The footer's own grouping — 4 columns instead of NAV_GROUPS' 8-9. Same links,
 // same hrefs (every one still reachable, still counted for internal linking),
 // just re-bucketed by theme so the footer doesn't need a column per nav group.
@@ -405,16 +403,16 @@ export const FOOTER_GROUPS: NavGroup[] = [
     links: [...(byTitle["Prices"] ?? []), ...miscLinks, ...storeLinks],
   },
   {
-    title: "Cards & collection",
-    links: [...(byTitle["The card database"] ?? []), ...(byTitle["Your collection"] ?? [])],
+    title: "Cards, decks & collection",
+    links: [...(byTitle["The card database"] ?? []), ...(byTitle["Decks"] ?? []), ...(byTitle["Your collection"] ?? [])],
   },
   // Games sit with the tools since 2026-09-25: the premium lineup took four
   // tools out of "Deals & value", which left that column at 8 links against
   // Learn's 17, past the 2x spread above. Moving the three footer games across
   // (the other seven are hideInFooter) rebalances to 10 / 13 / 11 / 14.
   {
-    title: "Tools, decks & games",
-    links: [...(byTitle["Deals & value"] ?? []), ...(byTitle["Decks"] ?? []), ...(byTitle["Games"] ?? [])],
+    title: "Tools & games",
+    links: [...(byTitle["Deals & value"] ?? []), ...(byTitle["Games"] ?? [])],
   },
   {
     title: "Learn & help",

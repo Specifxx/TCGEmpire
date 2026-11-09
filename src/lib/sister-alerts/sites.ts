@@ -9,7 +9,7 @@
 // alerts), CamCompare and Compare Empire (their own alert tables), KaeYoung (left out, owner
 // 2026-11-02, unless the owner asks).
 
-export type SisterAlertSiteKey = "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "bandai" | "wargame" | "figure";
+export type SisterAlertSiteKey = "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "bandai" | "wax" | "wargame" | "figure";
 export type SisterGroup = "cards" | "hobby";
 
 export interface SisterAlertSite {
@@ -31,6 +31,7 @@ export const SISTER_ALERT_SITES: SisterAlertSite[] = [
   { key: "ygo", name: "YGO Compare", url: "https://ygocompare.com", group: "cards", color: "#b45309" },
   { key: "cyberpunk", name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com", group: "cards", color: "#0891b2" },
   { key: "bandai", name: "BandaiCompare", url: "https://bandaicompare.com", group: "cards", color: "#ff6a00" },
+  { key: "wax", name: "SportsCardCompare", url: "https://sportscardcompare.com", group: "cards", color: "#1d4ed8" },
   { key: "wargame", name: "WargameCompare", url: "https://wargamecompare.com", group: "hobby", color: "#b91c1c" },
   { key: "figure", name: "FigureCompare", url: "https://figurecompare.com", group: "hobby", color: "#dc2626" },
 ];

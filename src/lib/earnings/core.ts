@@ -752,6 +752,8 @@ export const TAG_NAMES: Record<string, string> = {
   lorcana: "Lorcana Compare",
   ygo: "YGO Compare (Yu-Gi-Oh!)",
   cc: "CamCompare",
+  wax: "SportsCardCompare",
+  motor: "MotorCompare",
   // Amazon tracking IDs several sites share (lib/earnings/amazon.ts).
   amazon: "Amazon, shared ID (several sites)",
 };
