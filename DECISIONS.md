@@ -23123,3 +23123,7 @@ TokyoToys (tokyotoys.com, Shopify, GBP, UK mainland delivery only; vetted for Cy
 ## 2026-11-09: MotorCompare joins the earnings dashboard and HQ
 
 `SportsCardCompare` was already in `SITES` (#380) but rides the next release; MotorCompare was missing from both the earnings by-site table and Empire HQ. Added both (`motor` prefix, project name `/motor/`, ops-monitor probed every 3 h). MotorCompare's links used `mc-`, which the dashboard reads as the old MTG singles site, so its eBay money would have landed on MTG Compare; MotorCompare now tags `motor-` (motorcompare PR). Amazon on both new sites is the shared AU ID (`compareempire-22`), so it shows under "Amazon, shared ID", never credited to one site it may not own.
+
+## 2026-11-09: a hand-entered cost that names a site goes on that site's row
+
+Vercel usage already reaches SportsCardCompare's row through its project name (`waxcompare`). Hand-entered costs (domains, tools) had no site and all went to "Shared", so SportsCardCompare's `sportscardcompare.com` renewal showed as nobody's. A cost entry whose label contains a site's name (or `waxcompare` for SportsCardCompare), ignoring spaces and punctuation, now lands on that site's row (`siteForLabel`); no match stays shared. Nothing is estimated: only entered amounts move.
