@@ -23067,3 +23067,20 @@ does the price alerts (2026-11-02).
 ## 2026-11-09 — TokyoToys (UK) added for Riftbound
 
 TokyoToys (tokyotoys.com, Shopify, GBP, UK mainland delivery only; vetted for Cyberpunk Compare, see its DECISIONS.md) lists Riftbound sealed through its `riftbound-league-of-legends-tcg` collection (read by hand 2026-11-09, items in stock with tracked inventory). UK market only. Its titles carry a "RELEASE <date>:" prefix. Dex and MTG Compare already list it; One Piece, Pokemon (English) and Union Arena / Digimon / Fusion World sealed are not stocked, so those sites do not.
+
+## Navigation audit: the rail's open group is ordered by how a buyer looks things up — 2026-11-09
+
+**Owner (Bill):** navigation is very important; a collector deep in a space must reach their dimension fast.
+
+- **Finding.** The rail had 10 groups and about 75 links. Prices, the one group open on a first visit, held 18: the card
+  database, price guide, sealed, two set pages, five seasonal sale pages, the market tools and Pokémon in one run. The
+  Riftbound collector's own dimensions (set, domain, champion, type and rarity) sat in "The card database", closed by default
+  and fifth, so no page's server HTML linked them from the rail.
+- **Change (`nav-groups.ts` only; no URL, title, canonical or JSON-LD moves).** Prices now reads singles first (Card Database,
+  Price Guide, Sets & card lists, Domains, Champions, By type & rarity), then sealed (Sealed Products, Radiance, Legacy
+  pre-orders, Release dates), then market (Index, Movers, Auctions, Graded, Stores, Pokémon). The five seasonal sale pages moved
+  to the end of Deals & value, where they are deals. "Miscellaneous" (one link) and "For stores" (one link) are folded into
+  Prices and Help: ten groups became eight. The group order the owner set on 2026-10-20 and the open groups (Prices, Guides &
+  News) are untouched; the footer columns were re-bucketed to stay balanced ("Cards, decks & collection", "Tools & games").
+- **Not done on purpose.** No header dropdown: the header row is width-pinned on tablets (`tests/mobile-header-fit.test.ts`)
+  and the owner curated it. The rail is the facet menu from lg; below that the phone menu renders the same list.
