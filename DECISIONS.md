@@ -23084,3 +23084,21 @@ TokyoToys (tokyotoys.com, Shopify, GBP, UK mainland delivery only; vetted for Cy
   News) are untouched; the footer columns were re-bucketed to stay balanced ("Cards, decks & collection", "Tools & games").
 - **Not done on purpose.** No header dropdown: the header row is width-pinned on tablets (`tests/mobile-header-fit.test.ts`)
   and the owner curated it. The rail is the facet menu from lg; below that the phone menu renders the same list.
+
+## Header dropdown menus: Singles, Sealed, Deals & market — 2026-11-09
+
+- **Owner.** Bill, 2026-11-09: he prefers drop-down menus for navigation across the engines, and wants state-of-the-art, neat
+  navigation. This supersedes the "header is owner-curated / width-pinned" caution in the entry above.
+- **Change.** `HeaderMegaMenu.tsx` draws three dropdowns from `HEADER_MENUS` (`nav-groups.ts`), each link picked BY HREF from
+  `NAV_GROUPS` with its own label, so the header, rail, phone menu and launcher stay in agreement (a href that leaves NAV_GROUPS
+  throws; `tests/header-menus.test.ts`). Singles: sets, domains, champions, type and rarity, plus the database, price guide,
+  A-Z, gallery and graded. Sealed: boxes and packs, Radiance, Legacy pre-orders, release dates, Box EV, Pull Tracker. Deals &
+  market: index, movers, auctions, Deal Finder, Rising, Best Basket, Demand. Header top level stays at 7 (Database, Singles,
+  Sealed, Deals & market, Blog, Tools, Pricing).
+- **Behaviour.** Every panel is in the server HTML as plain `<a href>` (closed panels use `hidden`, never unmounted). Hover with a
+  short intent delay, click, Enter/Space/ArrowDown to open, Left/Right between triggers, Escape closes and refocuses the
+  trigger, outside click or focus leaving closes. `aria-expanded`, `aria-controls`. No pop-up, no overlay.
+- **Width.** From 1440px only. From lg to 1439px the row has no slack (`tests/mobile-header-fit.test.ts`), so the plain Sealed
+  link stays there with complementary gates (`lg:block min-[1440px]:hidden` / `hidden min-[1440px]:flex`) and the rail carries the
+  facets. The phone menu (CinematicNavMenu) is unchanged. No URL, title, canonical, heading or JSON-LD moves; no query or cache.
+- **Not done.** The rail is kept: it is the only navigation between 1024 and 1439px and carries the full index.
