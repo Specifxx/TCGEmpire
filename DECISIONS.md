@@ -23102,3 +23102,7 @@ TokyoToys (tokyotoys.com, Shopify, GBP, UK mainland delivery only; vetted for Cy
   link stays there with complementary gates (`lg:block min-[1440px]:hidden` / `hidden min-[1440px]:flex`) and the rail carries the
   facets. The phone menu (CinematicNavMenu) is unchanged. No URL, title, canonical, heading or JSON-LD moves; no query or cache.
 - **Not done.** The rail is kept: it is the only navigation between 1024 and 1439px and carries the full index.
+
+## 2026-11-09: MotorCompare joins the earnings dashboard and HQ
+
+`SportsCardCompare` was already in `SITES` (#380) but rides the next release; MotorCompare was missing from both the earnings by-site table and Empire HQ. Added both (`motor` prefix, project name `/motor/`, ops-monitor probed every 3 h). MotorCompare's links used `mc-`, which the dashboard reads as the old MTG singles site, so its eBay money would have landed on MTG Compare; MotorCompare now tags `motor-` (motorcompare PR). Amazon on both new sites is the shared AU ID (`compareempire-22`), so it shows under "Amazon, shared ID", never credited to one site it may not own.
