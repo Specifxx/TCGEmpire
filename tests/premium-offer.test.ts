@@ -345,7 +345,7 @@ test("opt-out: footer link, plain-text link, and one-click List-Unsubscribe head
   assert.equal(payload.textContent, email.text);
   assert.deepEqual(payload.headers, email.headers);
   assert.deepEqual(Object.keys(brevoPayload({ sender: { name: "R", email: "r@x" }, to: [{ email: "a@b" }], subject: "s", htmlContent: "h" })).sort(), ["htmlContent", "sender", "subject", "to"], "callers passing no extras send exactly what they did");
-  assert.match(read("src/lib/email.ts"), /sendEmailBrevo\(to, subject, html, \{ text, headers \}\)/);
+  assert.match(read("src/lib/email.ts"), /sendEmailBrevo\(to, subject, html, \{ text, headers, marketing: true \}\)/);
 });
 
 test("an email-shaped display name falls back to a plain greeting, and names are HTML-escaped", () => {
@@ -377,17 +377,6 @@ test("the cron route fails CLOSED, defaults to a dry run, needs no deadline and 
   assert.match(src, /const dryRun = p\.get\("dry"\) !== "0";/);
   assert.doesNotMatch(src, /p\.get\("until"\)/);
   assert.match(src, /Math\.min\(limitRaw, 300\)/);
-});
-
-test("the workflow is dispatch-only, defaults dry_run to true, has no deadline input, and fails loudly without CRON_SECRET", () => {
-  const src = read(".github/workflows/premium-offer-email.yml");
-  assert.doesNotMatch(src, /^\s*schedule:/m);
-  assert.match(src, /dry_run:[\s\S]*?default: true/);
-  assert.doesNotMatch(src, /offer_ends|until=/);
-  assert.match(src, /::error::No CRON_SECRET secret set/);
-  assert.match(src, /api\/cron\/premium-offer\?dry=\$DRY&via=\$VIA/);
-  assert.match(src, /concurrency:[\s\S]*?group: premium-offer-email/);
-  assert.match(src, /^name: Price-drop email$/m);
 });
 
 test("the admin route: dual gate, three actions, only `send` delivers, a hand-typed limit stays under a day's cap", () => {

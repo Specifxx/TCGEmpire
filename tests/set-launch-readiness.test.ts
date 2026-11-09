@@ -166,10 +166,7 @@ test("the release-day blast defaults to the set that actually released", () => {
     assert.match(src, /newestReleasedSet\(\)/, `${p} must derive its default set`);
     assert.doesNotMatch(src, /\?\?\s*"vendetta"|\|\|\s*"vendetta"/, `${p} still falls back to a literal set slug`);
   }
-  const wf = read(".github/workflows/release-day-email.yml");
-  assert.doesNotMatch(wf, /default:\s*"vendetta"/, "the workflow input still defaults to a literal set slug");
-  // Dry run must stay the default — this emails every subscriber.
-  assert.match(wf, /dry_run:[\s\S]{0,200}default:\s*true/, "dry_run must default to true");
+  // The release-day workflow is gone (marketing email is off, DECISIONS.md 2026-11-09).
 });
 
 test("maintenance.yml exposes the per-set pipeline and pings IndexNow after it", () => {

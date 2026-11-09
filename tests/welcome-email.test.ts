@@ -68,12 +68,3 @@ test("exactly once: a window, a conditional claim, and a released claim on failu
   assert.match(read("prisma/schema.prisma"), /welcomeEmailSentAt DateTime\?/, "additive, nullable column");
 });
 
-test("the cron route fails closed and the workflow runs hourly, tolerating a not-yet-deployed route", () => {
-  const route = read("src/app/api/cron/welcome-email/route.ts");
-  assert.match(route, /if \(!secret\) return false;/, "no CRON_SECRET, no sends");
-  assert.match(route, /runWelcomeEmails\(\)/);
-  const wf = read(".github/workflows/welcome-email.yml");
-  assert.match(wf, /cron: "23 \* \* \* \*"/);
-  assert.match(wf, /api\/cron\/welcome-email/);
-  assert.match(wf, /if \[ "\$code" = "404" \]; then/);
-});

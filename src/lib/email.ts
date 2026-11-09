@@ -67,9 +67,21 @@ export interface SendEmailExtras {
   headers?: Record<string, string>;
   /** A different display name on the verified sender (the sister-site alerts, lib/sister-alerts/email.ts). */
   from?: string;
+  /** Promotional, news or bulk mail. Refused while MARKETING_EMAIL_OFF holds (Bill, 2026-11-09). */
+  marketing?: boolean;
+}
+
+// Bill, 2026-11-09: email is for accounts, billing and the alerts people asked for. Every promotional,
+// news or announcement send passes `marketing: true` and is refused here, whichever provider carries it.
+export const MARKETING_EMAIL_OFF = true;
+function marketingBlocked(extras: SendEmailExtras): boolean {
+  if (!extras.marketing || !MARKETING_EMAIL_OFF) return false;
+  lastEmailError = "Marketing email is switched off (DECISIONS.md, 2026-11-09)";
+  return true;
 }
 
 export async function sendEmail(to: string, subject: string, html: string, extras: SendEmailExtras = {}): Promise<boolean> {
+  if (marketingBlocked(extras)) return false;
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn(`[email] RESEND_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
@@ -90,6 +102,8 @@ export async function sendEmail(to: string, subject: string, html: string, extra
     if (!res.ok) {
       console.warn(`[email] Resend returned ${res.status} for "${subject}".`);
       await noteProviderFailure("Resend", res);
+      // Resend's daily quota (429): the same mail goes through Brevo, so a busy day never drops an alert or a sign-in link.
+      if (res.status === 429 && isBrevoEnabled()) return sendEmailBrevo(to, subject, html, extras);
     } else lastEmailError = null;
     return res.ok;
   } catch (e) {
@@ -148,6 +162,7 @@ function parseFrom(raw: string): { name: string; email: string } {
 // part as `textContent` and extra headers (List-Unsubscribe) as `headers`.
 // Callers that pass neither send exactly what they always did.
 export async function sendEmailBrevo(to: string, subject: string, html: string, extras: SendEmailExtras = {}): Promise<boolean> {
+  if (marketingBlocked(extras)) return false;
   const key = process.env.BREVO_API_KEY;
   if (!key) {
     console.warn(`[email] BREVO_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
@@ -892,7 +907,7 @@ export async function sendNewsletterDigestEmail(to: string, subject: string, hea
   // so the weekly digest carries the generic account CTA. Some subscribers may
   // also hold accounts — acceptable noise for one soft block, unlike the alert
   // emails where the caller knows userId and gates it precisely.
-  return sendEmail(to, subject, emailShell(heading, inner + accountCtaBlock("newsletter"), newsletterFooter(unsubUrl)));
+  return sendEmail(to, subject, emailShell(heading, inner + accountCtaBlock("newsletter"), newsletterFooter(unsubUrl)), { marketing: true });
 }
 
 // One-off release-day blast for a new set (e.g. Vendetta, 31 Jul 2026). Sent to the
@@ -1051,7 +1066,7 @@ export async function sendReleaseDayEmail(
       : `${setName} is out — see every card's cheapest price`;
 
   const footer = recipient === "account" ? announcementFooter(unsubUrl) : newsletterFooter(unsubUrl);
-  return sendEmail(to, subject, emailShell(`${setName} is here`, inner, footer));
+  return sendEmail(to, subject, emailShell(`${setName} is here`, inner, footer), { marketing: true });
 }
 
 // ─── Weekly digest to registered accounts (not opt-in subscribers) ──────────
@@ -1088,7 +1103,7 @@ export async function sendUserDigestEmail(
   via: "brevo" | "resend" = "brevo"
 ): Promise<boolean> {
   const html = emailShell(heading, inner, accountDigestFooter(unsubUrl));
-  return via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
+  return via === "resend" ? sendEmail(to, subject, html, { marketing: true }) : sendEmailBrevo(to, subject, html, { marketing: true });
 }
 
 // ─── Premium trial reminder ──────────────────────────────────────────────────
@@ -1291,7 +1306,7 @@ export async function sendCheckoutRecoveryEmail(
   trialFeeCents = 0,
 ): Promise<boolean> {
   const { subject, html } = buildCheckoutRecoveryEmail(trialDays, fromLine, tier, trialFeeCents);
-  return sendEmail(to, subject, html);
+  return sendEmail(to, subject, html, { marketing: true });
 }
 
 // ─── Welcome email to a new account (one-time) ────────────────────────────────
@@ -1378,7 +1393,7 @@ function welcomeFooter(): string {
 
 export async function sendWelcomeEmail(to: string, opts: WelcomeEmailOpts): Promise<boolean> {
   const { subject, html } = buildWelcomeEmail(opts);
-  return sendEmail(to, subject, html);
+  return sendEmail(to, subject, html, { marketing: true });
 }
 
 // The welcome for an account that is ALREADY IN A TRIAL (2026-09-24). Twelve of
@@ -1633,7 +1648,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
 
 export async function sendPremiumOfferEmail(to: string, opts: PremiumOfferEmailOpts): Promise<boolean> {
   const { subject, html, text, headers } = buildPremiumOfferEmail(opts);
-  return opts.via === "resend" ? sendEmail(to, subject, html, { text, headers }) : sendEmailBrevo(to, subject, html, { text, headers });
+  return opts.via === "resend" ? sendEmail(to, subject, html, { text, headers, marketing: true }) : sendEmailBrevo(to, subject, html, { text, headers, marketing: true });
 }
 
 // One-off "N days of Premium, free, no card" win-back email. See
@@ -1678,7 +1693,7 @@ export function buildPremiumWinbackEmail(opts: PremiumWinbackEmailOpts): { subje
 
 export async function sendPremiumWinbackEmail(to: string, opts: PremiumWinbackEmailOpts): Promise<boolean> {
   const { subject, html } = buildPremiumWinbackEmail(opts);
-  return opts.via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
+  return opts.via === "resend" ? sendEmail(to, subject, html, { marketing: true }) : sendEmailBrevo(to, subject, html, { marketing: true });
 }
 
 // Sent once on first signup so subscribers hear from us immediately (and get the
@@ -1704,7 +1719,7 @@ export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string, s
       The next edition lands this Saturday morning (Sydney time).
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;
-  return sendEmail(to, `You're on the ${SITE_NAME} weekly Index summary`, emailShell("Welcome aboard", inner, newsletterFooter(unsubUrl)));
+  return sendEmail(to, `You're on the ${SITE_NAME} weekly Index summary`, emailShell("Welcome aboard", inner, newsletterFooter(unsubUrl)), { marketing: true });
 }
 
 // ─── Wrong-price report fixed (thank-you) ────────────────────────────────────
