@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { addDays, anthropicCostDays, dayIn, expandCost, mapLimit, mergeDays, windows, type CostEntry, type CostRecurrence, type DayAmount } from "./core";
 import { EARNINGS_SINCE, scrubSecrets, overdueDetail } from "./sources";
 import { readStored, writeStored } from "./stored";
-import { projectDays, vercelCharges, type ProjectCharge } from "./sites";
+import { projectDays, siteForLabel, vercelCharges, type ProjectCharge } from "./sites";
 
 // The earnings dashboard's costs (2026-10-25, owner: "add costs on the website …
 // Vercel Premium plan … Anthropic plan … for as long as the site has been alive … an
@@ -185,6 +185,8 @@ export async function loadCosts(fresh = false): Promise<CostLine[]> {
     const entry = { ...r, recurrence: (["once", "monthly", "yearly"].includes(r.recurrence) ? r.recurrence : "once") as CostRecurrence };
     let days = expandCost(entry, today);
     if (apiFrom && isVercelInvoice(r.label)) days = days.filter((d) => d.day < apiFrom);
+    const site = siteForLabel(r.label);
+    if (site) days = days.map((d) => ({ ...d, site }));
     return { key: `entry:${r.id}`, label: r.label, category: r.category, status: "ok" as const, days, entry };
   });
   return [auto, vercel, ...entries];

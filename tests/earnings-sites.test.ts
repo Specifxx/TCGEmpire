@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { SourceResult } from "../src/lib/earnings/core";
-import { siteForProject, siteLedger, vercelCharges } from "../src/lib/earnings/sites";
+import { siteForLabel, siteForProject, siteLedger, vercelCharges } from "../src/lib/earnings/sites";
 import { buildGrowthReport, growthReportText } from "../src/lib/earnings/growth-report";
 import { isVercelInvoice } from "../src/lib/earnings/costs";
 
@@ -109,4 +109,23 @@ test("the By site table carries each site's all-time earned and net beside the r
   assert.equal(all.find((r) => r.key === "rc")?.net, -200, "all-time net is earned minus every cost since the start");
   const recent = siteLedger([ebay], [{ day: "2026-02-01", project: "tcgempire", currency: "AUD", cents: 1000 }], [], "2026-10-23", "2026-10-29", "AUD");
   assert.equal(recent.find((r) => r.key === "rc")?.net, 300);
+});
+
+test("SportsCardCompare's Vercel project (waxcompare) and a hand-entered domain land on its row", () => {
+  assert.equal(siteForProject("waxcompare"), "wax");
+  assert.equal(siteForLabel("sportscardcompare.com domain"), "wax");
+  assert.equal(siteForLabel("waxcompare Vercel add-on"), "wax");
+  assert.equal(siteForLabel("Reddit + Meta ads"), undefined);
+  const rows = siteLedger(
+    [],
+    [{ day: "2026-11-09", project: "waxcompare", currency: "AUD", cents: 300 }],
+    [{ day: "2026-11-09", currency: "AUD", cents: 1800, site: "wax" }, { day: "2026-11-09", currency: "AUD", cents: 500 }],
+    "2026-11-01",
+    "2026-11-09",
+    "AUD",
+  );
+  const wax = rows.find((r) => r.key === "wax")!;
+  assert.equal(wax.vercel, 300);
+  assert.equal(wax.other, 1800);
+  assert.equal(rows.find((r) => r.key === "shared")!.other, 500);
 });

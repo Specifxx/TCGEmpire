@@ -79,6 +79,19 @@ export const SITES: { key: string; label: string; project: RegExp }[] = [
 ];
 export const SHARED = "shared";
 
+// A hand-entered cost (a domain, a tool) belongs to a site when its label names it:
+// "sportscardcompare.com domain" is SportsCardCompare's, not the shared row's
+// (2026-11-09, owner: "the costs need to be updated for sportscardcompare").
+// Matches the site's name or its Vercel project name with spaces and punctuation
+// ignored; no match stays shared.
+const ALSO_NAMED: Record<string, string[]> = { wax: ["waxcompare"] };
+const squash = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "");
+export function siteForLabel(label: string): string | undefined {
+  const l = squash(label);
+  if (!l) return undefined;
+  return SITES.find((s) => [s.label, ...(ALSO_NAMED[s.key] ?? [])].some((n) => l.includes(squash(n))))?.key;
+}
+
 /** Which site a Vercel project belongs to; an unknown project keeps its own name, a team-wide charge is shared. */
 export function siteForProject(project: string): string {
   const p = project.trim().toLowerCase();
@@ -144,7 +157,7 @@ export function siteLedger(
     for (const d of s.days) if (inRange(d.day)) row(SOURCE_SITE[s.key] ?? SHARED).earned += cents(d);
   }
   for (const c of vercel) if (inRange(c.day)) row(siteForProject(c.project)).vercel += cents(c);
-  for (const d of otherCosts) if (inRange(d.day)) row(SHARED).other += cents(d);
+  for (const d of otherCosts) if (inRange(d.day)) row(d.site && SITES.some((x) => x.key === d.site) ? d.site : SHARED).other += cents(d);
   const out = [...rows.values()].map((r) => ({ ...r, net: r.earned - r.vercel - r.other }));
   const last = (k: string) => (k === SHARED ? 2 : k === "" ? 1 : 0);
   return out.sort((a, b) => last(a.key) - last(b.key) || b.net - a.net || a.label.localeCompare(b.label));

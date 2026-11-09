@@ -31,6 +31,7 @@ export interface DayAmount {
   currency: string; // ISO 4217, upper case
   cents: number; // earned (net of refunds and fees where the source reports them)
   pendingCents?: number; // the part not yet approved/locked (affiliate networks)
+  site?: string; // hand-entered costs only: the site key the entry's label names (lib/earnings/sites.ts siteForLabel)
 }
 
 export type SourceStatus = "ok" | "not-configured" | "error";
