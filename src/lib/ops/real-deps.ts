@@ -26,6 +26,8 @@ const opsDb = (): NonNullable<OpsDeps["db"]> => ({
   },
   featuredOldestPending: async () =>
     (await prisma.featuredSubmission.aggregate({ where: { status: "pending" }, _min: { createdAt: true } }))._min.createdAt,
+  sisterAdOldestPending: async () =>
+    (await prisma.sisterAd.aggregate({ where: { status: "pending" }, _min: { paidAt: true } }))._min.paidAt,
   ebayAdsNewest: async () => (await prisma.ebayAdListing.aggregate({ _max: { updatedAt: true } }))._max.updatedAt,
   storeHealthNewest: async () => (await prisma.storeHealthSnapshot.aggregate({ _max: { day: true } }))._max.day,
   inbox: getInboxCounts,

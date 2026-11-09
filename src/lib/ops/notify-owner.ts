@@ -19,7 +19,7 @@ import { inboxEmail } from "./owner";
 export const MAX_PER_HOUR = 8;
 export const MAX_PER_DAY = 25;
 
-export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate" | "creator-profile" | "store-plan" | "sister-alert";
+export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate" | "creator-profile" | "store-plan" | "sister-alert" | "sister-ad";
 
 export interface InboxItem {
   kind: InboxKind;
@@ -44,6 +44,7 @@ const LABEL: Record<InboxKind, string> = {
   "store-plan": "Stores plan purchase",
   // A new address set its first price alert on a sister site (lib/sister-alerts, 2026-11-02).
   "sister-alert": "Sister-site price alert",
+  "sister-ad": "Paid featured listing",
 };
 
 /** Where the email's button goes: creator applications are reviewed in /admin/affiliates, Stores plans linked in /admin/store-partners. */

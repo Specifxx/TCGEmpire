@@ -19,6 +19,7 @@ import {
 import { recordAffiliateCheckout, recordAffiliateCommission } from "@/lib/creator-affiliate";
 import { STORE_PLAN_PRICE_ID, isStorePlanSubscription, subscriptionIdOf, validateStoreName, validateStoreUrl } from "@/lib/store-plan";
 import { extendStorePlan, recordStorePlanStart } from "@/lib/store-plan-db";
+import { adAbandoned, adPaid } from "@/lib/sister-ads/server";
 import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 
 export const dynamic = "force-dynamic";
@@ -92,8 +93,16 @@ export async function POST(req: Request) {
         // this file. Premium for the buyer comes through stampFromSubscription,
         // the same path every renewal takes.
         if (session.metadata?.kind === "store") await storePlanStarted(session);
+        // A sister site's paid featured listing (lib/sister-ads/): the card is
+        // only authorised; the owner's approval captures it.
+        if (session.metadata?.kind === "sister_ad") await adPaid(session);
         // Store consulting ("store_consult") was retired on 2026-10-16
         // (DECISIONS.md, "Ten features nobody used"); no checkout creates one now.
+        break;
+      }
+      case "checkout.session.expired": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.metadata?.kind === "sister_ad") await adAbandoned(session);
         break;
       }
       // Premium renewals — see rule 1 above for why both invoice events.

@@ -324,6 +324,14 @@ export default function PrivacyPage() {
             address do we send it, one email a week for the region you picked, each with a link to stop
             it that deletes the subscription.
           </p>
+          <p id="sister-ads" className="scroll-mt-header">
+            <strong className="text-white">Featured listings on our sister sites.</strong> When you
+            buy a featured listing on a sister site, this service keeps the listing you typed (title,
+            link, photo address, price text, region and weeks) and your email address, so we can
+            review it, email you the result and show the approved listing. Your card details go to
+            Stripe, never to us. The listing text, link and photo are public while it runs; your
+            email address never is.
+          </p>
         </section>
 
         <section className="space-y-2">
