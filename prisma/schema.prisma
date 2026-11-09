@@ -2309,3 +2309,44 @@ model FeaturedSubmission {
   @@index([userId])
   @@index([status, endsAt])
 }
+
+// PAID FEATURED LISTINGS ON THE SISTER SITES (owner, 2026-11-09: "people pay
+// for a direct spot on the website via Stripe, $100 per featured listing per
+// week"). The sister sites have no database, so this service keeps the orders
+// (lib/sister-ads/). A seller submits a listing on the site's /advertise page,
+// pays through Stripe Checkout with the card only AUTHORISED (manual capture);
+// the owner approves it in /admin/sister-ads, which captures the payment and
+// sets the dates, or rejects it, which releases the card. The site draws the
+// live ones from /api/sister-ads/<site>. PRIVATE (email) except the ad fields
+// the feed publishes; never exported to data/public.
+model SisterAd {
+  id              String    @id @default(cuid())
+  /// the sister site's key in lib/sister-alerts/sites.ts ("dex")
+  site            String
+  /// awaiting_payment | pending | approved | rejected | cancelled
+  status          String    @default("awaiting_payment")
+  weeks           Int
+  amountCents     Int
+  title           String
+  blurb           String?
+  destUrl         String
+  imageUrl        String
+  /// free text the seller wants shown ("A$1,526", "from US$45"); never parsed
+  priceText       String?
+  /// US, UK, CA, AU, NZ, EU, SG or ALL
+  region          String
+  email           String
+  /// why it was rejected, in words the seller can read
+  reason          String?
+  stripeSessionId String?   @unique
+  paymentIntentId String?
+  /// set on approval; the ad shows from startsAt to endsAt
+  startsAt        DateTime?
+  endsAt          DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([site, status, endsAt])
+  @@index([status, createdAt])
+}

@@ -23040,3 +23040,25 @@ entry. Clicks are real and hands-off: `/api/cron/earnings-refresh` asks Vercel's
 grouped by `eventData/<key>` (retailer, placement, host, surface, source), keeps the rows naming Amazon per site
 (largest key per project, never a sum) in `earnings:amazon-clicks`, and /admin/earnings shows 7 and 30 days.
 Analytics under-counts visitors who decline consent. `src/lib/earnings/amazon-clicks.ts`.
+
+## 2026-11-09 — Paid featured listings on the sister sites (DexCompare first), US$100 a week
+
+Owner: "people pay for a direct spot on the website via Stripe, $100 per featured listing per week", pointing at
+"any website or eBay or etc.". The sister sites have no database or mail key, so this service keeps the orders, as it
+does the price alerts (2026-11-02).
+
+- **Flow.** The site's `/advertise` page posts to `/api/sister-ads` (exact-origin CORS, rate limited). The route saves a
+  `SisterAd` row and returns a Stripe Checkout URL: one-off payment, US$100 × 1 to 4 weeks, built from `price_data` so no
+  Price object has to exist, on the SAME Stripe account and webhook as Premium (`kind: "sister_ad"` metadata).
+- **Authorised, not charged, until approved.** `capture_method: "manual"`: `checkout.session.completed` marks the order
+  pending and emails the owner (`notifyOwnerBounded`); `/admin/sister-ads` Approve captures the payment and sets the dates,
+  Reject cancels the hold (the seller is never charged for a refused ad). A card hold lasts seven days, so the ops check
+  `ads:pending` warns at 3 days and goes red at 5.
+- **Any destination, screened by a person.** The link and photo only have to be public https addresses (`cleanUrl`: no
+  credentials, ports, IPs or single-label hosts). Everything else is the owner's review before anything shows: no scams,
+  counterfeits, adult goods, malware or anything illegal. Text is drawn as plain text; the link is `rel="sponsored nofollow noopener"`.
+- **Dates are automatic.** Approval sets `startsAt` (now, or when the earliest of the site's three slots frees) and `endsAt`
+  (weeks later). The site's banner filters by those dates in the browser, so an ad ends on time whatever the CDN holds; the
+  public feed `/api/sister-ads/<site>` is cached six hours, so a new ad appears within about six hours of approval.
+- **Honest label.** Banner reads "Featured listing", "Paid link", "Not part of the comparison"; it never enters a ranking,
+  a best price, a deal or an alert. Private data (the seller's email) never leaves the service.

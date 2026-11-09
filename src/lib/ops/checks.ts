@@ -312,6 +312,27 @@ export async function ebayData(d: OpsDeps): Promise<CheckResult[]> {
       out.push(unknown(d, "ebay:featured", "ebay", "Members' featured listings", `Could not read it (${msg(e)}).`));
     }
   }
+  if (d.db.sisterAdOldestPending) {
+    try {
+      // A paid featured listing holds the seller's card for seven days; past
+      // that Stripe releases it and the sale is lost. Warn at 3 days, red at 5.
+      const at = await d.db.sisterAdOldestPending();
+      const h = at ? hoursSince(at, d.now) : null;
+      const sev = h == null ? "ok" : ageSeverity(h, 72, 120);
+      out.push(
+        result(d, {
+          id: "ads:pending",
+          area: "money",
+          title: "Paid featured listings awaiting approval",
+          severity: sev,
+          summary: h == null ? "None waiting." : `Oldest paid listing waiting for approval: ${humanAge(h)}.`,
+          action: sev === "ok" ? undefined : "A seller has paid for a featured listing and is waiting. Open riftcompare.com/admin/sister-ads and approve or reject it before the card hold expires at 7 days.",
+        }),
+      );
+    } catch (e) {
+      out.push(unknown(d, "ads:pending", "money", "Paid featured listings awaiting approval", `Could not read it (${msg(e)}).`));
+    }
+  }
   try {
     const at = await d.db.ebayAdsNewest();
     const h = hoursSince(at, d.now);

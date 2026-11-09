@@ -34,6 +34,8 @@ export interface OpsDeps {
     ebayAdsNewest(): Promise<Date | null>;
     /** Members' featured listings (lib/featured/): the oldest still waiting for its eBay check. Optional: older deps lack it. */
     featuredOldestPending?(): Promise<Date | null>;
+    /** Sister sites' paid featured listings (lib/sister-ads/): the oldest paid one still waiting for the owner's approval. Optional. */
+    sisterAdOldestPending?(): Promise<Date | null>;
     storeHealthNewest(): Promise<Date | null>;
     inbox(): Promise<InboxCounts>;
     /** Stores plans (lib/store-plan.ts): how many exist, and the paid ones not yet linked to a tracked store. */
