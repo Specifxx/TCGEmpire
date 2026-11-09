@@ -23062,3 +23062,8 @@ does the price alerts (2026-11-02).
   public feed `/api/sister-ads/<site>` is cached six hours, so a new ad appears within about six hours of approval.
 - **Honest label.** Banner reads "Featured listing", "Paid link", "Not part of the comparison"; it never enters a ranking,
   a best price, a deal or an alert. Private data (the seller's email) never leaves the service.
+
+
+## 2026-11-09 — TokyoToys (UK) added for Riftbound
+
+TokyoToys (tokyotoys.com, Shopify, GBP, UK mainland delivery only; vetted for Cyberpunk Compare, see its DECISIONS.md) lists Riftbound sealed through its `riftbound-league-of-legends-tcg` collection (read by hand 2026-11-09, items in stock with tracked inventory). UK market only. Its titles carry a "RELEASE <date>:" prefix. Dex and MTG Compare already list it; One Piece, Pokemon (English) and Union Arena / Digimon / Fusion World sealed are not stocked, so those sites do not.
