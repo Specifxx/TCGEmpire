@@ -322,6 +322,46 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/blog", label: "Blog" },
 ];
 
+// The header's dropdown menus (HeaderMegaMenu.tsx, from 1440px; owner 2026-11-09). Picked BY HREF from NAV_GROUPS, with the link's
+// own label, so a rename or removal there reaches the header, rail, phone menu and launcher together; a href that is no longer
+// in NAV_GROUPS throws at import (tests/header-menus.test.ts). 7 top-level items or fewer in the header row.
+export interface HeaderMenu {
+  label: string;
+  columns: { title: string; links: { href: string; label: string }[] }[];
+}
+const ALL_NAV_LINKS = NAV_GROUPS.flatMap((g) => g.links);
+function pick(...hrefs: string[]): { href: string; label: string }[] {
+  return hrefs.map((href) => {
+    const l = ALL_NAV_LINKS.find((x) => x.href === href);
+    if (!l) throw new Error(`HEADER_MENUS: ${href} is not in NAV_GROUPS`);
+    return { href: l.href, label: l.label };
+  });
+}
+export const HEADER_MENUS: HeaderMenu[] = [
+  {
+    label: "Singles",
+    columns: [
+      { title: "Browse cards by", links: pick("/sets", "/domains", "/champions", "/cards") },
+      { title: "Find a card", links: pick("/browse", "/price-guide", "/cards/all", "/gallery", "/graded") },
+    ],
+  },
+  {
+    label: "Sealed",
+    columns: [
+      { title: "Boxes & packs", links: pick("/sealed", "/singles") },
+      { title: "Sets & pre-orders", links: pick("/sets/radiance", "/legacy-preorders", "/release-dates") },
+      { title: "Opening product", links: pick("/tools/box-ev", "/tools/pull-tracker/radiance") },
+    ],
+  },
+  {
+    label: "Deals & market",
+    columns: [
+      { title: "Market", links: pick("/market", "/movers", "/auctions") },
+      { title: "Deals", links: pick("/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand") },
+    ],
+  },
+];
+
 // The footer's own grouping — 4 columns instead of NAV_GROUPS' 8-9. Same links,
 // same hrefs (every one still reachable, still counted for internal linking),
 // just re-bucketed by theme so the footer doesn't need a column per nav group.

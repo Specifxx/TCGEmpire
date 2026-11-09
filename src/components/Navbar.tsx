@@ -12,6 +12,8 @@ import { BrandLogo } from "./BrandLogo";
 import { HeaderMenuButton } from "./HeaderMenuButton";
 import { HeaderWatchButton } from "./HeaderWatchButton";
 import { CartHeaderLink } from "./cart/CartHeaderLink";
+import { HeaderMegaMenu } from "./HeaderMegaMenu";
+import { HEADER_MENUS } from "./nav-groups";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -262,7 +264,10 @@ export function Navbar() {
               gives every other control. 20px line + 28px padding = 48px on
               touch; a mouse keeps the 36px row. The row is h-16, so the header
               height does not change. */}
-          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
+          {/* DROPDOWNS FROM 1440px (owner, 2026-11-09): Singles, Sealed, Deals & market (HeaderMegaMenu, built from NAV_GROUPS). At lg the
+              row has no slack, so the plain Sealed link stays there: complementary gates (lg:block min-[1440px]:hidden / hidden min-[1440px]:flex). */}
+          <HeaderMegaMenu menus={HEADER_MENUS} className="hidden min-[1440px]:flex" />
+          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 min-[1440px]:hidden [@media(pointer:coarse)]:py-3.5">
             Sealed
           </Link>
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">

@@ -855,6 +855,8 @@ longer lands on its entry.
 
 ## Navigation & chrome
 
+- **Header dropdowns (2026-11-09, owner):** Singles, Sealed, Deals & market from 1440px, picked by href from `NAV_GROUPS`
+  (`HEADER_MENUS`), links in server HTML; the plain Sealed link below that. [2026-11-09](../DECISIONS.md#L23088)
 - **Desktop rail:** 17rem from 1024px, always expanded (the collapse mode was
   deleted on 09-21). Group headers are disclosures; Prices and Guides & News
   (the second group) open on a first visit, because a collapsed group renders
