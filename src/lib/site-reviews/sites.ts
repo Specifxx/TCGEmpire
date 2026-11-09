@@ -23,6 +23,7 @@ export type SisterReviewSiteKey =
   | "figure"
   | "kaeyoung"
   | "scentcompare"
+  | "wax"
   | "cam"
   | "compareempire";
 
@@ -48,6 +49,7 @@ export const SISTER_REVIEW_SITES: SisterReviewSite[] = [
   { key: "figure", name: "FigureCompare", url: "https://figurecompare.com" },
   { key: "kaeyoung", name: "KaeYoung", url: "https://kaeyoung.com" },
   { key: "scentcompare", name: "ScentCompare", url: "https://scentcompare.app" },
+  { key: "wax", name: "SportsCardCompare", url: "https://sportscardcompare.com" },
   { key: "cam", name: "CamCompare", url: "https://www.camcompare.app" },
   { key: "compareempire", name: "Compare Empire", url: "https://compareempire.com" },
 ];

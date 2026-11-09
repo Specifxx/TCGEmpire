@@ -19,7 +19,7 @@ const ORIGINS = [
   "https://riftcompare.com", "https://dexcompare.app", "https://opcompare.app", "https://mtgcompare.app",
   "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://cyberpunkcompare.com",
   "https://bandaicompare.com", "https://www.camcompare.app", "https://compareempire.com", "https://wargamecompare.com",
-  "https://figurecompare.com", "https://kaeyoung.com", "https://scentcompare.app", "https://riftboundstocks.com",
+  "https://figurecompare.com", "https://kaeyoung.com", "https://scentcompare.app", "https://sportscardcompare.com", "https://riftboundstocks.com",
 ];
 const ONLY = (process.env.ONLY ?? "").split(",").map((x) => x.trim()).filter(Boolean);
 
