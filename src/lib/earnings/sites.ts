@@ -70,6 +70,7 @@ export const SITES: { key: string; label: string; project: RegExp }[] = [
   { key: "figure", label: "FigureCompare", project: /figure/ },
   { key: "ky", label: "KaeYoung", project: /kaeyoung|kyoung|k-young/ },
   { key: "sc", label: "ScentCompare", project: /scent/ },
+  { key: "wax", label: "SportsCardCompare", project: /waxcompare|sportscard/ },
   { key: "cc", label: "CamCompare", project: /cam/ },
   { key: "ce", label: "Compare Empire", project: /compareempire|compare-empire/ },
   { key: "cyberpunk", label: "Cyberpunk Compare", project: /cyberpunk/ },

@@ -80,6 +80,7 @@ export const HQ_SITES: HqSite[] = [
   { key: "figure", label: "FigureCompare", url: "https://figurecompare.com", host: "figurecompare.com", repo: "figurecompare", tags: ["figure"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   { key: "ky", label: "KaeYoung", url: "https://kaeyoung.com", host: "kaeyoung.com", repo: "kaeyoung", tags: ["ky"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   { key: "sc", label: "ScentCompare", url: "https://scentcompare.app", host: "scentcompare.app", repo: "scentcompare", tags: ["sc"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
+  { key: "wax", label: "SportsCardCompare", url: "https://sportscardcompare.com", host: "sportscardcompare.com", repo: "waxcompare", tags: ["wax"], monitor: null },
   {
     key: "cc",
     label: "CamCompare",
