@@ -69,6 +69,8 @@ export interface CheckoutParamsInput {
   surface?: string | null;
   /** A sanitized on-site path to return to. */
   back?: string | null;
+  /** A sister site's own absolute success and cancel URLs (lib/sister-premium.ts): fixed per site, never from the request. */
+  returnUrls?: { success: string; cancel: string } | null;
   /**
    * Stripe Adaptive Pricing: show and charge the price in the buyer's own
    * currency. Stripe's payment report of 2026-10-12 showed an Australian member's
@@ -199,8 +201,8 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
     // Stripe substitutes the real session id on the redirect. The welcome page
     // re-reads that session and checks it belongs to the viewer before showing
     // anything (entitlement itself still comes from the webhook).
-    success_url: `${SITE_URL}/premium/welcome?session_id={CHECKOUT_SESSION_ID}${i.back ? `&back=${encodeURIComponent(i.back)}` : ""}`,
-    cancel_url: `${SITE_URL}${i.back ?? "/premium"}`,
+    success_url: i.returnUrls?.success ?? `${SITE_URL}/premium/welcome?session_id={CHECKOUT_SESSION_ID}${i.back ? `&back=${encodeURIComponent(i.back)}` : ""}`,
+    cancel_url: i.returnUrls?.cancel ?? `${SITE_URL}${i.back ?? "/premium"}`,
     // Stripe refuses `discounts` together with allow_promotion_codes, so a
     // checkout carrying the intro offer or a creator code takes no second code;
     // everyone else can still enter one (a creator code typed there works too).

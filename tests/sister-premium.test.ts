@@ -79,3 +79,23 @@ test("the sign-in redirect fixes its destination and keeps the token in the frag
   assert.match(s, /\$\{site\.url\}\/premium\/return#t=/);
   assert.doesNotMatch(s, /searchParams|return=|next=\$\{.*req/);
 });
+
+test("sign-in on the sister site: an email-link code is its own kind, for its own site, and never a session", async () => {
+  const { signEmailLinkCode, verifyEmailLinkCode, signPremiumSession, verifyPremiumSession, premiumSite, emailLinkUrl, googleClientIdFor } = await import("../src/lib/sister-premium");
+  const dex = premiumSite("dex")!;
+  const code = await signEmailLinkCode(dex, "a@b.com");
+  assert.equal(await verifyEmailLinkCode(code, dex), "a@b.com");
+  assert.equal(await verifyPremiumSession(code, dex), null, "a link code is not a session");
+  const sess = await signPremiumSession(dex, "a@b.com");
+  assert.equal(await verifyEmailLinkCode(sess, dex), null, "a session is not a link code");
+  assert.equal(await verifyEmailLinkCode(code, { ...dex, url: "https://evil.example" }), null);
+  assert.match(emailLinkUrl(dex, code), /^https:\/\/dexcompare\.app\/account\/verify#c=/);
+  assert.equal(googleClientIdFor(dex, {}), null);
+  assert.equal(googleClientIdFor(dex, { DEX_GOOGLE_CLIENT_ID: " abc.apps.googleusercontent.com " }), "abc.apps.googleusercontent.com");
+});
+
+test("a Google credential that is not a Google-signed token is refused", async () => {
+  const { verifyGoogleCredential } = await import("../src/lib/sister-premium");
+  assert.equal(await verifyGoogleCredential("x".repeat(200), "abc.apps.googleusercontent.com"), null);
+  assert.equal(await verifyGoogleCredential(42, "abc"), null);
+});

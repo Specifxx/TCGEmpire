@@ -23268,3 +23268,15 @@ Not reached: the review's 350 KB home and 250 KB card page. What is left is stru
 module references (one `I[...]` row per client component, each listing its chunks), the layout's 31 KB, and the card
 page's six-market rows (79 KB, needed because the page is one market-neutral cached copy). The next cut is fewer client
 islands on the card page and the home carousels' tiles drawn on the server.
+
+## 2026-11-10: DexCompare signs in on DexCompare (owner)
+
+Owner, after trying it: "I don't want them to go into the RiftCompare website to sign in, because that's very dodgy. It needs to be sign
+in via DexCompare." The hand-off through `/sister-premium/dex` stays for old links, but DexCompare now signs members in on its own pages
+and its browser calls `/api/sister-premium/sign-in`: Google's own button (Google Identity Services gives the page an ID token for
+DexCompare's OAuth client, `DEX_GOOGLE_CLIENT_ID`, a public id; we verify it against Google's published keys, so a token minted for
+another app is refused) or a 20-minute email link mailed from DexCompare's sender. Either proves the address, and `memberFor` finds,
+links or creates the ordinary RiftCompare account, so Stripe, `isPremium` and the admin Accounts › DexCompare tab see one member.
+Checkout (`/api/sister-premium/checkout`) and billing (`/portal`) are opened for that account from DexCompare too, returning to
+dexcompare.app; the member sees Stripe's page and never riftcompare.com. Nothing secret lives on DexCompare: the session token is
+signed with the sister key and re-read on every call, as before.
