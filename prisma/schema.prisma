@@ -1016,6 +1016,21 @@ model SisterAlert {
   @@index([lastNotifiedAt])
 }
 
+// A RiftCompare account that signed in through a sister site's Premium door
+// (/sister-premium/<site>, 2026-11-10). Sister sites hold no accounts, so this
+// is the only record of "who uses DexCompare as a member": first and latest
+// hand-off, nothing else. Powers the admin Accounts page's DexCompare tab.
+// PRIVATE, never exported.
+model SisterMember {
+  email         String
+  site          String
+  firstLinkedAt DateTime @default(now())
+  lastLinkedAt  DateTime @default(now())
+
+  @@id([email, site])
+  @@index([site])
+}
+
 // THE WEEKLY "BIGGEST DROPS" EMAIL for a sister site (2026-11-08, owner: build
 // the competitor scan's gaps). Opt-in only, from an unticked box on the alert
 // form or a button on the manage page, and it rides the address's double
