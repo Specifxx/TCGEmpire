@@ -17,7 +17,8 @@ export async function DexTab() {
   let data: Awaited<ReturnType<typeof loadSisterAccounts>> | null = null;
   try {
     data = await loadSisterAccounts("dex");
-  } catch {
+  } catch (e) {
+    console.error("DexTab: loadSisterAccounts failed", e);
     data = null;
   }
   if (!data) {

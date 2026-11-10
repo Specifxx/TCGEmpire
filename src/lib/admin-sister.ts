@@ -76,7 +76,7 @@ export function summarise(rows: SisterRow[], now: Date): SisterSummary {
 export async function loadSisterAccounts(site: string, now: Date = new Date()): Promise<{ rows: SisterRow[]; summary: SisterSummary; truncated: boolean }> {
   const [members, alertGroups, addresses] = await Promise.all([
     prisma.sisterMember.findMany({ where: { site }, select: { email: true, firstLinkedAt: true, lastLinkedAt: true }, take: 5000 }).catch(() => []),
-    prisma.sisterAlert.groupBy({ by: ["email"], where: { site }, _count: { _all: true }, _min: { createdAt: true }, take: 5000 }),
+    prisma.sisterAlert.groupBy({ by: ["email"], where: { site }, _count: { _all: true }, _min: { createdAt: true }, orderBy: { email: "asc" }, take: 5000 }),
     prisma.sisterAlertAddress.findMany({ where: { confirmedAt: { not: null } }, select: { email: true }, take: 20000 }),
   ]);
   const confirmed = new Set(addresses.map((a) => a.email));
