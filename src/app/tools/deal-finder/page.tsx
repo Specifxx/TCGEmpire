@@ -155,7 +155,7 @@ const DEAL_FAQS = [
   },
   {
     q: "Does the price include postage?",
-    a: "Store prices are the item price only, because most shops quote postage at checkout and we never guess it. eBay rows include the postage the seller states and are marked delivered. When a seller states none, the row reads eBay + postage and, like a store's price, is compared and ranked on the item price alone, so the real cost is higher than the figure shown; a listing with stated postage is shown instead whenever its delivered price is no higher. On Underpriced vs eBay that means the real gap is smaller than shown by the store's own postage. In Canada the eBay rows are US listings with international postage on top, so they are left out of the default list and there is no eBay comparison at all.",
+    a: "Store prices are the item price only, because most shops quote postage at checkout and we never guess it. eBay rows include the postage the seller states and are marked delivered. When a seller states none, the row reads eBay + postage and, like a store's price, is compared and ranked on the item price alone, so the real cost is higher than the figure shown; a listing with stated postage is shown instead whenever its delivered price is no higher. On Underpriced vs eBay that means the real gap is smaller than shown by the store's own postage.",
   },
   {
     q: "Is a big gap always a good deal?",
@@ -543,18 +543,10 @@ function MineChips({ params, mine, count, capped }: { params: DealFinderParams; 
   );
 }
 
-// Canada (or a market with no eBay feed): say why there is no eBay list at all,
-// rather than "nothing today", which would imply there sometimes is.
-function NoEbayComparison({ place, country }: { place: string; country: Country }) {
-  if (country === "CA") {
-    return (
-      <>
-        There is no eBay comparison for Canada. The eBay listings we track for Canadian buyers are US listings with
-        international postage on top that no seller has quoted, so we can&apos;t honestly say one costs more or less than a
-        Canadian store.
-      </>
-    );
-  }
+// A market with no eBay feed: say why there is no eBay list at all, rather than
+// "nothing today", which would imply there sometimes is. (Canada had its own
+// message here until 2026-11-10, when its eBay rows became eBay Canada listings.)
+function NoEbayComparison({ place }: { place: string; country: Country }) {
   return <>We don&apos;t track eBay listings in {place} yet, so there is nothing to compare against.</>;
 }
 

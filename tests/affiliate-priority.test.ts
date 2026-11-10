@@ -2,7 +2,7 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
-  orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS,
+  orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS, EBAY_WEEKLY_MARKETS,
 } from "../src/lib/price-import";
 import {
   pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer, EBAY_CA_RETAILER,
@@ -603,7 +603,16 @@ const AUCTION_CALLS_PER_DAY = AUCTION_MARKETS.length * AUCTION_PAGE_CAP * AUCTIO
 // that list is now empty, and `day < EBAY_ROTATING_MARKETS.length` would run
 // every loop below ZERO times and pass vacuously — the tests would still be
 // green while asserting nothing at all.
-const CYCLE_DAYS = Math.max(EBAY_ALWAYS_MARKETS.length, EBAY_ROTATING_MARKETS.length, 1) * 2;
+// Two whole weeks since 2026-11-10: Singapore is searched one day in seven, so a
+// shorter cycle could miss it (or see it once and never check it comes back).
+const CYCLE_DAYS = Math.max(14, Math.max(EBAY_ALWAYS_MARKETS.length, EBAY_ROTATING_MARKETS.length, 1) * 2);
+// The keyset is SHARED with MTG Compare, which caps itself at 1,500 a day
+// (mtgcompare's EBAY_DAILY_CAP; DECISIONS.md 2026-11-10). Rift's day must fit in
+// what that share leaves, not in the whole 4,400.
+const MTG_SHARE = 1500;
+const RIFT_SPENDABLE = SPENDABLE - MTG_SHARE;
+const isRotatingOrWeekly = (c: string) =>
+  [...EBAY_ROTATING_MARKETS, ...EBAY_WEEKLY_MARKETS].some((m) => m.country === c);
 
 /**
  * Browse calls for one whole DAY, not one pass.
@@ -641,10 +650,11 @@ function dailyCalls(day: number): number {
   return Math.round(singles * (1 + RETRY_RATE)) + sealed + AUCTION_CALLS_PER_DAY;
 }
 
-test("a whole day of eBay passes fits inside the Browse budget", () => {
+test("a whole day of eBay passes fits inside the Browse budget, beside MTG Compare's share", () => {
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const calls = dailyCalls(day);
     assert.ok(calls <= SPENDABLE, `day ${day}: ${calls} calls exceeds the ${SPENDABLE} budget`);
+    assert.ok(calls <= RIFT_SPENDABLE, `day ${day}: ${calls} calls leaves MTG Compare less than its ${MTG_SHARE}`);
   }
 });
 
@@ -692,9 +702,10 @@ test("a day's markets fit inside the job timeout", () => {
 test("the rotation exists because every market daily does NOT fit", () => {
   // The history, because the design keeps being re-litigated: UK and SG were
   // demoted to a rotation on 2026-08-03 (4 × the full catalogue did not fit),
-  // promoted back on 2026-08-08 (the value floor — $20, then $10, now $5, all on
-  // 2026-08-20, see CATALOGUE above — shrank the searched set), and rotated again
-  // on 2026-08-23 when the EU market made five.
+  // promoted back on 2026-08-08 (the value floor shrank the searched set), and
+  // rotated again on 2026-08-23 when the EU market made five. On 2026-11-10
+  // (owner) Canada became a real daily market and Singapore, where the eBay
+  // Partner Network pays nothing, dropped to one day in seven.
   //
   // The floor constraint has not gone away, and is asserted first: without it
   // even four markets stop fitting.
@@ -702,39 +713,16 @@ test("the rotation exists because every market daily does NOT fit", () => {
     4 * FULL_CATALOGUE > SPENDABLE,
     "4 markets × the FULL catalogue should still not fit — that constraint has not gone away",
   );
-  // ── WHAT THE ROTATION ACTUALLY BUYS, STATED HONESTLY ──────────────────────
-  // Not "every market daily would not fit". At the constants above it WOULD —
-  // ~78% of budget — and asserting otherwise would be a comfortable lie that
-  // this file would then enforce. What the rotation buys is HEADROOM, and the
-  // reason headroom is worth staleness is that CATALOGUE is understated: it is a
-  // $10-floor measurement, the floor has since dropped to $5, and a set launch
-  // inflates the searched set further because a new set's cards have no
-  // TCGplayer price and "unknown ≠ cheap" keeps all of them.
-  //
-  // So assert the two things that are actually true and worth pinning: the
-  // rotation is load-bearing (it materially reduces the day), and the day it
-  // produces sits far enough inside budget that the understatement above cannot
-  // quietly eat it.
-  const everyMarket = EBAY_ALWAYS_MARKETS.length + EBAY_ROTATING_MARKETS.length;
-  const scheduled = EBAY_ALWAYS_MARKETS.length + Math.min(1, EBAY_ROTATING_MARKETS.length);
-  assert.ok(
-    everyMarket > scheduled,
-    "no market is on a rotation — delete this test and the rotation, or restore one",
-  );
+  // What the rotation buys is headroom on a keyset MTG Compare shares. Every
+  // market daily (six) would be ~3,900 calls, past what MTG's 1,500 leaves; four
+  // a day (US, AU, CA and one of UK/EU/SG) fits inside it.
+  const everyMarket = EBAY_ALWAYS_MARKETS.length + EBAY_ROTATING_MARKETS.length + EBAY_WEEKLY_MARKETS.length;
+  const scheduled = EBAY_ALWAYS_MARKETS.length + Math.min(1, EBAY_ROTATING_MARKETS.length + EBAY_WEEKLY_MARKETS.length);
+  assert.ok(everyMarket > scheduled, "no market is on a rotation — delete this test and the rotation, or restore one");
   const cost = (markets: number) =>
     Math.round(markets * (CATALOGUE + CHASE_PRINTINGS) * (1 + RETRY_RATE)) + SEALED_PER_RUN;
-  assert.ok(
-    cost(scheduled) < cost(everyMarket) * 0.8,
-    `the rotation saves too little to be worth its staleness: ${cost(scheduled)} vs ${cost(everyMarket)}`,
-  );
-  // Half the budget is the headroom the staleness is being traded for. If a
-  // growing catalogue pushes the ROTATED day past this, the rotation has stopped
-  // providing what it was chosen for and the floor/reserve need revisiting —
-  // fail here rather than discover it as a truncated market in production.
-  assert.ok(
-    cost(scheduled) <= SPENDABLE / 2,
-    `a rotated day costs ~${cost(scheduled)} of ${SPENDABLE} — past half the budget the rotation is no longer buying headroom`,
-  );
+  assert.ok(cost(everyMarket) > RIFT_SPENDABLE, `six daily markets (${cost(everyMarket)}) would fit beside MTG — revisit the rotation`);
+  assert.ok(cost(scheduled) <= RIFT_SPENDABLE, `a rotated day costs ~${cost(scheduled)}, past the ${RIFT_SPENDABLE} MTG's share leaves`);
 });
 
 test("the always-markets refresh every single day", () => {
@@ -755,12 +743,25 @@ test("every rotating market comes round, and only one runs per day", () => {
   const seen = new Set<string>();
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
-    const rotating = codes.filter((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
+    const rotating = codes.filter(isRotatingOrWeekly);
     assert.ok(rotating.length <= 1, `day ${day}: ${rotating.length} rotating markets scheduled at once`);
     rotating.forEach((c) => seen.add(c));
   }
-  for (const m of EBAY_ROTATING_MARKETS) {
+  for (const m of [...EBAY_ROTATING_MARKETS, ...EBAY_WEEKLY_MARKETS]) {
     assert.ok(seen.has(m.country), `${m.country} never comes round in ${CYCLE_DAYS} days`);
+  }
+});
+
+test("Singapore is searched exactly one day in seven; UK and EU share the other six", () => {
+  // Owner, 2026-11-10: EPN has no Singapore programme (1,262 visitors, one sale,
+  // A$0.00 in 30 days), so SG gave its daily-rotation share to Canada.
+  for (let week = 0; week < 4; week++) {
+    const days = Array.from({ length: 7 }, (_, i) => ebayMarketsForDay(week * 7 + i).map((m) => m.country));
+    assert.equal(days.filter((d) => d.includes("SG")).length, 1, `week ${week}: SG must run exactly once`);
+    for (const d of days) {
+      assert.equal(d.filter((c) => c === "UK" || c === "EU" || c === "SG").length, 1, `one of UK/EU/SG a day, got ${d.join("→")}`);
+    }
+    assert.ok(days.filter((d) => d.includes("UK")).length >= 3 && days.filter((d) => d.includes("EU")).length >= 3);
   }
 });
 
@@ -788,7 +789,7 @@ test("the rotating market is never the one dropped", () => {
   if (EBAY_ROTATING_MARKETS.length === 0) return; // nothing to order
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
-    const rotatingAt = codes.findIndex((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
+    const rotatingAt = codes.findIndex(isRotatingOrWeekly);
     // Since 2026-11-01 the US searches first (owner: "prioritise the US"); the
     // rotating market comes straight after it, ahead of every other daily market.
     const usFirst = EBAY_ALWAYS_MARKETS.some((m) => m.country === "US") ? 1 : 0;
@@ -814,7 +815,7 @@ test("the US searches first every day; the other daily markets share the last sl
     if (m.country === "US") assert.ok(!trailers.has("US"), "the US must never sit last");
     else assert.ok(trailers.has(m.country), `${m.country} never sits last — every other daily market carries its risk`);
   }
-  for (const m of EBAY_ROTATING_MARKETS) {
+  for (const m of [...EBAY_ROTATING_MARKETS, ...EBAY_WEEKLY_MARKETS]) {
     assert.ok(!trailers.has(m.country), `${m.country} rotates but still sits last — see the test above`);
   }
 });
@@ -823,7 +824,7 @@ test("a day's market set is the same whichever order it is in", () => {
   // Rotating priority must not change WHICH markets run — only their order.
   // The rotation dropping or duplicating a market is the exact failure a naive
   // slice-based rotation produces on a negative or out-of-range index.
-  const expected = EBAY_ALWAYS_MARKETS.length + (EBAY_ROTATING_MARKETS.length > 0 ? 1 : 0);
+  const expected = EBAY_ALWAYS_MARKETS.length + (EBAY_ROTATING_MARKETS.length + EBAY_WEEKLY_MARKETS.length > 0 ? 1 : 0);
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country).sort();
     assert.equal(new Set(codes).size, codes.length, `day ${day}: duplicate market in ${codes.join(",")}`);
@@ -865,38 +866,38 @@ test("every market we search comes round, and none is ever skipped forever", () 
     for (const m of ebayMarketsForDay(day)) seen.add(m.country);
   }
   // Both lists, so this keeps working whether a market is daily or rotating.
-  for (const m of [...EBAY_ALWAYS_MARKETS, ...EBAY_ROTATING_MARKETS]) {
+  for (const m of [...EBAY_ALWAYS_MARKETS, ...EBAY_ROTATING_MARKETS, ...EBAY_WEEKLY_MARKETS]) {
     assert.ok(seen.has(m.country), `${m.country} never scheduled`);
   }
   // The four markets the site actually sells into. UK and SG were on a rotation
   // between 2026-08-03 and 2026-08-08 and were each ~48h stale by design; they
   // are daily again, and a silent demotion would show up here.
-  for (const c of ["AU", "US", "UK", "SG"]) {
+  for (const c of ["AU", "US", "UK", "SG", "CA", "EU"]) {
     assert.ok(seen.has(c), `${c} is not searched at all`);
   }
 });
 
-test("CANADA costs no quota — it is not a searched market", () => {
-  // CA reuses the US result set converted to CAD: eBay US ships to Canada, so
-  // the listings are substantially the same and a separate ~1,400-call pass for
-  // the smallest market is not worth the budget.
+test("CANADA is a real eBay Canada search every day, after the US (owner, 2026-11-10)", () => {
+  // It reused the US result set converted to CAD, postage blanked, until
+  // 2026-11-10. Canada is the site's second biggest country (2,413 visitors in
+  // 30 days); its rows are now ebay.ca listings from Canadian sellers.
   for (let day = 0; day < CYCLE_DAYS; day++) {
-    assert.ok(
-      !ebayMarketsForDay(day).some((m) => m.country === "CA"),
-      `day ${day} still searches eBay CA`,
-    );
+    const codes = ebayMarketsForDay(day).map((m) => m.country);
+    assert.ok(codes.includes("CA"), `day ${day} does not search eBay CA`);
+    assert.ok(codes.indexOf("US") < codes.indexOf("CA"), `day ${day}: the US must search before Canada`);
   }
-  assert.equal(EBAY_CA_RETAILER, "ebay_ca", "the derived rows must keep the existing retailer key");
+  const ca = EBAY_ALWAYS_MARKETS.find((m) => m.country === "CA")!;
+  assert.equal(ca.marketplace, "EBAY_CA");
+  assert.equal(ca.currency, "CAD");
+  assert.equal(EBAY_CA_RETAILER, "ebay_ca", "Canada keeps the existing retailer key every reader uses");
+  assert.equal(ca.retailer, EBAY_CA_RETAILER);
+  const src = readFileSync("src/lib/price-import.ts", "utf8");
+  assert.doesNotMatch(src, /retailerName: "eBay US"/, "the US-derived Canada rows must not come back beside the real search");
 });
 
-test("the derived CA rows are still real eBay rows for the comparison", () => {
-  // Unlike a converted TCGplayer reference, an eBay US listing genuinely ships
-  // to Canada, so it stays a buyable comparison row.
+test("Canada's eBay rows are real eBay rows for the comparison", () => {
   assert.equal(isFallbackRetailer(EBAY_CA_RETAILER), false);
-  const v = computeMarket(
-    [{ ...tcgRow("CA", EBAY_CA_RETAILER), retailerName: "eBay US", ship: null }],
-    "CA",
-  );
+  const v = computeMarket([{ ...tcgRow("CA", EBAY_CA_RETAILER), retailerName: "eBay", ship: 900 }], "CA");
   assert.equal(v.storeCount, 1);
   assert.equal(v.hasEbay, true, "hasEbay must still fire so the CA fallback search is suppressed");
 });

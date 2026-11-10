@@ -107,7 +107,7 @@ export function BrowseView({
                 postage comes in — the card list had none of it. Under the H1 by
                 the owner's brief; kept to two short paragraphs so the grid still
                 starts high on a phone. Written for the visitor's own market
-                (place, currency, and Canada's converted "eBay US" rows): the
+                (place and currency): the
                 baseline's words in the HTML, theirs after hydration
                 (BrowseMarketWord), so it costs no query and no cookie read. */}
             <div className="mt-2 max-w-2xl space-y-2 text-sm leading-relaxed text-slate-400">

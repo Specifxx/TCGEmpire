@@ -759,6 +759,17 @@ export interface EbayMarketCfg { country: string; marketplace: string; currency:
 export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
   { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
   { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
+  // ── CANADA IS A SEARCHED MARKET AGAIN, DAILY (owner, 2026-11-10) ───────────
+  // From 2026-08 until 2026-11-10 Canada's rows were the US results converted to
+  // CAD with postage blanked (see the note at the old write site in
+  // refreshEbayMarkets). The site-by-region review measured Canada as the site's
+  // second biggest country (2,413 visitors in 30 days, 127 eBay clicks) with no
+  // Canadian listing, no Canadian postage and no Canadian seller on any row.
+  // EBAY_CA returns ebay.ca listings in CAD from sellers who post to Canada, so
+  // the rows are local like every other market's. It reuses the `ebay_ca`
+  // retailer key (EBAY_CA_RETAILER), which sealed-import.ts already searches
+  // under, so every reader keeps working.
+  { country: "CA", marketplace: "EBAY_CA", currency: "CAD", retailer: EBAY_CA_RETAILER },
 ];
 
 /**
@@ -782,9 +793,29 @@ export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
  */
 export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [
   { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
-  { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
   { country: "EU", marketplace: "EBAY_ES", currency: "EUR", retailer: "ebay_eu" },
 ];
+
+/**
+ * Searched ONE day in seven, taking that day's rotating slot (owner, 2026-11-10).
+ *
+ * Singapore left the UK/SG/EU rotation the day Canada became a daily market. The
+ * eBay Partner Network has no Singapore programme: in the 30 days to 10 November
+ * Singapore sent 1,262 visitors, 73 eBay clicks and one sale, worth A$0.00 (see
+ * the SG reroute in ebay.ts). Its rows are kept fresh enough to compare, once a
+ * week, and the day it runs it REPLACES the UK/EU pick rather than adding a fifth
+ * market, so no day searches more markets than an ordinary one. UK and EU
+ * therefore alternate on the other six days: each about every second day, at
+ * worst three, fresher than the one-in-three they had before.
+ *
+ * The 7-day ebayAdListing sweep in refreshEbayMarkets is exactly one cycle, so a
+ * Singapore carousel row refreshed on its day is never swept before the next.
+ */
+export const EBAY_WEEKLY_MARKETS: EbayMarketCfg[] = [
+  { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
+];
+/** Which day of the 7-day cycle (dayIndex % 7) belongs to EBAY_WEEKLY_MARKETS. */
+export const EBAY_WEEKLY_DAY = 0;
 
 /**
  * The markets a run on `dayIndex` will search, IN THE ORDER IT WILL SEARCH THEM.
@@ -854,8 +885,17 @@ export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
   // `undefined` and append it, and the pass would crash on `mkt.marketplace`
   // rather than simply searching the always-markets.
   const r = EBAY_ROTATING_MARKETS.length;
-  if (r === 0) return always;
-  const today = EBAY_ROTATING_MARKETS[((dayIndex % r) + r) % r];
+  const w = EBAY_WEEKLY_MARKETS.length;
+  const weekDay = ((dayIndex % 7) + 7) % 7;
+  let today: EbayMarketCfg | undefined;
+  if (w > 0 && weekDay === EBAY_WEEKLY_DAY) {
+    // One weekly market per weekly day; with more than one they take turns week by week.
+    const week = Math.floor(dayIndex / 7);
+    today = EBAY_WEEKLY_MARKETS[((week % w) + w) % w];
+  } else if (r > 0) {
+    today = EBAY_ROTATING_MARKETS[((dayIndex % r) + r) % r];
+  }
+  if (!today) return always;
 
   // ── THE ROTATING MARKET GOES FIRST, NOT LAST (2026-08-23) ──────────────────
   // Appending it — the obvious reading of "always-markets, then today's extra" —
@@ -881,8 +921,8 @@ export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
 }
 
 // EBAY_CA_RETAILER moved to constants.ts (2026-08-20) so sealed-import.ts can
-// share it without an import cycle — see the note there. Rows here are still
-// derived from the US pass, not a separate search; see the write site below.
+// share it without an import cycle — see the note there. Since 2026-11-10 the
+// singles rows under it are a real EBAY_CA search (EBAY_ALWAYS_MARKETS).
 
 /**
  * Every Riftbound product a SHOPIFY store lists, de-duplicated across its
@@ -1010,11 +1050,16 @@ export async function refreshEbayMarkets(
   // take turns one per day, so a run searches 3 markets rather than 4 — LESS
   // than before EU existed. Each rotating market is at most ~72h stale, which is
   // the real cost of this design and the number to watch if a market's prices
-  // start looking wrong. CA still costs nothing: its rows are derived from the
-  // US pass and converted (see the write site below).
+  // start looking wrong.
+  //
+  // 2026-11-10 (owner): CA joined the daily markets as a real EBAY_CA search
+  // (it was derived from the US pass, at no cost) and SG dropped to one day in
+  // seven, in the rotating slot. A day is now FOUR markets: US, AU, CA and one of
+  // UK/EU/SG. The keyset is shared with MTG Compare (1,500 a day); the budget
+  // test models Rift's day against what is left after that share.
   const ALWAYS = EBAY_ALWAYS_MARKETS;
   const ROTATING = EBAY_ROTATING_MARKETS;
-  const ALL = [...ALWAYS, ...ROTATING];
+  const ALL = [...ALWAYS, ...ROTATING, ...EBAY_WEEKLY_MARKETS];
 
   // EBAY_ONLY_MARKET=SG restricts the pass to one marketplace (~1k calls) — used
   // for new-market rollouts, or to refresh a rotating market off-cycle. It bypasses
@@ -1041,6 +1086,9 @@ export async function refreshEbayMarkets(
         // ", alternate by Sydney day" with nothing named in front of it.
         (ROTATING.length
           ? `; ${ROTATING.map((m) => m.country).join("/")} one per day (each every ${ROTATING.length}d)`
+          : "") +
+        (EBAY_WEEKLY_MARKETS.length
+          ? `; ${EBAY_WEEKLY_MARKETS.map((m) => m.country).join("/")} once a week in that slot`
           : "") +
         `; use EBAY_ONLY_MARKET=<code> to refresh one off-cycle).`
     );
@@ -1195,42 +1243,14 @@ export async function refreshEbayMarkets(
       console.log(`eBay graded ${mkt.country}: ${gradedRows.length} slabs across ${queriedIds.length} cards (0 extra Browse calls).`);
     }
 
-    // ── CANADA IS DERIVED FROM THE US PASS, NOT SEARCHED ────────────────────
-    // eBay CA used to be its own marketplace query — a full ~1,400 extra Browse
-    // calls for the smallest market, on a budget that no longer covers even the
-    // markets we search. It is also the most redundant: eBay US ships to Canada
-    // as a matter of course (eBay International Shipping), so the listings a
-    // Canadian buyer sees substantially ARE the US ones.
-    //
-    // So CA now reuses the US result set, converted to CAD, at zero quota cost.
-    //
-    // Two honesty constraints, both load-bearing:
-    //   • shippingCents is NULLED. The figure eBay returned is US DOMESTIC
-    //     postage; a Canadian buyer pays international postage instead. null
-    //     means "unknown / at checkout" in the UI, which is true — carrying the
-    //     US number over would understate the delivered cost and make these rows
-    //     beat genuine Canadian listings they might well lose to.
-    //   • retailerName says "eBay US", so the row is visibly a cross-border buy
-    //     rather than a local one.
-    // Unlike the converted TCGplayer references (see ALL_FALLBACK_RETAILERS),
-    // this stays a REAL comparison row, because it is a real purchasable listing
-    // — the price is genuine and the item genuinely ships to Canada. What is
-    // unknown is the postage, and the UI already has a way to say that.
-    if (mkt.country === "US" && rows.length > 0 && !truncated) {
-      const caRows: Prisma.RetailerPriceCreateManyInput[] = rows.map((r) => ({
-        ...r,
-        retailer: EBAY_CA_RETAILER,
-        retailerName: "eBay US",
-        priceCents: Math.round((r.priceCents as number) * USD_TO.CAD),
-        shippingCents: null,
-        currency: "CAD",
-        country: "CA",
-      }));
-      await prisma.retailerPrice.deleteMany({ where: { retailer: EBAY_CA_RETAILER } });
-      await prisma.retailerPrice.createMany({ data: caRows });
-      written += caRows.length;
-      console.log(`eBay CA: ${caRows.length} rows derived from the US pass (0 extra Browse calls).`);
-    }
+    // ── CANADA USED TO BE DERIVED FROM THE US PASS HERE (until 2026-11-10) ───
+    // The US rows were copied to `ebay_ca`, converted to CAD with postage nulled
+    // and labelled "eBay US". Canada is now its own EBAY_CA search in
+    // EBAY_ALWAYS_MARKETS, written by this loop like every market. No derived
+    // fallback is kept: on a day Canada's pass does not complete, yesterday's
+    // real Canadian rows stay (the truncation guard above), which beats a
+    // converted US listing with unknown postage. Before Canada's first completed
+    // pass the last derived rows simply stay until it replaces them wholesale.
   }
   // Sweep carousel rows for cards this pass no longer covers.
   //

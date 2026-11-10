@@ -123,11 +123,11 @@ test("rankCheapestOnEbay: a genuinely cheaper eBay copy is listed, ranked by the
   assert.deepEqual(tie.map((r) => r.cardId), ["y", "x"]);
 });
 
-test("rankCheapestOnEbay: Canada is skipped — its eBay rows are US listings with unquoted postage", () => {
+test("rankCheapestOnEbay: Canada qualifies like every market since its eBay rows became eBay Canada listings (2026-11-10)", () => {
   const store = new Map([["a", 3000]]);
   const eb = new Map([["a", ebay({ cents: 1000, postageKnown: false })]]);
-  assert.equal(arb.rankCheapestOnEbay("AU", store, eb, []).length, 1, "the same input qualifies elsewhere");
-  assert.deepEqual(arb.rankCheapestOnEbay("CA", store, eb, []), []);
+  assert.equal(arb.rankCheapestOnEbay("AU", store, eb, []).length, 1);
+  assert.equal(arb.rankCheapestOnEbay("CA", store, eb, []).length, 1);
 });
 
 test("rankCheapestOnEbay: the 100-unit floor, the 50-unit gap and the 80% outlier guard", () => {
@@ -225,12 +225,8 @@ test("the row's store keys are exactly the default Deal Finder list's, so minByC
   }
 });
 
-test("Canada costs no read at all", async () => {
-  db.rows = [row({ cardId: "a", country: "CA", retailer: "ebay_ca", priceCents: 500 })];
-  db.calls = [];
-  assert.deepEqual(await arb.getCheapestOnEbay("CA"), []);
-  assert.deepEqual(db.calls, []);
-  assert.equal(arb.defaultBuySplit("CA").buyEbayKey, null, "ebay_ca is off the default list");
+test("Canada's eBay Canada rows are on the default list (2026-11-10)", () => {
+  assert.equal(arb.defaultBuySplit("CA").buyEbayKey, "ebay_ca");
 });
 
 test("getCheapestOnEbay end to end: one narrow detail query for at most `limit` cards", async () => {
@@ -277,9 +273,6 @@ test("getCheapestOnEbayFor: the row's verdict for the cards asked about, no top-
   assert.deepEqual([...found.keys()].sort(), ["c0", "c2"], "the same rule as the homepage row, whatever the cards' place in it");
   assert.deepEqual(found.get("c0"), { cardId: "c0", ebayCents: 2150, postageKnown: true, url: "https://www.ebay.com/itm/0", storeCents: 3000, gapCents: 850, ebayKey: "ebay_us" });
   assert.ok(!db.calls.some((c) => c.op === "card.findMany"), "no detail query: the snapshot already has its cards");
-  db.calls = [];
-  assert.equal((await arb.getCheapestOnEbayFor("CA", ["c0"])).size, 0, "Canada: nothing, and no read");
-  assert.deepEqual(db.calls, []);
   assert.equal((await arb.getCheapestOnEbayFor("US", [])).size, 0);
 });
 

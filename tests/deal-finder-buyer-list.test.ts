@@ -158,8 +158,8 @@ test("TCGplayer is a source outside Australia but never on the Deal Finder's buy
   }
 });
 
-test("Canada's eBay feed (US listings, postage unquoted) is off the default buy side but still selectable", () => {
-  assert.ok(!arb.defaultTcgBuyKeys("CA").includes("ebay_ca"));
+test("Canada's eBay feed (eBay Canada listings since 2026-11-10) is on the default buy side like every market's", () => {
+  assert.ok(arb.defaultTcgBuyKeys("CA").includes("ebay_ca"));
   assert.ok(arb.dealFinderSources("CA").some((s) => s.key === "ebay_ca" && s.isEbay));
   assert.ok(arb.defaultTcgBuyKeys("US").includes("ebay_us"), "elsewhere eBay stays in the default");
 });
@@ -187,14 +187,13 @@ test("unknown eBay postage is never counted as free, and never called delivered"
   assert.deepEqual(us.get("a"), { cents: 500, url: "u1", postageKnown: false });
   assert.deepEqual(us.get("b"), { cents: 650, url: "u2", postageKnown: true });
   assert.deepEqual(us.get("c"), { cents: 500, url: "u3", postageKnown: true }, "stated free postage IS known");
-  // Canada's rows are US listings: postage to Canada is never known.
-  assert.equal(arb.cheapestEbayByCard("CA", rows).get("b")?.postageKnown, false);
-  assert.equal(arb.cheapestEbayByCard("CA", rows).get("b")?.cents, 500, "compared on the item price there");
+  // Canada's rows are eBay Canada listings since 2026-11-10: stated postage counts there like anywhere.
+  assert.equal(arb.cheapestEbayByCard("CA", rows).get("b")?.postageKnown, true);
 
   assert.equal(arb.ebayBuyLabel("US", true), "eBay (delivered)");
   assert.equal(arb.ebayBuyLabel("US", false), "eBay + postage");
-  assert.equal(arb.ebayBuyLabel("CA", true), "eBay US + intl postage");
-  assert.equal(arb.ebayBuyLabel("CA", false), "eBay US + intl postage");
+  assert.equal(arb.ebayBuyLabel("CA", true), "eBay (delivered)");
+  assert.equal(arb.ebayBuyLabel("CA", false), "eBay + postage");
 });
 
 test("a listing with stated postage wins whenever its delivered price is no higher", async () => {

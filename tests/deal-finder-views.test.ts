@@ -182,11 +182,11 @@ test("rankUnderpricedVsEbay: the eBay figure and its postage flag are carried ex
   assert.deepEqual([by.u.ebay, by.u.postageKnown, by.u.below], [1800, false, 800], "no postage stated: the item price, flagged");
 });
 
-test("rankUnderpricedVsEbay: Canada is skipped — its eBay rows are US listings with unquoted postage", () => {
+test("rankUnderpricedVsEbay: Canada qualifies like every market since its eBay rows became eBay Canada listings (2026-11-10)", () => {
   const store = new Map([["a", 1000]]);
   const eb = new Map([["a", ebay(2000, false)]]);
-  assert.equal(arb.rankUnderpricedVsEbay("AU", store, eb).length, 1, "the same input qualifies elsewhere");
-  assert.deepEqual(arb.rankUnderpricedVsEbay("CA", store, eb), []);
+  assert.equal(arb.rankUnderpricedVsEbay("AU", store, eb).length, 1);
+  assert.equal(arb.rankUnderpricedVsEbay("CA", store, eb).length, 1);
 });
 
 test("the two eBay views can never both claim a card", () => {
@@ -239,12 +239,11 @@ test("getCheapestOnEbayPage: the whole ranking, paged, with ONE narrow detail qu
   assert.equal(p9.page, 2, "a page past the end is the last page, not an empty one");
 });
 
-test("getCheapestOnEbayPage: Canada is unavailable, at no read at all", async () => {
+test("getCheapestOnEbayPage: Canada is available since 2026-11-10 (eBay Canada listings, not converted US ones)", async () => {
   db.rows = [row({ cardId: "a", country: "CA", retailer: "ebay_ca", priceCents: 500 })];
   db.calls = [];
   const p = await arb.getCheapestOnEbayPage("CA", 1, 25);
-  assert.deepEqual([p.available, p.items, p.total], [false, [], 0]);
-  assert.deepEqual(db.calls, []);
+  assert.equal(p.available, true);
 });
 
 // ── Underpriced vs eBay end to end ───────────────────────────────────────────
@@ -352,11 +351,10 @@ test("getUnderpricedVsEbay: 'Only my cards' filters before paging", async () => 
   assert.deepEqual(page.items.map((i) => i.card.id), ["c3", "c1"], "page 2 of the member's own cards, not of the whole list");
 });
 
-test("getUnderpricedVsEbay: Canada is unavailable at no read, and a failed read is an empty page", async () => {
+test("getUnderpricedVsEbay: Canada is available since 2026-11-10, and a failed read is an empty page", async () => {
   db.calls = [];
   const ca = await arb.getUnderpricedVsEbay("CA", { sort: "saving" });
-  assert.deepEqual([ca.available, ca.items.length], [false, 0]);
-  assert.deepEqual(db.calls, []);
+  assert.equal(ca.available, true);
   const realGroupBy = stub.retailerPrice.groupBy;
   stub.retailerPrice.groupBy = async () => {
     throw new Error("neon down");
@@ -443,15 +441,15 @@ test("gating per view: vs-ebay is locked / top 3 / full like the TCGplayer list;
   assert.match(src, /view !== "ebay" && access === "none" \? Promise\.resolve\(null\) : getPricesAsOf\(country\)/);
 });
 
-test("Canada and markets with no eBay feed get an honest empty state on both eBay views", () => {
+test("markets with no eBay feed get an honest empty state on both eBay views", () => {
   const src = code(PAGE);
   const eb = between(src, '{view === "ebay" && cheapestEbay && (', '{view === "vs-ebay" && (');
   assert.match(eb, /!cheapestEbay\.available \? \(\s*<Empty>\s*<NoEbayComparison /);
   const vs = between(src, '{view === "vs-ebay" && (', "How Deal Finder works");
   assert.match(vs, /!vsEbay\.available \? \(\s*<Empty>\s*<NoEbayComparison /);
   const msg = between(src, "function NoEbayComparison(", "\n}\n");
-  assert.match(msg, /country === "CA"/);
-  assert.match(msg, /international\s+postage/);
+  assert.doesNotMatch(msg, /country === "CA"/, "Canada has eBay Canada listings since 2026-11-10");
+  assert.match(msg, /We don&apos;t track eBay listings in \{place\} yet/);
 });
 
 test("the eBay mirror's copy is honest: an asking price, item prices postage extra, % of the eBay price", () => {
