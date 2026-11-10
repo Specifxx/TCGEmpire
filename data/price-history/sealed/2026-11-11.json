@@ -32,11 +32,11 @@
       "CA": 19995,
       "EU": 11900,
       "SG": 20000,
-      "US": 13782
+      "US": 14978
     },
     "LGC|Booster Case": {
       "UK": 62995,
-      "US": 89820
+      "US": 88000
     },
     "LGC|Booster Pack": {
       "CA": 2400
@@ -86,7 +86,7 @@
       "CA": 8994
     },
     "LGC|Pre-Rift Kit": {
-      "CA": 4999,
+      "CA": 3499,
       "US": 7995
     },
     "LGC|Proving Grounds 2nd Edition": {
@@ -101,17 +101,17 @@
       "CA": 29995,
       "EU": 6497,
       "UK": 13437,
-      "US": 22999
+      "US": 23450
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 138999
+      "US": 138990
     },
     "OGN|Booster Pack": {
       "CA": 1199,
       "UK": 700,
-      "US": 1278
+      "US": 1000
     },
     "OGN|Box Set": {
       "EU": 47990,
@@ -158,7 +158,7 @@
       "EU": 699,
       "SG": 6754,
       "UK": 3180,
-      "US": 6482
+      "US": 6200
     },
     "OGN|Champion Deck (Viktor) Display": {
       "US": 27296
@@ -169,7 +169,7 @@
       "EU": 2900,
       "SG": 5434,
       "UK": 33098,
-      "US": 2750
+      "US": 2000
     },
     "OGN|Sealed": {
       "EU": 485
@@ -211,13 +211,13 @@
       "CA": 129999,
       "EU": 52500,
       "UK": 61999,
-      "US": 60297
+      "US": 59996
     },
     "RAD|Booster Pack": {
       "AU": 1000,
       "CA": 699,
       "UK": 499,
-      "US": 487
+      "US": 475
     },
     "RAD|Bundle": {
       "AU": 5052,
@@ -225,10 +225,10 @@
       "EU": 2800,
       "SG": 5783,
       "UK": 2799,
-      "US": 2799
+      "US": 2284
     },
     "RAD|Bundle Case": {
-      "US": 42000
+      "US": 43788
     },
     "RAD|Pre-Rift Event Kit": {
       "CA": 4995,
@@ -240,7 +240,7 @@
       "CA": 4999,
       "EU": 3199,
       "UK": 2995,
-      "US": 2500
+      "US": 2400
     },
     "RAD|Sealed": {
       "EU": 399
@@ -256,7 +256,7 @@
     "RAD|Showdown Decks Display": {
       "AU": 5500,
       "CA": 4499,
-      "US": 5566
+      "US": 5565
     },
     "RAD|Sleeved Booster": {
       "EU": 1100,
@@ -296,7 +296,7 @@
       "CA": 150000,
       "EU": 59990,
       "UK": 75130,
-      "US": 106300
+      "US": 105200
     },
     "SFD|Booster Pack": {
       "AU": 1200,
@@ -393,11 +393,11 @@
     },
     "UNL|Booster Box": {
       "AU": 20000,
-      "CA": 21999,
+      "CA": 21995,
       "EU": 9349,
       "SG": 25000,
       "UK": 16500,
-      "US": 16200
+      "US": 16300
     },
     "UNL|Booster Case": {
       "AU": 144999,
@@ -482,7 +482,7 @@
     },
     "VEN|Booster Box": {
       "AU": 20000,
-      "CA": 16995,
+      "CA": 15995,
       "EU": 9000,
       "SG": 21600,
       "UK": 8390,
@@ -490,10 +490,10 @@
     },
     "VEN|Booster Case": {
       "AU": 131070,
-      "CA": 104999,
+      "CA": 96999,
       "EU": 61200,
       "UK": 61100,
-      "US": 74490
+      "US": 74290
     },
     "VEN|Booster Pack": {
       "AU": 999,
