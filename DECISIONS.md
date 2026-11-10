@@ -23172,3 +23172,19 @@ it, so its Google clicks appear the moment the Search Console service account ca
 (the 10 Nov `gsc-sites-daily` run read 21 properties, not that one). `scripts/sister-demand-export.mjs` now lists it, so
 its `demand` branch fills from the same day; until then the export skips it quietly. Giving the service account access
 is a Search Console step (Settings → Users and permissions → Add user, Full).
+
+## 2026-11-10 — The compare search test's numbers on Empire HQ and in the Monday report
+
+Thread "Build compare search engine MVP" (plan: project files › compare-search/compare-search-mvp-plan-2026-11-10.html;
+gate 8 Dec). compareempire.com/search and every sister site's "Search every Compare Empire site" link (shown only on an
+empty search) feed one test, judged on paid clicks per search, not searches.
+
+- `lib/earnings/search-test.ts`: the earnings refresh (every three hours) reads Compare Empire's Web Analytics events
+  through the public API the analytics page uses (`search` by results, by `from` and by the empty-search words;
+  `search_click`; `buy_click` with page `/search`, which is only the pinned eBay row, so always paid) and keeps one copy
+  under `search-test`. Search earnings are eBay sales whose customid starts `ce-search` or `ce-mcp` (Compare Empire kept
+  its `ce-` prefix so the money stays in its own row).
+- Empire HQ's "Compare search test" box and the Monday report's section show 7 and 30 days: searches, empty searches,
+  result clicks, paid clicks per 100 searches, search earnings, searches per sending site and the most searched words
+  nothing matched (the list of stores, feeds and categories to add next). The query words are the only text kept, and
+  only for a search nothing matched; nothing about the visitor.
