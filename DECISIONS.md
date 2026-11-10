@@ -23234,3 +23234,37 @@ Owner: one central admin dashboard, "who is Premium and who isn't" for DexCompar
 - Plan is read live from `User` (`lib/admin-sister.ts` `planStatus`): Premium (paid, active), Trial (active inside the trial
   window from `trialStartedAt`), Lapsed, Free, No account. Cancelled-but-still-active is not distinguishable without a
   Stripe call, so it reads as its current plan. Conversion = members on paid Premium / members. Read-only, 500 rows.
+## 2026-11-10: Lighter homepage and card pages (site review X2)
+
+The site review (`/mnt/project-files/strategy/site-review-2026-11-10.html`) measured the home page at 1,042 KB (654 KB of
+React payload) and a card page at 616 KB, with 61% of visits on phones. Measured on a local production build from
+`data/public/` (the live site cannot be fetched from the build sandbox), before and after:
+
+| Page | Before | After |
+| --- | --- | --- |
+| `/` | 989 KB | 657 KB |
+| `/card/astral-heron-ven-044` | 573 KB | 543 KB |
+| `/browse` | 633 KB | 556 KB |
+| `/sealed` | 602 KB | 594 KB |
+
+Titles, meta, canonicals, JSON-LD and the card, browse and sealed pages' links and headings are unchanged.
+
+- **Homepage sealed shelf: no store rows.** `HomeSealedShelf` drew one market's eight tiles but carried every market's
+  groups WITH their listings: 229 KB of the 544 KB payload. The groups now arrive with `listings: []` and the tiles are
+  plain links to `/sealed/<slug>` (`SealedTile quickView={false}`), where every store row is.
+- **Today's Top Deals: only the columns it draws.** `topDealsForGrid` empties `cheapestSealed` (column removed
+  2026-09-30) and `cheapestOnEbay` (moved to Deal Finder) before the six markets reach the client.
+- **"Recently updated prices" shows 12 tiles,** not 24 ("See all movers" lists the rest). Its ItemList keeps all 24.
+- **Short classes for what repeats on every page:** the card tile (`.ct-tile`, `.ct-art`, `.ct-count`), the tile's watch
+  icon (`.wb-off`), the rail's links (`.sn-link`/`.sn-on`/`.sn-off`) and the mega menu's (`.mm-link`), the same utilities
+  through `@apply`, after `.card-surface` so its transition does not win. `text-brand-300` went with the rail link: the
+  theme has no brand-300, so it never drew anything. The tile's watch icon keeps the first clause of its tooltip; the
+  labelled watch buttons keep the full one.
+- **Card rows: `storeUrl` only when it cannot be rebuilt.** A row whose buyHref is the store URL plus our three utm tags
+  leaves `storeUrl` out and `rowStoreUrl()` rebuilds it (`packedStoreUrl`, checked for exactness on the server).
+- `tests/page-weight-x2.test.ts` pins the three payload cuts.
+
+Not reached: the review's 350 KB home and 250 KB card page. What is left is structural: about 70 KB per page of client
+module references (one `I[...]` row per client component, each listing its chunks), the layout's 31 KB, and the card
+page's six-market rows (79 KB, needed because the page is one market-neutral cached copy). The next cut is fewer client
+islands on the card page and the home carousels' tiles drawn on the server.

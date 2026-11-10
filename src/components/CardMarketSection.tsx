@@ -9,7 +9,7 @@ import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { CartAddButton } from "@/components/cart/CartAddButton";
-import { PIN_OUTLINE, computeMarket, rowOutline, pinMarketplaces, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
+import { PIN_OUTLINE, computeMarket, rowOutline, rowStoreUrl, pinMarketplaces, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
 import { convertUsdCents } from "@/lib/fx";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { ReportPriceButton } from "./ReportPriceButton";
@@ -154,7 +154,7 @@ function OutOfStockDisclosure({
             <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 opacity-60 sm:flex-nowrap sm:p-4">
               <div className="w-5 shrink-0 text-center text-slate-600 sm:w-6">—</div>
               <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 items-center gap-2"><span className="truncate font-semibold text-slate-300">{p.retailerName}</span><StoreVote url={p.storeUrl} name={p.retailerName} className="shrink-0 text-slate-400" /></div>
+                <div className="flex min-w-0 items-center gap-2"><span className="truncate font-semibold text-slate-300">{p.retailerName}</span><StoreVote url={rowStoreUrl(p)} name={p.retailerName} className="shrink-0 text-slate-400" /></div>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                   {(() => {
                     const grade = normaliseCondition(p.condition);
@@ -447,7 +447,7 @@ export function CardPriceComparison({
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="min-w-0 truncate font-semibold text-white">{p.retailerName}</span>
-                    <StoreVote url={p.storeUrl} name={p.retailerName} className="shrink-0 text-slate-400" />
+                    <StoreVote url={rowStoreUrl(p)} name={p.retailerName} className="shrink-0 text-slate-400" />
                     {/* The cheapest row is the one visitors should click — a small
                         badge draws the eye there, the same way a highlighted price
                         naturally pulls clicks. */}
@@ -544,7 +544,7 @@ export function CardPriceComparison({
                 <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
                 <CartAddButton
                   href={p.buyHref}
-                  productUrl={p.storeUrl}
+                  productUrl={rowStoreUrl(p)}
                   storeName={p.retailerName}
                   title={displayName}
                   detail={[p.condition, p.isFoil ? "Foil" : null].filter(Boolean).join(" · ") || null}

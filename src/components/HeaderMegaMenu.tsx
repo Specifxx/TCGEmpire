@@ -97,7 +97,7 @@ export function HeaderMegaMenu({ menus, className = "" }: { menus: HeaderMenu[];
                     <ul className="space-y-0.5">
                       {c.links.map((l) => (
                         <li key={l.href}>
-                          <Link href={l.href} prefetch={false} onClick={() => setOpen(null)} className="block whitespace-nowrap rounded-md px-2 py-1.5 text-sm text-slate-200 hover:bg-ink-800 hover:text-white focus-visible:bg-ink-800 focus-visible:text-white">
+                          <Link href={l.href} prefetch={false} onClick={() => setOpen(null)} className="mm-link">
                             {l.label}
                           </Link>
                         </li>

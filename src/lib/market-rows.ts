@@ -26,7 +26,9 @@ export interface MarketRow {
   lastSeen: string; // ISO — timeAgo() accepts strings
   buyHref: string; // affiliate-tagged outbound URL (country-independent)
   policyUrl: string | null; // store shipping-policy page, when verified
-  storeUrl?: string | null; // the store's own listing URL, for the store thumbs (components/StoreVote.tsx)
+  // The store's own listing URL, for the store thumbs (components/StoreVote.tsx). Left OUT when it is
+  // buyHref minus our utm tags (the server checks it is exactly that): read it through rowStoreUrl().
+  storeUrl?: string | null;
 }
 
 export interface ComputedRow extends MarketRow {
@@ -261,4 +263,31 @@ export function stockElsewhere(
     markets: found.length,
     first: found[0].place,
   };
+}
+
+const UTM_TAGS = ["utm_source", "utm_medium", "utm_campaign"] as const;
+
+/** `href` without the three utm tags affiliateUrl() adds to a store with no programme. Pure. */
+export function withoutUtm(href: string): string | null {
+  try {
+    const u = new URL(href);
+    for (const k of UTM_TAGS) u.searchParams.delete(k);
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A row's store listing URL. The card page leaves `storeUrl` out of a row whose buyHref is
+ * that URL plus our utm tags and nothing else: 147 rows on six markets repeated ~14 KB of
+ * URLs in the page payload (site review X2, 2026-11-10). Pure.
+ */
+export function rowStoreUrl(r: Pick<MarketRow, "storeUrl" | "buyHref">): string | null | undefined {
+  return r.storeUrl !== undefined ? r.storeUrl : withoutUtm(r.buyHref);
+}
+
+/** The `storeUrl` field to serialize: omitted (undefined) when rowStoreUrl() rebuilds it exactly. */
+export function packedStoreUrl(storeUrl: string, buyHref: string): string | undefined {
+  return buyHref !== storeUrl && withoutUtm(buyHref) === storeUrl ? undefined : storeUrl;
 }

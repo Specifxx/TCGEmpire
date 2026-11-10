@@ -46,7 +46,7 @@ import { decksUsingCard } from "@/lib/published-decks-server";
 import { RADIANCE_SET_CODE } from "@/lib/sets/radiance";
 import { EbayPanelIntro } from "@/components/EbayPanelIntro";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
-import { computeMarket, type MarketRow } from "@/lib/market-rows";
+import { computeMarket, packedStoreUrl, type MarketRow } from "@/lib/market-rows";
 import { compareMarkets, marketPriceListSentence, marketSpreadSentence } from "@/lib/market-comparison";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
@@ -396,7 +396,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     buyHref: affiliateUrl(p.url, p.retailer, `${SITE_URL}/card/${card.slug ?? params.id}`),
     policyUrl: shippingPolicyUrl(p.retailer),
     storeUrl: p.url,
-  }));
+  })).map(({ storeUrl, ...r }) => {
+    // Key left out (not undefined, which serializes as "$undefined") when rowStoreUrl() rebuilds it.
+    const packed = packedStoreUrl(storeUrl as string, r.buyHref);
+    return packed === undefined ? r : { ...r, storeUrl: packed };
+  });
 
   // BASELINE view for the cached HTML — structured data, prose and FAQ. This is
   // the same market the SSR'd client components render before hydration, i.e.

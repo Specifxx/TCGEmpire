@@ -698,6 +698,34 @@ html {
   .card-surface {
     @apply rounded-lg border border-ink-800 bg-ink-900 shadow-card transition-colors duration-150;
   }
+  /* Card tile (CardTile.tsx) and its watch icon (PriceWatchButton.tsx): one short class each
+     instead of the same utility list on every tile. A homepage draws 64 tiles, so the lists
+     were ~30 KB of its HTML and payload (site review X2, 2026-11-10). Same utilities; after .card-surface so its transition does not win. */
+  .ct-tile {
+    @apply relative flex h-full flex-col overflow-hidden transition-[transform,box-shadow,border-color] duration-base ease-out motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0;
+  }
+  .ct-art {
+    @apply h-full w-full transition-transform duration-slow ease-out motion-safe:group-hover:scale-[1.03];
+  }
+  .ct-count {
+    @apply shrink-0 whitespace-nowrap pb-0.5 text-right text-[11px] font-semibold text-brand-400;
+  }
+  /* Rail links (SideNav.tsx) and mega-menu links (HeaderMegaMenu.tsx): on every page. */
+  .sn-link {
+    @apply block truncate rounded-md border-l-2 py-1.5 [@media(pointer:coarse)]:py-3.5 pl-3 pr-2 text-sm transition-colors;
+  }
+  .sn-on {
+    @apply border-brand-400 bg-brand-500/10 font-semibold; /* text-brand-300 is not in the theme: it was a no-op in the markup */
+  }
+  .sn-off {
+    @apply border-transparent text-slate-300 hover:border-ink-700 hover:bg-ink-800 hover:text-white;
+  }
+  .mm-link {
+    @apply block whitespace-nowrap rounded-md px-2 py-1.5 text-sm text-slate-200 hover:bg-ink-800 hover:text-white focus-visible:bg-ink-800 focus-visible:text-white;
+  }
+  .wb-off {
+    @apply border-ink-600 bg-ink-950/80 text-slate-300 hover:border-gold/50 hover:text-gold;
+  }
   .chip {
     @apply inline-flex items-center gap-1 rounded px-2.5 py-0.5 text-xs font-medium;
   }
