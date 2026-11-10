@@ -9,7 +9,7 @@ import { sendEmail, getLastEmailError } from "../email";
 import { recentlyEmailedAddresses, type AlertBudgetDb } from "../alert-budget";
 import { ALERT_BUDGET_WINDOW_MS, alertDailyBudget } from "../price-alerts";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
-import { evaluateAlert, UNCONFIRMED_TTL_MS } from "./evaluate";
+import { evaluateAlert, isRestockTarget, UNCONFIRMED_TTL_MS } from "./evaluate";
 import { buildAlertEmail, fromFor, listUnsubscribeHeaders, type DealPick, type FiredAlert } from "./email";
 import { SISTER_ALERT_SITES, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
 import { claimMailSlot } from "./mail-cap";
@@ -128,7 +128,7 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
     if (v.kind === "fire" && item) {
       const key = `${a.email}\u0000${a.site}`;
       const list = fired.get(key) ?? [];
-      list.push({ id: a.id, site: a.site, name: item.n, path: item.u, region, priceCents: v.priceCents, targetCents: a.targetCents });
+      list.push({ id: a.id, site: a.site, name: item.n, path: item.u, region, priceCents: v.priceCents, targetCents: a.targetCents, restock: isRestockTarget(a.targetCents) });
       fired.set(key, list);
       updates.push({ id: a.id, data: { ...meta, lastPriceCents: v.priceCents, lastCheckedAt: now, missingSince: null } });
       continue;

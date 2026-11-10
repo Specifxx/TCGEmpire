@@ -49,7 +49,7 @@ export function signInSiteForOrigin(origin: string | null): SignInSite | null {
 }
 
 let keys: { privateKey: KeyObject; publicKey: KeyObject } | null = null;
-function keyPair() {
+export function sisterKeyPair() {
   if (keys) return keys;
   const seed = createHmac("sha256", Buffer.from(authSecret())).update("riftcompare:sister-sign-in:v1").digest();
   // PKCS#8 wrapping of a raw Ed25519 seed (RFC 8410).
@@ -60,7 +60,7 @@ function keyPair() {
 }
 
 export function sisterSignInJwks(): { keys: JWK[] } {
-  const jwk = keyPair().publicKey.export({ format: "jwk" }) as JWK;
+  const jwk = sisterKeyPair().publicKey.export({ format: "jwk" }) as JWK;
   return { keys: [{ ...jwk, kid: KID, alg: "EdDSA", use: "sig" }] };
 }
 
@@ -73,7 +73,7 @@ export async function signSisterSignIn(site: SignInSite, email: string): Promise
     .setJti(randomUUID())
     .setIssuedAt()
     .setExpirationTime(`${SISTER_SIGN_IN_MINUTES}m`)
-    .sign(keyPair().privateKey);
+    .sign(sisterKeyPair().privateKey);
 }
 
 /** Where the emailed link goes: the sister's own confirm page, never an API. */
