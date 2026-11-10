@@ -20,7 +20,6 @@ import { OutboundLink } from "./OutboundLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { cardThumbProps } from "@/lib/card-image-url";
 import { SearchLimitPanel } from "./SearchLimitPanel";
-import { compareSearchHref } from "@/lib/compare-search";
 import type { SearchTier } from "@/lib/search-quota";
 
 // How long a focused-but-not-yet-typing field has to stay focused before it
@@ -933,12 +932,6 @@ export function SearchBar({
                   </OutboundLink>
                   <AffiliateDisclosure partner="ebay" tight />
                 </div>
-              )}
-              {/* Compare search test (2026-11-10): only here, where this site found nothing. */}
-              {!loading && trimmed.length > 1 && (
-                <a href={compareSearchHref(trimmed, "rift", country)} rel="nofollow" className="block border-t border-ink-800 px-4 py-3 text-sm font-semibold text-brand-400 [overflow-wrap:anywhere] hover:underline">
-                  Search every Compare Empire site for “{trimmed}” →
-                </a>
               )}
             </div>
           ) : (
