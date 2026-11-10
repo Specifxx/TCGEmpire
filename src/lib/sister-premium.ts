@@ -100,3 +100,8 @@ export async function premiumStatusFor(email: string): Promise<PremiumStatus | n
 
 /** Members get more price alerts than the free 25, and restock alerts. */
 export const MEMBER_MAX_ALERTS = 200;
+
+export function maskEmail(email: string): string {
+  const [local = "", domain = ""] = email.split("@");
+  return `${local.slice(0, 2)}${"*".repeat(Math.max(1, Math.min(6, local.length - 2)))}@${domain}`;
+}

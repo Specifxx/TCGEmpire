@@ -3,10 +3,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { signSisterSignIn, signInSite } from "../src/lib/sister-sign-in";
-import { SISTER_PREMIUM_SITES, premiumSite, premiumSiteForOrigin, premiumCors, signPremiumSession, verifyPremiumSession } from "../src/lib/sister-premium";
+import { maskEmail, SISTER_PREMIUM_SITES, premiumSite, premiumSiteForOrigin, premiumCors, signPremiumSession, verifyPremiumSession } from "../src/lib/sister-premium";
 import { evaluateAlert, isRestockTarget, RESTOCK_TARGET_CENTS } from "../src/lib/sister-alerts/evaluate";
 import { buildAlertEmail } from "../src/lib/sister-alerts/email";
-import { maskEmail } from "../src/app/api/sister-premium/status/route";
 
 // DexCompare Premium is a RiftCompare Premium account (2026-11-10).
 const read = (f: string) => readFileSync(join(__dirname, "..", f), "utf8");

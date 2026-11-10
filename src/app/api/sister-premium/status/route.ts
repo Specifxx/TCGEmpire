@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { premiumCors, premiumSiteForOrigin, premiumStatusFor, verifyPremiumSession } from "@/lib/sister-premium";
+import { maskEmail, premiumCors, premiumSiteForOrigin, premiumStatusFor, verifyPremiumSession } from "@/lib/sister-premium";
 
 export const dynamic = "force-dynamic";
 
@@ -10,11 +10,6 @@ export const dynamic = "force-dynamic";
 export function OPTIONS(req: Request) {
   const origin = req.headers.get("origin");
   return new NextResponse(null, { status: premiumSiteForOrigin(origin) ? 204 : 403, headers: premiumCors(origin) });
-}
-
-export function maskEmail(email: string): string {
-  const [local = "", domain = ""] = email.split("@");
-  return `${local.slice(0, 2)}${"*".repeat(Math.max(1, Math.min(6, local.length - 2)))}@${domain}`;
 }
 
 export async function POST(req: Request) {
