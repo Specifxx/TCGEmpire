@@ -73,6 +73,8 @@ export function classifyLink(url: string): LinkKind {
   if (/(^|\.)partner\.tcgplayer\.com$/.test(h) || /\.(pxf|sjv)\.io$/.test(h)) return "tcgplayer";
   if (/(^|\.)tcgplayer\.com$/.test(h)) return "tcgplayer-untagged";
   if (/(^|\.)awin1\.com$/.test(h)) return "awin";
+  // Our own Impact brands (src/lib/awin.ts: accounts 7385758 and 8139279), on whatever vanity host the brand uses.
+  if (/^\/c\/(7385758|8139279)\/\d+\/\d+\/?$/.test(u.pathname)) return "network";
   if (/(^|\.)(t\.cfjump\.com|anrdoezrs\.net|dpbolvw\.net|jdoqocy\.com|kqzyfj\.com|tkqlhce\.com|click\.linksynergy\.com|prf\.hn|track\.flexlinkspro\.com|7eer\.net|ojrq\.net|evyy\.net|linkconnector\.com|goaffpro\.com)$/.test(h)) return "network";
   if (FAMILY_HOSTS.some((f) => h === f || h.endsWith(`.${f}`))) return "family";
   if (NOT_A_SHOP.test(h) || /^(mailto|tel):/.test(url)) return "ignore";
