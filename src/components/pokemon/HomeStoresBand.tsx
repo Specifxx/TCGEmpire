@@ -1,5 +1,5 @@
 import { COUNTRIES, type Country } from "@/lib/country";
-import { dexHomeHref } from "@/lib/pokemon/dexcompare";
+import { DEX_TYPE_HUBS, dexHomeHref, dexTypeHubHref } from "@/lib/pokemon/dexcompare";
 import { DexAnchor } from "./DexStores";
 
 // The section home's way to DexCompare, the owner's Pokémon STORE comparison
@@ -32,6 +32,17 @@ export function HomeStoresBand({ market, inStockProducts }: { market: Country; i
       >
         Compare {adjective} stores ↗
       </DexAnchor>
+      <p className="basis-full text-xs text-slate-400">
+        By type at {adjective} stores:{" "}
+        {DEX_TYPE_HUBS.map(([slug, label], i) => (
+          <span key={slug}>
+            {i > 0 && " · "}
+            <DexAnchor href={dexTypeHubHref(market, slug)} surface="home" market={market} follow className="font-semibold text-emerald-300 hover:underline">
+              {label}
+            </DexAnchor>
+          </span>
+        ))}
+      </p>
     </section>
   );
 }

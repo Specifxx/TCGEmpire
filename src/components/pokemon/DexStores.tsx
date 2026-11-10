@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { formatDay } from "@/lib/pokemon/format";
-import { DEX_REL, dexHref, storePriceCents, storesWord, type DexLink, type DexSurface } from "@/lib/pokemon/dexcompare";
+import { DEX_FOLLOW_REL, DEX_REL, dexHref, storePriceCents, storesWord, type DexLink, type DexSurface } from "@/lib/pokemon/dexcompare";
 
 // The stores line: DexCompare's figures for this product in the visitor's
 // market (lib/pokemon/dexcompare.ts has the join and the why), and the way to
@@ -21,6 +21,7 @@ export function DexAnchor({
   market,
   product,
   className,
+  follow = false,
   children,
 }: {
   href: string;
@@ -28,13 +29,15 @@ export function DexAnchor({
   market: Country;
   product?: string;
   className?: string;
+  /** A followed link (noopener only): the few set and type-hub links that give DexCompare's hubs a referring page (SEO-8, 2026-11-10). Every other link stays nofollow. */
+  follow?: boolean;
   children: ReactNode;
 }) {
   return (
     <a
       href={href}
       target="_blank"
-      rel={DEX_REL}
+      rel={follow ? DEX_FOLLOW_REL : DEX_REL}
       onClick={() => trackEvent("pokemon_dexcompare_click", { surface, market, product })}
       className={className}
     >

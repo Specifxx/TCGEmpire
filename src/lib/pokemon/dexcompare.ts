@@ -197,6 +197,21 @@ export function dexOpen(d: { cents: number | null; inStock: number; marketplace:
 // cross-linked sitewide read as a link network).
 
 export const DEX_REL = "nofollow noopener";
+/** The followed variant (SEO-8, 2026-11-10): the set page's link to its DexCompare set hub and the section home's links to the type hubs, the only places this site passes DexCompare's hubs a followed link. Search Console showed no referring page for them. */
+export const DEX_FOLLOW_REL = "noopener";
+
+/** DexCompare's type hubs for sealed Pokémon (its lib/sealed-title.ts slugs), as [slug, label]. */
+export const DEX_TYPE_HUBS: readonly (readonly [slug: string, label: string])[] = [
+  ["booster-boxes", "Booster boxes"],
+  ["elite-trainer-boxes", "Elite Trainer Boxes"],
+  ["booster-bundles", "Booster bundles"],
+  ["collections", "Collections"],
+];
+
+/** A DexCompare type hub in the market, a clean URL: https://dexcompare.app/us/type/booster-boxes. */
+export function dexTypeHubHref(market: Country, slug: string): string {
+  return dexUrl(`/${DEX_REGION[market]}/type/${slug}`, "home");
+}
 
 export type DexSurface = "product" | "quickview" | "markets" | "set" | "home" | "subnav";
 
