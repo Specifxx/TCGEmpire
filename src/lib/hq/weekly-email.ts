@@ -12,6 +12,7 @@ import type { Hq } from "./load";
 import { pctChange, type Week } from "./view";
 import { GROWTH_TARGETS } from "../admin-growth";
 import { paidPer100, type SearchTest } from "../earnings/search-test";
+import type { NetworkCounts } from "../analytics/click-networks";
 
 export const WEEKLY_SUBJECT_PREFIX = "Empire weekly";
 
@@ -40,6 +41,8 @@ export interface WeeklyInput {
   today: string;
   /** Per site key, the last 7 days' visitors (daily, summed) and buy_click events (Vercel Web Analytics); null when not read. */
   buyClicks?: ReadonlyMap<string, { visitors: number; clicks: number }> | null;
+  /** Per site key, the same week's buy clicks to TCGplayer, eBay, Amazon and joined Awin stores (lib/analytics/click-networks.ts); null when not read. */
+  networks?: ReadonlyMap<string, NetworkCounts> | null;
   /** The compare search test (to the 8 Dec gate): stored analytics and ce-search/ce-mcp eBay earnings, AUD cents. */
   search?: { test: SearchTest | null; earned: { d7: number; d30: number } } | null;
   /** Bing, every site (lib/hq/bing.ts bingLines), or empty. */
@@ -69,6 +72,18 @@ export function buyCell(b: { visitors: number; clicks: number } | undefined): st
   if (!b || (!b.visitors && !b.clicks)) return "–";
   return b.visitors ? `${b.clicks.toLocaleString("en-US")} · ${((b.clicks / b.visitors) * 100).toFixed(1)}/100` : b.clicks.toLocaleString("en-US");
 }
+
+/** "TCG 12 · eBay 30 · Amz 4 · Awin 0 (46%)": buy clicks to the networks that pay, and their share of all buy clicks (2026-11-10). */
+export function paidCell(c: NetworkCounts | undefined, total: number | undefined): string {
+  if (!c) return "–";
+  const paid = c.tcgplayer + c.ebay + c.amazon + c.awin;
+  if (!paid && !total) return "–";
+  const share = total ? ` (${Math.round((Math.min(paid, total) / total) * 100)}%)` : "";
+  return `TCG ${c.tcgplayer.toLocaleString("en-US")} · eBay ${c.ebay.toLocaleString("en-US")} · Amz ${c.amazon.toLocaleString("en-US")} · Awin ${c.awin.toLocaleString("en-US")}${share}`;
+}
+
+/** Daily visitors summed over the week. */
+export const visitorsCell = (b: { visitors: number } | undefined) => (b && b.visitors ? b.visitors.toLocaleString("en-US") : "–");
 
 /** Each site's visitors and buy clicks over [from, to] (inclusive days), from loadBuyClickCounts' days. */
 export function buyClicksBySite(sites: readonly { key: string; days: readonly { day: string; visitors: number; clicks: number }[] }[], from: string, to: string): Map<string, { visitors: number; clicks: number }> {
@@ -115,14 +130,14 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
 
   // One row per site.
   inner += `<tr><td style="${h}">Every site, last 7 days${hq.gscEnd ? ` (Google to ${esc(hq.gscEnd)})` : ""}</td></tr>`;
-  inner += `<tr><td style="padding:2px 26px"><table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td style="${head}">Site</td><td style="${head};text-align:right">Clicks</td><td style="${head};text-align:right">Earned</td>${x.buyClicks ? `<td style="${head};text-align:right">Buy clicks</td>` : ""}<td style="${head}">Health</td></tr>`;
+  inner += `<tr><td style="padding:2px 26px"><table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td style="${head}">Site</td><td style="${head};text-align:right">Clicks</td><td style="${head};text-align:right">Earned</td>${x.buyClicks ? `<td style="${head};text-align:right">Visitors</td><td style="${head};text-align:right">Buy clicks</td>` : ""}${x.networks ? `<td style="${head};text-align:right">To who pays</td>` : ""}<td style="${head}">Health</td></tr>`;
   for (const r of hq.rows) {
     const mark = r.met == null ? "" : r.met ? ` <span style="color:#34d17e">✓</span>` : ` <span style="color:#ef4444">✗</span>`;
     const top = r.health.problems[0];
-    inner += `<tr><td style="${cell}"><strong style="color:#e6ebf2">${esc(r.site.label)}</strong></td><td style="${num}">${n(r.clicks.last7)} <span style="color:#6b7585">${esc(pct(r.clicksPct))}</span>${mark}</td><td style="${num}">${esc(money(r.earned.last7))}</td>${x.buyClicks ? `<td style="${num}">${esc(buyCell(x.buyClicks.get(r.site.key)))}</td>` : ""}<td style="${cell}"><span style="color:${COLOR[r.health.severity]}">●</span> ${esc(top ? `${top.name}: ${top.detail}` : r.health.summary)}</td></tr>`;
+    inner += `<tr><td style="${cell}"><strong style="color:#e6ebf2">${esc(r.site.label)}</strong></td><td style="${num}">${n(r.clicks.last7)} <span style="color:#6b7585">${esc(pct(r.clicksPct))}</span>${mark}</td><td style="${num}">${esc(money(r.earned.last7))}</td>${x.buyClicks ? `<td style="${num}">${esc(visitorsCell(x.buyClicks.get(r.site.key)))}</td><td style="${num}">${esc(buyCell(x.buyClicks.get(r.site.key)))}</td>` : ""}${x.networks ? `<td style="${num}">${esc(paidCell(x.networks.get(r.site.key), x.buyClicks?.get(r.site.key)?.clicks))}</td>` : ""}<td style="${cell}"><span style="color:${COLOR[r.health.severity]}">●</span> ${esc(top ? `${top.name}: ${top.detail}` : r.health.summary)}</td></tr>`;
   }
   inner += `</table></td></tr>`;
-  inner += `<tr><td style="padding:4px 32px;font-size:11px;color:#6b7585">Clicks: Google, this week vs last (✓ met the target: sisters +${GROWTH_TARGETS.sisters.pct}%, RiftCompare hold). Earned: eBay and TCGplayer by tag, Stripe and ads on RiftCompare, AUD incl. pending.${x.buyClicks ? " Buy clicks: visitors leaving for a store, eBay, TCGplayer or Amazon (Vercel buy_click events), and per 100 visitors." : ""}${hq.costsConnected ? "" : " Vercel cost per site is not connected yet."}</td></tr>`;
+  inner += `<tr><td style="padding:4px 32px;font-size:11px;color:#6b7585">Clicks: Google, this week vs last (✓ met the target: sisters +${GROWTH_TARGETS.sisters.pct}%, RiftCompare hold). Earned: eBay and TCGplayer by tag, Stripe and ads on RiftCompare, AUD incl. pending.${x.buyClicks ? " Visitors: daily visitors summed (Vercel Web Analytics). Buy clicks: visitors leaving for a store, eBay, TCGplayer or Amazon (Vercel buy_click events), and per 100 visitors." : ""}${x.networks ? " To who pays: those clicks to TCGplayer, eBay, Amazon and the stores we joined on Awin, and their share; the rest went to stores that pay us nothing." : ""}${hq.costsConnected ? "" : " Vercel cost per site is not connected yet."}</td></tr>`;
 
   const flagged = x.riftChecks.filter((r) => SEVERITY_RANK[r.severity] > 0 && r.area !== "sites");
   if (flagged.length) {
@@ -163,7 +178,7 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
     `EVERY SITE, LAST 7 DAYS${hq.gscEnd ? ` (Google to ${hq.gscEnd})` : ""}`,
     ...hq.rows.map((r) => {
       const top = r.health.problems[0];
-      return `  ${r.site.label}: ${n(r.clicks.last7)} clicks ${pct(r.clicksPct)}${r.met == null ? "" : r.met ? " ✓" : " ✗"} · ${money(r.earned.last7)}${x.buyClicks ? ` · buy clicks ${buyCell(x.buyClicks.get(r.site.key))}` : ""} · [${WORD[r.health.severity]}] ${top ? `${top.name}: ${top.detail}` : r.health.summary}`;
+      return `  ${r.site.label}: ${n(r.clicks.last7)} clicks ${pct(r.clicksPct)}${r.met == null ? "" : r.met ? " ✓" : " ✗"} · ${money(r.earned.last7)}${x.buyClicks ? ` · visitors ${visitorsCell(x.buyClicks.get(r.site.key))} · buy clicks ${buyCell(x.buyClicks.get(r.site.key))}` : ""}${x.networks ? ` · to who pays ${paidCell(x.networks.get(r.site.key), x.buyClicks?.get(r.site.key)?.clicks)}` : ""} · [${WORD[r.health.severity]}] ${top ? `${top.name}: ${top.detail}` : r.health.summary}`;
     }),
     ...(flagged.length ? ["", "RIFTCOMPARE CHECKS FLAGGED", ...flagged.map((r) => `  [${WORD[r.severity]}] ${r.title}: ${r.summary}`)] : []),
     ...(bingLines.length ? ["", "BING, PAGES INDEXED PER SITE", ...bingLines.map((l) => `  ${l}`)] : []),

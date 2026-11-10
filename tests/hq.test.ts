@@ -6,7 +6,7 @@ import { HQ_SITES, normaliseHost, siteForTag } from "../src/lib/hq/sites";
 import { healthFromProbe, healthFromReport, healthFromStatus, hqChecks, judgeJob, judgeLive, parseStatusFile } from "../src/lib/hq/status";
 import { parseDone, parseSteps, stepViews } from "../src/lib/hq/owner-steps";
 import { buildHqRows, familyTotals, gscWeeks } from "../src/lib/hq/view";
-import { buildWeeklyEmail, buyCell, buyClicksBySite } from "../src/lib/hq/weekly-email";
+import { buildWeeklyEmail, buyCell, buyClicksBySite, paidCell } from "../src/lib/hq/weekly-email";
 import { collectSisters } from "../src/lib/hq/collect";
 import { SITES } from "../src/lib/earnings/sites";
 
@@ -147,6 +147,21 @@ test("buy clicks per visitor on each site's line (site review X6, 2026-11-10)", 
   assert.ok(mail.html.includes("Buy clicks"));
   const without = buildWeeklyEmail({ hq, riftChecks: [], money: { html: "", text: "" }, growthText: null, siteUrl: "https://riftcompare.com", today: "2026-11-09" });
   assert.ok(!without.html.includes("Buy clicks"), "no column when Vercel was not read");
+});
+
+test("visitors and clicks to who pays on each site's line (zero-earnings diagnosis, 2026-11-10)", () => {
+  const by = new Map([["ky", { visitors: 262, clicks: 20 }]]);
+  const networks = new Map([["ky", { tcgplayer: 0, ebay: 3, amazon: 1, awin: 2 }]]);
+  assert.equal(paidCell(networks.get("ky"), 20), "TCG 0 · eBay 3 · Amz 1 · Awin 2 (30%)");
+  assert.equal(paidCell(undefined, 20), "–");
+  assert.equal(paidCell({ tcgplayer: 0, ebay: 0, amazon: 0, awin: 0 }, 0), "–");
+  const rows = buildHqRows({ gsc: { hosts: new Map() }, ledgerLast: [], ledgerPrev: [], costsConnected: false, health: [], steps: [] });
+  const hq = { rows, totals: familyTotals(rows), steps: [], gscEnd: null, collectedAt: null, earningsDays: ["2026-11-02", "2026-11-08"] as [string, string], costsConnected: false, errors: [] };
+  const mail = buildWeeklyEmail({ hq, riftChecks: [], money: { html: "", text: "" }, growthText: null, siteUrl: "https://riftcompare.com", today: "2026-11-16", buyClicks: by, networks });
+  assert.match(mail.text, /KaeYoung: .* · visitors 262 · buy clicks 20 · 7\.6\/100 · to who pays TCG 0 · eBay 3 · Amz 1 · Awin 2 \(30%\) ·/);
+  assert.ok(mail.html.includes("Visitors") && mail.html.includes("To who pays"));
+  const route = fs.readFileSync("src/app/api/cron/weekly-report/route.ts", "utf8");
+  assert.match(route, /loadNetworkClicks\(weekFrom, weekTo\)/);
 });
 
 test("wiring: the monitor collects HQ, the Monday report replaces the digest and the growth report's schedule", () => {

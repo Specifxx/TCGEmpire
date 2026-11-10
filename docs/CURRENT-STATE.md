@@ -122,7 +122,9 @@ longer lands on its entry.
   `/admin/health`, and emails the owner only when something is RED; amber waits for
   Empire HQ (`/admin/hq`, every site in one row, sisters' `ops-status` files) and the
   one Monday report, which replaced the Sunday digest and the growth report email
-  [2026-11-02](../DECISIONS.md#L21386). Its
+  [2026-11-02](../DECISIONS.md#L21386). The report shows each site's visitors, buy clicks and
+  
+  [2026-11-10](../DECISIONS.md#L23298). Its
   memory is the Actions cache, not the database it watches. Every new public form
   calls `notifyOwnerBounded` (capped 8/h, 25/day), which emails the SITE inbox
   (`CONTACT_EMAIL`, Reply-To the visitor), not the owner, written feedback included

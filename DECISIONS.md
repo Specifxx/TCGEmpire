@@ -23319,3 +23319,22 @@ report reads for a "Bing URL submission, small sites" section (indexed trend and
 per-site Bing line) and the ops monitor reads for `seo:bing-submit`: amber when a submit is refused, a target site is not
 verified in the account, or the summary is over 60 hours old; the job itself is in `JOBS` (stale after 36 hours). A run
 goes red only when Bing refuses a call, not for an unverified, graduated or unreadable-sitemap site.
+
+## 2026-11-10: Buy clicks by who pays in the Monday report
+
+The zero-earnings diagnosis (owner: "a lot of our sites have earned nothing … something wrong") found tracking sound and two
+causes: few visitors, and buy clicks going to stores that pay nothing. The Monday report already had each site's week of buy
+clicks per 100 visitors (site review X6, earlier today); it now also shows **Visitors** (daily visitors summed) and **To who
+pays**: the week's buy clicks to TCGplayer, eBay, Amazon and the stores we joined on Awin, with their share of all buy clicks
+(`src/lib/analytics/click-networks.ts`, `paidCell` in `lib/hq/weekly-email.ts`).
+
+- Every site family names the destination under a different `buy_click` property, so the report groups seven keys
+  (`retailer`, `retailer_key`, `host`, `placement`, `surface`, `source`, `link_url`) through the public Web Analytics API and,
+  per network, keeps the largest count any key gave, never the sum (one click can name eBay under several keys). Each answer
+  is the top 100 values, so the split can under-count, never over-count. Seven requests a project, four projects at a time,
+  inside 30 seconds of the route's 60; a timeout just leaves the column out.
+- "Awin" means the stores in `compareempiretake2`'s `data/awin/programmes.json` `joined` list (read raw, as the affiliate gap
+  audit does), matched by name or domain label; if it can't be read, the 2026-11-10 list (`AWIN_FALLBACK`). A store we only
+  applied to is not counted: it pays nothing yet.
+- **No per-site Amazon tracking IDs (owner, 2026-11-10: "just skip the tracking IDs … it's fine just having it as one").**
+  Amazon earnings stay on the shared IDs, unattributed per site; the clicks column above is the only per-site Amazon view.
