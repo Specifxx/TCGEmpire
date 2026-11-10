@@ -23154,3 +23154,21 @@ easiest; DexCompare's free price alerts and weekly drops keep running. DexCompar
   about twice a day), no synced collection (Dex sells sealed only, so a vault is thin). The cheapest-delivered basket planner is
   the next perk, once members ask for it. Free alerts stay free and ungated.
 - **Measure.** Premium sign-ins from Dex (`/premium/return` hits), restock watches set, trial starts per `PREMIUM_COPY_VERSION`.
+## 2026-11-10: Buy clicks per visitor on each site's line of the Monday report (site review X6)
+
+**Why.** Only RiftCompare counted its outbound clicks in the report (`/api/click` counters), so a layout change on any
+other site could not be judged until its sales arrived weeks later. Every site already sends a `buy_click` Vercel
+event when a visitor leaves for a store, eBay, TCGplayer or Amazon (the admin analytics page reads them).
+
+**What.** `loadBuyClickCounts` (`lib/analytics/vercel.ts`) reads, per Vercel project, daily visitors and `buy_click`
+events for the report's last 7 days from the same public Web Analytics API and credentials as the share counts, mapped
+to sites with the earnings mapping. `/api/cron/weekly-report` passes them to `buildWeeklyEmail`, which adds a "Buy
+clicks" column to every site's line: the count and per 100 visitors (visitors are each day's visitors summed, as the
+admin analytics page counts them). Counts only, nothing personal; the column is left out when Vercel is not read, and
+a slow read gives up after 20 seconds so the report still goes. `tests/hq.test.ts`.
+
+**SportsCardCompare (site review SCC-1).** Its earnings and costs rows already exist (#380, #384) and HQ already lists
+it, so its Google clicks appear the moment the Search Console service account can read `sc-domain:sportscardcompare.com`
+(the 10 Nov `gsc-sites-daily` run read 21 properties, not that one). `scripts/sister-demand-export.mjs` now lists it, so
+its `demand` branch fills from the same day; until then the export skips it quietly. Giving the service account access
+is a Search Console step (Settings → Users and permissions → Add user, Full).

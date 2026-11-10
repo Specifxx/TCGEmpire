@@ -262,3 +262,50 @@ export async function loadShareCounts(since: string, until: string): Promise<Sha
     return { status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed", sites: [] };
   }
 }
+
+// BUY CLICKS PER VISITOR (2026-11-10, site review X6): every site sends a `buy_click`
+// event when a visitor leaves for a store, eBay, TCGplayer or Amazon. The Monday
+// report shows, per site and week, daily visitors summed and buy clicks, so a layout
+// change can be judged the week it ships instead of when sales arrive weeks later.
+// Counts only, from the same public API and credentials. Two requests a project.
+export interface BuyClickDay {
+  day: string;
+  visitors: number;
+  clicks: number;
+}
+
+export interface BuyClickCounts {
+  status: AnalyticsStatus;
+  detail?: string;
+  sites: { key: string; label: string; days: BuyClickDay[] }[];
+}
+
+export async function loadBuyClickCounts(since: string, until: string): Promise<BuyClickCounts> {
+  const cred = credentials();
+  if (!cred) return { status: "not-configured", sites: [] };
+  try {
+    const projects = await listProjects(cred.token, cred.team);
+    const per = await pool(projects, 4, async (p) => {
+      const q = (extra: Record<string, string> = {}) => ({ teamId: cred.team, projectId: p.id, since, until, by: "day", limit: "100", ...extra });
+      const [v, c] = await Promise.all([
+        get("/v1/query/web-analytics/visits/aggregate", q(), cred.token).catch(() => null),
+        get("/v1/query/web-analytics/events/aggregate", q({ filter: "eventName eq 'buy_click'" }), cred.token).catch(() => null),
+      ]);
+      return { site: analyticsSite(p.name), visits: parseTimeRows(v), clicks: parseTimeRows(c) };
+    });
+    const bySite = new Map<string, Map<string, BuyClickDay>>();
+    for (const r of per) {
+      const days = bySite.get(r.site) ?? new Map<string, BuyClickDay>();
+      const at = (t: string) => days.get(t) ?? days.set(t, { day: t, visitors: 0, clicks: 0 }).get(t)!;
+      for (const x of r.visits) at(x.t).visitors += x.visitors;
+      for (const x of r.clicks) at(x.t).clicks += x.count;
+      bySite.set(r.site, days);
+    }
+    return {
+      status: "ok",
+      sites: [...bySite.entries()].map(([key, days]) => ({ key, label: label(key, key), days: [...days.values()].sort((a, b) => a.day.localeCompare(b.day)) })),
+    };
+  } catch (e) {
+    return { status: "error", detail: e instanceof Error ? scrubSecrets(e.message).slice(0, 200) : "Request failed", sites: [] };
+  }
+}

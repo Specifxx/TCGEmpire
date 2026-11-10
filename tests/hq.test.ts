@@ -6,7 +6,7 @@ import { HQ_SITES, normaliseHost, siteForTag } from "../src/lib/hq/sites";
 import { healthFromProbe, healthFromReport, healthFromStatus, hqChecks, judgeJob, judgeLive, parseStatusFile } from "../src/lib/hq/status";
 import { parseDone, parseSteps, stepViews } from "../src/lib/hq/owner-steps";
 import { buildHqRows, familyTotals, gscWeeks } from "../src/lib/hq/view";
-import { buildWeeklyEmail } from "../src/lib/hq/weekly-email";
+import { buildWeeklyEmail, buyCell, buyClicksBySite } from "../src/lib/hq/weekly-email";
 import { collectSisters } from "../src/lib/hq/collect";
 import { SITES } from "../src/lib/earnings/sites";
 
@@ -133,6 +133,20 @@ test("rows and the Monday email: one row per site, targets, escaped, no secrets"
   assert.ok(mail.html.includes("W1 &lt;b&gt;"));
   assert.match(mail.text, /Gundam Compare: 22 clicks \+10% ✗/);
   assert.match(mail.text, /https:\/\/riftcompare\.com\/admin\/hq/);
+});
+
+test("buy clicks per visitor on each site's line (site review X6, 2026-11-10)", () => {
+  const by = buyClicksBySite([{ key: "dex", days: [{ day: "2026-11-02", visitors: 500, clicks: 20 }, { day: "2026-11-03", visitors: 500, clicks: 11 }, { day: "2026-10-30", visitors: 999, clicks: 99 }] }], "2026-11-02", "2026-11-08");
+  assert.deepEqual(by.get("dex"), { visitors: 1000, clicks: 31 });
+  assert.equal(buyCell(by.get("dex")), "31 · 3.1/100");
+  assert.equal(buyCell(undefined), "–");
+  const rows = buildHqRows({ gsc: { hosts: new Map() }, ledgerLast: [], ledgerPrev: [], costsConnected: false, health: [], steps: [] });
+  const hq = { rows, totals: familyTotals(rows), steps: [], gscEnd: null, collectedAt: null, earningsDays: ["2026-11-02", "2026-11-08"] as [string, string], costsConnected: false, errors: [] };
+  const mail = buildWeeklyEmail({ hq, riftChecks: [], money: { html: "", text: "" }, growthText: null, siteUrl: "https://riftcompare.com", today: "2026-11-09", buyClicks: by });
+  assert.match(mail.text, /DexCompare: .* · buy clicks 31 · 3\.1\/100 ·/);
+  assert.ok(mail.html.includes("Buy clicks"));
+  const without = buildWeeklyEmail({ hq, riftChecks: [], money: { html: "", text: "" }, growthText: null, siteUrl: "https://riftcompare.com", today: "2026-11-09" });
+  assert.ok(!without.html.includes("Buy clicks"), "no column when Vercel was not read");
 });
 
 test("wiring: the monitor collects HQ, the Monday report replaces the digest and the growth report's schedule", () => {
