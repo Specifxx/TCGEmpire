@@ -34,6 +34,7 @@ const ALL = [
   "https://kaeyoung.com",
   "https://scentcompare.app",
   "https://sportscardcompare.com",
+  "https://motorcompare.app",
 ];
 const pick = (process.env.SITES ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const SITES = pick.length ? ALL.filter((o) => pick.some((p) => o.includes(p))) : ALL;

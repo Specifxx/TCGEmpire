@@ -96,7 +96,7 @@ export const HQ_SITES: HqSite[] = [
     monitor: null,
     jobs: [{ file: "refresh-prices.yml", label: "Price refresh", maxAgeH: 12 }],
   },
-  { key: "motor", label: "MotorCompare", url: "https://motorcompare.vercel.app", host: "motorcompare.vercel.app", repo: "motorcompare", tags: ["motor"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
+  { key: "motor", label: "MotorCompare", url: "https://motorcompare.app", host: "motorcompare.app", repo: "motorcompare", tags: ["motor"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   // A private repository: Actions runs cannot be read with RiftCompare's token, so only its home page is probed.
   { key: "ce", label: "Compare Empire", url: "https://compareempire.com", host: "compareempire.com", repo: "compareempiretake2", tags: ["ce"], monitor: null, jobs: [] },
 ];
