@@ -100,9 +100,9 @@ test("checkout returns the buyer to a page that knows they bought something", ()
   // builder the route calls), so the URLs are pinned there.
   const src = read("src/lib/checkout-params.ts");
   // {CHECKOUT_SESSION_ID} is Stripe's own placeholder — it must stay literal.
-  assert.match(src, /success_url: `\$\{SITE_URL\}\/premium\/welcome\?session_id=\{CHECKOUT_SESSION_ID\}/,
+  assert.match(src, /success_url: (?:i\.returnUrls\?\.success \?\? )?`\$\{SITE_URL\}\/premium\/welcome\?session_id=\{CHECKOUT_SESSION_ID\}/,
     "success_url must point at the welcome page and carry Stripe's session-id placeholder");
-  assert.match(src, /cancel_url: `\$\{SITE_URL\}\$\{i\.back \?\? "\/premium"\}`/,
+  assert.match(src, /cancel_url: (?:i\.returnUrls\?\.cancel \?\? )?`\$\{SITE_URL\}\$\{i\.back \?\? "\/premium"\}`/,
     "cancelling at Stripe must return the visitor to where they started");
   // The old dead end: /portfolio?upgraded=1 was read by nothing, so a buyer
   // landed on the ordinary free-tier portfolio.
