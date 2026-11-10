@@ -117,8 +117,14 @@ export function maskEmail(email: string): string {
 // Stripe and isPremium see one member.
 
 /** Each premium site's own Google OAuth client id (public): an env override, else the one registered for it. */
+/** Each sister site's own Google sign-in client. A client id is public by design (Google checks the page's origin), so it lives here;
+ *  `<SITE>_GOOGLE_CLIENT_ID` overrides it. DexCompare's is the "DexCompare web" client in the owner's Google Cloud project "dexcompare". */
+const GOOGLE_CLIENT_IDS: Record<string, string> = {
+  dex: "36388598689-mqo784k6r1s3ndeiht9eu98dgsdbaked.apps.googleusercontent.com",
+};
+
 export function googleClientIdFor(site: PremiumSite, env: Record<string, string | undefined> = process.env): string | null {
-  const v = env[`${site.key.toUpperCase()}_GOOGLE_CLIENT_ID`]?.trim();
+  const v = env[`${site.key.toUpperCase()}_GOOGLE_CLIENT_ID`]?.trim() || GOOGLE_CLIENT_IDS[site.key];
   return v ? v : null;
 }
 
