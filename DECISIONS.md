@@ -23288,3 +23288,9 @@ weekly report reads it raw (`src/lib/hq/bing.ts`, like the owner-steps queue) an
 indexed, crawled, errors, 28-day impressions and clicks. A missing file simply leaves the section out. `needsSitemapSubmit` also
 resubmits a sitemap whose Bing status reads as an error or "not accessible", not only a missing or 14-day-stale one (BandaiCompare
 showed that status while its robots.txt and sitemap route were fine). Dex and Compare Empire stay skipped.
+
+## 2026-11-10: DexCompare's Brevo key replaced (owner)
+
+The first `DEX_BREVO_API_KEY` in Vercel held the pasted command text, not the key, so every DexCompare email fell back to Resend
+("Brevo send failed: Headers.append" in the logs). The owner made a new Brevo key, `dex2`, limited to transactional email, and set it
+with `Read-Host` piped to `vercel env add` (the clipboard can't hold both the command and the key). This release picks it up.
