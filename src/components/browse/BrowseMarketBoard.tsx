@@ -17,7 +17,6 @@ import { SealedTile } from "../SealedTile";
 import { Pagination } from "../Pagination";
 import { PageSizeSelect } from "../PageSizeSelect";
 import { FamilySearch } from "../FamilySearch";
-import { compareSearchHref } from "@/lib/compare-search";
 import { InlineSignupPrompt } from "../InlineSignupPrompt";
 
 /** The free-account prompt sits after this many tiles (fewer on a short page: after the last). */
@@ -202,13 +201,6 @@ export function BrowseMarketBoard({
               sealed matches the compact one above already covers it. */}
           {q && !hasResults && (
             <EbayBuyCta query={q} freeText source="browse-no-results" pageType="browse" surface="ebay_search" className="mt-4" />
-          )}
-          {q && total === 0 && !hasResults && q.trim().length > 1 && (
-            <p className="mt-4 text-sm">
-              <a href={compareSearchHref(q, "rift")} rel="nofollow" className="font-semibold text-brand-400 hover:underline">
-                Search every Compare Empire site for “{q.trim()}” →
-              </a>
-            </p>
           )}
         </>
       ) : (
