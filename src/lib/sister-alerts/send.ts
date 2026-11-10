@@ -22,9 +22,10 @@ export async function sendSisterMail(
   extras: SisterMailExtras,
   env: Record<string, string | undefined> = process.env,
 ): Promise<boolean> {
-  if (siteKey === "dex" && env[DEX_BREVO_KEY_ENV]) {
+  const key = env[DEX_BREVO_KEY_ENV]?.trim();
+  if (siteKey === "dex" && key) {
     const from = env.DEX_EMAIL_FROM ?? DEX_FROM_DEFAULT;
-    if (await sendEmailBrevoAccount(env[DEX_BREVO_KEY_ENV], DEX_BREVO_KEY_ENV, from, to, subject, html, { ...extras, from })) return true;
+    if (await sendEmailBrevoAccount(key, DEX_BREVO_KEY_ENV, from, to, subject, html, { ...extras, from })) return true;
   }
   return sendEmail(to, subject, html, extras);
 }
