@@ -34,6 +34,8 @@ export const SITES = [
   { site: "kaeyoung", property: "sc-domain:kaeyoung.com", alt: "https://kaeyoung.com/", repo: "Specifxx/Kaeyoung" },
   { site: "scentcompare", property: "sc-domain:scentcompare.app", alt: "https://scentcompare.app/", repo: "Specifxx/scentcompare" },
   { site: "camcompare", property: "sc-domain:camcompare.app", alt: "https://www.camcompare.app/", repo: "Specifxx/Camcompare" },
+  // 2026-11-10 (site review SCC-1): live since 9 Nov; skipped quietly until the service account can read its property.
+  { site: "sportscardcompare", property: "sc-domain:sportscardcompare.com", alt: "https://sportscardcompare.com/", repo: "Specifxx/waxcompare" },
 ];
 const BRANCH = "demand";
 const FILE = "gsc-pages.json";

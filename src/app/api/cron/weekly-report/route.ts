@@ -10,7 +10,8 @@ import { buildGrowthReport, growthReportText, WEEKS } from "@/lib/earnings/growt
 import { readClickCounts } from "@/lib/click-counter";
 import { getLatestReport } from "@/lib/ops/snapshot";
 import { loadHq } from "@/lib/hq/load";
-import { buildWeeklyEmail } from "@/lib/hq/weekly-email";
+import { buildWeeklyEmail, buyClicksBySite } from "@/lib/hq/weekly-email";
+import { loadBuyClickCounts } from "@/lib/analytics/vercel";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -40,12 +41,15 @@ async function handlePOST(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const origin = new URL(req.url).origin;
   const today = dayIn(Date.now());
-  const [hq, report, sources, costs, clicks] = await Promise.all([
+  const weekFrom = addDays(today, -7);
+  const weekTo = addDays(today, -1);
+  const [hq, report, sources, costs, clicks, buy] = await Promise.all([
     loadHq(true),
     getLatestReport(),
     within(loadEarnings(false), 25_000, null),
     within(loadCosts(false), 25_000, null),
     within(readClickCounts(addDays(today, -7 * WEEKS - 1)), 10_000, new Map()),
+    within(loadBuyClickCounts(weekFrom, weekTo), 20_000, null),
   ]);
   const money = sources && costs ? earningsDigest(sources, costs, today, `${origin}/admin/earnings`) : EARNINGS_UNAVAILABLE;
   const vercel = costs?.find((c) => c.key === "vercel");
@@ -57,7 +61,7 @@ async function handlePOST(req: Request) {
         }),
       )
     : null;
-  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today });
+  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null });
 
   const recipients = [...new Set([ownerEmail(), growthReportEmail()])];
   let sent = 0;
