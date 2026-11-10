@@ -13,6 +13,7 @@ import { loadHq } from "@/lib/hq/load";
 import { buildWeeklyEmail, buyClicksBySite } from "@/lib/hq/weekly-email";
 import { bingLines, loadBing } from "@/lib/hq/bing";
 import { loadBuyClickCounts } from "@/lib/analytics/vercel";
+import { loadNetworkClicks } from "@/lib/analytics/click-networks";
 import { loadSearchTest, searchTestInput } from "@/lib/earnings/search-test";
 
 export const dynamic = "force-dynamic";
@@ -45,13 +46,14 @@ async function handlePOST(req: Request) {
   const today = dayIn(Date.now());
   const weekFrom = addDays(today, -7);
   const weekTo = addDays(today, -1);
-  const [hq, report, sources, costs, clicks, buy, searchTest, bing] = await Promise.all([
+  const [hq, report, sources, costs, clicks, buy, nets, searchTest, bing] = await Promise.all([
     loadHq(true),
     getLatestReport(),
     within(loadEarnings(false), 25_000, null),
     within(loadCosts(false), 25_000, null),
     within(readClickCounts(addDays(today, -7 * WEEKS - 1)), 10_000, new Map()),
     within(loadBuyClickCounts(weekFrom, weekTo), 20_000, null),
+    within(loadNetworkClicks(weekFrom, weekTo), 30_000, null),
     within(loadSearchTest(), 10_000, null),
     within(loadBing(), 10_000, null),
   ]);
@@ -65,7 +67,7 @@ async function handlePOST(req: Request) {
         }),
       )
     : null;
-  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null, search: searchTestInput(searchTest, sources, today), bing: bingLines(bing) });
+  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null, networks: nets?.status === "ok" ? nets.sites : null, search: searchTestInput(searchTest, sources, today), bing: bingLines(bing) });
 
   const recipients = [...new Set([ownerEmail(), growthReportEmail()])];
   let sent = 0;

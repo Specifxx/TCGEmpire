@@ -122,7 +122,9 @@ longer lands on its entry.
   `/admin/health`, and emails the owner only when something is RED; amber waits for
   Empire HQ (`/admin/hq`, every site in one row, sisters' `ops-status` files) and the
   one Monday report, which replaced the Sunday digest and the growth report email
-  [2026-11-02](../DECISIONS.md#L21386). Its
+  [2026-11-02](../DECISIONS.md#L21386). The report shows each site's visitors, buy clicks and
+  buy clicks to who pays (TCGplayer, eBay, Amazon, joined Awin stores)
+  [2026-11-10](../DECISIONS.md#L23298). Its
   memory is the Actions cache, not the database it watches. Every new public form
   calls `notifyOwnerBounded` (capped 8/h, 25/day), which emails the SITE inbox
   (`CONTACT_EMAIL`, Reply-To the visitor), not the owner, written feedback included
@@ -240,6 +242,8 @@ longer lands on its entry.
   into the dashboard's "Amazon figures" box (`/api/admin/earnings/amazon/entry`);
   per-ID totals are spread over the days by the days' totals, the rest shared.
   [2026-11-06](../DECISIONS.md#L22539)
+  A new per-site Amazon tracking ID is credited by its name (`motorcompare-22` →
+  MotorCompare); shared IDs stay shared. [2026-11-10](../DECISIONS.md#L23298)
   A growth line sits under the columns; eBay's Today shows its latest reported
   day, dated, because EPN has no same-day data. [2026-10-28](../DECISIONS.md#L20647)
   A forecast panel projects this quarter and the next four (and this year and

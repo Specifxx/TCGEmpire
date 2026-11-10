@@ -23294,3 +23294,25 @@ showed that status while its robots.txt and sitemap route were fine). Dex and Co
 The first `DEX_BREVO_API_KEY` in Vercel held the pasted command text, not the key, so every DexCompare email fell back to Resend
 ("Brevo send failed: Headers.append" in the logs). The owner made a new Brevo key, `dex2`, limited to transactional email, and set it
 with `Read-Host` piped to `vercel env add` (the clipboard can't hold both the command and the key). This release picks it up.
+
+## 2026-11-10: Buy clicks by who pays in the Monday report; per-site Amazon IDs split by name
+
+The zero-earnings diagnosis (owner: "a lot of our sites have earned nothing … something wrong") found tracking sound and two
+causes: few visitors, and buy clicks going to stores that pay nothing. The Monday report already had each site's week of buy
+clicks per 100 visitors (site review X6, earlier today); it now also shows **Visitors** (daily visitors summed) and **To who
+pays**: the week's buy clicks to TCGplayer, eBay, Amazon and the stores we joined on Awin, with their share of all buy clicks
+(`src/lib/analytics/click-networks.ts`, `paidCell` in `lib/hq/weekly-email.ts`).
+
+- Every site family names the destination under a different `buy_click` property, so the report groups seven keys
+  (`retailer`, `retailer_key`, `host`, `placement`, `surface`, `source`, `link_url`) through the public Web Analytics API and,
+  per network, keeps the largest count any key gave, never the sum (one click can name eBay under several keys). Each answer
+  is the top 100 values, so the split can under-count, never over-count. Seven requests a project, four projects at a time,
+  inside 30 seconds of the route's 60; a timeout just leaves the column out.
+- "Awin" means the stores in `compareempiretake2`'s `data/awin/programmes.json` `joined` list (read raw, as the affiliate gap
+  audit does), matched by name or domain label; if it can't be read, the 2026-11-10 list (`AWIN_FALLBACK`). A store we only
+  applied to is not counted: it pays nothing yet.
+- **Per-site Amazon tracking IDs need no code change.** `amazonSiteForId` reads `AMAZON_TRACKING_SITES` first, keeps the
+  shared IDs (`riftcompare-20`, `compareempire-22/-20/-21`, `compareempi03-21`) shared, then reads a new ID's name without
+  Amazon's `-20`/`-22` like a Vercel project name: `motorcompare-22` is MotorCompare, `sportscardcomp-20` SportsCardCompare.
+  A `compareempi…` name never matches by name, and a name no site matches stays "Amazon, shared ID". So once the owner
+  creates one ID per site per store and the sites' links use them, the earnings dashboard splits Amazon by site by itself.
