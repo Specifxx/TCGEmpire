@@ -162,14 +162,23 @@ function parseFrom(raw: string): { name: string; email: string } {
 // part as `textContent` and extra headers (List-Unsubscribe) as `headers`.
 // Callers that pass neither send exactly what they always did.
 export async function sendEmailBrevo(to: string, subject: string, html: string, extras: SendEmailExtras = {}): Promise<boolean> {
+  return sendViaBrevo(process.env.BREVO_API_KEY, "BREVO_API_KEY", parseFrom(process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`), to, subject, html, extras);
+}
+
+// A second Brevo account with its own key and sender (DexCompare's alerts,
+// lib/sister-alerts/send.ts). `from` is "Name <addr>"; the key's env name is
+// only used in the not-set message.
+export async function sendEmailBrevoAccount(key: string | undefined, keyName: string, from: string, to: string, subject: string, html: string, extras: SendEmailExtras = {}): Promise<boolean> {
+  return sendViaBrevo(key, keyName, parseFrom(from), to, subject, html, extras);
+}
+
+async function sendViaBrevo(key: string | undefined, keyName: string, sender: { name: string; email: string }, to: string, subject: string, html: string, extras: SendEmailExtras): Promise<boolean> {
   if (marketingBlocked(extras)) return false;
-  const key = process.env.BREVO_API_KEY;
   if (!key) {
-    console.warn(`[email] BREVO_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
-    lastEmailError = "Brevo: BREVO_API_KEY not set";
+    console.warn(`[email] ${keyName} not set — "${subject}" to ${to} was NOT sent.`);
+    lastEmailError = `Brevo: ${keyName} not set`;
     return false;
   }
-  const sender = parseFrom(process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`);
   try {
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",

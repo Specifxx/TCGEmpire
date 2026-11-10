@@ -23172,3 +23172,12 @@ it, so its Google clicks appear the moment the Search Console service account ca
 (the 10 Nov `gsc-sites-daily` run read 21 properties, not that one). `scripts/sister-demand-export.mjs` now lists it, so
 its `demand` branch fills from the same day; until then the export skips it quietly. Giving the service account access
 is a Search Console step (Settings → Users and permissions → Add user, Full).
+
+## 2026-11-10: DexCompare's alert mail goes through its own Brevo account (owner)
+
+DexCompare has its own Brevo account (owner, 2026-11-10), authenticated for `dexcompare.app`, so its alert, restock,
+confirmation and weekly mail does not use RiftCompare's Resend quota. `lib/sister-alerts/send.ts` sends a `dex` mail
+through it from `alerts@dexcompare.app` when `DEX_BREVO_API_KEY` is set (Vercel Production only, the send runs there),
+and falls back to the shared sender if the key is missing or Brevo refuses the send, so no alert is lost. Every other
+site is unchanged. The new Brevo account's "Authorised IPs" must stay off (Vercel's outbound IPs rotate). The daily
+mail cap and per-address limits still apply.

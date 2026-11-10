@@ -5,7 +5,8 @@
 // tidy (expired, missing, unconfirmed). Throws only when it cannot read its own
 // tables; a site whose feed fails is reported and its alerts are left as they were.
 import type { prisma as Prisma } from "../db";
-import { sendEmail, getLastEmailError } from "../email";
+import { getLastEmailError } from "../email";
+import { sendSisterMail } from "./send";
 import { recentlyEmailedAddresses, type AlertBudgetDb } from "../alert-budget";
 import { ALERT_BUDGET_WINDOW_MS, alertDailyBudget } from "../price-alerts";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
@@ -20,7 +21,7 @@ export interface RunDeps {
   db: Db;
   now?: Date;
   fetchFeed?: (site: SisterAlertSite) => Promise<AlertFeed>;
-  send?: (to: string, subject: string, html: string, extras: { text: string; headers: Record<string, string>; from: string }) => Promise<boolean>;
+  send?: (to: string, subject: string, html: string, extras: { text: string; headers: Record<string, string>; from: string }, siteKey?: string) => Promise<boolean>;
   dryRun?: boolean;
 }
 
@@ -55,7 +56,7 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
   const { db } = deps;
   const now = deps.now ?? new Date();
   const fetchFeed = deps.fetchFeed ?? ((s: SisterAlertSite) => realFetchFeed(s));
-  const send = deps.send ?? ((to, subject, html, extras) => sendEmail(to, subject, html, extras));
+  const send = deps.send ?? ((to, subject, html, extras, siteKey) => sendSisterMail(siteKey, to, subject, html, extras));
   const dryRun = !!deps.dryRun;
   const summary: RunSummary = { alerts: 0, sites: {}, fired: 0, emailed: 0, deferred: 0, failed: 0, expired: 0, unconfirmedRemoved: 0, dryRun };
 
@@ -165,7 +166,7 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
     }
     const token = tokenOf.get(email)!;
     const mail = buildAlertEmail(siteKey, list, token, pickDeal(site, list[0]!.region, feeds, now));
-    const ok = await send(email, mail.subject, mail.html, { text: mail.text, headers: listUnsubscribeHeaders(token), from: fromFor(site) });
+    const ok = await send(email, mail.subject, mail.html, { text: mail.text, headers: listUnsubscribeHeaders(token), from: fromFor(site) }, siteKey);
     if (ok) {
       summary.emailed += 1;
       recent.add(email);

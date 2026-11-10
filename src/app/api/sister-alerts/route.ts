@@ -4,9 +4,9 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
-import { sendEmail } from "@/lib/email";
 import { SISTER_ALERT_KEYS, SISTER_REGIONS, allowedOrigin, corsHeaders, sisterSite } from "@/lib/sister-alerts/sites";
 import { buildConfirmEmail, fromFor } from "@/lib/sister-alerts/email";
+import { sendSisterMail } from "@/lib/sister-alerts/send";
 import { claimMailSlot } from "@/lib/sister-alerts/mail-cap";
 import { RESTOCK_TARGET_CENTS } from "@/lib/sister-alerts/evaluate";
 import { MEMBER_MAX_ALERTS, premiumSite, premiumStatusFor, verifyPremiumSession } from "@/lib/sister-premium";
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
     const due = !address.confirmSentAt || now.getTime() - address.confirmSentAt.getTime() > CONFIRM_RESEND_MS;
     if (due && (await claimMailSlot(prisma, now))) {
       const mail = buildConfirmEmail(site, address.token, targetCents, region, weekly === true);
-      const sent = await sendEmail(email, mail.subject, mail.html, { text: mail.text, from: fromFor(sisterSite(site)!) });
+      const sent = await sendSisterMail(site, email, mail.subject, mail.html, { text: mail.text, from: fromFor(sisterSite(site)!) });
       if (sent) await prisma.sisterAlertAddress.update({ where: { email }, data: { confirmSentAt: now } });
     }
     if (!existing) {
