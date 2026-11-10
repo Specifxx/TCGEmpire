@@ -16,7 +16,8 @@
 //   • A region with fewer than MIN_DROPS drops sends nothing that week.
 import type { Prisma as PrismaNS } from "@prisma/client";
 import type { prisma as Prisma } from "../db";
-import { escapeHtml, getLastEmailError, sendEmail } from "../email";
+import { escapeHtml, getLastEmailError } from "../email";
+import { sendSisterMail } from "./send";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
 import { button, fromFor, money, REGION_LABEL, serviceUrl, shell, siteLink, type BuiltMail } from "./email";
 import { SISTER_ALERT_SITES, SISTER_REGIONS, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
@@ -174,7 +175,7 @@ export interface DigestDeps {
   db: Db;
   now?: Date;
   fetchFeed?: (site: SisterAlertSite) => Promise<AlertFeed>;
-  send?: (to: string, subject: string, html: string, extras: { text: string; headers: Record<string, string>; from: string }) => Promise<boolean>;
+  send?: (to: string, subject: string, html: string, extras: { text: string; headers: Record<string, string>; from: string }, siteKey?: string) => Promise<boolean>;
   dryRun?: boolean;
 }
 
@@ -192,7 +193,7 @@ export async function runSisterDigest(deps: DigestDeps): Promise<DigestSummary> 
   const { db } = deps;
   const now = deps.now ?? new Date();
   const fetchFeed = deps.fetchFeed ?? ((s: SisterAlertSite) => realFetchFeed(s));
-  const send = deps.send ?? ((to, subject, html, extras) => sendEmail(to, subject, html, extras));
+  const send = deps.send ?? ((to, subject, html, extras, siteKey) => sendSisterMail(siteKey, to, subject, html, extras));
   const dryRun = !!deps.dryRun;
   const summary: DigestSummary = { subscribers: 0, sites: {}, emailed: 0, skippedFewDrops: 0, deferred: 0, failed: 0 };
 
@@ -265,7 +266,7 @@ export async function runSisterDigest(deps: DigestDeps): Promise<DigestSummary> 
     const site = sisterSite(s.site)!;
     const token = tokenOf.get(s.email)!;
     const mail = buildDigestEmail(site.key, s.region as SisterRegion, drops, token);
-    const ok = await send(s.email, mail.subject, mail.html, { text: mail.text, headers: digestUnsubscribeHeaders(token, site.key), from: fromFor(site) });
+    const ok = await send(s.email, mail.subject, mail.html, { text: mail.text, headers: digestUnsubscribeHeaders(token, site.key), from: fromFor(site) }, site.key);
     if (ok) {
       summary.emailed += 1;
       await db.sisterDigest.update({ where: { email_site: { email: s.email, site: s.site } }, data: { lastEdition: ed.edition, lastSentAt: now } });
