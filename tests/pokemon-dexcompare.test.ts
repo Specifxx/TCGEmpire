@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
+  DEX_FOLLOW_REL,
   DEX_REGION,
+  DEX_TYPE_HUBS,
+  dexTypeHubHref,
   dexHomeHref,
   dexHref,
   dexLinkFor,
@@ -146,6 +149,21 @@ test("the DexCompare surfaces follow the section's copy rules", () => {
 
 test("every DexCompare link is nofollow and opens in a new tab", () => {
   const src = readFileSync("src/components/pokemon/DexStores.tsx", "utf8");
-  assert.match(src, /rel=\{DEX_REL\}/);
+  assert.match(src, /rel=\{follow \? DEX_FOLLOW_REL : DEX_REL\}/);
   assert.doesNotMatch(src, /rel="noopener"/);
+});
+
+test("SEO-8: the set page's DexCompare set link and the section home's type-hub links are followed and clean", () => {
+  assert.equal(DEX_FOLLOW_REL, "noopener");
+  assert.equal(dexTypeHubHref("US", "booster-boxes"), "https://dexcompare.app/us/type/booster-boxes");
+  assert.equal(dexTypeHubHref("AU", "elite-trainer-boxes"), "https://dexcompare.app/au/type/elite-trainer-boxes");
+  assert.equal(
+    dexHref("US", { kind: "set", setSlug: "delta-reign", setName: "Delta Reign" }, "set"),
+    "https://dexcompare.app/us/sets/delta-reign",
+  );
+  for (const [slug] of DEX_TYPE_HUBS) assert.ok(!dexTypeHubHref("US", slug).includes("?"));
+  const set = readFileSync("src/app/pokemon/sets/[set]/page.tsx", "utf8");
+  assert.match(set, /surface="set"[\s\S]{0,80}\bfollow\b/);
+  const band = readFileSync("src/components/pokemon/HomeStoresBand.tsx", "utf8");
+  assert.match(band, /dexTypeHubHref\(market, slug\)[^>]*\bfollow\b/);
 });

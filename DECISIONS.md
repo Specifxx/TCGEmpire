@@ -23173,6 +23173,18 @@ it, so its Google clicks appear the moment the Search Console service account ca
 its `demand` branch fills from the same day; until then the export skips it quietly. Giving the service account access
 is a Search Console step (Settings → Users and permissions → Add user, Full).
 
+## 2026-11-10: Followed links from Rift's Pokémon section to DexCompare's hubs (SEO-8)
+
+**Why.** Search Console showed no referring page for DexCompare's set and type hubs, which Google crawled and did not
+index. Rift is the domain Google trusts, and its Pokémon section already linked DexCompare with clean URLs (2026-11-07),
+but every one of those links was nofollow.
+
+**What.** Two kinds of link are now followed (`rel="noopener"`, `DEX_FOLLOW_REL`, `DexAnchor follow`): each Pokémon set
+page's "Compare <set> at <market> stores" link to the matching `/<region>/sets/<set>` hub, and a line on the section home
+(`HomeStoresBand`) to the four type hubs (`/<region>/type/booster-boxes`, `elite-trainer-boxes`, `booster-bundles`,
+`collections`) in the visitor's market, US by default. All clean URLs, no query string. Every other DexCompare link
+(product boards, tiles, quick view, subnav, the band's button) stays nofollow, and there is still no site-wide footer link:
+a data link repeated across a thousand pages is what looked like a link network. `tests/pokemon-dexcompare.test.ts`.
 ## 2026-11-10 — The compare search test's numbers on Empire HQ and in the Monday report
 
 Thread "Build compare search engine MVP" (plan: project files › compare-search/compare-search-mvp-plan-2026-11-10.html;

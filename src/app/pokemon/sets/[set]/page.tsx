@@ -150,6 +150,7 @@ export default async function PokemonSetPage({ params }: { params: Params }) {
                 href={dexHref(country, { kind: "set", setSlug: dexSet, setName: set.name }, "set")}
                 surface="set"
                 market={country}
+                follow
                 className="font-semibold text-emerald-300 hover:underline"
               >
                 Compare {set.name} at {COUNTRIES[country].adjective} stores on DexCompare ↗
