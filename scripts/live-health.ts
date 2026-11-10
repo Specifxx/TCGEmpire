@@ -27,6 +27,7 @@ const SITES: { host: string; canonicalHost: string }[] = [
   { host: "camcompare.app", canonicalHost: "www.camcompare.app" },
   { host: "compareempire.com", canonicalHost: "compareempire.com" },
   { host: "sportscardcompare.com", canonicalHost: "sportscardcompare.com" },
+  { host: "motorcompare.app", canonicalHost: "motorcompare.app" },
 ];
 
 const UA_MOBILE =
