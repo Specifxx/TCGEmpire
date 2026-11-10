@@ -131,6 +131,26 @@ async function main() {
       console.log(`      ${q.keys[0].slice(0, 58).padEnd(58)} ${String(q.clicks).padStart(4)} ${String(q.impressions).padStart(6)}  pos ${q.position.toFixed(1)}`);
   }
 
+  // Every comparison and question query (all of them, not the top N): compare pairs and posts to write.
+  const byQuery = new Map<string, { impr: number; clicks: number; pos: number; page: string }>();
+  for (const r of qp) {
+    const e = byQuery.get(r.keys[0]);
+    if (!e) byQuery.set(r.keys[0], { impr: r.impressions, clicks: r.clicks, pos: r.position, page: path(r.keys[1]) });
+    else {
+      if (r.impressions > e.impr) e.page = path(r.keys[1]);
+      e.pos = (e.pos * e.impr + r.position * r.impressions) / Math.max(1, e.impr + r.impressions);
+      e.impr += r.impressions;
+      e.clicks += r.clicks;
+    }
+  }
+  const listed = (re: RegExp, title: string, n: number) => {
+    const rows = [...byQuery.entries()].filter(([q]) => re.test(q)).sort((a, b) => b[1].impr - a[1].impr).slice(0, n);
+    console.log(`\n${title} (${rows.length} shown)`);
+    for (const [q, e] of rows) console.log(`${q.slice(0, 56).padEnd(56)} ${String(e.clicks).padStart(4)} ${String(e.impr).padStart(6)} ${e.pos.toFixed(1).padStart(5)}  ${e.page.slice(0, 60)}`);
+  };
+  listed(/\b(vs\.?|versus|or|compared? to)\b/i, "COMPARISON QUERIES (vs / versus / or): every one, with the page Google shows most", 200);
+  listed(/^(how|what|which|when|where|why|who|is|are|does|do|can|should|will)\b|\b(worth it|best|cheapest)\b|\?$/i, "QUESTION QUERIES: every one, with the page Google shows most", 150);
+
   console.log("\nBLOG AND GUIDE PAGES");
   console.log(head(70));
   for (const r of pages.filter((p) => /\/(blog|guides)\//.test(p.keys[0])).sort((a, b) => b.impressions - a.impressions))
