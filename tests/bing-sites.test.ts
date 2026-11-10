@@ -21,3 +21,17 @@ test("Dex and Compare Empire are never submitted", () => {
   assert.equal(needsSitemapSubmit("dexcompare.app", [], "2026-11-10").submit, false);
   assert.equal(needsSitemapSubmit("compareempire.com", [], "2026-11-10").submit, false);
 });
+
+test("a sitemap Bing reports as not accessible is resubmitted even when recently read", () => {
+  const f = { url: "https://bandaicompare.com/sitemap.xml", lastCrawled: "2026-11-09", status: "The page is not accessible" };
+  assert.equal(needsSitemapSubmit("bandaicompare.com", [f], "2026-11-10").submit, true);
+});
+
+test("the Monday report's Bing lines parse defensively", async () => {
+  const { parseBing, bingLines } = await import("../src/lib/hq/bing");
+  assert.equal(parseBing(null), null);
+  assert.deepEqual(bingLines(null), []);
+  const r = parseBing({ generatedAt: "2026-11-10T07:50:00Z", sites: [{ host: "kaeyoung.com", indexed: "0", crawled: "4", errors: "0", impr: "1", clicks: "0" }, { nope: 1 }] });
+  assert.equal(r?.rows.length, 1);
+  assert.match(bingLines(r)[0], /^kaeyoung\.com: 0 indexed, 4 crawled/);
+});

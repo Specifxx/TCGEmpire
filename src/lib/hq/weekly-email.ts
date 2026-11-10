@@ -42,6 +42,8 @@ export interface WeeklyInput {
   buyClicks?: ReadonlyMap<string, { visitors: number; clicks: number }> | null;
   /** The compare search test (to the 8 Dec gate): stored analytics and ce-search/ce-mcp eBay earnings, AUD cents. */
   search?: { test: SearchTest | null; earned: { d7: number; d30: number } } | null;
+  /** Bing, every site (lib/hq/bing.ts bingLines), or empty. */
+  bing?: readonly string[];
 }
 
 /** The compare search test's lines, plain text (the HTML part escapes them). Pure. */
@@ -125,6 +127,11 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
     inner += `<tr><td style="${h}">RiftCompare checks flagged</td></tr>`;
     inner += `<tr><td style="padding:2px 32px;font-size:13px;line-height:1.5;color:#b8c0cc">${flagged.map((r) => `<div style="margin:3px 0"><span style="color:${COLOR[r.severity]}">●</span> <strong style="color:#e6ebf2">${esc(r.title)}</strong> — ${esc(r.summary)}</div>`).join("")}</td></tr>`;
   }
+  const bingLines = x.bing ?? [];
+  if (bingLines.length) {
+    inner += `<tr><td style="${h}">Bing, pages indexed per site</td></tr>`;
+    inner += `<tr><td style="padding:2px 32px;font-size:13px;line-height:1.55;color:#b8c0cc">${bingLines.map((l) => `<div style="margin:3px 0">${esc(l)}</div>`).join("")}</td></tr>`;
+  }
   const searchLines = searchTestLines(x.search);
   if (searchLines.length) {
     inner += `<tr><td style="${h}">Compare search test (gate 8 Dec)</td></tr>`;
@@ -152,6 +159,7 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
       return `  ${r.site.label}: ${n(r.clicks.last7)} clicks ${pct(r.clicksPct)}${r.met == null ? "" : r.met ? " ✓" : " ✗"} · ${money(r.earned.last7)}${x.buyClicks ? ` · buy clicks ${buyCell(x.buyClicks.get(r.site.key))}` : ""} · [${WORD[r.health.severity]}] ${top ? `${top.name}: ${top.detail}` : r.health.summary}`;
     }),
     ...(flagged.length ? ["", "RIFTCOMPARE CHECKS FLAGGED", ...flagged.map((r) => `  [${WORD[r.severity]}] ${r.title}: ${r.summary}`)] : []),
+    ...(bingLines.length ? ["", "BING, PAGES INDEXED PER SITE", ...bingLines.map((l) => `  ${l}`)] : []),
     ...(searchLines.length ? ["", "COMPARE SEARCH TEST (GATE 8 DEC)", ...searchLines.map((l) => `  ${l}`)] : []),
     "",
     x.money.text,
