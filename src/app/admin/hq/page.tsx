@@ -10,6 +10,10 @@ import type { Week } from "@/lib/hq/view";
 import { pctChange } from "@/lib/hq/view";
 import { GROWTH_TARGETS } from "@/lib/admin-growth";
 import { StepDone } from "./StepDone";
+import { loadSearchTest, searchTestInput } from "@/lib/earnings/search-test";
+import { loadEarnings } from "@/lib/earnings/sources";
+import { searchTestLines } from "@/lib/hq/weekly-email";
+import { dayIn } from "@/lib/earnings/core";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +58,8 @@ export default async function HqPage({ searchParams }: { searchParams: { key?: s
   const me = await getCurrentUser();
   if (!(keyOk || me?.isAdmin)) notFound();
 
-  const hq = await loadHq();
+  const [hq, searchTest, sources] = await Promise.all([loadHq(), loadSearchTest().catch(() => null), loadEarnings(false).catch(() => null)]);
+  const searchLines = searchTestLines(searchTestInput(searchTest, sources, dayIn(Date.now())));
   const now = Date.now();
   const open = hq.steps.filter((s) => !s.doneAt);
   const done = hq.steps.filter((s) => s.doneAt);
@@ -168,6 +173,18 @@ export default async function HqPage({ searchParams }: { searchParams: { key?: s
         <p className="mt-2 text-[11px] text-slate-500">
           Earnings: eBay and TCGplayer by each link&apos;s tag; Stripe and ads count to RiftCompare; untagged sales (mostly the eBay app) are on /admin/earnings.
           {hq.costsConnected ? "" : " Vercel cost per site appears once the billing token is set (a step above)."} Health: each site&apos;s own monitor, or for a site without one, its home page and import jobs.
+        </p>
+      </section>
+
+      <section id="search-test" className="mt-6 rounded-xl border border-ink-700 bg-ink-850 p-4">
+        <h2 className="text-sm font-semibold text-white">Compare search test (gate 8 Dec)</h2>
+        <div className="mt-2 space-y-1 text-sm text-slate-300">
+          {searchLines.map((l) => (
+            <p key={l}>{l}</p>
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-slate-500">
+          compareempire.com/search, from Web Analytics (refreshed every three hours). Paid clicks are the pinned eBay row; earned is eBay sales tagged ce-search or ce-mcp. Go on 8 Dec if search earns more than its Vercel cost and paid clicks per 100 searches are at least half DexCompare&apos;s per 100 visits.
         </p>
       </section>
     </div>

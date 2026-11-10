@@ -11,6 +11,7 @@ import { SEVERITY_RANK, type CheckResult, type Severity } from "../ops/types";
 import type { Hq } from "./load";
 import { pctChange, type Week } from "./view";
 import { GROWTH_TARGETS } from "../admin-growth";
+import { paidPer100, type SearchTest } from "../earnings/search-test";
 
 export const WEEKLY_SUBJECT_PREFIX = "Empire weekly";
 
@@ -39,6 +40,24 @@ export interface WeeklyInput {
   today: string;
   /** Per site key, the last 7 days' visitors (daily, summed) and buy_click events (Vercel Web Analytics); null when not read. */
   buyClicks?: ReadonlyMap<string, { visitors: number; clicks: number }> | null;
+  /** The compare search test (to the 8 Dec gate): stored analytics and ce-search/ce-mcp eBay earnings, AUD cents. */
+  search?: { test: SearchTest | null; earned: { d7: number; d30: number } } | null;
+}
+
+/** The compare search test's lines, plain text (the HTML part escapes them). Pure. */
+export function searchTestLines(search: WeeklyInput["search"]): string[] {
+  if (!search) return [];
+  const t = search.test;
+  if (!t) return ["Not collected yet (the earnings refresh reads it every three hours)."];
+  const w = t.d7;
+  const per = paidPer100(w);
+  const lines = [
+    `Last 7 days: ${n(w.searches)} searches (${n(w.empty)} found nothing), ${n(w.resultClicks)} result clicks, ${n(w.paidClicks)} paid eBay clicks${per == null ? "" : ` (${per} per 100 searches)`}, earned ${money(search.earned.d7)}.`,
+    `Last 30 days: ${n(t.d30.searches)} searches, ${n(t.d30.paidClicks)} paid clicks, earned ${money(search.earned.d30)}.`,
+  ];
+  if (t.bySite.length) lines.push(`Sent by: ${t.bySite.slice(0, 8).map((b) => `${b.from} ${b.count}`).join(", ")}.`);
+  if (t.noResult.length) lines.push(`Most searched, not found: ${t.noResult.slice(0, 10).map((r) => `“${r.q}” ${r.count}`).join(", ")}.`);
+  return lines;
 }
 
 /** "84 · 3.1/100" — buy clicks, and per 100 visitors (site review X6, 2026-11-10). */
@@ -106,6 +125,11 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
     inner += `<tr><td style="${h}">RiftCompare checks flagged</td></tr>`;
     inner += `<tr><td style="padding:2px 32px;font-size:13px;line-height:1.5;color:#b8c0cc">${flagged.map((r) => `<div style="margin:3px 0"><span style="color:${COLOR[r.severity]}">●</span> <strong style="color:#e6ebf2">${esc(r.title)}</strong> — ${esc(r.summary)}</div>`).join("")}</td></tr>`;
   }
+  const searchLines = searchTestLines(x.search);
+  if (searchLines.length) {
+    inner += `<tr><td style="${h}">Compare search test (gate 8 Dec)</td></tr>`;
+    inner += `<tr><td style="padding:2px 32px;font-size:13px;line-height:1.55;color:#b8c0cc">${searchLines.map((l) => `<div style="margin:3px 0">${esc(l)}</div>`).join("")}</td></tr>`;
+  }
   inner += x.money.html;
   if (x.growthText) {
     inner += `<tr><td style="${h}">Growth review detail</td></tr>`;
@@ -128,6 +152,7 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
       return `  ${r.site.label}: ${n(r.clicks.last7)} clicks ${pct(r.clicksPct)}${r.met == null ? "" : r.met ? " ✓" : " ✗"} · ${money(r.earned.last7)}${x.buyClicks ? ` · buy clicks ${buyCell(x.buyClicks.get(r.site.key))}` : ""} · [${WORD[r.health.severity]}] ${top ? `${top.name}: ${top.detail}` : r.health.summary}`;
     }),
     ...(flagged.length ? ["", "RIFTCOMPARE CHECKS FLAGGED", ...flagged.map((r) => `  [${WORD[r.severity]}] ${r.title}: ${r.summary}`)] : []),
+    ...(searchLines.length ? ["", "COMPARE SEARCH TEST (GATE 8 DEC)", ...searchLines.map((l) => `  ${l}`)] : []),
     "",
     x.money.text,
     ...(x.growthText ? ["", "GROWTH REVIEW DETAIL", x.growthText] : []),
