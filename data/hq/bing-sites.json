@@ -1,0 +1,299 @@
+{
+  "generatedAt": "2026-11-10T11:12:00.679Z",
+  "sites": [
+    {
+      "host": "bandaicompare.com",
+      "indexed": "0",
+      "crawled": "0",
+      "errors": "0",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://bandaicompare.com/sitemap.xml",
+        "lastCrawled": "2026-11-07",
+        "status": "The page is not accessible"
+      },
+      "action": "SUBMITTED (Bing status \"The page is not accessible\")"
+    },
+    {
+      "host": "camcompare.vercel.app",
+      "indexed": "0",
+      "crawled": "1",
+      "errors": "0",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://camcompare.vercel.app/sitemap.xml",
+        "lastCrawled": "2026-11-10",
+        "status": "Success"
+      },
+      "action": "read 2026-11-10"
+    },
+    {
+      "host": "cyberpunkcompare.com",
+      "indexed": "13",
+      "crawled": "5",
+      "errors": "4",
+      "impr": "1705",
+      "clicks": "81",
+      "sitemap": {
+        "url": "https://cyberpunkcompare.com/sitemap.xml",
+        "lastCrawled": "2026-11-02",
+        "status": "Success"
+      },
+      "action": "read 2026-11-02"
+    },
+    {
+      "host": "dexcompare.app",
+      "indexed": "4034",
+      "crawled": "10307",
+      "errors": "11176",
+      "impr": "3412",
+      "clicks": "119",
+      "sitemap": {
+        "url": "https://dexcompare.app/sitemap.xml",
+        "lastCrawled": "2026-11-05",
+        "status": "Success"
+      },
+      "action": "skipped by rule"
+    },
+    {
+      "host": "figurecompare.com",
+      "indexed": "4",
+      "crawled": "8",
+      "errors": "0",
+      "impr": "4",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://figurecompare.com/sitemap.xml",
+        "lastCrawled": "2026-11-07",
+        "status": "Success"
+      },
+      "action": "read 2026-11-07"
+    },
+    {
+      "host": "gundamcompare.com",
+      "indexed": "20",
+      "crawled": "287",
+      "errors": "0",
+      "impr": "184",
+      "clicks": "2",
+      "sitemap": {
+        "url": "https://gundamcompare.com/sitemap.xml",
+        "lastCrawled": "2026-11-04",
+        "status": "Success"
+      },
+      "action": "read 2026-11-04"
+    },
+    {
+      "host": "kaeyoung.com",
+      "indexed": "0",
+      "crawled": "4",
+      "errors": "0",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://kaeyoung.com/sitemap.xml",
+        "lastCrawled": "2026-11-07",
+        "status": "Success"
+      },
+      "action": "read 2026-11-07"
+    },
+    {
+      "host": "learnnarutomythos.app",
+      "indexed": "0",
+      "crawled": "0",
+      "errors": "0",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://learnnarutomythos.app/sitemap.xml",
+        "lastCrawled": "2026-11-07",
+        "status": "503 (Service Unavailable)"
+      },
+      "action": "read 2026-11-07"
+    },
+    {
+      "host": "lorcanacompare.com",
+      "indexed": "20",
+      "crawled": "692",
+      "errors": "0",
+      "impr": "381",
+      "clicks": "10",
+      "sitemap": {
+        "url": "https://lorcanacompare.com/sitemap.xml",
+        "lastCrawled": "2026-11-07",
+        "status": "Success"
+      },
+      "action": "read 2026-11-07"
+    },
+    {
+      "host": "motorcompare.app",
+      "indexed": "0",
+      "crawled": "0",
+      "errors": "0",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://motorcompare.app/sitemap.xml",
+        "lastCrawled": "2026-11-10",
+        "status": "Success"
+      },
+      "action": "read 2026-11-10"
+    },
+    {
+      "host": "mtgcompare.app",
+      "indexed": "1123",
+      "crawled": "8052",
+      "errors": "1032",
+      "impr": "2978",
+      "clicks": "66",
+      "sitemap": {
+        "url": "https://mtgcompare.app/sitemap.xml",
+        "lastCrawled": "2026-11-05",
+        "status": "Success"
+      },
+      "action": "read 2026-11-05"
+    },
+    {
+      "host": "opcompare.app",
+      "indexed": "1008",
+      "crawled": "2117",
+      "errors": "1",
+      "impr": "1263",
+      "clicks": "51",
+      "sitemap": {
+        "url": "https://opcompare.app/sitemap.xml",
+        "lastCrawled": "2026-11-04",
+        "status": "Success"
+      },
+      "action": "read 2026-11-04"
+    },
+    {
+      "host": "riftboundstocks.com",
+      "indexed": "1418",
+      "crawled": "6399",
+      "errors": "30",
+      "impr": "1061",
+      "clicks": "36",
+      "sitemap": {
+        "url": "https://riftboundstocks.com/sitemap.xml",
+        "lastCrawled": "2026-11-07",
+        "status": "Success"
+      },
+      "action": "read 2026-11-07"
+    },
+    {
+      "host": "riftcompare.com",
+      "indexed": "2729",
+      "crawled": "122279",
+      "errors": "7469",
+      "impr": "42296",
+      "clicks": "1385",
+      "sitemap": {
+        "url": "https://riftcompare.com/sitemap.xml",
+        "lastCrawled": "2026-11-04",
+        "status": "Success"
+      },
+      "action": "read 2026-11-04"
+    },
+    {
+      "host": "scentcompare.app",
+      "indexed": "0",
+      "crawled": "0",
+      "errors": "0",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://scentcompare.app/sitemap.xml",
+        "lastCrawled": "2026-11-06",
+        "status": "Success"
+      },
+      "action": "read 2026-11-06"
+    },
+    {
+      "host": "sportscardcompare.com",
+      "indexed": "0",
+      "crawled": "0",
+      "errors": "0",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://sportscardcompare.com/sitemap.xml",
+        "lastCrawled": "2026-11-09",
+        "status": "Success"
+      },
+      "action": "read 2026-11-09"
+    },
+    {
+      "host": "wargamecompare.com",
+      "indexed": "6",
+      "crawled": "4",
+      "errors": "0",
+      "impr": "17",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://wargamecompare.com/sitemap.xml",
+        "lastCrawled": "2026-11-04",
+        "status": "Success"
+      },
+      "action": "read 2026-11-04"
+    },
+    {
+      "host": "camcompare.app",
+      "indexed": "187",
+      "crawled": "1315",
+      "errors": "2",
+      "impr": "324",
+      "clicks": "3",
+      "sitemap": {
+        "url": "https://www.camcompare.app/sitemap.xml",
+        "lastCrawled": "2026-11-04",
+        "status": "Success"
+      },
+      "action": "read 2026-11-04"
+    },
+    {
+      "host": "compareempire.com",
+      "indexed": "75",
+      "crawled": "144",
+      "errors": "478",
+      "impr": "201",
+      "clicks": "1",
+      "sitemap": {
+        "url": "https://compareempire.com/sitemap.xml",
+        "lastCrawled": "2026-11-07",
+        "status": "Success"
+      },
+      "action": "skipped by rule"
+    },
+    {
+      "host": "scanmyemails.com",
+      "indexed": "3",
+      "crawled": "13",
+      "errors": "6",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://www.scanmyemails.com/sitemap.xml",
+        "lastCrawled": "2026-11-10",
+        "status": "The page is not accessible"
+      },
+      "action": "SUBMITTED (Bing status \"The page is not accessible\")"
+    },
+    {
+      "host": "ygocompare.com",
+      "indexed": "11",
+      "crawled": "282",
+      "errors": "0",
+      "impr": "451",
+      "clicks": "3",
+      "sitemap": {
+        "url": "https://ygocompare.com/sitemap.xml",
+        "lastCrawled": "2026-11-04",
+        "status": "Success"
+      },
+      "action": "read 2026-11-04"
+    }
+  ]
+}
