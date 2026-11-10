@@ -369,11 +369,8 @@ export function SideNav() {
                 <ul id={panelId} className="space-y-0.5 pb-1.5">
                   {group.links.map((link) => {
                     const active = isActiveLink(pathname, link);
-                    const className = `block truncate rounded-md border-l-2 py-1.5 [@media(pointer:coarse)]:py-3.5 pl-3 pr-2 text-sm transition-colors ${
-                      active
-                        ? "border-brand-400 bg-brand-500/10 font-semibold text-brand-300"
-                        : "border-transparent text-slate-300 hover:border-ink-700 hover:bg-ink-800 hover:text-white"
-                    }`;
+                    // .sn-link / .sn-on / .sn-off (globals.css): the same utilities, one short class (site review X2).
+                    const className = `sn-link ${active ? "sn-on" : "sn-off"}`;
                     return (
                       <li key={link.href}>
                         {link.external ? (

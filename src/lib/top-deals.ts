@@ -379,3 +379,13 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
 export function getCachedTopDeals(country: Country): Promise<TopDeals> {
   return getTopDeals(country);
 }
+
+/**
+ * The fields Today's Top Deals draws, for the props of that client component. Pure.
+ * `cheapestSealed` (the column went 2026-09-30) and `cheapestOnEbay` (moved to Deal
+ * Finder) are still fetched for other readers but never drawn there, and every market's
+ * copy rides in the homepage payload: they were ~40% of its 84 KB (site review X2, 2026-11-10).
+ */
+export function topDealsForGrid(d: TopDeals): TopDeals {
+  return { ...d, cheapestSealed: [], cheapestOnEbay: [] };
+}

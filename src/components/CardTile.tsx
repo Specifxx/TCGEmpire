@@ -101,7 +101,7 @@ export function CardTile({ card }: { card: CardTileData }) {
     // button is a SIBLING of the link (not inside it) so toggling it never triggers
     // navigation or the top loading bar. h-full + flex so every tile in a row (even
     // one with no price yet) matches its siblings' height.
-    <div className="cv-auto group card-surface relative flex h-full flex-col overflow-hidden transition-[transform,box-shadow,border-color] duration-base ease-out motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0">
+    <div className="cv-auto group card-surface ct-tile">
       {/* z-30, ABOVE the badge column (z-20). It used to be z-10, below it, so
           on a narrow tile a wide chip like "★ Overnumbered" was laid over the
           heart and took its clicks — reported from the watchlist drawer, where
@@ -117,7 +117,7 @@ export function CardTile({ card }: { card: CardTileData }) {
         >
           <CardImage
             card={card}
-            className="h-full w-full transition-transform duration-slow ease-out motion-safe:group-hover:scale-[1.03]"
+            className="ct-art"
           />
           {/* Bounded on the right so the column ends before the heart's corner
               (right-2 + a 32px button + a gap = right-12), and each chip
@@ -170,7 +170,7 @@ export function CardTile({ card }: { card: CardTileData }) {
             )}
           </div>
           {stock.kind === "stores" ? (
-            <div className="shrink-0 whitespace-nowrap pb-0.5 text-right text-[11px] font-semibold text-brand-400">
+            <div className="ct-count">
               {stock.count} {stock.count === 1 ? "store" : "stores"}
             </div>
           ) : stock.kind === "elsewhere" ? (

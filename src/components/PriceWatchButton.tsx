@@ -107,6 +107,11 @@ export function PriceWatchButton({
       ? "Watch this card: a free email when its price hits a new low (free accounts: up to 10 cards). Plus adds your own target price and sealed-product watches; Premium watches a whole deck's delivered price."
       : "Watch this card: a free email when its price hits a new low (free accounts: up to 10 cards, with your own target price on one card and one sealed-product watch). Premium sets a target on every card, watches every sealed product and a whole deck's delivered price.";
 
+  // The icon on a card tile carries the first clause only: a homepage draws 64 tiles, and the
+  // full sentence was ~16 KB of its HTML (site review X2, 2026-11-10). The labelled buttons
+  // keep the full hint.
+  const tileHint = watching ? hint : "Watch this card: a free email when its price hits a new low";
+
   if (variant === "full" || variant === "responsive") {
     const responsive = variant === "responsive";
     return (
@@ -155,11 +160,11 @@ export function PriceWatchButton({
       disabled={busy}
       aria-pressed={watching}
       aria-label={label}
-      title={hint}
+      title={tileHint}
       className={`tap-icon rounded-full border transition-colors ${
         watching
           ? "border-gold/60 bg-ink-950/80 text-gold"
-          : "border-ink-600 bg-ink-950/80 text-slate-300 hover:border-gold/50 hover:text-gold"
+          : "wb-off"
       }`}
     >
       {bell}

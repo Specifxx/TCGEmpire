@@ -23,10 +23,14 @@ export function SealedTile({
   group,
   currency,
   soldOutEverywhere = false,
+  quickView = true,
 }: {
   group: SealedGroup;
   currency: string;
   soldOutEverywhere?: boolean;
+  /** false: the tile is a plain link to the product's page. The homepage shelf passes its groups
+   *  without listings (site review X2, 2026-11-10), so it has nothing to show in a quick view. */
+  quickView?: boolean;
 }) {
   const g = group;
   const soldOut = g.lowestPriceCents == null;
@@ -43,6 +47,7 @@ export function SealedTile({
     <a
       href={sealedPath(g.groupKey)}
       onClick={(e) => {
+        if (!quickView) return; // a plain link (the homepage shelf, whose groups carry no listings)
         // A modified or middle click opens the page itself (new tab, new window).
         if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         e.preventDefault();

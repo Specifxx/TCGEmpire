@@ -9,8 +9,10 @@ import { SealedTile } from "@/components/SealedTile";
 // The homepage's sealed shelf (2026-10-28, owner: sealed is as big a market as
 // singles, so it belongs on the front page). The page is one market-neutral
 // cached render, so it passes the shelf for every market and this picks the
-// visitor's, the same way TodaysTopDeals does. Tiles open the sealed quick view
-// in place (RiftCompare has no sealed detail page), exactly as on /sealed.
+// visitor's, the same way TodaysTopDeals does. Tiles link to the product's own
+// page (/sealed/<slug>). Since 2026-11-10 (site review X2) the groups arrive
+// WITHOUT their listings: six markets' store rows were 229 KB of the home
+// page's 544 KB payload, for a quick view few opened. The product page has them.
 export interface SealedShelf {
   groups: SealedGroup[];
   currency: string;
@@ -41,7 +43,7 @@ export function HomeSealedShelf({ shelves }: { shelves: Record<Country, SealedSh
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
         {shelf.groups.map((g) => (
-          <SealedTile key={g.groupKey} group={g} currency={shelf.currency} />
+          <SealedTile key={g.groupKey} group={g} currency={shelf.currency} quickView={false} />
         ))}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">

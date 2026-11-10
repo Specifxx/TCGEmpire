@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getPopularCards, getSetChaseTiles } from "@/lib/cheapest-cards";
 import { featuredSet } from "@/lib/constants";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
-import { getCachedTopDeals, type TopDeals } from "@/lib/top-deals";
+import { getCachedTopDeals, topDealsForGrid, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
 import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
@@ -331,6 +331,7 @@ export default async function HomePage() {
   // doc comment) — not just the AU baseline this page's ISR render bakes in.
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
+  const gridDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c) => [c, topDealsForGrid(topDealsByCountry[c])])) as Record<Country, TopDeals>;
   const sealedShelves = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, sealedShelf(sealedArr[i], COUNTRIES[c].currency)])) as Record<Country, SealedShelf>;
   // Riot's drawing products, per market, for RiotDrawingsRow's tiles (the
   // groups always exist: sealed-import.ts synthesises them until eBay lists one).
@@ -385,7 +386,7 @@ export default async function HomePage() {
           place (globals.css, "Scroll motion"). */}
       {anyDeals && (
         <div className="rb-sd">
-          <TodaysTopDeals dealsByCountry={topDealsByCountry} />
+          <TodaysTopDeals dealsByCountry={gridDealsByCountry} />
         </div>
       )}
 
@@ -582,7 +583,8 @@ const SHELF_SKIP = /case|bulk runes|^sealed$/i;
 function sealedShelf(groups: SealedGroup[], currency: string): SealedShelf {
   const open = groups.filter((g) => g.lowestPriceCents != null);
   return {
-    groups: open.filter((g) => !SHELF_SKIP.test(g.productType)).slice(0, 8),
+    // Listings stay on the product page: the tile draws none of them (site review X2, 2026-11-10).
+    groups: open.filter((g) => !SHELF_SKIP.test(g.productType)).slice(0, 8).map((g) => ({ ...g, listings: [] })),
     currency,
     types: Array.from(new Set(open.map((g) => g.productType))),
   };

@@ -12,7 +12,7 @@ import { SETS, hasSetGallery, hasSetHub, newestReleasedSet, nextUpcomingSet, sho
 import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import type { Country } from "@/lib/country";
-import type { TopDeals } from "@/lib/top-deals";
+import { topDealsForGrid, type TopDeals } from "@/lib/top-deals";
 import type { PriceMovers } from "@/lib/price-history";
 import type { CardTileData } from "@/components/CardTile";
 import type { RecentUpdate } from "@/lib/price-history";
@@ -103,7 +103,9 @@ export function HomeSections({
   // Same trim for "Recently updated" — a separate variable (not reassigning
   // the `recentlyUpdated` prop) because the JSON-LD ItemList further down
   // still needs the full RecentUpdate list it was passed.
-  const recentlyUpdatedCards = recentlyUpdated.map((u) => ({ card: u.card, pct: u.pct }));
+  // The shelf shows 12 (site review X2, 2026-11-10: 24 tiles were ~80 KB of the page, below the
+  // fold, and "See all movers" lists the rest); the ItemList keeps all of them, unchanged.
+  const recentlyUpdatedCards = recentlyUpdated.slice(0, 12).map((u) => ({ card: u.card, pct: u.pct }));
   const newestSet = newestReleasedSet();
   // The next announced-but-unreleased set (Radiance today; rolls forward on
   // its own — see nextUpcomingSet's doc comment). undefined hides the card.
@@ -151,7 +153,7 @@ export function HomeSections({
           test file. Hidden entirely if no market has data. */}
       {showTopDeals && anyDeals && (
         <Reveal>
-          <TodaysTopDeals dealsByCountry={topDealsByCountry} />
+          <TodaysTopDeals dealsByCountry={Object.fromEntries(Object.entries(topDealsByCountry).map(([c, d]) => [c, topDealsForGrid(d)])) as Record<Country, TopDeals>} />
         </Reveal>
       )}
 

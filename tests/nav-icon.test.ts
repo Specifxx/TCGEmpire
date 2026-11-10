@@ -73,7 +73,10 @@ test("icons inherit colour and size from the button, so active/hover states reac
   // the tint alone is the cue, and the background moved to the active LINK
   // inside the group — which is the thing you actually navigated to.
   assert.match(rail, /groupActive \? "text-brand-300"/, "the active group must tint its icon, not only its background");
-  assert.match(rail, /border-brand-400 bg-brand-500\/10 font-semibold text-brand-300/, "the active LINK carries the border + tint");
+  // Since 2026-11-10 (site review X2) the link's utilities are one class, .sn-on in globals.css.
+  // text-brand-300 left with them: the theme has no brand-300, so it never drew anything.
+  assert.match(rail, /active \? "sn-on" : "sn-off"/, "the active link takes .sn-on");
+  assert.match(read("src/app/globals.css"), /\.sn-on \{\s*@apply border-brand-400 bg-brand-500\/10 font-semibold;/, "the active LINK carries the border + tint");
 });
 
 test("the icons are decorative — the button carries the accessible name", () => {
