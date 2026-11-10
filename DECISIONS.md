@@ -23181,3 +23181,42 @@ through it from `alerts@dexcompare.app` when `DEX_BREVO_API_KEY` is set (Vercel 
 and falls back to the shared sender if the key is missing or Brevo refuses the send, so no alert is lost. Every other
 site is unchanged. The new Brevo account's "Authorised IPs" must stay off (Vercel's outbound IPs rotate). The daily
 mail cap and per-address limits still apply.
+
+## 2026-11-10: Followed links from Rift's Pokémon section to DexCompare's hubs (SEO-8)
+
+**Why.** Search Console showed no referring page for DexCompare's set and type hubs, which Google crawled and did not
+index. Rift is the domain Google trusts, and its Pokémon section already linked DexCompare with clean URLs (2026-11-07),
+but every one of those links was nofollow.
+
+**What.** Two kinds of link are now followed (`rel="noopener"`, `DEX_FOLLOW_REL`, `DexAnchor follow`): each Pokémon set
+page's "Compare <set> at <market> stores" link to the matching `/<region>/sets/<set>` hub, and a line on the section home
+(`HomeStoresBand`) to the four type hubs (`/<region>/type/booster-boxes`, `elite-trainer-boxes`, `booster-bundles`,
+`collections`) in the visitor's market, US by default. All clean URLs, no query string. Every other DexCompare link
+(product boards, tiles, quick view, subnav, the band's button) stays nofollow, and there is still no site-wide footer link:
+a data link repeated across a thousand pages is what looked like a link network. `tests/pokemon-dexcompare.test.ts`.
+## 2026-11-10 — The compare search test's numbers on Empire HQ and in the Monday report
+
+Thread "Build compare search engine MVP" (plan: project files › compare-search/compare-search-mvp-plan-2026-11-10.html;
+gate 8 Dec). compareempire.com/search and every sister site's "Search every Compare Empire site" link (shown only on an
+empty search) feed one test, judged on paid clicks per search, not searches.
+
+- `lib/earnings/search-test.ts`: the earnings refresh (every three hours) reads Compare Empire's Web Analytics events
+  through the public API the analytics page uses (`search` by results, by `from` and by the empty-search words;
+  `search_click`; `buy_click` with page `/search`, which is only the pinned eBay row, so always paid) and keeps one copy
+  under `search-test`. Search earnings are eBay sales whose customid starts `ce-search` or `ce-mcp` (Compare Empire kept
+  its `ce-` prefix so the money stays in its own row).
+- Empire HQ's "Compare search test" box and the Monday report's section show 7 and 30 days: searches, empty searches,
+  result clicks, paid clicks per 100 searches, search earnings, searches per sending site and the most searched words
+  nothing matched (the list of stores, feeds and categories to add next). The query words are the only text kept, and
+  only for a search nothing matched; nothing about the visitor.
+
+## 2026-11-10: Bing, every site (SEO indexing plan, SEO-3)
+
+- Bing reported 0 indexed pages for kaeyoung.com and 75 for compareempire.com while only Rift was measured. `scripts/bing-sites.ts`
+  loops over every property the `BING_API_KEY` account sees and prints one line each: pages in Bing's index, crawled, errors,
+  28-day impressions and clicks, and the sitemap Bing holds with its last-read date. With `--apply` it submits
+  `https://<host>/sitemap.xml` (SubmitFeed) where Bing has none or has not read it in 14 days, never for dexcompare.app or
+  compareempire.com (no sitemap resubmits there until the 25 Nov recheck).
+- It is its own workflow (`bing-sites.yml`, weekly read-only, `apply` input) rather than a Maintenance task: `maintenance.yml`
+  is at 440 KB of GitHub's 512 KB limit, and the file was undispatchable once already. Pure helpers pinned in
+  `tests/bing-sites.test.ts`. Its JSON (`docs/bing-sites.json`) is the source for the Bing line in the Monday report.
