@@ -1,6 +1,5 @@
 import { inflateRawSync } from "node:zlib";
 import type { DayAmount, TagDay } from "./core";
-import { siteForProject } from "./sites";
 
 // AMAZON ASSOCIATES ON THE EARNINGS DASHBOARD (2026-11-03, owner: "is there a
 // way to get Amazon on our earnings dashboard as well?"). DECISIONS.md, "Amazon
@@ -64,33 +63,10 @@ export const AMAZON_TRACKING_SITES: Record<string, string> = {
   // compareempire-21 (DE).
 };
 
-/** IDs several sites use: never credited to one site, whatever their name says. */
-export const AMAZON_SHARED_IDS = new Set(["riftcompare-20", "compareempire-22", "compareempi03-21", "compareempire-20", "compareempire-21"]);
-
-/**
- * Which site an Amazon tracking ID belongs to (2026-11-10, zero-earnings diagnosis:
- * every site should get its own ID in each Amazon store, and the dashboard must
- * split them the day the owner creates them, with no code change). The map first;
- * then a shared ID stays shared; then the ID's name, without Amazon's `-20`/`-22`
- * suffix, is read like a Vercel project name (`motorcompare-22` → MotorCompare,
- * `sportscardcomp-20` → SportsCardCompare). A `compareempi…` name never matches by
- * name (the shared IDs are all called that), and an ID no site's name matches stays
- * shared. Pure.
- */
-export function amazonSiteForId(trackingId: string): string {
-  const id = trackingId.trim().toLowerCase();
-  if (AMAZON_TRACKING_SITES[id]) return AMAZON_TRACKING_SITES[id];
-  if (!id || AMAZON_SHARED_IDS.has(id)) return AMAZON_SHARED;
-  const stem = id.replace(/-\d{2}$/, "");
-  if (!stem || stem.startsWith("compareempi")) return AMAZON_SHARED;
-  const site = siteForProject(stem);
-  return site.startsWith("project:") || site === "shared" ? AMAZON_SHARED : site;
-}
-
 /** A tracking ID as a dashboard tag: `<site>-<store>-<id>`, so tagGroup finds the site. */
 export function amazonTag(trackingId: string, store: string): string {
   const id = trackingId.trim().toLowerCase();
-  return `${amazonSiteForId(id)}-${store}-${id || "none"}`;
+  return `${AMAZON_TRACKING_SITES[id] ?? AMAZON_SHARED}-${store}-${id || "none"}`;
 }
 
 /** The tracking ID back out of a dashboard tag. */

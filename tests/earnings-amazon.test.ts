@@ -102,12 +102,6 @@ test("tracking IDs split by site; shared IDs never land on one site", () => {
   assert.equal(amazonTag("compareempire-22", "au"), "amazon-au-compareempire-22");
   assert.equal(amazonTag("somethingnew-22", "au"), "amazon-au-somethingnew-22");
   for (const [id, site] of Object.entries(AMAZON_TRACKING_SITES)) assert.equal(tagGroup(amazonTag(id, "au")).key, site, id);
-  // A new per-site ID splits by its name, no code change (2026-11-10); shared IDs and unknown names stay shared.
-  assert.equal(amazonTag("motorcompare-22", "au"), "motor-au-motorcompare-22");
-  assert.equal(amazonTag("sportscardcomp-20", "us"), "wax-us-sportscardcomp-20");
-  assert.equal(amazonTag("kaeyoung-20", "us"), "ky-us-kaeyoung-20");
-  assert.equal(amazonTag("compareempire-22", "au"), "amazon-au-compareempire-22");
-  assert.equal(amazonTag("compareempire05-20", "us"), "amazon-us-compareempire05-20", "a compareempi… name never matches by name");
   assert.equal(tagGroup("amazon-us-riftcompare-20").label, "Amazon, shared ID (several sites)");
 
   const rows = [
