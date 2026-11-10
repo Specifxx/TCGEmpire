@@ -7,6 +7,7 @@ import { AccountsExport, type ExportUser } from "@/components/admin/AccountsExpo
 import { GrantPremiumForm } from "@/components/admin/GrantPremiumForm";
 import { TierFloorForm } from "@/components/admin/TierFloorForm";
 import { NOT_SEED_WHERE } from "@/lib/premium";
+import { DexTab } from "./DexTab";
 
 export const dynamic = "force-dynamic";
 
@@ -21,19 +22,54 @@ const TAKE = 500; // cap the list; use the search box to find older accounts.
 export default async function AccountsAdminPage({
   searchParams,
 }: {
-  searchParams: { key?: string; q?: string; f?: string };
+  searchParams: { key?: string; q?: string; f?: string; site?: string };
 }) {
   const token = process.env.ADMIN_TOKEN;
   const keyOk = !!token && searchParams.key === token;
   const me = await getCurrentUser();
   if (!(keyOk || me?.isAdmin)) notFound(); // don't reveal the page exists
 
+  const dexTab = searchParams.site === "dex";
   const q = (searchParams.q ?? "").trim();
   const FILTERS = ["paid", "plus", "premium", "verified", "active"] as const;
   const filter = (FILTERS as readonly string[]).includes(searchParams.f ?? "")
     ? (searchParams.f as (typeof FILTERS)[number])
     : null;
   const keySuffix = keyOk && !me?.isAdmin ? `&key=${encodeURIComponent(token!)}` : "";
+
+
+  const tabKey = keyOk && !me?.isAdmin ? `key=${encodeURIComponent(token!)}` : "";
+  const tabBar = (
+    <div className="mt-3 flex gap-1.5">
+      {([["", "RiftCompare"], ["dex", "DexCompare"]] as const).map(([k, label]) => {
+        const qs = [k ? `site=${k}` : "", tabKey].filter(Boolean).join("&");
+        const on = (k === "dex") === dexTab;
+        return (
+          <Link
+            key={label}
+            href={`/admin/accounts${qs ? `?${qs}` : ""}`}
+            className={`chip border px-3 py-1.5 text-xs font-semibold ${on ? "border-brand-500 bg-brand-500/15 text-brand-400" : "border-ink-700 text-slate-400 hover:border-brand-500/50"}`}
+          >
+            {label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+  if (dexTab) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-10">
+        <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
+          <Link href={`/admin${keySuffix ? `?key=${encodeURIComponent(token!)}` : ""}`} className="hover:text-slate-300">Admin</Link>
+          <span>/</span>
+          <span className="text-slate-300">Accounts</span>
+        </nav>
+        <h1 className="text-2xl font-bold text-white">Accounts</h1>
+        {tabBar}
+        <DexTab />
+      </div>
+    );
+  }
 
   const now = new Date();
   const d7 = new Date(now.getTime() - 7 * 86400_000);
@@ -209,7 +245,8 @@ export default async function AccountsAdminPage({
         <span className="text-slate-300">Accounts</span>
       </nav>
       <h1 className="text-2xl font-bold text-white">Accounts</h1>
-      <p className="mt-1 text-sm text-slate-400">Every registered account, newest first. Admin-only, excluded from search.</p>
+      {tabBar}
+      <p className="mt-3 text-sm text-slate-400">Every registered account, newest first. Admin-only, excluded from search.</p>
 
       {/* Summary. Plus and Premium are counted separately rather than as one
           "paid" number: they're different revenue per head, so a rise in one and

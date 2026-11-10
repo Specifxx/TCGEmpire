@@ -23220,3 +23220,17 @@ empty search) feed one test, judged on paid clicks per search, not searches.
 - It is its own workflow (`bing-sites.yml`, weekly read-only, `apply` input) rather than a Maintenance task: `maintenance.yml`
   is at 440 KB of GitHub's 512 KB limit, and the file was undispatchable once already. Pure helpers pinned in
   `tests/bing-sites.test.ts`. Its JSON (`docs/bing-sites.json`) is the source for the Bing line in the Monday report.
+
+## 2026-11-10: DexCompare accounts tab on the admin Accounts page
+
+Owner: one central admin dashboard, "who is Premium and who isn't" for DexCompare beside RiftCompare.
+
+- DexCompare has no database; its Premium member is a RiftCompare account (DECISIONS "DexCompare Premium"). So the data
+  is already here and no cross-site API, shared secret or database access is needed: `/admin/accounts?site=dex` (a tab
+  beside RiftCompare, same admin gate) reads it directly.
+- New private table `SisterMember (email, site, firstLinkedAt, lastLinkedAt)`, upserted by `/sister-premium/<site>` when a
+  signed-in account is handed to the sister (best effort, never blocks). Not in `PUBLIC_MODELS`. Members start from this
+  deploy; earlier hand-offs are not recorded. Alert-only subscribers come from `SisterAlert` (site `dex`).
+- Plan is read live from `User` (`lib/admin-sister.ts` `planStatus`): Premium (paid, active), Trial (active inside the trial
+  window from `trialStartedAt`), Lapsed, Free, No account. Cancelled-but-still-active is not distinguishable without a
+  Stripe call, so it reads as its current plan. Conversion = members on paid Premium / members. Read-only, 500 rows.
