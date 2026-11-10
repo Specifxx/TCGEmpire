@@ -23280,3 +23280,9 @@ links or creates the ordinary RiftCompare account, so Stripe, `isPremium` and th
 Checkout (`/api/sister-premium/checkout`) and billing (`/portal`) are opened for that account from DexCompare too, returning to
 dexcompare.app; the member sees Stripe's page and never riftcompare.com. Nothing secret lives on DexCompare: the session token is
 signed with the sister key and re-read on every call, as before.
+
+## 2026-11-10: DexCompare's Brevo key replaced (owner)
+
+The first `DEX_BREVO_API_KEY` in Vercel held the pasted command text, not the key, so every DexCompare email fell back to Resend
+("Brevo send failed: Headers.append" in the logs). The owner made a new Brevo key, `dex2`, limited to transactional email, and set it
+with `Read-Host` piped to `vercel env add` (the clipboard can't hold both the command and the key). This release picks it up.
