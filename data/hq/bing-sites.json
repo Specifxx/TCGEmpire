@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-10T11:12:00.679Z",
+  "generatedAt": "2026-11-10T20:06:13.810Z",
   "sites": [
     {
       "host": "bandaicompare.com",
@@ -10,10 +10,10 @@
       "clicks": "0",
       "sitemap": {
         "url": "https://bandaicompare.com/sitemap.xml",
-        "lastCrawled": "2026-11-07",
-        "status": "The page is not accessible"
+        "lastCrawled": "2026-11-10",
+        "status": "Success"
       },
-      "action": "SUBMITTED (Bing status \"The page is not accessible\")"
+      "action": "read 2026-11-10"
     },
     {
       "host": "camcompare.vercel.app",
@@ -269,17 +269,13 @@
     },
     {
       "host": "scanmyemails.com",
-      "indexed": "3",
-      "crawled": "13",
-      "errors": "6",
-      "impr": "0",
-      "clicks": "0",
-      "sitemap": {
-        "url": "https://www.scanmyemails.com/sitemap.xml",
-        "lastCrawled": "2026-11-10",
-        "status": "The page is not accessible"
-      },
-      "action": "SUBMITTED (Bing status \"The page is not accessible\")"
+      "indexed": "?",
+      "crawled": "?",
+      "errors": "?",
+      "impr": "?",
+      "clicks": "?",
+      "sitemap": null,
+      "action": "GetFeeds failed: HTTP 400 {\"ErrorCode\":14,\"Message\":\"ERROR!!! NotAuthorized\"}"
     },
     {
       "host": "ygocompare.com",
