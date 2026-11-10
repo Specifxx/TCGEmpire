@@ -122,7 +122,9 @@ longer lands on its entry.
   `/admin/health`, and emails the owner only when something is RED; amber waits for
   Empire HQ (`/admin/hq`, every site in one row, sisters' `ops-status` files) and the
   one Monday report, which replaced the Sunday digest and the growth report email
-  [2026-11-02](../DECISIONS.md#L21386). Its
+  [2026-11-02](../DECISIONS.md#L21386). The report shows each site's visitors, buy clicks and
+  
+  [2026-11-10](../DECISIONS.md#L23298). Its
   memory is the Actions cache, not the database it watches. Every new public form
   calls `notifyOwnerBounded` (capped 8/h, 25/day), which emails the SITE inbox
   (`CONTACT_EMAIL`, Reply-To the visitor), not the owner, written feedback included
@@ -842,7 +844,7 @@ longer lands on its entry.
   ranking, paged) lists only cards where eBay
   beats every source the card page ranks (EU: CardTrader too; US: TCGplayer's
   listing too; Canada too since its eBay rows became eBay Canada listings,
-  [2026-11-10](../DECISIONS.md#L23323)). Its free status beside the trial measurement is
+  [2026-11-10](../DECISIONS.md#L23342)). Its free status beside the trial measurement is
   the owner's call. Hot 40 snapshots mark picks "Cheapest on eBay" by the same
   rule (`getCheapestOnEbayFor`), in each pick's basis market, frozen at mint,
   with a Paid link tag and the disclosure above the table
@@ -1151,7 +1153,7 @@ longer lands on its entry.
   the cheapest eBay listing, an asking price; store prices are item prices,
   postage extra, and the copy says the gap is smaller by it; % is of the eBay
   price; ties excluded; Canada has both eBay views since 2026-11-10 (its own
-  eBay Canada search, [2026-11-10](../DECISIONS.md#L23323)). The store picker is on the
+  eBay Canada search, [2026-11-10](../DECISIONS.md#L23342)). The store picker is on the
   first view only. `Card.marketPriceCents` is synthetic; never show it.
   [2026-09-21](../DECISIONS.md#L9681), [2026-09-17](../DECISIONS.md#L7801),
   [2026-09-30](../DECISIONS.md#L16000)
