@@ -90,7 +90,7 @@ test("sign-in on the sister site: an email-link code is its own kind, for its ow
   assert.equal(await verifyEmailLinkCode(sess, dex), null, "a session is not a link code");
   assert.equal(await verifyEmailLinkCode(code, { ...dex, url: "https://evil.example" }), null);
   assert.match(emailLinkUrl(dex, code), /^https:\/\/dexcompare\.app\/account\/verify#c=/);
-  assert.equal(googleClientIdFor(dex, {}), null);
+  assert.match(googleClientIdFor(dex, {}) ?? "", /^36388598689-.*\.apps\.googleusercontent\.com$/);
   assert.equal(googleClientIdFor(dex, { DEX_GOOGLE_CLIENT_ID: " abc.apps.googleusercontent.com " }), "abc.apps.googleusercontent.com");
 });
 
