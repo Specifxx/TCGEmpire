@@ -980,6 +980,11 @@ longer lands on its entry.
 
 ## Content & SEO
 
+- **Bing URL submission for the small sites:** `bing-submit.yml` sends each sister site Bing
+  indexes under 25 pages of its home, hubs and top sitemap URLs (by Google impressions)
+  daily, within Bing's allowance and at most 100 a site; never Dex or Compare Empire, never
+  Google. The Monday report and the `seo:bing-submit` check read `data/hq/bing-submit.json`.
+  [2026-11-10](../DECISIONS.md#L23298)
 - **Black Friday and Cyber Monday pages:** `/black-friday` and `/cyber-monday` are one
   component (`HolidaySalePage`), each kept all year, with the sealed deals table and
   the price watch (sealed boxes, biggest price drops, graded slabs, chase auctions, each

@@ -1,0 +1,64 @@
+name: Bing URL submission (small sites)
+
+# Zero-earnings plan (2026-11-10; DECISIONS.md "Bing URL submission"). Once a day, for every sister site Bing indexes
+# fewer than 25 pages of, submits its home page, hubs and top products (by Google impressions from the site's `demand`
+# branch, else sitemap order) through Bing's SubmitUrlBatch, within Bing's daily allowance and at most 100 a site
+# (scripts/bing-submit.ts). Never DexCompare or Compare Empire, never Google. Writes data/hq/bing-submit.json for the
+# Monday report and the ops check; what was sent when is kept in the Actions cache. No [deploy]: it never builds a site.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print what would be submitted, submit nothing"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "23 6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bing-submit
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Restore what was sent
+        uses: actions/cache/restore@v4
+        with:
+          path: .bing-submit-state.json
+          key: bing-submit-${{ github.run_id }}
+          restore-keys: bing-submit-
+      - name: Submit
+        env:
+          BING_API_KEY: ${{ secrets.BING_API_KEY }}
+          REPORTS_GITHUB_TOKEN: ${{ secrets.REPORTS_GITHUB_TOKEN }}
+          BING_SUBMIT_MAX: ${{ vars.BING_SUBMIT_MAX }}
+        run: npx tsx scripts/bing-submit.ts ${{ inputs.dry_run && '--dry-run' || '' }}
+      - name: Keep what was sent
+        if: always() && !inputs.dry_run && hashFiles('.bing-submit-state.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: .bing-submit-state.json
+          key: bing-submit-${{ github.run_id }}
+      # The Monday report and the ops check read this file from main. No [deploy]: it never builds the site.
+      - name: Publish the summary to data/hq
+        if: always() && !inputs.dry_run
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/hq/bing-submit.json
+          if git diff --cached --quiet; then echo "No change."; exit 0; fi
+          git commit -m "data: Bing URL submissions $(date -u +%F)"
+          for i in 1 2 3 4; do git push origin HEAD:main && exit 0; sleep $((2 ** i)); git pull --rebase origin main; done
+          exit 1

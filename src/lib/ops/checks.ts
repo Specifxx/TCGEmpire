@@ -474,6 +474,8 @@ export const JOBS: { file: string; title: string; staleH: number; scheduledSince
   { file: "store-vetting.yml", title: "Store vetting job (weekly)", staleH: 200 },
   // Weekly (2026-11-08): every site's outbound links; red when a tag is lost (lib/affiliate-gaps.ts).
   { file: "affiliate-gap-audit.yml", title: "Affiliate gap audit (weekly)", staleH: 200, scheduledSince: "2026-11-08T12:00:00Z" },
+  // Daily (2026-11-10): Bing URL submission for the sister sites Bing indexes under 25 pages of (scripts/bing-submit.ts).
+  { file: "bing-submit.yml", title: "Bing URL submission job", staleH: 36, scheduledSince: "2026-11-11T06:23:00Z" },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {
@@ -1151,6 +1153,43 @@ async function guarded(d: OpsDeps, id: string, area: OpsArea, title: string, fn:
   }
 }
 
+/**
+ * Bing URL submission (DECISIONS.md 2026-11-10 "Bing URL submission"): bing-submit.yml sends the small sites' best URLs
+ * to Bing once a day and publishes data/hq/bing-submit.json. This reads that file: pages in Bing per site, and whether
+ * any submit failed. A refused submit or a target site missing from (or unverified in) the owner's Bing Webmaster account
+ * is a warn: the sites still work, they just stay out of Bing. Never crit (a red job run is the jobs check's to mail).
+ */
+export async function bingSubmitCheck(d: OpsDeps): Promise<CheckResult> {
+  const id = "seo:bing-submit";
+  const area: OpsArea = "site";
+  const title = "Bing indexing (small sites)";
+  const r = await d.fetch("https://raw.githubusercontent.com/Specifxx/TCGEmpire/main/data/hq/bing-submit.json", { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+  if (!r.ok) return unknown(d, id, area, title, `The submission summary answered HTTP ${r.status} (the job has not run yet).`);
+  const f = (await r.json()) as { generatedAt?: string; status?: string; sites?: { host?: string; indexed?: number | null; status?: string }[] };
+  if (f.status === "not configured") return unknown(d, id, area, title, "No BING_API_KEY secret: nothing is submitted to Bing.");
+  const sites = Array.isArray(f.sites) ? f.sites.filter((s) => typeof s?.host === "string") : [];
+  const counts = sites.map((s) => `${s.host} ${s.indexed ?? "?"}`).join(", ");
+  const age = f.generatedAt ? hoursSince(new Date(f.generatedAt), d.now) : Infinity;
+  const failed = sites.filter((s) => (s.status ?? "").startsWith("failed"));
+  const missing = sites.filter((s) => /not in this Bing|not verified/.test(s.status ?? ""));
+  const problems: string[] = [];
+  if ((f.status ?? "").startsWith("failed")) problems.push(`the job could not read Bing (${f.status})`);
+  if (age > 60) problems.push(`the summary is ${Number.isFinite(age) ? humanAge(age) : "of unknown"} old`);
+  if (failed.length) problems.push(`submit failed for ${failed.map((s) => `${s.host} (${(s.status ?? "").slice(8, 80)})`).join(", ")}`);
+  if (missing.length) problems.push(`not verified in the owner's Bing Webmaster account: ${missing.map((s) => s.host).join(", ")}`);
+  if (problems.length) {
+    return result(d, {
+      id,
+      area,
+      title,
+      severity: "warn",
+      summary: `Pages in Bing: ${counts || "none read"}. Problem: ${problems.join("; ")}.`,
+      action: 'Tell Claude: "the Bing indexing check is amber; look at the latest Bing URL submission run on TCGEmpire".',
+    });
+  }
+  return result(d, { id, area, title, severity: "ok", summary: `Pages in Bing: ${counts}. Sites under 25 get their best URLs submitted daily.` });
+}
+
 export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   const out: CheckResult[] = [];
   const add = async (id: string, area: OpsArea, title: string, fn: () => Promise<CheckResult | CheckResult[]>) => out.push(...(await guarded(d, id, area, title, fn)));
@@ -1185,6 +1224,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("stores:codes", "money", "Store partner codes", async () => storeCodesRecheck(d));
   await add("amazon:prices", "money", "Amazon prices (Creators API)", () => amazonPrices(d));
   await add("awin:programmes", "money", "Awin programmes", () => awinProgrammes(d));
+  await add("seo:bing-submit", "site", "Bing indexing (small sites)", () => bingSubmitCheck(d));
   await add("site:self", "email", "Email and site settings", () => siteSelfChecks(d));
   await add("inbox:waiting", "inbox", "Inbox", () => inboxWaiting(d));
   return out;
