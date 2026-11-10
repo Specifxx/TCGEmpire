@@ -242,9 +242,9 @@ export default function MethodologyPage() {
           </p>
         </section>
 
-        {/* The old copy said we "never convert between currencies"; Canada's
-            "eBay US" rows (price-import.ts) and the TCGplayer benchmark
-            (lib/arbitrage.ts) both do. Every use is listed instead. */}
+        {/* The old copy said we "never convert between currencies"; the
+            TCGplayer benchmark (lib/arbitrage.ts) does (and Canada's "eBay US"
+            rows did until 2026-11-10). Every use is listed instead. */}
         <section id="currency" className="scroll-mt-header space-y-3">
           <h2 className="text-lg font-bold text-white">Currency conversion</h2>
           <p>
@@ -252,11 +252,6 @@ export default function MethodologyPage() {
             charges. We convert between currencies only in these places:
           </p>
           <ul className="list-disc space-y-1 pl-5">
-            <li>
-              <strong className="text-white">Canada&rsquo;s &ldquo;eBay US&rdquo; rows</strong> — eBay listings
-              from the US, converted to Canadian dollars, with postage left unquoted because a Canadian buyer
-              pays international postage the listing doesn&rsquo;t state.
-            </li>
             <li>
               <strong className="text-white">TCGplayer&rsquo;s market price</strong> — converted into your
               currency for the reference block, the Deal Finder, the homepage&rsquo;s savings figures and Box
@@ -401,8 +396,7 @@ export default function MethodologyPage() {
               <Link href="/tools/deal-finder" className="text-brand-400 hover:underline">Deal Finder</Link>{" "}
               lists cards you can buy in your market for less than TCGplayer&rsquo;s US market price, converted
               into your currency. For each card it takes the cheapest price on the buy side you choose — by
-              default every store we track in your market plus eBay (in Canada, whose eBay rows are US
-              listings with unquoted postage, eBay is off by default). An eBay price includes the postage the
+              default every store we track in your market plus eBay. An eBay price includes the postage the
               seller states, or is marked &ldquo;+ postage&rdquo; when the seller states none.
             </p>
             <p>
@@ -424,8 +418,6 @@ export default function MethodologyPage() {
               postage where there is one, and says so. It must be at least 1.00, at least 0.50 cheaper than
               the cheapest of those sources, and less than 80% cheaper — a copy at a fifth of every
               store&rsquo;s price is almost always a mismatched listing. Cards are ordered by the money saved.
-              Canada is left out,
-              because its eBay rows carry international postage nobody has quoted.
             </p>
           </div>
 
@@ -441,7 +433,6 @@ export default function MethodologyPage() {
               price must be at least 1.00, at least 0.50 below eBay, and less than 80% below it — a store at a
               fifth of the cheapest eBay copy almost always means that listing is a different product, such as a
               graded card. Equal prices are not listed. Ordered by the amount below eBay, or by the percentage.
-              Canada is left out for the same reason as above.
             </p>
           </div>
 

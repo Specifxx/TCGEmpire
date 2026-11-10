@@ -256,13 +256,13 @@ const FAQS: { q: string; a: string }[] = [
     q: "Does RiftCompare cover Riftbound singles and sealed products?",
     a: "Yes — compare prices on individual Riftbound singles as well as sealed products like booster boxes, booster packs, Proving Grounds and Nexus Night packs, all priced across local retailers.",
   },
-  // The conversion sentence (2026-09-26): Canada's "eBay US" rows are US
-  // listings the import converts to CAD (lib/price-import.ts), and the 7-day
+  // The conversion sentence (2026-09-26; Canada's converted "eBay US" rows
+  // left it 2026-11-10, when Canada got its own eBay Canada search): the 7-day
   // change and price-drop deals read the weekly USD history, converted
   // (lib/price-history.ts), so "no conversions" was untrue.
   {
     q: "Are the Riftbound prices shown in my local currency?",
-    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, USD in the US, GBP in the UK, SGD in Singapore, CAD in Canada and EUR in the EU — and store prices are shown as the stores themselves charge them. Two kinds of figure are converted at our reference rate: Canada's rows marked \"eBay US\", which are US listings, and figures from our weekly worldwide price history, such as the 7-day change and the price-drop deals.",
+    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, USD in the US, GBP in the UK, SGD in Singapore, CAD in Canada and EUR in the EU — and store prices are shown as the stores themselves charge them. Figures from our weekly worldwide price history, such as the 7-day change and the price-drop deals, are converted at our reference rate.",
   },
 ];
 

@@ -90,7 +90,8 @@ export async function RegionHome({ region }: { region: Country }) {
   // computeMarket (lib/market-rows.ts) sorts by item price, with postage only
   // breaking ties and a delivered total only where the store publishes it. The
   // second said "no conversion" in every market, but Canada's "eBay US" rows
-  // are US listings the import converts to CAD (lib/price-import.ts).
+  // were US listings the import converted to CAD (until 2026-11-10, when Canada
+  // got its own eBay Canada search).
   const faqs = [
     {
       q: `Where can I buy Riftbound cards in ${info.place}?`,
@@ -100,7 +101,7 @@ export async function RegionHome({ region }: { region: Country }) {
       q: `Are prices shown in ${info.currency}?`,
       a:
         region === "CA"
-          ? `Yes — every store price on this page and across the ${info.adjective} store listings is in ${info.currency}, the currency those stores charge in. Two kinds of figure are converted at our reference rate: rows marked "eBay US", which are US listings, and figures from our weekly worldwide price history, such as the 7-day change and price drops.`
+          ? `Yes — every store and eBay price on this page and across the ${info.adjective} store listings is in ${info.currency}, the currency those stores and eBay Canada sellers charge in. Figures from our weekly worldwide price history, such as the 7-day change and price drops, are converted into ${info.currency} at our reference rate.`
           : `Yes — every store price on this page and across the ${info.adjective} store listings is in ${info.currency}, the real currency those stores charge in. Figures from our weekly worldwide price history, such as the 7-day change and price drops, are converted into ${info.currency} at our reference rate.`,
     },
   ];

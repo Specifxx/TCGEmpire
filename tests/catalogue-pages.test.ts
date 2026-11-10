@@ -164,7 +164,7 @@ test("/browse explains its prices under the H1, without giving up its H1 or its 
     assert.ok(head.includes(phrase), `/browse's explanation must say "${phrase}"`);
   }
   // The market words are the BrowseMarketWord island's (2026-11-05): the baseline's in the HTML, the visitor's after hydration.
-  assert.match(code("src/components/browse/BrowseMarketBoard.tsx"), /country === "CA"[\s\S]{0,120}eBay US/, "Canada's converted eBay US rows are named, not denied");
+  assert.doesNotMatch(code("src/components/browse/BrowseMarketBoard.tsx"), /converted from US dollars/, "Canada's eBay rows are eBay Canada listings since 2026-11-10: nothing converted to name");
   assert.match(head, /href="\/methodology#ordering"/);
   assert.match(head, /href="\/guides\/where-to-buy-riftbound-cards"/);
   assert.match(code("src/lib/browse-shared.ts"), /const BROWSE_DEFAULT_SORT = "popular";/);

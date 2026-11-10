@@ -23319,3 +23319,30 @@ report reads for a "Bing URL submission, small sites" section (indexed trend and
 per-site Bing line) and the ops monitor reads for `seo:bing-submit`: amber when a submit is refused, a target site is not
 verified in the account, or the summary is over 60 hours old; the job itself is in `JOBS` (stale after 36 hours). A run
 goes red only when Bing refuses a call, not for an unverified, graduated or unreadable-sitemap site.
+
+## 2026-11-10: Canada gets its own daily eBay search; Singapore drops to once a week
+
+**Why.** The owner approved the site-by-region eBay review (project files,
+`strategy/ebay-site-region-split-2026-11-10.html`). Canada was RiftCompare's second biggest country in the 30 days to
+10 November (2,413 visitors, 127 eBay clicks, A$7.06) and had no eBay search of its own: its `ebay_ca` singles rows
+were the US results converted to CAD with postage blanked (the 2026-08 "CANADA IS DERIVED FROM THE US PASS" design).
+eBay US does ship to Canada, but at international postage nobody quoted, from US sellers, so those rows were left out of
+the Deal Finder's eBay views and the default buy side. Singapore pays nothing on eBay: the Partner Network has no
+Singapore programme (1,262 visitors, 73 eBay clicks, one sale, A$0.00).
+
+**What.**
+- `EBAY_ALWAYS_MARKETS` is AU, US and CA: Canada is a real `EBAY_CA` search every day (Canadian sellers via
+  `itemLocationCountry`, CAD, postage to Toronto stated), searched after the US, which still goes first. It keeps the
+  `ebay_ca` retailer key the sealed sweep already used, so every reader carries on.
+- `EBAY_ROTATING_MARKETS` is UK and EU, alternating; `EBAY_WEEKLY_MARKETS` is SG, which takes that slot one Sydney day in
+  seven (`EBAY_WEEKLY_DAY`). A day is four markets: US, the day's UK/EU/SG, then AU and CA in rotating order.
+- The US-derived Canada rows are gone, with no derived fallback: on a day Canada's pass does not complete, yesterday's
+  real Canadian rows stay (the truncation guard), which beats a converted US listing. Until Canada's first complete
+  pass the last derived rows stay. `EBAY_CROSS_BORDER` is empty, so Canada is in the Deal Finder's eBay views and on the
+  default buy side; the policy, methodology, home FAQ, region home and /browse copy no longer describe "eBay US" rows.
+- Budget: the keyset is shared with MTG Compare (capped at 1,500 a day). `tests/affiliate-priority.test.ts` now models
+  Rift's day against what MTG's share leaves (2,900): four markets model at about 2,800 with the test's deliberately
+  high constants. Measured before the change: Rift about 2,030 a day, 1,490 of the keyset unused. `primeEbayBudget`
+  still never spends past `remaining − 600`.
+- Recheck about 24 November: eBay earnings tagged `rc-ca-*` against A$7.06, and the import log's per-market lines for
+  any "budget ran out" on CA.

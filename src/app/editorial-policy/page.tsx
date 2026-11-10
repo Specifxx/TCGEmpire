@@ -175,11 +175,12 @@ export default function EditorialPolicyPage() {
               <strong className="text-white">eBay:</strong> once a day we search eBay for every card
               worth at least US$5 at TCGplayer&rsquo;s US market price, plus any card with no TCGplayer
               price yet (usually a new release); base-rarity commons and uncommons are skipped, not the
-              whole catalogue searched. Australia and the US are searched every day; the UK, Singapore
-              and the EU take turns, one a day, so each is refreshed about every three days. On the
+              whole catalogue searched. The US, Australia and Canada are searched every day; the UK and
+              the EU take turns, one a day, so each is refreshed about every two days, and Singapore is
+              searched once a week. On the
               other daily run, the promo, Signature and overnumbered printings in that day&rsquo;s
-              markets are searched again, so those refresh twice a day. Canada&rsquo;s eBay rows are the
-              US results converted to Canadian dollars.
+              markets are searched again, so those refresh twice a day. Canada&rsquo;s eBay rows are
+              listings on eBay Canada from sellers in Canada, in Canadian dollars.
             </li>
             <li>
               <strong className="text-white">eBay auctions ending soon:</strong> every four hours.
@@ -229,8 +230,7 @@ export default function EditorialPolicyPage() {
             </li>
             <li>
               Store comparisons are priced in each market&rsquo;s own currency, at the price the store
-              itself charges. The exceptions: in Canada, rows marked &ldquo;eBay US&rdquo; are US
-              listings converted to Canadian dollars; a eurozone visitor can see UK store prices in euros,
+              itself charges. The exceptions: a eurozone visitor can see UK store prices in euros,
               with the pound price beside each; and the Deal Finder,
               the homepage&rsquo;s savings figures and the price-history charts convert TCGplayer&rsquo;s
               US price or our US-dollar history at the reference rates published on our{" "}

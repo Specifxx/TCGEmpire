@@ -261,5 +261,6 @@ export function BrowseMarketWord({ baseline, pinned, what }: { baseline: Country
   const country = pinned ? baseline : visitor;
   if (what === "place") return <>{COUNTRIES[country].place}</>;
   if (what === "currency") return <>{COUNTRIES[country].currency}</>;
-  return country === "CA" ? <>, and sometimes an &ldquo;eBay US&rdquo; listing converted from US dollars at our reference rate</> : null;
+  // Canada's "eBay US" note retired 2026-11-10: its eBay rows are eBay Canada listings in CAD now, nothing converted.
+  return null;
 }

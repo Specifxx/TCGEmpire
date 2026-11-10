@@ -82,13 +82,13 @@ export const pctBelow = belowTcgPct;
 // eBay retailer key per market.
 const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca", EU: "ebay_eu" };
 
-// Markets whose "eBay" rows are ANOTHER market's listings. ebay_ca is US listings
-// converted to CAD, written with shippingCents = null on purpose (price-import.ts:
-// "carrying the US number over would understate the delivered cost") — a
-// Canadian pays international postage nobody has quoted. So in these markets an
+// Markets whose "eBay" rows are ANOTHER market's listings. In these markets an
 // eBay row is item-price-only, is never called "delivered", and is left out of
-// the default buy side (it stays selectable, clearly labelled).
-const EBAY_CROSS_BORDER: Partial<Record<Country, true>> = { CA: true };
+// the default buy side (it stays selectable, clearly labelled). Canada was the
+// one entry until 2026-11-10, when its `ebay_ca` rows stopped being US listings
+// converted to CAD and became a real EBAY_CA search with Canadian sellers and
+// stated postage (price-import.ts, EBAY_ALWAYS_MARKETS). None is cross-border now.
+const EBAY_CROSS_BORDER: Partial<Record<Country, true>> = {};
 
 /**
  * What an eBay row is called in the Best price column. "delivered" ONLY when the

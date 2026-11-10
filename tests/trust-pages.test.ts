@@ -145,13 +145,16 @@ test("the refresh list matches the importer's real cadence", () => {
 
   const markets = (name: string) =>
     [...new RegExp(`${name}: EbayMarketCfg\\[\\] = \\[([\\s\\S]*?)\\];`).exec(importer)![1].matchAll(/country: "(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(markets("EBAY_ALWAYS_MARKETS"), ["AU", "US"]);
-  assert.deepEqual(markets("EBAY_ROTATING_MARKETS"), ["UK", "SG", "EU"]);
-  assert.match(policy, /Australia and the US are searched every day; the UK, Singapore and the EU take turns, one a day/);
+  assert.deepEqual(markets("EBAY_ALWAYS_MARKETS"), ["AU", "US", "CA"]);
+  assert.deepEqual(markets("EBAY_ROTATING_MARKETS"), ["UK", "EU"]);
+  assert.deepEqual(markets("EBAY_WEEKLY_MARKETS"), ["SG"]);
+  assert.match(policy, /The US, Australia and Canada are searched every day; the UK and the EU take turns, one a day, so each is refreshed about every two days, and Singapore is searched once a week/);
   assert.match(importer, /refreshEbayChasePrintings\(ebayMarketsForDay\(ebayDayIndex\(\)\)\)/);
   assert.match(policy, /promo, Signature and overnumbered printings in that day&rsquo;s markets are searched again/);
-  assert.match(importer, /retailerName: "eBay US",[\s\S]{0,80}USD_TO\.CAD/);
-  assert.match(policy, /Canada&rsquo;s eBay rows are the US results converted to Canadian dollars/);
+  // Canada is a real EBAY_CA search since 2026-11-10; the US-derived copy is gone.
+  assert.match(importer, /country: "CA", marketplace: "EBAY_CA", currency: "CAD", retailer: EBAY_CA_RETAILER/);
+  assert.doesNotMatch(importer, /retailerName: "eBay US",[\s\S]{0,80}USD_TO\.CAD/);
+  assert.match(policy, /Canada&rsquo;s eBay rows are listings on eBay Canada from sellers in Canada, in Canadian dollars/);
 
   // Daily since 2026-10-03 (weekly 2026-08-31 → 10-03): every import writes or
   // replaces the day's file (lib/price-history-store.ts) with no interval gate.
@@ -208,9 +211,9 @@ test("the homepage's Cheapest on eBay rule is the one the ranking applies", () =
   assert.equal(num(lib, "CHEAPEST_EBAY_MAX_GAP_PCT"), 80);
   assert.match(page, /It must be at least 1\.00, at least 0\.50 cheaper than the cheapest of those sources, and less than 80% cheaper/);
   assert.match(read(lib), /RANKED_NON_STORE_SOURCES: Partial<Record<Country, string\[\]>> = \{ EU: \[CARDTRADER_RETAILER\] \}/);
-  assert.match(read(lib), /const EBAY_CROSS_BORDER: Partial<Record<Country, true>> = \{ CA: true \}/);
+  assert.match(read(lib), /const EBAY_CROSS_BORDER: Partial<Record<Country, true>> = \{\};/);
   assert.match(page, /CardTrader in the EU, and TCGplayer&rsquo;s cheapest listing in the US/);
-  assert.match(page, /Canada is left out/);
+  assert.doesNotMatch(page, /Canada is left out/, "Canada's eBay rows are local since 2026-11-10");
 });
 
 test("cross-market gaps are described as a gap, with the board's real cut-offs", () => {

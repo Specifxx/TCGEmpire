@@ -841,7 +841,8 @@ longer lands on its entry.
   test). The free "Cheapest on eBay" view (Deal Finder's `?view=ebay` since 09-30, the whole
   ranking, paged) lists only cards where eBay
   beats every source the card page ranks (EU: CardTrader too; US: TCGplayer's
-  listing too; Canada never). Its free status beside the trial measurement is
+  listing too; Canada too since its eBay rows became eBay Canada listings,
+  [2026-11-10](../DECISIONS.md#L23323)). Its free status beside the trial measurement is
   the owner's call. Hot 40 snapshots mark picks "Cheapest on eBay" by the same
   rule (`getCheapestOnEbayFor`), in each pick's basis market, frozen at mint,
   with a Paid link tag and the disclosure above the table
@@ -1149,7 +1150,8 @@ longer lands on its entry.
   like the first): a store on the default list (+ CardTrader in the EU) below
   the cheapest eBay listing, an asking price; store prices are item prices,
   postage extra, and the copy says the gap is smaller by it; % is of the eBay
-  price; ties excluded; Canada has no eBay view. The store picker is on the
+  price; ties excluded; Canada has both eBay views since 2026-11-10 (its own
+  eBay Canada search, [2026-11-10](../DECISIONS.md#L23323)). The store picker is on the
   first view only. `Card.marketPriceCents` is synthetic; never show it.
   [2026-09-21](../DECISIONS.md#L9681), [2026-09-17](../DECISIONS.md#L7801),
   [2026-09-30](../DECISIONS.md#L16000)
