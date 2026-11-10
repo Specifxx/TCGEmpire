@@ -23295,6 +23295,31 @@ The first `DEX_BREVO_API_KEY` in Vercel held the pasted command text, not the ke
 ("Brevo send failed: Headers.append" in the logs). The owner made a new Brevo key, `dex2`, limited to transactional email, and set it
 with `Read-Host` piped to `vercel env add` (the clipboard can't hold both the command and the key). This release picks it up.
 
+## 2026-11-10: Bing URL submission for the small sites (zero-earnings plan)
+
+The zero-earnings diagnosis (10 Nov) found the small sites earn nothing mostly because few people reach them, and Bing held
+0 pages of KaeYoung, ScentCompare, BandaiCompare, SportsCardCompare and MotorCompare, and under 25 of Figure, Wargame,
+Gundam, Lorcana, YGO and Cyberpunk, while Bing and DuckDuckGo already send Cyberpunk more visitors than Google. Sitemaps
+and IndexNow were already in place (SEO-3), so the next lever is Bing's own URL submission API, which takes URLs directly
+on a per-site daily allowance. Google is not asked: its indexing API is for job and livestream pages only, and the plan
+rules out mass indexing requests there.
+
+`bing-submit.yml` runs `scripts/bing-submit.ts` daily at 06:23 UTC. For each site in `TARGETS` that the `BING_API_KEY`
+account (the owner's Bing Webmaster account) lists as verified and indexes fewer than 25 pages of, it sends
+`SubmitUrlBatch` the home page, up to 20 hubs (one path segment, legal pages left out) and then every other sitemap URL,
+hubs and the rest ordered by Google impressions from the site's `demand` branch (`gsc-pages.json`) and otherwise by
+sitemap order. Only URLs in the site's own sitemap are sent (its canonical, indexable pages), never one sent in the last
+30 days, never more than min(Bing's daily and monthly allowance, 100) per site per day (`BING_SUBMIT_MAX` variable,
+hard ceiling 500), and nothing when the allowance cannot be read. A site stops at 25 indexed pages (it graduates to the
+sitemap and IndexNow alone). Dex and Compare Empire are never sent (owner rule while their redirects settle).
+
+What was sent when is the Actions cache's (`.bing-submit-state.json`): losing it only means a URL may be sent again. The
+day's per-site summary and 21 days of history go to `data/hq/bing-submit.json` on `main` (no `[deploy]`), which the Monday
+report reads for a "Bing URL submission, small sites" section (indexed trend and URLs sent in 7 days, under the existing
+per-site Bing line) and the ops monitor reads for `seo:bing-submit`: amber when a submit is refused, a target site is not
+verified in the account, or the summary is over 60 hours old; the job itself is in `JOBS` (stale after 36 hours). A run
+goes red only when Bing refuses a call, not for an unverified, graduated or unreadable-sitemap site.
+
 ## 2026-11-10: Buy clicks by who pays in the Monday report
 
 The zero-earnings diagnosis (owner: "a lot of our sites have earned nothing … something wrong") found tracking sound and two

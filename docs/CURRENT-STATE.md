@@ -123,7 +123,7 @@ longer lands on its entry.
   Empire HQ (`/admin/hq`, every site in one row, sisters' `ops-status` files) and the
   one Monday report, which replaced the Sunday digest and the growth report email
   [2026-11-02](../DECISIONS.md#L21386). The report shows each site's visitors, buy clicks and
-  buy clicks to who pays (TCGplayer, eBay, Amazon, joined Awin stores)
+  
   [2026-11-10](../DECISIONS.md#L23298). Its
   memory is the Actions cache, not the database it watches. Every new public form
   calls `notifyOwnerBounded` (capped 8/h, 25/day), which emails the SITE inbox
@@ -982,6 +982,11 @@ longer lands on its entry.
 
 ## Content & SEO
 
+- **Bing URL submission for the small sites:** `bing-submit.yml` sends each sister site Bing
+  indexes under 25 pages of its home, hubs and top sitemap URLs (by Google impressions)
+  daily, within Bing's allowance and at most 100 a site; never Dex or Compare Empire, never
+  Google. The Monday report and the `seo:bing-submit` check read `data/hq/bing-submit.json`.
+  [2026-11-10](../DECISIONS.md#L23298)
 - **Black Friday and Cyber Monday pages:** `/black-friday` and `/cyber-monday` are one
   component (`HolidaySalePage`), each kept all year, with the sealed deals table and
   the price watch (sealed boxes, biggest price drops, graded slabs, chase auctions, each

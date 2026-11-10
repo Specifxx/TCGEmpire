@@ -47,6 +47,8 @@ export interface WeeklyInput {
   search?: { test: SearchTest | null; earned: { d7: number; d30: number } } | null;
   /** Bing, every site (lib/hq/bing.ts bingLines), or empty. */
   bing?: readonly string[];
+  /** Bing URL submission for the small sites (lib/hq/bing.ts bingSubmitLines), or empty. */
+  bingSubmit?: readonly string[];
 }
 
 /** The compare search test's lines, plain text (the HTML part escapes them). Pure. */
@@ -147,6 +149,11 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
     inner += `<tr><td style="${h}">Bing, pages indexed per site</td></tr>`;
     inner += `<tr><td style="padding:2px 32px;font-size:13px;line-height:1.55;color:#b8c0cc">${bingLines.map((l) => `<div style="margin:3px 0">${esc(l)}</div>`).join("")}</td></tr>`;
   }
+  const submitLines = x.bingSubmit ?? [];
+  if (submitLines.length) {
+    inner += `<tr><td style="${h}">Bing URL submission, small sites (daily until 25 pages are indexed)</td></tr>`;
+    inner += `<tr><td style="padding:2px 32px;font-size:13px;line-height:1.55;color:#b8c0cc">${submitLines.map((l) => `<div style="margin:3px 0">${esc(l)}</div>`).join("")}</td></tr>`;
+  }
   const searchLines = searchTestLines(x.search);
   if (searchLines.length) {
     inner += `<tr><td style="${h}">Compare search test (gate 8 Dec)</td></tr>`;
@@ -175,6 +182,7 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
     }),
     ...(flagged.length ? ["", "RIFTCOMPARE CHECKS FLAGGED", ...flagged.map((r) => `  [${WORD[r.severity]}] ${r.title}: ${r.summary}`)] : []),
     ...(bingLines.length ? ["", "BING, PAGES INDEXED PER SITE", ...bingLines.map((l) => `  ${l}`)] : []),
+    ...(submitLines.length ? ["", "BING URL SUBMISSION, SMALL SITES", ...submitLines.map((l) => `  ${l}`)] : []),
     ...(searchLines.length ? ["", "COMPARE SEARCH TEST (GATE 8 DEC)", ...searchLines.map((l) => `  ${l}`)] : []),
     "",
     x.money.text,

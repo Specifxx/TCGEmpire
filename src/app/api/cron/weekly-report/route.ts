@@ -11,7 +11,7 @@ import { readClickCounts } from "@/lib/click-counter";
 import { getLatestReport } from "@/lib/ops/snapshot";
 import { loadHq } from "@/lib/hq/load";
 import { buildWeeklyEmail, buyClicksBySite } from "@/lib/hq/weekly-email";
-import { bingLines, loadBing } from "@/lib/hq/bing";
+import { bingLines, bingSubmitLines, loadBing, loadBingSubmit } from "@/lib/hq/bing";
 import { loadBuyClickCounts } from "@/lib/analytics/vercel";
 import { loadNetworkClicks } from "@/lib/analytics/click-networks";
 import { loadSearchTest, searchTestInput } from "@/lib/earnings/search-test";
@@ -46,7 +46,7 @@ async function handlePOST(req: Request) {
   const today = dayIn(Date.now());
   const weekFrom = addDays(today, -7);
   const weekTo = addDays(today, -1);
-  const [hq, report, sources, costs, clicks, buy, nets, searchTest, bing] = await Promise.all([
+  const [hq, report, sources, costs, clicks, buy, nets, searchTest, bing, bingSubmit] = await Promise.all([
     loadHq(true),
     getLatestReport(),
     within(loadEarnings(false), 25_000, null),
@@ -56,6 +56,7 @@ async function handlePOST(req: Request) {
     within(loadNetworkClicks(weekFrom, weekTo), 30_000, null),
     within(loadSearchTest(), 10_000, null),
     within(loadBing(), 10_000, null),
+    within(loadBingSubmit(), 10_000, null),
   ]);
   const money = sources && costs ? earningsDigest(sources, costs, today, `${origin}/admin/earnings`) : EARNINGS_UNAVAILABLE;
   const vercel = costs?.find((c) => c.key === "vercel");
@@ -67,7 +68,7 @@ async function handlePOST(req: Request) {
         }),
       )
     : null;
-  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null, networks: nets?.status === "ok" ? nets.sites : null, search: searchTestInput(searchTest, sources, today), bing: bingLines(bing) });
+  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null, networks: nets?.status === "ok" ? nets.sites : null, search: searchTestInput(searchTest, sources, today), bing: bingLines(bing), bingSubmit: bingSubmitLines(bingSubmit) });
 
   const recipients = [...new Set([ownerEmail(), growthReportEmail()])];
   let sent = 0;
