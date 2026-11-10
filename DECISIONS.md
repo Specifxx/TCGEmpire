@@ -23127,3 +23127,30 @@ TokyoToys (tokyotoys.com, Shopify, GBP, UK mainland delivery only; vetted for Cy
 ## 2026-11-09: a hand-entered cost that names a site goes on that site's row
 
 Vercel usage already reaches SportsCardCompare's row through its project name (`waxcompare`). Hand-entered costs (domains, tools) had no site and all went to "Shared", so SportsCardCompare's `sportscardcompare.com` renewal showed as nobody's. A cost entry whose label contains a site's name (or `waxcompare` for SportsCardCompare), ignoring spaces and punctuation, now lands on that site's row (`siteForLabel`); no match stays shared. Nothing is estimated: only entered amounts move.
+
+## 2026-11-10: DexCompare Premium is a RiftCompare Premium account (owner)
+
+**Owner (Bill, 2026-11-10):** build DexCompare Premium now; one account across RiftCompare and DexCompare is fine, whatever is
+easiest; DexCompare's free price alerts and weekly drops keep running. DexCompare has no accounts, no Stripe and no database
+(CLAUDE.md there), so nothing new is stored there. Plan page: `/mnt/project-files/dexcompare/dexcompare-premium-plan-2026-11-09.html`.
+
+- **Sign-in.** DexCompare's `/premium` sends the visitor to `/sister-premium/dex` here. Signed out it goes through `/login` and
+  returns; signed in it signs a PREMIUM-SESSION token (`lib/sister-premium.ts`: EdDSA, the sister sign-in key, `use:
+  "premium-session"`, audience DexCompare, subject the address, 60 days) and redirects to
+  `https://dexcompare.app/premium/return#t=<token>` (a fixed destination, the token in the fragment so no server sees it).
+  DexCompare keeps it in localStorage. A sister sign-in link has no `use` claim and never works as one, and the reverse.
+- **Nothing is copied.** `POST /api/sister-premium/status` (exact-origin CORS, rate limited) re-reads the account with the
+  same `isPremium(user, "premium")` the whole site uses, so a lapsed subscription stops working on Dex at the next check.
+  Buying stays at `/premium` here on the same Stripe prices (US$4.99/mo, US$39.99/yr, 14-day trial); the price, trial and copy
+  version are unchanged, and the only copy change is one line under the pricing cards naming DexCompare.
+- **What members get on DexCompare.** (1) Back-in-stock watches: a `SisterAlert` whose target is `RESTOCK_TARGET_CENTS`
+  (any in-stock price). It fires when the feed's lowest in-stock price appears, re-arms while the product is sold out, never
+  fires on a further drop and is not removed for being sold out 90 days (`evaluate.ts`); the email says "Back in stock".
+  (2) Up to 200 price alerts instead of 25. (3) A watch list page (`POST /api/sister-premium/watches`: list and stop,
+  scoped to the token's address and site). A member's address is already proven by their account, so their alerts need no
+  confirmation email. The 30-a-day shared mail cap and alert budget still apply: if members' restock mail starts deferring,
+  raise the budget (Brevo), not the ceiling.
+- **Not done on purpose.** No ad-free (Dex's eBay and TCGplayer rails are its income), no faster restock checks (imports run
+  about twice a day), no synced collection (Dex sells sealed only, so a vault is thin). The cheapest-delivered basket planner is
+  the next perk, once members ask for it. Free alerts stay free and ungated.
+- **Measure.** Premium sign-ins from Dex (`/premium/return` hits), restock watches set, trial starts per `PREMIUM_COPY_VERSION`.

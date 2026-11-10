@@ -8,6 +8,8 @@ import { sendEmail } from "@/lib/email";
 import { SISTER_ALERT_KEYS, SISTER_REGIONS, allowedOrigin, corsHeaders, sisterSite } from "@/lib/sister-alerts/sites";
 import { buildConfirmEmail, fromFor } from "@/lib/sister-alerts/email";
 import { claimMailSlot } from "@/lib/sister-alerts/mail-cap";
+import { RESTOCK_TARGET_CENTS } from "@/lib/sister-alerts/evaluate";
+import { MEMBER_MAX_ALERTS, premiumSite, premiumStatusFor, verifyPremiumSession } from "@/lib/sister-premium";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +33,13 @@ const schema = z.object({
   site: z.enum(SISTER_ALERT_KEYS),
   productId: z.string().trim().min(1).max(160).regex(/^[A-Za-z0-9._:-]+$/),
   region: z.enum(SISTER_REGIONS),
-  email: z.string().trim().toLowerCase().email().max(200),
-  targetCents: z.number().int().min(1).max(100_000_000),
+  email: z.string().trim().toLowerCase().email().max(200).optional(),
+  targetCents: z.number().int().min(1).max(100_000_000).optional(),
   weekly: z.boolean().optional(),
+  // DexCompare Premium (lib/sister-premium.ts): a member's token names the address (and its form
+  // email is ignored), lifts the 25-alert cap and unlocks kind "restock" (back in stock).
+  token: z.string().max(4096).optional(),
+  kind: z.enum(["price", "restock"]).optional(),
 });
 
 export function OPTIONS(req: Request) {
@@ -51,9 +57,27 @@ export async function POST(req: Request) {
 
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Please check the email address and price." }, { status: 400, headers });
-  const { site, productId, region, email, targetCents, weekly } = parsed.data;
+  const { site, productId, region, weekly, token, kind } = parsed.data;
   // A site may only add alerts for itself.
   if (site !== fromSite.key) return NextResponse.json({ error: "Not allowed" }, { status: 403, headers });
+  let email = parsed.data.email;
+  let targetCents = parsed.data.targetCents;
+  let maxAlerts = MAX_ALERTS_PER_ADDRESS;
+  let memberVerified = false;
+  if (token) {
+    const psite = premiumSite(site);
+    const proven = psite ? await verifyPremiumSession(token, psite) : null;
+    const status = proven ? await premiumStatusFor(proven).catch(() => null) : null;
+    if (!proven || !status) return NextResponse.json({ error: "Sign in again to use your membership." }, { status: 401, headers });
+    email = proven;
+    memberVerified = status.verified;
+    if (status.premium) maxAlerts = MEMBER_MAX_ALERTS;
+    else if (kind === "restock") return NextResponse.json({ error: "Back-in-stock alerts are for Premium members.", premium: false }, { status: 403, headers });
+  } else if (kind === "restock") {
+    return NextResponse.json({ error: "Back-in-stock alerts are for Premium members.", premium: false }, { status: 403, headers });
+  }
+  if (kind === "restock") targetCents = RESTOCK_TARGET_CENTS;
+  if (!email || !targetCents) return NextResponse.json({ error: "Please check the email address and price." }, { status: 400, headers });
   const rlEmail = rateLimit(`sister-alerts:e:${email}`, 10, 60 * 60_000);
   if (!rlEmail.ok) return NextResponse.json({ error: "Too many alerts for this address just now." }, { status: 429, headers });
 
@@ -63,10 +87,15 @@ export async function POST(req: Request) {
       existing ??
       (await prisma.sisterAlertAddress.create({ data: { email, token: randomBytes(24).toString("base64url") }, select: { token: true, confirmedAt: true, confirmSentAt: true } }));
 
+    // A signed-in member's address is already proven by their RiftCompare account: no confirmation email.
+    if (memberVerified && !address.confirmedAt) {
+      await prisma.sisterAlertAddress.update({ where: { email }, data: { confirmedAt: new Date() } });
+      address.confirmedAt = new Date();
+    }
     const count = await prisma.sisterAlert.count({ where: { email } });
     const already = await prisma.sisterAlert.findUnique({ where: { email_site_productId_region: { email, site, productId, region } }, select: { id: true } });
-    if (!already && count >= MAX_ALERTS_PER_ADDRESS) {
-      return NextResponse.json({ error: `You already have ${MAX_ALERTS_PER_ADDRESS} price alerts. Stop one from an alert email to add another.` }, { status: 409, headers });
+    if (!already && count >= maxAlerts) {
+      return NextResponse.json({ error: `You already have ${maxAlerts} price alerts. Stop one from an alert email to add another.` }, { status: 409, headers });
     }
     if (already) {
       // A new target re-arms the alert.

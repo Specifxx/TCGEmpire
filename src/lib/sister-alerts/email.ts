@@ -77,6 +77,8 @@ export interface FiredAlert {
   region: SisterRegion;
   priceCents: number;
   targetCents: number;
+  /** A back-in-stock watch (evaluate.ts RESTOCK_TARGET_CENTS): the email says it is back, not that a price dropped. */
+  restock?: boolean;
 }
 
 export interface DealPick {
@@ -95,17 +97,22 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
   const site = sisterSite(siteKey)!;
   const rows = fired.slice(0, 10);
   const first = rows[0]!;
+  const allRestock = rows.every((a) => a.restock);
   const subject =
     rows.length === 1
-      ? `Price drop: ${first.name} is now ${money(first.priceCents, first.region)}`
-      : `${rows.length} of your ${site.name} price alerts hit their target`;
+      ? first.restock
+        ? `Back in stock: ${first.name} from ${money(first.priceCents, first.region)}`
+        : `Price drop: ${first.name} is now ${money(first.priceCents, first.region)}`
+      : allRestock
+        ? `${rows.length} of your ${site.name} products are back in stock`
+        : (rows.some((a) => a.restock) ? `${rows.length} of your ${site.name} alerts fired` : `${rows.length} of your ${site.name} price alerts hit their target`);
   const items = rows
     .map((a) => {
       const link = siteLink(site, a.path, "sister-alert", a.region);
       return `<tr><td style="padding:10px 28px 4px">
         <div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px">
           <div style="font-size:15px;font-weight:700;color:#111827">${escapeHtml(a.name)}</div>
-          <div style="margin-top:4px;font-size:14px;color:#374151">Now <strong style="color:#047857">${escapeHtml(money(a.priceCents, a.region))}</strong> at ${REGION_LABEL[a.region]} stores · your alert: ${escapeHtml(money(a.targetCents, a.region))} or less</div>
+          <div style="margin-top:4px;font-size:14px;color:#374151">${a.restock ? `Back in stock at ${REGION_LABEL[a.region]} stores from <strong style="color:#047857">${escapeHtml(money(a.priceCents, a.region))}</strong>` : `Now <strong style="color:#047857">${escapeHtml(money(a.priceCents, a.region))}</strong> at ${REGION_LABEL[a.region]} stores · your alert: ${escapeHtml(money(a.targetCents, a.region))} or less`}</div>
           <div style="margin-top:10px">${button(site, link, "Compare store prices")}</div>
           <div style="margin-top:8px;font-size:12px"><a href="${escapeHtml(friendLink(site, a))}" style="color:#4b5563">Send this to a friend</a> · <a href="${escapeHtml(serviceUrl("manage", token) + `&stop=${encodeURIComponent(a.id)}`)}" style="color:#4b5563">Stop this alert</a></div>
         </div></td></tr>`;
@@ -124,11 +131,11 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
   const text = [
     subject,
     "",
-    ...rows.map((a) => `${a.name}: now ${money(a.priceCents, a.region)} (your alert: ${money(a.targetCents, a.region)} or less)\n${siteLink(site, a.path, "sister-alert", a.region)}`),
+    ...rows.map((a) => `${a.name}: ${a.restock ? `back in stock from ${money(a.priceCents, a.region)}` : `now ${money(a.priceCents, a.region)} (your alert: ${money(a.targetCents, a.region)} or less)`}\n${siteLink(site, a.path, "sister-alert", a.region)}`),
     deal ? `\nA deal on ${deal.site.name}: ${deal.deal.n}, ${money(deal.deal.p, deal.deal.r)}\n${siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`, deal.deal.r)}` : "",
     `\nManage or stop your alerts: ${serviceUrl("manage", token)}`,
   ].join("\n");
-  const heading = rows.length === 1 ? "Your price alert hit its target" : `${rows.length} price alerts hit their target`;
+  const heading = allRestock ? (rows.length === 1 ? "It's back in stock" : `${rows.length} products are back in stock`) : rows.length === 1 ? "Your price alert hit its target" : rows.some((a) => a.restock) ? `${rows.length} alerts fired` : `${rows.length} price alerts hit their target`;
   return { subject, html: shell(site, heading, items + dealHtml + note, footer, `${first.name}: ${money(first.priceCents, first.region)}`), text };
 }
 
