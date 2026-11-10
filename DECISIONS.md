@@ -23200,3 +23200,14 @@ empty search) feed one test, judged on paid clicks per search, not searches.
   result clicks, paid clicks per 100 searches, search earnings, searches per sending site and the most searched words
   nothing matched (the list of stores, feeds and categories to add next). The query words are the only text kept, and
   only for a search nothing matched; nothing about the visitor.
+
+## 2026-11-10: Bing, every site (SEO indexing plan, SEO-3)
+
+- Bing reported 0 indexed pages for kaeyoung.com and 75 for compareempire.com while only Rift was measured. `scripts/bing-sites.ts`
+  loops over every property the `BING_API_KEY` account sees and prints one line each: pages in Bing's index, crawled, errors,
+  28-day impressions and clicks, and the sitemap Bing holds with its last-read date. With `--apply` it submits
+  `https://<host>/sitemap.xml` (SubmitFeed) where Bing has none or has not read it in 14 days, never for dexcompare.app or
+  compareempire.com (no sitemap resubmits there until the 25 Nov recheck).
+- It is its own workflow (`bing-sites.yml`, weekly read-only, `apply` input) rather than a Maintenance task: `maintenance.yml`
+  is at 440 KB of GitHub's 512 KB limit, and the file was undispatchable once already. Pure helpers pinned in
+  `tests/bing-sites.test.ts`. Its JSON (`docs/bing-sites.json`) is the source for the Bing line in the Monday report.

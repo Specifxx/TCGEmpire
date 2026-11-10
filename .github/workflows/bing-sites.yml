@@ -1,0 +1,38 @@
+name: Bing, every site
+
+# SEO indexing plan SEO-3 (2026-11-10). One line per verified Bing property: pages in the index, crawled, errors, 28-day
+# impressions and clicks, and the sitemap Bing holds with its last-read date (scripts/bing-sites.ts). Read-only by default;
+# tick `apply` to submit https://<host>/sitemap.xml for every site where Bing has none or has not read it in 14 days
+# (never dexcompare.app or compareempire.com). A separate workflow, not a Maintenance task: maintenance.yml is at 440 KB of
+# GitHub's 512 KB limit. Weekly, read-only, Mondays 07:50 UTC.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Submit the missing or stale sitemaps (never Dex or Compare Empire)"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "50 7 * * 1"
+
+jobs:
+  sites:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Report every Bing property
+        env:
+          BING_API_KEY: ${{ secrets.BING_API_KEY }}
+        run: npx tsx scripts/bing-sites.ts ${{ inputs.apply && '--apply' || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bing-sites
+          path: docs/bing-sites.json
+          if-no-files-found: ignore
