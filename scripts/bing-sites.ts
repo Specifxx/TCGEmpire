@@ -6,7 +6,7 @@
  * was last crawled. bing-coverage.ts answers the same questions in depth for ONE site; this is the family view.
  *
  * READ-ONLY unless `--apply`. With `--apply` it submits `https://<host>/sitemap.xml` (SubmitFeed) for every site whose
- * sitemap Bing does not hold or has not read in 14 days. It never submits for SKIP_HOSTS: DexCompare and Compare Empire
+ * sitemap Bing does not hold, has not read in 14 days, or reports as not accessible. It never submits for SKIP_HOSTS: DexCompare and Compare Empire
  * get no sitemap resubmits while Google and Bing work through their redirects and rejected pages (owner, 2026-11-10).
  *
  * Fails soft per site and per endpoint (a monitor, exit 0). Pure helpers are exported and tested
@@ -19,7 +19,7 @@ import { pathToFileURL } from "node:url";
 import { parseDotNetDate, pick, pickString, unwrapD } from "./bing-coverage";
 
 const API_BASE = "https://ssl.bing.com/webmaster/api.svc/json";
-const REPORT_PATH = "docs/bing-sites.json";
+const REPORT_PATH = "data/hq/bing-sites.json";
 /** Hosts that never get a resubmit (the plan's rule for Dex and Compare Empire). */
 export const SKIP_HOSTS = ["dexcompare.app", "compareempire.com"];
 export const STALE_DAYS = 14;
@@ -42,6 +42,7 @@ export function needsSitemapSubmit(host: string, feeds: Feed[], today: string): 
   if (SKIP_HOSTS.includes(host)) return { submit: false, reason: "skipped by rule" };
   const f = ownSitemap(feeds, host);
   if (!f) return { submit: true, reason: "Bing holds no sitemap.xml" };
+  if (/not accessible|error|fail|denied|invalid|blocked/i.test(f.status)) return { submit: true, reason: `Bing status "${f.status}"` };
   if (!f.lastCrawled) return { submit: true, reason: "sitemap never read" };
   const days = Math.floor((Date.parse(today) - Date.parse(f.lastCrawled)) / 86_400_000);
   return days > STALE_DAYS ? { submit: true, reason: `last read ${days} days ago` } : { submit: false, reason: `read ${f.lastCrawled}` };

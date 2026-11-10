@@ -23280,3 +23280,11 @@ links or creates the ordinary RiftCompare account, so Stripe, `isPremium` and th
 Checkout (`/api/sister-premium/checkout`) and billing (`/portal`) are opened for that account from DexCompare too, returning to
 dexcompare.app; the member sees Stripe's page and never riftcompare.com. Nothing secret lives on DexCompare: the session token is
 signed with the sister key and re-read on every call, as before.
+
+## 2026-11-10 — Bing per-site line in the Monday report; Bing "not accessible" sitemaps are resubmitted
+
+`bing-sites.yml` now commits `data/hq/bing-sites.json` to `main` after each Monday run (no `[deploy]`: it never builds the site), and the
+weekly report reads it raw (`src/lib/hq/bing.ts`, like the owner-steps queue) and prints one line per verified Bing site: pages
+indexed, crawled, errors, 28-day impressions and clicks. A missing file simply leaves the section out. `needsSitemapSubmit` also
+resubmits a sitemap whose Bing status reads as an error or "not accessible", not only a missing or 14-day-stale one (BandaiCompare
+showed that status while its robots.txt and sitemap route were fine). Dex and Compare Empire stay skipped.

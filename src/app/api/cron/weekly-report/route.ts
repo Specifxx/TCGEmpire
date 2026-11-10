@@ -11,6 +11,7 @@ import { readClickCounts } from "@/lib/click-counter";
 import { getLatestReport } from "@/lib/ops/snapshot";
 import { loadHq } from "@/lib/hq/load";
 import { buildWeeklyEmail, buyClicksBySite } from "@/lib/hq/weekly-email";
+import { bingLines, loadBing } from "@/lib/hq/bing";
 import { loadBuyClickCounts } from "@/lib/analytics/vercel";
 import { loadSearchTest, searchTestInput } from "@/lib/earnings/search-test";
 
@@ -44,7 +45,7 @@ async function handlePOST(req: Request) {
   const today = dayIn(Date.now());
   const weekFrom = addDays(today, -7);
   const weekTo = addDays(today, -1);
-  const [hq, report, sources, costs, clicks, buy, searchTest] = await Promise.all([
+  const [hq, report, sources, costs, clicks, buy, searchTest, bing] = await Promise.all([
     loadHq(true),
     getLatestReport(),
     within(loadEarnings(false), 25_000, null),
@@ -52,6 +53,7 @@ async function handlePOST(req: Request) {
     within(readClickCounts(addDays(today, -7 * WEEKS - 1)), 10_000, new Map()),
     within(loadBuyClickCounts(weekFrom, weekTo), 20_000, null),
     within(loadSearchTest(), 10_000, null),
+    within(loadBing(), 10_000, null),
   ]);
   const money = sources && costs ? earningsDigest(sources, costs, today, `${origin}/admin/earnings`) : EARNINGS_UNAVAILABLE;
   const vercel = costs?.find((c) => c.key === "vercel");
@@ -63,7 +65,7 @@ async function handlePOST(req: Request) {
         }),
       )
     : null;
-  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null, search: searchTestInput(searchTest, sources, today) });
+  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null, search: searchTestInput(searchTest, sources, today), bing: bingLines(bing) });
 
   const recipients = [...new Set([ownerEmail(), growthReportEmail()])];
   let sent = 0;
