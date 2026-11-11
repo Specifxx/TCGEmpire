@@ -17,3 +17,22 @@ if (arr) {
     const e = Object.entries(c); if (e.length && e.length < 60) console.log("values of", k, JSON.stringify(Object.fromEntries(e)));
   }
 }
+// Part 2: games, and number/set/finish formats per game (identifiers only, no prices).
+const arr2 = j.products;
+const games = {}; for (const p of arr2) { const g = `${p.gameId}|${p.gameName}`; games[g] = (games[g] || 0) + 1; }
+console.log("games", JSON.stringify(games));
+const stock = {}; for (const p of arr2) { const k = `${p.availability}|${p.stock > 0 ? "pos" : p.stock}`; stock[k] = (stock[k] || 0) + 1; }
+console.log("availability", JSON.stringify(stock));
+const conds = {}; for (const p of arr2) for (const c of p.conditions) conds[c.condition] = (conds[c.condition] || 0) + 1;
+console.log("conditions", JSON.stringify(conds));
+const want = /riftbound|one piece|gundam|lorcana|cyberpunk|pokemon|pok.mon/i;
+const seen = {};
+for (const p of arr2) {
+  if (!want.test(p.gameName)) continue;
+  const g = p.gameName; seen[g] ??= { n: 0, sets: {}, ex: [] };
+  seen[g].n++; seen[g].sets[p.set] = (seen[g].sets[p.set] || 0) + 1;
+  if (seen[g].ex.length < 4) seen[g].ex.push({ name: p.name, title: p.title, number: p.number, set: p.set, finish: p.finish, rarity: p.rarity, urlHost: p.url.split("/").slice(0, 4).join("/"), urlTail: p.url.split("/").slice(4).join("/").slice(0, 40), ncond: p.conditions.length, imgs: p.images.length });
+}
+for (const [g, v] of Object.entries(seen)) console.log("GAME", g, v.n, "sets", Object.keys(v.sets).length, JSON.stringify(Object.entries(v.sets).sort((a, b) => b[1] - a[1]).slice(0, 12)), JSON.stringify(v.ex));
+const q = {}; for (const p of arr2) { const u = new URL(p.url); for (const k of u.searchParams.keys()) q[k] = (q[k] || 0) + 1; }
+console.log("url params", JSON.stringify(q));
