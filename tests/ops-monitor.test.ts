@@ -535,6 +535,15 @@ test("Amazon prices: unknown without credentials, warn when refused, ok with or 
   assert.equal(nolist.severity, "unknown");
 });
 
+test("Fetch TCG row: ok when the card page shows it, warn when it does not, unknown when the page is down", async () => {
+  const { fetchtcgRow } = await import("../src/lib/ops/checks");
+  const page = (body: string, status = 200) => new Response(body, { status });
+  const ask = (r: Response) => fetchtcgRow(deps({ fetch: fakeFetch({ "https://riftcompare.com/card/blazing-scorcher-ogn-001-298": r }).f }));
+  assert.equal((await ask(page("<a>View on Fetch TCG →</a>"))).severity, "ok");
+  assert.equal((await ask(page("<p>no row</p>"))).severity, "warn");
+  assert.equal((await ask(page("", 503))).severity, "unknown");
+});
+
 test("Awin programmes: unknown before the token, ok when read today, warn when stale, never crit", async () => {
   const { awinProgrammes } = await import("../src/lib/ops/checks");
   const URL_ = "https://raw.githubusercontent.com/Specifxx/compareempiretake2/HEAD/data/awin/programmes.json";

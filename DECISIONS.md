@@ -23365,3 +23365,35 @@ Singapore programme (1,262 visitors, 73 eBay clicks, one sale, A$0.00).
   still never spends past `remaining − 600`.
 - Recheck about 24 November: eBay earnings tagged `rc-ca-*` against A$7.06, and the import log's per-market lines for
   any "budget ran out" on CA.
+
+## 2026-11-11: Fetch TCG's price on Australian card pages (partner feed, never published)
+
+**Why.** Fetch TCG (fetchtcg.com, an Australia and New Zealand card marketplace) agreed on 2026-10-28 to be listed on
+every site and on 2026-11-11 sent a partner feed: `https://api.fetchtcg.com/partner-feed/au.json` (`nz.json` for New
+Zealand), `Authorization: Bearer <key>`, once a day. Its terms: show Fetch's prices with a link back to the listing; no
+reselling or passing the feed on; no building a marketplace or pricing model from it. The owner said to use it on
+RiftCompare first, then every Australian trading-card site, and to ask Fetch its commission rate after sending
+screenshots; list them regardless.
+
+**What the feed is (measured 2026-11-11).** 95 MB of JSON (131,904 in-stock cards, all AUD, single cards only: no sealed
+product), 22 games, `{ gameId, name, set, number, finish, rarity, conditions: [{ condition, price }], url, stock }`, price
+in dollars, every URL already carrying our referral `utm_source`/`utm_medium`. Some sets write numbers "001:221" for
+"001/221"; printings come as a bracketed suffix ("Ahri - Alluring (Alternate Art)"); promos sit in their own sets.
+
+**What.**
+- `scripts/fetch-fetchtcg.ts` runs in every build (after `fetch-awin`, never fatal) and keeps only `gameId: "rift"` in
+  `data/fetch-live/au.json`, **git-ignored**: `data/` is public with the source, and publishing the feed is passing it on.
+  It is bundled into `/card/[id]` only (`outputFileTracingIncludes`). `FETCH_TCG_API_KEY` is a Vercel Production variable
+  and a GitHub secret, never printed.
+- `src/lib/fetchtcg.ts` matches a card on set, collector number (`:` read as `/`) AND name (bracketed printing ignored):
+  anything ambiguous is no row. A promo gets none (it shares its base card's number). Against the committed catalogue,
+  1,383 of 1,465 non-promo cards matched on 2026-11-11; the rest are out of stock at Fetch or signatures.
+- The card page draws a "Fetch TCG · Marketplace" row (violet outline) after eBay's, **Australia only**, one row per
+  finish, Near Mint else the best raw condition, in stock, "price on <date>", a paid-link tag and "View on Fetch TCG →"
+  using Fetch's own URL as sent. It is not a store: never ranked, never "Cheapest", never in a deal, alert, history,
+  basket-by-store, JSON-LD or the quick view.
+- A file older than three days is ignored. Ops monitor check `fetchtcg:row` (warn when `/card/blazing-scorcher-ogn-001-298`
+  has no Fetch row).
+- Rollout to the sister sites that sell singles (OP, Gundam, Lorcana, Cyberpunk, Dex) follows; MTG, YGO and Bandai are
+  sealed-only and Fetch lists no sealed product, so they get nothing.
+- Recheck about 18 November: Fetch's commission rate (the owner's email to Dhanish) and the first Fetch clicks.

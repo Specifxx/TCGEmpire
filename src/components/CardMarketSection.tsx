@@ -19,6 +19,7 @@ import { normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/con
 import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { isPaidLink } from "@/lib/affiliate";
 import { playedDiscounts, playedDiscountText } from "@/lib/played-discount";
+import type { FetchRows } from "@/lib/fetchtcg";
 import { lastKnownLabel, lastKnownTitle, type LastKnownPrice } from "@/lib/last-known-price";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
@@ -341,6 +342,7 @@ export function CardPriceComparison({
   preRelease = false,
   emptyState,
   image = null,
+  fetchRows = null,
 }: {
   rows: MarketRow[];
   /** The card's picture, for the cart list's line (components/cart). */
@@ -356,6 +358,9 @@ export function CardPriceComparison({
    *  says nothing ships before release instead of implying copies are out
    *  there now. Computed by the ISR page, which re-renders daily. */
   preRelease?: boolean;
+  /** Fetch TCG's own price of this printing in Australia (lib/fetchtcg.ts), a labelled marketplace row after eBay's:
+   *  AU only, never a store, never ranked, never the cheapest. */
+  fetchRows?: FetchRows | null;
 }) {
   const { country, fmt, secondaryFmt } = useCountry();
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
@@ -617,7 +622,7 @@ export function CardPriceComparison({
             on top (tcgFirst): the cheapest listing of each when this market has one, else eBay's search and,
             outside the US, TCGplayer's US market price as a labelled reference.
             Stores follow below, ranked by price. */}
-        {(pin.ebay || ebay || pin.tcgplayer || tcg) && (
+        {(pin.ebay || ebay || pin.tcgplayer || tcg || (country === "AU" && fetchRows)) && (
           <ul className="divide-y divide-ink-800 border-b border-ink-800">
             {pin.tcgFirst && pin.tcgplayer && renderRow(pin.tcgplayer, true)}
             {pin.ebay
@@ -650,6 +655,45 @@ export function CardPriceComparison({
                     </OutboundLink>
                   </li>
                 )}
+            {country === "AU" &&
+              fetchRows?.rows.map((r) => (
+                <li key={`fetchtcg-${r.finish}`} className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4 ${PIN_OUTLINE.fetch}`}>
+                  <div className="w-5 shrink-0 sm:w-6" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="min-w-0 truncate font-semibold text-white">Fetch TCG</span>
+                      <span className="chip shrink-0 bg-ink-800 text-[10px] text-slate-400">Marketplace</span>
+                    </div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                      {r.finish === "Foil" && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
+                      <span className="chip bg-ink-800 text-slate-300">{normaliseCondition(r.condition) ? CONDITIONS[normaliseCondition(r.condition)!].label : r.condition}</span>
+                      <span className="text-up">● In stock</span>
+                      <span>postage at checkout</span>
+                      <span>price on {new Date(fetchRows.at).toLocaleDateString("en-AU", { day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</span>
+                      <PaidLinkTag />
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="num text-lg font-bold text-white">{fmt(r.priceCents)}</div>
+                  </div>
+                  <OutboundLink
+                    href={r.url}
+                    retailer="fetchtcg"
+                    country={country}
+                    cardId={cardId}
+                    cardName={displayName}
+                    price={r.priceCents / 100}
+                    pageType="card_detail"
+                    inStock
+                    variant={r.finish === "Foil" ? "foil" : "nonfoil"}
+                    condition={r.condition}
+                    surface="table_pinned"
+                    className="btn-buy order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                  >
+                    View on Fetch TCG →
+                  </OutboundLink>
+                </li>
+              ))}
             {pin.tcgFirst
               ? null
               : pin.tcgplayer

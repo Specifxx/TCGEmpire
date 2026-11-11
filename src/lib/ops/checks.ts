@@ -762,6 +762,27 @@ export async function amazonPrices(d: OpsDeps): Promise<CheckResult> {
 }
 
 /**
+ * Fetch TCG's row on the card page (DECISIONS.md 2026-11-11): read a common Riftbound card's page, which is drawn on the
+ * Australian baseline, and look for the Fetch row. No row is unknown (the key is the owner's step, or the card is
+ * out of stock at Fetch today), never crit: the card page works without it.
+ */
+export async function fetchtcgRow(d: OpsDeps): Promise<CheckResult> {
+  const id = "fetchtcg:row";
+  const area: OpsArea = "money";
+  const title = "Fetch TCG row (card pages)";
+  const slug = "blazing-scorcher-ogn-001-298";
+  const r = await d.fetch(`${SITE}/card/${slug}`, { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+  if (!r.ok) return unknown(d, id, area, title, `/card/${slug} answered HTTP ${r.status}.`);
+  const html = await r.text();
+  if (html.includes("View on Fetch TCG")) return result(d, { id, area, title, severity: "ok", summary: `The Fetch TCG row is on /card/${slug}.` });
+  return result(d, {
+    id, area, title, severity: "warn",
+    summary: `/card/${slug} shows no Fetch TCG row: FETCH_TCG_API_KEY is missing in Vercel, the feed was not read at the last build, or Fetch has no stock of it today.`,
+    action: 'Check FETCH_TCG_API_KEY in Vercel (Production) and the last build log for "Fetch TCG:". Tell Claude: "the Fetch TCG row check is failing".',
+  });
+}
+
+/**
  * Awin (DECISIONS.md 2026-11-06): Compare Empire's daily job reads the family's Awin account and publishes the joined
  * programmes in its public data/awin/programmes.json, which every site copies at build to track those stores' links.
  * No token yet is unknown (the owner's step); a list not refreshed for three days is a warn (links keep yesterday's
@@ -1223,6 +1244,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("stores:unlinked", "money", "Stores plan: stores waiting for their report", () => storePlansUnlinked(d));
   await add("stores:codes", "money", "Store partner codes", async () => storeCodesRecheck(d));
   await add("amazon:prices", "money", "Amazon prices (Creators API)", () => amazonPrices(d));
+  await add("fetchtcg:row", "money", "Fetch TCG row (card pages)", () => fetchtcgRow(d));
   await add("awin:programmes", "money", "Awin programmes", () => awinProgrammes(d));
   await add("seo:bing-submit", "site", "Bing indexing (small sites)", () => bingSubmitCheck(d));
   await add("site:self", "email", "Email and site settings", () => siteSelfChecks(d));
