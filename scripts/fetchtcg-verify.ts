@@ -1,20 +1,14 @@
-// temporary diagnostics: identifiers and raw price shape for Riftbound only
+// temporary: match rate of the real feed against the committed Riftbound catalogue
 import { readFileSync } from "node:fs";
-async function main() {
-const key = process.env.FETCH_TCG_API_KEY!;
-const res = await fetch("https://api.fetchtcg.com/partner-feed/au.json", { headers: { Authorization: `Bearer ${key}` } });
-const f = (await res.json()) as { products: any[] };
-const rift = f.products.filter((p) => p.gameId === "rift");
-const bySet: Record<string, any[]> = {};
-for (const p of rift) (bySet[p.set] ||= []).push(p);
-for (const [s, ps] of Object.entries(bySet)) console.log("FETCH", s, ps.length, ps.slice(0, 3).map((p) => `${p.number}|${p.name}|${p.finish}|${p.rarity}`).join(" ;; "));
-const cards = JSON.parse(readFileSync("data/public/cards.json", "utf8")) as any[];
-const ours: Record<string, any[]> = {};
-for (const c of cards) (ours[c.setName] ||= []).push(c);
-for (const [s, cs] of Object.entries(ours)) console.log("OURS", s, cs.length, cs.slice(0, 3).map((c) => `${c.collectorNumber}|${c.name}|${c.rarity}|promo=${c.isPromo}`).join(" ;; "));
-const withPrices = rift.slice(0, 6).map((p) => `${p.name}: price=${p.price} conds=${JSON.stringify(p.conditions)} stock=${p.stock}`);
-console.log(withPrices.join("\n"));
-const aa = rift.filter((p) => /Ahri/.test(p.name)).slice(0, 6).map((p) => `${p.set}|${p.number}|${p.name}|${p.finish}|price=${p.price}|${JSON.stringify(p.conditions)}`);
-console.log(aa.join("\n"));
+import { fetchRowsFor } from "../src/lib/fetchtcg";
+const cards = JSON.parse(readFileSync("data/public/cards.json", "utf8")) as { name: string; setName: string; collectorNumber: string; slug: string; isPromo: boolean }[];
+let hit = 0, both = 0, promo = 0; const miss: Record<string, string[]> = {}; const sample: string[] = [];
+for (const c of cards) {
+  if (c.isPromo) { promo++; continue; }
+  const r = fetchRowsFor(c);
+  if (r) { hit++; if (r.rows.length > 1) both++; if (sample.length < 3) sample.push(`${c.slug}: ` + r.rows.map((x) => `${x.finish} ${x.condition} ${x.priceCents}c`).join(", ")); }
+  else (miss[c.setName] ||= []).push(`${c.collectorNumber} ${c.name}`);
 }
-main();
+console.log("catalogue", cards.length, "promos skipped", promo, "matched", hit, "both finishes", both);
+for (const [s, m] of Object.entries(miss)) console.log("MISS", s, m.length, m.slice(0, 6).join(" ;; "));
+console.log(sample.join("\n"));

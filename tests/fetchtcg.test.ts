@@ -22,10 +22,10 @@ test("Near Mint wins, graded and damaged copies never", () => {
 test("a card matches only on set, collector number and name; a stale or missing file shows nothing", async () => {
   const dir = mkdtempSync(path.join(tmpdir(), "fetchtcg-"));
   mkdirSync(path.join(dir, "data", "fetch-live"), { recursive: true });
-  const card = (o: object) => ({ s: "Spiritforged", no: "001/221", n: "Ahri, Nine-Tailed", f: "Normal", c: "Near Mint", p: 250, u: "https://www.fetchtcg.com/cards/x?utm_source=a", ...o });
+  const card = (o: object) => ({ s: "Spiritforged", no: "001:221", n: "Ahri - Nine-Tailed (Alternate Art)", f: "Normal", c: "Near Mint", p: 250, u: "https://www.fetchtcg.com/cards/x?utm_source=a", ...o });
   writeFileSync(
     path.join(dir, "data", "fetch-live", "au.json"),
-    JSON.stringify({ fetchedAt: new Date().toISOString(), cards: [card({}), card({ f: "Foil", p: 900 }), card({ no: "002/221", n: "Someone else" })] }),
+    JSON.stringify({ fetchedAt: new Date().toISOString(), cards: [card({}), card({ f: "Foil", p: 900 }), card({ no: "002:221", n: "Someone else" })] }),
   );
   const cwd = process.cwd();
   process.chdir(dir);
@@ -33,6 +33,7 @@ test("a card matches only on set, collector number and name; a stale or missing 
     const { fetchRowsFor } = await import("../src/lib/fetchtcg");
     const r = fetchRowsFor({ name: "Ahri, Nine-Tailed", setName: "Spirit Forged", collectorNumber: "001/221" });
     assert.deepEqual(r?.rows.map((x) => [x.finish, x.priceCents]), [["Normal", 250], ["Foil", 900]]);
+    assert.equal(fetchRowsFor({ name: "Ahri, Nine-Tailed", setName: "Spirit Forged", collectorNumber: "001/221", isPromo: true }), null);
     assert.equal(fetchRowsFor({ name: "Another Name", setName: "Spirit Forged", collectorNumber: "001/221" }), null);
     assert.equal(fetchRowsFor({ name: "Ahri, Nine-Tailed", setName: "Spirit Forged", collectorNumber: "001a/221" }), null);
   } finally {

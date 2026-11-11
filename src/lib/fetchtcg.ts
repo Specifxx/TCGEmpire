@@ -46,6 +46,10 @@ export const FETCH_LIVE_FILE = path.join("data", "fetch-live", "au.json");
 export const FETCH_MAX_AGE_MS = 3 * 86400e3;
 
 const norm = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "");
+/** Fetch writes some sets' numbers "001:221"; the card says "001/221". */
+const num = (s: string) => s.toLowerCase().replace(/:/g, "/").replace(/\s+/g, "");
+/** Fetch adds the printing in brackets ("Ahri - Alluring (Alternate Art)"); the number already says which printing. */
+const nameOf = (s: string) => norm(s.replace(/\s*\([^)]*\)/g, ""));
 
 let cache: { index: Map<string, FetchLiveCard[]>; at: string } | null | undefined;
 
@@ -60,7 +64,7 @@ function load(): typeof cache {
     if (Date.now() - Date.parse(f.fetchedAt) > FETCH_MAX_AGE_MS) return cache;
     const index = new Map<string, FetchLiveCard[]>();
     for (const c of f.cards) {
-      const k = `${norm(c.s)}|${c.no.toLowerCase()}`;
+      const k = `${norm(c.s)}|${num(c.no)}`;
       const a = index.get(k);
       if (a) a.push(c);
       else index.set(k, [c]);
@@ -76,13 +80,14 @@ function load(): typeof cache {
  * Fetch's listings of exactly this printing: the same set, the same collector number AND the same name. Anything
  * ambiguous (two Fetch cards on one key with different names) is no match: a wrong price is worse than none.
  */
-export function fetchRowsFor(card: { name: string; setName: string; collectorNumber: string }): FetchRows | null {
+export function fetchRowsFor(card: { name: string; setName: string; collectorNumber: string; isPromo?: boolean }): FetchRows | null {
   const l = load();
-  if (!l) return null;
-  const hits = l.index.get(`${norm(card.setName)}|${card.collectorNumber.toLowerCase()}`);
+  // A promo printing shares its base card's number; Fetch lists promos in their own sets, so it gets no row.
+  if (!l || card.isPromo) return null;
+  const hits = l.index.get(`${norm(card.setName)}|${num(card.collectorNumber)}`);
   if (!hits) return null;
-  const want = norm(card.name);
-  const named = hits.filter((h) => norm(h.n) === want);
+  const want = nameOf(card.name);
+  const named = hits.filter((h) => nameOf(h.n) === want);
   if (!named.length) return null;
   const rows: FetchRow[] = [];
   for (const finish of ["Normal", "Foil"] as const) {
