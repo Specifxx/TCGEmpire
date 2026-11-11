@@ -37,6 +37,7 @@ import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { getPriceHistory } from "@/lib/price-history";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { RecentlyViewedRail } from "@/components/home/RecentlyViewedRail";
+import { fetchRowsFor } from "@/lib/fetchtcg";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { CardMarketsTable } from "@/components/CardMarketsTable";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
@@ -466,6 +467,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       },
     ])
   );
+
+  // Fetch TCG's own listing of this printing (AU only, lib/fetchtcg.ts): null without the build-time file.
+  const fetchRows = fetchRowsFor(card);
 
   // Structured data so Google can show a rich price snippet ("$X, N stores").
   // Google requires a Product to carry "offers", "review", or "aggregateRating";
@@ -1289,6 +1293,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               displayName={displayName}
               image={cardImageSrc(card, { absolute: true }) ?? null}
               ebaySearch={ebaySearch}
+              fetchRows={fetchRows}
               ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
               preRelease={preview}
               emptyState={

@@ -183,6 +183,7 @@ const nextConfig = {
       // The Pokémon section's files only where they are read: its pages, its
       // API routes and the child sitemaps (src/lib/pokemon/store.ts). Never "/**":
       // ~300 Riftbound functions have no use for them.
+      "/card/[id]": ["./data/fetch-live/**/*.json"],
       "/pokemon/**": ["./data/pokemon/**/*.json"],
       "/api/pokemon/**": ["./data/pokemon/**/*.json"],
       "/sitemaps/**": ["./data/pokemon/**/*.json"],

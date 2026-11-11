@@ -47,3 +47,6 @@ artifacts/premium-offer-*.html
 
 # Bing URL submission state (scripts/bing-submit.ts), kept in the Actions cache
 /.bing-submit-state.json
+
+# Fetch TCG's feed, kept out of the public source (its terms): scripts/fetch-fetchtcg.ts
+/data/fetch-live/

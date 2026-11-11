@@ -135,6 +135,8 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
  */
 export const PIN_OUTLINE = {
   ebay: "rounded-lg outline outline-2 -outline-offset-2 outline-[#16a34a]",
+  // Fetch TCG (2026-11-11): its own row after eBay's, violet so it reads as a marketplace, never as the cheapest.
+  fetch: "rounded-lg outline outline-2 -outline-offset-2 outline-[#7c3aed]",
   amazon: "rounded-lg outline outline-2 -outline-offset-2 outline-[#f59e0b]",
   // The cheapest row (owner, 2026-11-07: "the cheapest listing should also have an outline too"): sky blue, so it never
   // reads as eBay's green or Amazon's amber. It wins over eBay's outline when eBay is itself the cheapest.
