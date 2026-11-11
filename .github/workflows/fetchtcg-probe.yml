@@ -1,0 +1,13 @@
+name: Fetch TCG feed probe
+on:
+  push:
+    branches: [claude/project-thread-j1qesk]
+    paths: [scripts/fetchtcg-probe.mjs, .github/workflows/fetchtcg-probe.yml]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/fetchtcg-probe.mjs
+        env:
+          FETCH_TCG_API_KEY: ${{ secrets.FETCH_TCG_API_KEY }}
