@@ -1,5 +1,6 @@
 // temporary diagnostics: identifiers and raw price shape for Riftbound only
 import { readFileSync } from "node:fs";
+async function main() {
 const key = process.env.FETCH_TCG_API_KEY!;
 const res = await fetch("https://api.fetchtcg.com/partner-feed/au.json", { headers: { Authorization: `Bearer ${key}` } });
 const f = (await res.json()) as { products: any[] };
@@ -15,3 +16,5 @@ const withPrices = rift.slice(0, 6).map((p) => `${p.name}: price=${p.price} cond
 console.log(withPrices.join("\n"));
 const aa = rift.filter((p) => /Ahri/.test(p.name)).slice(0, 6).map((p) => `${p.set}|${p.number}|${p.name}|${p.finish}|price=${p.price}|${JSON.stringify(p.conditions)}`);
 console.log(aa.join("\n"));
+}
+main();
