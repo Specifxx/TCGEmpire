@@ -63,7 +63,7 @@ test("the colour is the only thing that changed: both tables still rank by price
 // TCGplayer lead every price list".
 test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when there is one, else the search and the reference", () => {
   const src = read(SECTION);
-  const lead = src.indexOf("{(pin.ebay || ebay || pin.tcgplayer || tcg || (country === "AU" && fetchRows)) && (");
+  const lead = src.indexOf('{(pin.ebay || ebay || pin.tcgplayer || tcg || (country === "AU" && fetchRows)) && (');
   const ranked = src.indexOf("{rest.map((p) => renderRow(p, false))}");
   assert.ok(lead > 0 && ranked > lead, "the pinned rows render before the ranked rest");
   const block = codeOnly(src.slice(lead, ranked));
