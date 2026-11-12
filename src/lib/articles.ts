@@ -8,6 +8,7 @@ import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
 import { LEGACY_SEASON_ARTICLES } from "./content/legacy-season-articles";
+import { RADIANCE_PRICE_ARTICLES } from "./content/radiance-price-articles";
 import { RIOT_DRAWINGS_ARTICLES } from "./content/riot-drawings-articles";
 import { TREND_ARTICLES } from "./content/trend-articles";
 import { monthYear } from "./content/month-year";
@@ -1764,6 +1765,7 @@ For every Radiance card as it is shown, the [live spoiler tracker](/blog/riftbou
       "Radiance signature cards: all 16 signed prints, 168* to 183*/167 plus 174a*, who signed each and release-day prices, cheapest first. Updated daily.",
     author: "RiftCompare",
     date: "2026-10-17",
+    updated: "2026-11-12",
     readMins: 12,
     tags: ["radiance", "signature", "chase cards", "collecting", "heartsteel", "price guide"],
     hero: {
@@ -1833,9 +1835,10 @@ For every Radiance card as it is shown, the [live spoiler tracker](/blog/riftbou
     summary: [
       "**Riftbound: Radiance has 16 Signature cards:** the nine overnumbered Legends signed by their artists (168\\* to 176\\*/167), the six HEARTSTEEL Champion Units signed with the band members' names (178\\* to 183\\*/167), and a Chinese-exclusive Seraphine, 174a\\*.",
       "**The asterisk is the Signature.** 174/167 is Seraphine's overnumbered Legend; 174\\*/167 is the same card with the signature in foil. Riot's card gallery and TCGplayer list none of them, which is why this list exists.",
-      "**First prices, 17 October:** the cheapest listings we track had **Ziggs 169\\*** at US$5,000, **Seraphine 174\\*** at US$3,606.53, **Evelynn 175\\*** at US$2,778.40 and **Ezreal 180\\*** at US$2,500. Seven had no listing yet.",
+      "**Prices on 12 November:** every Signature is down from its first listing, by a median of 67%. The dearest are **Evelynn 175\\*** and **Riven 173\\*** at US$900, **Seraphine 174\\*** is US$747 and the cheapest, **K'Sante 178\\***, is US$221. Thirteen were US$1,000 or more on 20 October; none are now. [Every card, three dates](/blog/riftbound-radiance-signature-prices-now).",
+      "**Opening prices, 17 October,** are kept below for the record: **Ziggs 169\\*** at US$5,000, **Seraphine 174\\*** at US$3,606.53, **Evelynn 175\\*** at US$2,778.40 and **Ezreal 180\\*** at US$2,500.",
       "**The chase is Seraphine 174\\*.** She is Radiance's headline champion; the [Seraphine Signature post](/blog/riftbound-radiance-seraphine-signature) explains why.",
-      "**These are opening prices from a week before release** (23 October 2026). One unsigned overnumber, Riven 173, fell from US$1,200 to US$500 in a single day.",
+      "**The 17 October table is a week before release** (23 October 2026), when a handful of sellers set the asking prices.",
     ],
     faq: [
       {
@@ -1848,7 +1851,7 @@ For every Radiance card as it is shown, the [live spoiler tracker](/blog/riftbou
       },
       {
         q: "What is the most expensive Radiance Signature?",
-        a: "On 17 October the dearest listing we tracked was Ziggs, Hexplosives Expert 169*/167 at US$5,000, ahead of Seraphine 174* at US$3,606.53 and Evelynn 175* at US$2,778.40. These are the first listings from the Pre-Rift week, before Radiance's 23 October release, and early asking prices move by the day.",
+        a: "On 12 November 2026 the dearest are Evelynn, Agony's Embrace 175* and Riven, The Exile 173*, both US$900 by cheapest listing. On 17 October, before release, the dearest listing was Ziggs, Hexplosives Expert 169*/167 at US$5,000; it is US$675 now. Early asking prices moved by the day.",
       },
       {
         q: "Which Radiance Signature is the chase card?",
@@ -1886,7 +1889,32 @@ Radiance's base run stops at 167, the number printed after the slash on every ca
 
 Radiance's Signatures come in two kinds. The nine **Legend Signatures** are signed by the artist who painted the card: Anna Nikonova's name is on Seraphine, Kindlejack's on Ziggs. The six **HEARTSTEEL Signatures** are signed in character, with the band member's name scrawled across the art the way a K-pop photocard is.
 
-## Radiance Signature prices on 17 October
+## Current Radiance Signature prices (12 November)
+
+Three weeks after release, every Signature is below its first listing. Cheapest in-stock listing across the AU, US, UK and Singapore stores we track, in US dollars, sorted by today's price:
+
+| Card | Signature | 20 Oct | 12 Nov |
+|---|---|---|---|
+| [Evelynn, Agony's Embrace](/card/evelynn-agony-s-embrace-rad-175s-167) | 175\\*/167 | US$1,945 | **US$900** |
+| [Riven, The Exile](/card/riven-the-exile-rad-173s-167) | 173\\*/167 | US$3,174 | **US$900** |
+| [Seraphine, Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-174s-167) | 174\\*/167 | US$1,582 | **US$747** |
+| [Seraphine, Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-174as-167) | 174a\\*/167 | US$930 | **US$718** |
+| [Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-169s-167) | 169\\*/167 | US$1,800 | **US$675** |
+| [Mordekaiser, Iron Revenant](/card/mordekaiser-iron-revenant-rad-170s-167) | 170\\*/167 | US$1,500 | **US$522** |
+| [Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-171s-167) | 171\\*/167 | US$1,200 | **US$437** |
+| [Kayn, Unleashed](/card/kayn-unleashed-rad-182s-167) | 182\\*/167 | US$1,266 | **US$400** |
+| [Sett, Kingpin](/card/sett-kingpin-rad-183s-167) | 183\\*/167 | US$1,013 | **US$394** |
+| [Ezreal, Dashing](/card/ezreal-dashing-rad-180s-167) | 180\\*/167 | US$1,300 | **US$380** |
+| [Ekko, Boy Who Shattered Time](/card/ekko-boy-who-shattered-time-rad-168s-167) | 168\\*/167 | US$1,300 | **US$332** |
+| [Jarvan IV, Exemplar of Demacia](/card/jarvan-iv-exemplar-of-demacia-rad-176s-167) | 176\\*/167 | US$1,000 | **US$304** |
+| [Yone, Blademaster](/card/yone-blademaster-rad-181s-167) | 181\\*/167 | US$644 | **US$299** |
+| [K'Sante, Pride of Nazumah](/card/k-sante-pride-of-nazumah-rad-172s-167) | 172\\*/167 | US$1,228 | **US$259** |
+| [Aphelios, Exalted](/card/aphelios-exalted-rad-179s-167) | 179\\*/167 | US$1,150 | **US$250** |
+| [K'Sante, Courageous](/card/k-sante-courageous-rad-178s-167) | 178\\*/167 | US$850 | **US$221** |
+
+The median fall is 67%, and 13 of the 16 were US$1,000 or more on 20 October. The full table, with 31 October, the unsigned twins and the premium for the signature, is in **[Radiance Signature prices now](/blog/riftbound-radiance-signature-prices-now)**. The table further down is the 17 October snapshot, before release.
+
+## Radiance Signature prices on 17 October (before release)
 
 The cheapest listing we track for each, in US dollars unless marked, from our 17 October snapshot, with the unsigned overnumber beside it:
 
@@ -12828,6 +12856,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
   ...SEO_PACK_ARTICLES,
   ...RADIANCE_TIER_GUIDES,
   ...LEGACY_SEASON_ARTICLES,
+  ...RADIANCE_PRICE_ARTICLES,
   ...RIOT_DRAWINGS_ARTICLES,
   ...TREND_ARTICLES,
   {

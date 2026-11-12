@@ -250,6 +250,15 @@ The section is off until the owner switches it on (docs/pokemon/README.md); thes
 | `booster box vs etb`, `pokemon center etb vs etb`, `how pokemon sealed prices are calculated` | the three `/pokemon/blog/<slug>` posts, once published (drafts 404 in production) | the kind hubs answer the price half of each query |
 | `pokemon collector to riftbound` | unchanged — `/guides/pokemon-collector-to-riftbound` (a Riftbound switching guide, not a Pokémon price page) | No Pokémon page targets "riftbound" |
 
+## Radiance price intent (added 2026-11-12, Search Console 28 days)
+
+Price searches were answered by `/` and `/browse` (split queries "riftbound card prices", "riftbound price guide") and by a 17 October table. Two posts now own them; neither restates facts the set hub or an earlier post owns.
+
+| Query pattern | Primary URL | Secondary (different angle) |
+|---|---|---|
+| `radiance price guide`, `riftbound radiance card prices`, `radiance card list price`, `kda riftbound price`, `blade of the exile riftbound`, `radiance booster box price` | `/blog/riftbound-radiance-price-guide` (rarity medians, dearest playables, K/DA specials, sealed by market, all computed) | `/sets/radiance` is the card list and gallery; `/blog/where-to-buy-riftbound-radiance` keeps "where", `/radiance-preorders` keeps the pre-order list |
+| `radiance signature price(s)`, `riftbound signature card prices`, `radiance overnumbered price` | `/blog/riftbound-radiance-signature-prices-now` (16 Signatures + 17 overnumbered, three dates) | `/blog/riftbound-radiance-signature-cards` keeps "what is it / how many / who signed", with a 12 November price table at the top and the 17 October snapshot kept for the record |
+
 ## How to use this file going forward
 
 1. Before writing new content, search this file for the target query.
