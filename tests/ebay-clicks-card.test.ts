@@ -35,7 +35,8 @@ const PAGE = "src/app/card/[id]/page.tsx";
 // ── 1. The buy button's colour, never its position ──────────────────────────
 
 test("buyButtonClass: eBay and TCGplayer wear the site's one orange filled button, every other row the green (owner, 2026-11-12: make them stand out)", () => {
-  for (const r of ["ebay", "ebay_us", "ebay_au", "ebay_uk", "ebay_ca", "ebay_eu", "tcgplayer"]) assert.equal(buyButtonClass(r), "btn-primary", r);
+  for (const r of ["ebay", "ebay_us", "ebay_au", "ebay_uk", "ebay_ca", "ebay_eu"]) assert.equal(buyButtonClass(r), "btn-primary", r);
+  assert.equal(buyButtonClass("tcgplayer"), "btn-tcg", "TCGplayer's button is blue (owner, 2026-11-12)");
   for (const r of ["tcgplayer_uk", "cherrycollectables", "cardtrader", ""]) assert.equal(buyButtonClass(r), "btn-buy", r || "(empty)");
   // The label rule is the same prefix test, so the two can never disagree.
   assert.equal(buyButtonLabel("ebay_au"), "Buy on eBay →");
@@ -60,7 +61,7 @@ test("the colour is the only thing that changed: both tables still rank by price
 // they are not the cheapest") the eBay search and TCGplayer's reference lead
 // the comparison panel instead of following it. DECISIONS.md, "eBay and
 // TCGplayer lead every price list".
-test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when there is one, else the search and the reference", () => {
+test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when there is one, else the search and the market price", () => {
   const src = read(SECTION);
   const lead = src.indexOf('{(pin.ebay || ebay || pin.tcgplayer || tcg) && (');
   const ranked = src.indexOf("{[...rest.map((p) => ({ price: p.priceCents, node: renderRow(p, false) })), ...fetchItems]");
@@ -73,7 +74,7 @@ test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when ther
   assert.match(block, /\{pin\.tcgFirst\s*\?\s*null\s*:\s*pin\.tcgplayer/, "never drawn twice");
   assert.match(block, /retailer="ebay_no_listing"/);
   assert.match(block, /surface="ebay_fallback"/);
-  assert.match(block, /TCGplayer may not ship to your country/);
+  assert.doesNotMatch(block, /TCGplayer may not ship|approximate rate|Check on TCGplayer/, "no reference or approximate wording on the TCGplayer row (owner, 2026-11-12)");
   assert.doesNotMatch(block, /cheaper|guarantee|buyer protection/i);
   // Nothing else moved: the gate, and Cardmarket stays a reference outside the list.
   assert.match(src, /const ebay = m\.hasEbay \? null : ebaySearch\[country\] \?\? null;/);

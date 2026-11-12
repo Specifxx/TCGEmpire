@@ -347,6 +347,7 @@ html {
 /* .btn-primary's hover shade is brand-400, which the light palette darkens for
    link legibility — dark ink on burnt orange would be 3:1. Hover to the
    official lighter orange instead, as in the dark theme. */
+:root[data-theme="light"] .btn-tcg { color: #fff; }
 :root[data-theme="light"] .btn-primary:hover {
   background-color: #f29733;
 }
@@ -396,6 +397,10 @@ html {
      `buy`), so the buttons that earn are exactly as they were. */
   .btn-buy {
     @apply btn bg-buy text-ink-950 hover:bg-buy-400;
+  }
+  /* TCGplayer's button (owner, 2026-11-12): blue, white text, so the marketplace row is picked out by its button alone. */
+  .btn-tcg {
+    @apply btn bg-[#1d4ed8] text-white hover:bg-[#2563eb];
   }
   .btn-ghost {
     @apply btn border border-ink-700 bg-ink-850 text-slate-200 hover:border-ink-600 hover:bg-ink-800;

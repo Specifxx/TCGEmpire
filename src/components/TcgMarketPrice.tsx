@@ -61,8 +61,7 @@ export function TcgMarketPrice({
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-white">TCGplayer market price</span>
-          <span className="chip bg-ink-800 text-[11px] text-slate-400">reference</span>
+          <span className="text-sm font-bold text-white">TCGplayer</span>
         </div>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           {std != null && (
@@ -70,7 +69,7 @@ export function TcgMarketPrice({
               {formatMoney(std, cur)}
               {usdCents != null && (
                 <span className="ml-1.5 align-middle text-xs font-medium text-slate-500">
-                  ≈ {formatMoney(usdCents, "USD")}
+                  {formatMoney(usdCents, "USD")}
                 </span>
               )}
             </span>
@@ -79,15 +78,11 @@ export function TcgMarketPrice({
             <span className="num text-sm font-bold text-gold">
               ✦ Foil {formatMoney(foil, cur)}
               {usdCentsFoil != null && (
-                <span className="ml-1 text-[11px] font-medium text-slate-500">≈ {formatMoney(usdCentsFoil, "USD")}</span>
+                <span className="ml-1 text-[11px] font-medium text-slate-500">{formatMoney(usdCentsFoil, "USD")}</span>
               )}
             </span>
           )}
         </div>
-        <p className="mt-1.5 text-[11px] leading-snug text-slate-500">
-          TCGplayer&apos;s US market price, converted to {cur} at an approximate rate. A reference value —
-          TCGplayer may not ship to your country.
-        </p>
         {href && disclosure && <AffiliateDisclosure partner="tcgplayer" tight />}
       </div>
       {href && (
@@ -95,9 +90,9 @@ export function TcgMarketPrice({
           href={href}
           retailer="tcgplayer"
           country={country}
-          className="btn-buy shrink-0 text-sm"
+          className="btn-tcg shrink-0 text-sm"
         >
-          Check on TCGplayer →
+          Buy on TCGplayer →
         </OutboundLink>
       )}
     </div>
