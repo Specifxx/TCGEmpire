@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 import { SISTER_ALERT_KEYS, SISTER_REGIONS, allowedOrigin, corsHeaders, sisterSite } from "@/lib/sister-alerts/sites";
-import { buildConfirmEmail, fromFor } from "@/lib/sister-alerts/email";
+import { buildConfirmEmail, buildWeeklyConfirmEmail, fromFor } from "@/lib/sister-alerts/email";
 import { sendSisterMail } from "@/lib/sister-alerts/send";
 import { claimMailSlot } from "@/lib/sister-alerts/mail-cap";
 import { RESTOCK_TARGET_CENTS } from "@/lib/sister-alerts/evaluate";
@@ -25,13 +25,18 @@ export const dynamic = "force-dynamic";
 // weekly biggest-drops email (lib/sister-alerts/digest.ts), on the same opt-in.
 // The product's name and link come from the site's own feed at the daily
 // check, so nothing a stranger types ever reaches an inbox.
+//
+// kind "weekly" (2026-11-12) is the sites' "weekly price drops" box: an address
+// and a region, no product and no price. Pressing its button is the opt-in, it
+// creates no alert, and it rides the same double opt-in (one confirmation email,
+// nothing else until the click).
 
 const MAX_ALERTS_PER_ADDRESS = 25;
 const CONFIRM_RESEND_MS = 24 * 60 * 60 * 1000;
 
 const schema = z.object({
   site: z.enum(SISTER_ALERT_KEYS),
-  productId: z.string().trim().min(1).max(160).regex(/^[A-Za-z0-9._:-]+$/),
+  productId: z.string().trim().min(1).max(160).regex(/^[A-Za-z0-9._:-]+$/).optional(),
   region: z.enum(SISTER_REGIONS),
   email: z.string().trim().toLowerCase().email().max(200).optional(),
   targetCents: z.number().int().min(1).max(100_000_000).optional(),
@@ -39,7 +44,7 @@ const schema = z.object({
   // DexCompare Premium (lib/sister-premium.ts): a member's token names the address (and its form
   // email is ignored), lifts the 25-alert cap and unlocks kind "restock" (back in stock).
   token: z.string().max(4096).optional(),
-  kind: z.enum(["price", "restock"]).optional(),
+  kind: z.enum(["price", "restock", "weekly"]).optional(),
 });
 
 export function OPTIONS(req: Request) {
@@ -77,7 +82,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Back-in-stock alerts are for Premium members.", premium: false }, { status: 403, headers });
   }
   if (kind === "restock") targetCents = RESTOCK_TARGET_CENTS;
-  if (!email || !targetCents) return NextResponse.json({ error: "Please check the email address and price." }, { status: 400, headers });
+  if (kind === "weekly") {
+    if (!email) return NextResponse.json({ error: "Please check the email address." }, { status: 400, headers });
+    return weeklyOnly(email, site, region, fromSite.name, memberVerified, headers);
+  }
+  if (!email || !targetCents || !productId) return NextResponse.json({ error: "Please check the email address and price." }, { status: 400, headers });
   const rlEmail = rateLimit(`sister-alerts:e:${email}`, 10, 60 * 60_000);
   if (!rlEmail.ok) return NextResponse.json({ error: "Too many alerts for this address just now." }, { status: 429, headers });
 
@@ -112,7 +121,7 @@ export async function POST(req: Request) {
 
     const now = new Date();
     const due = !address.confirmSentAt || now.getTime() - address.confirmSentAt.getTime() > CONFIRM_RESEND_MS;
-    if (due && (await claimMailSlot(prisma, now))) {
+    if (due && (await claimMailSlot(prisma, now, undefined, site))) {
       const mail = buildConfirmEmail(site, address.token, targetCents, region, weekly === true);
       const sent = await sendSisterMail(site, email, mail.subject, mail.html, { text: mail.text, from: fromFor(sisterSite(site)!) });
       if (sent) await prisma.sisterAlertAddress.update({ where: { email }, data: { confirmSentAt: now } });
@@ -124,5 +133,45 @@ export async function POST(req: Request) {
   } catch (e) {
     console.warn("[sister-alerts] signup failed:", e);
     return NextResponse.json({ error: "Couldn't save your alert. Please try again." }, { status: 503, headers });
+  }
+}
+
+/** The weekly-drops box: subscribe the address to this site's weekly email, with the same one confirmation as an alert. */
+async function weeklyOnly(
+  email: string,
+  site: (typeof SISTER_ALERT_KEYS)[number],
+  region: (typeof SISTER_REGIONS)[number],
+  siteName: string,
+  memberVerified: boolean,
+  headers: Record<string, string>,
+) {
+  const rlEmail = rateLimit(`sister-alerts:e:${email}`, 10, 60 * 60_000);
+  if (!rlEmail.ok) return NextResponse.json({ error: "Too many requests for this address just now." }, { status: 429, headers });
+  try {
+    const existing = await prisma.sisterAlertAddress.findUnique({ where: { email }, select: { token: true, confirmedAt: true, confirmSentAt: true } });
+    const address =
+      existing ??
+      (await prisma.sisterAlertAddress.create({ data: { email, token: randomBytes(24).toString("base64url") }, select: { token: true, confirmedAt: true, confirmSentAt: true } }));
+    if (memberVerified && !address.confirmedAt) {
+      await prisma.sisterAlertAddress.update({ where: { email }, data: { confirmedAt: new Date() } });
+      address.confirmedAt = new Date();
+    }
+    await prisma.sisterDigest.upsert({ where: { email_site: { email, site } }, create: { email, site, region }, update: { region } });
+    if (address.confirmedAt) return NextResponse.json({ ok: true, status: "active" }, { headers });
+
+    const now = new Date();
+    const due = !address.confirmSentAt || now.getTime() - address.confirmSentAt.getTime() > CONFIRM_RESEND_MS;
+    if (due && (await claimMailSlot(prisma, now, undefined, site))) {
+      const mail = buildWeeklyConfirmEmail(site, address.token, region);
+      const sent = await sendSisterMail(site, email, mail.subject, mail.html, { text: mail.text, from: fromFor(sisterSite(site)!) });
+      if (sent) await prisma.sisterAlertAddress.update({ where: { email }, data: { confirmSentAt: now } });
+    }
+    if (!existing) {
+      await notifyOwnerBounded({ kind: "sister-alert", headline: `New weekly-drops sign-up on ${siteName}`, fields: [["Site", siteName], ["Region", region]] });
+    }
+    return NextResponse.json({ ok: true, status: "confirm" }, { headers });
+  } catch (e) {
+    console.warn("[sister-alerts] weekly signup failed:", e);
+    return NextResponse.json({ error: "Couldn't save that. Please try again." }, { status: 503, headers });
   }
 }

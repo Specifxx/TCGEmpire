@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { dollarsToCents, normalizeSearch } from "./format";
 import { parseSearchQuery } from "./search-query";
+import { searchWords } from "./search-words";
 import { DEFAULT_COUNTRY, priceField, type Country } from "./country";
 import { ALL_FALLBACK_RETAILERS, ULTIMATE_PRINTS } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
@@ -155,6 +156,13 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
       // match the remaining name, narrowed by the top-level printing filters.
       or.push({ nameNormalized: { contains: strippedName } });
     }
+    // ALTERNATIVE THREE (2026-11-12): every meaningful word of the name, in any
+    // order. "blade of exile" finds "Blade of the Exile" and "exile riven" finds
+    // "Riven, The Exile"; the one-substring match above found neither. Two words
+    // or more only (one word is the substring match already), and it can only
+    // add rows. lib/search-words.ts.
+    const words = searchWords(parsed.name);
+    if (words.length >= 2) or.push({ AND: [...words.map((w) => ({ nameNormalized: { contains: w } })), ...scopedClauses] });
     // A community nickname resolves to specific printings by slug — a unique
     // column, so this is an indexed lookup of a handful of ids, not a scan.
     if (parsed.aliasSlugs.length) or.push({ slug: { in: parsed.aliasSlugs } });

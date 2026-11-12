@@ -191,6 +191,8 @@ export function SearchBar({
   const [sealedCurrency, setSealedCurrency] = useState<string | null>(null);
   // Near-miss card names the route offers when a query matched nothing.
   const [suggest, setSuggest] = useState<string[]>([]);
+  // Guides whose title matches a query no card or product does ("kda", "legacy"); lib/search-words.ts.
+  const [guides, setGuides] = useState<{ title: string; href: string }[]>([]);
   // Set when the day's search allowance is used up (lib/search-quota.ts).
   const [limited, setLimited] = useState<SearchTier | null>(null);
   const [open, setOpen] = useState(false);
@@ -360,6 +362,7 @@ export function SearchBar({
           setResults([]);
           setSealed([]);
           setSuggest([]);
+          setGuides([]);
           trackEvent("search_limit_shown", { tier: data.tier, variant });
           return;
         }
@@ -370,6 +373,8 @@ export function SearchBar({
         setSealed(nextSealed);
         setSealedCurrency(typeof data.sealedCurrency === "string" ? data.sealedCurrency : null);
         setSuggest(Array.isArray(data.suggest) ? data.suggest : []);
+        const nextGuides: { title: string; href: string }[] = Array.isArray(data.guides) ? data.guides : [];
+        setGuides(nextGuides);
         // A free product-gap report: every distinct, debounced-settled query
         // that came back completely empty. Firing per settled query (not per
         // keystroke — the 180ms debounce above already collapses a fast typist
@@ -377,7 +382,7 @@ export function SearchBar({
         // flooding GA4 while still catching every real miss, including
         // transient ones the visitor typed past on the way to a hit.
         if (nextResults.length === 0 && nextSealed.length === 0) {
-          trackEvent("search_no_results", { query: q, variant });
+          trackEvent("search_no_results", { query: q, variant, guides: nextGuides.length });
         }
       } catch {
         /* aborted or failed — ignore */
@@ -886,8 +891,24 @@ export function SearchBar({
           ) : results.length === 0 && sealed.length === 0 ? (
             <div>
               <div className="px-4 py-3 text-sm text-slate-400">
-                {loading ? "Searching…" : "No matches — press Enter to search anyway."}
+                {loading ? "Searching…" : guides.length > 0 ? "No card by that name. These guides cover it:" : "No matches — press Enter to search anyway."}
               </div>
+              {!loading && guides.length > 0 && (
+                <ul className="px-2 pb-2">
+                  {guides.map((g, i) => (
+                    <li key={g.href}>
+                      <a
+                        href={g.href}
+                        onClick={() => trackEvent("search_guide_click", { query: value.trim(), rank: i + 1, href: g.href, variant })}
+                        className="flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-brand-400 hover:bg-ink-800 hover:underline"
+                      >
+                        <span aria-hidden="true">→</span>
+                        <span className="min-w-0">{g.title}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
               {!loading && suggest.length > 0 && (
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 pb-2 text-sm text-slate-400">
                   <span>Did you mean</span>

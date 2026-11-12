@@ -69,6 +69,20 @@ export function buildConfirmEmail(siteKey: string, token: string, targetCents: n
   return { subject, html: shell(site, "Confirm your price alert", inner, footer, `One click and we'll watch the price for you.`), text };
 }
 
+/** The confirmation for a weekly-drops sign-up that came with no price alert (the sites' "weekly price drops" box, 2026-11-12). */
+export function buildWeeklyConfirmEmail(siteKey: string, token: string, region: SisterRegion): BuiltMail {
+  const site = sisterSite(siteKey)!;
+  const url = serviceUrl("confirm", token);
+  const subject = `Confirm your ${site.name} weekly price drops`;
+  const inner = `
+    <tr><td style="padding:8px 28px 6px;font-size:14px;line-height:1.6;color:#374151">Someone, hopefully you, asked ${escapeHtml(site.name)} to email this address its biggest price drops at ${REGION_LABEL[region]} stores, once a week. Confirm and the next edition comes to you.</td></tr>
+    <tr><td style="padding:10px 28px 18px">${button(site, url, "Confirm my weekly email")}</td></tr>
+    <tr><td style="padding:0 28px 18px;font-size:13px;line-height:1.6;color:#6b7280">One email a week, real store prices only, and every email has a link to stop it. If you didn't ask for this, ignore this email and nothing will be sent.</td></tr>`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">${escapeHtml(site.name)} emails are sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
+  const text = `${subject}\n\nSomeone, hopefully you, asked ${site.name} to email this address its biggest price drops at ${REGION_LABEL[region]} stores, once a week.\n\nConfirm: ${url}\n\nOne email a week, and every email has a link to stop it. If you didn't ask for this, ignore this email and nothing will be sent.`;
+  return { subject, html: shell(site, "Confirm your weekly email", inner, footer, `One click and the weekly price drops come to you.`), text };
+}
+
 export interface FiredAlert {
   id: string;
   site: string;

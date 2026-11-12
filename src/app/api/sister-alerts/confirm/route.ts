@@ -38,5 +38,6 @@ export async function POST(req: Request) {
   const site = last ? sisterSite(last.site) : null;
   const weekly = await prisma.sisterDigest.count({ where: { email: a.email } });
   const back = site ? `<p><a href="${new URL(last?.path ? resolvePath(last.path, last.region) : "/", site.url).toString()}">Back to ${site.name}</a></p>` : "";
+  if (!last && weekly) return page("Weekly email confirmed", `<h1>You're all set</h1><p>Your weekly email of the biggest price drops is on; the first one comes within about a week. Every email has a link to stop it.</p>`);
   return page("Price alerts confirmed", `<h1>You're all set</h1><p>Your price alerts are on. We check prices once a day and email you when one reaches your price. New alerts you set on any of our sites start straight away.</p>${weekly ? `<p>Your weekly email of the biggest price drops is on too; the first one comes within about a week.</p>` : ""}${back}`);
 }

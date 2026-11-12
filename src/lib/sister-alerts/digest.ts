@@ -21,7 +21,7 @@ import { sendSisterMail } from "./send";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
 import { button, fromFor, money, REGION_LABEL, serviceUrl, shell, siteLink, type BuiltMail } from "./email";
 import { SISTER_ALERT_SITES, SISTER_REGIONS, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
-import { claimMailSlot, SISTER_DAILY_MAIL_CAP } from "./mail-cap";
+import { claimMailSlot, mailLane, SISTER_DAILY_MAIL_CAP } from "./mail-cap";
 
 /** An edition is rebuilt this long after the last one (a little under a week: the cron runs at a fixed hour). */
 export const EDITION_EVERY_MS = 7 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000;
@@ -237,7 +237,8 @@ export async function runSisterDigest(deps: DigestDeps): Promise<DigestSummary> 
 
   // 3. Send each fresh edition once per subscriber, inside the digest's share of the daily cap.
   const dropsCache = new Map<string, DropsByRegion>();
-  let capped = false;
+  // Per lane (mail-cap.ts): DexCompare's own counter running out never stops the shared one, or the reverse.
+  const capped = new Set<string>();
   for (const s of live) {
     const ed = edOf.get(s.site);
     if (!ed || s.lastEdition === ed.edition || now.getTime() - ed.builtAt.getTime() > EDITION_SEND_WINDOW_MS) continue;
@@ -250,7 +251,7 @@ export async function runSisterDigest(deps: DigestDeps): Promise<DigestSummary> 
       summary.skippedFewDrops += 1;
       continue;
     }
-    if (capped) {
+    if (capped.has(mailLane(s.site))) {
       summary.deferred += 1;
       continue;
     }
@@ -258,8 +259,8 @@ export async function runSisterDigest(deps: DigestDeps): Promise<DigestSummary> 
       summary.emailed += 1;
       continue;
     }
-    if (!(await claimMailSlot(db, now, DIGEST_MAIL_CEILING))) {
-      capped = true; // stop claiming: every refused claim still spends a slot of the day
+    if (!(await claimMailSlot(db, now, DIGEST_MAIL_CEILING, s.site))) {
+      capped.add(mailLane(s.site)); // stop claiming: every refused claim still spends a slot of the day
       summary.deferred += 1;
       continue;
     }

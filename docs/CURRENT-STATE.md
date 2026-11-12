@@ -145,14 +145,14 @@ longer lands on its entry.
 - **The sister sites' price alerts run here (2026-11-02):** one shared service (`lib/sister-alerts/`): their form
   posts to `/api/sister-alerts` (exact-origin CORS, double opt-in), the daily `sister-alerts.yml` reads each site's own
   static `/alert-feed.json` from its CDN (never its repo or a database) and emails under the shared alert budget plus a
-  30-a-day cap. Private tables `SisterAlert`, `SisterAlertAddress`. KaeYoung, OP Compare, CamCompare and Compare Empire are not in it.
+  30-a-day cap (DexCompare's mail, sent through its own Brevo account, counts on its own 250-a-day lane since 2026-11-12). Private tables `SisterAlert`, `SisterAlertAddress`. KaeYoung, OP Compare, CamCompare and Compare Empire are not in it.
   [2026-11-02](../DECISIONS.md#L21386)
 - **DexCompare Premium is a RiftCompare Premium account (2026-11-10):** `/sister-premium/dex` signs a premium-session token the
   browser hands to Dex (fragment, 60 days); `/api/sister-premium/*` re-reads the account every call. Members get back-in-stock
   watches (`RESTOCK_TARGET_CENTS`), 200 alerts and a watch list; free alerts stay free. Same Stripe, price and trial as Rift.
   [2026-11-10](../DECISIONS.md#L23131)
 - **A weekly biggest-drops email for the sister sites (2026-11-08):** opt-in only (an unticked box on their alert form,
-  or a button on the manage page), double opt-in, one edition a week per site from its feed (8–60% drops, three or
+  a button on the manage page, or since 2026-11-12 the sites' own "weekly price drops" box, `kind: "weekly"`), double opt-in, one edition a week per site from its feed (8–60% drops, three or
   more), links only to the site (no eBay or Amazon), inside 20 of the service's 30 daily mails. `SisterDigest`, `SisterDigestEdition`.
   [2026-11-08](../DECISIONS.md#L22993)
 - **Live names** (since 2026-11-06; `src/lib/db-chains.ts` is the source of
