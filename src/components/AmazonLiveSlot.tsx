@@ -38,6 +38,8 @@ export function AmazonLiveSlot({ country, slug, label, searchHref, cart, priced 
   const cartInput =
     live?.url && cart && live.priceCents ? { href: live.url, productUrl: live.url, storeName: "Amazon", title: cart.title, priceCents: live.priceCents, currency: live.currency ?? cart.currency, image: cart.image ?? null } : null;
   const when = live?.at ? new Date(live.at).toLocaleString("en-GB", { timeZone: live.timeZone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
+  // Amazon is shown only with a real price (owner, 2026-11-12): no price, no row (the wrapper hides when empty).
+  if (!live) return null;
   return (
     <>
       <div className="min-w-0 flex-1">
@@ -60,7 +62,7 @@ export function AmazonLiveSlot({ country, slug, label, searchHref, cart, priced 
       )}
       {live && cartInput && <CartAddButton {...cartInput} className="hidden text-slate-300 sm:inline-flex" />}
       <OutboundLink href={live?.url ?? searchHref} retailer="amazon_sealed" country={country} kind="sealed" pageType="sealed" surface={live ? "amazon_live" : "amazon_search"} className="btn-buy px-3 py-1.5 text-xs">
-        {live ? "View →" : "Check Amazon →"}
+        View →
       </OutboundLink>
     </>
   );

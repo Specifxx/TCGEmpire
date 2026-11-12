@@ -134,7 +134,6 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
  *  (green is the colour of money here); it still wins over eBay's when eBay is itself the cheapest. */
 export const PIN_OUTLINE = {
   ebay: "",
-  fetch: "",
   amazon: "",
   cheapest: "rounded-lg shadow-[inset_3px_0_0_#16a34a]",
 } as const;

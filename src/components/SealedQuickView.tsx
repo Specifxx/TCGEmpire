@@ -199,7 +199,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
   const amazonHref = amazonStore ? amazonSearchUrl(country, riftboundEbayQuery(group.name), `${source}-amazon`) : null;
   const amazonRow =
     amazonStore && amazonHref ? (
-      <li key="amazon" data-amazon-row className={`-mx-2 flex items-center gap-3 px-2 py-2.5 ${PIN_OUTLINE.amazon}`}>
+      <li key="amazon" data-amazon-row className={`-mx-2 flex items-center gap-3 px-2 py-2.5 empty:hidden ${PIN_OUTLINE.amazon}`}>
         {/* Amazon's own price from the Creators API where this store's account has access (owner, 2026-11-05), else the search. */}
         <AmazonLiveSlot country={country} slug={sealedSlug(group.groupKey)} label={amazonStore.label} searchHref={amazonHref} cart={{ title: group.name, currency, image: group.imageUrl }} priced={source === "sealed-page"} />
       </li>
@@ -214,7 +214,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
         <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-buy mt-3 inline-flex text-xs">
           Search on eBay →
         </OutboundLink>
-        {amazonRow && <ul className="mt-3 border-t border-ink-800 text-left">{amazonRow}</ul>}
+        {amazonRow && <ul className="mt-3 border-t border-ink-800 text-left empty:hidden">{amazonRow}</ul>}
       </div>
     ) : (
       <ul className="divide-y divide-ink-800">
