@@ -13,10 +13,12 @@ import type { CardTileData } from "@/components/CardTile";
 // the homepage's "Most popular Vendetta cards" tab, retired on 2026-09-12 now that
 // Vendetta (31 Jul 2026) is long past being the new set; set-scoped popularity
 // lives on /sets/<slug>, which that tab was only ever a teaser for.
-export async function getPopularCards(limit = 12, country: Country = DEFAULT_COUNTRY, setCode?: string): Promise<CardTileData[]> {
+export async function getPopularCards(limit = 12, country: Country = DEFAULT_COUNTRY, setCode?: string, minCents = 0): Promise<CardTileData[]> {
   const field = priceField(country);
+  const where = buildCardWhere({ set: setCode, priced: "1" }, country);
+  // minCents (owner, 2026-11-12): the front page features dearer cards only.
   const cards = (await prisma.card.findMany({
-    where: buildCardWhere({ set: setCode, priced: "1" }, country),
+    where: minCents > 0 ? { AND: [where, { [field]: { gte: minCents } }] } : where,
     orderBy: [
       { searchCount: "desc" },
       { [field]: { sort: "desc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput,
