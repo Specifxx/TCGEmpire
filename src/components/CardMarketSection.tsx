@@ -52,8 +52,10 @@ export type EbaySearchMap = Record<string, { url: string; label: string } | null
 // the same as the other price rows": every row, eBay's included, wears the one
 // green again. The function stays so the card table, the quick view and the
 // mobile buy bar keep sharing one rule.
-export function buyButtonClass(_retailer: string): string {
-  return "btn-buy";
+// 2026-11-12 (owner: "make eBay and TCGplayer links stand out so more people click them"): the two paid marketplaces wear the
+// site's one orange filled button, other rows keep the green one. Position and ranking never change.
+export function buyButtonClass(retailer: string): string {
+  return retailer.startsWith("ebay") || retailer === "tcgplayer" ? "btn-primary" : "btn-buy";
 }
 
 export function buyButtonLabel(retailer: string): string {

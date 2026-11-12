@@ -108,15 +108,8 @@ test("drawing dates are Riot's, and the status chip follows them", () => {
   assert.equal(drawingWindow(kda), "27–30 October 2026");
 });
 
-test("the row sits near the top of every home and draws each product as the real sealed tile (quick view)", () => {
-  for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
-    const src = read(f);
-    const hero = src.indexOf("<CinematicHero");
-    const row = src.indexOf("<RiotDrawingsRow");
-    const picks = src.indexOf("<EbayPicks");
-    assert.ok(hero >= 0 && hero < row && row < picks, `${f}: hero, drawings row, eBay Picks`);
-    assert.match(src, /<RiotDrawingsRow groupsByCountry=\{drawingGroups\} today=\{sydneyDayKey\(\)\} \/>/);
-  }
+test("the drawings row is off both homes now the events are over (owner, 2026-11-12), and its components stay pure", () => {
+  for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) assert.doesNotMatch(read(f), /<RiotDrawingsRow/, f);
   const row = read("src/components/home/RiotDrawingsRow.tsx");
   assert.doesNotMatch(row, /from "@\/lib\/db"|prisma\./, "a server component with no query");
   const tiles = read("src/components/home/RiotDrawingTiles.tsx");

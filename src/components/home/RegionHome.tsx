@@ -14,10 +14,6 @@ import { HomeFeaturedListing } from "./HomeFeaturedListing";
 import { HomeSections } from "./HomeSections";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EbayPicks } from "@/components/EbayPicks";
-import { RiotDrawingsRow } from "@/components/home/RiotDrawingsRow";
-import { getSealedGroups, type SealedGroup } from "@/lib/sealed-import";
-import { RIOT_DRAWINGS } from "@/lib/riot-drawings";
-import { sydneyDayKey } from "@/lib/price-history";
 import { EditorialHub } from "./EditorialHub";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
@@ -62,7 +58,6 @@ export async function RegionHome({ region }: { region: Country }) {
     recentlyUpdated,
     moversArr,
     chaseCards,
-    sealedArr,
   ] = await Promise.all([
     getHomeStats(),
     getPopularCards(12, region, undefined, FEATURE_FLOOR_CENTS[region].card),
@@ -70,14 +65,7 @@ export async function RegionHome({ region }: { region: Country }) {
     getRecentlyUpdated(region, 24),
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 30).then((m) => featuredMovers(m, c, 6)))),
     chaseSet ? getSetChaseTiles(chaseSet.code, 16, region) : Promise.resolve([]),
-    // Every market's sealed groups (the /sealed loader, cached and memoised),
-    // for RiotDrawingsRow's tiles, which follow the visitor's market as on "/".
-    Promise.all(COUNTRY_CODES.map((c) => getSealedGroups(c).catch(() => []))),
   ]);
-  const drawingKeys = new Set(RIOT_DRAWINGS.map((d) => d.groupKey));
-  const drawingGroups = Object.fromEntries(
-    COUNTRY_CODES.map((c, i) => [c, sealedArr[i].filter((g) => drawingKeys.has(g.groupKey))]),
-  ) as Record<Country, SealedGroup[]>;
   const trendingCards = popularCards.slice(0, 6);
   const stat = statsByCountry[region];
   const storeWord = stat.stores === 1 ? "store" : "stores";
@@ -121,8 +109,7 @@ export async function RegionHome({ region }: { region: Country }) {
       {/* A featured eBay listing, until it ends, as on "/" (owner, 2026-11-07). */}
       <HomeFeaturedListing />
 
-      {/* Riot's drawing-only drops, near the top, as on "/" (owner, 2026-11-04). */}
-      <RiotDrawingsRow groupsByCountry={drawingGroups} today={sydneyDayKey()} />
+      {/* The K/DA and Worlds drawing row was removed 2026-11-12 (owner): the events are over. */}
 
       {/* eBay Picks directly under the hero, above Today's Top Deals, as on "/"
           (owner, 2026-10-19). HomeSections gets showEbayPicks={false}. */}
