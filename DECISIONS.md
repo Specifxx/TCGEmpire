@@ -23519,3 +23519,12 @@ All numbers are computed from the committed price history and the sealed export,
 prices, and carry no forecast. Not built: a "risers this week" post, because the cheapest-listing series jumps when a cheap
 listing sells out (Lee Sin 304* read US$1,350 against a TCGplayer market of US$217), so a week-on-week ranking would publish
 stock noise as a trend. Measure impressions and clicks for the two URLs and the Signature post on 19 November.
+
+## 2026-11-12: Only eBay and TCGplayer are paid rows; Fetch is a store, Amazon needs a price
+
+Owner: "Do not feature Fetch TCG as a paid link. We are not getting paid. It is just another usual store. And do not have Amazon
+in the price rows as a paid link if there is no price found. So really we just want eBay and TCGplayer as the paid links at the top.
+That is why our revenue is declining." Fetch's AU row now ranks among the stores by price, with no pin, no Ad tag and no
+Marketplace chip (it still never takes the Cheapest badge). Amazon draws a row only when the Creators API returned a real price
+(`AmazonLiveSlot` returns null otherwise); the unpriced "Check Amazon" search row and the Pokémon "Also on Amazon" strip are gone.
+`tests/paid-rows.test.ts` fails the build if a pinned Fetch row or an unpriced Amazon row comes back.

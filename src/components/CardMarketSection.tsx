@@ -52,8 +52,10 @@ export type EbaySearchMap = Record<string, { url: string; label: string } | null
 // the same as the other price rows": every row, eBay's included, wears the one
 // green again. The function stays so the card table, the quick view and the
 // mobile buy bar keep sharing one rule.
-export function buyButtonClass(_retailer: string): string {
-  return "btn-buy";
+// 2026-11-12 (owner: "make eBay and TCGplayer links stand out so more people click them"): the two paid marketplaces wear the
+// site's one orange filled button, other rows keep the green one. Position and ranking never change.
+export function buyButtonClass(retailer: string): string {
+  return retailer.startsWith("ebay") || retailer === "tcgplayer" ? "btn-primary" : "btn-buy";
 }
 
 export function buyButtonLabel(retailer: string): string {
@@ -437,6 +439,46 @@ export function CardPriceComparison({
     if (!row) return null;
     return { priceCents: row.priceCents, href: row.buyHref, isEu: country === "EU" };
   }, [rows, country]);
+  // Fetch TCG is an ordinary store row (owner, 2026-11-12: "we are not getting paid, it is just another usual store"):
+  // no pin, no Ad tag, ranked among the stores by price and never the cheapest badge.
+  const renderFetchRow = (r: NonNullable<typeof fetchRows>["rows"][number]) => (
+                <li key={`fetchtcg-${r.finish}`} className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4`}>
+                  <div className="w-5 shrink-0 sm:w-6" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="min-w-0 truncate font-semibold text-white">Fetch TCG</span>
+                    </div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                      {r.finish === "Foil" && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
+                      <span className="chip bg-ink-800 text-slate-300">{normaliseCondition(r.condition) ? CONDITIONS[normaliseCondition(r.condition)!].label : r.condition}</span>
+                      <span className="text-up">● In stock</span>
+                      <span>postage at checkout</span>
+                      <span>price on {new Date(fetchRows!.at).toLocaleDateString("en-AU", { day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</span>
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="num text-lg font-bold text-white">{fmt(r.priceCents)}</div>
+                  </div>
+                  <OutboundLink
+                    href={r.url}
+                    retailer="fetchtcg"
+                    country={country}
+                    cardId={cardId}
+                    cardName={displayName}
+                    price={r.priceCents / 100}
+                    pageType="card_detail"
+                    inStock
+                    variant={r.finish === "Foil" ? "foil" : "nonfoil"}
+                    condition={r.condition}
+                    surface="table"
+                    className="btn-buy order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                  >
+                    View on Fetch TCG →
+                  </OutboundLink>
+                </li>
+  );
+  const fetchItems = country === "AU" && fetchRows ? fetchRows.rows.map((r) => ({ price: r.priceCents, node: renderFetchRow(r) })) : [];
+
   // eBay and TCGplayer lead the list (owner, 2026-10-27; see pinMarketplaces in
   // lib/market-rows.ts). Every row keeps its PRICE rank in the number column,
   // the "Cheapest" chip stays on the real cheapest, and a pinned row that costs
@@ -622,7 +664,7 @@ export function CardPriceComparison({
             on top (tcgFirst): the cheapest listing of each when this market has one, else eBay's search and,
             outside the US, TCGplayer's US market price as a labelled reference.
             Stores follow below, ranked by price. */}
-        {(pin.ebay || ebay || pin.tcgplayer || tcg || (country === "AU" && fetchRows)) && (
+        {(pin.ebay || ebay || pin.tcgplayer || tcg) && (
           <ul className="divide-y divide-ink-800 border-b border-ink-800">
             {pin.tcgFirst && pin.tcgplayer && renderRow(pin.tcgplayer, true)}
             {pin.ebay
@@ -655,45 +697,6 @@ export function CardPriceComparison({
                     </OutboundLink>
                   </li>
                 )}
-            {country === "AU" &&
-              fetchRows?.rows.map((r) => (
-                <li key={`fetchtcg-${r.finish}`} className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4 ${PIN_OUTLINE.fetch}`}>
-                  <div className="w-5 shrink-0 sm:w-6" />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="min-w-0 truncate font-semibold text-white">Fetch TCG</span>
-                      <span className="chip shrink-0 bg-ink-800 text-[10px] text-slate-400">Marketplace</span>
-                    </div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                      {r.finish === "Foil" && <span className="chip bg-gold/15 font-semibold text-gold">✦ Foil</span>}
-                      <span className="chip bg-ink-800 text-slate-300">{normaliseCondition(r.condition) ? CONDITIONS[normaliseCondition(r.condition)!].label : r.condition}</span>
-                      <span className="text-up">● In stock</span>
-                      <span>postage at checkout</span>
-                      <span>price on {new Date(fetchRows.at).toLocaleDateString("en-AU", { day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</span>
-                      <PaidLinkTag />
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <div className="num text-lg font-bold text-white">{fmt(r.priceCents)}</div>
-                  </div>
-                  <OutboundLink
-                    href={r.url}
-                    retailer="fetchtcg"
-                    country={country}
-                    cardId={cardId}
-                    cardName={displayName}
-                    price={r.priceCents / 100}
-                    pageType="card_detail"
-                    inStock
-                    variant={r.finish === "Foil" ? "foil" : "nonfoil"}
-                    condition={r.condition}
-                    surface="table_pinned"
-                    className="btn-buy order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
-                  >
-                    View on Fetch TCG →
-                  </OutboundLink>
-                </li>
-              ))}
             {pin.tcgFirst
               ? null
               : pin.tcgplayer
@@ -738,7 +741,9 @@ export function CardPriceComparison({
           </ul>
         )}
 
-        {prices.length === 0 && outOfStock.length === 0 && emptyState ? (
+        {prices.length === 0 && fetchItems.length > 0 ? (
+          <ul className="divide-y divide-ink-800">{fetchItems.map((x) => x.node)}</ul>
+        ) : prices.length === 0 && outOfStock.length === 0 && emptyState ? (
           <div className="p-3 sm:p-4">{emptyState}</div>
         ) : prices.length === 0 && outOfStock.length === 0 ? (
           <div className="p-8 text-center text-sm text-slate-400">
@@ -767,7 +772,9 @@ export function CardPriceComparison({
           </div>
         ) : (
           <ul className="divide-y divide-ink-800">
-            {rest.map((p) => renderRow(p, false))}
+            {[...rest.map((p) => ({ price: p.priceCents, node: renderRow(p, false) })), ...fetchItems]
+              .sort((x, y) => x.price - y.price)
+              .map((x) => x.node)}
           </ul>
         )}
 

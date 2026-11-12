@@ -12,9 +12,7 @@ import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { ReviewsSection } from "@/components/ReviewsSection";
-import { RiotDrawingsRow } from "@/components/home/RiotDrawingsRow";
 import { HomeFeaturedListing } from "@/components/home/HomeFeaturedListing";
-import { sydneyDayKey } from "@/lib/price-history";
 import { RIOT_DRAWINGS } from "@/lib/riot-drawings";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
@@ -334,11 +332,6 @@ export default async function HomePage() {
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
   const gridDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c) => [c, topDealsForGrid(topDealsByCountry[c])])) as Record<Country, TopDeals>;
   const sealedShelves = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, sealedShelf(sealedArr[i], COUNTRIES[c].currency, FEATURE_FLOOR_CENTS[c].sealed)])) as Record<Country, SealedShelf>;
-  // Riot's drawing products, per market, for RiotDrawingsRow's tiles (the
-  // groups always exist: sealed-import.ts synthesises them until eBay lists one).
-  const drawingGroups = Object.fromEntries(
-    COUNTRY_CODES.map((c, i) => [c, sealedArr[i].filter((g) => DRAWING_KEYS.has(g.groupKey))]),
-  ) as Record<Country, SealedGroup[]>;
   // A market with no sealed rows of its own shows the US shelf in USD, as /sealed does.
   for (const c of COUNTRY_CODES) if (sealedShelves[c].groups.length === 0) sealedShelves[c] = sealedShelves.US;
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
@@ -364,9 +357,7 @@ export default async function HomePage() {
       {/* A featured eBay listing, until it ends (owner, 2026-11-07). */}
       <HomeFeaturedListing />
 
-      {/* Riot's drawing-only drops (the K/DA Couture Collection, the Worlds 2026
-          Edition), near the top (owner, 2026-11-04). Facts in lib/riot-drawings.ts. */}
-      <RiotDrawingsRow groupsByCountry={drawingGroups} today={sydneyDayKey()} />
+      {/* The K/DA and Worlds drawing row was removed 2026-11-12 (owner): the events are over. */}
 
       {/* eBay Picks (the newest set's chase cards, cheapest live listing
           each) directly under the hero, above Today's Top Deals (owner,

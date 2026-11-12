@@ -46,7 +46,7 @@ test("the Pokémon board: an Amazon search in the US and AU, none in Singapore; 
   assert.match(buildBoard("Pokémon TCG: X", [], "AU", { page: "p", surface: "table" }).amazonSearch!.href, /amazon\.com\.au\/s\?k=Pok%C3%A9mon\+TCG%3A\+X&/);
   assert.equal(buildBoard("X", [], "SG", { page: "p", surface: "table" }).amazonSearch, null);
   const view = readFileSync(new URL("../src/components/pokemon/PokemonBoardView.tsx", import.meta.url), "utf8");
-  assert.match(view, /board\.amazonSearch && <AffiliateDisclosure partner="amazon" tight \/>/);
+  assert.doesNotMatch(view, /amazonSearch/, "no unpriced Amazon link row (owner, 2026-11-12)");
 });
 
 test("sealed: Amazon's row only for set products Amazon sells (owner, 2026-11-12)", () => {
