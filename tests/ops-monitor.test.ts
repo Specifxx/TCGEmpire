@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   NEON_FREE_TRANSFER_BYTES,
   ageSeverity,
@@ -542,6 +543,8 @@ test("Fetch TCG row: ok when the card page shows it, warn when it does not, unkn
   assert.equal((await ask(page("<a>View on Fetch TCG →</a>"))).severity, "ok");
   assert.equal((await ask(page("<p>no row</p>"))).severity, "warn");
   assert.equal((await ask(page("", 503))).severity, "unknown");
+  // The row is Australia-only and the monitor runs from the US: the check must ask for the AU market.
+  assert.match(readFileSync("src/lib/ops/checks.ts", "utf8"), /Cookie: "country=AU"/);
 });
 
 test("Awin programmes: unknown before the token, ok when read today, warn when stale, never crit", async () => {
