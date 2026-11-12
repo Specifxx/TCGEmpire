@@ -771,7 +771,9 @@ export async function fetchtcgRow(d: OpsDeps): Promise<CheckResult> {
   const area: OpsArea = "money";
   const title = "Fetch TCG row (card pages)";
   const slug = "blazing-scorcher-ogn-001-298";
-  const r = await d.fetch(`${SITE}/card/${slug}`, { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+  // The row is for Australian visitors only and the monitor runs from a US datacentre, so ask for the AU market
+  // the way the switcher does (the `country` cookie); without it the row can never appear and the check cries wolf.
+  const r = await d.fetch(`${SITE}/card/${slug}`, { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0", Cookie: "country=AU" } });
   if (!r.ok) return unknown(d, id, area, title, `/card/${slug} answered HTTP ${r.status}.`);
   const html = await r.text();
   if (html.includes("View on Fetch TCG")) return result(d, { id, area, title, severity: "ok", summary: `The Fetch TCG row is on /card/${slug}.` });
