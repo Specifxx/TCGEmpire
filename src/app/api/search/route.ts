@@ -10,6 +10,8 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, priceField } from "@/lib/country";
 import { didYouMean } from "@/lib/did-you-mean";
 import { getPriceGuideRows } from "@/lib/price-guide";
+import { matchGuides, type GuideHit } from "@/lib/search-words";
+import { getArticles } from "@/lib/articles";
 import { meterAndStore, quotaContext } from "@/lib/search-quota-server";
 
 // Typeahead search for the navbar dropdown. Returns full tile data so a result can
@@ -106,13 +108,17 @@ export async function GET(req: Request) {
   // read. Called here at route level, never inside a cache callback (rule 6).
   // Fails open to no suggestion.
   let suggest: string[] = [];
+  let guides: GuideHit[] = [];
   if (ranked.length === 0 && sealed.length === 0) {
     const rows = await getPriceGuideRows().catch(() => null);
     if (rows) suggest = didYouMean(parsed.name || q, rows.map((r) => r.n));
+    // Not a card at all ("kda", "legacy"): the published guides whose title
+    // carries every word (lib/search-words.ts, 2026-11-12). Static content, no read.
+    guides = matchGuides(q, getArticles());
   }
 
   return NextResponse.json(
-    { results: ranked, sealed, sealedCurrency, ...(suggest.length ? { suggest } : {}), ...(quota ? { quota } : {}) },
+    { results: ranked, sealed, sealedCurrency, ...(suggest.length ? { suggest } : {}), ...(guides.length ? { guides } : {}), ...(quota ? { quota } : {}) },
     { headers: { "Cache-Control": "private, no-store" } },
   );
 }

@@ -160,7 +160,7 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
       summary.emailed += 1;
       continue;
     }
-    if (!(await claimMailSlot(db, now))) {
+    if (!(await claimMailSlot(db, now, undefined, siteKey))) {
       summary.deferred += list.length;
       continue;
     }

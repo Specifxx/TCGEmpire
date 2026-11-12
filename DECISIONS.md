@@ -23441,3 +23441,43 @@ domain". So this is accents only, the same on every Compare site, in Rift Compar
 ## 2026-11-12: the festive layer is released urgently (owner)
 
 The owner said to deploy the festive layer urgently once every site had it, so this merge carries `[deploy] [urgent]` in its subject: one production build now, instead of waiting for the next release. No other change.
+
+
+## 2026-11-12: A weekly-drops sign-up with no alert, and DexCompare's own mail lane
+
+Owner, 2026-11-12: growth has stalled and he wants it fixed with no work from him. Measured the same day: the sister
+sites had 17,632 visitors in a week and the alert service's run of 11 Nov counted 0 alerts and 0 weekly subscribers on all
+ten of them. Their only sign-up is a small text link under the whole price table of a product page. Every visitor is won
+again from Reddit or Google, so nothing compounds. The sites get a visible sign-up (their own repos); this is the service's half.
+
+- `POST /api/sister-alerts` takes `kind: "weekly"`: an address and a region, no product and no price. It subscribes the
+  address to that site's weekly biggest-drops email (`SisterDigest`) and creates no alert. Pressing the box's own button
+  is the opt-in; the same double opt-in follows (`buildWeeklyConfirmEmail`, one confirmation, at most one a day, nothing
+  else until the click). Same origin check, same "a site signs up only for itself", same rate limits, the owner is
+  told through `notifyOwnerBounded`. The confirm page says "weekly email" when the address has no alert.
+- DexCompare's mail counts on its own lane (`mailLane`, `DEX_DAILY_MAIL_CAP` 250) while `DEX_BREVO_API_KEY` is set: it
+  leaves through Dex's own Brevo account (300 a day free, 2026-11-10), so it no longer spends the 30 a day the other nine
+  sites share, and they no longer spend Dex's. The weekly email keeps the same 10-mail reserve under either cap. Without
+  the key Dex is on the shared 30 as before. Known edge: a Dex send Brevo refuses still falls back to Resend
+  (2026-11-10 rule); a whole day of that could pass 30 on Resend, and the email check in the ops monitor would show it.
+- The Monday report gets "Email sign-ups, sister sites": per site, alerts and weekly subscriptions held and added this
+  week, and addresses signed up and confirmed (`lib/sister-alerts/report.ts`). Counts only, never an address.
+- Unchanged: KaeYoung, OP Compare, CamCompare and Compare Empire are not in the service; no product name from a form;
+  the weekly email's rules (8 to 60% drops, three or more, links only to the site).
+- Measure on 19 Nov: sign-ups per 100 visitors on DexCompare and MTG Compare. If it captures, the box goes to the other eight.
+
+## 2026-11-12: Search: words in any order, and guides when no card matches
+
+Measured from the site's own `search_no_results` events: 661 visitors searched in the week to 11 Nov and 215 of them
+saw an empty result. In two weeks "kda" came up empty 31 times and "blade of exile" about 16; Blade of the Exile was
+the top card of the Hot 40. The name match was one normalised substring, so a missing "the" lost the card, and "kda",
+"legacy" and "firestarter" name a product or a season we have a guide for, never a card.
+
+- `buildCardWhere` gets a third alternative: every meaningful word of the name, in any order (`searchWords`,
+  `lib/search-words.ts`: stop words and punctuation dropped), for two words or more. It only adds rows; the whole typed
+  phrase is still the first alternative, and facet words are still applied as an alternative, never a filter.
+- When a search finds no card and no sealed product, `/api/search` also returns up to three published guides whose
+  title holds every word (`matchGuides`, newest first, drafts never), and the dropdown lists them. Static content,
+  no database read, and only on the empty path. `search_no_results` now carries `guides`, and `search_guide_click` counts the clicks.
+- No URL, title, metadata, page or ranking changes. The search allowance is unchanged.
+- Measure on 19 Nov: searchers with an empty result against 215 of 661.
