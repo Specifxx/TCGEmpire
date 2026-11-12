@@ -1469,10 +1469,12 @@ longer lands on its entry.
   observer to survive a failed hydration, which resets `<html>`/`<body>`
   attributes ([2026-10-16](../DECISIONS.md#L17916)). Season markup lives in
   its own components (`NocturneComing`, `HalloweenDecor`, `ChristmasGifts`),
-  so a season comes out by deleting them. Christmas is ONE quiet line in the
-  site's own colours (the gifts pill): no snow, lights, art, hats or palette
-  swap, on any sister site; the theme must match the domain
-  ([2026-11-08](../DECISIONS.md#L22966)).
+  so a season comes out by deleting them. Christmas is a few tasteful accents
+  in the site's own colours (a gift-guide banner, a 3px cranberry/pine
+  hairline, the two colours as tokens on the gifts pill and sale strip; one off
+  switch, `CHRISTMAS_FESTIVE_LAYER`): no snow, lights, art, hats, stripes or
+  palette swap, on any sister site; the theme must match the domain
+  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420)).
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired

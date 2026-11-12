@@ -34,6 +34,14 @@ function md(d: Date): number {
   return (d.getMonth() + 1) * 100 + d.getDate();
 }
 
+// Christmas festive layer (owner, 2026-11-12: "more festive again", after the 2026-11-08
+// tone-down): a gift-guide banner on the home page plus the cranberry/pine hairline and
+// accent tokens in globals.css (the xmas-common block). The ONE off switch: set this to
+// false after New Year and the banner is not rendered (the 2026-11-08 gifts pill returns)
+// and <html> loses `data-xmas-layer`, which the hairline and accents key on. Letting the
+// window above end on 26 December removes it too, with no deploy. The window is unchanged.
+export const CHRISTMAS_FESTIVE_LAYER = true;
+
 export function seasonAt(d: Date): Season | null {
   const v = md(d);
   for (const [name, w] of Object.entries(SEASONS) as [Season, (typeof SEASONS)[Season]][]) {

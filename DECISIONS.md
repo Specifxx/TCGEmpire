@@ -23416,3 +23416,23 @@ expensive sealed products like booster boxes", because a click on a US$150 box e
   rows inside a product stay in price order; the reference price is TCGplayer market; eBay is never a deal; no commission
   ranking. The shelf falls back to the old order when fewer than four products clear the floor.
 - Revisit with the first `home_*` click and earnings split after the next release.
+
+## 2026-11-12: Christmas, a few tasteful accents back (festive layer)
+
+Owner, 2026-11-12: make the Christmas theme "more festive again". On 2026-11-08 he had asked for the first theme (snow,
+lights, trees, Santa hats, candy-cane stripes, palette swaps) to be stripped as "a bit too much: the theme must match the
+domain". So this is accents only, the same on every Compare site, in Rift Compare's own colours and layout.
+
+- A gift-guide banner replaces the small gifts pill on the home page (`ChristmasGifts`): one line card, server HTML, a
+  small inline `currentColor` gift icon, "Christmas gift guide", a short subline from `sm` up, linking the EXISTING
+  `/blog/riftbound-gift-guide-2026` (no new page, no URL, title, meta, h1 or h2 change; the text is not a heading). A 3px cranberry left border.
+- A 3px two-tone hairline (cranberry then pine, a hard 50% stop: no stripes, no diagonals) across the top of the page, drawn
+  by `html::before` from `data-season="christmas"` and `data-xmas-layer`; `position: fixed`, so no layout shift. A darker
+  pair in the light theme keeps it contrast-safe. The same two colours, as tokens (`--xmas-red`, `--xmas-pine`), tint the
+  gifts pill and the Black Friday strip's edge, via `box-shadow`/border colour only: no new elements.
+- ONE off switch: `CHRISTMAS_FESTIVE_LAYER` in `lib/season.ts`. False (after New Year) stops the banner, which falls back
+  to the 2026-11-08 pill, and removes `data-xmas-layer` from `<html>`, so the hairline and accents go. The window
+  (1 November to 26 December, the visitor's date) is unchanged and ends the layer on its own.
+- Still out, pinned by the season tests: snow, flakes, lights, hats, candy stripes, palette swaps, sparkles, canvas, images,
+  keyframes, JS animation, pop-ups, floating rails and any extra request. The layer is about 90 lines of CSS and one
+  server component; no client JS, no revalidate changed.
