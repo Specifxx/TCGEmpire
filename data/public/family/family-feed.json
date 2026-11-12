@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "rift",
- "generatedAt": "2026-11-11T16:13:01.883Z",
+ "generatedAt": "2026-11-12T17:21:29.481Z",
  "links": {
   "US": {
    "deals": "https://riftcompare.com/black-friday",
@@ -131,10 +131,10 @@
    "region": "CA",
    "title": "Riftbound The Reckoning Booster Box",
    "url": "https://riftcompare.com/the-reckoning-preorders",
-   "cents": 18999,
+   "cents": 14995,
    "currency": "CAD",
-   "store": "Screen Free Games",
-   "image": "https://cdn.shopify.com/s/files/1/0815/8786/3827/files/riftboundreckoningbooster.jpg?v=1794062784",
+   "store": "401 Games",
+   "image": "https://cdn.shopify.com/s/files/1/1704/1809/files/raw_0987ffff-9f24-484a-9fb3-bcff2bbbaa97.jpg?v=1794433624",
    "releaseDate": "2027-04-30"
   },
   {
@@ -147,9 +147,9 @@
    "currency": "CAD",
    "store": "401 Games",
    "image": "https://cdn.shopify.com/s/files/1/1704/1809/files/raw_475b5858-0ee8-4094-b04c-ec4b5c2e551b.png?v=1773842561",
-   "refCents": 3695,
+   "refCents": 3648,
    "refLabel": "median store price",
-   "savingPct": 46
+   "savingPct": 45
   },
   {
    "kind": "deal",
@@ -183,20 +183,6 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "CA",
-   "title": "Riftbound Origins Booster Pack",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Booster%20Pack",
-   "cents": 1199,
-   "currency": "CAD",
-   "store": "Desert City Games",
-   "image": "https://cdn.shopify.com/s/files/1/0881/9956/1503/files/tmzopqxchvslwymnjtf6.png?v=1764024680",
-   "refCents": 1849,
-   "refLabel": "median store price",
-   "savingPct": 35
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "CA",
    "title": "Riftbound Spirit Forged Champion Deck (Fiora)",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Spirit%20Forged%20Champion%20Deck%20(Fiora)",
    "cents": 2294,
@@ -206,6 +192,20 @@
    "refCents": 3495,
    "refLabel": "median store price",
    "savingPct": 34
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "CA",
+   "title": "Riftbound Origins Booster Pack",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Booster%20Pack",
+   "cents": 1199,
+   "currency": "CAD",
+   "store": "Desert City Games",
+   "image": "https://cdn.shopify.com/s/files/1/0881/9956/1503/files/tmzopqxchvslwymnjtf6.png?v=1764024680",
+   "refCents": 1799,
+   "refLabel": "median store price",
+   "savingPct": 33
   },
   {
    "kind": "deal",
@@ -403,27 +403,27 @@
    "region": "UK",
    "title": "Riftbound Radiance Booster Box",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Booster%20Box",
-   "cents": 10000,
+   "cents": 9995,
    "currency": "GBP",
    "store": "Roll N Play",
    "image": "https://cdn.shopify.com/s/files/1/0909/8297/3773/files/lol_riftbound-s5-render-boosterbox-front.png?v=1790750195",
    "refCents": 11976,
    "refLabel": "median store price",
-   "savingPct": 16
+   "savingPct": 17
   },
   {
    "kind": "deal",
    "cluster": "cards",
    "region": "UK",
-   "title": "Riftbound Radiance Bundle",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Bundle",
-   "cents": 2995,
+   "title": "Riftbound Vendetta Booster Box",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Booster%20Box",
+   "cents": 9995,
    "currency": "GBP",
    "store": "Roll N Play",
-   "image": "https://cdn.shopify.com/s/files/1/0909/8297/3773/files/144178_0_1.webp?v=1791360596",
-   "refCents": 3499,
+   "image": "https://cdn.shopify.com/s/files/1/0909/8297/3773/files/b72da4c2-66e0-4b85-89bf-d75caac8c32b.jpg?v=1785323221",
+   "refCents": 11988,
    "refLabel": "median store price",
-   "savingPct": 14
+   "savingPct": 17
   },
   {
    "kind": "preorder",
@@ -523,15 +523,15 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "Riftbound Spirit Forged Booster Pack",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Spirit%20Forged%20Booster%20Pack",
-   "cents": 599,
+   "title": "Riftbound Radiance Booster Box",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Booster%20Box",
+   "cents": 10099,
    "currency": "USD",
-   "store": "Gator's Card Den",
-   "image": "https://cdn.shopify.com/s/files/1/0714/4774/0450/files/SpiritforgedPack.png?v=1770924057",
-   "refCents": 749,
+   "store": "Wulf Gaming",
+   "image": "https://cdn.shopify.com/s/files/1/0602/6349/7898/files/711365.jpg?v=1792439920",
+   "refCents": 12999,
    "refLabel": "median store price",
-   "savingPct": 20
+   "savingPct": 22
   }
  ]
 }
