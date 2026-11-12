@@ -7,6 +7,7 @@ import { featuredSet } from "@/lib/constants";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { getCachedTopDeals, topDealsForGrid, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
+import { FEATURE_FLOOR_CENTS, featuredMovers } from "@/lib/featured-floor";
 import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
@@ -289,7 +290,7 @@ export default async function HomePage() {
     // the exact same cached figures instead of a second, potentially-drifting copy.
     getHomeStats(),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
-    getPopularCards(12, country),
+    getPopularCards(12, country, undefined, FEATURE_FLOOR_CENTS[country].card),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
@@ -314,7 +315,7 @@ export default async function HomePage() {
     // day-cached (see price-history.ts), so this is six cheap cache reads, not
     // six fresh DB scans. moversByCountry[country] (the baseline) also feeds the
     // popular-cards carousel's "Movers" tab below, unchanged from before.
-    Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
+    Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 30).then((m) => featuredMovers(m, c, 6)))),
     // The featured set's chase printings, dearest first (16 rows).
     chaseSet ? getSetChaseTiles(chaseSet.code, 16, country) : Promise.resolve([]),
     // The sealed shelf, per market like Top Deals. getSealedGroups caches
@@ -332,7 +333,7 @@ export default async function HomePage() {
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
   const gridDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c) => [c, topDealsForGrid(topDealsByCountry[c])])) as Record<Country, TopDeals>;
-  const sealedShelves = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, sealedShelf(sealedArr[i], COUNTRIES[c].currency)])) as Record<Country, SealedShelf>;
+  const sealedShelves = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, sealedShelf(sealedArr[i], COUNTRIES[c].currency, FEATURE_FLOOR_CENTS[c].sealed)])) as Record<Country, SealedShelf>;
   // Riot's drawing products, per market, for RiotDrawingsRow's tiles (the
   // groups always exist: sealed-import.ts synthesises them until eBay lists one).
   const drawingGroups = Object.fromEntries(
@@ -575,16 +576,21 @@ export default async function HomePage() {
   );
 }
 
-// The homepage sealed shelf for one market: in-stock headline products in
-// getSealedGroups' own order (boxes first, then cheapest), never cases or bulk
-// runes (a case at the top of the front page reads as a price error).
+// The homepage sealed shelf for one market: in-stock products at or above the
+// sealed floor (lib/featured-floor.ts), dearest first (owner, 2026-11-12:
+// feature the high-ticket items). Cases are back, as boxes' bigger siblings;
+// bulk runes and the generic "Sealed" bucket stay off. Under the floor the
+// shelf falls back to the old order rather than show a near-empty row.
 const DRAWING_KEYS = new Set(RIOT_DRAWINGS.map((d) => d.groupKey));
-const SHELF_SKIP = /case|bulk runes|^sealed$/i;
-function sealedShelf(groups: SealedGroup[], currency: string): SealedShelf {
+const SHELF_SKIP = /bulk runes|^sealed$/i;
+function sealedShelf(groups: SealedGroup[], currency: string, floor: number): SealedShelf {
   const open = groups.filter((g) => g.lowestPriceCents != null);
+  const shelfable = open.filter((g) => !SHELF_SKIP.test(g.productType));
+  const dear = shelfable.filter((g) => g.lowestPriceCents! >= floor).sort((a, b) => b.lowestPriceCents! - a.lowestPriceCents!);
+  const chosen = dear.length >= 4 ? dear : shelfable.filter((g) => !/case/i.test(g.productType));
   return {
     // Listings stay on the product page: the tile draws none of them (site review X2, 2026-11-10).
-    groups: open.filter((g) => !SHELF_SKIP.test(g.productType)).slice(0, 8).map((g) => ({ ...g, listings: [] })),
+    groups: chosen.slice(0, 8).map((g) => ({ ...g, listings: [] })),
     currency,
     types: Array.from(new Set(open.map((g) => g.productType))),
   };

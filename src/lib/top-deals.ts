@@ -49,6 +49,7 @@
 // own gated PREMIUM column rather than folded into savings-vs-market so its
 // distinct screener (demand + price-timing, not "cheaper on eBay than in
 // stores") stays legible as its own signal.
+import { FEATURE_FLOOR_CENTS } from "./featured-floor";
 import type { Country } from "./country";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
@@ -198,6 +199,14 @@ export function cheapestEbayDeal(it: CheapestOnEbayItem, loc = "/"): CheapestEba
   };
 }
 
+// Dearer deals first (owner, 2026-11-12): keep the deals at or above the card
+// floor (lib/featured-floor.ts); if too few clear it, keep the full list.
+function dearDeals<T extends { priceCents: number }>(xs: T[], country: Country, perType: number): T[] {
+  const floor = FEATURE_FLOOR_CENTS[country].card;
+  const dear = xs.filter((d) => d.priceCents >= floor);
+  return (dear.length >= Math.min(perType, 3) ? dear : xs).slice(0, perType);
+}
+
 export async function getTopDeals(country: Country, perType = 4): Promise<TopDeals> {
   const savingsP = (async (): Promise<{ deals: Deal[]; total: number; savingsTotalCents: number }> => {
     try {
@@ -219,9 +228,9 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
         buy: defaultTcgBuyKeys(country),
         sort: "pct",
         page: 1,
-        pageSize: perType,
+        pageSize: perType * 5,
       });
-      const deals = items.map(savingsVsMarketDeal);
+      const deals = dearDeals(items.map(savingsVsMarketDeal), country, perType);
       return { deals, total, savingsTotalCents: savingsTotalCents ?? 0 };
     } catch {
       return { deals: [], total: 0, savingsTotalCents: 0 };
@@ -250,8 +259,8 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
     savingsP,
     (async (): Promise<Deal[]> => {
       try {
-        const movers = await getPriceMovers(country, perType);
-        return movers.plummeting.slice(0, perType).map((m) => ({
+        const movers = await getPriceMovers(country, perType * 8);
+        return dearDeals(movers.plummeting.map((m) => ({ ...m, priceCents: m.nowCents })), country, perType).map((m) => ({
           dealType: "price-drops" as const,
           title: m.card.name,
           subtitle: sub(m.card),
@@ -274,7 +283,8 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
       try {
         const groups = (await getSealedGroups(country)).filter((g) => g.lowestPriceCents != null);
         return [...groups]
-          .sort((a, b) => a.lowestPriceCents! - b.lowestPriceCents!)
+          .filter((g) => g.lowestPriceCents! >= FEATURE_FLOOR_CENTS[country].sealed)
+          .sort((a, b) => b.lowestPriceCents! - a.lowestPriceCents!)
           .slice(0, perType)
           .map((g) => {
             // lowestPriceCents is the cheapest IN-STOCK price, but listings[0] is the
@@ -327,7 +337,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
         // reads, so a visit to either warms the other.
         const analysis = await getCachedRisingCards(country);
         const priced = analysis.picks.filter((p) => p.priceCents != null);
-        const deals = priced.slice(0, perType).map((p) => ({
+        const deals = dearDeals(priced.map((p) => ({ ...p, priceCents: p.priceCents! })), country, perType).map((p) => ({
           dealType: "rising-cards" as const,
           title: p.displayName,
           subtitle: sub(p),

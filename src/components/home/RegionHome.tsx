@@ -4,6 +4,7 @@ import { getPopularCards, getSetChaseTiles } from "@/lib/cheapest-cards";
 import { featuredSet } from "@/lib/constants";
 import { getHomeStats } from "@/lib/home-stats";
 import { getCachedTopDeals, type TopDeals } from "@/lib/top-deals";
+import { FEATURE_FLOOR_CENTS, featuredMovers } from "@/lib/featured-floor";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
 import { COUNTRIES, COUNTRY_LIST, type Country } from "@/lib/country";
 import { COUNTRY_GUIDE_SLUGS } from "@/lib/seo";
@@ -64,10 +65,10 @@ export async function RegionHome({ region }: { region: Country }) {
     sealedArr,
   ] = await Promise.all([
     getHomeStats(),
-    getPopularCards(12, region),
+    getPopularCards(12, region, undefined, FEATURE_FLOOR_CENTS[region].card),
     Promise.all(COUNTRY_CODES.map((c) => getCachedTopDeals(c))),
     getRecentlyUpdated(region, 24),
-    Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
+    Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 30).then((m) => featuredMovers(m, c, 6)))),
     chaseSet ? getSetChaseTiles(chaseSet.code, 16, region) : Promise.resolve([]),
     // Every market's sealed groups (the /sealed loader, cached and memoised),
     // for RiotDrawingsRow's tiles, which follow the visitor's market as on "/".

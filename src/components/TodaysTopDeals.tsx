@@ -96,7 +96,8 @@ function inTier(cents: number, tier: Tier, t: { small: number; mid: number }): b
   return cents > t.mid;
 }
 
-// Default ("All") ordering: pull items at/under the $25-equivalent tier toward
+// Default ("All") ordering (flipped 2026-11-12, owner: feature the dearer
+// items): pricier ones lead. It used to pull items at/under the $25-equivalent tier toward
 // the front, interleaved with pricier ones, so the single item a non-Premium
 // visitor sees for a gated column is more often an approachable price — real
 // items, real order within each bucket, just presented cheap-first when a cheap
@@ -107,8 +108,8 @@ function mixByTier(items: Deal[], midThreshold: number): Deal[] {
   const pricey = items.filter((d) => d.priceCents > midThreshold);
   const out: Deal[] = [];
   for (let i = 0; i < cheap.length || i < pricey.length; i++) {
-    if (i < cheap.length) out.push(cheap[i]);
     if (i < pricey.length) out.push(pricey[i]);
+    if (i < cheap.length) out.push(cheap[i]);
   }
   return out;
 }

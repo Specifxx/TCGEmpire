@@ -23397,3 +23397,22 @@ in dollars, every URL already carrying our referral `utm_source`/`utm_medium`. S
 - Rollout to the sister sites that sell singles (OP, Gundam, Lorcana, Cyberpunk, Dex) follows; MTG, YGO and Bandai are
   sealed-only and Fetch lists no sealed product, so they get nothing.
 - Recheck about 18 November: Fetch's commission rate (the owner's email to Dhanish) and the first Fetch clicks.
+
+## 2026-11-12: The front page features the dearer items
+
+Owner: "promote the more expensive items … the cheap ones we shouldn't advertise on the front page … especially the more
+expensive sealed products like booster boxes", because a click on a US$150 box earns far more than one on a 50c common.
+
+- `lib/featured-floor.ts` holds one floor per market (US$5 a card, US$50 sealed; AU/UK/SG/CA/EU hand-rounded, never
+  FX-converted). From the committed data: 75% of priced US singles are under US$3 (median 15c, top 10% from ~US$75);
+  US sealed boxes, cases and displays sit at US$57+ at the median, while packs, Showdown and Champion starter decks are
+  under US$50.
+- Selection only. The home and region-home "Most popular cards" (`getPopularCards(…, minCents)`), the price-mover lists,
+  Today's Top Deals (savings, price drops, rising: over-fetch, keep the floor, fall back if fewer than three clear it) and
+  the sealed shelf now lead with items at or above the floor. The sealed shelf is dearest first and cases are back on it;
+  the "All" tier mix in Today's Top Deals puts the pricier items first (it was cheap first). The "cheapest sealed" deal feed
+  (not drawn on the grid) is floored too.
+- Unchanged: every URL, title, meta, JSON-LD and sitemap; cheap cards and sealed stay searchable and on their pages; store
+  rows inside a product stay in price order; the reference price is TCGplayer market; eBay is never a deal; no commission
+  ranking. The shelf falls back to the old order when fewer than four products clear the floor.
+- Revisit with the first `home_*` click and earnings split after the next release.
