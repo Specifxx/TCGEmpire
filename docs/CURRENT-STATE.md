@@ -803,8 +803,9 @@ longer lands on its entry.
   [2026-09-26](../DECISIONS.md#L13751)
 - **eBay and TCGplayer lead every price list** (owner, 2026-10-27): the card
   page's comparison and the QuickView draw the cheapest eBay row and the
-  cheapest TCGplayer row, eBay always on top since [2026-11-06](../DECISIONS.md#2026-11-06--ebay-and-amazon-rows-are-full-price-rows-on-top-outlined) (green
-  outline; `tcgFirst` is always false; the sealed page's Amazon row second, amber),
+  cheapest TCGplayer row, eBay always on top since [2026-11-06](../DECISIONS.md#2026-11-06--ebay-and-amazon-rows-are-full-price-rows-on-top-outlined) (no
+  coloured outline since [2026-11-12](../DECISIONS.md#2026-11-12--a-calmer-price-table-owner): only the cheapest row is marked, with a
+  green edge; `tcgFirst` is always false; the sealed page's Amazon row second),
   then the stores by price (`pinMarketplaces`); with no eBay row, eBay's search
   leads; outside the US TCGplayer's US market price is a
   labelled reference row. A "Paid link" tag (no "Shown first" chip since [2026-10-30](../DECISIONS.md#L20903)), the price rank in
