@@ -23481,3 +23481,11 @@ the top card of the Hot 40. The name match was one normalised substring, so a mi
   no database read, and only on the empty path. `search_no_results` now carries `guides`, and `search_guide_click` counts the clicks.
 - No URL, title, metadata, page or ranking changes. The search allowance is unchanged.
 - Measure on 19 Nov: searchers with an empty result against 215 of 661.
+
+## 2026-11-12 — Amazon only where Amazon sells the item (owner)
+
+Bill: "no point having Amazon links on the sites which don't sell Amazon like RiftCompare — only the sealed set products like Origins, Spiritforged
+packs sell on Amazon." `amazonSellsSealed` (lib/amazon.ts) now gates the sealed Amazon row (`SealedOffers`): booster boxes and packs, sleeved boosters,
+bundles, starter sets and box sets only; never promo or Nexus Night packs, T1 or Worlds editions, Proving Grounds, Champion or Showdown decks, cases,
+Chinese or Korean editions. /sealed's category-search rows lose their Amazon button (a category search is not a product, Associates rule 4). Singles
+carry no Amazon (unchanged). The Pokémon board is sealed-only and unchanged.

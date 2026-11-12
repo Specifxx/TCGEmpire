@@ -76,7 +76,7 @@ test("Amazon is the second row, right under eBay; the quick view has its tagged 
   const qv = read("src/components/SealedQuickView.tsx");
   assert.match(qv, /\{!pin\.ebay && amazonRow\}/, "right after eBay's search row when eBay has no listing");
   assert.match(qv, /pin\.ebay && l === pin\.ebay \? amazonRow : null/, "right after the eBay row");
-  assert.match(qv, /const amazonStore = amazon \? amazonFor\(country\) : null;/);
+  assert.match(qv, /const amazonStore = amazon && amazonSellsSealed\(group\) \? amazonFor\(country\) : null;/, "only for set products Amazon sells (2026-11-12)");
   assert.match(qv, /<AffiliateDisclosure partner="amazon" \/>/, "Amazon's statement beside its link");
   const modal = qv.slice(qv.indexOf("function SealedQuickViewModal"), qv.indexOf("export function SealedOffers"));
   assert.match(modal, /<SealedOffers group=\{group\} currency=\{currency\} amazon \/>/, "the quick view carries the Amazon link");

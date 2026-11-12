@@ -21,7 +21,7 @@ import { isPreorderSetCode } from "@/lib/constants";
 import { SealedWatchButton } from "./SealedWatchButton";
 import { PaidLinkTag } from "./AffiliateDisclosure";
 import { PIN_OUTLINE, pinMarketplaces, rowOutline } from "@/lib/market-rows";
-import { amazonFor, amazonSearchUrl } from "@/lib/amazon";
+import { amazonFor, amazonSearchUrl, amazonSellsSealed } from "@/lib/amazon";
 import { sealedPath, sealedSlug } from "@/lib/sealed-slug";
 import { AmazonLiveSlot } from "./AmazonLiveSlot";
 import Link from "next/link";
@@ -195,7 +195,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
   const lead = (pin.tcgFirst ? [pin.tcgplayer, pin.ebay] : [pin.ebay, pin.tcgplayer]).filter((l): l is (typeof listings)[number] => l != null);
   const shown = [...lead, ...listings.filter((l) => !lead.includes(l))];
 
-  const amazonStore = amazon ? amazonFor(country) : null;
+  const amazonStore = amazon && amazonSellsSealed(group) ? amazonFor(country) : null;
   const amazonHref = amazonStore ? amazonSearchUrl(country, riftboundEbayQuery(group.name), `${source}-amazon`) : null;
   const amazonRow =
     amazonStore && amazonHref ? (

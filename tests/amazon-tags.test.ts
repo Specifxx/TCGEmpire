@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { amazonFor, amazonSearchUrl, amazonTagForHost } from "../src/lib/amazon";
+import { amazonFor, amazonSearchUrl, amazonSellsSealed, amazonTagForHost } from "../src/lib/amazon";
 import { affiliateUrl } from "../src/lib/affiliate";
 import { buildBoard } from "../src/lib/pokemon/board";
 
@@ -36,7 +36,7 @@ test("/sealed: Amazon only where the market has an account, never the AU fallbac
   // The marketplace rows moved to a client component on 2026-11-05 (the page is one CDN copy for every market).
   for (const f of ["../src/app/sealed/page.tsx", "../src/components/SealedMarketplaceSearches.tsx"]) assert.doesNotMatch(readFileSync(new URL(f, import.meta.url), "utf8"), /AMAZON_HOSTS/);
   const rows = readFileSync(new URL("../src/components/SealedMarketplaceSearches.tsx", import.meta.url), "utf8");
-  assert.match(rows, /const amazon = amazonFor\(country\);/);
+  assert.doesNotMatch(rows, /amazonFor|amazon_sealed|amazon\.com|Amazon →/, "no Amazon on the hub's category searches (owner, 2026-11-12)");
 });
 
 test("the Pokémon board: an Amazon search in the US and AU, none in Singapore; no price", () => {
@@ -47,4 +47,10 @@ test("the Pokémon board: an Amazon search in the US and AU, none in Singapore; 
   assert.equal(buildBoard("X", [], "SG", { page: "p", surface: "table" }).amazonSearch, null);
   const view = readFileSync(new URL("../src/components/pokemon/PokemonBoardView.tsx", import.meta.url), "utf8");
   assert.match(view, /board\.amazonSearch && <AffiliateDisclosure partner="amazon" tight \/>/);
+});
+
+test("sealed: Amazon's row only for set products Amazon sells (owner, 2026-11-12)", () => {
+  for (const t of ["Booster Box", "Booster Pack", "Sleeved Booster", "Bundle", "Starter Set", "Box Set"]) assert.equal(amazonSellsSealed({ productType: t, groupKey: `OGN|${t}` }), true, t);
+  for (const t of ["Nexus Night Pack", "Promo Pack", "T1 Signature Edition", "Worlds 2026 Edition", "Proving Grounds", "Champion Deck (Ahri)", "Showdown Decks", "Booster Case", "Sealed"]) assert.equal(amazonSellsSealed({ productType: t, groupKey: `OGN|${t}` }), false, t);
+  assert.equal(amazonSellsSealed({ productType: "Booster Box", groupKey: "T1S|Booster Box|CN" }), false, "a Chinese edition");
 });
