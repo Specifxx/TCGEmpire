@@ -1310,11 +1310,105 @@ ins.adsbygoogle[data-ad-status="unfilled"],
    Christmas (data-season="christmas", lib/season.ts; 1 November to Boxing Day).
    Owner, 2026-11-08: the first Christmas look (snow, lights, trees, Santa hats,
    candy-cane stripes, palette swaps) was "a bit too much: the theme must match
-   the domain". So the season is ONE quiet touch: the gifts line (.xmas-pill),
-   drawn in the site's own colours (it inherits them through currentColor).
-   No snow, lights, art, hats, stripes or palette change: the site looks like
-   itself. Hidden unless <html> carries the attribute, so it ends on its own.
+   the domain". Owner, 2026-11-12: "more festive again". So the season is a few
+   TASTEFUL ACCENTS, all CSS from the attribute (CHRISTMAS_FESTIVE_LAYER in
+   lib/season.ts is the one off switch): a gift-guide banner on the home page
+   (.xmas-banner), a 3px two-tone cranberry/pine hairline across the top of the
+   page, and the same two colours as tokens on the gifts pill and the sale
+   strip. No snow, lights, art, hats, stripes, palette swap, motion or image:
+   the site still looks like itself. Hidden unless <html> carries the
+   attribute, so it ends on its own.
    --------------------------------------------------------------------------- */
+:root[data-season="christmas"] {
+  --xmas-red: #d1435c;
+  --xmas-pine: #2f8a63;
+  --xmas-pine-fg: #6fcf9f;
+}
+:root[data-season="christmas"][data-theme="light"] {
+  --xmas-red: #a11d33;
+  --xmas-pine: #1f6b4a;
+  --xmas-pine-fg: #1f6b4a;
+}
+:root[data-season="christmas"][data-xmas-layer]::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 60;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--xmas-red) 50%, var(--xmas-pine) 50%);
+}
+:root[data-season="christmas"][data-xmas-layer] [data-holiday-strip] {
+  box-shadow: inset 3px 0 0 var(--xmas-red);
+  border-bottom-color: color-mix(in srgb, var(--xmas-pine) 50%, transparent);
+}
+:root[data-season="christmas"][data-xmas-layer] .rb-gifts {
+  border-color: color-mix(in srgb, var(--xmas-pine) 55%, transparent);
+  box-shadow: inset 3px 0 0 var(--xmas-red);
+}
+.xmas-banner-row {
+  display: none;
+}
+:root[data-season="christmas"] .xmas-banner-row {
+  display: flex;
+}
+.xmas-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 34rem;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-left: 3px solid var(--xmas-red);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: inherit;
+  transition: border-color 150ms ease;
+}
+.xmas-banner:hover,
+.xmas-banner:focus-visible {
+  border-color: color-mix(in srgb, var(--xmas-pine) 70%, transparent);
+  border-left-color: var(--xmas-red);
+}
+.xmas-banner svg {
+  flex: none;
+  width: 1.3rem;
+  height: 1.3rem;
+  color: var(--xmas-pine-fg);
+}
+.xmas-banner-text {
+  min-width: 0;
+}
+.xmas-banner b {
+  font-weight: 700;
+}
+.xmas-banner-sub {
+  display: none;
+  opacity: 0.75;
+  font-size: 0.82rem;
+}
+.xmas-banner-go {
+  flex: none;
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--xmas-pine-fg);
+}
+@media (min-width: 640px) {
+  /* Clears the creators badge that sits in the hero's top-right corner. */
+  .xmas-banner-row {
+    margin-top: 1rem;
+  }
+  .xmas-banner {
+    max-width: 44rem;
+  }
+  .xmas-banner-sub {
+    display: block;
+  }
+}
 .xmas-only {
   display: none !important;
 }

@@ -182,3 +182,29 @@ test("Christmas is one quiet line, not a costume (owner, 2026-11-08: the theme m
   assert.match(css, /:root\[data-season="christmas"\] \.rb-gifts-row \{\s*display: flex;/);
   assert.match(read("src/components/home/ChristmasGifts.tsx"), /if \(!seasonMarkupLive\("christmas"\)\) return null;/);
 });
+
+test("Christmas festive layer (owner, 2026-11-12): tasteful accents only, one off switch, still no costume", () => {
+  const css = read("src/app/globals.css");
+  const season = read("src/lib/season.ts");
+  const layout = read("src/app/layout.tsx");
+  const gifts = read("src/components/home/ChristmasGifts.tsx");
+  // The one off switch: gates the banner and the attribute the CSS keys on.
+  assert.match(season, /export const CHRISTMAS_FESTIVE_LAYER = true;/);
+  assert.match(layout, /data-xmas-layer=\{CHRISTMAS_FESTIVE_LAYER \? "" : undefined\}/);
+  assert.match(gifts, /if \(!CHRISTMAS_FESTIVE_LAYER\)/);
+  assert.match(gifts, /seasonMarkupLive\("christmas"\)/);
+  // Banner: a link to the existing gift guide, server HTML, inline currentColor icon, not a heading.
+  assert.match(gifts, /href="\/blog\/[a-z0-9-]*gift-guide[a-z0-9-]*"/);
+  assert.match(gifts, /stroke="currentColor"/);
+  assert.doesNotMatch(gifts, /<h[1-6]|"use client"|<img|<canvas/);
+  // Hairline and accents: CSS from the attribute only, two flat tones, no stripes.
+  const block = css.slice(css.indexOf("xmas-common:start"), css.indexOf("xmas-common:end")).replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.match(block, /:root\[data-season="christmas"\]\[data-xmas-layer\]::before \{[^}]*height: 3px;[^}]*linear-gradient\(90deg, var\(--xmas-red\) 50%, var\(--xmas-pine\) 50%\)/);
+  assert.match(block, /\[data-holiday-strip\]/);
+  assert.match(block, /:root\[data-season="christmas"\]\[data-theme="light"\]/, "the light theme has its own, darker pair");
+  assert.match(block, /\.xmas-banner-row \{\s*display: none;/);
+  // Still gone: snow, flakes, canvas, candy stripes, motion, images, palette swap.
+  for (const gone of ["snow", "flake", "canvas", "repeating-linear-gradient", "45deg", "@keyframes", "animation:", "url(", "--c-ink-", "--c-brand-"]) {
+    assert.ok(!block.includes(gone), `${gone} stays out of the Christmas CSS`);
+  }
+});

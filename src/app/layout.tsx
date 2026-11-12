@@ -9,7 +9,7 @@ import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
 import { SideRails } from "@/components/SideRails";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
-import { SEASON_BOOT_SCRIPT } from "@/lib/season";
+import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT, MOBILE_NO_VIGNETTE_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
@@ -312,6 +312,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} ${cinzel.variable}`}
+      // Christmas festive layer's off switch (lib/season.ts): the hairline and accents key on it.
+      data-xmas-layer={CHRISTMAS_FESTIVE_LAYER ? "" : undefined}
       // The theme and season boot scripts below stamp data-theme / data-season
       // on this element before React hydrates; React must not report that as a
       // mismatch. (A second
