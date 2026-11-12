@@ -23436,3 +23436,8 @@ domain". So this is accents only, the same on every Compare site, in Rift Compar
 - Still out, pinned by the season tests: snow, flakes, lights, hats, candy stripes, palette swaps, sparkles, canvas, images,
   keyframes, JS animation, pop-ups, floating rails and any extra request. The layer is about 90 lines of CSS and one
   server component; no client JS, no revalidate changed.
+
+
+## 2026-11-12: the festive layer is released urgently (owner)
+
+The owner said to deploy the festive layer urgently once every site had it, so this merge carries `[deploy] [urgent]` in its subject: one production build now, instead of waiting for the next release. No other change.
