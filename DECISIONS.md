@@ -23502,3 +23502,20 @@ This replaces the coloured outlines of 2026-11-06 and 2026-11-07.
 Order, labels, links, tags, URLs, titles, metadata and headings are unchanged; what we earn still never decides order. Measure outbound
 clicks per placement on 19 November against the week before: if the pinned eBay row's clicks fall, strengthen its button before
 bringing any outline back.
+
+## 2026-11-12 — two Radiance price posts, written from what Search Console says people type (owner)
+
+The owner asked for "a couple more blog posts ... that target exactly what people are searching for right now", noting that his own
+ideas (the Radiance pre-orders, the Signature cards) were the ones that surged. Search Console's 28 days to 12 November showed
+why the Signature post is the site's top page (931 clicks, 11.4% CTR at position 6.1) and where the next demand was: price
+searches ("riftbound radiance card prices", "radiance price guide", "riftbound card prices", "kda riftbound price", "blade of the
+exile riftbound", about 3,000 impressions a month between them) were answered by the home page and /browse at position 8 to 9
+because no page owned them, and the Signature post's own price table was five weeks old (Ziggs 169* at US$5,000; it is US$675).
+
+Shipped: `riftbound-radiance-signature-prices-now` (every Signature and overnumbered card on 20 Oct, 31 Oct and 12 Nov: 13 of 16
+Signatures were US$1,000+ at first listing, none are now; median fall 67%) and `riftbound-radiance-price-guide` (rarity medians,
+the dearest playable card, the K/DA specials, boxes and Vault Bundles by market), plus a current-price section on the Signature post.
+All numbers are computed from the committed price history and the sealed export, labelled as cheapest in-stock listings, not sold
+prices, and carry no forecast. Not built: a "risers this week" post, because the cheapest-listing series jumps when a cheap
+listing sells out (Lee Sin 304* read US$1,350 against a TCGplayer market of US$217), so a week-on-week ranking would publish
+stock noise as a trend. Measure impressions and clicks for the two URLs and the Signature post on 19 November.
