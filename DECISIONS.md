@@ -23528,3 +23528,7 @@ That is why our revenue is declining." Fetch's AU row now ranks among the stores
 Marketplace chip (it still never takes the Cheapest badge). Amazon draws a row only when the Creators API returned a real price
 (`AmazonLiveSlot` returns null otherwise); the unpriced "Check Amazon" search row and the Pokémon "Also on Amazon" strip are gone.
 `tests/paid-rows.test.ts` fails the build if a pinned Fetch row or an unpriced Amazon row comes back.
+
+## 2026-11-12: the TCGplayer row says what it is, and its button is blue
+
+Owner: the TCGplayer row read "reference", "approximate" and "Check on TCGplayer", and clicks fell. Outside the US the row now shows TCGplayer's price as a normal price (its market price, converted, no "≈", no caveat) under "TCGplayer", with "Buy on TCGplayer →" in a blue button (`.btn-tcg`). A real listed price is shown wherever a listing row exists (the US); we hold no other. The one-orange-accent calm rule yields here for TCGplayer's button only (owner's call). eBay stays orange.

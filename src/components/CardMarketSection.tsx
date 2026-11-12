@@ -55,7 +55,8 @@ export type EbaySearchMap = Record<string, { url: string; label: string } | null
 // 2026-11-12 (owner: "make eBay and TCGplayer links stand out so more people click them"): the two paid marketplaces wear the
 // site's one orange filled button, other rows keep the green one. Position and ranking never change.
 export function buyButtonClass(retailer: string): string {
-  return retailer.startsWith("ebay") || retailer === "tcgplayer" ? "btn-primary" : "btn-buy";
+  if (retailer === "tcgplayer") return "btn-tcg";
+  return retailer.startsWith("ebay") ? "btn-primary" : "btn-buy";
 }
 
 export function buyButtonLabel(retailer: string): string {
@@ -707,17 +708,15 @@ export function CardPriceComparison({
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="min-w-0 truncate font-semibold text-white">TCGplayer</span>
-                        <span className="chip shrink-0 bg-ink-800 text-[10px] text-slate-400">US market price</span>
                       </div>
                       <p className="mt-0.5 text-xs text-slate-500">
-                        A reference, converted at an approximate rate. TCGplayer may not ship to your country.{" "}
                         {isPaidLink(tcg.href) && <PaidLinkTag />}
                       </p>
                     </div>
                     {(tcg.usdCents ?? tcg.usdCentsFoil) != null && (
                       <div className="shrink-0 text-right">
                         <div className="num text-lg font-bold text-white">
-                          ≈ {formatMoney(convertUsdCents((tcg.usdCents ?? tcg.usdCentsFoil)!, COUNTRIES[country].currency), COUNTRIES[country].currency)}
+                          {formatMoney(convertUsdCents((tcg.usdCents ?? tcg.usdCentsFoil)!, COUNTRIES[country].currency), COUNTRIES[country].currency)}
                         </div>
                         <div className="num text-[11px] text-slate-500">{formatMoney((tcg.usdCents ?? tcg.usdCentsFoil)!, "USD")}</div>
                       </div>
@@ -731,9 +730,9 @@ export function CardPriceComparison({
                         cardName={displayName}
                         pageType="card_detail"
                         surface="table_pinned"
-                        className="btn-buy order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                        className="btn-tcg order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
                       >
-                        Check on TCGplayer →
+                        Buy on TCGplayer →
                       </OutboundLink>
                     )}
                   </li>
