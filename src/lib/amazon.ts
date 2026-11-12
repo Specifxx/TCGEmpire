@@ -38,6 +38,16 @@ const STORES: Record<Country, Store | null> = {
   SG: null,
 };
 
+/**
+ * Sealed products Amazon actually sells (owner, 2026-11-12: "only the sealed set products like Origins, Spiritforged packs sell on
+ * Amazon"). Everything else (promo and Nexus Night packs, T1 and Worlds editions, Proving Grounds kits, Champion and Showdown decks,
+ * cases, Chinese and Korean editions, the bare "Sealed" catch-all) gets no Amazon row: a search there only finds the wrong thing.
+ */
+export const AMAZON_SEALED_TYPES: ReadonlySet<string> = new Set(["Booster Box", "Booster Pack", "Sleeved Booster", "Bundle", "Starter Set", "Box Set"]);
+export function amazonSellsSealed(group: { productType: string; groupKey: string }): boolean {
+  return AMAZON_SEALED_TYPES.has(group.productType) && !/\|(CN|KR)\b/.test(group.groupKey);
+}
+
 /** The market's Amazon (host, label, tag), or null where it shows none. */
 export function amazonFor(country: Country): { host: string; label: string; tag: string } | null {
   const s = STORES[country];

@@ -232,8 +232,9 @@ test("/sealed names no set in code, states its real fallback and carries Amazon'
   assert.match(code("src/components/SealedMarketBoard.tsx"), /\{COUNTRIES\[view\.priceCountry\]\.adjective\} listings/);
   assert.doesNotMatch(code("src/components/SealedMarketBoard.tsx"), /Australian listings|prices in AUD|ship internationally/);
   const panel = src.slice(src.indexOf("<SealedMarketplaceSearches"), src.indexOf("</section>", src.indexOf("<SealedMarketplaceSearches")));
-  assert.match(code("src/components/SealedMarketplaceSearches.tsx"), /amazon_sealed_search/);
-  assert.match(panel, /<AffiliateDisclosure partner="amazon" \/>/);
+  // No Amazon on the hub's category searches since 2026-11-12 (owner: only some sealed sells on Amazon; its row is on the product page).
+  assert.doesNotMatch(code("src/components/SealedMarketplaceSearches.tsx"), /amazonFor|amazon_sealed|Amazon →/);
+  void panel;
   // MSRP is described as the code keeps it: approximate launch RRPs for three
   // markets, never for pre-orders (lib/msrp.ts, lib/sealed-import.ts).
   const intro = plainIntroText(HUB_INTROS["/sealed"].paragraphs.join(" "));
