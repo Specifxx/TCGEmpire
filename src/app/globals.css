@@ -71,34 +71,9 @@
   --scroll-track: #071a25;
   --scroll-thumb: #1d3c4e;
   --scroll-thumb-hover: #2f566a;
-  /* Reserved width for the persistent desktop SideNav (components/SideNav.tsx),
-     0 by default so every element that pads/positions against it (the header,
-     main, the footer ad zone, the footer itself, CinematicHero's full-bleed
-     breakout) is a no-op below the breakpoint where SideNav actually renders.
-     Read via `var(--sidenav-w)` rather than a Tailwind `lg:` prefix on each
-     consumer so ALL of them share exactly one breakpoint decision —
-     SideNav.tsx's own `hidden lg:flex` and the media query below must always
-     agree, or the panel either overlaps un-padded content or leaves a dead
-     gap. tests/sidenav.test.ts pins both against the same "1024px" value.
-
-     ONE WIDTH, ONE BREAKPOINT, since 2026-09-21. There used to be two rail
-     modes — a 4rem icon strip and a 17rem list — chosen by a `data-sidenav`
-     attribute stamped before first paint from a cookie, with a chevron and a
-     `[` shortcut to flip between them. That whole mechanism is gone
-     ("the collapsible option is actually, there's no point — have the default
-     as uncollapsed"), and with it the boot script, the cookie, the
-     `.sidenav-expanded`/`.sidenav-collapsed` display toggles and the flyouts
-     the icon mode needed. The rail is simply the list now. */
-  --sidenav-w: 0px;
   /* Height of the native AdMob banner inside the Capacitor shell — see the
      native-app rule further down. 0 on the web, where there is no banner. */
   --native-banner-h: 0px;
-}
-
-@media (min-width: 1024px) {
-  :root {
-    --sidenav-w: 17rem;
-  }
 }
 
 /* ── Palette: LIGHT ──────────────────────────────────────────────────────
@@ -373,8 +348,10 @@ html {
 }
 
 @layer components {
+  /* THE CONTENT COLUMN: 1200px, centred (owner, 2026-11-13, DECISIONS.md "Minimal redesign"). It was 1400px beside a
+     17rem rail; with the rail gone a narrower column keeps lines readable and leaves air at the sides. */
   .container-app {
-    @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6;
+    @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6;
   }
   /* min-h-11 = 44px, the Apple HIG / Google mobile-usability tap-target floor.
      px-4 py-2 at 14px text laid out at 37px tall, which the 375px audit flagged
@@ -494,30 +471,12 @@ html {
      rename across all of them would be churn for no behaviour. What it no
      longer carries is --bottombar-h (gone — nothing reserves that space any
      more) or --chrome-lift (gone with the bar whose position it corrected). */
-  /* The shared corner for every bottom-left nudge (PremiumSlideIn,
-     AnnualSwitchNudge; SignupPromoPopup until its removal on 2026-09-30). It clears the phone tab bar's space
-     below lg and, since 2026-09-21, clears the DESKTOP RAIL from lg up:
-     those cards are `left-4`, which from 1024px put them on top of the
-     sidebar ("for any sliders (sign up and premium), it should be shifted to
-     the right so it doesn't overlap with the sidebar").
-
-     Done HERE rather than as an `lg:left-…` on each card, and that is the
-     point: tests/signup-inline.test.ts pins both to one identical
-     corner string precisely so a fix applied to one of them cannot leave the
-     other behind — which is exactly what the first attempt at this did.
-     `--sidenav-w` is 0 below lg, so the override is a no-op there and the
-     `left-4` in the shared string still decides. */
+  /* The shared corner for every bottom-left nudge (PremiumSlideIn, AnnualSwitchNudge): a plain `left-4` since the desktop
+     rail went on 2026-11-13 (it used to be pushed right of the rail from 1024px). tests/signup-inline.test.ts pins both
+     nudges to one identical corner string. */
   .above-bottombar {
     bottom: calc(var(--native-banner-h) + env(safe-area-inset-bottom, 0px) + 1rem);
   }
-  /* SCOPED TO THE LEFT-ANCHORED NUDGES, via the `left-4` they all carry. The
-     first version of this put `left` on `.above-bottombar` itself, which also
-     caught FeedbackWidget — that one is `right-4`, and giving a right-anchored
-     fixed element a `left` too stretched it across the whole viewport
-     (measured: 1136px wide instead of 114px). Matching on `.left-4` is what
-     makes "left-anchored" expressible in CSS at all, and the two nudges are
-     pinned to that exact class string by tests/signup-inline.test.ts, so the
-     set this applies to cannot quietly drift. */
   /* The card page's sticky buy bar (CardMobileBuy, 2026-09-26) sits on the
      native-banner line; while it shows, the corner launchers lift above it. */
   .buybar {
@@ -528,9 +487,6 @@ html {
     body[data-rc-buybar] .above-bottombar {
       bottom: calc(var(--native-banner-h) + env(safe-area-inset-bottom, 0px) + 4.75rem);
     }
-  }
-  .above-bottombar.left-4 {
-    left: calc(var(--sidenav-w) + 1rem);
   }
   /* A nudge that was ALREADY showing yields to any Dialog or nav menu opened after
      it. z-[70] (Z.nudge) outranks z-overlay (60), which QuickView, SealedQuickView
@@ -715,16 +671,7 @@ html {
   .ct-count {
     @apply shrink-0 whitespace-nowrap pb-0.5 text-right text-[11px] font-semibold text-brand-400;
   }
-  /* Rail links (SideNav.tsx) and mega-menu links (HeaderMegaMenu.tsx): on every page. */
-  .sn-link {
-    @apply block truncate rounded-md border-l-2 py-1.5 [@media(pointer:coarse)]:py-3.5 pl-3 pr-2 text-sm transition-colors;
-  }
-  .sn-on {
-    @apply border-brand-400 bg-brand-500/10 font-semibold; /* text-brand-300 is not in the theme: it was a no-op in the markup */
-  }
-  .sn-off {
-    @apply border-transparent text-slate-300 hover:border-ink-700 hover:bg-ink-800 hover:text-white;
-  }
+  /* Mega-menu links (HeaderMegaMenu.tsx): on every page. */
   .mm-link {
     @apply block whitespace-nowrap rounded-md px-2 py-1.5 text-sm text-slate-200 hover:bg-ink-800 hover:text-white focus-visible:bg-ink-800 focus-visible:text-white;
   }
@@ -1039,6 +986,61 @@ ins.adsbygoogle[data-ad-status="unfilled"],
   box-shadow: 0 0 0 1px rgb(239 125 0 / 0.35), 0 0 18px rgb(239 125 0 / 0.28);
 }
 
+/* THE HERO'S ENTRANCE AND ITS WAYS IN (2026-11-13, DECISIONS.md "Minimal redesign").
+     .rb-rise   a part of the hero rises into place, each one 80ms after the one before (--rise is its
+                place in the order). Never the h1: it is the LCP element and paints at once. `backwards`,
+                so a part that has arrived carries no transform (one would trap the search's dropdown in
+                a stacking context). Off under prefers-reduced-motion.
+     .rb-way    one of the six doors under the search: a line icon over a label; it lifts on hover. */
+@media (prefers-reduced-motion: no-preference) {
+  .rb-rise {
+    animation: rb-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+    animation-delay: calc(var(--rise, 0) * 80ms + 60ms);
+  }
+}
+@keyframes rb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.rb-way {
+  display: flex;
+  min-height: 4.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid rgb(var(--c-ink-700) / 0.8);
+  border-radius: 0.875rem;
+  background: rgb(var(--c-ink-900) / 0.55);
+  padding: 0.6rem 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgb(var(--c-slate-200));
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+.rb-way svg {
+  color: rgb(var(--c-brand-400));
+}
+.rb-way:hover,
+.rb-way:focus-visible {
+  border-color: rgb(var(--c-brand-400) / 0.6);
+  background: rgb(var(--c-ink-800) / 0.8);
+  color: rgb(var(--c-white, 255 255 255));
+}
+@media (min-width: 640px) {
+  .rb-way {
+    font-size: 0.8125rem;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rb-way:hover {
+    transform: translateY(-2px);
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Scroll motion (owner, 2026-10-16: "scroll animations … super duper smooth").
    Scroll-DRIVEN, not scroll-triggered: each animation's progress is the scroll
@@ -1205,20 +1207,16 @@ ins.adsbygoogle[data-ad-status="unfilled"],
 }
 :root[data-theme="light"] .rb-nocturne b { color: #2e1065; }
 :root[data-theme="light"] .rb-nocturne span { color: #5b21b6; }
-/* Set dressing (HalloweenDecor.tsx, SideNav): cobwebs in the hero's top
-   corners and the rail's, candlelit jack-o'-lanterns in the hero's bottom
-   corners. The web is a mask (public/brand/cobweb.svg) so each theme tints it;
-   the left one starts where the rail ends (--sidenav-w), not under it. */
-.rb-decor,
-.rb-rail-web {
+/* Set dressing (HalloweenDecor.tsx): cobwebs in the hero's top corners, candlelit
+   jack-o'-lanterns in its bottom corners. The web is a mask
+   (public/brand/cobweb.svg) so each theme tints it. */
+.rb-decor {
   display: none;
 }
-:root[data-season="halloween"] .rb-decor,
-:root[data-season="halloween"] .rb-rail-web {
+:root[data-season="halloween"] .rb-decor {
   display: block;
 }
-.rb-web,
-.rb-rail-web {
+.rb-web {
   position: absolute;
   top: 0;
   aspect-ratio: 1;
@@ -1231,20 +1229,13 @@ ins.adsbygoogle[data-ad-status="unfilled"],
   width: clamp(92px, 13vw, 200px);
 }
 .rb-web-l {
-  left: var(--sidenav-w);
+  left: 0;
 }
-.rb-web-r,
-.rb-rail-web {
+.rb-web-r {
   right: 0;
   transform: scaleX(-1);
 }
-.rb-rail-web {
-  width: 76px;
-  z-index: 1;
-  background-color: rgb(225 220 255 / 0.22);
-}
-:root[data-theme="light"] .rb-web,
-:root[data-theme="light"] .rb-rail-web {
+:root[data-theme="light"] .rb-web {
   background-color: rgb(60 40 110 / 0.3);
 }
 .rb-pumpkins {
@@ -1255,7 +1246,7 @@ ins.adsbygoogle[data-ad-status="unfilled"],
   gap: 4px;
 }
 .rb-pumpkins-l {
-  left: calc(var(--sidenav-w) + 14px);
+  left: 14px;
 }
 .rb-pumpkins-r {
   right: 14px;
@@ -1358,61 +1349,37 @@ ins.adsbygoogle[data-ad-status="unfilled"],
   display: flex;
 }
 .xmas-banner {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  width: 100%;
-  max-width: 34rem;
-  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-  border-left: 3px solid var(--xmas-red);
-  border-radius: 0.6rem;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  border: 1px solid color-mix(in srgb, var(--xmas-pine) 45%, transparent);
+  border-radius: 999px;
   background: color-mix(in srgb, currentColor 6%, transparent);
-  padding: 0.55rem 0.8rem;
-  text-align: left;
-  font-size: 0.9rem;
+  padding: 0.3rem 0.85rem 0.3rem 0.7rem;
+  font-size: 0.8125rem;
   line-height: 1.3;
   color: inherit;
-  transition: border-color 150ms ease;
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
 .xmas-banner:hover,
 .xmas-banner:focus-visible {
-  border-color: color-mix(in srgb, var(--xmas-pine) 70%, transparent);
-  border-left-color: var(--xmas-red);
+  border-color: color-mix(in srgb, var(--xmas-pine) 80%, transparent);
+  background: color-mix(in srgb, currentColor 10%, transparent);
 }
 .xmas-banner svg {
   flex: none;
-  width: 1.3rem;
-  height: 1.3rem;
-  color: var(--xmas-pine-fg);
-}
-.xmas-banner-text {
-  min-width: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--xmas-red);
 }
 .xmas-banner b {
-  font-weight: 700;
-}
-.xmas-banner-sub {
-  display: none;
-  opacity: 0.75;
-  font-size: 0.82rem;
+  font-weight: 600;
 }
 .xmas-banner-go {
   flex: none;
-  margin-left: auto;
   font-weight: 600;
   color: var(--xmas-pine-fg);
-}
-@media (min-width: 640px) {
-  /* Clears the creators badge that sits in the hero's top-right corner. */
-  .xmas-banner-row {
-    margin-top: 1rem;
-  }
-  .xmas-banner {
-    max-width: 44rem;
-  }
-  .xmas-banner-sub {
-    display: block;
-  }
 }
 .xmas-only {
   display: none !important;

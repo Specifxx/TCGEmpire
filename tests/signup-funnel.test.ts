@@ -243,8 +243,14 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   // more things than it did an hour earlier, and the measurement below is the
   // check that matters rather than any particular absence.
   assert.match(src, /<HeaderSearchSlot>/, "the desktop card search is in the header");
-  assert.doesNotMatch(src, /<CommandLauncherButton \/>/, "the ⌘K button stays out; the rail is the nav surface");
-  assert.match(src, /className="tap-link min-w-11 shrink-0 gap-2 lg:hidden"/, "the brand is rail-only from lg");
+  assert.doesNotMatch(src, /<CommandLauncherButton \/>/, "the ⌘K button stays out; the menu button is the nav surface");
+  // REWRITTEN 2026-11-13 (DECISIONS.md "Minimal redesign"): the rail is gone, so the brand is back in the header at
+  // every width. What buys the slack now: the word waits for xl, the mega menus for 1440px (one plain Sealed link
+  // stands in below that), Blog, Tools and the Discord icon left the row, and the search is the row's one flexible
+  // element. Re-measured in a real browser at 1024/1100/1280/1440: "Log in / Sign up free" renders in full and no
+  // width scrolls sideways.
+  assert.match(src, /className="tap-link min-w-11 shrink-0 gap-2" aria-label="RiftCompare home"/, "the brand is in the header again");
+  assert.match(src, /text-white xl:block/, "its word waits for xl");
   assert.doesNotMatch(src, /<Link href="\/auctions"/, "Auctions is rail-only (owner, 2026-09-21)");
   assert.doesNotMatch(src, /<Link href="\/deck"/, "Deck builder is rail-only (owner, 2026-09-21)");
 
@@ -252,10 +258,10 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   // instruction: "I still want the sealed, the blog, premium, Discord, the
   // watch list, the light and dark mode, the country and the accounts."
   // Premium is GetPremiumLink since 2026-10-15 (lg:inline-flex, its own class).
-  assert.equal((src.match(/lg:block lg:px-2\.5/g) ?? []).length, 2, "Sealed and Blog, and nothing more");
+  assert.equal((src.match(/lg:block lg:px-2\.5/g) ?? []).length, 1, "Sealed, and nothing more (Blog left the row 2026-11-13)");
   assert.equal((src.match(/<GetPremiumLink\b/g) ?? []).length, 2, "…plus the Premium button (phone slot and lg row)");
-  assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\blg:grid\b/, "Discord comes back at lg with the reclaimed slack");
-  assert.match(src, /<HeaderWatchButton className="hidden sm:inline-flex" \/>/, "the watchlist is a desktop control again");
+  assert.doesNotMatch(src, /Join our Discord/, "the Discord icon left the row (2026-11-13); the footer row and the menu carry it");
+  assert.match(src, /<HeaderWatchButton className="hidden sm:inline-flex" onlyWhenWatching \/>/, "the watchlist shows once a card is watched");
 
   // Re-measured in a real browser after the change, the same way the original
   // clip was found: "Log in / Sign up" renders in full at
@@ -296,8 +302,11 @@ test("the homepage finally pitches the free account (AccountStrip)", () => {
   assert.match(strip, /Create your free account/);
   // Hidden for signed-in members; renders identically on first paint (ISR-safe).
   assert.match(strip, /if \(loaded && user\) return null/);
+  // OFF THE HOME PAGES since 2026-11-13 (owner: "cull the features that we show"; DECISIONS.md "Minimal redesign").
+  // The component is kept, unmounted, so putting it back is one line; the header's "Sign up free" is on every page.
   const home = read("src/components/home/HomeSections.tsx");
-  assert.match(home, /<AccountStrip \/>/);
+  assert.doesNotMatch(home, /<AccountStrip \/>/);
+  assert.match(read("src/components/Navbar.tsx"), /<NavUser \/>/);
 });
 
 test("/login leads with account creation, not returning-user framing", () => {

@@ -3,10 +3,7 @@ import dynamic from "next/dynamic";
 import { Reveal } from "@/components/Reveal";
 import { InlineAds } from "@/components/InlineAds";
 import { ReviewsSection } from "@/components/ReviewsSection";
-import { AccountStrip } from "@/components/home/AccountStrip";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
-import { PartnersStrip } from "@/components/home/PartnersStrip";
-import { PokemonHomePromo } from "@/components/pokemon/PokemonHomePromo";
 import { SETS, hasSetGallery, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
 import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
@@ -25,7 +22,6 @@ const TodaysTopDeals = dynamic(() => import("@/components/TodaysTopDeals").then(
 const PopularCardsCarousel = dynamic(() =>
   import("@/components/home/PopularCardsCarousel").then((m) => m.PopularCardsCarousel),
 );
-const ReturnVisitCards = dynamic(() => import("@/components/home/ReturnVisitCards").then((m) => m.ReturnVisitCards));
 
 export interface HomeSectionsProps {
   // The market this PAGE is scoped to for the single-market computations below
@@ -156,30 +152,11 @@ export function HomeSections({
         </Reveal>
       )}
 
-      {/* THE 2026-10-19 ORDER (owner: "we're just tidying it up"): Top Deals,
-          the Radiance countdown, the chase cards, eBay Picks, Pokémon, then
-          Welcome back above the pack simulator, Riftle and watch cards. The
-          creators strip (the hero carries creators) and "How RiftCompare works"
-          went; the editorial band moved to the bottom of the page. */}
-      {/* Next-set countdown ("Radiance is coming"), right under Today's Top
-          Deals since 2026-10-19 (owner's tidy-up of the homepage). New-set
-          searches are the biggest organic traffic spikes in TCGs. Hides itself
-          once nothing upcoming is announced. */}
-      {showNextSetCard && (
-        <Reveal>
-          {/* preorders passed down 2026-09-17: Market Pulse used to carry the
-              homepage's ONLY link to /radiance-preorders, and removing it would
-              have silently dropped the pre-order CTA from the homepage six
-              weeks before Radiance ships. This card is already the "next set"
-              slot, so the link belongs here rather than being lost as
-              collateral from a layout change nobody intended that way. */}
-          <NextSetCountdownCard
-            set={nextSet}
-            preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
-            spoilers={spoilersHref ? { href: spoilersHref, setName: nextSet!.name } : null}
-          />
-        </Reveal>
-      )}
+      {/* THE 2026-11-13 ORDER (owner: "we're making things too complicated, and before it was simplicity that was
+          driving it"; DECISIONS.md "Minimal redesign"): Top Deals, the chase cards, the one ad block, the sets. Nothing
+          else. The next-set countdown is one line under the set grid now; the Pokémon line, the three return-visit
+          cards (pack simulator, Riftle, watch a card), the free-account strip and the partners strip left the home
+          pages, and each is still one click away in the menu and the footer. */}
 
       {/* Unified popular-cards carousel — the all-time most-popular list, with
           a "Biggest movers" tab and "Recently updated prices" (each once its
@@ -223,36 +200,7 @@ export function HomeSections({
           the rest, replacing the eBay and TCGplayer strips that sat under the hero. Every home renders it here. */}
       {showEbayPicks && <InlineAds pageType="homepage" />}
 
-      {/* The Pokémon section's one line (2026-10-01, owner's request), on all
-          six homes: after Top Deals and the editorial band, never above them.
-          Renders nothing while the section is off (lib/pokemon/flag.ts). */}
-      <PokemonHomePromo />
-
-      {/* Return-visit hooks — Riftle, the pack simulator, and price alerts.
-          These were moved ABOVE the commercial run on 2026-09-16, after
-          repeated reader feedback that the site read as "simply a too
-          greedy/capitalistic/money focused site for a card GAME for me" and
-          the page order was the evidence for it. That ordering was reversed in
-          two steps by owner instruction — eBay Picks on 2026-09-17, Today's
-          Top Deals on 2026-09-21 — so the playable sections now sit behind
-          both, as they did before that pass. See DECISIONS.md.
-
-          They remain the site's best "come back tomorrow" mechanics that
-          aren't the price data itself, and they still sit ahead of the
-          explainer and the set/domain grid below. The editorial run no longer
-          follows them: since 2026-09-26 it is the band above this component,
-          under the price table (owner decision; see EditorialHub.tsx). */}
-      {/* Three across only from 1440 (2026-09-23): beside the 17rem rail the
-          three cards were 224px at 1024 and ~300px at 1280, leaving their text
-          columns 16-110px wide next to the shrink-0 CTA, one word per line and
-          running under the button. Below 1440 it is two across with the last
-          card spanning the row, which also ends the half-width orphan at
-          640-1023. grid-cols-1 per tests/grid-base-columns.test.ts. */}
-      <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:[&>*:last-child]:col-span-2 min-[1440px]:grid-cols-3 min-[1440px]:[&>*:last-child]:col-span-1">
-        <ReturnVisitCards newestSetName={newestSet?.name} />
-      </Reveal>
-
-      {/* Explore — sets + domains consolidated into one entry point */}
+      {/* Explore by set: one compact row of tiles, then the next set's one line. */}
       <section>
         <h2 className="mb-4 text-xl font-extrabold text-white">Explore the database</h2>
 
@@ -263,7 +211,7 @@ export function HomeSections({
             DECISIONS "Grid density" is the rule: no lonely second row. It was 6
             columns ([5,1] regressed it once, RAD alone); xl rather than lg
             because from lg the 17rem rail leaves only ~704px (2026-09-23). */}
-        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
+        <Reveal stagger className={`grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8 ${SETS.length % 2 === 1 ? "[&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1" : ""}`}>
           {SETS.map((s) =>
             // An unreleased set in its preview season (comingSoon + hubReady,
             // Radiance from 25 Sep 2026) keeps its "Coming soon" cue but links to
@@ -315,12 +263,8 @@ export function HomeSections({
           )}
         </Reveal>
 
-        {/* The homepage's link into the visual gallery, inherited from the
-            removed Vendetta launch band. Points at whichever set is CURRENT
-            rather than at one set by name: the set in its preview season when
-            there is one (its gallery is the page people are looking for, and
-            it has no complete count to quote yet), else the newest released
-            set, which is Radiance again from 23 October. */}
+        {/* The homepage's link into the visual gallery: whichever set is CURRENT, never one set by name. The set in
+            its preview season when it has a gallery (no complete count to quote yet), else the newest released set. */}
         {nextSet && hasSetGallery(nextSet) ? (
           <p className="mt-3 text-sm">
             <Link
@@ -343,6 +287,17 @@ export function HomeSections({
           </p>
         )}
 
+        {/* The next set's countdown, one line under the grid (release details, the cards revealed so far, pre-order
+            prices). It sat in a slot of its own above the chase cards until 2026-11-13; it hides itself once nothing
+            upcoming is announced. */}
+        {showNextSetCard && (
+          <NextSetCountdownCard
+            set={nextSet}
+            preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
+            spoilers={spoilersHref ? { href: spoilersHref, setName: nextSet!.name } : null}
+          />
+        )}
+
         {/* THE "BY DOMAIN" CHIP ROW (Fury/Calm/Mind/Body/Chaos/Order) WAS
             REMOVED HERE on 2026-09-17, on the owner's instruction.
 
@@ -360,17 +315,6 @@ export function HomeSections({
           that the owner placed above this whole component, directly under the
           price table — see its header and "Blog and tools, joined up" in
           DECISIONS.md. */}
-
-      {/* The homepage's one account-shaped slot: AccountStrip pitches the free
-          tier and hides itself for members; WelcomeBack is its signed-in
-          twin and hides itself for everyone else. Exactly one renders. */}
-      <AccountStrip />
-
-      {/* Approved partners + affiliate disclosure. Client component (reads
-          useCountry() itself) so every visitor's eBay click here is tagged
-          with THEIR actual market rather than whichever market this page's
-          ISR render happened to bake in. */}
-      <PartnersStrip />
 
       <script
         type="application/ld+json"

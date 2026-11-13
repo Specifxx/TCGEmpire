@@ -64,21 +64,15 @@ test("exactly one component in the tree opens the mega menu", () => {
   assert.deepEqual(openers, ["src/components/HeaderMenuButton.tsx"], "exactly one opener, and it is the header button");
 });
 
-test("the header renders it below lg only, so desktop keeps ONE full-nav surface", () => {
+test("the header renders it at every width, and it is the ONE full-nav surface", () => {
   const nav = readCode("src/components/Navbar.tsx");
-  assert.match(nav, /<HeaderMenuButton className="lg:hidden" \/>/);
-  // From lg that surface is the RAIL, not the header's ⌘K button — which was
-  // removed on 2026-09-21 precisely because the rail carries its own Search
-  // row opening the same launcher, plus every NAV_GROUPS link inline. A menu
-  // button, a launcher button AND a rail would have been three doors into one
-  // index, which is the duplication this file exists to prevent.
-  assert.doesNotMatch(nav, /<CommandLauncherButton \/>/, "the desktop launcher button belongs to the rail now");
-  // From lg that surface is the RAIL, which renders the whole NAV_GROUPS
-  // index inline — no button to press, nothing to open. The ⌘K launcher still
-  // exists and still has its global shortcut; it simply has no desktop BUTTON
-  // any more, and (since 2026-09-21) no longer sits behind the rail's search
-  // field either, which is real card search now.
-  const rail = readCode("src/components/SideNav.tsx");
-  assert.match(rail, /NAV_GROUPS\.map/, "the rail renders the full index inline");
-  assert.match(rail, /placeholder="Search features"/, "…and its own field searches those features, not cards");
+  // At every width since 2026-11-13 (tests/one-navigation.test.ts): from lg the full-nav surface was the rail,
+  // which is gone.
+  assert.match(nav, /<HeaderMenuButton \/>/);
+  // No second door beside it: the ⌘K launcher keeps its global shortcut and has no button.
+  assert.doesNotMatch(nav, /<CommandLauncherButton \/>/, "no desktop launcher button");
+  // The menu renders the whole NAV_GROUPS index and searches cards, sealed and features in one field.
+  const menu = readCode("src/components/CinematicNavMenu.tsx");
+  assert.match(menu, /NAV_GROUPS\.map/, "the menu renders the full index");
+  assert.match(menu, /placeholder="Search cards, sealed, features…"/);
 });

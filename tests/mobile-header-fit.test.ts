@@ -48,7 +48,8 @@ const NAVBAR = "src/components/Navbar.tsx";
 test("the header's left group can shrink, so the row can never push the page sideways", () => {
   const code = readCode(NAVBAR);
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
-  assert.match(row, /className="flex min-w-0 items-center gap-[\d.]+ sm:gap-3"/, "left group must be shrinkable with min-w-0");
+  // lg:flex-1 since 2026-11-13: the left group holds the inline search from lg and takes the row's spare width.
+  assert.match(row, /className="flex min-w-0 items-center gap-[\d.]+ sm:gap-3(?: lg:flex-1)?"/, "left group must be shrinkable with min-w-0");
   assert.doesNotMatch(
     row,
     /className="flex shrink-0 items-center gap-[\d.]+ sm:gap-3"/,
@@ -119,7 +120,9 @@ test("the wordmark, not a nav control, is what pays for the tablet band", () => 
   // decoration rather than a destination. The mark stays: still the home link,
   // still tappable, still the brand.
   const code = readCode(NAVBAR);
-  assert.match(code, /<span className="hidden text-lg font-extrabold tracking-tight text-white lg:block">/);
+  // xl since 2026-11-13: from lg the row also holds the inline search and the brand (the rail had both), so the
+  // word waits one breakpoint more.
+  assert.match(code, /<span className="hidden text-lg font-extrabold tracking-tight text-white xl:block">/);
   assert.doesNotMatch(code, /tracking-tight text-white sm:block/, "the wordmark must not turn back on at sm");
 });
 

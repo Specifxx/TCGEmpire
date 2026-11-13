@@ -41,12 +41,14 @@ test("every icon a group names is actually drawn", () => {
   }
 });
 
-test("the rail renders the drawn icon, not an emoji", () => {
-  const src = read("src/components/SideNav.tsx");
-  assert.match(src, /<NavIcon name=\{group\.icon\}/, "the collapsed rail must render NavIcon");
+test("the menu renders the drawn icon, not an emoji", () => {
+  // The desktop rail drew these until it was removed on 2026-11-13 (tests/one-navigation.test.ts); the menu the
+  // header's button opens is the surface that draws a group's icon now.
+  const src = read("src/components/CinematicNavMenu.tsx");
+  assert.match(src, /<NavIcon name=\{sec\.icon\}/, "the menu must render NavIcon for each group");
   assert.doesNotMatch(
     src,
-    /<span aria-hidden="true">\{group\.icon\}\}?<\/span>/,
+    /<span aria-hidden="true">\{(?:group|sec)\.icon\}\}?<\/span>/,
     "the raw-emoji span must be gone, not just bypassed",
   );
   // No emoji may sneak back into the group data either.
@@ -66,17 +68,11 @@ test("icons inherit colour and size from the button, so active/hover states reac
   assert.doesNotMatch(src, /stroke="#|fill="#/, "no hard-coded colours — the rail owns the colour");
   // Sized by className, never by a baked-in width/height attribute.
   assert.doesNotMatch(src, /<svg[^>]*\swidth=/, "size comes from className, so one icon can't render at a different size");
-  const rail = read("src/components/SideNav.tsx");
-  assert.match(rail, /<NavIcon name=\{group\.icon\} className="h-4 w-4 shrink-0" \/>/, "the rail sizes the icon");
-  // The active group tints its HEADER (and therefore, via currentColor, its
-  // icon). It used to also carry a background; with the rail always expanded
-  // the tint alone is the cue, and the background moved to the active LINK
-  // inside the group — which is the thing you actually navigated to.
-  assert.match(rail, /groupActive \? "text-brand-300"/, "the active group must tint its icon, not only its background");
-  // Since 2026-11-10 (site review X2) the link's utilities are one class, .sn-on in globals.css.
-  // text-brand-300 left with them: the theme has no brand-300, so it never drew anything.
-  assert.match(rail, /active \? "sn-on" : "sn-off"/, "the active link takes .sn-on");
-  assert.match(read("src/app/globals.css"), /\.sn-on \{\s*@apply border-brand-400 bg-brand-500\/10 font-semibold;/, "the active LINK carries the border + tint");
+  // The surfaces that draw one size it and colour it themselves: the menu's group headings and the hero's ways in.
+  const menu = read("src/components/CinematicNavMenu.tsx");
+  assert.match(menu, /<NavIcon name=\{sec\.icon\} className="h-3\.5 w-3\.5 text-brand-400" \/>/, "the menu sizes and tints the icon");
+  assert.match(read("src/components/home/CinematicHero.tsx"), /<NavIcon name=\{w\.icon\} className="h-5 w-5" \/>/, "the hero's tiles size theirs");
+  assert.match(read("src/app/globals.css"), /\.rb-way svg \{\s*color: rgb\(var\(--c-brand-400\)\);/, "…and the tile's CSS tints it");
 });
 
 test("the icons are decorative — the button carries the accessible name", () => {

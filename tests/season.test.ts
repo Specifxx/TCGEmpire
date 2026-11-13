@@ -155,13 +155,14 @@ test("scroll motion is scroll-driven, guarded, and declared before the reduced-m
 
 test("the Halloween set dressing is season-gated decoration: hidden by default, aria-hidden, cached art", () => {
   const css = read("src/app/globals.css");
-  assert.match(css, /\.rb-decor,\s*\n\.rb-rail-web \{\s*display: none;/);
-  assert.match(css, /:root\[data-season="halloween"\] \.rb-decor,\s*\n:root\[data-season="halloween"\] \.rb-rail-web \{\s*display: block;/);
+  assert.match(css, /\.rb-decor \{\s*display: none;/);
+  assert.match(css, /:root\[data-season="halloween"\] \.rb-decor \{\s*display: block;/);
+  // The rail's own cobweb went with the rail (2026-11-13).
+  assert.doesNotMatch(css, /rb-rail-web/);
   const decor = read("src/components/home/HalloweenDecor.tsx");
   assert.match(decor, /if \(!seasonMarkupLive\("halloween"\)\) return null;/);
   assert.match(decor, /<div className="rb-decor" aria-hidden="true">/);
   assert.match(read("src/components/home/CinematicHero.tsx"), /<HalloweenDecor \/>/);
-  assert.match(read("src/components/SideNav.tsx"), /<span aria-hidden="true" className="rb-rail-web" \/>/);
   for (const f of ["public/brand/cobweb.svg", "public/brand/pumpkin.svg"]) {
     const svg = read(f);
     assert.ok(svg.startsWith("<svg") && svg.length < 4000, `${f} stays a small vector file`);

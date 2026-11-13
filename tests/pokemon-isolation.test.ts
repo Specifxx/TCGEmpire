@@ -19,7 +19,6 @@ const POKEMON_DIRS = ["src/lib/pokemon", "src/components/pokemon", "src/app/poke
 /** The Riftbound files allowed to mention the section — the removal checklist. */
 const HOST_TOUCHPOINTS = [
   "src/lib/ad-routes.ts", // OFF_TOPIC_ROUTES: no Riftbound ad block on /pokemon
-  "src/components/home/HomeSections.tsx", // <PokemonHomePromo />
   "src/components/nav-groups.ts", // the gated "Pokémon (beta)" link
   "src/lib/nudge-gate.ts", // no Premium slide-in on /pokemon
   "src/lib/ops/checks.ts", // dexcompareIndex: the section's DexCompare index check, skipped while /pokemon 404s

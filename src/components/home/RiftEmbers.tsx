@@ -120,10 +120,8 @@ export function RiftEmbers() {
     let w = 0;
     let h = 0;
     let dpr = 1;
-    // The hero runs the full window width, but from lg the side rail covers
-    // its left edge (--sidenav-w). Anything that has to be SEEN (the eyes, the
-    // centre of the dark) is placed in the visible part, from x0 to w.
-    let x0 = 0;
+    // The left edge of the visible hero. 0 since the desktop rail went (2026-11-13); it was the rail's width from lg.
+    const x0 = 0;
     let motes: Mote[] = [];
     let bats: Bat[] = [];
     let spiders: Spider[] = [];
@@ -180,9 +178,6 @@ export function RiftEmbers() {
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const rail = getComputedStyle(root).getPropertyValue("--sidenav-w").trim();
-      const remPx = parseFloat(getComputedStyle(root).fontSize) || 16;
-      x0 = rail.endsWith("rem") ? parseFloat(rail) * remPx : parseFloat(rail) || 0;
       const want = Math.max(36, Math.min(150, Math.round((w * h) / 8000)));
       const embers = motes.filter((m) => m.life === Infinity);
       const sparks = motes.filter((m) => m.life !== Infinity);

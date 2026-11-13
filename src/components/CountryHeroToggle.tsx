@@ -52,7 +52,7 @@ export function CountryHeroToggle() {
           "AU" letters did), currency shown only on the active chip. Three by two on
           phones (six flags and codes don't fit one 360px row), one row from sm;
           min-h-11 keeps each chip's tap target accessible. */}
-      <div className="grid max-w-full grid-cols-3 gap-1 rounded-2xl border border-ink-700 bg-ink-900/60 p-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:rounded-full">
+      <div className="grid max-w-full grid-cols-6 gap-0.5 rounded-full border border-ink-700 bg-ink-900/60 p-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-1">
         {COUNTRY_LIST.map((c) => {
           const active = c.code === country;
           // aria-labelledby, not aria-label: it concatenates the referenced
@@ -84,14 +84,14 @@ export function CountryHeroToggle() {
               // inactive chip ("SG", no currency suffix shown) at ~37px wide on
               // a real 390px viewport — under the 44px mobile tap-target floor
               // even though the height was already covered.
-              className={`flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border px-2.5 text-sm font-semibold transition-colors ${
+              className={`flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full border px-1.5 text-xs font-semibold transition-colors sm:gap-1.5 sm:px-2.5 sm:text-sm ${
                 active ? "border-brand-400/70 bg-ink-800 text-white" : "border-transparent text-slate-300 hover:bg-ink-800 hover:text-white"
               }`}
             >
               <Flag code={c.code} />
               <span id={codeId}>{c.code}</span>
               {active && (
-                <span id={currencyId} className="text-[10px] font-medium text-slate-400">
+                <span id={currencyId} className="hidden text-[10px] font-medium text-slate-400 sm:inline">
                   {currency}
                 </span>
               )}

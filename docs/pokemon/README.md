@@ -86,7 +86,6 @@ by `tests/pokemon-isolation.test.ts`:
 | File | What to remove |
 |---|---|
 | `src/components/nav-groups.ts` | the `pokemonSectionOn()` spread in Prices, and its import |
-| `src/components/home/HomeSections.tsx` | `<PokemonHomePromo />` and its import |
 | `src/lib/sitemap-sections.ts` | `"pokemon"` in `ALL_SECTIONS`, the `SECTIONS` filter, `const pokemon = …`, the two imports |
 | `src/lib/ad-routes.ts` | `OFF_TOPIC_ROUTES` (harmless if left) |
 | `src/lib/nudge-gate.ts` | `"/pokemon"` in `PREMIUM_SKIP_PATHS` (harmless if left) |

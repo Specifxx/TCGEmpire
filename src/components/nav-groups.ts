@@ -4,7 +4,8 @@ import { pokemonSectionOn } from "@/lib/pokemon/flag";
 import { CARD_SHOP_FINDER } from "@/lib/partners";
 
 // The grouped site navigation, shared by the ⌘K command launcher
-// (CommandLauncher.tsx), the persistent desktop rail (SideNav.tsx), the footer
+// (CommandLauncher.tsx), the menu the header's button opens (CinematicNavMenu.tsx;
+// it was also a desktop rail, SideNav.tsx, from 2026-09-21 to 2026-11-13), the footer
 // site-map (FOOTER_GROUPS below) and /llms.txt — edit a link here once and all
 // four follow.
 import type { NavIconName } from "./NavIcon";
@@ -17,7 +18,7 @@ export interface NavGroupLink {
    * through next/link's client-side navigation or router.push — both would
    * either mis-handle an absolute non-app URL or navigate the current tab
    * away from RiftCompare). Every renderer of NavGroupLink (FooterNav,
-   * CinematicNavMenu, CommandLauncher, SideNav) must branch on this.
+   * CinematicNavMenu, CommandLauncher) must branch on this.
    */
   external?: boolean;
   /**
@@ -60,8 +61,8 @@ export interface NavGroup {
    * and client components) and so re-drawing an icon touches no nav data.
    *
    * Was an emoji until 2026-09-11 — see NavIcon.tsx for why that changed.
-   * Required in practice for NAV_GROUPS, since SideNav renders every group as
-   * an icon; optional on the type because the footer groups never collapse.
+   * Required in practice for NAV_GROUPS, since the menu draws every group's
+   * icon; optional on the type because the footer groups carry none.
    */
   icon?: NavIconName;
   links: NavGroupLink[];
@@ -158,9 +159,9 @@ export const NAV_GROUPS: NavGroup[] = [
     // SECOND, right under Prices, and OPEN BY DEFAULT in the rail (owner,
     // 2026-09-28: "we need the blog and guides to be prominent so that we get
     // approved for adsense with their lazy crawlers"). It sat seventh and
-    // collapsed, and SideNav renders a collapsed group's links not at all, so
-    // no page's HTML carried a rail link to /guides or /blog. Order here is the
-    // rail's, the phone menu's and the launcher's.
+    // collapsed, and the rail of the time (SideNav, removed 2026-11-13) rendered a
+    // collapsed group's links not at all, so no page's HTML carried a rail link to
+    // /guides or /blog. Order here is the menu's and the launcher's.
     title: "Guides & News",
     icon: "news",
     links: [
@@ -170,7 +171,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // navigation surface you were in: PRIMARY_NAV (the top bar) has always said
       // "Blog", the page's own H1 is "Blog", and its <title> is "Riftbound Blog —
       // …" — while this entry, which feeds the Explore overlay, the footer,
-      // SideNav and the ⌘K launcher, said "News & analysis". Clicking it landed
+      // the menu and the ⌘K launcher, said "News & analysis". Clicking it landed
       // you on a page headed something else. The `keywords` below already carry
       // news/articles/announcements, so ⌘K still finds it by any of the old words.
       { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "posts", "updates", "announcements", "analysis"] },
@@ -178,7 +179,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/forum", label: "Community forum", keywords: ["forum", "community", "discussion", "talk", "chat", "questions", "ask"] },
       // hideInFooter: the footer's four columns are already at the top of their
       // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
-      // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
+      // the ⌘K launcher, the menu and llms.txt, plus the direct links this page
       // added on /blog and /guides themselves.
       // The creators hub (2026-10-15): beside Community links, where a reader
       // looking for "who else makes Riftbound content" looks. Moved from Help.
@@ -304,9 +305,7 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 
 // NOT RENDERED. Nothing draws this list: Navbar.tsx writes the header's links
-// out by hand (Database, Sealed, Blog, Tools, Premium — the owner's curated
-// shortlist, see its comments), and SideNav is forbidden from using it
-// (tests/sidenav.test.ts). It survives only because
+// out by hand (Database, Sealed, Pricing — see its comments). It survives only because
 // tests/market-index-restore.test.ts reads its /market entry. Editing it
 // changes nothing on screen: to change the header, edit Navbar.tsx.
 //

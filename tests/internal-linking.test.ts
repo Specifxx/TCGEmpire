@@ -88,10 +88,19 @@ test("the hero carries exactly one secondary text link, not a wall of CTAs", () 
   // one plain-text link ("Browse all N cards →") below the search box, plus
   // the quiet region toggle (a control, not a CTA, and not a <Link>). This
   // pins that a future edit can't quietly re-crowd the hero.
+  // AMENDED 2026-11-13 (owner: "get rid of the products on the hero … the product's very easy to access"; DECISIONS.md
+  // "Minimal redesign"): the one text link became the ways-in tiles, four to six doors under the search, drawn by ONE
+  // <Link> mapped over WAYS. The rule this test exists for is unchanged: nothing else in the hero is a link, so a
+  // future edit cannot quietly re-crowd it.
   const hero = read("src/components/home/CinematicHero.tsx");
   const links = hero.match(/<Link\b/g) ?? [];
-  assert.equal(links.length, 1, `the hero has ${links.length} <Link> elements; the brief calls for exactly one`);
-  assert.ok(hero.includes('href="/browse"'), "the hero's one remaining link should point at the database, not somewhere new");
+  assert.equal(links.length, 1, `the hero has ${links.length} <Link> elements; the ways-in map is the only one`);
+  const ways = /const WAYS:[^=]*= \[([\s\S]*?)\n\];/.exec(hero);
+  assert.ok(ways, "the hero's ways in are one list");
+  const hrefs = [...ways[1].matchAll(/href: "([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(hrefs.length >= 4 && hrefs.length <= 6, `the hero offers ${hrefs.length} ways in; 4 to 6 is the rule`);
+  assert.ok(hrefs.includes("/browse"), "the database is one of the hero's ways in");
+  assert.doesNotMatch(hero, /href="\//, "no hand-written link beside the tiles");
   // Scoped to an actual className attribute value, not the raw file text — the
   // hero's own doc comments are allowed to reference the class name in prose
   // (e.g. explaining that it deliberately ISN'T applied here) without tripping

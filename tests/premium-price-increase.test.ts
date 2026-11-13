@@ -325,7 +325,6 @@ test("every literal 'Premium' nav entry point navigates straight to /premium, no
   for (const file of [
     "src/components/Navbar.tsx",
     "src/components/UserMenu.tsx",
-    "src/components/SideNav.tsx",
   ]) {
     const src = read(file);
     // Navbar's links go through GetPremiumLink (2026-10-15), itself a PremiumNavLink.

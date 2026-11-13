@@ -258,11 +258,16 @@ test("the hero's primary CTA row still carries only one <Link> (test constraint 
   // this row further — see tests/internal-linking.test.ts's "the hero carries
   // exactly one secondary text link, not a wall of CTAs" for the real,
   // maintained invariant this duplicates a narrower check of.
+  // RE-DERIVED 2026-11-13 (DECISIONS.md "Minimal redesign"): the CTA row ("All N cards in the database", "Get
+  // Premium") is gone. The hero's only links are its ways-in tiles, one <Link> mapped over WAYS, six at most.
   const src = read("src/components/home/CinematicHero.tsx");
-  const row = /flex flex-col items-center gap-2[\s\S]*?<\/div>/.exec(src);
-  assert.ok(row, "the primary CTA row markup moved — re-derive this test");
-  const linkCount = (row[0].match(/<Link/g) ?? []).length;
-  assert.ok(linkCount <= 2, `the CTA row has ${linkCount} <Link>s — tests/internal-linking.test.ts caps it at 2`);
+  assert.doesNotMatch(src, /flex flex-col items-center gap-2/, "the old CTA row must not come back");
+  const linkCount = (src.match(/<Link\b/g) ?? []).length;
+  assert.equal(linkCount, 1, `the hero has ${linkCount} <Link>s: the one mapped over WAYS is the only one`);
+  const ways = /const WAYS:[^=]*= \[([\s\S]*?)\n\];/.exec(src);
+  assert.ok(ways, "the ways-in list moved: re-derive this test");
+  const count = (ways[1].match(/href: "/g) ?? []).length;
+  assert.ok(count >= 4 && count <= 6, `the hero offers ${count} ways in; the redesign allows 4 to 6`);
 });
 
 test("the homepage no longer promotes Best Basket or the inline newsletter card — both removed 2026-09-16", () => {

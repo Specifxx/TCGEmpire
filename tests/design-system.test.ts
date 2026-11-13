@@ -135,12 +135,11 @@ test("no component hand-rolls the double-rAF entrance any more — usePresence()
 // P2 route feedback — owner decision: "progress bar + 150ms fade".
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("layout.tsx mounts NextTopLoader, not between Navbar and SideNav", () => {
+test("layout.tsx mounts NextTopLoader, and never directly after Navbar", () => {
   const src = readCode("src/app/layout.tsx");
   assert.match(src, /import NextTopLoader from "nextjs-toploader"/);
   assert.match(src, /<NextTopLoader\b/);
-  // tests/sidenav.test.ts pins <Navbar /> immediately followed by <SideNav />
-  // — the loader must sit outside that pair, not between them.
+  // <Navbar /> was immediately followed by the desktop rail until 2026-11-13; the loader still sits before it.
   assert.doesNotMatch(src, /<Navbar \/>\s*<NextTopLoader/);
 });
 
@@ -388,9 +387,9 @@ test("the CSS reservations went with it, and .above-bottombar keeps only what st
     "the utility must still clear the native banner and the safe area"
   );
   assert.match(css, /body\s*\{\s*padding-bottom:\s*calc\(var\(--native-banner-h\)/, "body padding keeps the banner reservation only");
-  // --sidenav-w's own 1024px block must survive the edit that removed its
-  // former neighbour.
-  assert.match(css, /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*17rem;/);
+  // --sidenav-w went the same way on 2026-11-13, with the desktop rail it reserved room for
+  // (tests/one-navigation.test.ts).
+  assert.doesNotMatch(css, /--sidenav-w/, "the rail's width variable must be gone");
 });
 
 test("HeaderMenuButton is the below-lg nav entry point and opens the same overlay", () => {
@@ -404,8 +403,9 @@ test("HeaderMenuButton is the below-lg nav entry point and opens the same overla
   // with "N cards are being tracked" on one target — "the watchlist and the
   // menu should be separate."
   assert.doesNotMatch(src, /useWatchlist/, "the watchlist must not be folded back into the menu button");
-  // Below lg only — from lg the command launcher and SideNav already cover it.
-  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderMenuButton className="lg:hidden" \/>/);
+  // At EVERY width since 2026-11-13: the desktop rail is gone, so the menu is the full index on a desktop too
+  // (tests/one-navigation.test.ts). It was below-lg only while the rail covered lg and up.
+  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderMenuButton \/>/);
 });
 
 test("the watchlist is its own header control, opening a drawer and carrying the count", () => {
@@ -451,7 +451,9 @@ test("the watchlist is its own header control, opening a drawer and carrying the
   // control and the menu were each either named a must-have or the only route to
   // something. It is still a SEPARATE control from the menu wherever it appears,
   // which is what "the watchlist and the menu should be separate" asked for.
-  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="hidden sm:inline-flex" \/>/);
+  // Since 2026-11-13 it is in the row only once a card is watched (onlyWhenWatching); the menu's "My Watchlist"
+  // reaches it until then (tests/one-navigation.test.ts).
+  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="hidden sm:inline-flex" onlyWhenWatching \/>/);
 });
 
 test("every fixed bottom-corner surface (the nudges, the rating card, ui/Toast) clears the banner via .above-bottombar", () => {

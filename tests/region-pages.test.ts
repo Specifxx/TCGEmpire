@@ -115,8 +115,13 @@ test("HeroStats defaults to the switcher's country when lockCountry is absent (t
   assert.match(src, /const country = lockCountry \?\? switcherCountry;/);
 });
 
-test("RegionHome never lists a market's own name among its 'five more markets'", () => {
+test("a region hero names its own market and lists no others", () => {
+  // Until 2026-11-13 the hero's sub line ended "plus five more markets in their own currency: …", built by
+  // otherMarketsList(exclude) so a region page never listed itself. The minimal redesign (DECISIONS.md) cut the
+  // sentence to one line and dropped the list: the six flags under the search are the other markets.
   const src = read("src/components/home/CinematicHero.tsx");
-  assert.match(src, /function otherMarketsList\(exclude: Country\)/);
-  assert.match(src, /COUNTRY_LIST\.filter\(\(c\) => c\.code !== exclude\)/);
+  assert.doesNotMatch(src, /otherMarketsList|five more markets/);
+  assert.match(src, /Card Prices\{region \? ` in \$\{SHORT_PLACE\[region\.code\]\}` : ""\}/, "the h1 names the page's own market");
+  assert.match(src, /every \{heroAdjective\} retailer we track/, "and so does the one sub line");
+  assert.match(src, /<CountryHeroToggle \/>/, "the market switch carries the rest");
 });
