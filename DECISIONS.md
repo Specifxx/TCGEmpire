@@ -23532,3 +23532,7 @@ Marketplace chip (it still never takes the Cheapest badge). Amazon draws a row o
 ## 2026-11-12: the TCGplayer row says what it is, and its button is blue
 
 Owner: the TCGplayer row read "reference", "approximate" and "Check on TCGplayer", and clicks fell. Outside the US the row now shows TCGplayer's price as a normal price (its market price, converted, no "≈", no caveat) under "TCGplayer", with "Buy on TCGplayer →" in a blue button (`.btn-tcg`). A real listed price is shown wherever a listing row exists (the US); we hold no other. The one-orange-accent calm rule yields here for TCGplayer's button only (owner's call). eBay stays orange.
+
+## 2026-11-13: urgent release
+
+Owner asked for every site to be released now: the unpriced-Amazon fix, Fetch as an ordinary store row and the blue TCGplayer button had been merged without a deploy marker. One build, via this commit's subject.
