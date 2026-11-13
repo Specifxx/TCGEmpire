@@ -460,7 +460,7 @@ test("the eBay mirror's copy is honest: an asking price, item prices postage ext
   assert.match(vs, /% below is a share of the eBay price|%\s+below is a share of the eBay price/);
   const table = between(src, "function VsEbayTable(", "\n}\n");
   assert.match(table, /known \? "delivered" : "\+ postage"/, "delivered only when the seller stated postage");
-  for (const col of ["Card", "Best store price", "Cheapest on eBay", "Below eBay", "% below"]) assert.match(table, new RegExp(`>${col.replace(/[+%]/g, "\\$&")}</th>`));
+  for (const col of ["Card", "Store price", "Cheapest on eBay", "Below eBay", "% below"]) assert.match(table, new RegExp(`>${col.replace(/[+%]/g, "\\$&")}</th>`));
   assert.match(table, /href=\{it\.storeUrl\}\s+retailer=\{it\.storeKey\}[\s\S]*?pageType="deals"\s+surface="table"/, "the store link is a measured OutboundLink");
   assert.match(table, /href=\{it\.ebayUrl\} retailer=\{it\.ebayKey\}/);
   assert.doesNotMatch(code(PAGE), /money.?back|buyer protection|\bhurry\b|\bonly \d+ left\b/i);
