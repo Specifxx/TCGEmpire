@@ -6,7 +6,6 @@ import "./globals.css";
 // The cart list's styles (components/cart): imported here, never from a component, so node tests can load them.
 import "@/components/cart/cart.css";
 import { Navbar } from "@/components/Navbar";
-import { SideNav } from "@/components/SideNav";
 import { PhoneDockAds } from "@/components/PhoneDockAds";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
@@ -24,7 +23,6 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION, IMPACT_SITE_VERIFICATION_2 } from "@/lib/affiliate";
 import { FooterNav } from "@/components/FooterNav";
-import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
@@ -316,9 +314,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-xmas-layer={CHRISTMAS_FESTIVE_LAYER ? "" : undefined}
       // The theme and season boot scripts below stamp data-theme / data-season
       // on this element before React hydrates; React must not report that as a
-      // mismatch. (A second
-      // script used to stamp data-sidenav here too — removed with the rail's
-      // collapsed mode on 2026-09-21; the rail has one width now.)
+      // mismatch.
       suppressHydrationWarning
     >
       <head>
@@ -417,22 +413,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <MegaMenuProvider>
               <WatchlistDrawerProvider>
                 <Navbar />
-                <SideNav />
                 {/* The phone dock (PhoneDockAds.tsx; owner, 2026-11-06): browser-only, narrow screens, after a scroll, never on a product page;
                     none for ad-free members. The side rails are gone (2026-11-13). */}
                 <PhoneDockAds />
                 {/* No announcement ribbon here any more — the homepage's Vendetta
                     block (right under the hero) carries the "it's here" message
                     with real prices instead of a repeating marquee claim. */}
-                {/* pl-[var(--sidenav-w)] on this OUTER wrapper, not on <main> itself
-                    — combining a pl-* utility with container-app's own px-* on the
-                    SAME element is a well-known Tailwind footgun (both set
-                    padding-left; which one wins depends on generated CSS order,
-                    not className order). Keeping them on separate elements sidesteps
-                    that entirely. 0 below lg, so a no-op everywhere SideNav is
-                    hidden; SideNav itself is `position: fixed`, not a layout
-                    participant, so this is what actually reserves its space. */}
-                <div className="pl-[var(--sidenav-w)]">
+                {/* ONE COLUMN, NO RAIL (owner, 2026-11-13; DECISIONS.md "Minimal redesign"): the pinned side rail is gone,
+                    so nothing here reserves a left edge any more. The header's menu button opens the full index
+                    (CinematicNavMenu) at every width, and the footer's site map carries every link in the HTML. */}
+                <div>
                   {/* Black Friday, then Cyber Monday (lib/holiday-strip.ts): one server-rendered line, outside <main> so the
                       homepage's full-bleed hero (-mt-6) never slides over it. */}
                   <HolidayStrip />
@@ -461,7 +451,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {/* The one uninvited opinion ask: a corner rating card, only
                     after real engagement, at most twice (lib/rate-prompt.ts). */}
                 <RateUsPrompt />
-                {/* SideNav's mobile complement USED TO BE <BottomTabBar /> here.
+                {/* A fixed bottom tab bar USED TO BE here (<BottomTabBar />).
                     Removed outright: three successive attempts to keep a fixed
                     bottom bar pinned on a phone all failed (see
                     components/HeaderMenuButton.tsx for the list), and the
@@ -481,42 +471,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             CPC/affiliate: they pay on click-through purchases, so
             placement-where-relevant beats raw banner count.
             FooterAds reads the market from the client country context (inside
-            CountryProvider) so the layout stays cookie-free and cacheable.
-            SideNav is `position: fixed` and spans the FULL page height (it
-            doesn't scroll away), so the ad zone needs the same pl-[var(--sidenav-w)]
-            reservation as <main> above — without it, the fixed panel would sit
-            on top of (not beside) these banners once scrolled into view. */}
-        <div className="pl-[var(--sidenav-w)]">
-          <InlineAdsZone />
-        </div>
+            CountryProvider) so the layout stays cookie-free and cacheable. */}
+        <InlineAdsZone />
         </CountryProvider>
-        {/* The rail reservation sits on the <footer> ITSELF (2026-09-23), the
-            same pattern as the <main> wrapper above, and the inner box is a
-            plain content container. The reservation used to share that inner
-            box, where the utility always beat the component-layer gutter:
-            padding-left was 0 below 1024 (the newsletter input, the accordion
-            rows and the share buttons touched x=0 at 390) and exactly the
-            rail's 17rem from 1024, and the capped box was centred on the
-            whole window rather than on the area beside the rail. Footer
-            content now lines up with <main> at every width, and border-t
-            still spans the full width under the fixed rail. */}
-        <footer className="border-t border-ink-800 py-8 pl-[var(--sidenav-w)] text-center text-xs text-slate-500">
+        <footer className="border-t border-ink-800 py-8 text-center text-xs text-slate-500">
         <div className="container-app">
           <NewsletterSignup siteName="RiftCompare" />
           {/* Site-map — surfaced here so every page links to every feature even
-              on mobile/tablet, where the lg-and-up SideNav is hidden. 4 columns
+              now that no rail lists them (and on a phone, where none ever did). 4 columns
               on desktop, collapsible accordions on mobile — see FooterNav /
               nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
           <FooterNav />
-          {/* Share band. The site's only other share controls are per-article
-              (ArticleShare) and per-card (ShareButton), so there was nowhere to
-              share RiftCompare ITSELF from — the thing a happy visitor is most
-              likely to want to pass on. Sits in the footer on every page:
-              always reachable, never an interruption. */}
-          <div className="mb-5 flex flex-col items-center gap-2 border-y border-ink-800/70 py-4">
-            <span className="text-xs text-slate-400">Find RiftCompare useful? Send it to someone who buys Riftbound.</span>
-            <ShareRow source="footer" size="sm" className="justify-center" />
-          </div>
+          {/* The share band ("Find RiftCompare useful? Send it to someone…", five buttons on every page) left the
+              footer on 2026-11-13 (owner: "cull the features that we show"). Sharing stays where it is asked for:
+              per article (ArticleShare) and per card (ShareButton). */}
           {/* NO "·" SEPARATORS (2026-09-23): items are separated by the row's
               own gap. The eleven "·" spans wrapped independently of their
               links, so on phones lines ended "Privacy policy ·" or
@@ -538,6 +506,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/blog" className="tap-link text-slate-300 hover:text-brand-400">Blog</Link>
             <Link href="/guides" className="tap-link text-slate-300 hover:text-brand-400">Guides</Link>
             <Link href="/tools" className="tap-link text-slate-300 hover:text-brand-400">Tools</Link>
+            {/* Creators (2026-11-13): /creators is hideInFooter in the site map and was linked on every page by the
+                rail and by the home hero's badge. Both went with the minimal redesign, so its one server-rendered
+                link is here. */}
+            <Link href="/creators" className="tap-link text-slate-300 hover:text-brand-400">Creators</Link>
             <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About us</Link>
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>

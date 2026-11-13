@@ -76,7 +76,7 @@ export function HeroStats({
           with a staggered delay pushes back the moment it's actually painted,
           directly inflating LCP. It's real informational content, not
           decoration, so it renders immediately with the rest of the SSR'd hero. */}
-      <p className="num text-xs text-slate-500 sm:text-sm">
+      <p className="num text-[11px] text-slate-500 sm:text-sm">
         {/* The final numbers, as rendered on the server — no count-up
             (2026-09-24). CountUp reset these to 0 on hydration and climbed
             back, so the first thing a visitor from Reddit read was "0 cards ·

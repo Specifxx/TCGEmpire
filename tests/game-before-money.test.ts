@@ -89,26 +89,26 @@ test("the homepage's commercial-vs-playable order is the owner's, and is asserte
   const code = readCode("src/components/home/HomeSections.tsx");
   const deals = code.indexOf("<TodaysTopDeals");
   const ebay = code.indexOf("<InlineAds");
-  const play = code.indexOf("<ReturnVisitCards");
-  assert.ok(deals > 0 && ebay > 0 && play > 0, "expected all three homepage sections to render");
+  assert.ok(deals > 0 && ebay > 0, "expected the deals and the one ad block to render");
 
-  // The 2026-09-21 order, top down: Top Deals → eBay Picks → … → the playable
-  // cards. Recently viewed sat above Top Deals until 2026-09-28, when the
-  // owner took it off the homepage (tests/homepage-declutter.test.ts).
+  // The 2026-09-21 order, top down: Top Deals → the ad block. Recently viewed
+  // sat above Top Deals until 2026-09-28, when the owner took it off the
+  // homepage (tests/homepage-declutter.test.ts).
   assert.ok(!code.includes("<RecentlyViewedRail"), "Recently viewed is off the homepage (owner, 2026-09-28)");
   assert.ok(deals < ebay, "Today's Top Deals is the owner-chosen top content slot as of 2026-09-21");
-  assert.ok(ebay < play, "the ad block is above the playable sections, as of 2026-09-17");
 
-  // Still pinned, because it is the part nobody has asked to change: the
-  // playable sections keep a slot ABOVE the explainer and the set/domain grid.
-  // "Behind the two commercial units" is the instruction; "buried at the bottom
-  // of the page" is not. They used to sit above the editorial run too; since
-  // 2026-09-26 that run is a band above HomeSections by the owner's decision
-  // (see the note above), so it is no longer below them to assert against.
-  // "How RiftCompare works" left the homepage on 2026-10-19 (owner); the
-  // playable cards still sit above the set grid.
+  // AMENDED 2026-11-13 (owner: "we're making things too complicated … cull the features that we show"; DECISIONS.md
+  // "Minimal redesign"). The three return-visit cards (pack simulator, Riftle, watch a card) used to be pinned
+  // between the ad block and the set grid. They left the home pages with the rest of the promo blocks; what is
+  // pinned now is that they are not on the page AND that each game is still one click away in the menu, which is
+  // the part of "game before money" that does not depend on this page's order.
+  assert.ok(!code.includes("<ReturnVisitCards"), "the return-visit cards are off the home pages (owner, 2026-11-13)");
+  const groups = readCode("src/components/nav-groups.ts");
+  for (const href of ["/riftle", "/games/pack-sim", "/games"]) {
+    assert.ok(groups.includes(`href: "${href}"`), `${href} stays in the menu and the footer`);
+  }
   assert.ok(!code.includes("<HowItWorks"), "the explainer is gone (owner, 2026-10-19)");
-  assert.ok(play < code.indexOf("Explore the database"), "Riftle/pack-sim stay above the set grid");
+  assert.ok(ebay < code.indexOf("Explore the database"), "the set grid closes the product run");
   assert.doesNotMatch(code, /<LatestPosts/, "the editorial run moved above HomeSections (owner, 2026-09-26), not back under the games");
 });
 

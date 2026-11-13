@@ -54,10 +54,13 @@ import { useWatchlistDrawer } from "./WatchlistDrawerProvider";
  * drawer opens over whatever page you're already on — so that's gone; `open`
  * from the shared drawer state drives the same highlight instead.
  */
-export function HeaderWatchButton({ className = "" }: { className?: string }) {
+export function HeaderWatchButton({ className = "", onlyWhenWatching = false }: { className?: string; onlyWhenWatching?: boolean }) {
   const { watched } = useWatchlist();
   const { open, setOpen } = useWatchlistDrawer();
   const count = watched?.size ?? 0;
+  // The header's copy (owner, 2026-11-13, the minimal header): nothing for a visitor who watches no card yet; the menu's
+  // "My Watchlist" is their way in. The server and the first client render both draw nothing, so nothing mismatches.
+  if (onlyWhenWatching && count === 0) return null;
 
   return (
     <button

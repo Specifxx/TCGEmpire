@@ -87,7 +87,7 @@ export function PriceGuideMarketBoard({
 
   return (
     <>
-      <PriceGuideSummary stats={view.stats} sets={view.bySet} currency={display} place={place} />
+      <PriceGuideSummary part="stats" stats={view.stats} sets={view.bySet} currency={display} place={place} />
 
       <div className="mt-6 flex flex-col gap-6 xl:flex-row" aria-busy={loading != null}>
         {/* No keyword box in the panel here: the toolbar beside it already
@@ -174,6 +174,9 @@ export function PriceGuideMarketBoard({
           <Pagination page={view.page} totalPages={view.totalPages} params={params} basePath={PRICE_GUIDE_PATH} />
         </section>
       </div>
+
+      {/* "Prices by set" under the list and its pager (2026-11-13): above it, the first price row was below the first screen. */}
+      <PriceGuideSummary part="sets" stats={view.stats} sets={view.bySet} currency={display} place={place} />
     </>
   );
 }

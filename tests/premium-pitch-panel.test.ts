@@ -42,9 +42,8 @@ test("the header sells Premium with the shiny GetPremiumLink; rail and menu stay
   assert.doesNotMatch(css, /^\.premium-cta::(before|after)/m, "no ring or sweep on the box");
   assert.match(css, /^\.premium-cta-label \{[^}]*filter: drop-shadow/m, "the glow is on the letters");
   assert.match(read("src/components/GetPremiumLink.tsx"), /className="premium-cta-label"/, "the label carries the text shimmer");
-  const rail = read("src/components/SideNav.tsx");
-  assert.match(rail, /href="\/premium"/, "the rail still links the plans");
-  assert.doesNotMatch(rail.slice(rail.indexOf("<PremiumNavLink")), /text-gold|border-gold/, "…without gold");
+  // The rail's plain "Pricing" row went with the rail (2026-11-13); the menu's own entry is the plain one now.
+  assert.match(read("src/components/nav-groups.ts"), /\{ href: "\/premium", label: "Premium"/, "the menu still links the plans");
   const menu = read("src/components/UserMenu.tsx");
   const menuCode = menu.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
   assert.doesNotMatch(menuCode, /Get Premium/);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { formatMoney } from "@/lib/format";
+import { formatDayUtc, formatMoney } from "@/lib/format";
 import { dropBreakWindow } from "@/lib/methodology-breaks";
 import type { PricePoint } from "@/lib/price-history";
 import { ENTRY_TIER_NAME } from "@/lib/site";
@@ -158,7 +158,8 @@ export function PriceChart({
   const up = delta > 0;
   const flat = delta === 0;
 
-  const fmtDate = (t: number) => new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  // The axis labels are in the server's HTML: the same words everywhere (lib/format.ts formatDayUtc), never the visitor's locale.
+  const fmtDate = (t: number) => formatDayUtc(t);
 
   function onMove(clientX: number) {
     const el = wrapRef.current;
@@ -288,7 +289,7 @@ export function PriceChart({
             style={{ left: `clamp(4rem, ${(x(hover!) / W) * 100}%, calc(100% - 4rem))`, top: 0 }}
           >
             <div className="text-sm font-bold text-accent">{label(hp.v)}</div>
-            <div className="whitespace-nowrap text-[10px] text-slate-400">{new Date(hp.t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}</div>
+            <div className="whitespace-nowrap text-[10px] text-slate-400">{formatDayUtc(hp.t, true)}</div>
           </div>
         )}
       </div>

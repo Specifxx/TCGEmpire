@@ -67,7 +67,6 @@ const GRIDS: { file: string; anchor: string; what: string }[] = [
   { file: "src/components/RouteLoading.tsx", anchor: "gap-3 sm:grid-cols-2 lg:grid-cols-3", what: "/sets loading skeleton (mirrors /sets)" },
   { file: "src/app/market/page.tsx", anchor: "gap-4 sm:grid-cols-2", what: "/market movers pair (341px at 320)" },
   { file: "src/components/TradeCalculator.tsx", anchor: "gap-4 md:grid-cols-2", what: "/trade both-sides grid (603px at 390 with two cards added)" },
-  { file: "src/components/home/HomeSections.tsx", anchor: "gap-4 sm:grid-cols-2 sm:[&>*:last-child]:col-span-2", what: "homepage return-visit cards (two across below 1440)" },
   // 2026-09-26: the homepage editorial band, and three grids found without a
   // base template while it was built (the article grid's cards hold unwrapped
   // tag chips; the other two hold fixed-width icons beside text).

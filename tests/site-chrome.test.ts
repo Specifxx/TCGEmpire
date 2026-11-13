@@ -35,6 +35,9 @@ test("the footer's always-visible row links every page the brief names, in order
     ["/blog", "Blog"],
     ["/guides", "Guides"],
     ["/tools", "Tools"],
+    // 2026-11-13: /creators lost its rail link and its hero badge (DECISIONS.md "Minimal redesign"); this is its
+    // one link in every page's server HTML.
+    ["/creators", "Creators"],
     ["/about", "About us"],
     ["/editorial-policy", "Editorial policy"],
     ["/methodology", "Methodology"],

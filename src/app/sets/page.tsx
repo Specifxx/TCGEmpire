@@ -115,23 +115,9 @@ export default async function SetsIndexPage() {
             <span className="text-slate-300">Sets</span>
           </nav>
           <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Riftbound sets — card lists &amp; prices</h1>
-      <HubIntro path="/sets" />
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-            Every set in Riftbound: League of Legends TCG. Open a set for its full card list with live
-            prices compared across stores, so you can find the cheapest singles — or complete the set.
-            Want to look rather than price-check? Every set has its own{" "}
-            <Link href="/gallery" className="text-brand-400 hover:underline">full-art card gallery</Link>.
-            Building around a colour instead? Browse{" "}
-            <Link href="/domains" className="text-brand-400 hover:underline">cards by domain</Link>.
-          </p>
-          {/* The set tracker (2026-09-29): a plain link, so this ISR page adds no
-              request. The tracker itself is /portfolio/sets, free within the
-              portfolio limit. */}
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-            Collecting a set?{" "}
-            <Link href="/portfolio/sets" className="font-semibold text-brand-400 hover:underline">Tick what&apos;s in your binder</Link>{" "}
-            to see what a set is missing and the cheapest listing for each card, before postage. Free, with no card limit.
-          </p>
+          <HubIntro path="/sets" />
+          {/* Two more paragraphs sat here (the gallery and domain links, the set tracker): on a 390px phone the first set was
+              1,443px down the page. They are in "About Riftbound sets" under the lists now (2026-11-13), same words, same links. */}
           <AnswerBox className="mt-4">
             <p>
               Riftbound: League of Legends TCG has {released.length} released{" "}
@@ -203,6 +189,22 @@ export default async function SetsIndexPage() {
           singles. RiftCompare tracks live prices for every card in every released set across stores in
           Australia, the US, the UK, Singapore, Canada and the EU — pick a set above for its full card list and a
           price guide of every card, dearest first, to find the cheapest place to buy.
+        </p>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Every set in Riftbound: League of Legends TCG. Open a set for its full card list with live
+          prices compared across stores, so you can find the cheapest singles — or complete the set.
+          Want to look rather than price-check? Every set has its own{" "}
+          <Link href="/gallery" className="text-brand-400 hover:underline">full-art card gallery</Link>.
+          Building around a colour instead? Browse{" "}
+          <Link href="/domains" className="text-brand-400 hover:underline">cards by domain</Link>.
+        </p>
+        {/* The set tracker (2026-09-29): a plain link, so this ISR page adds no
+            request. The tracker itself is /portfolio/sets, free within the
+            portfolio limit. */}
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Collecting a set?{" "}
+          <Link href="/portfolio/sets" className="font-semibold text-brand-400 hover:underline">Tick what&apos;s in your binder</Link>{" "}
+          to see what a set is missing and the cheapest listing for each card, before postage. Free, with no card limit.
         </p>
       </section>
 

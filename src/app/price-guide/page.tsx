@@ -125,8 +125,9 @@ export default async function PriceGuidePage({ searchParams }: { searchParams: R
           primary={{ href: "/browse", label: "Open the card database" }}
         />
       ) : (
-        /* The stat strip, prices by set, filters, toolbar, table and pager for
-           the visitor's market; the HTML carries the baseline market's. */
+        /* The stat strip, filters, toolbar, table and pager, then prices by set
+           (under the list since 2026-11-13), for the visitor's market; the HTML
+           carries the baseline market's. */
         <PriceGuideMarketBoard baseline={view} query={priceGuideQuery(searchParams)} pinned={pinned} />
       )}
 

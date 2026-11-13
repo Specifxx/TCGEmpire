@@ -109,26 +109,37 @@ export function BrowseView({
                 starts high on a phone. Written for the visitor's own market
                 (place and currency): the
                 baseline's words in the HTML, theirs after hydration
-                (BrowseMarketWord), so it costs no query and no cookie read. */}
-            <div className="mt-2 max-w-2xl space-y-2 text-sm leading-relaxed text-slate-400">
-              <p>
-                A tile&apos;s &ldquo;from&rdquo; price is the cheapest in-stock listing we have for that card in{" "}
-                {word("place")}, in {word("currency")} — the item price, before postage
-                {word("ebay-us-note")}.
-                &ldquo;Stocked elsewhere&rdquo; means no seller in {word("place")} has it in stock but
-                another market does. Prices come from two imports a day, at 07:00 and 19:00 UTC.
-              </p>
-              <p>
-                The list opens on the cards searched and viewed most here; sort it by price, name or set and
-                card number, or filter by set, domain, rarity, type or printing. Open a card for every store&apos;s price,
-                cheapest first by item price, with the delivered total shown where the store publishes its postage (
-                <Link href="/methodology#ordering" className="text-brand-400 hover:underline">how we compare</Link>
-                ). For every card&apos;s price in one table, sorted dearest first, see the{" "}
-                <Link href="/price-guide" className="text-brand-400 hover:underline">Riftbound price guide</Link>. New to buying? See{" "}
-                <Link href="/guides/where-to-buy-riftbound-cards" className="text-brand-400 hover:underline">where to buy Riftbound cards</Link>{" "}
-                in each market.
-              </p>
-            </div>
+                (BrowseMarketWord), so it costs no query and no cookie read.
+                ONE LINE UNTIL OPENED since 2026-11-13 (owner: "the product's very easy to access"; DECISIONS.md
+                "Minimal redesign"): on a 390px phone the two paragraphs filled the first screen and no card was on
+                it. A native <details>, closed: still under the H1, and every word still in the server HTML. */}
+            <details className="group/read mt-1 max-w-2xl">
+              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-sm font-semibold text-brand-400 hover:underline [&::-webkit-details-marker]:hidden">
+                How to read these prices
+                <svg className="h-3.5 w-3.5 shrink-0 transition-transform group-open/read:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div className="space-y-2 pb-2 text-sm leading-relaxed text-slate-400">
+                <p>
+                  A tile&apos;s &ldquo;from&rdquo; price is the cheapest in-stock listing we have for that card in{" "}
+                  {word("place")}, in {word("currency")} — the item price, before postage
+                  {word("ebay-us-note")}.
+                  &ldquo;Stocked elsewhere&rdquo; means no seller in {word("place")} has it in stock but
+                  another market does. Prices come from two imports a day, at 07:00 and 19:00 UTC.
+                </p>
+                <p>
+                  The list opens on the cards searched and viewed most here; sort it by price, name or set and
+                  card number, or filter by set, domain, rarity, type or printing. Open a card for every store&apos;s price,
+                  cheapest first by item price, with the delivered total shown where the store publishes its postage (
+                  <Link href="/methodology#ordering" className="text-brand-400 hover:underline">how we compare</Link>
+                  ). For every card&apos;s price in one table, sorted dearest first, see the{" "}
+                  <Link href="/price-guide" className="text-brand-400 hover:underline">Riftbound price guide</Link>. New to buying? See{" "}
+                  <Link href="/guides/where-to-buy-riftbound-cards" className="text-brand-400 hover:underline">where to buy Riftbound cards</Link>{" "}
+                  in each market.
+                </p>
+              </div>
+            </details>
             {/* Popular-champion cross-links — /browse had no path into the
                 per-champion hub pages at all (card pages already link to
                 them; this was the other half the brief asked for). Only

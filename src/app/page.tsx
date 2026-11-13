@@ -398,9 +398,25 @@ export default async function HomePage() {
         recentlyUpdated={recentlyUpdated}
       />
 
-      {/* About + FAQ — keyword-relevant content for search */}
-      <section className="card-surface p-6">
-        <h2 className="text-xl font-extrabold text-white">Riftbound prices in Australia, the US, the UK, Singapore, Canada and the EU — all in one place</h2>
+      {/* Guides, news & market updates: one compact card after the products (2026-11-13). It was the very last block
+          from 2026-10-19 (owner: "move the guides, news, and market updates to the very bottom"); the only thing under
+          it now is the folded text below. */}
+      <div className="rb-sd">
+        <EditorialHub freshness={freshness} freshnessAt={freshnessAt} />
+      </div>
+
+      {/* About + FAQ: the page's reference text, FOLDED since 2026-11-13 (owner: "cull the features that we show";
+          DECISIONS.md "Minimal redesign"). Two native <details>, closed: every word is still in the server HTML for
+          search and for anyone who opens them, and the page ends two short rows after the products. */}
+      <section className="card-surface divide-y divide-ink-800 px-5 sm:px-6">
+        <details className="group/about py-1">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 [&::-webkit-details-marker]:hidden">
+            <h2 className="text-base font-bold text-white sm:text-lg">Riftbound prices in Australia, the US, the UK, Singapore, Canada and the EU — all in one place</h2>
+            <svg className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open/about:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </summary>
+          <div className="pb-4">
         {/* Full width, matching the heading above — a capped/centred measure
             here just shifted the paragraph out of alignment with the heading
             (text starting a third of the way across the card reads as broken,
@@ -453,8 +469,17 @@ export default async function HomePage() {
           </Link>{" "}
           values both sides of a trade at the cheapest in-stock store price before you swap.
         </p>
-        {/* Collapsible FAQ — tidy on mobile; answers still in the DOM for SEO. */}
-        <div className="mt-5 divide-y divide-ink-800 border-t border-ink-800">
+          </div>
+        </details>
+        {/* The FAQ: one row that opens the list; each answer is its own <details> inside. Answers stay in the DOM. */}
+        <details className="group/faq py-1">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 [&::-webkit-details-marker]:hidden">
+            <span className="text-base font-bold text-white sm:text-lg">Questions and answers</span>
+            <svg className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open/faq:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </summary>
+        <div className="divide-y divide-ink-800 border-t border-ink-800 pb-2">
           {FAQS.map((f) => (
             <details key={f.q} className="group py-1">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
@@ -473,12 +498,8 @@ export default async function HomePage() {
             </details>
           ))}
         </div>
+        </details>
       </section>
-
-      {/* Guides, news & market updates, at the very bottom since 2026-10-19
-          (owner: "move the guides, news, and market updates to the very
-          bottom"). They sat directly under the hero from 2026-10-02. */}
-      <EditorialHub freshness={freshness} freshnessAt={freshnessAt} />
 
       {/* The homepage is the site's canonical entity landing page and carried
           no node describing itself — only an FAQPage, unlinked to the

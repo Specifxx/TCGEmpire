@@ -23570,3 +23570,100 @@ Owner: "no point having" the ratings section, the booster boxes and sealed secti
 panel on the front page; the chase cards stay. `ReviewsSection` and `HomeSealedShelf` are no longer mounted on `/` (the Premium
 page keeps its reviews, `/sealed` is unchanged), and `WelcomeBack` is deleted from `HomeSections`, so the region homes lose it
 too. This reverses the 2026-11-03 "reviews visible on the home page" and 2026-10-28 "sealed gets the front page" placements.
+
+## 2026-11-13: Minimal redesign: one navigation, a hero of words and search
+
+Owner, the same day, about all the Compare sites: "we're making things too complicated, and before it was simplicity that was
+driving it"; "get rid of the products on the hero"; "cull the features that we show and all the display aesthetics"; the site
+should be "minimalistic, dynamic, aesthetic and smooth without having everything there", with "the product's very easy to access
+rather than have everything everywhere all at once". A review of the live pages found two navigations at once (a 17rem rail of
+about 25 links pinned beside a seven-item header with mega menus, plus three search boxes on the home page), a hero doing
+eight jobs, and a home page of 15 blocks (5,631px tall on a desktop, 8,819px on a phone, in dev).
+
+**One navigation.** The desktop rail (`SideNav.tsx`, 2026-09-21) is deleted with its width variable (`--sidenav-w`), the
+padding every consumer reserved for it, its "Search features" box and its Halloween cobweb. The header is the navigation:
+brand (the word from xl), Database, the ONE card search (inline from lg, its own row below), the three mega menus from 1440px
+(the plain Sealed link stands in from lg), Pricing, theme, market, account, cart, and the menu button, which now shows at
+EVERY width and opens the full index (`CinematicNavMenu`, every `NAV_GROUPS` link, searchable). Every link the rail had is
+still in each page's server HTML through the footer's site map (`FooterNav`), and in the menu and the ⌘K launcher. Left the
+header row: Blog and Tools (menu, footer row), the Discord icon (footer row, menu), and the watchlist heart for a visitor
+watching nothing (it returns with its count once a card is watched; "My Watchlist" is in the menu). This reverses the
+2026-09-21 shortlist ("the blog, … Discord, the watch list") for the header only. The content column is 1200px, centred
+(`.container-app`, was 1400px beside the rail).
+
+**The hero** (`CinematicHero`, `/` and the six region homes) is words, the search and six ways in, centred: one eyebrow pill
+in season (the Christmas gift guide, now a small pill; Nocturne at Halloween), the same h1, the buy phrase and one line, the
+search, the market switch (one row on a phone), six tiles (Card database, Sealed, Deals, Sets, Price guide, Decks) and the
+one line of numbers. Gone from it: the creators badge, the repeated logo, the ornament rule, the six trending chips (the
+search's empty state still lists them), "All N cards in the database", "Get Premium", and the sentence listing the five other
+markets (the flags are the list). The h1, the title, the description and every JSON-LD node are unchanged, and the sub line
+keeps "Price check any card and find the cheapest place to buy" and "live Riftbound prices from".
+
+**The home pages** below the hero, in order: Today's Top Deals, the tabbed chase-cards shelf, the one ad block, the set grid
+(one row of eight, with the next set's countdown as one line under it), the guides and news card, then the reference text and
+the FAQ folded in two native `<details>` (every word still in the HTML). Cut, and where each lives: the Pokémon line (menu,
+`/pokemon`), the three return-visit cards (Riftle, pack simulator, watch a card: menu and footer), the free-account strip (the
+header's "Sign up free"), the partners strip (`/stores/tracked`, the footer), the "Rate us" row on the home pages only (the
+corner rating card and the footer's "Rate & review"; every other page keeps the row), and the footer's share band on every
+page (sharing stays per article and per card). `AccountStrip`, `PartnersStrip`, `ReturnVisitCards` and `PokemonHomePromo`
+are kept, unmounted, so putting one back is one line. In dev the home page is 4,066px tall on a desktop and 5,504px on a phone.
+
+**Motion** is CSS only and off under `prefers-reduced-motion`: the hero's parts rise in one after another (`.rb-rise`; never
+the h1, which is the LCP element), the tiles lift on hover, and the sections keep the existing scroll-in (`.rb-sd`).
+
+**Not done in this pass, on purpose** (the brief was shell and home first): the card tile and the card page are unchanged
+apart from the wider, rail-free column (the list pages' intro text is shortened in the entry below). A phone has no second
+search inside the hero: the header's full-width search sits directly above it and is always visible (owner, 2026-09-21), and
+two boxes in one screen is the duplication this entry removes.
+
+**To measure** (two weeks, against the two before): home page bounce and time to first search or first click; clicks into
+`/browse`, `/sealed` and card pages from the home page; paid-link clicks per home visit (the ad block and Top Deals are
+unchanged); sign-ups per visit, since the free-account strip left the home page; Search Console clicks and position for the
+home page's queries; mobile LCP and CLS. Tests: `tests/one-navigation.test.ts` replaces `tests/sidenav.test.ts`, and the
+header, hero and home-order pins were rewritten to the new contract.
+
+## 2026-11-13: Minimal redesign, second pass: products sooner on the list pages; the server's HTML is kept in every browser
+
+Two things found while checking the redesign above on a phone, and with a US and a German visitor's settings.
+
+**The words above the products are shorter.** The first pass left the list pages' text alone, and on a 390px by 844px phone the
+first card of /browse was below the first screen. First product's distance from the top of the page on that phone, the build
+before the redesign against this one: /browse 999px → 671px, /sealed 1,165px → 810px, /sets 1,443px → 815px, /cards 849px →
+455px, /movers 1,112px → 910px, /price-guide 2,060px → 1,402px (1,112px → 718px on a 1440px by 900px desktop).
+
+- `HubIntro` (21 hub and tool pages) shows its first paragraph and folds the rest behind "Read more", a native `<details>`, closed.
+  Below 640px that first paragraph is itself three lines until "Read more" is opened (`[data-hub-intro]` in `globals.css`): only
+  where a closed "Read more" follows it, so an intro of one paragraph is never cut, and a browser without `:has()` shows it whole.
+  Every word and every link is still in the server HTML, directly under the `<h1>`. A hub intro's first paragraph must now say on
+  its own what the page is (`lib/content/hub-intros.ts`).
+- /browse: the two "how to read the grid" paragraphs are one line, "How to read these prices", still between the h1 and the board
+  (`tests/catalogue-pages.test.ts` holds unchanged).
+- /sets: the two extra paragraphs under the intro (the gallery and domain links, the set tracker) moved into "About Riftbound sets"
+  under the set lists, same words, same links.
+- /price-guide: "Prices by set" sits under the list and its pager (`PriceGuideSummary` is drawn in two parts); the four figures
+  stay above the list. The same table, with the same link to each set's own price guide.
+
+`tests/products-first.test.ts` pins the order on each page, and that every paragraph is still in the server HTML.
+
+**A hydration failure on the card page and the card list is fixed. It was live before the redesign.** A client component is
+rendered on the server and again in the browser; if a single text node differs, React 18 gives up on the server's HTML and renders
+the whole document again in the browser. Two things did that:
+
+- The price chart's axis labels and the "full history since" line used `toLocaleDateString(undefined, …)`: the visitor's locale and
+  time zone. A price point is stamped 00:00 UTC, so every visitor west of UTC got the day before ("Oct 13" against the server's
+  "Oct 14") and every day-first locale got "14 Oct". The card page, the page that earns, was rendered twice for all of them. Both
+  now print the UTC day with `formatDayUtc` (`lib/format.ts`: "14 Oct", "14 Oct 2026"), written out rather than through Intl, so
+  the server and every browser print the same words.
+- The card list's, the sealed list's and the set page's counts used `n.toLocaleString()`: "1.741" for a German visitor against the
+  server's "1,741". They pass `"en-US"`, as the server prints.
+
+Measured on a phone over 16 pages (the home page, a region home, nine list and hub pages, three card pages, a sealed page and a
+set page), the production build before against this one. With a New York visitor's settings React threw the server's HTML away on
+4 of the 16 before (the three card pages and /market) and on none now; with a Berlin visitor's settings on 5 before (the same four
+and /browse) and on none now. `tests/hydration-locale.test.ts` pins both fixes and scans every public client component for a date
+or a number formatted in the visitor's own locale; the two components whose value only exists in the browser are listed there
+with the reason. A warning `RecentlyViewedRail` prints in development ("getServerSnapshot should be cached") is left alone: it
+does not discard the page.
+
+Titles, descriptions, canonicals, robots, Open Graph, h1s and JSON-LD are unchanged on 26 pages compared field by field with the
+production build before both passes. Released with `[deploy] [urgent]` in the merge subject, as the owner asked ("deploy urgently").

@@ -406,7 +406,7 @@ test("no Offer/AggregateOffer markup — a third-party bid changes by the minute
   assert.doesNotMatch(page, /AggregateOffer|"@type": "Offer"/, "we are not the seller and the price is not stable");
 });
 
-test("the page is discoverable: sitemap, nav groups and the desktop rail all point at it", () => {
+test("the page is discoverable: sitemap, nav groups, the header's Deals & market menu and the full menu all point at it", () => {
   // The third check was Navbar.tsx until 2026-09-21. The header's own
   // /auctions link is gone: SideNav now runs the full page height from lg and
   // carries every NAV_GROUPS link, so a desktop copy in the header was a
@@ -416,7 +416,10 @@ test("the page is discoverable: sitemap, nav groups and the desktop rail all poi
   const checks: [string, RegExp][] = [
     ["src/lib/sitemap-sections.ts", /\$\{SITE_URL\}\/auctions`/],
     ["src/components/nav-groups.ts", /href: "\/auctions"/],
-    ["src/components/SideNav.tsx", /NAV_GROUPS\.map/],
+    // The rail carried it from 2026-09-21 to 2026-11-13. Since then: the header's "Deals & market" menu, the full
+    // menu (every NAV_GROUPS link) and the footer's site map (tests/one-navigation.test.ts).
+    ["src/components/nav-groups.ts", /title: "Market", links: pick\("\/market", "\/movers", "\/auctions"\)/],
+    ["src/components/CinematicNavMenu.tsx", /NAV_GROUPS\.map/],
   ];
   for (const [path, pattern] of checks) {
     assert.match(read(path), pattern, `${path} must link to /auctions`);

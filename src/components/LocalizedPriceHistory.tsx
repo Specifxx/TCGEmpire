@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCountry } from "@/components/CountryProvider";
 import { PriceChart } from "@/components/PriceChart";
 import { currencyOf, type Country } from "@/lib/country";
+import { formatDayUtc } from "@/lib/format";
 import { gbpCentsToEur } from "@/lib/fx";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import type { PricePoint } from "@/lib/price-history";
@@ -134,7 +135,7 @@ export function LocalizedPriceHistory({
         <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-slate-400">
           <span>
             Showing the last {FREE_HISTORY_DAYS} days. {ENTRY_TIER_NAME} shows the full history since{" "}
-            {new Date(older).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })} and downloads it as CSV.
+            {formatDayUtc(older, true)} and downloads it as CSV.
           </span>
           <PremiumButton tier="plus" surface="gate:price-history" className="btn-ghost min-h-11 px-3 text-xs">
             See full history

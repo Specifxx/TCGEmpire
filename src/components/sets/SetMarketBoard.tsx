@@ -105,7 +105,7 @@ function useSetView(): SetViewCtx {
 /** A number or word of the visitor's market's view, inside the page's prose. */
 export function SetMarketValue({ what }: { what: "priced" | "place" | "currency" }) {
   const { view } = useSetView();
-  if (what === "priced") return <>{view.priced.toLocaleString()}</>;
+  if (what === "priced") return <>{view.priced.toLocaleString("en-US")}</>;
   if (what === "place") return <>{view.place}</>;
   return <>{view.currency}</>;
 }
@@ -196,7 +196,7 @@ export function SetMarketBoard({
               section; scroll-mt-36 clears the 125px sticky header (2026-09-23). */}
           <div id="results" className="mb-4 flex scroll-mt-36 flex-wrap items-center justify-between gap-3" aria-busy={loading != null}>
             <p className="text-sm text-slate-400">
-              <span className="font-semibold text-white">{total.toLocaleString()}</span>{" "}
+              <span className="font-semibold text-white">{total.toLocaleString("en-US")}</span>{" "}
               {total === 1 ? "card" : "cards"}
               {/* The panel's keyword box narrows the set's grid (buildCardWhere
                   reads `q`; never metered: a set page is not a site search). */}
@@ -278,8 +278,8 @@ export function SetMarketBoard({
             <p>
               Each price on this page is the cheapest in-stock listing we have for that card in{" "}
               {view.place}, in {view.currency}: the item price, before postage.{" "}
-              {priced.toLocaleString()} of {setName}&apos;s {totalInSet.toLocaleString()} cards have one right now
-              {priced < totalInSet ? `; the other ${(totalInSet - priced).toLocaleString()} show no price until a seller in ${view.place} lists them in stock` : ""}.
+              {priced.toLocaleString("en-US")} of {setName}&apos;s {totalInSet.toLocaleString("en-US")} cards have one right now
+              {priced < totalInSet ? `; the other ${(totalInSet - priced).toLocaleString("en-US")} show no price until a seller in ${view.place} lists them in stock` : ""}.
               Prices come from two imports a day, at 07:00 and 19:00 UTC.
             </p>
             {guideTop && (
@@ -293,7 +293,7 @@ export function SetMarketBoard({
                   </>
                 )}
                 .{topTenRarity && <> {topTenRarity.n} of the ten dearest are {topTenRarity.rarity} cards.</>} The
-                price guide lists all {priceGuide.length.toLocaleString()} cards dearest first; the grid above opens A–Z
+                price guide lists all {priceGuide.length.toLocaleString("en-US")} cards dearest first; the grid above opens A–Z
                 and can be re-sorted and filtered.
               </p>
             )}

@@ -119,13 +119,13 @@ export function Filters({
 
   return (
     <aside className="w-full shrink-0 xl:w-64">
-      {/* Collapsible bar below xl, not just on phones (2026-09-23). Since the
-          2026-09-21 rail change the 17rem SideNav is permanent from 1024px, so a
-          256px sidebar there left the results a 424px column: 4 columns of 94px
-          tiles at 1024, 29-54 clipped names/prices per page and an 8px sideways
-          scroll (the "cost a card column" conflict in DECISIONS, 2026-09-10).
-          From 1280 the sidebar has room again; below it this bar keeps the
-          results at full width (704px at 1024). */}
+      {/* Collapsible bar below xl, not just on phones (2026-09-23). Beside the
+          17rem navigation rail of the time, a 256px sidebar at 1024 left the
+          results a 424px column: 4 columns of 94px tiles, 29-54 clipped
+          names/prices per page and an 8px sideways scroll (the "cost a card
+          column" conflict in DECISIONS, 2026-09-10). The rail was removed on
+          2026-11-13; the bar stays below xl, where the results keep the page's
+          full width, and the sidebar joins from 1280. */}
       <button
         type="button"
         aria-expanded={mobileOpen}

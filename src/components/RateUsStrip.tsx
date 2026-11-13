@@ -15,13 +15,20 @@ import { ADS_OFF_NOTICE } from "@/lib/adsense";
 // pages the corner card skips (sign-in, checkout, admin, embeds, the arcade).
 // Client-only, so a crawler and a rater never see it. DECISIONS.md, "One
 // feedback form, shown by default".
+//
+// NOT ON THE HOME PAGES since 2026-11-13 ("/" and the six region homes; owner: "cull the features that we show",
+// DECISIONS.md "Minimal redesign"): they end at the products and the folded text. Every other page keeps the row, and
+// the corner rating card and the footer's "Rate & review" link are on all of them, the home pages included.
+const HOME_PATH = /^\/(?:au|us|uk|sg|ca|eu)?$/;
+
 export function RateUsStrip() {
   const path = usePathname() ?? "/";
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    setShow(rateAllowedOn(path) && !hasRated());
-    const onRated = () => setShow(rateAllowedOn(path) && !hasRated());
+    const allowed = rateAllowedOn(path) && !HOME_PATH.test(path);
+    setShow(allowed && !hasRated());
+    const onRated = () => setShow(allowed && !hasRated());
     window.addEventListener("rc:rated", onRated);
     return () => window.removeEventListener("rc:rated", onRated);
   }, [path]);

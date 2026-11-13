@@ -455,7 +455,8 @@ test("the rail and account menu link to /premium plainly; the header sells it (2
   const nav = code("src/components/Navbar.tsx");
   assert.equal([...nav.matchAll(/<GetPremiumLink\b/g)].length, 2, "the phone slot and the lg row");
   assert.match(code("src/components/GetPremiumLink.tsx"), /premium-cta/);
-  for (const f of ["src/components/SideNav.tsx", "src/components/UserMenu.tsx"]) {
+  // The rail's own plain "Pricing" row went with the rail on 2026-11-13; the account menu's stays.
+  for (const f of ["src/components/UserMenu.tsx"]) {
     const c = code(f);
     const links = [...c.matchAll(/<PremiumNavLink[\s\S]*?<\/PremiumNavLink>/g)].map((m) => m[0]);
     assert.ok(links.length > 0, `${f}: /premium stays reachable`);
