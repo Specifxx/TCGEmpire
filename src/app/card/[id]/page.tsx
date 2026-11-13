@@ -1,6 +1,5 @@
 import { metalKindOf } from "@/lib/metal-cards";
-import { MiniPicks } from "@/components/MiniPicks";
-import { TcgplayerPicks } from "@/components/TcgplayerPicks";
+import { InlineAds } from "@/components/InlineAds";
 import { publicRead, routeRaw } from "@/lib/public-data/route";
 import { BanNotice } from "@/components/BanNotice";
 import type { Metadata } from "next";
@@ -1119,11 +1118,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               preorder={isPreorderSetCode(card.setCode)}
             />
 
-            {/* The small eBay + TCGplayer pair of this set's chase cards, near
-                the top under the price and alert (owner, 2026-10-29: "much
-                smaller … not intrusive"); the full strips stay further down. */}
-            <MiniPicks setCode={card.setCode} pageType="card_detail" className="mt-4" />
-
             {/* A revealed card from an unreleased set has no price to compare
                 yet; what its visitor came for is the rest of the reveal
                 season. The tracker owns "<set> spoilers" and no card page
@@ -1616,9 +1610,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               className="mt-3"
             />
           </section>
-          {/* The set's top cards on TCGplayer, under the eBay panel: the
-              Gundam Compare card strip (owner, 2026-10-29). */}
-          <TcgplayerPicks pageType="card_detail" setCode={card.setCode} className="mt-6" />
+          {/* The one in-page ad block (owner, 2026-11-13): the set's chase cards on eBay and TCGplayer, below the price table and the eBay
+              panel, never beside a buy button or above a price. Replaces the small pair under the price and the TCGplayer strip. */}
+          <InlineAds setCode={card.setCode} pageType="card_detail" className="mt-6" />
         </div>
       </div>
 

@@ -26,20 +26,20 @@ test("the phone dock: narrow screens only, never on the first screen, never besi
   assert.match(d, /yieldTo = "\[data-ad\]"/, "every [data-ad] unit by default");
   assert.match(d, /sessionStorage\.setItem\(DISMISS_KEY, "1"\)/, "✕ hides it for the visit");
   assert.match(d, />Ad<\/span>/, "labelled Ad");
-  const s = src("components/SideRails.tsx");
+  const s = src("components/PhoneDockAds.tsx");
   assert.match(s, /railTiles\(data, country, "dock"\)/, "its own tags (dock_<market>, tcg_dock)");
   assert.match(s, /surface="ad_dock"/);
   assert.match(s, /yieldTo="\[data-ad-placement\], \[data-rate-prompt\]"/, "yields to every ad unit and the rating card");
-  assert.match(s, /if \(narrow && !adFree\)/, "never for Plus/Premium");
+  assert.match(s, /if \(!narrow \|\| adFree\) return null;/, "never for Plus/Premium");
   assert.match(d, /\[data-adfree\], \.capacitor-native/, "never for Plus/Premium or in the app");
   assert.match(s, /buybar="\.buybar"/, "never on a card page (the buy bar)");
   assert.match(src("app/globals.css"), /html\[data-ad-dock\] \.above-bottombar/, "the feedback button lifts above it");
   assert.doesNotMatch(d + s, /amazon/i, "no Amazon in the dock");
 });
 
-test("the phone dock's tiles carry their own tags, never the rails'", async () => {
-  const { railTiles } = await import("../src/components/SideRails");
+test("the phone dock's tiles carry their own tags, never the in-page block's", async () => {
+  const { railTiles } = await import("../src/components/PhoneDockAds");
   const data = { set: "x", ebay: [], tcg: [{ cardId: "a", name: "A", url: "https://www.tcgplayer.com/product/1", imageUrl: "https://i/a.jpg", priceCents: 500 }] } as never;
   assert.match(railTiles(data, "US", "dock").tcg[0].href, /tcg_dock/);
-  assert.match(railTiles(data, "US", "side").tcg[0].href, /tcg_side/);
+  assert.match(railTiles(data, "US", "inline").tcg[0].href, /tcg_inline/);
 });

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Filters } from "@/components/Filters";
-import { EbayPicks } from "@/components/EbayPicks";
+import { InlineAds } from "@/components/InlineAds";
 import { AdSlot } from "@/components/AdSlot";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { CHAMPIONS } from "@/lib/champions";
@@ -170,7 +170,7 @@ export function BrowseView({
           query={browseQuery(searchParams)}
           pinned={pinned}
           marketParam={searchParams.market || undefined}
-          picks={<EbayPicks className="mb-6" pageType="browse" />}
+          picks={<InlineAds className="mt-6" pageType="browse" />}
           guides={<RelatedGuides guides={guidesForTool("/browse")} />}
         />
 

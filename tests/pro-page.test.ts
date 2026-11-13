@@ -145,7 +145,7 @@ test("the rating shown is real and only shown once there are enough", () => {
   assert.ok(landing.indexOf("<ReviewsSection") < landing.indexOf('id="features"'), "reviews sit under the hero, above the feature panels (owner, 2026-11-03)");
   const home = read("src/app/page.tsx");
   assert.match(home, /<ReviewsSection rating=\{rating\} \/>/, "the homepage shows the reviews too");
-  assert.ok(home.indexOf("<ReviewsSection") < home.indexOf("<EbayPicks"), "right under the homepage hero");
+  assert.ok(home.indexOf("<ReviewsSection") < home.indexOf("<TodaysTopDeals"), "right under the homepage hero");
   assert.match(home, /showReviews=\{false\}/, "and only once");
   const reviews = read("src/components/ReviewsSection.tsx");
   assert.match(reviews, /if \(reviews\.length < MIN_REVIEWS_TO_DISPLAY\) return null;/, "no reviews, no section");

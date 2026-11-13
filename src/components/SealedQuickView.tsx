@@ -2,7 +2,6 @@
 
 import { CartAddButton } from "@/components/cart/CartAddButton";
 import { StoreVote } from "./StoreVote";
-import { MiniPicks } from "./MiniPicks";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import type { SealedGroup } from "@/lib/sealed-import";
@@ -145,8 +144,6 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
 
           {/* Price comparison — every tracked store, cheapest in-stock first */}
           <div className="p-4">
-            {/* The small eBay + TCGplayer pair (owner, 2026-10-29). */}
-            <MiniPicks setCode={group.setCode ?? ""} pageType="sealed_quickview" className="mb-3" />
             <SealedOffers group={group} currency={currency} amazon />
             <p className="mt-3 text-center text-xs">
               <Link href={sealedPath(group.groupKey)} prefetch={false} onClick={onClose} className="font-semibold text-brand-400 hover:underline">

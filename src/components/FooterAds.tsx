@@ -1,6 +1,6 @@
 "use client";
 
-import { MiniPicks } from "./MiniPicks";
+import { InlineAds } from "./InlineAds";
 import { usePathname } from "next/navigation";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
@@ -48,13 +48,12 @@ export { AD_FREE_GAME_ROUTES };
 // /premium/* (start, welcome, claim) included.
 export const SALES_ROUTES = ["/premium"] as const;
 
-// Pages that already carry the full eBay + TCGplayer card strips (homes, set
-// hubs) or the small pair near their top (card pages), and pages that are not
-// for shopping. Every other page gets the small pair above the banners (owner,
-// 2026-10-29: the ads on every page, pre-orders and lists included).
-const OWN_CARD_STRIPS = [/^\/$/, /^\/(au|uk|ca|eu|sg)\/?$/, /^\/sets\/[^/]+\/?$/, /^\/card\//, /^\/(account|admin|login|dashboard|profile|portfolio|watchlist|settings)(\/|$)/];
-export function miniPicksAllowed(pathname: string | null): boolean {
-  return !!pathname && !OWN_CARD_STRIPS.some((r) => r.test(pathname));
+// Pages that carry the in-page ad block themselves (homes, set hubs, card and sealed product pages, browse), the Mediavine articles
+// (/blog and /guides: no new block there, never next to a Mediavine unit), and pages that are not for shopping. Every other page gets
+// the one block above the banners (owner, 2026-11-13: one horizontal native block, replacing the side rails and the small strips).
+const OWN_BLOCK = [/^\/$/, /^\/(au|uk|ca|eu|sg)\/?$/, /^\/sets\/[^/]+\/?$/, /^\/card\//, /^\/sealed\/[^/]+/, /^\/browse(\/|$)/, /^\/(blog|guides)(\/|$)/, /^\/(account|admin|login|dashboard|profile|portfolio|watchlist|settings)(\/|$)/];
+export function inlineAdsAllowed(pathname: string | null): boolean {
+  return !!pathname && !OWN_BLOCK.some((r) => r.test(pathname));
 }
 
 export function footerBannersAllowed(pathname: string | null): boolean {
@@ -87,7 +86,7 @@ export function FooterAds() {
       {/* eBay first (2026-09-26, "Pushing eBay clicks" in DECISIONS.md): it is
           the site's main affiliate partner, so it takes the upper slot. Both
           stay labelled "Ad" and hidden for ad-free members, as above. */}
-      {miniPicksAllowed(pathname) && <MiniPicks pageType={`footer-${pathname?.split("/")[1] || "home"}`} className="w-full max-w-3xl" />}
+      {inlineAdsAllowed(pathname) && <InlineAds pageType={`footer-${pathname?.split("/")[1] || "home"}`} className="w-full" />}
       <EbayAd size="leaderboard" country={country} disclosure={false} />
       <TcgplayerAd size="leaderboard" country={country} disclosure={false} />
       {/* One combined line for the pair, directly beneath them — this is the

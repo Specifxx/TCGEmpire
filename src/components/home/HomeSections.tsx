@@ -1,7 +1,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Reveal } from "@/components/Reveal";
-import { EbayPicks } from "@/components/EbayPicks";
+import { InlineAds } from "@/components/InlineAds";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { AccountStrip } from "@/components/home/AccountStrip";
 import { WelcomeBack } from "@/components/home/WelcomeBack";
@@ -220,16 +220,9 @@ export function HomeSections({
           is very important … display it and be transparent"). */}
       {showReviews && <ReviewsSection />}
 
-      {/* eBay Picks — the newest set's chase cards with their cheapest live
-          listing, rather than a generic banner. Held the top slot from
-          2026-09-17 (where it replaced the removed Market Pulse) until
-          2026-09-21, when Today's Top Deals was moved above it on the owner's
-          instruction — see that section's comment and DECISIONS.md.
-          2026-10-06 (owner: "move the ebay chase card ad right below the news
-          and guides"): every home now renders it itself, directly under the
-          editorial band, and passes showEbayPicks={false}. It stays here as the
-          default for any caller that does not. */}
-      {showEbayPicks && <EbayPicks pageType="homepage" />}
+      {/* The one in-page ad block (owner, 2026-11-13): the newest set's chase cards on eBay and TCGplayer, between the editorial band and
+          the rest, replacing the eBay and TCGplayer strips that sat under the hero. Every home renders it here. */}
+      {showEbayPicks && <InlineAds pageType="homepage" />}
 
       {/* The Pokémon section's one line (2026-10-01, owner's request), on all
           six homes: after Top Deals and the editorial band, never above them.

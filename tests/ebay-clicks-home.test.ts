@@ -400,9 +400,9 @@ test("/browse: a compact eBay search by the count, a full one when nothing match
   const gridAt = src.indexOf("cards.map((c) =>");
   assert.ok(countAt > 0 && compactAt > countAt && compactAt < gridAt, "by the results count, above the grid");
   assert.match(src, /\{picks\}/, "EbayPicks reaches the island as a slot, drawn in the same place");
-  assert.match(code("src/components/browse/BrowseView.tsx"), /picks=\{<EbayPicks className="mb-6" pageType="browse" \/>\}/, "EbayPicks never gets the visitor's query");
+  assert.match(code("src/components/browse/BrowseView.tsx"), /picks=\{<InlineAds className="mt-6" pageType="browse" \/>\}/, "the ad block never gets the visitor's query");
   // The homepage's call names its page (2026-09-26), never the query.
-  assert.match(read("src/components/home/HomeSections.tsx"), /<EbayPicks pageType="homepage" \/>/, "the homepage's call carries no query");
+  assert.match(read("src/components/home/HomeSections.tsx"), /<InlineAds pageType="homepage" \/>/, "the homepage's call carries no query");
 });
 
 test("Deal Finder: an eBay CTA beside the signed-out lock, and attributed table links", () => {

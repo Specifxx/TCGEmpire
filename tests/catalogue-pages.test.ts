@@ -84,7 +84,7 @@ test("set pages and galleries show the set's guides from data, before the eBay b
   const board = code("src/components/sets/SetMarketBoard.tsx");
   const guidesAt = page.indexOf("<RelatedGuides guides={guidesForSet(set.code)}");
   assert.ok(guidesAt > page.indexOf("<SetMarketBoard"), "the set's guides follow the price guide");
-  assert.ok(guidesAt < page.indexOf("<EbayPicks"), "…and lead the eBay block");
+  assert.ok(guidesAt < page.indexOf("<InlineAds"), "…and lead the ad block");
   assert.ok(board.indexOf("How to read {setName} prices") > board.indexOf("<SetPriceGuide "), "the read-out follows the price guide");
   assert.doesNotMatch(page, /ranked by total delivered cost/);
   assert.doesNotMatch(board, /ranked by total delivered cost/);
