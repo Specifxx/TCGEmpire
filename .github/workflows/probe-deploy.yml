@@ -5,15 +5,68 @@ name: Probe RiftCompare deploy state
 # + status, and fingerprints the live site so we can tell WHICH commit
 # production is serving and whether new deploys are flowing.
 
+#
+# SPEED (2026-11-13): give `speed` a list of targets and this runs scripts/speed-ab.ts
+# INSTEAD: Lighthouse with the deploy gate's settings on each target, several runs,
+# the targets taking turns, then the browser's own list of largest paints. A target
+# is `label=https://…` or `label=sha:<commit>` (that commit's own production
+# deployment, which Vercel keeps at its own address), so the build before a change
+# and the build after it are measured on the same servers at the same time:
+#   speed: new=sha:f04fdd52 old=sha:19761944 live=https://riftcompare.com
+# Read-only. See the script's header for why one run per deploy is not enough.
+
 on:
   workflow_dispatch:
+    inputs:
+      speed:
+        description: "Speed check instead of the deploy probe: targets as label=url or label=sha:<commit>, separated by spaces"
+        required: false
+        default: ""
+      runs:
+        description: "Speed check: Lighthouse runs per target"
+        required: false
+        default: "5"
+      page:
+        description: "Speed check: the path to measure"
+        required: false
+        default: "/"
+      methods:
+        description: "Speed check: simulate (the gate's), devtools (really throttled), or both: simulate,devtools"
+        required: false
+        default: "simulate"
 
 permissions:
   contents: read
   deployments: read
 
 jobs:
+  speed:
+    if: inputs.speed != ''
+    # Pinned for Playwright's Chromium, as seo-preview-gate.yml is.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Speed A/B (Lighthouse, the gate's settings, targets taking turns)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGETS: ${{ inputs.speed }}
+          RUNS: ${{ inputs.runs }}
+          PAGE: ${{ inputs.page }}
+          METHODS: ${{ inputs.methods }}
+        run: |
+          export CHROME_PATH=$(node -e "console.log(require('playwright').chromium.executablePath())")
+          # $TARGETS is split on spaces on purpose: each word is one label=target.
+          npx tsx scripts/speed-ab.ts --runs "$RUNS" --page "$PAGE" --methods "$METHODS" $TARGETS
+
   probe:
+    if: inputs.speed == ''
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
