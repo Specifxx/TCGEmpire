@@ -88,7 +88,7 @@ by `tests/pokemon-isolation.test.ts`:
 | `src/components/nav-groups.ts` | the `pokemonSectionOn()` spread in Prices, and its import |
 | `src/components/home/HomeSections.tsx` | `<PokemonHomePromo />` and its import |
 | `src/lib/sitemap-sections.ts` | `"pokemon"` in `ALL_SECTIONS`, the `SECTIONS` filter, `const pokemon = …`, the two imports |
-| `src/components/FooterAds.tsx` | `OFF_TOPIC_ROUTES` (harmless if left) |
+| `src/lib/ad-routes.ts` | `OFF_TOPIC_ROUTES` (harmless if left) |
 | `src/lib/nudge-gate.ts` | `"/pokemon"` in `PREMIUM_SKIP_PATHS` (harmless if left) |
 | `src/lib/ops/checks.ts` | `dexcompareIndex` and its `runChecks` line, its test in `tests/ops-monitor.test.ts`, and the DexCompare row in `docs/ops-monitor.md` (harmless if left: it goes grey while `/pokemon` 404s) |
 | `scripts/adsense-audit.ts` | the four `pokemon-*` rows at the top of `TEMPLATES` (harmless if left) |

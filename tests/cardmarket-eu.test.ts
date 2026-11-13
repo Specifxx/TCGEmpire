@@ -555,7 +555,8 @@ test("the Cardmarket reference block is not the last thing on either surface", (
   {
     const src = read("src/components/CardMarketSection.tsx");
     const cm = src.indexOf("<CardmarketPrice");
-    assert.ok(cm > 0 && cm < src.indexOf("<EbayAd ") && cm < src.indexOf("<TcgplayerAd "), "Cardmarket before the banners");
+    assert.ok(cm > 0, "Cardmarket renders in the section");
+    assert.doesNotMatch(src, /<(EbayAd|TcgplayerAd) /, "no banner after it (owner, 2026-11-13)");
   }
   for (const f of ["src/components/QuickView.tsx"]) {
     const src = read(f);

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BANNER_FREE_ROUTES, footerBannersAllowed } from "../src/components/FooterAds";
+import { BANNER_FREE_ROUTES, adBlockAllowed as footerBannersAllowed } from "../src/lib/ad-routes";
 import { STATIC_PAGE_DATE_PATHS } from "../src/lib/static-page-dates";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,25 +72,20 @@ test("the policy and trust pages carry no footer banner pair; every other route 
   for (const r of BANNER_FREE_ROUTES) assert.ok(existsSync(join(ROOT, `src/app${r}/page.tsx`)), `${r} is not a route`);
 });
 
-test("FooterAds never renders a banner without its disclosure line", () => {
+test("the footer zone renders only the one InlineAds block, never a banner (owner, 2026-11-13)", () => {
   // Whole-line // comments go first: one of them names "/premium/*", which the
   // block-comment pass would otherwise read as an opening /* and swallow code.
-  const src = codeOnly(read("src/components/FooterAds.tsx").replace(/^\s*\/\/.*$/gm, ""));
-  // One early return covers both reasons for no banners, so the zone (both
-  // banners AND the combined line under them) goes or stays as a whole.
-  assert.match(src, /if \(adFree \|\| !footerBannersAllowed\(pathname\)\) return null;/);
-  const zone = src.slice(src.indexOf('id="rc-ad-zone"'));
-  const ebay = zone.indexOf("<EbayAd ");
-  const tcg = zone.indexOf("<TcgplayerAd ");
-  const line = zone.indexOf('<AffiliateDisclosure partner="both"');
-  assert.ok(ebay > 0 && tcg > ebay && line > tcg, "eBay, then TCGplayer, then the one disclosure line for both");
-  assert.equal(src.match(/<(EbayAd|TcgplayerAd) /g)?.length, 2, "no other banner path in the component");
+  const src = codeOnly(read("src/components/InlineAdsZone.tsx").replace(/^\s*\/\/.*$/gm, ""));
+  assert.match(src, /if \(adFree \|\| !adBlockAllowed\(pathname\) \|\| !inlineAdsAllowed\(pathname\)\) return null;/);
+  assert.equal(src.match(/<InlineAds\b/g)?.length, 1, "exactly one block");
+  assert.doesNotMatch(src, /<(EbayAd|TcgplayerAd|AdSlot)\b/, "no banner path in the zone");
+  for (const gone of ["FooterAds", "EbayAd", "TcgplayerAd"]) assert.ok(!existsSync(join(ROOT, `src/components/${gone}.tsx`)), `${gone} is deleted`);
 });
 
-test("no footer banner pair (and so no disclosure line) on /premium and below", async () => {
+test("no ad block on /premium and below", async () => {
   // 2026-10-22 (owner): a page selling an ad-free plan does not open on two ads.
   // The early return above drops banners and line together, so the invariant holds.
-  const { SALES_ROUTES, footerBannersAllowed } = await import("../src/components/FooterAds");
+  const { SALES_ROUTES, adBlockAllowed: footerBannersAllowed } = await import("../src/lib/ad-routes");
   assert.deepEqual([...SALES_ROUTES], ["/premium"]);
   for (const p of ["/premium", "/premium/welcome", "/premium/start"]) assert.equal(footerBannersAllowed(p), false, p);
   for (const p of ["/", "/trade", "/premiums", "/cards/jinx"]) assert.equal(footerBannersAllowed(p), true, p);
@@ -166,7 +161,7 @@ test("the arcade is ad-free: no in-page pair, no AdSlot, no footer pair", () => 
   const pages = [...MINI_GAMES.map((g) => `src/app/games/${g}/page.tsx`), "src/app/games/page.tsx", "src/app/games/seraphines-piano/page.tsx", "src/app/riftle/page.tsx"];
   for (const f of pages) {
     const page = codeOnly(read(f));
-    assert.doesNotMatch(page, /<(TcgplayerAd|EbayAd|AdSlot)\b/, `${f}: no ad unit`);
+    assert.doesNotMatch(page, /<(TcgplayerAd|EbayAd|AdSlot|InlineAds)\b/, `${f}: no ad unit`);
   }
   assert.doesNotMatch(codeOnly(read("src/components/games/shared.tsx")), /<AdSlot\b/, "GameShell carries no AdSlot");
   for (const path of ["/games", "/games/seraphines-piano", "/games/higher-lower", "/riftle"]) {

@@ -56,8 +56,8 @@ test("one block per page: where it sits, and never on an article, a quick view o
   assert.doesNotMatch(code("src/app/sets/[set]/page.tsx"), /<(EbayPicks|TcgplayerPicks)\b/);
   assert.match(code("src/components/browse/BrowseView.tsx"), /<InlineAds\b/);
   for (const f of ["src/components/QuickView.tsx", "src/components/SealedQuickView.tsx", "src/components/ArticleView.tsx"]) assert.doesNotMatch(code(f), /<InlineAds\b/, `${f}: no block here`);
-  // The footer places it only where the page has none and never under Mediavine (articles, guides).
-  const { inlineAdsAllowed } = await import("../src/components/FooterAds");
+  // The footer zone (InlineAdsZone) places it only where the page has none and never under Mediavine (articles, guides).
+  const { inlineAdsAllowed } = await import("../src/lib/ad-routes");
   for (const p of ["/", "/au", "/card/jinx", "/sealed/some-box", "/sets/origins", "/browse", "/blog/some-post", "/guides/some-guide", "/account"]) assert.equal(inlineAdsAllowed(p), false, p);
   for (const p of ["/sealed", "/movers", "/trade"]) assert.equal(inlineAdsAllowed(p), true, p);
 });

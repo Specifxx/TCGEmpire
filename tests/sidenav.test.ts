@@ -125,11 +125,11 @@ test("layout.tsx mounts SideNav and reserves its width for main, the footer ad z
   assert.match(layout, /<footer className="[^"]*\bpl-\[var\(--sidenav-w\)\]/, "the footer reserves the rail on the <footer> itself, outside container-app");
 });
 
-test("FooterAds reserves the same width — SideNav is fixed and spans the full page height", () => {
+test("The ad zone reserves the same width — SideNav is fixed and spans the full page height", () => {
   const layout = read("src/app/layout.tsx");
-  const idx = layout.indexOf("<FooterAds");
+  const idx = layout.indexOf("<InlineAdsZone");
   const before = layout.slice(Math.max(0, idx - 200), idx);
-  assert.match(before, /pl-\[var\(--sidenav-w\)\]/, "the wrapper immediately around <FooterAds /> must reserve SideNav's width");
+  assert.match(before, /pl-\[var\(--sidenav-w\)\]/, "the wrapper immediately around <InlineAdsZone /> must reserve SideNav's width");
 });
 
 test("CinematicHero's full-bleed breakout compensates for --sidenav-w, not a bare -translate-x-1/2", () => {

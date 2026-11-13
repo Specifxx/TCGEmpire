@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -28,96 +28,26 @@ import { join } from "node:path";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
-const AD_COMPONENTS = ["src/components/EbayAd.tsx", "src/components/TcgplayerAd.tsx"];
+const INLINE = "src/components/InlineAds.tsx";
 
-// Tailwind's breakpoints, and the container padding the layout applies.
-const SM = 640;
-const MD = 768;
-const CONTAINER_PADDING = 32; // px-4 either side at the narrowest
-
-test("no banner wider than the sm breakpoint is allowed to render at sm", () => {
-  for (const path of AD_COMPONENTS) {
-    const src = read(path);
-    // Every declared creative size, parsed from the component's own DIMS/ADS map.
-    const dims = [...src.matchAll(/(\w+):\s*\{[^}]*?w:\s*(\d+),\s*h:\s*(\d+)/g)].map((m) => ({
-      name: m[1],
-      w: Number(m[2]),
-      h: Number(m[3]),
-    }));
-    assert.ok(dims.length >= 4, `${path}: expected to parse the creative sizes, found ${dims.length}`);
-
-    const wide = dims.filter((d) => d.w > SM - CONTAINER_PADDING);
-    assert.ok(wide.length > 0, `${path}: expected at least one creative too wide for sm`);
-
-    // The component must gate the wide creatives behind md, never sm.
-    assert.match(src, /const wide = size !== "rect";/, `${path}: must classify wide sizes`);
-    assert.match(
-      src,
-      /deskShow = wide \? "hidden max-w-full md:inline-block" : "hidden max-w-full sm:inline-block"/,
-      `${path}: a wide creative must be gated at md, a narrow one may use sm`,
-    );
-    assert.match(src, /mobShow = wide \? "max-w-full md:hidden" : "max-w-full sm:hidden"/, `${path}: the mobile unit must cover the gap`);
-
-    // …and the billboard's step-down must also be md, not sm.
-    assert.ok(
-      !/sm:inline-block lg:hidden/.test(src),
-      `${path}: the billboard steps down to a 728px unit — that cannot appear at sm`,
-    );
-    assert.match(src, /md:inline-block lg:hidden/, `${path}: the billboard must step down at md`);
+// 2026-11-13 (owner): the fixed-size leaderboard, rect and billboard banners (EbayAd, TcgplayerAd) are gone. The one block that
+// remains is fluid: a card capped at its column whose tiles scroll sideways inside it, so nothing can widen the document.
+test("the leaderboard banner components are gone, so no fixed 728px or 970px unit can overflow", () => {
+  for (const f of ["src/components/EbayAd.tsx", "src/components/TcgplayerAd.tsx", "src/components/FooterAds.tsx"]) {
+    assert.ok(!existsSync(join(process.cwd(), f)), `${f} must stay deleted`);
   }
 });
 
-test("every creative that renders from md actually fits at md", () => {
-  for (const path of AD_COMPONENTS) {
-    const src = read(path);
-    const dims = [...src.matchAll(/(\w+):\s*\{[^}]*?w:\s*(\d+),\s*h:\s*(\d+)/g)].map((m) => ({
-      name: m[1],
-      w: Number(m[2]),
-    }));
-    // The billboard is lg-only; everything else must fit inside md.
-    for (const d of dims.filter((x) => x.name !== "billboard")) {
-      assert.ok(
-        d.w <= MD - CONTAINER_PADDING,
-        `${path}: "${d.name}" is ${d.w}px, wider than the ${MD - CONTAINER_PADDING}px available at md`,
-      );
-    }
-  }
+test("the one ad block is capped at its column and scrolls its tiles sideways inside it", () => {
+  const src = read(INLINE);
+  assert.match(src, /className=\{`card-surface min-w-0 p-4/, "the block itself may shrink below its content");
+  assert.match(src, /overflow-x-auto/, "tiles scroll inside the block");
+  assert.match(src, /shrink-0 snap-start/, "tiles keep their width instead of squeezing");
 });
 
-test("the mobile creatives fit the narrowest audited viewport", () => {
-  // 375px is scripts/mobile-check.ts's viewport and the iPhone SE width.
-  for (const path of AD_COMPONENTS) {
-    const src = read(path);
-    const dims = [...src.matchAll(/(\w+):\s*\{[^}]*?w:\s*(\d+),\s*h:\s*(\d+)/g)].map((m) => ({
-      name: m[1],
-      w: Number(m[2]),
-    }));
-    for (const d of dims.filter((x) => x.name.startsWith("mobile"))) {
-      assert.ok(d.w <= 375 - CONTAINER_PADDING, `${path}: "${d.name}" is ${d.w}px, too wide for a 375px phone`);
-    }
-  }
-});
-
-test("banners and their wrappers are capped at their container", () => {
-  // The breakpoint rule alone is not enough: at 1024px the card page's content
-  // column is ~700px, so a legitimately-shown 728px leaderboard still overflowed.
-  // The cap has to be on the banner AND on the inline-block wrappers, because a
-  // wrapper with no cap grows to its content and "100%" then resolves against
-  // the already-grown parent — which is precisely how the first fix missed.
-  for (const path of AD_COMPONENTS) {
-    const src = read(path);
-    assert.match(src, /maxWidth: "100%"/, `${path}: the banner itself must be capped`);
-    assert.match(src, /flex max-w-full flex-col items-center/, `${path}: the container must be capped`);
-    const wrappers = [...src.matchAll(/<span className=(?:"([^"]*(?:inline-block|:hidden)[^"]*)"|\{(\w+)\})/g)];
-    assert.ok(wrappers.length >= 2, `${path}: expected banner wrapper spans`);
-    for (const m of wrappers) {
-      if (!m[1]) continue; // computed class — asserted by name above
-      assert.ok(
-        m[1].includes("max-w-full"),
-        `${path}: wrapper "${m[1]}" must carry max-w-full or it grows past its column`,
-      );
-    }
-  }
+test("a tile fits the narrowest audited viewport, so a phone shows at least one whole tile", () => {
+  const tile = Number(/const TILE_W = (\d+);/.exec(read(INLINE))?.[1]);
+  assert.ok(tile > 0 && tile <= 375 - 32 - 32, `tile width ${tile}px must fit a 375px phone inside the block's padding`);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -348,7 +348,7 @@ test("/contact and /support say what they are for and promise no response time",
 // ── All seven ────────────────────────────────────────────────────────────────
 
 test("no trust page carries an in-page affiliate banner pair (owner, 2026-09-26)", () => {
-  for (const f of TRUST_PAGES) assert.doesNotMatch(code(f), /<(EbayAd|TcgplayerAd)\b/, f);
+  for (const f of TRUST_PAGES) assert.doesNotMatch(code(f), /<(EbayAd|TcgplayerAd|InlineAds)\b/, f);
 });
 
 test("the trust pages keep their cache windows", () => {

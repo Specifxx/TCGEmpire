@@ -1288,7 +1288,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               image={cardImageSrc(card, { absolute: true }) ?? null}
               ebaySearch={ebaySearch}
               fetchRows={fetchRows}
-              ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
               preRelease={preview}
               emptyState={
                 isRadianceCard ? (

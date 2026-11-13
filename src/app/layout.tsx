@@ -72,7 +72,7 @@ const RateUsPrompt = dynamic(() => import("@/components/RateUsPrompt").then((m) 
 // reason the rest of the site's ad units are: an AdSense reviewer or crawler
 // fetching raw HTML must still see it. Only the JS is split out of the
 // initial hydration bundle.
-const FooterAds = dynamic(() => import("@/components/FooterAds").then((m) => m.FooterAds));
+const InlineAdsZone = dynamic(() => import("@/components/InlineAdsZone").then((m) => m.InlineAdsZone));
 // Both render nothing on the web (NativeShell no-ops outside the Capacitor
 // native app; ReferralCapture is a pure side-effect that writes a cookie) —
 // ssr:false costs nothing content-wise and keeps their JS out of the bundle
@@ -487,7 +487,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             reservation as <main> above — without it, the fixed panel would sit
             on top of (not beside) these banners once scrolled into view. */}
         <div className="pl-[var(--sidenav-w)]">
-          <FooterAds />
+          <InlineAdsZone />
         </div>
         </CountryProvider>
         {/* The rail reservation sits on the <footer> ITSELF (2026-09-23), the
