@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "rift",
- "generatedAt": "2026-11-12T17:21:29.481Z",
+ "generatedAt": "2026-11-13T16:27:58.282Z",
  "links": {
   "US": {
    "deals": "https://riftcompare.com/black-friday",
@@ -147,7 +147,7 @@
    "currency": "CAD",
    "store": "401 Games",
    "image": "https://cdn.shopify.com/s/files/1/1704/1809/files/raw_475b5858-0ee8-4094-b04c-ec4b5c2e551b.png?v=1773842561",
-   "refCents": 3648,
+   "refCents": 3600,
    "refLabel": "median store price",
    "savingPct": 45
   },
@@ -269,9 +269,9 @@
    "currency": "EUR",
    "store": "Lake Cards",
    "image": "https://cdn.shopify.com/s/files/1/0781/5856/1615/files/riftbound-vendetta-zed-vs-shen-showdown-deck-en-1200-transparent.png?v=1788537824",
-   "refCents": 3343,
+   "refCents": 3395,
    "refLabel": "median store price",
-   "savingPct": 40
+   "savingPct": 41
   },
   {
    "kind": "deal",
@@ -421,7 +421,7 @@
    "currency": "GBP",
    "store": "Roll N Play",
    "image": "https://cdn.shopify.com/s/files/1/0909/8297/3773/files/b72da4c2-66e0-4b85-89bf-d75caac8c32b.jpg?v=1785323221",
-   "refCents": 11988,
+   "refCents": 11999,
    "refLabel": "median store price",
    "savingPct": 17
   },
@@ -455,13 +455,13 @@
    "region": "US",
    "title": "Riftbound Vendetta Showdown Decks",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks",
-   "cents": 1254,
+   "cents": 1265,
    "currency": "USD",
    "store": "Shippin Texas",
    "image": "https://cdn.shopify.com/s/files/1/0676/9413/3386/files/697971.jpg?v=1794194994",
-   "refCents": 2500,
+   "refCents": 2499,
    "refLabel": "median store price",
-   "savingPct": 50
+   "savingPct": 49
   },
   {
    "kind": "deal",
@@ -481,6 +481,20 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
+   "title": "Riftbound Radiance Showdown Decks",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Showdown%20Decks",
+   "cents": 1719,
+   "currency": "USD",
+   "store": "Shippin Texas",
+   "image": "https://cdn.shopify.com/s/files/1/0676/9413/3386/files/711368.jpg?v=1794207096",
+   "refCents": 2800,
+   "refLabel": "median store price",
+   "savingPct": 39
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
    "title": "Riftbound Spirit Forged Champion Deck (Fiora)",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Spirit%20Forged%20Champion%20Deck%20(Fiora)",
    "cents": 1999,
@@ -495,26 +509,12 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "Riftbound Radiance Showdown Decks",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Showdown%20Decks",
-   "cents": 1799,
-   "currency": "USD",
-   "store": "Gator's Card Den",
-   "image": "https://cdn.shopify.com/s/files/1/0714/4774/0450/files/RiftboundEvelybbvsSeraphineShowdownDeck.png?v=1792590563",
-   "refCents": 2800,
-   "refLabel": "median store price",
-   "savingPct": 36
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
    "title": "Riftbound Unleashed Champion Deck (Vi)",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Unleashed%20Champion%20Deck%20(Vi)",
    "cents": 1499,
    "currency": "USD",
-   "store": "Wulf Gaming",
-   "image": "https://cdn.shopify.com/s/files/1/0602/6349/7898/files/678157_fa0ee96a-9477-4713-a2d7-0ca58c86bfcf.jpg?v=1784712939",
+   "store": "OneStopTCG",
+   "image": "https://cdn.shopify.com/s/files/1/0777/2323/8715/files/678157_in_800x800_b756f046-e09b-4272-969a-5ab42e20c73d.jpg?v=1771174141",
    "refCents": 1999,
    "refLabel": "median store price",
    "savingPct": 25
@@ -525,13 +525,13 @@
    "region": "US",
    "title": "Riftbound Radiance Booster Box",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Booster%20Box",
-   "cents": 10099,
+   "cents": 9799,
    "currency": "USD",
    "store": "Wulf Gaming",
    "image": "https://cdn.shopify.com/s/files/1/0602/6349/7898/files/711365.jpg?v=1792439920",
    "refCents": 12999,
    "refLabel": "median store price",
-   "savingPct": 22
+   "savingPct": 25
   }
  ]
 }
