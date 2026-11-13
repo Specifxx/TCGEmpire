@@ -70,6 +70,9 @@ export function railTiles(data: MiniData, country: string, where: "side" | "dock
   return { ebay, tcg };
 }
 
+/** The side rails are OFF (owner, 2026-11-13: "banner ads on the side … doesn't look as good … fill in that space on the side again"): the ads are the strips inside the page and the phone dock. The rail code stays; nothing renders or fetches it while this is false. */
+export const SIDE_RAILS = false;
+
 export function SideRails() {
   const adFree = usePremium();
   const { country } = useCountry();
@@ -79,7 +82,7 @@ export function SideRails() {
   useEffect(() => {
     const mq = window.matchMedia(`(min-width: ${MIN_WIDTH}px)`);
     const update = () => {
-      setFit(mq.matches && railFits(window.innerHeight));
+      setFit(SIDE_RAILS && mq.matches && railFits(window.innerHeight));
       setNarrow(!mq.matches);
     };
     update();

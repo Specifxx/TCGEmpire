@@ -1775,9 +1775,6 @@ ins.adsbygoogle[data-ad-status="unfilled"],
    and a TCGplayer rail at the right. Pure CSS, the same on the server and in
    the browser, so nothing shifts when the rails mount. Ad-free members get no
    rails and keep the full width (data-adfree is set before first paint). */
-@media (min-width: 1280px) {
-  :root:not([data-adfree]) .container-app { max-width: min(1400px, calc(100% - 320px)); }
-}
 .rail-scroll { scrollbar-width: thin; scrollbar-color: rgb(var(--c-ink-700, 51 65 85)) transparent; }
 
 
