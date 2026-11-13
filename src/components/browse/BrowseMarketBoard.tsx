@@ -140,13 +140,6 @@ export function BrowseMarketBoard({
 
       <ActiveFilters />
 
-      {/* Tailored eBay unit (EbayPicks, a server component passed in by the
-          page). Above the results grid: browse is where buying intent is
-          highest, and the tiles are chase cards rather than a generic banner.
-          Never given `q`: it sells the newest set's chase cards, not the
-          visitor's search. */}
-      {picks}
-
       {/* SEALED MATCHES, above the cards: a search like "origins" names a set,
           and its boxes and packs are often the whole answer. Each tile opens
           the sealed quick view in place (SealedTile), like a card tile does. */}
@@ -246,6 +239,9 @@ export function BrowseMarketBoard({
           writing ahead of the commercial slot. Not on a ?q search, whose view
           is noindexed and whose reader came for one card. */}
       {!q && guides}
+
+      {/* The one in-page ad block (InlineAds, passed in by the page; owner, 2026-11-13): after the grid, never above the results. */}
+      {picks}
     </>
   );
 }

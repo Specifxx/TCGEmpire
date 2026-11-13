@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import { getPopularCards, getSetChaseTiles } from "@/lib/cheapest-cards";
 import { featuredSet } from "@/lib/constants";
 import { getHomeStats } from "@/lib/home-stats";
@@ -13,7 +12,6 @@ import { CinematicHero } from "./CinematicHero";
 import { HomeFeaturedListing } from "./HomeFeaturedListing";
 import { HomeSections } from "./HomeSections";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
-import { EbayPicks } from "@/components/EbayPicks";
 import { EditorialHub } from "./EditorialHub";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
@@ -111,12 +109,6 @@ export async function RegionHome({ region }: { region: Country }) {
 
       {/* The K/DA and Worlds drawing row was removed 2026-11-12 (owner): the events are over. */}
 
-      {/* eBay Picks directly under the hero, above Today's Top Deals, as on "/"
-          (owner, 2026-10-19). HomeSections gets showEbayPicks={false}. */}
-      <EbayPicks pageType="homepage" />
-      {/* Its TCGplayer twin, the Gundam Compare card strip (owner, 2026-10-29). */}
-      <TcgplayerPicks pageType="homepage" />
-
       {/* Today's Top Deals straight under the hero, as on "/" (owner's tidy-up,
           2026-10-19): the editorial band moved to the bottom of the page and
           the price guide callout went. HomeSections gets showTopDeals={false}
@@ -138,7 +130,6 @@ export async function RegionHome({ region }: { region: Country }) {
         chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
         showTopDeals={false}
-        showEbayPicks={false}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

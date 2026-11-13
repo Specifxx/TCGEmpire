@@ -2,7 +2,7 @@ import { cachedEbayPicks, defaultPicksSet } from "@/components/EbayPicks";
 import { cachedTcgPicks } from "@/components/TcgplayerPicks";
 import { setByCode } from "@/lib/constants";
 
-// The small eBay + TCGplayer pair (components/MiniPicks.tsx): a set's chase
+// The small eBay + TCGplayer pair (components/InlineAds.tsx and the phone dock): a set's chase
 // cards with their cheapest eBay listing per market and TCGplayer's market
 // price, from the same day-long caches as EbayPicks and TcgplayerPicks. The
 // client fetches it so the card page, the quick views and the footer stay

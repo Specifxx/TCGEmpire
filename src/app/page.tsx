@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { ADSENSE_SERVING } from "@/lib/adsense";
-import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import Link from "next/link";
 import { getPopularCards, getSetChaseTiles } from "@/lib/cheapest-cards";
 import { featuredSet } from "@/lib/constants";
@@ -16,7 +15,6 @@ import { HomeFeaturedListing } from "@/components/home/HomeFeaturedListing";
 import { RIOT_DRAWINGS } from "@/lib/riot-drawings";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { TodaysTopDeals } from "@/components/TodaysTopDeals";
-import { EbayPicks } from "@/components/EbayPicks";
 import { HomeSealedShelf, type SealedShelf } from "@/components/home/HomeSealedShelf";
 import { getSealedGroups, type SealedGroup } from "@/lib/sealed-import";
 import { COUNTRIES } from "@/lib/country";
@@ -359,14 +357,6 @@ export default async function HomePage() {
 
       {/* The K/DA and Worlds drawing row was removed 2026-11-12 (owner): the events are over. */}
 
-      {/* eBay Picks (the newest set's chase cards, cheapest live listing
-          each) directly under the hero, above Today's Top Deals (owner,
-          2026-10-19: "ebay chase cards should be at the top above todays top
-          deals"). HomeSections gets showEbayPicks={false} so it appears once. */}
-      <EbayPicks pageType="homepage" />
-      {/* Its TCGplayer twin, the Gundam Compare card strip (owner, 2026-10-29). */}
-      <TcgplayerPicks pageType="homepage" />
-
       {/* Today's Top Deals, straight under the hero since 2026-10-19 (owner's
           tidy-up: the editorial band moved to the bottom of the page and the
           price guide callout went). HomeSections gets showTopDeals={false} so
@@ -422,7 +412,6 @@ export default async function HomePage() {
         chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
         showTopDeals={false}
-        showEbayPicks={false}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

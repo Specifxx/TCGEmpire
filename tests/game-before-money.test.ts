@@ -88,7 +88,7 @@ test("the phone Explore overlay has a Games group with something to play", () =>
 test("the homepage's commercial-vs-playable order is the owner's, and is asserted rather than assumed", () => {
   const code = readCode("src/components/home/HomeSections.tsx");
   const deals = code.indexOf("<TodaysTopDeals");
-  const ebay = code.indexOf("<EbayPicks");
+  const ebay = code.indexOf("<InlineAds");
   const play = code.indexOf("<ReturnVisitCards");
   assert.ok(deals > 0 && ebay > 0 && play > 0, "expected all three homepage sections to render");
 
@@ -97,7 +97,7 @@ test("the homepage's commercial-vs-playable order is the owner's, and is asserte
   // owner took it off the homepage (tests/homepage-declutter.test.ts).
   assert.ok(!code.includes("<RecentlyViewedRail"), "Recently viewed is off the homepage (owner, 2026-09-28)");
   assert.ok(deals < ebay, "Today's Top Deals is the owner-chosen top content slot as of 2026-09-21");
-  assert.ok(ebay < play, "eBay Picks is above the playable sections, as of 2026-09-17");
+  assert.ok(ebay < play, "the ad block is above the playable sections, as of 2026-09-17");
 
   // Still pinned, because it is the part nobody has asked to change: the
   // playable sections keep a slot ABOVE the explainer and the set/domain grid.

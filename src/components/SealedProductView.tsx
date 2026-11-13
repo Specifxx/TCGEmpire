@@ -7,7 +7,7 @@ import { sealedImageAlt } from "@/lib/image-alt";
 import { useCountry } from "./CountryProvider";
 import { SealedOffers } from "./SealedQuickView";
 import { SealedWatchButton } from "./SealedWatchButton";
-import { MiniPicks } from "./MiniPicks";
+import { InlineAds } from "./InlineAds";
 
 // The market-dependent half of a sealed product's page, /sealed/<slug> (2026-11-03). The page is one CDN copy for every
 // visitor (no cookie or header read on the server, like /card/[id]), so it hands this island the product's group in
@@ -25,6 +25,7 @@ export function SealedProductView({ byMarket }: { byMarket: Partial<Record<Count
   const lowest = group.lowestPriceCents;
 
   return (
+    <>
     <div className="grid gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
       <div className="card-surface flex gap-4 p-4 lg:flex-col">
         <div className="grid aspect-square w-28 shrink-0 self-start place-items-center sm:w-40 lg:w-full overflow-hidden rounded-lg border border-ink-800 bg-ink-950 p-3">
@@ -68,8 +69,10 @@ export function SealedProductView({ byMarket }: { byMarket: Partial<Record<Count
           </p>
         )}
         <SealedOffers key={`${group.groupKey}-${shownMarket}`} group={group} currency={currency} amazon source="sealed-page" />
-        <MiniPicks setCode={group.setCode ?? ""} pageType="sealed_page" className="mt-4" />
       </div>
     </div>
+    {/* The one in-page ad block (owner, 2026-11-13), below the price table, never beside it. */}
+    <InlineAds setCode={group.setCode ?? ""} pageType="sealed_page" className="mt-5" />
+    </>
   );
 }

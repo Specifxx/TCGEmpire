@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { EbayPicks } from "@/components/EbayPicks";
+import { InlineAds } from "@/components/InlineAds";
 import { CountUp } from "@/components/CountUp";
 import { type CardQuery, parsePageNum, parsePageSize } from "@/lib/cards";
 import { DEFAULT_COUNTRY, normalizeCountry, type Country } from "@/lib/country";
@@ -657,13 +656,8 @@ export default async function SetPage({
           has its reading list in PRE_RELEASE_LINKS above. */}
       {live && <RelatedGuides guides={guidesForSet(set.code)} className="card-surface p-5" />}
 
-      <EbayPicks
-        pageType="set_hub"
-        setCode={set.code}
-        heading={`${set.name} singles on eBay right now`}
-        fallbackQuery={`Riftbound ${set.name}`}
-      />
-      <TcgplayerPicks pageType="set_hub" setCode={set.code} />
+      {/* The one in-page ad block (owner, 2026-11-13): this set's chase cards on eBay and TCGplayer, after the price read-out and the guides. */}
+      <InlineAds pageType="set_hub" setCode={set.code} />
 
       {/* Internal links to the other sets (crawl + UX) */}
       <section>

@@ -19,18 +19,18 @@ const code = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").replace(/
 // second band on every home: hero, editorial band, eBay Picks, Today's Top
 // Deals, price guide. All six share one structure (DECISIONS.md, 2026-10-02),
 // so "/" and the five region homes move together.
-test("eBay Picks sits directly under the hero, above Today's Top Deals, on all six homes, and renders once", () => {
-  // Owner, 2026-10-19: "ebay chase cards should be at the top above todays top deals".
+test("the in-page ad block (2026-11-13) renders once per home, from HomeSections, after Today's Top Deals", () => {
+  // Owner, 2026-11-13: the eBay and TCGplayer strips under the hero became ONE horizontal block between sections.
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = code(f);
-    const hero = src.indexOf("<CinematicHero");
-    const picks = src.indexOf("<EbayPicks");
-    assert.ok(hero >= 0 && hero < picks && picks < src.indexOf("<TodaysTopDeals"), `${f}: hero, Picks, Top Deals`);
-    assert.match(src, /showTopDeals=\{false\}\n\s*showEbayPicks=\{false\}/, `${f}: HomeSections must not render it a second time`);
+    assert.doesNotMatch(src, /<(EbayPicks|TcgplayerPicks|InlineAds)\b/, `${f}: HomeSections draws it, once`);
+    assert.match(src, /showTopDeals=\{false\}/, `${f}: HomeSections must not render Top Deals a second time`);
+    assert.doesNotMatch(src, /showEbayPicks=\{false\}/, `${f}: HomeSections must render the block`);
   }
   const sections = code("src/components/home/HomeSections.tsx");
-  assert.match(sections, /showEbayPicks = true,/, "any other caller still gets the unit");
-  assert.match(sections, /\{showEbayPicks && <EbayPicks pageType="homepage" \/>\}/);
+  assert.match(sections, /showEbayPicks = true,/);
+  assert.match(sections, /\{showEbayPicks && <InlineAds pageType="homepage" \/>\}/);
+  assert.ok(sections.indexOf("<InlineAds") > sections.indexOf("<TodaysTopDeals"), "after Top Deals, never in the hero");
 });
 
 test("Cheapest on eBay left Today's Top Deals for Deal Finder (2026-09-30)", () => {
@@ -58,7 +58,6 @@ test("eBay Picks clicks name their page to EPN, and an unknown page keeps the st
   assert.match(c, /const PICKS_PAGE: Record<string, string> = \{ homepage: "\/", browse: "\/browse", set_hub: "\/sets", article: "\/blog" \};/);
   assert.match(c, /href=\{pageType && PICKS_PAGE\[pageType\] \? affiliateUrl\(l\.url, `picks_\$\{l\.country\.toLowerCase\(\)\}`, PICKS_PAGE\[pageType\]\) : l\.url\}/);
   assert.match(read("src/components/ArticleView.tsx"), /<EbayPicks\s+className="mt-8"\s+pageType="article"/);
-  assert.match(read("src/app/sets/[set]/page.tsx"), /<EbayPicks\s+pageType="set_hub"/);
 });
 
 test("a Singapore Picks click still says Singapore to EPN after the re-tag", () => {
