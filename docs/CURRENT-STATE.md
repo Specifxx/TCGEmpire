@@ -295,7 +295,7 @@ longer lands on its entry.
   days apart, and is the one uninvited opinion ask
   ([2026-11-03](../DECISIONS.md#one-interruption-per-visit-never-on-arrival));
   a tapped star counts even when the form is closed unsent ([2026-10-28](../DECISIONS.md#L20608)); one rating-and-review form everywhere (corner card,
-  footer panel, a "Rate us" row at the end of every page, /feedback), reviews
+  footer panel, a "Rate us" row at the end of every page except the home pages (2026-11-13), /feedback), reviews
   shown unless unticked, still admin-approved ([2026-10-27](../DECISIONS.md#L20240)); no floating button ([2026-10-27](../DECISIONS.md#L20201)); the homepage hero and the
   Pro page show the real average with its count from the first rating
   (2026-10-27), approved and consented reviews on both, never in JSON-LD.
@@ -655,8 +655,8 @@ longer lands on its entry.
   ([2026-11-03](../DECISIONS.md#the-trial-on-the-pro-page-and-no-pro-or-sign-up-sliders-at-all-2026-11-03));
   the corner `PremiumSlideIn` is gone — and a tick on a set page (the same
   `limit:portfolio` panel, reworded for a set). The header carries the shiny
-  `GetPremiumLink` since 2026-10-15 (see "Gold marks Premium"); rail and account
-  menu stay plain "Pricing" links. [2026-10-15](../DECISIONS.md#L17561) [2026-09-28](../DECISIONS.md#L14549),
+  `GetPremiumLink` since 2026-10-15 (see "Gold marks Premium"); the account
+  menu stays a plain "Pricing" link (the rail went on 2026-11-13). [2026-10-15](../DECISIONS.md#L17561) [2026-09-28](../DECISIONS.md#L14549),
   [2026-09-29](../DECISIONS.md#L15178)
 - **Sign-in (2026-11-06):** Google, Discord, or a one-time link emailed to any
   address (passwordless; no passwords, no forgot-password); a paid guest checkout
@@ -736,7 +736,7 @@ longer lands on its entry.
   `PREMIUM_COPY_VERSION` was `akali-slider-2026-10-17` (then `premium-simple-2026-10-17`, now `premium-limits-2026-10-22`, the /premium rebuild). `InlineSignupPrompt` is page content, one per page, below
   the first screen, signed-out only after `/api/me` answers: `/browse` (after
   the 12th tile), a priced `/deck`, `/decks/[slug]`, `/movers`,
-  `/champions/[slug]`. The homepage keeps `AccountStrip` and a released set page
+  `/champions/[slug]`. The homepage kept `AccountStrip` until 2026-11-13 (now the header's "Sign up free" only); a released set page keeps
   its tracker line instead. Free account only: no price, gold, Premium, timer,
   modal or dismiss; numbers from `lib/free-limits.ts`; `/login?next=…&src=inline_*`;
   `signup_inline_view` (GA4 only) and `signup_inline_click` by `surface`
@@ -865,25 +865,20 @@ longer lands on its entry.
 
 - **Header dropdowns (2026-11-09, owner):** Singles, Sealed, Deals & market from 1440px, picked by href from `NAV_GROUPS`
   (`HEADER_MENUS`), links in server HTML; the plain Sealed link below that. [2026-11-09](../DECISIONS.md#L23088)
-- **Desktop rail:** 17rem from 1024px, always expanded (the collapse mode was
-  deleted on 09-21). Group headers are disclosures; Prices and Guides & News
-  (the second group) open on a first visit, because a collapsed group renders
-  no links and the guides must be in every page's HTML for AdSense's
-  crawlers. The rail's search filters FEATURES; the header's searches
-  CARDS. [2026-09-21](../DECISIONS.md#L9958),
-  [2026-09-21](../DECISIONS.md#L10095), [2026-09-28](../DECISIONS.md#L15131)
-- **Rail order (2026-11-09):** Prices leads with the singles dimensions (set, domain, champion, type and rarity), then sealed, then market; seasonal sale pages live in Deals & value; no one-link groups. [2026-11-09](../DECISIONS.md)
-- **Header:** "Database" (→ `/browse`) shows at every width. Card search has
-  its own row until xl, then sits inline. The theme toggle is in the header
-  from lg, in the menu below that. "Tools" (→ `/tools`) joins Blog from xl
-  only (owner's brief, 09-26; the lg row has ~5px of slack).
-  [2026-09-21](../DECISIONS.md#L9368),
-  [2026-09-21](../DECISIONS.md#L10095), [2026-09-23](../DECISIONS.md#L11201),
-  [2026-09-26](../DECISIONS.md#L14680)
+- **One navigation (owner, 2026-11-13):** no desktop rail (`SideNav.tsx`, `--sidenav-w` and every reservation for it are
+  deleted). The header is the navigation, and its menu button, at every width, opens the full index (`CinematicNavMenu`,
+  every `NAV_GROUPS` link, searchable). Every link is also in each page's server HTML through the footer's site map. The
+  content column is 1200px, centred. `tests/one-navigation.test.ts`. [2026-11-13](../DECISIONS.md#L23574)
+- **Menu order (2026-11-09; the rail had the same order until 2026-11-13):** Prices leads with the singles dimensions (set, domain, champion, type and rarity), then sealed, then market; seasonal sale pages live in Deals & value; no one-link groups. [2026-11-09](../DECISIONS.md)
+- **Header (2026-11-13):** one row: brand (the word from xl), "Database" (→ `/browse`, every width), the ONE card search
+  (inline from lg, its own row below), the three menus from 1440px (the plain Sealed link from lg to 1439px), Pricing,
+  theme (from lg), market, account, cart, and the menu button last. Blog, Tools and the Discord icon left the row (menu
+  and footer row); the watchlist heart shows only once a card is watched. [2026-11-13](../DECISIONS.md#L23574),
+  [2026-09-21](../DECISIONS.md#L9368), [2026-09-23](../DECISIONS.md#L11201)
 - **Footer:** the always-visible row is Home, Blog, Guides, Tools, About us,
   Editorial policy, Methodology, Who writes this, Contact & feedback, Privacy
   policy, Terms of service (the site map stays collapsed on `/`). Privacy and
-  Terms are also in the rail/menu Help group (`hideInFooter`). `InlineAdsZone` (2026-11-13: the footer banner pair is gone, one block per page)
+  Terms are also in the menu's Help group (`hideInFooter`). The footer's share band is gone (2026-11-13). `InlineAdsZone` (2026-11-13: the footer banner pair is gone, one block per page)
   renders no ad block on /about, /authors(/*), /contact, /editorial-policy,
   /methodology, /privacy, /support and /terms, nor on `/pokemon` (another game:
   `OFF_TOPIC_ROUTES`). The arcade (/games/*, /riftle) is ad-free for everyone:
@@ -925,7 +920,7 @@ longer lands on its entry.
   Pokémon section's DexCompare data links are the exception: nofollow, on
   every Pokémon product page ([2026-10-15](../DECISIONS.md#L17162)).
   [2026-10-14](../DECISIONS.md#L17018)
-- **1024–1279 is its own band** (~704px of content): the filter sidebar
+- **1024–1279 is its own band** (~704px of content beside the rail until 2026-11-13, ~976px since; the rules below were left as they are): the filter sidebar
   waits for xl, card art is 160px (320 from xl), and stickies use
   `lg:top-36 xl:top-20`. [2026-09-23](../DECISIONS.md#L11201)
 - **The filter panels open with a search box** (`FilterSearch`, on /browse,
@@ -954,25 +949,21 @@ longer lands on its entry.
   `.premium-cta`: glowing, shimmering gold TEXT and nothing else: no fill, no
   outline, no box glow (owner, same day: "I only want the font to be glowing";
   [2026-10-15](../DECISIONS.md#L17636)); brighter on hover, still under reduced motion. Its label is "Pricing" at every width since 2026-10-24
-  (plain gold text for a member; the homepage hero's button keeps "Get Premium"). [2026-10-15](../DECISIONS.md#L17561), [2026-10-24](../DECISIONS.md#L19322)
-  The rail and account menu keep a plain "Pricing" link. No menu spotlight. Signed-out visitors see "Log in" and a primary
+  (plain gold text for a member; the homepage hero has no Premium link since 2026-11-13). [2026-10-15](../DECISIONS.md#L17561), [2026-10-24](../DECISIONS.md#L19322)
+  The account menu keeps a plain "Pricing" link. No menu spotlight. Signed-out visitors see "Log in" and a primary
   "Sign up free" at every width. The market switcher (flag only below sm) is
   in the header from 360px, and in the menu's top bar below that; on phones
   its panel opens full width under the header. [2026-09-24](../DECISIONS.md#L11756),
   [2026-09-30](../DECISIONS.md#L15905)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
   [2026-09-28](../DECISIONS.md#L14549)
-- **Homepage order (all six homes, owner 10-06):** hero, then the editorial
-  band (`EditorialHub`: Start here, Latest news, Market updates; two rows per
-  column on phones), eBay Picks (the newest released set's chase cards),
-  Today's Top Deals (Biggest savings, Price drops, Rising cards; no tier chips,
-  no Cheapest sealed column), the price-guide link, the one-line Pokémon promo
-  while that section is on (`PokemonHomePromo`, all six homes), the popular
-  carousel (its "Most popular" tab back, owner's call; it carries the ItemList
-  on `/`), Riftle/pack-sim, How it works. No price table on any home (`/` since 09-30, the
-  region homes since 10-02). "Cheapest on eBay" is a Deal Finder view since
-  09-30. No Recently viewed on any homepage (owner, 09-28); it stays in the
-  search box and on card pages.
+- **Homepage order (all six homes, owner 2026-11-13):** the hero (words, the search, the market switch, six ways in, one
+  line of numbers; no products, chips, creators badge or Premium link), Today's Top Deals, the tabbed chase-cards shelf (it
+  carries the ItemList on `/`), the one ad block, the set grid with the next set's one-line countdown, the guides and news
+  card (`EditorialHub`), then the reference text and FAQ folded in `<details>`. Off the homes since 2026-11-13: the
+  Pokémon line, the return-visit cards (Riftle, pack simulator, watch a card), the free-account strip, the partners
+  strip and the "Rate us" row; each is in the menu or the footer. No price table, no Recently viewed, no reviews section,
+  no sealed shelf, no Welcome back. [2026-11-13](../DECISIONS.md#L23574),
   [2026-09-17](../DECISIONS.md#L7959), [2026-09-21](../DECISIONS.md#L9500),
   [2026-09-26](../DECISIONS.md#L13751), [2026-09-26](../DECISIONS.md#L14190),
   [2026-09-26](../DECISIONS.md#L14680), [2026-09-28](../DECISIONS.md#L15131),
