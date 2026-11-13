@@ -28,6 +28,20 @@ export function formatAUD(cents: number): string {
   return formatMoney(cents, "AUD");
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// A day as words, the same on the server and in every browser: "14 Oct", or "14 Oct 2026" with the year. For text a client
+// component draws into the server's HTML and then hydrates (the price chart's axis). `toLocaleDateString(undefined, …)` there
+// used the visitor's own locale and time zone, so the words differed from the server's for anyone west of UTC ("Oct 13" for a
+// point stamped 14 Oct 00:00 UTC) or with a day-first locale ("14 Oct"), and React then threw away the whole card page's
+// server HTML and rendered it again in the browser (measured 2026-11-13, a US visitor: "The server HTML was replaced with
+// client content in <#document>"). A price point's day is its UTC date. Written out, not Intl with a fixed locale: the
+// short month names still vary between ICU versions ("Sep" / "Sept"), which would be the same mismatch one month a year.
+export function formatDayUtc(t: number | Date, withYear = false): string {
+  const d = new Date(t);
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}${withYear ? ` ${d.getUTCFullYear()}` : ""}`;
+}
+
 // Compact money for large aggregate figures (e.g. an index's basket value), e.g.
 // "A$48.2k" or "US$1.31M". Falls back to two-decimal money under $1,000.
 export function formatMoneyCompact(cents: number, currency: string = "AUD"): string {

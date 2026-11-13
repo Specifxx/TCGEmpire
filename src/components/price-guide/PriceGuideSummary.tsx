@@ -3,20 +3,30 @@ import { cardHref } from "@/lib/card-url";
 import { formatMoney } from "@/lib/format";
 import type { GuideStats, SetPriceSummary } from "@/lib/price-guide-query";
 
-// The figures above the price guide's table, all computed on the server from
-// rows already in memory (no query of their own): a stat strip, a "Prices by
-// set" table and a short how-to-read. They are also the page's own words — the
-// editorial a table alone does not supply (scripts/adsense-guard.ts §6).
+// The figures around the price guide's table, all computed on the server from
+// rows already in memory (no query of their own): a stat strip and a "Prices by
+// set" table. They are also the page's own words — the editorial a table alone
+// does not supply (scripts/adsense-guard.ts §6).
+//
+// Two parts since 2026-11-13 (DECISIONS.md "Minimal redesign, second pass"):
+// the stat strip stays above the list, and "Prices by set" sits UNDER the list
+// and its pager. Above it, the first price row was 1,112px down a 1440x900
+// desktop and 2,060px down a 390px phone: the page is the list, and the per-set
+// table is the summary a reader wants after it. Same words, same links, still
+// in the server HTML.
 //
 // Set names come from SETS only (via pricesBySet), never typed here, and each
 // set links to its hub's own price guide, which keeps "<set> price guide" on
 // /sets/<slug> (docs/seo-keyword-map.md).
 export function PriceGuideSummary({
+  part,
   stats,
   sets,
   currency,
   place,
 }: {
+  /** "stats": the four figures above the list. "sets": the "Prices by set" table under it. */
+  part: "stats" | "sets";
   stats: GuideStats;
   sets: SetPriceSummary[];
   currency: string;
@@ -48,8 +58,8 @@ export function PriceGuideSummary({
     },
   ];
 
-  return (
-    <div className="space-y-4">
+  if (part === "stats") {
+    return (
       <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {tiles.map((t) => (
           <div key={t.label} className="card-surface min-w-0 p-4">
@@ -59,9 +69,13 @@ export function PriceGuideSummary({
           </div>
         ))}
       </dl>
+    );
+  }
 
+  return (
+    <>
       {sets.length > 0 && (
-        <section aria-labelledby="pg-by-set" className="card-surface overflow-hidden">
+        <section aria-labelledby="pg-by-set" className="card-surface mt-8 overflow-hidden">
           <div className="p-4 pb-2 sm:px-5">
             <h2 id="pg-by-set" className="text-lg font-bold text-white">
               Prices by set
@@ -120,6 +134,6 @@ export function PriceGuideSummary({
           </table>
         </section>
       )}
-    </div>
+    </>
   );
 }

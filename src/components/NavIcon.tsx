@@ -7,8 +7,8 @@
  * different typeface (and a different SHAPE) on every OS, they can't take the
  * brand colour, and they can't go semi-transparent when inactive. These are
  * drawn in the same idiom as the chrome already around them: 24px box, no fill,
- * `currentColor` stroke, 2px round caps — identical to SideNav's own collapse
- * chevron and the rest of the components' inline SVG.
+ * `currentColor` stroke, 2px round caps — identical to the rest of the
+ * components' inline SVG.
  *
  * DRAWN IN-HOUSE, not imported. No icon library is a dependency here and none
  * was added for nine glyphs; nothing here carries a licence or an attribution

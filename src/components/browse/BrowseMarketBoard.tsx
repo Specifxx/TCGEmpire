@@ -107,14 +107,14 @@ export function BrowseMarketBoard({
           clears the 125px sticky header below xl (2026-09-23). */}
       <div id="results" className="mb-4 flex scroll-mt-36 flex-wrap items-center justify-between gap-3" aria-busy={loading != null}>
         <p className="text-sm text-slate-400">
-          <span className="font-semibold text-white">{total.toLocaleString()}</span>{" "}
+          <span className="font-semibold text-white">{total.toLocaleString("en-US")}</span>{" "}
           {total === 1 ? "card" : "cards"}
           {q && (
             <> for <span className="text-brand-400">“{q}”</span></>
           )}
           {view.sealedMatches > 0 && (
             <>
-              {" "}· <span className="font-semibold text-white">{view.sealedMatches.toLocaleString()}</span> sealed{" "}
+              {" "}· <span className="font-semibold text-white">{view.sealedMatches.toLocaleString("en-US")}</span> sealed{" "}
               {view.sealedMatches === 1 ? "product" : "products"}
             </>
           )}

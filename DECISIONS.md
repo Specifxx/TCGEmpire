@@ -23611,13 +23611,59 @@ are kept, unmounted, so putting one back is one line. In dev the home page is 4,
 **Motion** is CSS only and off under `prefers-reduced-motion`: the hero's parts rise in one after another (`.rb-rise`; never
 the h1, which is the LCP element), the tiles lift on hover, and the sections keep the existing scroll-in (`.rb-sd`).
 
-**Not done in this pass, on purpose** (the brief was shell and home first): the card tile, the list pages' intro text and the
-card page are unchanged apart from the wider, rail-free column. A phone has no second search inside the hero: the header's
-full-width search sits directly above it and is always visible (owner, 2026-09-21), and two boxes in one screen is the
-duplication this entry removes.
+**Not done in this pass, on purpose** (the brief was shell and home first): the card tile and the card page are unchanged
+apart from the wider, rail-free column (the list pages' intro text is shortened in the entry below). A phone has no second
+search inside the hero: the header's full-width search sits directly above it and is always visible (owner, 2026-09-21), and
+two boxes in one screen is the duplication this entry removes.
 
 **To measure** (two weeks, against the two before): home page bounce and time to first search or first click; clicks into
 `/browse`, `/sealed` and card pages from the home page; paid-link clicks per home visit (the ad block and Top Deals are
 unchanged); sign-ups per visit, since the free-account strip left the home page; Search Console clicks and position for the
 home page's queries; mobile LCP and CLS. Tests: `tests/one-navigation.test.ts` replaces `tests/sidenav.test.ts`, and the
 header, hero and home-order pins were rewritten to the new contract.
+
+## 2026-11-13: Minimal redesign, second pass: products sooner on the list pages; the server's HTML is kept in every browser
+
+Two things found while checking the redesign above on a phone, and with a US and a German visitor's settings.
+
+**The words above the products are shorter.** The first pass left the list pages' text alone, and on a 390px by 844px phone the
+first card of /browse was below the first screen. First product's distance from the top of the page on that phone, the build
+before the redesign against this one: /browse 999px → 671px, /sealed 1,165px → 810px, /sets 1,443px → 815px, /cards 849px →
+455px, /movers 1,112px → 910px, /price-guide 2,060px → 1,402px (1,112px → 718px on a 1440px by 900px desktop).
+
+- `HubIntro` (21 hub and tool pages) shows its first paragraph and folds the rest behind "Read more", a native `<details>`, closed.
+  Below 640px that first paragraph is itself three lines until "Read more" is opened (`[data-hub-intro]` in `globals.css`): only
+  where a closed "Read more" follows it, so an intro of one paragraph is never cut, and a browser without `:has()` shows it whole.
+  Every word and every link is still in the server HTML, directly under the `<h1>`. A hub intro's first paragraph must now say on
+  its own what the page is (`lib/content/hub-intros.ts`).
+- /browse: the two "how to read the grid" paragraphs are one line, "How to read these prices", still between the h1 and the board
+  (`tests/catalogue-pages.test.ts` holds unchanged).
+- /sets: the two extra paragraphs under the intro (the gallery and domain links, the set tracker) moved into "About Riftbound sets"
+  under the set lists, same words, same links.
+- /price-guide: "Prices by set" sits under the list and its pager (`PriceGuideSummary` is drawn in two parts); the four figures
+  stay above the list. The same table, with the same link to each set's own price guide.
+
+`tests/products-first.test.ts` pins the order on each page, and that every paragraph is still in the server HTML.
+
+**A hydration failure on the card page and the card list is fixed. It was live before the redesign.** A client component is
+rendered on the server and again in the browser; if a single text node differs, React 18 gives up on the server's HTML and renders
+the whole document again in the browser. Two things did that:
+
+- The price chart's axis labels and the "full history since" line used `toLocaleDateString(undefined, …)`: the visitor's locale and
+  time zone. A price point is stamped 00:00 UTC, so every visitor west of UTC got the day before ("Oct 13" against the server's
+  "Oct 14") and every day-first locale got "14 Oct". The card page, the page that earns, was rendered twice for all of them. Both
+  now print the UTC day with `formatDayUtc` (`lib/format.ts`: "14 Oct", "14 Oct 2026"), written out rather than through Intl, so
+  the server and every browser print the same words.
+- The card list's, the sealed list's and the set page's counts used `n.toLocaleString()`: "1.741" for a German visitor against the
+  server's "1,741". They pass `"en-US"`, as the server prints.
+
+Measured on a phone over 16 pages (the home page, a region home, nine list and hub pages, three card pages, a sealed page and a
+set page), the production build before against this one. With a New York visitor's settings React threw the server's HTML away on
+4 of the 16 before (the three card pages and /market) and on none now; with a Berlin visitor's settings on 5 before (the same four
+and /browse) and on none now. `tests/hydration-locale.test.ts` pins both fixes and scans every public client component for a date
+or a number formatted in the visitor's own locale; the two components whose value only exists in the browser are listed there
+with the reason. A warning `RecentlyViewedRail` prints in development ("getServerSnapshot should be cached") is left alone: it
+does not discard the page.
+
+Titles, descriptions, canonicals, robots, Open Graph, h1s and JSON-LD are unchanged on 26 pages compared field by field with the
+production build before both passes. Released with `[deploy] [urgent]` in the merge subject, as the owner asked ("deploy urgently").

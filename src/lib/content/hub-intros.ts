@@ -27,7 +27,10 @@
 //    would count for nothing. No sentence appears in two entries.
 //  - Short enough that the data still starts about one phone screen down: the
 //    2026-09-26 mobile-first entry covers the homepage, card pages and /browse,
-//    not these, so the intro stays visible above the data rather than hidden.
+//    not these. Since 2026-11-13 (owner: the product first) HubIntro shows the
+//    FIRST paragraph and folds the rest into one closed <details> line under
+//    it, all of it still in the server HTML: so the first paragraph must say
+//    on its own what the page is.
 //  - Facts from code, stated the way the code does them: six markets; prices
 //    read twice a day; comparisons ranked by ITEM price (only Best Basket prices
 //    whole orders with measured postage); weekly history is the cheapest price

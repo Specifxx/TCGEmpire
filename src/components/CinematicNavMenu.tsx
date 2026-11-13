@@ -79,9 +79,10 @@ export function CinematicNavMenu() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
   // The menu's ~150 links are drawn only once it has been opened (SEO report,
-  // 2026-11-03: the closed overlay repeated every SideNav and footer link in the
-  // server HTML, ~338 link instances on /au). The overlay shell stays mounted,
-  // so the open/close transition still runs; once drawn, the links stay.
+  // 2026-11-03: the closed overlay repeated every footer link, and the links of
+  // the side rail of the time, in the server HTML, ~338 link instances on /au).
+  // The overlay shell stays mounted, so the open/close transition still runs;
+  // once drawn, the links stay.
   const [drawn, setDrawn] = useState(false);
   if (open && !drawn) setDrawn(true);
 

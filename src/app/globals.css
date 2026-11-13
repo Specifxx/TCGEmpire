@@ -1740,6 +1740,19 @@ html[data-ad-dock] .above-bottombar {
   bottom: calc(var(--native-banner-h, 0px) + env(safe-area-inset-bottom, 0px) + 4.75rem);
 }
 
+/* A hub page's intro on a phone (components/HubIntro.tsx, 2026-11-13): the first paragraph is three lines until "Read more" is
+   opened, so the products are on the first screen or just under it. Only where a closed "Read more" follows it: an intro of one
+   paragraph is never cut, and a browser without :has() drops this rule and shows the paragraph whole. The words are in the HTML
+   either way. */
+@media (max-width: 639px) {
+  [data-hub-intro]:has(> details:not([open])) > p:first-child {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+}
+
 /* The header's "Try Premium" callout (PricingNudge, 2026-10-25): slides in under
    the Pricing link a few seconds into a visit, its arrow bobbing towards it. */
 @keyframes pricing-nudge-in {
@@ -1774,4 +1787,3 @@ html[data-ad-dock] .above-bottombar {
     animation: none;
   }
 }
-

@@ -1072,10 +1072,16 @@ longer lands on its entry.
   and before any affiliate block (outside paywalls; /movers and the signed-out
   Deal Finder keep their pinned eBay CTAs first), and an article's "Related tools" row. Data pages carry a
   visible, page-specific intro under the H1 (`HubIntro`, `[label](/path)`
-  links); /deck and set pages keep theirs under the tool/grid. The 09-26
+  links; since 2026-11-13 its first paragraph shows, three lines of it on a phone, and the rest opens with "Read more":
+  all of it stays in the server HTML, and the first paragraph must say on its own what the page is); /deck and set pages keep theirs under the tool/grid. The 09-26
   "Mobile first" entry covers the homepage, card page, thumbnails and
   /browse's sort only. Every published article links a tool (ratchet test).
-  [2026-09-26](../DECISIONS.md#L14680)
+  [2026-09-26](../DECISIONS.md#L14680), [2026-11-13](../DECISIONS.md#L23625)
+- **List pages show their products first (owner, 2026-11-13):** the words above a list are short. A hub intro is its first
+  paragraph (three lines on a phone) with the rest behind "Read more"; /browse's "How to read these prices" is one closed
+  line; on /sets the longer paragraphs, and on /price-guide "Prices by set", sit under the list. Nothing is deleted to do it:
+  every word and link stays in the server HTML (native `<details>`, or moved under the list). `tests/products-first.test.ts`.
+  [2026-11-13](../DECISIONS.md#L23625)
 - **A set in preview:** its `/sets/<slug>` and `/sets/<slug>/gallery` pages
   count what is shown ("N of 180 So Far" / "(N So Far)") and date the prices
   while `isPreorderSetCode()` holds, and return to the released-set titles on
@@ -1436,6 +1442,12 @@ longer lands on its entry.
 - **Layout:** every grid gets a base `grid-cols-1`; rows of controls wrap;
   `body{overflow-x:clip}` is only a backstop. Audit phones at DPR 2.
   [2026-09-22](../DECISIONS.md#L10643), [2026-09-23](../DECISIONS.md#L11201)
+- **A client component prints the same words on the server and in every browser (2026-11-13):** a date or a number it
+  draws into the server HTML is formatted with a fixed locale (`formatDayUtc` for a day, `toLocaleString("en-US")` for a
+  count), never the visitor's own (`toLocaleString()`, `toLocaleDateString(undefined, …)`): one differing text node makes
+  React 18 throw the server's HTML away and render the whole document again, which the card page did for every visitor west
+  of UTC. `tests/hydration-locale.test.ts` scans every public client component; a value that only exists in the browser is
+  listed there with its reason. [2026-11-13](../DECISIONS.md#L23625)
 - **Theme:** dark by default, no `prefers-color-scheme`. Light is a `theme`
   cookie stamped before paint; the root layout never reads cookies.
   [2026-09-12](../DECISIONS.md#L5530)

@@ -150,10 +150,9 @@ export function SearchBar({
   trendingCards,
 }: {
   // A "rail" variant existed for a few hours on 2026-09-21, when the desktop
-  // sidebar briefly carried card search. The sidebar searches FEATURES now
-  // (SideNav.tsx) and the card search moved back into the header, so the
-  // variant and its sideways-opening dropdown are gone rather than left
-  // behind unused.
+  // sidebar briefly carried card search. The card search moved back into the
+  // header (and the sidebar itself was removed on 2026-11-13), so the variant
+  // and its sideways-opening dropdown are gone rather than left behind unused.
   variant?: "nav" | "hero";
   autoFocusDesktop?: boolean;
   // Zero-state suggestions (focused + empty box) alongside recent searches.

@@ -73,7 +73,7 @@ export function BrowseGrid({
       )}
       {!hasMore && cards.length > 0 && (
         <p className="py-8 text-center text-xs text-slate-600">
-          You&apos;ve reached the end · {total.toLocaleString()} cards
+          You&apos;ve reached the end · {total.toLocaleString("en-US")} cards
         </p>
       )}
     </>

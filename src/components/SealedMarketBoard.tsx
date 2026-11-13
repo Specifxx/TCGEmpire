@@ -104,7 +104,7 @@ export function SealedMarketBoard({ baseline, query }: { baseline: SealedView; q
               sticky header (2026-09-23). */}
           <div id="results" className="mb-4 flex scroll-mt-36 flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-400">
-              <span className="num font-semibold text-white">{view.groups.length.toLocaleString()}</span>{" "}
+              <span className="num font-semibold text-white">{view.groups.length.toLocaleString("en-US")}</span>{" "}
               {view.groups.length === 1 ? "product" : "products"}
               {q && <> for <span className="text-brand-400">&ldquo;{q}&rdquo;</span></>}
               {loading && <span className="ml-2 text-xs text-slate-500">Loading {COUNTRIES[loading].adjective} prices…</span>}
