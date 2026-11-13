@@ -23733,14 +23733,16 @@ gallery link above, live until the next release.
 and only performance has 0.08 of slack, but the comparison subtracted 0.08 from every score, and its test asked only that the
 cushion existed. Each row carries its own limit now (`limit: (x) => x` for the three, `x - 0.08` for performance), and
 `tests/lighthouse-budget.test.ts` reads each row. Checked on /browse of a local build, which reads 0.99: a cross and exit 1, where
-it printed a tick before.
+it printed a tick before. And on the live home page, in a second run from this branch (43481841456): a cross beside 0.97, "1
+metric regressed beyond budget", exit 1, and the gate still green, because the step is report-only (score 0.90, largest paint
+3.45s, blocking time 107ms that time).
 
 **Limits.** The gate checks what the public site serves when it runs, about a minute after Vercel reports the deployment ready,
 and cannot prove which build that is: the site publishes no build id. A Preview's address is behind the same sign-in, so a
 preview's gate now fails with "Nothing was checked" instead of passing; previews are off (`vercel.json`), and making one
 checkable needs Vercel's Protection Bypass for Automation secret, which is the owner's to create. The Lighthouse step stays
 report-only: this is its first real run, so its trial starts now. Nobody is told what it prints; read a week of runs before
-making it a gate. One row will not hold as it is: blocking time for the same home page read 41 to 301ms across eight runs on
+making it a gate. One row will not hold as it is: blocking time for the same home page read 41 to 301ms across nine runs on
 GitHub's machines, against a ceiling of 300ms.
 
 `tests/deploy-gate.test.ts` pins all of it, and runs the template check against a server that answers like the login page (exit
