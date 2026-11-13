@@ -2,8 +2,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { addLink, classifyLink, emptyTally, knownProgramme, trackedShare } from "../src/lib/affiliate-gaps";
 
-test("eBay counts only with our EPN campaign", () => {
-  assert.equal(classifyLink("https://www.ebay.com/itm/1?mkevt=1&campid=5339155912&toolid=10001"), "ebay");
+test("eBay counts only with our EPN campaign and a customid", () => {
+  assert.equal(classifyLink("https://www.ebay.com/itm/1?mkevt=1&campid=5339155912&toolid=10001&customid=dex-us-item"), "ebay");
+  assert.equal(classifyLink("https://www.ebay.com/itm/1?mkevt=1&campid=5339155912&toolid=10001"), "ebay-no-customid");
+  assert.equal(classifyLink("https://www.ebay.com/itm/1?mkevt=1&campid=5339155912&customid="), "ebay-no-customid");
   assert.equal(classifyLink("https://www.ebay.com.au/sch/i.html?_nkw=x"), "ebay-untagged");
   assert.equal(classifyLink("https://www.ebay.co.uk/itm/1?campid=5339155911"), "ebay-untagged");
 });
@@ -36,7 +38,7 @@ test("a store we joined on Awin linked untracked is broken, not a gap", () => {
   const t = emptyTally("kaeyoung.com");
   addLink(t, "https://www.stylevana.com/en_US/x.html", ["stylevana.com"]);
   addLink(t, "https://www.yesstyle.com/en/list.html?q=x", ["stylevana.com"]);
-  addLink(t, "https://www.ebay.com/itm/1?campid=5339155912", []);
+  addLink(t, "https://www.ebay.com/itm/1?campid=5339155912&customid=rift-x", []);
   assert.equal(t.broken.length, 1);
   assert.equal(t.broken[0]!.kind, "awin-joined-untracked");
   assert.deepEqual(t.programmeGaps["yesstyle.com"], { network: "Awin", links: 1 });
