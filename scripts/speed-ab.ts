@@ -10,7 +10,7 @@
  *
  *   - every target is measured `--runs` times, the targets taking turns (A B, B A, A B…), so a slow minute on the
  *     runner or the network lands on all of them;
- *   - a target is a URL, or `sha:<commit>`: that commit's own production deployment, which Vercel keeps at its own
+ *   - a target is a URL (an origin, to which `--page` is added, or a full address with its own path), or `sha:<commit>`: that commit's own production deployment, which Vercel keeps at its own
  *     address, so the build before and the build after are compared on the same servers, with the same data, at the
  *     same time (the address is read from the GitHub Deployments API, as probe-deploy.yml does);
  *   - the settings are the gate's (mobile, 390 by 844 at 2x, Lighthouse's simulated throttling), plus, with
@@ -48,6 +48,9 @@ interface Target {
   label: string;
   origin: string;
 }
+
+/** The address measured: the target plus `--page`, unless the target was given with a path of its own. */
+const urlOf = (t: Target): string => (/^https?:\/\/[^/]+\/.+/.test(t.origin) ? t.origin : `${t.origin}${PAGE}`);
 
 interface Run {
   score: number;
@@ -241,7 +244,7 @@ async function observe(targets: Target[]): Promise<void> {
       });
       try {
         const started = Date.now();
-        await page.goto(`${t.origin}${PAGE}`, { waitUntil: "load", timeout: 60_000 });
+        await page.goto(urlOf(t), { waitUntil: "load", timeout: 60_000 });
         const loadMs = Date.now() - started;
         await page.waitForTimeout(5000);
         const seen = await page.evaluate(() => {
@@ -251,6 +254,17 @@ async function observe(targets: Target[]): Promise<void> {
         });
         console.log(`  ${t.label} #${i + 1}: first byte ${ms(seen.ttfb)}, first paint ${ms(seen.fcp)}, DOM ready ${ms(seen.dcl)}, load ${ms(loadMs)}`);
         for (const c of seen.lcp) console.log(`      ${JSON.stringify(c)}`);
+        if (i === 0) {
+          // Which build is this? The page's own headings say it better than a byte count does.
+          const outline = await page.evaluate(() => ({
+            title: document.title,
+            links: document.querySelectorAll("a[href]").length,
+            height: document.documentElement.scrollHeight,
+            headings: Array.from(document.querySelectorAll("h1, h2")).map((h) => `${h.tagName.toLowerCase()} ${(h.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 80)}`),
+          }));
+          console.log(`      title "${outline.title}", ${outline.links} links, ${outline.height}px tall`);
+          for (const h of outline.headings.slice(0, 40)) console.log(`      ${h}`);
+        }
       } catch (e) {
         console.log(`  ${t.label} #${i + 1}: failed: ${String((e as Error).message).split("\n")[0]}`);
       }
@@ -284,7 +298,7 @@ async function main() {
   // One plain request each first: is the address open to the public, and which build answers.
   for (const t of targets) {
     try {
-      const res = await fetch(`${t.origin}${PAGE}`, { redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 speed-ab" } });
+      const res = await fetch(urlOf(t), { redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 speed-ab" } });
       const body = res.status === 200 ? await res.text() : "";
       const title = /<title>([^<]*)<\/title>/.exec(body)?.[1] ?? "";
       console.log(`  ${t.label}: HTTP ${res.status}, ${body.length} bytes, x-vercel-cache=${res.headers.get("x-vercel-cache") ?? "n/a"}, title="${title.slice(0, 70)}"${res.status >= 300 && res.status < 400 ? `, location=${res.headers.get("location")}` : ""}`);
@@ -299,7 +313,7 @@ async function main() {
     for (let i = 0; i < RUNS; i++) {
       const order = i % 2 ? [...targets].reverse() : targets;
       for (const t of order) {
-        const r = lighthouseOnce(`${t.origin}${PAGE}`, method);
+        const r = lighthouseOnce(urlOf(t), method);
         results.get(t.label)!.push(r);
         if (r.error) {
           console.log(`  ${t.label} #${i + 1}: FAILED ${r.error}`);
