@@ -19,8 +19,17 @@
  *
  * Expectations are declared per template below, and a template that gains a
  * requirement it doesn't meet fails loudly rather than silently drifting.
+ *
+ * NOTHING TO CHECK IS A FAILURE (2026-11-13). The pages come from the sitemap, so an
+ * address that answers with something else leaves every template "skipped" — and
+ * for as long as the deploy gate pointed this at a Vercel deployment's own address,
+ * which is behind Vercel's sign-in, that is what happened: the login page was read
+ * as a sitemap with no URLs and the check passed. It now exits 1 when the address
+ * does not serve a sitemap (src/lib/deploy-gate.ts), when the sitemap lists no
+ * page, or when not one template has a page to sample.
  */
-export {};
+import { sitemapProblem } from "../src/lib/deploy-gate";
+import { SITE_URL } from "../src/lib/site";
 
 const args = process.argv.slice(2);
 const argOf = (n: string, d: string) => {
@@ -147,20 +156,36 @@ async function check(path: string): Promise<Result> {
   return { path, status: res.status, canonicalOk, canonicalDetail, ogOk: ogMissing.length === 0, ogMissing, types, ldParseError: error };
 }
 
+/** The address gave us no page to sample: say what it answered and fail. A pass here would mean "nothing looked at". */
+function nothingChecked(why: string): never {
+  console.error(`${R}${B}Nothing was checked:${O} ${why}.`);
+  console.error(
+    `${D}This check samples the pages the sitemap lists, so it needs the address the public site answers on (production: ${SITE_URL}). ` +
+      `A Vercel deployment's own address is behind Vercel's sign-in.${O}\n`,
+  );
+  process.exit(1);
+}
+
 async function main(): Promise<void> {
   console.log(`\n${B}Template SEO check — ${BASE}${O}\n`);
 
   // Sample URLs per template out of the sitemap, so this always tests real,
   // currently-published pages rather than a hand-maintained URL list that rots.
-  const idx = await fetch(`${BASE}/sitemap.xml`, { headers: { "user-agent": UA } }).then((r) => r.text());
+  const res = await fetch(`${BASE}/sitemap.xml`, { headers: { "user-agent": UA } });
+  const idx = await res.text();
+  // Is this the site at all? See NOTHING TO CHECK IS A FAILURE in the header.
+  const problem = sitemapProblem({ base: BASE, finalUrl: res.url, status: res.status, body: idx });
+  if (problem) nothingChecked(problem);
   const children = [...idx.matchAll(/<loc>\s*(.*?)\s*<\/loc>/g)].map((m) => new URL(m[1]).pathname);
   const all: string[] = [];
   for (const c of children) {
     const xml = await fetch(`${BASE}${c}`, { headers: { "user-agent": UA } }).then((r) => r.text());
     for (const m of xml.matchAll(/<loc>\s*(.*?)\s*<\/loc>/g)) all.push(new URL(m[1]).pathname.replace(/\/+$/, "") || "/");
   }
+  if (!all.length) nothingChecked(`the ${children.length} sitemap${children.length === 1 ? "" : "s"} ${BASE}/sitemap.xml points to list no pages`);
 
   let failures = 0;
+  let sampled = 0;
   const rows: string[] = [];
   const nameW = Math.max(...SPECS.map((s) => s.name.length));
 
@@ -170,6 +195,7 @@ async function main(): Promise<void> {
       rows.push(`  ${spec.name.padEnd(nameW)}  ${D}no published URLs — skipped${O}`);
       continue;
     }
+    sampled++;
     // Evenly spaced samples, so we don't only ever test the first few.
     const step = Math.max(1, Math.floor(pool.length / SAMPLES));
     const picks = Array.from({ length: Math.min(SAMPLES, pool.length) }, (_, i) => pool[i * step]);
@@ -203,6 +229,7 @@ async function main(): Promise<void> {
   }
 
   console.log(rows.join("\n"));
+  if (!sampled) nothingChecked(`the sitemap lists ${all.length} pages and not one belongs to a template this check knows`);
   console.log(
     failures === 0
       ? `\n${G}${B}All templates emit a self-canonical, complete OpenGraph and their required structured data.${O}\n`

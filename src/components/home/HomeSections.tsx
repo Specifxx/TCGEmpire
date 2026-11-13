@@ -23,6 +23,9 @@ const PopularCardsCarousel = dynamic(() =>
   import("@/components/home/PopularCardsCarousel").then((m) => m.PopularCardsCarousel),
 );
 
+/** The text link into the set gallery, as a 44px row: see where it is drawn, under the set grid. */
+const GALLERY_LINK = "inline-flex min-h-11 items-center font-semibold text-brand-300 underline-offset-2 hover:underline";
+
 export interface HomeSectionsProps {
   // The market this PAGE is scoped to for the single-market computations below
   // (biggest movers, the recently-updated tab, the store-count line) — the
@@ -264,12 +267,14 @@ export function HomeSections({
         </Reveal>
 
         {/* The homepage's link into the visual gallery: whichever set is CURRENT, never one set by name. The set in
-            its preview season when it has a gallery (no complete count to quote yet), else the newest released set. */}
+            its preview season when it has a gallery (no complete count to quote yet), else the newest released set.
+            A 44px row (GALLERY_LINK): the countdown card sits straight under it since 2026-11-13, and as a 17px line
+            of text it was too close to that card's links to tap (Lighthouse "target-size", accessibility 1.00 → 0.97). */}
         {nextSet && hasSetGallery(nextSet) ? (
-          <p className="mt-3 text-sm">
+          <p className="mt-1 text-sm">
             <Link
               href={`/sets/${nextSet.slug}/gallery`}
-              className="font-semibold text-brand-300 underline-offset-2 hover:underline"
+              className={GALLERY_LINK}
             >
               {showsAsNew(nextSet)
                 ? `See every ${nextSet.name} card in the gallery →`
@@ -277,10 +282,10 @@ export function HomeSections({
             </Link>
           </p>
         ) : newestSet && (
-          <p className="mt-3 text-sm">
+          <p className="mt-1 text-sm">
             <Link
               href={`/sets/${newestSet.slug}/gallery`}
-              className="font-semibold text-brand-300 underline-offset-2 hover:underline"
+              className={GALLERY_LINK}
             >
               See all{newestSet.totalCards ? ` ${newestSet.totalCards}` : ""} {newestSet.name} cards in the gallery →
             </Link>

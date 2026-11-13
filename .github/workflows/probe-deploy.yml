@@ -9,17 +9,19 @@ name: Probe RiftCompare deploy state
 # SPEED (2026-11-13): give `speed` a list of targets and this runs scripts/speed-ab.ts
 # INSTEAD: Lighthouse with the deploy gate's settings on each target, several runs,
 # the targets taking turns, then the browser's own list of largest paints. A target
-# is `label=https://…` or `label=sha:<commit>` (that commit's own production
-# deployment, which Vercel keeps at its own address), so the build before a change
-# and the build after it are measured on the same servers at the same time:
-#   speed: new=sha:f04fdd52 old=sha:19761944 live=https://riftcompare.com
-# Read-only. See the script's header for why one run per deploy is not enough.
+# is `label=https://…` (an origin, or a full address with its own path):
+#   speed: home=https://riftcompare.com browse=https://riftcompare.com/browse
+# `label=sha:<commit>` (that commit's own production deployment) is accepted and
+# reported, then left out: a deployment's own address is behind Vercel's sign-in,
+# and a target that redirects to another host is not measured (DECISIONS.md, "The
+# after-deploy gate was checking Vercel's sign-in page"). Read-only. See the
+# script's header for why one run per deploy is not enough.
 
 on:
   workflow_dispatch:
     inputs:
       speed:
-        description: "Speed check instead of the deploy probe: targets as label=url or label=sha:<commit>, separated by spaces"
+        description: "Speed check instead of the deploy probe: targets as label=url, separated by spaces (public addresses only)"
         required: false
         default: ""
       runs:

@@ -27,13 +27,20 @@
  * what it is. Failing this script means "materially worse than what this
  * homepage already measured on its worst-audited day", not "didn't hit some
  * number invented for this script".
+ *
+ * WHICH PAGE WAS MEASURED (2026-11-13). The log now says where Lighthouse ended
+ * and which element its largest paint was, and a run that ended on another host
+ * is refused before it reaches the budget or a baseline. For as long as the
+ * deploy gate sent this to a Vercel deployment's own address, which redirects
+ * to Vercel's sign-in, every figure it printed was the login page's (9 to 12s
+ * to the largest paint, a score of 0.46 to 0.60) and read as our home page
+ * getting slower. See src/lib/deploy-gate.ts and DECISIONS.md, 2026-11-13.
  */
-export {};
-
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { largestPaintElement, lighthouseLanding } from "../src/lib/deploy-gate";
 
 const args = process.argv.slice(2);
 const argOf = (n: string, d: string) => {
@@ -120,6 +127,20 @@ async function main() {
   console.log(`${D}Running Lighthouse (mobile, simulated throttling) against ${url}…${O}`);
 
   const lhr = runLighthouse(url);
+
+  // Which page is this a measurement of? (WHICH PAGE WAS MEASURED, in the header.)
+  const landing = lighthouseLanding(url, lhr);
+  const painted = largestPaintElement(lhr);
+  console.log(`${D}Measured: ${landing.url || "no address reported"}${O}`);
+  console.log(`${D}Largest paint: ${painted ? `${painted.snippet}${painted.text ? ` "${painted.text}"` : ""}` : "element not reported"}${O}`);
+  if (!landing.sameHost) {
+    console.error(
+      `\n${R}${B}Not measured.${O} Lighthouse was sent to ${url} and ended on ${landing.url || "no page"}: the address redirected to another host ` +
+        `(a sign-in wall?), so these are that page's numbers, not this site's. Give it the address the public site answers on.\n`,
+    );
+    process.exit(1);
+  }
+
   const cat = (id: string) => lhr.categories?.[id]?.score;
   const audit = (id: string) => lhr.audits?.[id]?.numericValue;
 

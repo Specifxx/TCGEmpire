@@ -1,18 +1,22 @@
 /**
  * scripts/speed-ab.ts: the same page on two or more origins, measured the same way, several times each.
  *
- *   CHROME_PATH=… npx tsx scripts/speed-ab.ts --runs 5 --page / new=sha:f04fdd52 old=sha:19761944 live=https://riftcompare.com
+ *   CHROME_PATH=… npx tsx scripts/speed-ab.ts --runs 5 home=https://riftcompare.com browse=https://riftcompare.com/browse
  *
- * WHY THIS EXISTS (2026-11-13, DECISIONS.md "Minimal redesign: the speed check after the deploy"). The deploy gate's
- * Lighthouse step (scripts/lighthouse-budget.ts) is ONE run per deploy, and one run cannot tell a slower page from a
- * slower minute: the home page read 9.06s to 9.49s on five deploys and 11.86s on the sixth, and nothing in the log said
- * which element that paint was or whether the next run would read the same. This asks the question properly:
+ * WHY THIS EXISTS (2026-11-13, DECISIONS.md "The after-deploy gate was checking Vercel's sign-in page"). The deploy
+ * gate's Lighthouse step (scripts/lighthouse-budget.ts) is ONE run per deploy, and one run cannot tell a slower page
+ * from a slower minute: it read 9.06s to 9.49s on five deploys and 11.86s on the sixth, and nothing in the log said
+ * which element that paint was. This was written to ask the question properly, and its first answer was that both
+ * builds' addresses were Vercel's sign-in page. What it does:
  *
  *   - every target is measured `--runs` times, the targets taking turns (A B, B A, A B…), so a slow minute on the
  *     runner or the network lands on all of them;
- *   - a target is a URL (an origin, to which `--page` is added, or a full address with its own path), or `sha:<commit>`: that commit's own production deployment, which Vercel keeps at its own
- *     address, so the build before and the build after are compared on the same servers, with the same data, at the
- *     same time (the address is read from the GitHub Deployments API, as probe-deploy.yml does);
+ *   - a target is a URL (an origin, to which `--page` is added, or a full address with its own path), or
+ *     `sha:<commit>`: that commit's own production deployment, whose address is read from the GitHub Deployments API,
+ *     as probe-deploy.yml does. A deployment's own address is behind Vercel's sign-in today, so such a target is
+ *     reported and then left out (see the first request below); the form stays for the day one can be opened;
+ *   - before anything is measured, one plain request per target says what answers there: the status, the title and
+ *     any redirect. A target that redirects to another host is a sign-in wall, not the site, and is not measured;
  *   - the settings are the gate's (mobile, 390 by 844 at 2x, Lighthouse's simulated throttling), plus, with
  *     `--methods simulate,devtools`, the same page under REAL throttling (the network and the processor slowed while
  *     the page loads), because the simulated figure is an estimate built from an unthrottled load;
@@ -24,12 +28,11 @@
  *
  * Read-only: it loads public pages. Nothing is written but the log. Run by probe-deploy.yml's `speed` input.
  */
-export {};
-
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { largestPaintElement } from "../src/lib/deploy-gate";
 
 const argv = process.argv.slice(2);
 const flag = (name: string, fallback: string): string => {
@@ -145,19 +148,9 @@ function lighthouseOnce(url: string, method: string): Run {
       before = { count: done.length, kb: kb(done), scripts: scripts.length, scriptKb: kb(scripts), thirdParty: third.length };
     }
 
-    // The element: Lighthouse 13 reports it inside the "LCP breakdown" insight; older versions had their own audit.
-    const findNode = (o: any): any => {
-      if (!o || typeof o !== "object") return null;
-      if (o.type === "node" && (o.snippet || o.selector)) return o;
-      if (o.node && (o.node.snippet || o.node.selector)) return o.node;
-      for (const v of Object.values(o)) {
-        const hit = findNode(v);
-        if (hit) return hit;
-      }
-      return null;
-    };
-    const node = findNode(a["lcp-breakdown-insight"]?.details) ?? findNode(a["largest-contentful-paint-element"]?.details) ?? findNode(a["lcp-discovery-insight"]?.details);
-    const element = node ? `${String(node.snippet ?? "").replace(/\s+/g, " ").slice(0, 150)} | ${String(node.nodeLabel ?? "").replace(/\s+/g, " ").slice(0, 60)}` : "(not reported)";
+    // The element the largest paint was (src/lib/deploy-gate.ts reads it out of whichever audit this version has).
+    const painted = largestPaintElement(lhr);
+    const element = painted ? `${painted.snippet} | ${painted.text}` : "(not reported)";
     const parts: string[] = [];
     const walk = (o: any): void => {
       if (!o || typeof o !== "object") return;
@@ -295,23 +288,37 @@ async function main() {
   }
   if (!targets.length) process.exit(1);
 
-  // One plain request each first: is the address open to the public, and which build answers.
+  // One plain request each first: is the address open to the public, and which build answers. An address that
+  // redirects to another host is a sign-in wall: measuring it would time the login page and call it ours.
+  const open: Target[] = [];
   for (const t of targets) {
     try {
-      const res = await fetch(urlOf(t), { redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 speed-ab" } });
+      const url = urlOf(t);
+      const res = await fetch(url, { redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 speed-ab" } });
       const body = res.status === 200 ? await res.text() : "";
       const title = /<title>([^<]*)<\/title>/.exec(body)?.[1] ?? "";
-      console.log(`  ${t.label}: HTTP ${res.status}, ${body.length} bytes, x-vercel-cache=${res.headers.get("x-vercel-cache") ?? "n/a"}, title="${title.slice(0, 70)}"${res.status >= 300 && res.status < 400 ? `, location=${res.headers.get("location")}` : ""}`);
+      const redirect = res.status >= 300 && res.status < 400 ? (res.headers.get("location") ?? "") : "";
+      console.log(`  ${t.label}: HTTP ${res.status}, ${body.length} bytes, x-vercel-cache=${res.headers.get("x-vercel-cache") ?? "n/a"}, title="${title.slice(0, 70)}"${redirect ? `, location=${redirect}` : ""}`);
+      const elsewhere = redirect ? new URL(redirect, url).host : "";
+      if (elsewhere && elsewhere !== new URL(url).host) {
+        console.log(`  ${t.label}: NOT MEASURED. It redirects to ${elsewhere}, so what would load there is that host's page, not this site.`);
+        continue;
+      }
     } catch (e) {
       console.log(`  ${t.label}: request failed: ${(e as Error).message}`);
     }
+    open.push(t);
+  }
+  if (!open.length) {
+    console.error("No target is open to the public: nothing was measured.");
+    process.exit(1);
   }
 
   for (const method of METHODS.length ? METHODS : ["simulate"]) {
     console.log(`\n== LIGHTHOUSE, ${method === "simulate" ? "simulated throttling (the deploy gate's settings)" : "real throttling (network and processor slowed during the load)"} ==`);
-    const results = new Map<string, Run[]>(targets.map((t) => [t.label, []]));
+    const results = new Map<string, Run[]>(open.map((t) => [t.label, []]));
     for (let i = 0; i < RUNS; i++) {
-      const order = i % 2 ? [...targets].reverse() : targets;
+      const order = i % 2 ? [...open].reverse() : open;
       for (const t of order) {
         const r = lighthouseOnce(urlOf(t), method);
         results.get(t.label)!.push(r);
@@ -329,7 +336,7 @@ async function main() {
       }
     }
     console.log(`\n  MEDIANS (${method}):`);
-    for (const t of targets) {
+    for (const t of open) {
       const ok = results.get(t.label)!.filter((r) => !r.error);
       if (!ok.length) {
         console.log(`  ${t.label}: no successful run`);
@@ -344,7 +351,7 @@ async function main() {
     }
   }
 
-  await observe(targets);
+  await observe(open);
 }
 
 main().catch((e) => {

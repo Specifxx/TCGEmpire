@@ -476,6 +476,11 @@ export const JOBS: { file: string; title: string; staleH: number; scheduledSince
   { file: "affiliate-gap-audit.yml", title: "Affiliate gap audit (weekly)", staleH: 200, scheduledSince: "2026-11-08T12:00:00Z" },
   // Daily (2026-11-10): Bing URL submission for the sister sites Bing indexes under 25 pages of (scripts/bing-submit.ts).
   { file: "bing-submit.yml", title: "Bing URL submission job", staleH: 36, scheduledSince: "2026-11-11T06:23:00Z" },
+  // After each production deploy (2026-11-13): the template SEO check against the live site
+  // (seo-preview-gate.yml). Its runs belong to Vercel's bot, so GitHub emails nobody when one
+  // fails: this row is how a failed gate is heard. Not on a clock of its own: it follows the
+  // release, and a release the 12-hour build gate skips leaves a gap of up to two days.
+  { file: "seo-preview-gate.yml", title: "After-deploy SEO check", staleH: 60 },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {
