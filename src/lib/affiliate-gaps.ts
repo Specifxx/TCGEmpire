@@ -44,7 +44,7 @@ export const KNOWN_PROGRAMMES: Array<[RegExp, string]> = [
 ];
 
 export type LinkKind =
-  | "ebay" | "ebay-untagged" | "amazon" | "amazon-untagged" | "tcgplayer" | "tcgplayer-untagged"
+  | "ebay" | "ebay-untagged" | "ebay-no-customid" | "amazon" | "amazon-untagged" | "tcgplayer" | "tcgplayer-untagged"
   | "awin" | "network" | "store" | "family" | "ignore";
 
 export function hostOf(url: string): string {
@@ -67,7 +67,10 @@ export function classifyLink(url: string): LinkKind {
   const h = u.hostname.toLowerCase().replace(/^www\./, "");
   const q = u.search + u.hash;
   if (/(^|\.)ebay\.[a-z.]+$/.test(h) || h === "ebay.us") {
-    return new RegExp(`campid=${EPN_CAMPAIGN}`).test(q) ? "ebay" : "ebay-untagged";
+    if (!new RegExp(`campid=${EPN_CAMPAIGN}`).test(q)) return "ebay-untagged";
+    // Without a customid the sale reaches EPN (now on Impact, where it is "Sub ID 1") with no site or page on it
+    // (owner, 2026-11-13: most eBay sales showed an empty Sub ID 1).
+    return /[?&]customid=[^&]+/.test(q) ? "ebay" : "ebay-no-customid";
   }
   if (/(^|\.)amazon\.[a-z.]+$/.test(h) || h === "amzn.to") return /[?&]tag=[^&]+/.test(q) || h === "amzn.to" ? "amazon" : "amazon-untagged";
   if (/(^|\.)partner\.tcgplayer\.com$/.test(h) || /\.(pxf|sjv)\.io$/.test(h)) return "tcgplayer";
@@ -113,7 +116,7 @@ export function addLink(t: SiteTally, url: string, joinedAwin: string[]): void {
     case "ebay": case "amazon": case "tcgplayer": case "awin": case "network":
       t.tracked[kind]++;
       return;
-    case "ebay-untagged": case "amazon-untagged": case "tcgplayer-untagged":
+    case "ebay-untagged": case "ebay-no-customid": case "amazon-untagged": case "tcgplayer-untagged":
       if (t.broken.length < 20) t.broken.push({ kind, url: url.slice(0, 200) });
       return;
     case "store": {

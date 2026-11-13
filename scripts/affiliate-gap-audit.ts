@@ -68,7 +68,8 @@ function hrefs(page: string, base: string): URL[] {
 /** Where a site's own /go link sends a visitor: one hop, never followed off the site. */
 async function resolveGo(u: URL): Promise<string | null> {
   try {
-    const r = await fetch(u, { redirect: "manual", headers: { "user-agent": UA }, signal: AbortSignal.timeout(15_000) });
+    // A person's click: /go sends a request without these untagged, as a bot's (src/lib/bot-click.ts on the sister sites).
+    const r = await fetch(u, { redirect: "manual", headers: { "user-agent": UA, "accept-language": "en-US", "sec-fetch-mode": "navigate" }, signal: AbortSignal.timeout(15_000) });
     const loc = r.headers.get("location");
     return loc ? new URL(loc, u).toString() : null;
   } catch {
