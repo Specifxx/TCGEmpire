@@ -33,8 +33,7 @@ test("Today's Top Deals gets only the columns it draws", () => {
   assert.doesNotMatch(read("src/components/TodaysTopDeals.tsx"), /cheapestSealed|cheapestOnEbay/, "if the grid draws them again, stop stripping them");
 });
 
-test("the homepage sealed shelf ships no store rows and its tiles are plain links", () => {
-  assert.match(read("src/app/page.tsx"), /\.map\(\(g\) => \(\{ \.\.\.g, listings: \[\] \}\)\)/);
-  assert.match(read("src/components/home/HomeSealedShelf.tsx"), /<SealedTile [^>]*quickView=\{false\}/);
+test("the homepage has no sealed shelf (owner, 2026-11-13) and a plain sealed tile opens no quick view", () => {
+  assert.doesNotMatch(read("src/app/page.tsx"), /HomeSealedShelf|getSealedGroups/);
   assert.match(read("src/components/SealedTile.tsx"), /if \(!quickView\) return;/);
 });
