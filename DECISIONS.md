@@ -23563,3 +23563,10 @@ carries its own "Ad" label and affiliate line (so the zone adds no second disclo
 nothing. The card page's `ebayQuery` prop went with the eBay banner. The pinned tests (site-chrome, ebay-clicks-card, ad-free-tier,
 ad-responsive, cardmarket-eu, trust-pages, sidenav, pokemon-isolation, inline-ads) now assert the one-block reality and that the
 three banner files stay deleted.
+
+## 2026-11-13: the front page loses the reviews section, the sealed shelf and Welcome back
+
+Owner: "no point having" the ratings section, the booster boxes and sealed section, or the Welcome back / go to your dashboard
+panel on the front page; the chase cards stay. `ReviewsSection` and `HomeSealedShelf` are no longer mounted on `/` (the Premium
+page keeps its reviews, `/sealed` is unchanged), and `WelcomeBack` is deleted from `HomeSections`, so the region homes lose it
+too. This reverses the 2026-11-03 "reviews visible on the home page" and 2026-10-28 "sealed gets the front page" placements.

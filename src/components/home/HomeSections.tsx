@@ -4,7 +4,6 @@ import { Reveal } from "@/components/Reveal";
 import { InlineAds } from "@/components/InlineAds";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { AccountStrip } from "@/components/home/AccountStrip";
-import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { PokemonHomePromo } from "@/components/pokemon/PokemonHomePromo";
@@ -228,10 +227,6 @@ export function HomeSections({
           six homes: after Top Deals and the editorial band, never above them.
           Renders nothing while the section is off (lib/pokemon/flag.ts). */}
       <PokemonHomePromo />
-
-      {/* Welcome back, directly above the return-visit cards (owner,
-          2026-10-19). Signed-in only; AccountStrip below is its signed-out twin. */}
-      <WelcomeBack />
 
       {/* Return-visit hooks — Riftle, the pack simulator, and price alerts.
           These were moved ABOVE the commercial run on 2026-09-16, after
