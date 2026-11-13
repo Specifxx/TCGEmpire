@@ -59,14 +59,21 @@ test("score categories gate on any regression; accessibility/best-practices/SEO 
   const metricsAt = src.indexOf("const METRICS");
   assert.ok(metricsAt >= 0);
   const metrics = src.slice(metricsAt, src.indexOf("];", metricsAt));
+  const row = (key: string): string => {
+    const at = metrics.indexOf(`key: "${key}"`);
+    assert.ok(at >= 0, `expected a METRICS row for ${key}`);
+    return metrics.slice(at, metrics.indexOf("}", at));
+  };
+  // 2026-11-13: until then the cushion sat in the shared comparison (`m.baseline - 0.08`),
+  // so all four scores had it, and this test only asked that the cushion existed. The first
+  // run that measured our own page read accessibility 0.97 against a baseline of 1.00 and
+  // printed a tick. Each row carries its own limit now, and the cushion is performance's alone.
   for (const key of ["accessibility", "bestPractices", "seo"]) {
-    const rowAt = metrics.indexOf(`key: "${key}"`);
-    assert.ok(rowAt >= 0, `expected a METRICS row for ${key}`);
+    assert.match(row(key), /limit: \(x\) => x,/, `${key}: the baseline itself is the floor, with no slack`);
   }
-  // The actual tolerance application: only "performance" gets the -0.08
-  // cushion; the comparison itself is shared code, so this is checked where
-  // the cushion is applied, not per-metric.
-  assert.match(src, /m\.actual >= m\.baseline - 0\.08/, "the score-regression check must apply a fixed, documented cushion");
+  assert.match(row("performance"), /limit: \(x\) => x - 0\.08,/, "performance keeps its fixed, documented 8-point cushion");
+  assert.doesNotMatch(src, /m\.baseline - 0\.\d/, "no cushion in the shared comparison, where every score would get it");
+  assert.match(src, /m\.higherIsBetter \? m\.actual >= limit : m\.actual <= limit/, "a score is held to its floor, a timing to its ceiling");
 });
 
 test("the timing metrics gate on the baseline, never on an always-true tolerance", () => {

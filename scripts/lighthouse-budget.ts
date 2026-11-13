@@ -27,13 +27,20 @@
  * what it is. Failing this script means "materially worse than what this
  * homepage already measured on its worst-audited day", not "didn't hit some
  * number invented for this script".
+ *
+ * WHICH PAGE WAS MEASURED (2026-11-13). The log now says where Lighthouse ended
+ * and which element its largest paint was, and a run that ended on another host
+ * is refused before it reaches the budget or a baseline. For as long as the
+ * deploy gate sent this to a Vercel deployment's own address, which redirects
+ * to Vercel's sign-in, every figure it printed was the login page's (9 to 12s
+ * to the largest paint, a score of 0.46 to 0.60) and read as our home page
+ * getting slower. See src/lib/deploy-gate.ts and DECISIONS.md, 2026-11-13.
  */
-export {};
-
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { largestPaintElement, lighthouseLanding } from "../src/lib/deploy-gate";
 
 const args = process.argv.slice(2);
 const argOf = (n: string, d: string) => {
@@ -65,8 +72,11 @@ interface Metric {
   label: string;
   actual: number;
   baseline: number;
-  /** Returns the max value below which `actual` is fine, given the baseline. */
-  ceiling: (baseline: number) => number;
+  /**
+   * The value `actual` must not cross, given the baseline: the lowest score that is
+   * still fine (`higherIsBetter`), or the highest timing that is.
+   */
+  limit: (baseline: number) => number;
   fmt: (n: number) => string;
   higherIsBetter: boolean;
 }
@@ -120,6 +130,20 @@ async function main() {
   console.log(`${D}Running Lighthouse (mobile, simulated throttling) against ${url}…${O}`);
 
   const lhr = runLighthouse(url);
+
+  // Which page is this a measurement of? (WHICH PAGE WAS MEASURED, in the header.)
+  const landing = lighthouseLanding(url, lhr);
+  const painted = largestPaintElement(lhr);
+  console.log(`${D}Measured: ${landing.url || "no address reported"}${O}`);
+  console.log(`${D}Largest paint: ${painted ? `${painted.snippet}${painted.text ? ` "${painted.text}"` : ""}` : "element not reported"}${O}`);
+  if (!landing.sameHost) {
+    console.error(
+      `\n${R}${B}Not measured.${O} Lighthouse was sent to ${url} and ended on ${landing.url || "no page"}: the address redirected to another host ` +
+        `(a sign-in wall?), so these are that page's numbers, not this site's. Give it the address the public site answers on.\n`,
+    );
+    process.exit(1);
+  }
+
   const cat = (id: string) => lhr.categories?.[id]?.score;
   const audit = (id: string) => lhr.audits?.[id]?.numericValue;
 
@@ -154,6 +178,12 @@ async function main() {
   // ±5-7 points on the 0-100 scale between identical runs — so it gets an
   // 8-point (0.08) cushion to absorb that noise without masking a real drop.
   //
+  // Until 2026-11-13 the comparison below subtracted that 0.08 from EVERY score,
+  // so the three "any regression" rows had the cushion too: the first run that
+  // measured our own page read accessibility 0.97 against a baseline of 1.00
+  // and printed a tick. Each row now carries its own limit, and only
+  // performance's has the cushion.
+  //
   // LCP: 25% slower than the baseline day is a real regression, not noise —
   // Lantern-simulated LCP is far more stable run-to-run than a live-throttled
   // trace would be.
@@ -166,19 +196,21 @@ async function main() {
   // terms; an absolute floor avoids gating on doubling from "excellent" to
   // "still excellent".
   const METRICS: Metric[] = [
-    { key: "performance", label: "Performance score", actual: actual.performance, baseline: b.performance, ceiling: (x) => x, fmt: (n) => n.toFixed(2), higherIsBetter: true },
-    { key: "accessibility", label: "Accessibility score", actual: actual.accessibility, baseline: b.accessibility, ceiling: (x) => x, fmt: (n) => n.toFixed(2), higherIsBetter: true },
-    { key: "bestPractices", label: "Best Practices score", actual: actual.bestPractices, baseline: b.bestPractices, ceiling: (x) => x, fmt: (n) => n.toFixed(2), higherIsBetter: true },
-    { key: "seo", label: "SEO score", actual: actual.seo, baseline: b.seo, ceiling: (x) => x, fmt: (n) => n.toFixed(2), higherIsBetter: true },
-    { key: "lcpMs", label: "Largest Contentful Paint", actual: actual.lcpMs, baseline: b.lcpMs, ceiling: (x) => x * 1.25, fmt: (n) => `${(n / 1000).toFixed(2)}s`, higherIsBetter: false },
-    { key: "clsScore", label: "Cumulative Layout Shift", actual: actual.clsScore, baseline: b.clsScore, ceiling: (x) => Math.max(0.1, x + 0.02), fmt: (n) => n.toFixed(3), higherIsBetter: false },
-    { key: "tbtMs", label: "Total Blocking Time", actual: actual.tbtMs, baseline: b.tbtMs, ceiling: (x) => Math.max(300, x * 2), fmt: (n) => `${n.toFixed(0)}ms`, higherIsBetter: false },
+    { key: "performance", label: "Performance score", actual: actual.performance, baseline: b.performance, limit: (x) => x - 0.08, fmt: (n) => n.toFixed(2), higherIsBetter: true },
+    { key: "accessibility", label: "Accessibility score", actual: actual.accessibility, baseline: b.accessibility, limit: (x) => x, fmt: (n) => n.toFixed(2), higherIsBetter: true },
+    { key: "bestPractices", label: "Best Practices score", actual: actual.bestPractices, baseline: b.bestPractices, limit: (x) => x, fmt: (n) => n.toFixed(2), higherIsBetter: true },
+    { key: "seo", label: "SEO score", actual: actual.seo, baseline: b.seo, limit: (x) => x, fmt: (n) => n.toFixed(2), higherIsBetter: true },
+    { key: "lcpMs", label: "Largest Contentful Paint", actual: actual.lcpMs, baseline: b.lcpMs, limit: (x) => x * 1.25, fmt: (n) => `${(n / 1000).toFixed(2)}s`, higherIsBetter: false },
+    { key: "clsScore", label: "Cumulative Layout Shift", actual: actual.clsScore, baseline: b.clsScore, limit: (x) => Math.max(0.1, x + 0.02), fmt: (n) => n.toFixed(3), higherIsBetter: false },
+    { key: "tbtMs", label: "Total Blocking Time", actual: actual.tbtMs, baseline: b.tbtMs, limit: (x) => Math.max(300, x * 2), fmt: (n) => `${n.toFixed(0)}ms`, higherIsBetter: false },
   ];
 
   let failures = 0;
   const rows: string[] = [];
   for (const m of METRICS) {
-    const ok = m.higherIsBetter ? m.actual >= m.baseline - 0.08 : m.actual <= m.ceiling(m.baseline);
+    // The limit is computed to the two places a score is printed at, so 0.88 - 0.08 is 0.80 and not 0.7999999999999999.
+    const limit = m.higherIsBetter ? Math.round(m.limit(m.baseline) * 100) / 100 : m.limit(m.baseline);
+    const ok = m.higherIsBetter ? m.actual >= limit : m.actual <= limit;
     if (!ok) failures++;
     const mark = ok ? `${G}✓${O}` : `${R}✗${O}`;
     rows.push(`  ${mark} ${m.label.padEnd(26)} ${m.fmt(m.actual)}  ${D}(baseline ${m.fmt(m.baseline)}, measured ${budget.measuredOn})${O}`);

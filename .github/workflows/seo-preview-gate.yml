@@ -45,14 +45,21 @@ name: SEO gate (Vercel deploy)
 # a deploy on it.
 on:
   deployment_status:
+  # "Run workflow" checks production now, without a deploy (2026-11-13).
+  workflow_dispatch:
 
 permissions:
   contents: read
   deployments: read
 
 concurrency:
-  group: seo-preview-gate-${{ github.event.deployment.sha }}
+  group: seo-preview-gate-${{ github.event.deployment.sha || github.run_id }}
   cancel-in-progress: true
+
+env:
+  # The public site. The same address as SITE_URL in src/lib/site.ts
+  # (tests/deploy-gate.test.ts fails if the two part ways).
+  PRODUCTION_URL: https://riftcompare.com
 
 # ── WHY THIS ALSO RUNS ON PRODUCTION (2026-08-23) ────────────────────────────
 # It used to require `environment == 'Preview'`. That became a silent hole the
@@ -72,12 +79,53 @@ concurrency:
 #
 # Preview is still gated when a preview exists (a PR from a non-claude/* branch),
 # which is the case where the pre-merge meaning is real.
+#
+# ── WHICH ADDRESS IS CHECKED (2026-11-13) ────────────────────────────────────
+# A Production deployment is checked at the public site, PRODUCTION_URL, never at
+# the deployment's own address. That address (riftcompare-<hash>-<team>.vercel.app,
+# what deployment_status.environment_url carries) is behind Vercel's sign-in: every
+# request is redirected to vercel.com. So this workflow had been reading the "Log
+# in to Vercel" page. The template check took it for a sitemap with no URLs,
+# skipped every template and passed; the Lighthouse step timed the login page (9
+# to 12 s to its largest paint and a score of 0.46 to 0.60 on the six deploys of
+# 12 and 13 November) and the log never said which page that was. The step
+# timings say it was not new: on 10 September and on 10 November the template
+# check and the content-quality crawl each finished within two seconds, which is
+# what an empty sitemap takes. DECISIONS.md, 2026-11-13.
+#
+# What keeps that from being quiet again:
+#   - template-seo-check.ts exits 1 when the address serves no sitemap, when the
+#     sitemap lists no page, or when no template has a page to sample;
+#   - lighthouse-budget.ts prints the page it ended on and the element its largest
+#     paint was, and refuses a run that ended on another host;
+#   - the ops monitor lists this workflow (JOBS in src/lib/ops/checks.ts): two
+#     failed gates in a row reach the owner, as any failing job does. A
+#     deployment_status run belongs to Vercel's bot, so GitHub emails nobody.
+#
+# It checks what the public site is serving when it runs, about a minute after
+# Vercel reports the deployment ready (the time this job spends installing). It
+# cannot prove which build that is: the site publishes no build id.
+#
+# A Preview (none is built today: vercel.json turns every branch off) is still
+# checked at its own address. If that is behind the sign-in too, the template
+# check now fails with "Nothing was checked", which is the truth.
+#
+# The content-quality report is a Preview-only step. It loads every page the
+# sitemap lists and then every link on them, several thousand requests. Against
+# production, minutes after a release emptied the page cache, that is the
+# prewarm the cost rules forbid (CLAUDE.md, "Deploys are gated").
+#
+# The Lighthouse step is still report-only, and its trial starts now: it has not
+# had one real run before this change. Installing its browser is report-only too:
+# on 11 November apt could not resolve its mirror and turned the whole gate red
+# for a step that only serves that report.
 jobs:
   seo-gate:
     if: >
-      github.event.deployment_status.state == 'success' &&
-      (github.event.deployment.environment == 'Preview' ||
-       github.event.deployment.environment == 'Production')
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       (github.event.deployment.environment == 'Preview' ||
+        github.event.deployment.environment == 'Production'))
     # Pinned: ubuntu-latest became 26.04, where Playwright 1.56 cannot install
     # Chromium's system packages (2026-11-02). Move up when Playwright supports it.
     runs-on: ubuntu-24.04
@@ -85,7 +133,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.deployment.sha }}
+          ref: ${{ github.event.deployment.sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -95,29 +143,46 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Resolve the deployment URL
-        id: preview
+      # See WHICH ADDRESS IS CHECKED. The event's values reach the shell through
+      # the environment, never pasted into the script.
+      - name: Resolve the address to check
+        id: target
+        env:
+          EVENT: ${{ github.event_name }}
+          ENVIRONMENT: ${{ github.event.deployment.environment }}
+          ENVIRONMENT_URL: ${{ github.event.deployment_status.environment_url }}
+          TARGET_URL: ${{ github.event.deployment_status.target_url }}
         run: |
-          URL="${{ github.event.deployment_status.environment_url }}"
-          if [ -z "$URL" ]; then URL="${{ github.event.deployment_status.target_url }}"; fi
+          if [ "$EVENT" = "workflow_dispatch" ] || [ "$ENVIRONMENT" = "Production" ]; then
+            URL="$PRODUCTION_URL"
+          else
+            URL="${ENVIRONMENT_URL:-$TARGET_URL}"
+          fi
           if [ -z "$URL" ]; then
-            echo "No environment_url or target_url on this deployment_status event — nothing to crawl." >&2
+            echo "No environment_url or target_url on this deployment_status event: nothing to check." >&2
             exit 1
           fi
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
-          echo "${{ github.event.deployment.environment }} URL: $URL"
+          echo "url=${URL%/}" >> "$GITHUB_OUTPUT"
+          echo "Checking ${URL%/} (${ENVIRONMENT:-a manual run})"
 
-      # GATE. Exits non-zero on a real template-level defect.
+      # GATE. Exits non-zero on a real template-level defect, and when the
+      # address gave it no page to check.
       - name: Template SEO check
-        run: npx tsx scripts/template-seo-check.ts --url "${{ steps.preview.outputs.url }}"
+        env:
+          URL: ${{ steps.target.outputs.url }}
+        run: npx tsx scripts/template-seo-check.ts --url "$URL"
 
-      # Report-only (see header). Exits non-zero only if the crawl itself
-      # fails — that failure still fails this job, same as any other step.
+      # Report-only (see header), and for a Preview only: it loads every page.
+      # Exits non-zero only if the crawl itself fails — that failure still fails
+      # this job, same as any other step.
       - name: Content quality report
-        run: npx tsx scripts/content-quality.ts --url "${{ steps.preview.outputs.url }}"
+        if: github.event.deployment.environment == 'Preview'
+        env:
+          URL: ${{ steps.target.outputs.url }}
+        run: npx tsx scripts/content-quality.ts --url "$URL"
 
       - name: Upload content-quality-report.csv
-        if: always()
+        if: always() && github.event.deployment.environment == 'Preview'
         uses: actions/upload-artifact@v4
         with:
           name: content-quality-report
@@ -127,13 +192,17 @@ jobs:
       # Lighthouse needs a real Chrome to drive, not just a fetch — Playwright's
       # is already the browser this repo installs elsewhere in CI (see e.g.
       # maintenance.yml), so this reuses that rather than adding a new
-      # browser-install action just for one more script.
+      # browser-install action just for one more script. Report-only, as the
+      # step it serves (see header).
       - name: Install Chromium for Lighthouse
+        continue-on-error: true
         run: npx playwright install --with-deps chromium
 
       # Report-only for now — see header.
       - name: Lighthouse performance budget
         continue-on-error: true
+        env:
+          URL: ${{ steps.target.outputs.url }}
         run: |
           export CHROME_PATH=$(node -e "console.log(require('playwright').chromium.executablePath())")
-          npx tsx scripts/lighthouse-budget.ts --url "${{ steps.preview.outputs.url }}"
+          npx tsx scripts/lighthouse-budget.ts --url "$URL"

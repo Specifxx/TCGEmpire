@@ -23667,3 +23667,84 @@ does not discard the page.
 
 Titles, descriptions, canonicals, robots, Open Graph, h1s and JSON-LD are unchanged on 26 pages compared field by field with the
 production build before both passes. Released with `[deploy] [urgent]` in the merge subject, as the owner asked ("deploy urgently").
+
+## 2026-11-13: The after-deploy gate was checking Vercel's sign-in page; it checks the live site now
+
+Found while checking the minimal redesign's speed. After that release the gate's Lighthouse step read 11.86s to the largest paint
+and a score of 0.46 for the home page, against 9.06s to 9.49s and 0.48 to 0.60 on the five deploys before it. Measured properly
+(`scripts/speed-ab.ts`: the two builds' own addresses, five runs each, taking turns), the build before and the build after read
+the same, 9.70s and 9.71s, and the element being timed was `<h1 class="text-heading-32">Log in to Vercel`.
+
+**What was wrong.** `seo-preview-gate.yml` checked each deployment at `deployment_status.environment_url`, the deployment's own
+address (`riftcompare-<hash>-<team>.vercel.app`). That address is behind Vercel's sign-in: every request is redirected to
+vercel.com. So:
+
+- `template-seo-check.ts`, the one blocking check, read the login page as the sitemap, found no URL, printed "no published URLs —
+  skipped" for all 18 templates and exited 0. It gated nothing.
+- `content-quality.ts` crawled an empty list.
+- `lighthouse-budget.ts` timed the login page. It is report-only, so "regressed beyond budget" on every run changed nothing.
+
+The step timings say this was not new: on 10 September and on 10 November the template check and the content-quality crawl each
+finished within two seconds. A real template check reads the sitemaps and samples 38 pages.
+
+**The home page itself is fine.** Lighthouse mobile with the gate's settings, from GitHub runners against https://riftcompare.com
+after the release, seven runs on two machines: score 84 to 92 (median 89), largest paint 3.27s to 3.65s (median 3.51s), layout
+shift 0.002, blocking time 41 to 83ms on one machine and 286 to 301ms on the other. The baseline (`artifacts/lighthouse/budget.json`,
+8 September) is 0.88 and 3.94s. /browse read 89 and 2.70s, /sealed 90 and 3.33s (two runs each).
+
+**What changed.**
+
+- A Production deployment is checked at the public site (`PRODUCTION_URL` in the workflow, equal to `SITE_URL`). A Preview, when
+  one exists, keeps its own address. "Run workflow" checks production without a deploy.
+- Nothing to check is a failure. `template-seo-check.ts` exits 1 when the address serves no sitemap (and names what answered:
+  another host, a status, or the first words of the page), when the sitemap lists no page, and when no template has a page to
+  sample. `lighthouse-budget.ts` prints the page it ended on and the element its largest paint was, and refuses a run that ended
+  on another host before the budget or `--write-baseline` can see it. The three questions are pure functions in
+  `src/lib/deploy-gate.ts`.
+- The content-quality crawl is a Preview-only step. It loads every sitemap URL (2,563 in today's build) and then up to 4,000 links. Against
+  production, minutes after a release emptied the page cache, that is the prewarm the cost rules forbid. It had been reading an
+  empty list, so nothing is lost; run it by hand against a local build when it is wanted.
+- The ops monitor lists the workflow (`JOBS`, 60 hours): a `deployment_status` run belongs to Vercel's bot, so GitHub emails
+  nobody when the gate fails. One failure is amber, two in a row are red.
+- Installing Chromium is report-only, like the Lighthouse step it serves: on 11 November apt could not resolve its mirror and
+  the whole gate went red.
+- `scripts/speed-ab.ts` (`probe-deploy.yml`'s `speed` input) stays as the way to measure a live page properly: several runs per
+  address, the addresses taking turns, the element named, and an address that redirects to another host left out.
+
+**What the repaired check found first.** With the budget script pointed at a page of ours for the first time (a production build
+of this branch, the build before the redesign beside it), accessibility read 0.97 on the new home page against 1.00 on the old.
+Lighthouse's `target-size`: the text link into the set gallery ("See all 167 Radiance cards in the gallery") was a line of text
+286.6px by 17px, and since the minimal redesign the countdown card sits straight under it, which left 4px of safe space around it
+where 24 is asked. The old page had the same 17px link and passed, because the nearest thing to tap under it was 163px away. The
+link is now a row of its own (`GALLERY_LINK` in `HomeSections.tsx`, `inline-flex min-h-11`): 44px tall with a mouse and 48px on
+touch, 40px above the countdown's first link, and a fresh build reads 1.00. The same old-against-new comparison on /browse and
+/sealed found nothing lost (0.95 before, 0.99 now; what remains on both builds is the tiles' `<h3>` with no `<h2>` above it, which
+is the pages' outline and is left alone).
+
+**The first run against the live site** (run 43480517933, started by hand from this branch before merging). The template check
+sampled 38 pages of 14 templates on https://riftcompare.com in 13 seconds (the card template's pool is 1,693 pages, the store
+template's 268), and all 14 carry a self-canonical, complete OpenGraph and their required structured data. Four templates have
+no page in the sitemap (`pokemon-product`, `pokemon-post`, `set/gallery`, `marketplace/seller`), as on a local build. Lighthouse measured
+`https://riftcompare.com/`, its largest paint the hero's `<span class="rb-flame-text rb-flame-live">` ("Riftbound"): score 0.87,
+largest paint 3.39s, layout shift 0.002, blocking time 225ms, best practices 1.00, SEO 1.00, and accessibility 0.97, which is the
+gallery link above, live until the next release.
+
+**The script printed a tick beside that 0.97.** `lighthouse-budget.ts` says accessibility, best practices and SEO fail on any drop
+and only performance has 0.08 of slack, but the comparison subtracted 0.08 from every score, and its test asked only that the
+cushion existed. Each row carries its own limit now (`limit: (x) => x` for the three, `x - 0.08` for performance), and
+`tests/lighthouse-budget.test.ts` reads each row. Checked on /browse of a local build, which reads 0.99: a cross and exit 1, where
+it printed a tick before. And on the live home page, in a second run from this branch (43481841456): a cross beside 0.97, "1
+metric regressed beyond budget", exit 1, and the gate still green, because the step is report-only (score 0.90, largest paint
+3.45s, blocking time 107ms that time).
+
+**Limits.** The gate checks what the public site serves when it runs, about a minute after Vercel reports the deployment ready,
+and cannot prove which build that is: the site publishes no build id. A Preview's address is behind the same sign-in, so a
+preview's gate now fails with "Nothing was checked" instead of passing; previews are off (`vercel.json`), and making one
+checkable needs Vercel's Protection Bypass for Automation secret, which is the owner's to create. The Lighthouse step stays
+report-only: this is its first real run, so its trial starts now. Nobody is told what it prints; read a week of runs before
+making it a gate. One row will not hold as it is: blocking time for the same home page read 41 to 301ms across nine runs on
+GitHub's machines, against a ceiling of 300ms.
+
+`tests/deploy-gate.test.ts` pins all of it, and runs the template check against a server that answers like the login page (exit
+1, "Nothing was checked") and like a site (exit 0). No `[deploy]`: the workflow and scripts take effect on merge, and the gallery
+link rides the next release.

@@ -62,6 +62,14 @@ would have regressed". That is a fair description of what the check was actually
 worth here anyway: nothing enforced the preview gate before a push to `main`, so
 it was never blocking.
 
+**Since 2026-11-13 a Production deployment is checked at the public site**
+(`https://riftcompare.com`), not at the deployment's own address. That address is
+behind Vercel's sign-in, so until then the gate had been reading the login page:
+an empty sitemap passed the template check, and Lighthouse timed the login page.
+The content-quality crawl stays a Preview-only step, because it loads every page
+and that, minutes after a release, is a prewarm of the whole site. DECISIONS.md,
+"The after-deploy gate was checking Vercel's sign-in page".
+
 ## If you want the pre-merge gate back
 
 Stop pushing the same commit to two refs — land work on `main` through a PR from

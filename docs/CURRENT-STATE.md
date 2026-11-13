@@ -35,6 +35,16 @@ longer lands on its entry.
   (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject overrides, only on the owner's word.
   `vercel.json` sets `"**": false` with `"main": true`, so no branch or pull request builds a
   preview, `[preview]` included. [2026-11-02](../DECISIONS.md#L21685)
+- **The after-deploy check reads the public site (2026-11-13):** `seo-preview-gate.yml` checks a
+  Production deployment at `https://riftcompare.com`, never at the deployment's own address, which
+  is behind Vercel's sign-in (the gate had been reading the login page, and passing). An address
+  that shows a check nothing fails it: `template-seo-check.ts` exits 1 with no sitemap, no page or
+  no template sampled, and `lighthouse-budget.ts` refuses a run that ended on another host and
+  names the page and the largest paint's element. The every-page content-quality crawl is a
+  Preview-only step, never production (it would prewarm the site after a release). Lighthouse is
+  still report-only, on trial since this date; accessibility, best practices and SEO have no slack,
+  performance 0.08. A failed gate reaches the ops monitor (`JOBS`). "Run workflow" checks
+  production without a deploy. [2026-11-13](../DECISIONS.md#L23671)
 - **One release a day, after the snapshot (2026-10-15):** the morning import
   (`refresh-prices.yml`) exports and commits the public data snapshot, then
   dispatches `production-deploy.yml`, which lands an empty `[deploy]` commit;
