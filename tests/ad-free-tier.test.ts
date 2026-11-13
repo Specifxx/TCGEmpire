@@ -207,7 +207,7 @@ test("the boot script runs before the (still ungated) AdSense loader, and the hi
 
 test("every site ad placement is hidden under the hint until React takes over", () => {
   assert.match(read("src/app/globals.css"), /:root\[data-adfree\] \[data-ad-placement\] \{\s*display: none !important;/);
-  for (const f of ["AdSlot", "EbayAd", "TcgplayerAd", "EbayPicksLive", "FooterAds", "EbayAdCarouselLive"]) {
+  for (const f of ["AdSlot", "InlineAds", "InlineAdsZone", "EbayPicksLive", "EbayAdCarouselLive"]) {
     assert.match(read(`src/components/${f}.tsx`), /data-ad-placement=""/, `${f} is marked`);
   }
 });

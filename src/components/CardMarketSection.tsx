@@ -5,8 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
 import { CardmarketPrice } from "./CardmarketPrice";
-import { TcgplayerAd } from "./TcgplayerAd";
-import { EbayAd } from "./EbayAd";
 import { formatMoney, timeAgo } from "@/lib/format";
 import { CartAddButton } from "@/components/cart/CartAddButton";
 import { PIN_OUTLINE, computeMarket, rowOutline, rowStoreUrl, pinMarketplaces, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
@@ -341,7 +339,6 @@ export function CardPriceComparison({
   cardId,
   displayName,
   ebaySearch,
-  ebayQuery,
   preRelease = false,
   emptyState,
   image = null,
@@ -356,7 +353,6 @@ export function CardPriceComparison({
   emptyState?: React.ReactNode;
   displayName: string;
   ebaySearch: EbaySearchMap;
-  ebayQuery: string;
   /** The card's set has not released (isPreorderSetCode): the eBay fallback
    *  says nothing ships before release instead of implying copies are out
    *  there now. Computed by the ISR page, which re-renders daily. */
@@ -788,10 +784,9 @@ export function CardPriceComparison({
             and below contrast guidance).
             This is the ONE canonical disclosure for the whole price-comparison
             + TCGplayer-reference + ad-banner cluster below — TcgMarketPrice,
-            TcgplayerAd and EbayAd all render in immediate succession after
-            this and each carries its own disclosure prop, so they're told to
-            stay quiet here rather than stacking 3-4 copies of the same
-            "may earn a commission" line in one screenful. (The separate eBay
+            the card page's one InlineAds block follow in immediate succession
+            after this (2026-11-13: the eBay and TCGplayer banners that sat
+            here are gone) and the block carries its own affiliate line. (The separate eBay
             listings/graded panel further down the page keeps its own — it's a
             genuinely distinct affiliate surface, not adjacent to this one.) */}
         <div className="border-t border-ink-800 p-3 text-center">
@@ -843,24 +838,6 @@ export function CardPriceComparison({
           isEu={cardmarket.isEu}
         />
       )}
-
-      {/* TCGplayer market price (reference, currency-converted) — rendered below the
-          buyable table so it still appears on cards with no local listings.
-          disclosure=false: covered by the canonical disclosure above. */}
-
-      {/* Contextual eBay banner — searches for THIS card (new, used & graded).
-          FIRST of the two banners (2026-09-26, "Pushing eBay clicks" in
-          DECISIONS.md): eBay is the main affiliate partner, so its banner
-          takes the prime spot under the price table that TCGplayer's held.
-          Still an ad — "Ad" label, hidden for ad-free members — exactly as
-          before; only the order changed.
-          disclosure=false: covered by the canonical disclosure above. */}
-      <EbayAd size="leaderboard" country={country} query={ebayQuery} className="mt-6" disclosure={false} pageType="card_detail" />
-
-      {/* TCGplayer affiliate banner — pays commission on click-through
-          purchases; second since 2026-09-26 (see the eBay banner above).
-          disclosure=false: covered by the canonical disclosure above. */}
-      <TcgplayerAd size="rect" mobile="rect" country={country} className="mt-4" disclosure={false} />
     </>
   );
 }

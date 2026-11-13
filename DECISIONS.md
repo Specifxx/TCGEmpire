@@ -23548,3 +23548,18 @@ Owner (after the rails came off): wanted ONE bigger, subtler horizontal ad block
 Rules held: browser only (nothing in the server HTML, so no SEO change), height reserved from the first client paint (CLS 0), `data-ad-placement` so it is hidden for Plus, Premium and ad-free members and the phone dock yields to it, every link through `OutboundLink` (rel sponsored), eBay first and TCGplayer second, never Amazon, Fetch TCG stays an ordinary store, never a store row, best price, deal or alert. No new database read: the route and its loaders are unchanged.
 
 Where it sits, once per page: the homes (HomeSections, after Today's Top Deals and the editorial band, never in the hero), card pages (after the price comparison and the eBay panel, replacing the small pair that sat under the price and the TCGplayer strip), sealed product pages (below the price table), set pages (after the guides) and /browse (after the grid); any other shopping page gets it from the footer zone (`inlineAdsAllowed`). Never on `/blog` or `/guides` (Mediavine articles keep their own strips and no unit is placed beside theirs), never in a quick view. Removed: `SideRails.tsx` (the rails, `SIDE_RAILS`, their CSS), `MiniPicks.tsx`, the quick views' small pair, the surfaces `side_rails` and `mini_picks`. Kept: the phone dock (`PhoneDockAds.tsx`, `AdDock.tsx`), and the footer's two banner leaderboards and the card page's two banners, which the owner did not name; say so if they should go too. Measure clicks per `inline_ads` placement against the strips it replaced. `tests/inline-ads.test.ts` pins it.
+
+## 2026-11-13: the footer leaderboards and the card-page banners are removed; one block per page
+
+Owner's aim: ONE subtle ad block per page. After the native `InlineAds` block replaced the side rails (PR #425), the old loud
+banners still stacked on top of it: the eBay and TCGplayer leaderboard pair that `FooterAds` mounted under every page, and the
+eBay leaderboard and TCGplayer rect under the card page's price table. All of them are gone, with `FooterAds.tsx`, `EbayAd.tsx`
+and `TcgplayerAd.tsx`. What stays: the block places itself on the homes, card, sealed, set and browse pages; on every other
+shopping page `InlineAdsZone` (the layout's footer zone, `id="rc-ad-zone"`, which the feedback launcher still avoids) draws the
+same block once. The route allow-lists (`BANNER_FREE_ROUTES`, `OFF_TOPIC_ROUTES`, `SALES_ROUTES`, the arcade, `inlineAdsAllowed`)
+moved to `src/lib/ad-routes.ts`, unchanged: the policy and trust pages, /pokemon, the arcade, /premium and Mediavine articles
+carry none. Rules unchanged: paid links are eBay and TCGplayer only, every one through `OutboundLink` (rel sponsored), the block
+carries its own "Ad" label and affiliate line (so the zone adds no second disclosure), and Plus, Premium and ad-free members see
+nothing. The card page's `ebayQuery` prop went with the eBay banner. The pinned tests (site-chrome, ebay-clicks-card, ad-free-tier,
+ad-responsive, cardmarket-eu, trust-pages, sidenav, pokemon-isolation, inline-ads) now assert the one-block reality and that the
+three banner files stay deleted.

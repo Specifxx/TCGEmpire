@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { buyButtonClass, buyButtonLabel } from "../src/components/CardMarketSection";
@@ -91,29 +91,22 @@ test("a pinned row keeps its price rank, says it was moved, and says how much de
 
 // ── 3. Banner order ─────────────────────────────────────────────────────────
 
-test("the eBay banner comes before TCGplayer's, under the card table and in the footer", () => {
-  for (const f of [SECTION, "src/components/FooterAds.tsx"]) {
-    const src = read(f);
-    const ebay = src.indexOf("<EbayAd ");
-    const tcg = src.indexOf("<TcgplayerAd ");
-    assert.ok(ebay > 0 && tcg > ebay, `${f}: EbayAd must precede TcgplayerAd`);
+test("the card page and the footer carry no eBay or TCGplayer banner, only the one InlineAds block (owner, 2026-11-13)", () => {
+  for (const f of [SECTION, "src/components/InlineAdsZone.tsx"]) {
+    assert.doesNotMatch(read(f), /<(EbayAd|TcgplayerAd) /, `${f}: no leaderboard or rect banner`);
   }
-  // The card page's banner names its page for buy_click.
-  assert.match(read(SECTION), /<EbayAd size="leaderboard" country=\{country\} query=\{ebayQuery\} className="mt-6" disclosure=\{false\} pageType="card_detail" \/>/);
+  for (const f of ["src/components/EbayAd.tsx", "src/components/TcgplayerAd.tsx", "src/components/FooterAds.tsx"]) assert.ok(!existsSync(join(process.cwd(), f)), `${f} is deleted`);
 });
 
-test("the banners are still ads: labelled, and hidden for ad-free members", () => {
-  for (const f of ["src/components/EbayAd.tsx", "src/components/TcgplayerAd.tsx"]) {
-    const src = read(f);
-    assert.match(src, /if \(usePremium\(\)\) return null;/, `${f} stays ad-free-gated`);
-    assert.match(src, />\s*Ad\s*</, `${f} keeps its "Ad" label`);
-  }
-  const footer = read("src/components/FooterAds.tsx");
-  // The same early return also drops the pair on the policy and trust pages
-  // since 2026-09-26 (owner decision, "Blog and tools, joined up" in
-  // DECISIONS.md; tests/site-chrome.test.ts). Ad-free still comes first.
-  assert.match(footer, /if \(adFree \|\| !footerBannersAllowed\(pathname\)\) return null;/);
-  assert.match(footer, /<AffiliateDisclosure partner="both" tight/);
+test("the one block is still an ad: labelled, and hidden for ad-free members", () => {
+  const inline = read("src/components/InlineAds.tsx");
+  assert.match(inline, /if \(adFree \|\| data === null\) return null;/);
+  assert.match(inline, />Ad<\/span>/, "keeps its Ad label");
+  assert.match(inline, /data-ad-placement=""/);
+  const zone = read("src/components/InlineAdsZone.tsx");
+  assert.match(zone, /if \(adFree \|\| !adBlockAllowed\(pathname\) \|\| !inlineAdsAllowed\(pathname\)\) return null;/);
+  // The block carries its own affiliate line, so the zone adds no second disclosure.
+  assert.match(inline, /Affiliate links: RiftCompare may earn a commission/);
 });
 
 // ── 4. Pre-release and resale-only cards on the card page ───────────────────
