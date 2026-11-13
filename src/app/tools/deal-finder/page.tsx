@@ -444,7 +444,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
                 <MorePremium more={vsEbay.total - vsEbay.items.length} unit="cards" />
               )}
               <p className="mt-3 text-[11px] leading-relaxed text-slate-600">
-                Best store price is the cheapest in-stock copy at a store we track, item price only (postage extra). Cheapest on
+                Store price is the cheapest in-stock copy at a store we track, item price only (postage extra). Cheapest on
                 eBay is the cheapest in-stock listing&apos;s asking price — &ldquo;delivered&rdquo; includes the seller&apos;s
                 stated postage, &ldquo;+ postage&rdquo; means none was stated. Below eBay is measured on these two figures, and %
                 below is a share of the eBay price. Open the card to see every store before buying.
@@ -631,7 +631,7 @@ function BuyerTable({ items, country, currency }: { items: ArbItem[]; country: C
 }
 
 // ── Underpriced vs eBay ──────────────────────────────────────────────────────
-// Card · Best store price · Cheapest on eBay · Below eBay · % below. Below sm it
+// Card · Store price · Cheapest on eBay · Below eBay · % below. Below sm it
 // is three columns, like BuyerTable: the eBay figure folds under the Below eBay
 // amount ("vs eBay $X delivered") instead of a fourth column scrolled sideways.
 // The store price links to that store's own listing (the live row the loader
@@ -645,7 +645,7 @@ function VsEbayTable({ items, country, currency }: { items: VsEbayItem[]; countr
       <thead>
         <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
           <th className="px-3 py-2.5 font-semibold sm:px-4">Card</th>
-          <th className="px-2 py-2.5 text-right font-semibold">Best store price</th>
+          <th className="px-2 py-2.5 text-right font-semibold">Store price</th>
           <th className="hidden px-2 py-2.5 text-right font-semibold sm:table-cell">Cheapest on eBay</th>
           <th className="px-3 py-2.5 text-right font-semibold sm:px-2">Below eBay</th>
           <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">% below</th>
