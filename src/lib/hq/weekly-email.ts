@@ -45,6 +45,8 @@ export interface WeeklyInput {
   networks?: ReadonlyMap<string, NetworkCounts> | null;
   /** The compare search test (to the 8 Dec gate): stored analytics and ce-search/ce-mcp eBay earnings, AUD cents. */
   search?: { test: SearchTest | null; earned: { d7: number; d30: number } } | null;
+  /** The quick view's A/B tests on DexCompare and MTG Compare (lib/earnings/ab-test.ts abTestLines), or empty. */
+  abTests?: readonly string[];
   /** Bing, every site (lib/hq/bing.ts bingLines), or empty. */
   bing?: readonly string[];
   /** Bing URL submission for the small sites (lib/hq/bing.ts bingSubmitLines), or empty. */
@@ -166,6 +168,11 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
     inner += `<tr><td style="${h}">Compare search test (gate 8 Dec)</td></tr>`;
     inner += `<tr><td style="padding:2px 32px;font-size:13px;line-height:1.55;color:#b8c0cc">${searchLines.map((l) => `<div style="margin:3px 0">${esc(l)}</div>`).join("")}</td></tr>`;
   }
+  const abLines = x.abTests ?? [];
+  if (abLines.length) {
+    inner += `<tr><td style="${h}">A/B tests, quick view (20 Nov to 3 Dec)</td></tr>`;
+    inner += `<tr><td style="padding:2px 32px;font-size:13px;line-height:1.55;color:#b8c0cc">${abLines.map((l) => `<div style="margin:3px 0">${esc(l)}</div>`).join("")}</td></tr>`;
+  }
   inner += x.money.html;
   if (x.growthText) {
     inner += `<tr><td style="${h}">Growth review detail</td></tr>`;
@@ -192,6 +199,7 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
     ...(submitLines.length ? ["", "BING URL SUBMISSION, SMALL SITES", ...submitLines.map((l) => `  ${l}`)] : []),
     ...(signupLns.length ? ["", "EMAIL SIGN-UPS, SISTER SITES", ...signupLns.map((l) => `  ${l}`)] : []),
     ...(searchLines.length ? ["", "COMPARE SEARCH TEST (GATE 8 DEC)", ...searchLines.map((l) => `  ${l}`)] : []),
+    ...(abLines.length ? ["", "A/B TESTS, QUICK VIEW (20 NOV TO 3 DEC)", ...abLines.map((l) => `  ${l}`)] : []),
     "",
     x.money.text,
     ...(x.growthText ? ["", "GROWTH REVIEW DETAIL", x.growthText] : []),

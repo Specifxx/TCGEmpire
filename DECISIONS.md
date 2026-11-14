@@ -23748,3 +23748,28 @@ GitHub's machines, against a ceiling of 300ms.
 `tests/deploy-gate.test.ts` pins all of it, and runs the template check against a server that answers like the login page (exit
 1, "Nothing was checked") and like a site (exit 0). No `[deploy]`: the workflow and scripts take effect on merge, and the gallery
 link rides the next release.
+
+## 2026-11-14: The Monday report reads the quick view's A/B tests on DexCompare and MTG Compare
+
+The owner (2026-11-14): "we need to do some A/B testing to determine what is the best way for us to earn more revenue". The
+tests themselves live in the two sister repos (their DECISIONS.md, 2026-11-14, `src/lib/ab.ts`): three 50/50 splits inside the
+quick view, which is drawn in the browser and is in no page's HTML, from 20 November to 3 December. `order` (US): TCGplayer's
+priced row pinned above eBay's or under it. `mini` (DexCompare, phones): the small eBay + TCGplayer pair above the price rows
+or under them. `cta`: TCGplayer's button says "Buy now" or "View deal". Why there: 53% of DexCompare's buy clicks and 52% of
+MTG Compare's start in the quick view (7 to 13 November: 2,437 of 4,595, and 591 of 1,143), and TCGplayer earned A$0.73 a click
+on DexCompare against eBay's A$0.13 (30 days to 11 November). RiftCompare is not split: its own redesign is read on 19
+November, and its analytics waits for consent. YGO Compare had 74 buy clicks that week, too few to split.
+
+What this repo adds is the read, so nobody has to remember to look. `src/lib/earnings/ab-test.ts`: the earnings refresh (every
+three hours) asks Vercel's public Web Analytics API for the tests' eight events by their one property `k` (region and the
+visit's three arms) and keeps one copy; `abTestLines` turns it into the lines of a new section in the Monday report and on
+Empire HQ. Each event is sent once a visit, so every figure is a share of the visits that opened a quick view. The refresh is
+idle before 20 November and after 14 December, and the section prints only between those days.
+
+The rules are in the code, written before any number existed: while the tests run the lines say "no verdict before the last
+day" (looking early and stopping on a good day is how a test finds a difference that is not there); from 4 December each
+test's first measure decides (`order` and `cta`: the share of visits with a TCGplayer click; `mini`: with any paid click), by
+a two-sided two-proportion test at p under 0.05, and a test that does not reach it keeps the control. For `order` the eBay
+clicks lost are weighed against the TCGplayer clicks won at each network's own earnings per click for the fortnight before the
+winner ships. `tests/earnings-ab-test.test.ts` pins the arithmetic, the dates and the no-early-verdict rule. No new scheduled
+job, API or limit: it rides the existing refresh and its ops check. No `[deploy]`: it rides the next release, before the 20th.
