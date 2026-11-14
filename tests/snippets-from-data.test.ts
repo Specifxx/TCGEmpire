@@ -15,11 +15,11 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 test("ban list: title, count, date and ItemList all come from lib/banlist.ts", () => {
   const a = getArticle(BANLIST_SLUG)!;
   assert.equal(a.updated, BANLIST_UPDATED, "dateModified is the last wave's date");
-  assert.equal(a.title, `Riftbound Ban List (Sep 2026): ${BANNED_CARDS.length} Banned Cards`);
+  assert.equal(a.title, `Riftbound Ban List (Nov 2026): ${BANNED_CARDS.length} Banned Cards`);
   assert.ok(`${a.title} — RiftCompare`.length <= 60);
   assert.equal(a.itemList?.items.length, BANNED_CARDS.length);
-  assert.equal(BANNED_CARDS.length, 13);
-  assert.equal(BANNED_CARDS.filter((b) => b.formats.includes("Standard")).length, 12);
+  assert.equal(BANNED_CARDS.length, 23);
+  assert.equal(BANNED_CARDS.filter((b) => b.formats.includes("Standard")).length, 22);
   assert.deepEqual(BANNED_CARDS.filter((b) => !b.formats.includes("Standard")).map((b) => b.name), ["Master Yi, Wuju Bladesman"]);
   // Every table row is also an embed on the page, so it resolves to a real card.
   const embedded = new Set((a.embeds ?? []).flatMap((e) => e.slugs));

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { BANNED_CARDS, BANLIST_UPDATED, banDate } from "@/lib/banlist";
+import { BANNED_CARDS, BANLIST_UPDATED, banDate, banIsUpcoming } from "@/lib/banlist";
 import { cardArtThumb, cardImageSrc, cardImageSrcSet } from "@/lib/card-image-url";
 import { formatMoney } from "@/lib/format";
 import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
@@ -40,7 +40,7 @@ export async function BanListTable() {
               <th scope="col" className="px-2 py-2 font-semibold sm:px-3">Card</th>
               {/* Format and date share a cell so the whole table fits a 360px
                   phone without a sideways scroll hiding the price. */}
-              <th scope="col" className="px-2 py-2 font-semibold sm:px-3">Banned in · since</th>
+              <th scope="col" className="px-2 py-2 font-semibold sm:px-3">Banned in · date</th>
               <th scope="col" className="px-2 py-2 text-right font-semibold sm:px-3">Price ({currency})</th>
             </tr>
           </thead>
@@ -66,7 +66,7 @@ export async function BanListTable() {
                     <span className="block whitespace-nowrap text-slate-300">
                       {b.formats.length === 2 ? "Standard + 2v2" : `${b.formats[0]} only`}
                     </span>
-                    <span className="block whitespace-nowrap text-xs text-slate-500">{banDate(b.effective)}</span>
+                    <span className="block whitespace-nowrap text-xs text-slate-500">{banIsUpcoming(b) ? "from " : ""}{banDate(b.effective)}</span>
                   </td>
                   <td className="num whitespace-nowrap px-2 py-1.5 text-right font-semibold text-white sm:px-3">
                     {price != null ? formatMoney(price, currency) : <span className="text-slate-600">—</span>}

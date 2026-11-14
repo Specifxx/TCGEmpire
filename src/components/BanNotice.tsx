@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BANLIST_HREF, banDate, banFor } from "@/lib/banlist";
+import { BANLIST_HREF, banDate, banFor, banIsUpcoming } from "@/lib/banlist";
 
 // "Banned in Standard and 2v2" under a banned card's name (2026-10-02). Prices
 // still show: people buy banned cards for collections and casual play. Data is
@@ -17,7 +17,7 @@ export function BanNotice({ name, compact = false }: { name: string; compact?: b
     >
       <span className="rounded bg-red-500/80 px-1.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-[#ffffff]">Banned</span>
       <span>
-        in {formats} since {banDate(ban.effective)}.{" "}
+        in {formats} {banIsUpcoming(ban) ? "from" : "since"} {banDate(ban.effective)}.{" "}
         <Link href={BANLIST_HREF} prefetch={false} className="font-semibold text-brand-400 hover:underline">
           Ban list
         </Link>

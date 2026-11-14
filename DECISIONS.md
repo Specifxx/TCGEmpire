@@ -23773,3 +23773,28 @@ a two-sided two-proportion test at p under 0.05, and a test that does not reach 
 clicks lost are weighed against the TCGplayer clicks won at each network's own earnings per click for the fortnight before the
 winner ships. `tests/earnings-ab-test.test.ts` pins the arithmetic, the dates and the no-early-verdict rule. No new scheduled
 job, API or limit: it rides the existing refresh and its ops check. No `[deploy]`: it rides the next release, before the 20th.
+
+## 2026-11-14: The November ban wave: ten rows from 23 November, and a ban that is announced reads "from"
+
+Riot announced its fourth ban wave on 13 November 2026, effective Monday 23 November: Riven, Broken Blade, Zhonya's Hourglass,
+Stellacorn Herder, Nocturne, Horrifying, Rhasa the Sunderer, Brynhir Thundersong, Dazzling Aurora and Baited Hook, and the
+battlefields Emperor's Dais and Star Spring, on the Standard and Constructed 2v2 lists together. The owner (2026-11-14): "there's
+a new ban list … Claude should be able to find it". `lib/banlist.ts` gains the ten rows and `BANLIST_UPDATED` moves to the
+announcement date, which moves the guide's title ("Riftbound Ban List (Nov 2026): 23 Banned Cards"), its `dateModified`, the
+table under the H1 and the ItemList in one step, as the 2026-09-24 entry set up.
+
+This is the first wave announced more than a week ahead, so a row's date can be in the future. `banIsUpcoming` makes the card
+page's and quick view's notice read "Banned in Standard and 2v2 from 23 Nov 2026" until the day, then "since"; the table's
+column is "Banned in · date" with "from" on a row still ahead. A cached page that still says "from" after the 23rd is not wrong.
+
+The guide gets the wave as its first section (Riot's reasons in our words with short quotations, the end of the global ban list,
+the 2027 ban windows, Nexus Nights) and two questions people will type ("Is Riven, Broken Blade banned", "Is Baited Hook
+banned"). A news post, `/blog/riftbound-november-2026-bans-riven-baited-hook`, carries what the guide is not for: the events
+either side of the date and what each card cost on 13 November, from our own daily price files, the last full day before the
+news. It gives no price after the announcement and no forecast: the daily file is the cheapest listing anywhere, one odd listing
+moves it, and the live gallery and each card's chart show the real thing. No community reaction this time: we could not read
+the thread, so none is quoted. The rules hub, the rotation guide and the patch-notes post no longer call September the latest
+wave. `tests/november-2026-bans.test.ts` pins the rows, the wording switch, the guide and the post.
+
+The merge carries `[deploy]` without `[urgent]`: the news is a day old and other sites already list it, so it should not wait
+a day, but the 12-hour gate still decides whether it builds now or rides the next release.
