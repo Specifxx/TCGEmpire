@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import Link from "next/link";
+import { PageTrail } from "@/components/PageTrail";
 import type { Article, ArticleCloseUp, ArticleEmbed } from "@/lib/articles";
 import { ARTICLES } from "@/lib/articles";
 import { prisma } from "@/lib/db";
@@ -472,18 +473,18 @@ export async function ArticleView({ article }: { article: Article }) {
         }}
       />
 
-      <Link href={backHref} className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
-        ← {backLabel}
-      </Link>
+      {/* One page header across page types (2026-11-14): the visible trail matches breadcrumbLd above. "← All
+          guides" / "← All posts" stays at the foot of the article. */}
+      <PageTrail trail={[{ name: isGuide ? "Guides" : "Blog", href: backHref }]} className="mb-3" />
 
-      <div className="mb-2 flex flex-wrap gap-1.5">
+      <div className="mb-3 flex flex-wrap gap-1.5">
         {article.tags.map((t) => (
           <span key={t} className="chip bg-ink-800 text-slate-400">{t}</span>
         ))}
       </div>
 
       <h1 className="text-3xl font-extrabold leading-tight text-white">{article.title}</h1>
-      <div className="mt-2 text-sm text-slate-500">
+      <div className="mt-3 text-sm text-slate-500">
         {/* The byline links to a real author page with a real bio, and to the
             editorial policy. Anonymous long-form content at scale is one of the
             strongest "machine-generated" signals a reviewer looks for. */}
@@ -513,7 +514,7 @@ export async function ArticleView({ article }: { article: Article }) {
           the H1 (lib/banlist.ts). */}
       {article.slug === BANLIST_SLUG && <BanListTable />}
 
-      <div className="mt-3">
+      <div className="mt-4">
         <ArticleShare url={articleUrl} title={article.title} />
       </div>
 

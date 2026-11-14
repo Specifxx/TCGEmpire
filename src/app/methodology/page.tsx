@@ -194,7 +194,7 @@ export default function MethodologyPage() {
             you can see the translation rather than trust it blindly.
           </p>
           <div className="card-surface mt-2 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[34rem] text-sm">
               <thead>
                 <tr className="border-b border-ink-800 text-left text-xs uppercase tracking-wide text-slate-500">
                   <th scope="col" className="px-4 py-3">Source</th>

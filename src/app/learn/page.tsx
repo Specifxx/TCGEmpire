@@ -197,7 +197,7 @@ export default async function LearnPage() {
 
       {/* Hero */}
       <section className="card-surface overflow-hidden">
-        <div className="border-l-2 border-brand-500 bg-ink-900 px-6 py-10 text-center">
+        <div className="bg-ink-900 px-5 py-10 text-center sm:px-6">
           <h1 className="mx-auto max-w-2xl font-display text-3xl font-extrabold text-white">Learn Riftbound</h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
             The interactive guide to the League of Legends TCG. Step through how a game flows, explore
@@ -258,9 +258,13 @@ export default async function LearnPage() {
                 ) : (
                   <div className="h-14 w-10 shrink-0 rounded bg-ink-800" />
                 )}
-                <div className="w-24 shrink-0 font-bold text-white">{t.type}</div>
-                <p className="min-w-0 flex-1 text-sm text-slate-400">{TYPE_BLURBS[t.type] ?? ""}</p>
-                <Link href={`/browse?type=${encodeURIComponent(t.type)}`} className="shrink-0 text-xs font-semibold text-brand-400 hover:underline">
+                {/* Name over its line on a phone, side by side from sm (2026-11-14): beside a 96px name the
+                    line had a three-word column. */}
+                <div className="min-w-0 flex-1 sm:flex sm:items-center sm:gap-4">
+                  <div className="font-bold text-white sm:w-24 sm:shrink-0">{t.type}</div>
+                  <p className="mt-0.5 min-w-0 flex-1 text-sm leading-snug text-slate-400 sm:mt-0">{TYPE_BLURBS[t.type] ?? ""}</p>
+                </div>
+                <Link href={`/browse?type=${encodeURIComponent(t.type)}`} className="tap-link shrink-0 gap-1 text-xs font-semibold text-brand-400 hover:underline">
                   <span className="num">{t._count}</span> cards →
                 </Link>
               </div>
@@ -361,7 +365,7 @@ export default async function LearnPage() {
 
       {/* Riftle banner */}
       <section className="card-surface overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-l-2 border-brand-500 bg-ink-900 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-ink-900 p-5 sm:p-6">
           <div>
             <h2 className="text-lg font-extrabold text-white">Riftle — the card game about the card game</h2>
             <p className="mt-1 max-w-md text-sm text-slate-400">

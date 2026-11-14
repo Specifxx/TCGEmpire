@@ -23855,3 +23855,33 @@ Seen and left, with the reason: the store thumbs (20px by 16px) are the owner's 
 page's phone buy box repeats the cheapest price shown just under it, but it is a paid placement and frozen until the 19th; the
 "updated 13h ago" words appear on each table row after the page loads, also inside the frozen rows; "+ I own this" on the set
 list is 26px tall and belongs to the shared vault stylesheet.
+
+## 2026-11-14: The pages after the front page: one page header, calm articles, guide and blog lists that fit a phone
+
+The owner (2026-11-14): "I like how all our compare websites are more aesthetic on the homepage now but can we make all the
+other pages more aesthetic as well". The polish pass earlier today covered the card, sealed, browse, set, search and 404 pages;
+this one covers the reading and index pages. Judged on a 390px phone first, then at 1440px, in both themes. Nothing was added.
+
+- **One page header.** The guide and blog indexes and every article open the way /about and /sets already did: a "Home /
+  Guides" (or "Blog") trail, the h1 at the same size, one line under it. The trail is `components/PageTrail.tsx`, which draws
+  the crumbs and writes no JSON-LD (each of those pages keeps its own BreadcrumbList node, unchanged). On an article it replaces
+  the "← All guides" link at the top; the same link is still at the foot. /sets drops the card its header sat in.
+- **Guide and blog indexes.** On a phone each article was a full-width card with a 200px picture: /guides measured 6,236px, /blog
+  5,766px. Below `sm` a card is now a row (an 80px thumbnail, the tags, the title, two lines of the excerpt): 4,247px and 4,313px.
+  From `sm` it is the same card as before. The second intro paragraph (who writes them, how prices are collected) folds into a
+  native `<details>` ("How these guides are written"), still in the server HTML with its four links. The topic dots, the gold
+  "Popular" chip and its gold outline are neutral (calm palette, 2026-11-12).
+- **Articles.** "The short version" box and the quote blocks lose their orange edge and orange heading; the post-release "Radiance
+  is out" link and the chase-card alert box lose their orange and gold tints (the eBay line under the Radiance link is
+  untouched). Paragraphs and lists get a little more air, h2s are one step larger from `sm`, list markers are grey. The share row
+  fits one line on a phone, and "🔗 Copy link" / "✓ Copied" read "Copy link" / "Copied".
+- **/learn**: the card-type list put a 96px name beside a three-word column of text on a phone; the line now sits under the name.
+  The two boxes with an orange left edge are plain cards. **/methodology**: the condition table scrolls in its own box on a phone
+  instead of squeezing three columns into 358px.
+
+**No paid link, ad placement, URL or metadata changed.** Compared with scripts off on ten pages (/guides, /blog, the ban list
+guide, the ban news post, a second post, /learn, /sets, /methodology, /about, a card page), main against this branch: the title,
+every meta tag, canonical and alternates, every JSON-LD node, the h1 and h2 lists and the set of internal links are identical, no
+word of text is lost, and every sponsored `<a>` is the same, in the same order. So the 19 November clicks-per-placement recheck
+is unaffected. Left alone: the price guide's table (its eBay buttons are paid rows), the Stores plan page (a sales page with its
+own design), the TOC staying open by default (2026-09-23 decision).

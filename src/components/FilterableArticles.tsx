@@ -7,7 +7,7 @@ import { fmtDate } from "@/components/ArticleList";
 import { Picture } from "@/components/Picture";
 
 // A named group of articles, surfaced as a topic BUTTON under the Latest list.
-// Matched by tag; `accent` is a hex colour for the button's dot, purely decorative.
+// Matched by tag. `accent` is kept in the data but no longer drawn (2026-11-14, calm palette: topics are neutral).
 export interface ArticleSection {
   title: string;
   tags: string[];
@@ -159,7 +159,7 @@ export function FilterableArticles({
         <div>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: activeGroup.accent }} aria-hidden />
+              <span className="h-2 w-2 shrink-0 rounded-full bg-slate-500" aria-hidden />
               <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">{activeGroup.title}</h2>
               <span className="text-xs text-slate-500">· {activeGroup.items.length}</span>
             </div>
@@ -186,7 +186,7 @@ export function FilterableArticles({
         /* ── Default: Latest, then topic buttons ─────────────────────────── */
         <div>
           <div className="mb-3 flex items-center gap-2">
-            <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-400" aria-hidden />
+            <span className="h-2 w-2 shrink-0 rounded-full bg-slate-500" aria-hidden />
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">Latest</h2>
             <span className="text-xs text-slate-500">· {articles.length}</span>
           </div>
@@ -257,10 +257,7 @@ function TopicButtons({
                   : "border-ink-700 bg-ink-850 text-slate-200 hover:border-brand-500/60 hover:bg-ink-800"
               }`}
             >
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: g.accent }} aria-hidden />
-                <span className="truncate">{g.title}</span>
-              </span>
+              <span className="truncate">{g.title}</span>
               <span className="shrink-0 text-xs font-normal text-slate-500">{g.items.length}</span>
             </button>
           );
@@ -290,9 +287,7 @@ function ArticleCard({
   return (
     <Link
       href={`${basePath}/${a.slug}`}
-      className={`card-surface group relative flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow ${
-        popular ? "border-gold/40" : ""
-      } ${className}`}
+      className={`card-surface group relative flex flex-row overflow-hidden transition-[transform,box-shadow,border-color] duration-base ease-out hover:border-ink-600 hover:shadow-glow focus-visible:border-brand-500/60 motion-safe:hover:-translate-y-0.5 active:translate-y-0 sm:flex-col ${className}`}
     >
       {/* Real card art when the article has one — many don't yet, so this is
           conditional rather than a reserved-but-empty box. aspect-[1.91/1] +
@@ -300,7 +295,7 @@ function ArticleCard({
           strip, the same treatment the homepage editorial band's lead image
           uses. */}
       {a.hero && (
-        <div className="relative aspect-[1.91/1] w-full shrink-0 overflow-hidden bg-ink-900">
+        <div className="relative ml-4 mt-4 h-20 w-20 shrink-0 self-start overflow-hidden rounded-md bg-ink-900 sm:m-0 sm:aspect-[1.91/1] sm:h-auto sm:w-full sm:self-auto sm:rounded-none">
           {/* wrapperClassName, not just className: Picture renders
               <picture><img/></picture>, and it is the PICTURE that is the aspect
               box's child. Left unstyled it is display:inline with no width of
@@ -313,22 +308,22 @@ function ArticleCard({
             alt={a.hero.alt}
             width={744}
             height={1039}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 80px, (max-width: 1024px) 50vw, 33vw"
             wrapperClassName="absolute inset-0 block h-full w-full"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="h-full w-full object-cover transition-transform duration-slow ease-out motion-safe:group-hover:scale-[1.03]"
           />
         </div>
       )}
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-1.5">
-          {popular && <span className="chip bg-gold/15 font-semibold text-gold">Popular</span>}
+          {popular && <span className="chip bg-ink-800 font-semibold text-slate-200">Popular</span>}
           {isNew(a.date) && <span className="chip bg-brand-500/15 font-semibold text-brand-300">New</span>}
           {a.tags.slice(0, popular || isNew(a.date) ? 2 : 3).map((t) => (
             <span key={t} className="chip bg-ink-800 text-slate-400">{t}</span>
           ))}
         </div>
-        <h2 className="mt-2 text-lg font-bold text-white">{a.title}</h2>
-        <p className="mt-1 line-clamp-3 flex-1 text-sm text-slate-400">{a.excerpt}</p>
+        <h2 className="mt-2 text-base font-bold leading-snug text-white sm:text-lg">{a.title}</h2>
+        <p className="mt-1 line-clamp-2 flex-1 text-sm text-slate-400 sm:line-clamp-3">{a.excerpt}</p>
         <div className="mt-3 text-xs text-slate-500">
           {fmtDate(a.date)} · {a.readMins} min read
         </div>

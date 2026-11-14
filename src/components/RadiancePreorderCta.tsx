@@ -30,10 +30,10 @@ export async function RadiancePreorderCta({
       <div data-radiance-cta={placement} className="not-prose my-6">
         <Link
           href="/sets/radiance#price-guide"
-          className="flex items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3 text-sm text-slate-200 hover:border-brand-500/60"
+          className="flex items-center justify-between gap-3 rounded-xl border border-ink-700 bg-ink-900 px-4 py-3 text-sm text-slate-300 transition-colors duration-fast hover:border-ink-600"
         >
           <span>
-            <strong className="text-brand-300">Radiance is out.</strong> Every card&apos;s live price, cheapest store first.
+            <strong className="text-white">Radiance is out.</strong> Every card&apos;s live price, cheapest store first.
           </span>
           <span className="shrink-0 font-semibold text-brand-300">See Radiance prices →</span>
         </Link>

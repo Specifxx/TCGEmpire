@@ -20,7 +20,7 @@ export function ArticleShare({ url, title }: { url: string; title: string }) {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
       <span className="text-xs text-slate-500">Share:</span>
       {links.map((l) => (
         <a
@@ -29,7 +29,7 @@ export function ArticleShare({ url, title }: { url: string; title: string }) {
           target="_blank"
           rel="noopener noreferrer nofollow"
           aria-label={l.label}
-          className="btn-ghost text-xs"
+          className="btn-ghost px-3 text-xs"
         >
           {l.short}
         </a>
@@ -46,9 +46,9 @@ export function ArticleShare({ url, title }: { url: string; title: string }) {
           }
         }}
         aria-label="Copy link to this article"
-        className="btn-ghost text-xs"
+        className="btn-ghost px-3 text-xs"
       >
-        {copied ? "✓ Copied" : "🔗 Copy link"}
+        {copied ? "Copied" : "Copy link"}
       </button>
     </div>
   );

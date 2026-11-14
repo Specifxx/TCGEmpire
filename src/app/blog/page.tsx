@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageTrail } from "@/components/PageTrail";
 import type { Metadata } from "next";
 import { getBlogPosts } from "@/lib/posts";
 import { FilterableArticles, type ArticleSection, type ArticleListItem } from "@/components/FilterableArticles";
@@ -115,21 +116,28 @@ export default async function BlogPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb, blog]) }}
       />
-      <div className="mb-5">
-        <h1 className="text-2xl font-extrabold text-white">Blog</h1>
+      <header className="mb-6">
+        <PageTrail trail={[{ name: "Blog" }]} />
+        <h1 className="text-3xl font-extrabold leading-tight text-white">Blog</h1>
         {/* What the blog is and who writes it (2026-09-26, "Blog and tools,
             joined up"). Worded for this page: /guides describes the reference
             half in its own words, so neither intro is the other's boilerplate.
             The authorship sentence is the owner's statement (lib/content/
             authors.ts ARTICLE_PROCESS), in this page's own phrasing. */}
-        <div className="mt-2 max-w-3xl space-y-2 text-sm leading-relaxed text-slate-400">
+        <div className="mt-2 max-w-2xl space-y-2 text-[15px] leading-relaxed text-slate-400">
           <p>
             The blog covers what is happening in Riftbound: set announcements and card reveals, ban-list changes, and
             market analysis of what cards cost across the six markets we track — Australia, the US, the UK,
             Singapore, Canada and the EU. Prices and figures in a post come from RiftCompare&apos;s own price
             database, the one behind every comparison on the site, never from the draft.
           </p>
-          <p>
+          {/* The second paragraph folds away (2026-11-14), as on /guides: still in the server HTML. */}
+          <details className="group text-sm">
+            <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 font-semibold text-slate-300 hover:text-white [&::-webkit-details-marker]:hidden">
+              How these posts are written
+              <span aria-hidden className="text-xs text-slate-500 transition-transform duration-fast group-open:rotate-180 motion-reduce:transition-none">▾</span>
+            </summary>
+          <p className="mt-1">
             Every post is drafted with AI assistance, then edited and fact-checked before publishing by Bill, who
             founded RiftCompare and runs it on his own. Our{" "}
             <Link href="/authors" className="text-brand-300 underline-offset-2 hover:underline">authors page</Link>{" "}
@@ -147,6 +155,7 @@ export default async function BlogPage() {
               Browse the guides →
             </Link>
           </p>
+          </details>
         </div>
         <p className="mt-2 flex flex-wrap items-center gap-x-4 text-xs">
           <span className="text-slate-500">The data behind the posts:</span>
@@ -156,7 +165,7 @@ export default async function BlogPage() {
             </Link>
           ))}
         </p>
-      </div>
+      </header>
       <FilterableArticles articles={items} basePath="/blog" sections={BLOG_SECTIONS} featured={BLOG_PICKS} />
     </div>
   );
