@@ -23925,3 +23925,25 @@ The owner, the same day: the quick view pop-ups need the add to cart button as w
 all (only the card page did); its store and eBay rows now carry the same `CartAddButton` the card page uses, beside the buy
 button, sharing its full-width line on a phone. TCGplayer rows never get one (a marketplace, as on the page). The row order,
 links, tags and buy button are unchanged.
+
+## 2026-11-14: Review of the day's design work, and /learn's header
+
+An independent check of #437 (polish) and #438 (calm reading pages) against the commit before them (de126ab2), both built
+with `PUBLIC_DATA_MODE=files` and compared on 14 URLs (home, /guides, /blog, the ban list guide, the November bans post,
+/learn, /sets, /sets/radiance, /methodology, a card page, a sealed page, a search that finds nothing, /about and a 404) at
+390px and 1440px in both themes, and with scripts off.
+
+What held: title, meta tags, canonical, alternates, JSON-LD and h1 identical on all 14; no h2 of a remaining section lost;
+no internal link lost (the search dead end gained the five released sets); every `rel="sponsored"` link identical in href,
+words and order (54 on the card page, 22 on the sealed page, 4 on /sets/radiance, 3 on the post, 1 on the guide). Words that
+disappear from the visible text are the two folded intro paragraphs (still in the server HTML inside `<details>`), the
+article's top "← All guides / All posts" (now the trail; the foot link stays), the second "Radiance is out" line on
+/sets/radiance (that placement never drew its eBay line under /sets/) and the rewritten empty-search copy. No page wider than
+the screen, no new low-contrast text, no layout shift over 0.06, no console or hydration errors beyond the Vercel Insights
+script that does not exist locally.
+
+One page type was left half done: #438 says /learn opens like /about, but its header was still a centred card. It now sits on
+the page like the others: the trail ("Home / Learn Riftbound", matching its existing BreadcrumbList), the title, the same
+intro and the same two buttons, left-aligned. No word, link or button changed.
+
+**No paid link, placement, URL or metadata changed**, so the 19 November clicks-per-placement recheck is unaffected.
