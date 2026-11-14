@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageTrail } from "@/components/PageTrail";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { DOMAINS, DOMAIN_KEYS } from "@/lib/constants";
@@ -195,28 +196,28 @@ export default async function LearnPage() {
     <div className="mx-auto flex max-w-4xl flex-col gap-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([faqLd, breadcrumbLd]) }} />
 
-      {/* Hero */}
-      <section className="card-surface overflow-hidden">
-        <div className="bg-ink-900 px-5 py-10 text-center sm:px-6">
-          <h1 className="mx-auto max-w-2xl font-display text-3xl font-extrabold text-white">Learn Riftbound</h1>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            The interactive guide to the League of Legends TCG. Step through how a game flows, explore
-            the domains with real cards, see exactly what goes in a deck — then test yourself. Completely
-            free: no signup, no paywall, no catch.
-          </p>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="https://riftbound.leagueoflegends.com/en-us/news/rules-and-releases/how-to-play-get-started/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary"
-            >
-              Official how-to-play (15 min) ↗
-            </a>
-            <Link href="/riftle" className="btn-ghost">Play today&apos;s Riftle</Link>
-          </div>
+      {/* The page header sits on the page like /about, /sets and the guides (2026-11-14): a trail, the title, one
+          line, the two ways in. It was a centred card, the one reading page still boxed. Same words, same links. */}
+      <header>
+        <PageTrail trail={[{ name: "Learn Riftbound" }]} />
+        <h1 className="text-3xl font-extrabold leading-tight text-white">Learn Riftbound</h1>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-slate-400">
+          The interactive guide to the League of Legends TCG. Step through how a game flows, explore
+          the domains with real cards, see exactly what goes in a deck — then test yourself. Completely
+          free: no signup, no paywall, no catch.
+        </p>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <a
+            href="https://riftbound.leagueoflegends.com/en-us/news/rules-and-releases/how-to-play-get-started/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary"
+          >
+            Official how-to-play (15 min) ↗
+          </a>
+          <Link href="/riftle" className="btn-ghost">Play today&apos;s Riftle</Link>
         </div>
-      </section>
+      </header>
 
       {/* The shape of a game — interactive stepper */}
       <section>
