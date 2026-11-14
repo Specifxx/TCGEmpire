@@ -92,9 +92,9 @@ export function ChaseWatchCta({
   };
 
   return (
-    <aside aria-labelledby="chase-watch-h" className={`not-prose card-surface overflow-hidden rounded-2xl border border-gold/30 ${className}`}>
-      <div className="bg-[radial-gradient(ellipse_at_top_left,rgba(232,183,72,0.14),transparent_60%)] p-4 sm:p-5">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold">Free price alerts</p>
+    <aside aria-labelledby="chase-watch-h" className={`not-prose card-surface overflow-hidden rounded-2xl ${className}`}>
+      <div className="p-4 sm:p-5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Free price alerts</p>
         <h2 id="chase-watch-h" className="mt-1 text-lg font-extrabold leading-snug text-white sm:text-xl">
           Follow Radiance&apos;s {n} chase cards
         </h2>

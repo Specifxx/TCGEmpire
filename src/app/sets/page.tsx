@@ -107,14 +107,15 @@ export default async function SetsIndexPage() {
         }}
       />
 
-      <section className="card-surface overflow-hidden border-l-2 border-brand-500 bg-ink-900">
-        <div className="px-6 py-8">
+      {/* The page header sits on the page like every other header (2026-11-14), not inside a card. */}
+      <section>
+        <div>
           <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-slate-300">Home</Link>
             <span>/</span>
             <span className="text-slate-300">Sets</span>
           </nav>
-          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Riftbound sets — card lists &amp; prices</h1>
+          <h1 className="text-3xl font-extrabold leading-tight text-white">Riftbound sets — card lists &amp; prices</h1>
           <HubIntro path="/sets" />
           {/* Two more paragraphs sat here (the gallery and domain links, the set tracker): on a 390px phone the first set was
               1,443px down the page. They are in "About Riftbound sets" under the lists now (2026-11-13), same words, same links. */}

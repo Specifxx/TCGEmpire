@@ -152,7 +152,7 @@ export function Markdown({ content, cards }: { content: string; cards?: Markdown
     }
     if (trimmed.startsWith("## ")) {
       const text = trimmed.slice(3);
-      blocks.push(<h2 key={key} id={nextHeadingId(text)} className="mb-3 mt-8 scroll-mt-header text-xl font-extrabold text-white sm:max-w-[40rem]">{inline(text, `h${key++}`)}</h2>);
+      blocks.push(<h2 key={key} id={nextHeadingId(text)} className="mb-3 mt-10 scroll-mt-header text-xl font-extrabold leading-snug text-white sm:max-w-[40rem] sm:text-2xl">{inline(text, `h${key++}`)}</h2>);
       i++;
       continue;
     }
@@ -222,7 +222,7 @@ export function Markdown({ content, cards }: { content: string; cards?: Markdown
         i++;
       }
       blocks.push(
-        <blockquote key={key} className="my-5 border-l-2 border-brand-500 bg-ink-900/60 px-4 py-3 text-slate-300 sm:max-w-[40rem]">
+        <blockquote key={key} className="my-5 rounded-r-lg border-l-2 border-ink-600 bg-ink-900/60 px-4 py-3 text-slate-300 sm:max-w-[40rem]">
           {inline(quoted.join(" "), `q${key++}`, cards)}
         </blockquote>
       );
@@ -233,7 +233,7 @@ export function Markdown({ content, cards }: { content: string; cards?: Markdown
       const items: string[] = [];
       while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^[-*]\s+/, "")); i++; }
       blocks.push(
-        <ul key={key} className="my-3 list-disc space-y-1 pl-5 text-slate-300 sm:max-w-[40rem]">
+        <ul key={key} className="my-4 list-disc space-y-1.5 pl-5 leading-relaxed text-slate-300 marker:text-slate-500 sm:max-w-[40rem]">
           {items.map((it, j) => <li key={j}>{inline(it, `u${key}-${j}`, cards)}</li>)}
         </ul>
       );
@@ -245,7 +245,7 @@ export function Markdown({ content, cards }: { content: string; cards?: Markdown
       const items: string[] = [];
       while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, "")); i++; }
       blocks.push(
-        <ol key={key} className="my-3 list-decimal space-y-1 pl-5 text-slate-300 sm:max-w-[40rem]">
+        <ol key={key} className="my-4 list-decimal space-y-1.5 pl-5 leading-relaxed text-slate-300 marker:text-slate-500 sm:max-w-[40rem]">
           {items.map((it, j) => <li key={j}>{inline(it, `o${key}-${j}`, cards)}</li>)}
         </ol>
       );
@@ -255,7 +255,7 @@ export function Markdown({ content, cards }: { content: string; cards?: Markdown
 
     const para: string[] = [];
     while (i < lines.length && lines[i].trim() && !isBreak(lines[i])) { para.push(lines[i].trim()); i++; }
-    blocks.push(<p key={key} className="my-3 leading-relaxed text-slate-300 sm:max-w-[40rem]">{inline(para.join(" "), `p${key++}`, cards)}</p>);
+    blocks.push(<p key={key} className="my-4 leading-relaxed text-slate-300 sm:max-w-[40rem]">{inline(para.join(" "), `p${key++}`, cards)}</p>);
   }
 
   // Reading measure (2026-09-23): phones stay at 15px. From sm the body is 17px

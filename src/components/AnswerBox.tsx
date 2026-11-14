@@ -28,17 +28,17 @@ export function AnswerBox({
 }) {
   return (
     <section
-      className={`answer-box card-surface border-l-2 border-l-brand-500 p-4 sm:p-5 ${className ?? "my-5"}`}
+      className={`answer-box card-surface p-4 sm:p-5 ${className ?? "my-5"}`}
       aria-label={heading}
     >
-      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-brand-400">{heading}</h2>
+      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">{heading}</h2>
       {/* max-w-2xl on the prose and the bullets, not the box (2026-09-23): the
           box still fills its row, but the text stops at a readable measure. On
           /movers it ran 917/1077/1309px wide at 1280/1440/1920. Left-aligned,
           no mx-auto, so it still starts under the heading. */}
       {children && <div className="max-w-2xl text-[15px] leading-relaxed text-slate-300">{children}</div>}
       {points && points.length > 0 && (
-        <ul className="mt-2 max-w-2xl list-disc space-y-1 pl-5 text-sm text-slate-300">
+        <ul className="mt-2 max-w-2xl list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-slate-300 marker:text-slate-500 sm:text-[15px]">
           {points.map((p, i) => (
             <li key={i}>
               {/* Inline markdown so a takeaway can carry **emphasis** and internal

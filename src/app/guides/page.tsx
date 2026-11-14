@@ -4,6 +4,7 @@ import { FilterableArticles, type ArticleSection, type ArticleListItem } from "@
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import Link from "next/link";
+import { PageTrail } from "@/components/PageTrail";
 import { SITE_URL } from "@/lib/site";
 import { COUNTRY_GUIDE_SLUGS, pageAlternates } from "@/lib/seo";
 import { GUIDE_PICKS } from "@/lib/content/featured";
@@ -108,22 +109,30 @@ export default function GuidesPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb, itemList]) }}
       />
-      <div className="mb-5">
-        <h1 className="text-2xl font-extrabold text-white">Guides</h1>
+      <header className="mb-6">
+        <PageTrail trail={[{ name: "Guides" }]} />
+        <h1 className="text-3xl font-extrabold leading-tight text-white">Guides</h1>
         {/* What the guides are and who writes them (2026-09-26, "Blog and
             tools, joined up"). Its own wording, not /blog's: the two indexes
             describe different halves of the writing. The authorship clause is
             the owner's statement (lib/content/authors.ts ARTICLE_PROCESS). The
             visitor's market picks the buying-guide link, as it already picked
             this page's copy before. */}
-        <div className="mt-2 max-w-3xl space-y-2 text-sm leading-relaxed text-slate-400">
+        <div className="mt-2 max-w-2xl space-y-2 text-[15px] leading-relaxed text-slate-400">
           <p>
             Guides are the reference side of RiftCompare: how Riftbound&apos;s mechanics and ban list work, how a deck
             is built, how to tell one printing or condition from another, and how to buy and sell without overpaying.
             They are revised when the game changes rather than left to date, and most end by pointing you at the tool
             that does what the guide describes.
           </p>
-          <p>
+          {/* The second paragraph (who writes them, how prices are collected) folds away
+              (2026-11-14): it stays in the server HTML, links and all, one tap from view. */}
+          <details className="group text-sm">
+            <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 font-semibold text-slate-300 hover:text-white [&::-webkit-details-marker]:hidden">
+              How these guides are written
+              <span aria-hidden className="text-xs text-slate-500 transition-transform duration-fast group-open:rotate-180 motion-reduce:transition-none">▾</span>
+            </summary>
+          <p className="mt-1">
             Each one is drafted with AI assistance, then edited and fact-checked by Bill, who runs the site, and the
             prices and figures it quotes come from RiftCompare&apos;s own price database. See{" "}
             <Link href="/authors" className="text-brand-300 underline-offset-2 hover:underline">who writes them</Link>,
@@ -143,6 +152,7 @@ export default function GuidesPage() {
               where to buy Riftbound cards in {info.place} →
             </Link>
           </p>
+          </details>
         </div>
         <p className="mt-2 flex flex-wrap items-center gap-x-4 text-xs">
           <span className="text-slate-500">Tools these guides explain:</span>
@@ -152,7 +162,7 @@ export default function GuidesPage() {
             </Link>
           ))}
         </p>
-      </div>
+      </header>
       <FilterableArticles articles={items} basePath="/guides" sections={GUIDE_SECTIONS} featured={GUIDE_PICKS} />
     </div>
   );
