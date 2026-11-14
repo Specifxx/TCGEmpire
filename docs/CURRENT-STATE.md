@@ -238,6 +238,10 @@ longer lands on its entry.
   (billing API, per project, last 120 days, domains still by hand), and a "By site"
   table (also in the weekly growth report) shows each site's earnings minus its own
   Vercel project, the plan and other costs on a shared row. [2026-10-30](../DECISIONS.md#L20960)
+  Paid ad tests have their own panel: ad visitors' affiliate clicks carry `fbad`
+  in the sub-id (`lib/paid-visit.ts`), so earned is real sales; spend, clicks and
+  visits are posted daily from Meta and Vercel; a rule says when to pause.
+  [2026-11-14](../DECISIONS.md#L23889)
   The table also carries each site's all-time earned and net (since
   `EARNINGS_SINCE`) beside the range, with a footer total. [2026-11-03](../DECISIONS.md#L22103)
   Visits read a stored copy of each API source (`OpsSnapshot` `earnings:*`), refreshed every three hours by

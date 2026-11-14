@@ -57,7 +57,11 @@ const UTM: [EntrySource, RegExp][] = [
 /** Pure: classify a landing from its referrer, the site's own host and the
  *  landing URL's query string. */
 export function classifyEntry(referrer: string, host: string, search: string): EntrySource {
-  const utm = (new URLSearchParams(search).get("utm_source") ?? "").trim().toLowerCase();
+  const params = new URLSearchParams(search);
+  const utm = (params.get("utm_source") ?? "").trim().toLowerCase();
+  // A paid campaign tagged by its medium (utm_source=facebook&utm_medium=paid, the
+  // 2026-11-14 Meta tests) is "ads", never organic "social".
+  if (/^(paid|cpc|ppc|paid_social|paidsocial)$/.test((params.get("utm_medium") ?? "").trim().toLowerCase())) return "ads";
   if (utm) {
     for (const [bucket, re] of UTM) if (re.test(utm)) return bucket;
   }

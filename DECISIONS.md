@@ -23885,3 +23885,25 @@ every meta tag, canonical and alternates, every JSON-LD node, the h1 and h2 list
 word of text is lost, and every sponsored `<a>` is the same, in the same order. So the 19 November clicks-per-placement recheck
 is unaffected. Left alone: the price guide's table (its eBay buttons are paid rows), the Stores plan page (a sales page with its
 own design), the TOC staying open by default (2026-09-23 decision).
+
+## 2026-11-14: Ad tests on the earnings dashboard: paid visits tag their affiliate clicks
+
+The owner (2026-11-14), after approving three A$35 Meta tests (RiftCompare AU, DexCompare US, Cyberpunk Compare US/CA/UK,
+14-21 Nov): "with the ads, we got to make sure that we keep track to see if they actually are giving us ROI." Counting ad
+visits was already possible; knowing what they EARNED was not, because a sale only comes back with its click's sub-id.
+
+- **Paid visits tag their clicks** (`lib/paid-visit.ts`, the same file in CompareEmpire's Dex app and the card engine). A landing
+  with `utm_medium=paid` (or cpc, or a `*_ads` source) stores a marker for the tab (`fbad` for Facebook/Instagram), and every
+  affiliate link that visitor opens gets `-fbad` added to its `customid` / `sharedid` / `subId1` / `ascsubtag`. Only the
+  parameter's value is edited, as a string, so eBay's own URL stays byte for byte; the sub-id stays within 60 characters.
+  Organic visits are untouched. `entry-source.ts` now calls a `utm_medium=paid` landing "ads", not "social".
+- **"Ad tests" panel** (`lib/earnings/ad-tests.ts`, `AD_TESTS`): per test, spend, link clicks, visitors, sales, earned, cost and
+  earned per click, money back per $1, and a verdict. Earned is real: TCGplayer, eBay and Amazon sales of that site's tag group
+  whose tag carries the marker, from the test's first day to three days after its last. No estimate is shown.
+- **Spend, clicks and visitors are posted, not fetched**: Meta has no API key on this account and creating one is the owner's
+  step, so a daily scheduled check reads Ads Manager and Vercel Analytics and POSTs them to `/api/admin/earnings/ad-stats`
+  (admin or ADMIN_TOKEN; one OpsSnapshot row `earnings:ad-stats`). The panel shows when they were read.
+- **The verdict is a rule** (`verdictFor`): no verdict under 10 (display currency) spent; at 100% back "Paying for itself",
+  50-100% "Losing a little", under 50% "Losing", and after 20 spent with under 10% back "Losing clearly: pause", which the
+  daily check acts on by pausing that ad in Meta and saying so. Pausing only stops spend.
+- A new ad test is one line in `AD_TESTS` plus the marker on its site's links (any site using `paid-visit.ts`).

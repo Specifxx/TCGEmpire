@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { REFERRAL_COOKIE } from "@/lib/referral-cookie";
 import { captureEntrySource } from "@/lib/entry-source";
+import { installPaidVisitTagger } from "@/lib/paid-visit";
 
 // Persists an inbound referral code (?ref=<userId>) into a cookie so it survives
 // the browse → sign-up journey and the OAuth round-trip. Read server-side by
@@ -14,6 +15,9 @@ export function ReferralCapture() {
     // attribution — first touch per tab, so it runs before anything returns.
     // See lib/entry-source.ts.
     captureEntrySource();
+    // A paid ad visit (utm_medium=paid) tags its affiliate clicks, so the earnings
+    // dashboard can say what each ad test earned. See lib/paid-visit.ts.
+    installPaidVisitTagger();
     const ref = new URLSearchParams(window.location.search).get("ref");
     // cuids are lowercase alphanumeric; validate loosely before storing.
     if (!ref || !/^[a-z0-9]{6,40}$/i.test(ref)) return;
