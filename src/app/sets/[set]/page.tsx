@@ -555,6 +555,8 @@ export default async function SetPage({
           ) : null}
         </div>
       </section>
+      {/* The two big ad banners (owner, 2026-11-14): at the top, directly under the hero. */}
+      <InlineAds pageType="set_hub" setCode={set.code} />
 
       {/* Radiance content hub — confirmed facts, legends, products + a real
           pre-order table, a release timeline, and the FAQ backing faqLd above.
@@ -659,8 +661,6 @@ export default async function SetPage({
           has its reading list in PRE_RELEASE_LINKS above. */}
       {live && <RelatedGuides guides={guidesForSet(set.code)} className="card-surface p-5" />}
 
-      {/* The one in-page ad block (owner, 2026-11-13): this set's chase cards on eBay and TCGplayer, after the price read-out and the guides. */}
-      <InlineAds pageType="set_hub" setCode={set.code} />
 
       {/* Internal links to the other sets (crawl + UX) */}
       <section>

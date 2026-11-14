@@ -1021,6 +1021,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </ol>
       </nav>
 
+      {/* The two big ad banners (owner, 2026-11-14): at the top, under the breadcrumbs. */}
+      <InlineAds setCode={card.setCode} pageType="card_detail" className="mb-4 lg:mb-6" />
+
       <div className="grid grid-cols-1 gap-4 lg:gap-6 lg:grid-cols-[160px_1fr] xl:grid-cols-[320px_1fr]">
         {/* Card visual. Capped much smaller on phones than desktop (was a flat
             max-w-[320px] at every breakpoint) — at 390px wide, a 320px-wide
@@ -1609,9 +1612,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               className="mt-3"
             />
           </section>
-          {/* The one in-page ad block (owner, 2026-11-13): the set's chase cards on eBay and TCGplayer, below the price table and the eBay
-              panel, never beside a buy button or above a price. Replaces the small pair under the price and the TCGplayer strip. */}
-          <InlineAds setCode={card.setCode} pageType="card_detail" className="mt-6" />
         </div>
       </div>
 

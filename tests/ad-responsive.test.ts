@@ -40,13 +40,13 @@ test("the leaderboard banner components are gone, so no fixed 728px or 970px uni
 
 test("the one ad block is capped at its column and scrolls its tiles sideways inside it", () => {
   const src = read(INLINE);
-  assert.match(src, /className=\{`card-surface min-w-0 p-4/, "the block itself may shrink below its content");
+  assert.match(src, /className="card-surface flex min-w-0 flex-col overflow-hidden p-3/, "the banner itself may shrink below its content");
   assert.match(src, /overflow-x-auto/, "tiles scroll inside the block");
   assert.match(src, /shrink-0 snap-start/, "tiles keep their width instead of squeezing");
 });
 
 test("a tile fits the narrowest audited viewport, so a phone shows at least one whole tile", () => {
-  const tile = Number(/const TILE_W = (\d+);/.exec(read(INLINE))?.[1]);
+  const tile = Number(/className="w-\[(\d+)px\] shrink-0 snap-start"/.exec(read(INLINE))?.[1]);
   assert.ok(tile > 0 && tile <= 375 - 32 - 32, `tile width ${tile}px must fit a 375px phone inside the block's padding`);
 });
 

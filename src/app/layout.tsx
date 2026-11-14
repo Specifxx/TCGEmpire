@@ -427,6 +427,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       homepage's full-bleed hero (-mt-6) never slides over it. */}
                   <HolidayStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
+                    {/* The two big ad banners (owner, 2026-11-14) at the TOP of every page that does not place them itself (policy and
+                        trust pages carry none, FooterAds' BANNER_FREE_ROUTES, owner decision 2026-09-26). The market comes from the client
+                        country context, so the layout stays cookie-free and cacheable. */}
+                    <InlineAdsZone />
                     {children}
                     {/* "Rate us" at the end of every page's content: in the
                         page, never a pop-up; gone once this browser rated. */}
@@ -464,15 +468,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </CommandLauncherProvider>
           </SealedQuickViewProvider>
           </QuickViewProvider>
-        {/* Site-wide affiliate banners above the footer — BOTH live partners
-            (TCGplayer Impact + eBay Partner Network) on every page except the
-            policy and trust pages, which carry none (FooterAds'
-            BANNER_FREE_ROUTES, owner decision 2026-09-26). Both are
-            CPC/affiliate: they pay on click-through purchases, so
-            placement-where-relevant beats raw banner count.
-            FooterAds reads the market from the client country context (inside
-            CountryProvider) so the layout stays cookie-free and cacheable. */}
-        <InlineAdsZone />
         </CountryProvider>
         <footer className="border-t border-ink-800 py-8 text-center text-xs text-slate-500">
         <div className="container-app">
