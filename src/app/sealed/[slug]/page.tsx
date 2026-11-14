@@ -7,6 +7,7 @@ import { isPreorderSetCode, SETS } from "@/lib/constants";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SealedProductView } from "@/components/SealedProductView";
+import { InlineAds } from "@/components/InlineAds";
 
 // A sealed product's own page (2026-11-03, owner: Amazon "up there with eBay and TCGplayer" on RiftCompare too, which
 // had no sealed page to put it on; DECISIONS.md "Sealed products get their own pages"). The /sealed tiles and the quick
@@ -49,6 +50,8 @@ export default async function SealedProductPage({ params }: { params: { slug: st
           { name: g.name, href: `/sealed/${params.slug}` },
         ]}
       />
+      {/* The two big ad banners (owner, 2026-11-14): at the top, under the breadcrumbs. */}
+      <InlineAds setCode={g.setCode ?? ""} pageType="sealed_page" className="mb-5" />
       <header className="mb-5">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="chip bg-brand-500/15 font-semibold text-brand-300">{g.productType}</span>

@@ -95,7 +95,7 @@ test("the homepage's commercial-vs-playable order is the owner's, and is asserte
   // sat above Top Deals until 2026-09-28, when the owner took it off the
   // homepage (tests/homepage-declutter.test.ts).
   assert.ok(!code.includes("<RecentlyViewedRail"), "Recently viewed is off the homepage (owner, 2026-09-28)");
-  assert.ok(deals < ebay, "Today's Top Deals is the owner-chosen top content slot as of 2026-09-21");
+  assert.ok(ebay < deals, "the two ad banners lead, directly under the hero, and Today's Top Deals follows (owner, 2026-11-14, amending 2026-09-21)");
 
   // AMENDED 2026-11-13 (owner: "we're making things too complicated … cull the features that we show"; DECISIONS.md
   // "Minimal redesign"). The three return-visit cards (pack simulator, Riftle, watch a card) used to be pinned

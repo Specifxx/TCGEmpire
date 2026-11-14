@@ -19,7 +19,7 @@ const code = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").replace(/
 // second band on every home: hero, editorial band, eBay Picks, Today's Top
 // Deals, price guide. All six share one structure (DECISIONS.md, 2026-10-02),
 // so "/" and the five region homes move together.
-test("the in-page ad block (2026-11-13) renders once per home, from HomeSections, after Today's Top Deals", () => {
+test("the in-page ad block (2026-11-13) renders once per home, from HomeSections, before Today's Top Deals (2026-11-14)", () => {
   // Owner, 2026-11-13: the eBay and TCGplayer strips under the hero became ONE horizontal block between sections.
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = code(f);
@@ -30,7 +30,7 @@ test("the in-page ad block (2026-11-13) renders once per home, from HomeSections
   const sections = code("src/components/home/HomeSections.tsx");
   assert.match(sections, /showEbayPicks = true,/);
   assert.match(sections, /\{showEbayPicks && <InlineAds pageType="homepage" \/>\}/);
-  assert.ok(sections.indexOf("<InlineAds") > sections.indexOf("<TodaysTopDeals"), "after Top Deals, never in the hero");
+  assert.ok(sections.indexOf("<InlineAds") < sections.indexOf("<TodaysTopDeals"), "the banners lead (owner, 2026-11-14), never in the hero");
 });
 
 test("Cheapest on eBay left Today's Top Deals for Deal Finder (2026-09-30)", () => {

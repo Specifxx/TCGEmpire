@@ -123,6 +123,10 @@ export function HomeSections({
 
   return (
     <>
+      {/* The two big ad banners (owner, 2026-11-14), eBay and TCGplayer apart: the first thing under the hero, the newest set's chase
+          cards. Every home renders them here. */}
+      {showEbayPicks && <InlineAds pageType="homepage" />}
+
       {/* Recently viewed WAS the first thing here (2026-09-19 to 2026-09-28).
           Removed from the homepage on the owner's instruction ("get rid of
           recently viewed from the homepage"). It stays where it is useful
@@ -199,9 +203,6 @@ export function HomeSections({
           is very important … display it and be transparent"). */}
       {showReviews && <ReviewsSection />}
 
-      {/* The one in-page ad block (owner, 2026-11-13): the newest set's chase cards on eBay and TCGplayer, between the editorial band and
-          the rest, replacing the eBay and TCGplayer strips that sat under the hero. Every home renders it here. */}
-      {showEbayPicks && <InlineAds pageType="homepage" />}
 
       {/* Explore by set: one compact row of tiles, then the next set's one line. */}
       <section>

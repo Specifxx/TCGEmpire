@@ -7,7 +7,6 @@ import { sealedImageAlt } from "@/lib/image-alt";
 import { useCountry } from "./CountryProvider";
 import { SealedOffers } from "./SealedQuickView";
 import { SealedWatchButton } from "./SealedWatchButton";
-import { InlineAds } from "./InlineAds";
 
 // The market-dependent half of a sealed product's page, /sealed/<slug> (2026-11-03). The page is one CDN copy for every
 // visitor (no cookie or header read on the server, like /card/[id]), so it hands this island the product's group in
@@ -73,8 +72,6 @@ export function SealedProductView({ byMarket }: { byMarket: Partial<Record<Count
         <SealedOffers key={`${group.groupKey}-${shownMarket}`} group={group} currency={currency} amazon source="sealed-page" />
       </div>
     </div>
-    {/* The one in-page ad block (owner, 2026-11-13), below the price table, never beside it. */}
-    <InlineAds setCode={group.setCode ?? ""} pageType="sealed_page" className="mt-5" />
     </>
   );
 }
