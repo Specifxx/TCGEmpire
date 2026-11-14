@@ -34,3 +34,12 @@ test("affiliateUrl tracks a joined Awin store on pages but never in an email", (
   assert.match(src, /if \(!page\?\.startsWith\("email"\)\) \{\s*const awin = awinUrl\(plain, clickref\("rift", page\)\);/);
   assert.match(src, /awin1\\\.com\$\/i\.test\(u\.hostname\) \|\| awinProgrammeFor\(href\)/);
 });
+
+test("Cardboard Hero (GoAffPro): a link to its own site gains our referral code, other stores do not", async () => {
+  const { directReferralUrl } = await import("../src/lib/awin");
+  assert.equal(awinUrl("https://cardboardhero.com/products/box?utm_source=x", "ref1"), "https://cardboardhero.com/products/box?utm_source=x&ref=apthvqnu");
+  assert.equal(awinUrl("https://www.cardboardhero.com/products/box", "ref1"), "https://www.cardboardhero.com/products/box?ref=apthvqnu");
+  assert.equal(directReferralUrl("https://cardboardhero.com/?ref=other"), "https://cardboardhero.com/?ref=other");
+  assert.equal(awinUrl("https://notcardboardhero.com/products/box", "ref1"), null);
+  assert.equal(directReferralUrl("https://cardboardhero.com.evil.example/x"), null);
+});
