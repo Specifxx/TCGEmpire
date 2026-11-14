@@ -27,7 +27,9 @@ export function SealedProductView({ byMarket }: { byMarket: Partial<Record<Count
   return (
     <>
     <div className="grid gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
-      <div className="card-surface flex gap-4 p-4 lg:flex-col">
+      {/* flex-wrap, and the alert form on a row of its own (2026-11-14): beside the 112px photo on a phone the form had
+          a 190px column, its label ran to four lines and its field read "you@e". From lg the card is one column as before. */}
+      <div className="card-surface flex flex-wrap gap-4 p-4 lg:flex-col lg:flex-nowrap">
         <div className="grid aspect-square w-28 shrink-0 self-start place-items-center sm:w-40 lg:w-full overflow-hidden rounded-lg border border-ink-800 bg-ink-950 p-3">
           {group.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -59,8 +61,8 @@ export function SealedProductView({ byMarket }: { byMarket: Partial<Record<Count
               ) : null}
             </div>
           )}
-          <SealedWatchButton groupKey={group.groupKey} name={group.name} market={shownMarket} className="mt-3" />
         </div>
+        <SealedWatchButton groupKey={group.groupKey} name={group.name} market={shownMarket} className="w-full" />
       </div>
       <div className="card-surface min-w-0 p-4 sm:p-5">
         {!own && (

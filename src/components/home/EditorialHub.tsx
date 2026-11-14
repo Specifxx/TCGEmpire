@@ -132,7 +132,7 @@ export function EditorialHub({ freshness, freshnessAt, market }: {
             <TeaserRow
               t={{ href: "/movers", title: "Price movers", line: "This week's biggest risers and drops, and the cards searched most.", hero: null }}
             />
-            <li className="flex items-start justify-between gap-3 md:flex-col md:gap-0">
+            <li className="flex items-center justify-between gap-3 md:flex-col md:items-start md:gap-0">
               <RowLink href="/market" title="The RiftCompare Index" line="One weekly number for the most-searched cards' prices." />
               {indexGuide && (
                 <Link

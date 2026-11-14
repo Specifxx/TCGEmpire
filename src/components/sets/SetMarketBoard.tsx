@@ -215,10 +215,10 @@ export function SetMarketBoard({
           <ActiveFilters basePath={basePath} />
 
           {cards.length === 0 ? (
-            <div className="card-surface grid place-items-center p-16 text-center">
-              <p className="text-lg font-semibold text-white">Nothing matches those filters</p>
-              <p className="mt-1 text-sm text-slate-400">Try clearing a filter or two.</p>
-              <Link href={basePath} className="btn-primary mt-4">Reset</Link>
+            <div className="card-surface grid place-items-center p-6 text-center sm:p-12">
+              <p className="text-lg font-semibold text-white">No cards in this set match these filters</p>
+              <p className="mt-1 max-w-md text-sm text-slate-400">Take one or two off and the list will fill again.</p>
+              <Link href={basePath} className="btn-primary mt-4">Clear the filters</Link>
             </div>
           ) : (
             <>

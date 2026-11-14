@@ -123,8 +123,11 @@ export function CardTile({ card }: { card: CardTileData }) {
               (right-2 + a 32px button + a gap = right-12), and each chip
               truncates rather than running under it. Stacking order alone
               would keep the heart clickable; the bound keeps the badge text
-              from being hidden behind the heart instead. */}
-          <div className="absolute left-2 right-12 top-2 z-20 flex flex-col items-start gap-1 [&>*]:max-w-full [&>*]:truncate">
+              from being hidden behind the heart instead. right-14 since
+              2026-11-14: on a touch screen the heart is 48px, not 32px, and
+              "Signature" ran under it on a phone's 144px shelf tile; below sm
+              the chips are a size smaller so the word still fits beside it. */}
+          <div className="absolute left-2 right-14 top-2 z-20 flex flex-col items-start gap-1 [&>*]:max-w-full [&>*]:truncate max-sm:[&>*]:px-1.5 max-sm:[&>*]:text-[10px]">
             <VariantBadge variant={card.variant} />
             <UltimateBadge show={isUltimate(card.setCode, card.collectorNumber)} />
             <SignatureBadge show={isSignature(card.collectorNumber)} />
@@ -141,43 +144,36 @@ export function CardTile({ card }: { card: CardTileData }) {
           {card.setCode} · {card.collectorNumber}
         </p>
 
-        {/* WRAPS BEFORE IT OVERLAPS. This row used to be a plain
-            justify-between with min-w-0 on the price block and shrink-0 on the
-            store count — and min-w-0 does nothing unless the child actually
-            truncates, so a long price (A$3,113.43 on an Overnumbered chase
-            card) rendered straight THROUGH the count beside it. Two fixes, in
-            order of which one you want to fire: the price block refuses to go
-            below 6.5rem, which is what makes flex-wrap drop the count onto its
-            own line rather than squeezing — flex-1 alone has a basis of 0 and
-            would silently shrink to nothing instead of ever wrapping — and
-            truncate stops the price escaping its column if even that is not
-            enough. The minimum is min(6.5rem, 100%), not a bare 6.5rem: on a
-            tile narrower than that (a 90px four-up column) a bare minimum is
-            wider than the tile itself, so the block cannot shrink, truncate
-            never engages, and the price runs out to the tile's edge. Rendered
-            and caught that way on 2026-09-24. */}
-        <div className="mt-auto flex flex-wrap items-end justify-between gap-x-2 gap-y-0.5 pt-1">
-          <div className="min-w-[min(6.5rem,100%)] flex-1">
-            {lowest != null ? (
+        {/* ONE SHAPE FOR EVERY TILE (2026-11-14). The count used to sit beside the price and drop under it only when
+            the two did not fit, so in one row of tiles "US$897.99 · 1 store" was two lines and "US$850.00 / 3 stores"
+            three, and the prices of neighbours sat at different heights. The count now shares the small "from" line and
+            the price has the full width under it: nothing to wrap, and every price in a row is on one baseline. The
+            price still truncates rather than leave its tile. */}
+        <div className="mt-auto pt-1">
+          {(() => {
+            const count =
+              stock.kind === "stores" ? (
+                <span className="ct-count">
+                  {stock.count} {stock.count === 1 ? "store" : "stores"}
+                </span>
+              ) : stock.kind === "elsewhere" ? (
+                <span className="whitespace-nowrap text-right text-[11px] font-medium text-slate-500">stocked elsewhere</span>
+              ) : null;
+            return lowest != null ? (
               <>
-                <div className="text-[11px] text-slate-500">from</div>
-                <div className="truncate text-base font-bold leading-tight text-accent sm:text-lg">
-                  {fmt(lowest)}
+                <div className="flex flex-wrap items-baseline justify-between gap-x-2 text-[11px] text-slate-500">
+                  <span>from</span>
+                  {count}
                 </div>
+                <div className="truncate text-base font-bold leading-tight text-accent sm:text-lg">{fmt(lowest)}</div>
               </>
             ) : (
-              <div className="text-sm font-medium text-slate-500">No price yet</div>
-            )}
-          </div>
-          {stock.kind === "stores" ? (
-            <div className="ct-count">
-              {stock.count} {stock.count === 1 ? "store" : "stores"}
-            </div>
-          ) : stock.kind === "elsewhere" ? (
-            <div className="shrink-0 whitespace-nowrap pb-0.5 text-right text-[11px] font-medium text-slate-500">
-              stocked elsewhere
-            </div>
-          ) : null}
+              <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+                <span className="text-sm font-medium text-slate-500">No price yet</span>
+                {count}
+              </div>
+            );
+          })()}
         </div>
         </div>
       </Link>

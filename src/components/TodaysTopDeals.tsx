@@ -403,7 +403,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
 
               <Link
                 href={def.allHref}
-                className="mt-1.5 flex items-center justify-center gap-1 rounded-md border border-ink-700 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
+                className="mt-1.5 flex items-center justify-center gap-1 min-h-10 rounded-md border border-ink-700 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
               >
                 {def.allLabel} →
               </Link>

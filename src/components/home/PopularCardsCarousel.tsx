@@ -149,8 +149,9 @@ export function PopularCardsCarousel({
           label: t.label,
           content: (
             <div>
-              <div className="mb-4 flex items-end justify-between gap-3">
-                <div>
+              {/* Stacked on a phone (2026-11-14): beside the button the description was a 200px column of six lines. */}
+              <div className="mb-4 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
                   <h2 className="text-xl font-extrabold text-white">{t.heading}</h2>
                   <p className="mt-0.5 text-sm text-slate-400">{t.description}</p>
                 </div>

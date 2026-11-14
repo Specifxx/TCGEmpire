@@ -257,6 +257,21 @@ h1 {
   outline-offset: 2px;
 }
 
+/* Breadcrumb links (every `nav[aria-label="Breadcrumb"]`: components/Breadcrumbs.tsx and the pages that write their
+   own). A crumb was a 16px-tall line of 12px text with 6px between it and the next: 24px is the floor for a mouse, 40px
+   for a finger (2026-11-14). The words, the trail and its JSON-LD are untouched. */
+nav[aria-label="Breadcrumb"] a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+@media (pointer: coarse) {
+  nav[aria-label="Breadcrumb"] a {
+    min-height: 40px;
+    padding-inline: 2px;
+  }
+}
+
 /* Skip rendering off-screen card tiles so a long infinite-scroll grid stays smooth
    (the browser only lays out / paints tiles near the viewport). */
 .cv-auto {
@@ -669,7 +684,7 @@ html {
     @apply h-full w-full transition-transform duration-slow ease-out motion-safe:group-hover:scale-[1.03];
   }
   .ct-count {
-    @apply shrink-0 whitespace-nowrap pb-0.5 text-right text-[11px] font-semibold text-brand-400;
+    @apply shrink-0 whitespace-nowrap text-right text-[11px] font-semibold text-brand-400;
   }
   /* Mega-menu links (HeaderMegaMenu.tsx): on every page. */
   .mm-link {
