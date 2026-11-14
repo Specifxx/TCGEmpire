@@ -83,8 +83,8 @@ function Metric({
   className?: string;
 }) {
   return (
-    <div className={`rounded-lg bg-ink-900 p-2 sm:p-3 ${className ?? ""}`} title={title}>
-      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
+    <div className={`min-w-0 rounded-lg bg-ink-900 p-2 sm:p-3 ${className ?? ""}`} title={title}>
+      <div className="whitespace-nowrap text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       {/* text-base until 2xl (was text-lg, 2026-09-23): 18px JetBrains Mono is
           ~10.8px a character, so "US$3,297.87" (≈116px) cannot fit the ~110px
           content box of a 4-up tile at 1280–~1310. 16px fits at every width,
@@ -266,7 +266,11 @@ export function CardPriceMetrics({
   // page, strip ≈678px) and from xl (details column ≥616px). The value is 16px
   // until 2xl — see Metric.
   return (
-    <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4 sm:gap-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
+    // A WRAPPING ROW OF TILES AS WIDE AS THEIR OWN LABEL (2026-11-14). It was a 3- or 4-column grid of equal tiles, and
+    // a label that names the market ("In stock at · the United States") is wider than a third of a phone or a quarter of
+    // the desktop column: it broke over three lines on a phone and two on a desktop, beside empty space. Each tile now
+    // takes the width its one-line label needs and the row wraps; the price tile still leads.
+    <div className="mt-3 flex flex-wrap gap-x-2 gap-y-2 sm:mt-4 sm:gap-x-3 sm:gap-y-3">
       {/* ONE cheapest-price figure, pinned to DEFAULT_COUNTRY (see the note
           above `place`) — this used to split into "Standard from" + a
           separate "✦ Foil from" tile whenever the card had any foil listing,
@@ -301,7 +305,7 @@ export function CardPriceMetrics({
           sub={lastKnownLabel(known.day)}
           title={lastKnownTitle(known.day)}
           muted
-          className="col-span-3 md:col-span-1 lg:col-span-3 xl:col-span-1"
+          className="max-sm:w-full"
         />
       ) : (
         <Metric
@@ -309,7 +313,7 @@ export function CardPriceMetrics({
           value={m.lowest != null ? fmt(m.lowest) : m.lastSeen ? fmt(m.lastSeen.priceCents) : "—"}
           sub={m.lowest == null && m.lastSeen ? "out of stock" : undefined}
           highlight
-          className="col-span-3 md:col-span-1 lg:col-span-3 xl:col-span-1"
+          className="max-sm:w-full"
         />
       )}
       <Metric
@@ -489,8 +493,10 @@ export function CardPriceComparison({
               >
                 <div className="w-5 shrink-0 text-center text-sm font-bold text-slate-500 sm:w-6">{i + 1}</div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="min-w-0 truncate font-semibold text-white">{p.retailerName}</span>
+                  <div className={pinned ? "flex min-w-0 items-center gap-2" : "flex min-w-0 flex-wrap items-center gap-x-2"}>
+                    {/* A store's name is never cut short (2026-11-14): on a phone "Stomping Grounds TCG" read
+                        "Stomping Ground…" beside room to wrap. The pinned marketplace rows keep their markup. */}
+                    <span className={pinned ? "min-w-0 truncate font-semibold text-white" : "min-w-0 max-w-full font-semibold text-white [overflow-wrap:anywhere]"}>{p.retailerName}</span>
                     <StoreVote url={rowStoreUrl(p)} name={p.retailerName} className="shrink-0 text-slate-400" />
                     {/* The cheapest row is the one visitors should click — a small
                         badge draws the eye there, the same way a highlighted price

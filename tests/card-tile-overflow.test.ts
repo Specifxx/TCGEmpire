@@ -20,30 +20,24 @@ const TILE = read("src/components/CardTile.tsx");
 // simply overflowed its own column, and because the sibling refused to shrink,
 // it overflowed straight across it.
 //
-// Three things hold it now, and each has a distinct job:
-//   - min-w on the price block, so it refuses to squeeze. This is what makes
-//     the wrap fire; `flex-1` alone has a flex-basis of 0 and would shrink to
-//     nothing before ever wrapping.
-//   - flex-wrap on the row, so the count drops to its own line instead.
-//   - truncate on the price, as the last resort if even that is not enough.
+// Until 2026-11-14 three things held it (a min-width on the price block, flex-wrap
+// on the row, truncate on the price), and the count sat beside the price and
+// dropped under it only when the two did not fit: neighbouring tiles then had
+// their prices at different heights. Now the count is not beside the price at
+// all: it shares the small "from" line above it, and the price has the row to
+// itself. Two things hold that:
+//   - the count is inside the "from" line, which wraps, never inside the price's;
+//   - truncate on the price, so a long one ends at the tile's edge.
 test("the card tile's price row cannot overlap its store count", () => {
-  const row = TILE.match(/<div className="mt-auto flex[^"]*"/);
-  assert.ok(row, "expected the price row to still be the mt-auto flex row");
-  assert.match(row![0], /\bflex-wrap\b/, "the price row must wrap rather than let its children collide");
-
-  assert.match(
-    TILE,
-    /<div className="min-w-\[min\([\d.]+rem,100%\)\] flex-1">/,
-    "the price block needs a real min-width, capped at its container — min-w-0 lets it shrink to nothing, and an uncapped rem minimum is wider than a narrow tile so truncate never engages",
-  );
+  const from = TILE.match(/<div className="([^"]*)">\s*<span>from<\/span>\s*\{count\}\s*<\/div>/);
+  assert.ok(from, "expected the store count to share the small \"from\" line above the price");
+  assert.match(from![1], /\bflex-wrap\b/, "the from line must wrap rather than let its two labels collide on a very narrow tile");
 
   const priceLine = TILE.match(/<div className="[^"]*text-accent[^"]*">/);
   assert.ok(priceLine, "expected the price to still be the text-accent div");
-  assert.match(
-    priceLine![0],
-    /\btruncate\b/,
-    "the price must truncate; without it min-w-0 does nothing and the text overflows across the store count",
-  );
+  assert.match(priceLine![0], /\btruncate\b/, "the price must truncate rather than leave its tile");
+  const price = TILE.slice(TILE.indexOf(priceLine![0]));
+  assert.doesNotMatch(price.slice(0, price.indexOf("</div>")), /count|ct-count/, "nothing may sit on the price's own line");
 });
 
 // The reported screenshot also showed names cut to about six characters
@@ -132,6 +126,6 @@ test("on a tile, the heart stacks above the badges and the badges stop short of 
   const badgeZ = Number(TILE.match(/absolute left-2 [^"]*top-2 z-(\d+) flex flex-col/)?.[1]);
   assert.ok(heartZ && badgeZ, "expected both the heart and the badge column to be positioned");
   assert.ok(heartZ > badgeZ, `the heart (z-${heartZ}) must sit above the badge column (z-${badgeZ}), or a wide badge takes its clicks`);
-  assert.match(TILE, /absolute left-2 right-12 top-2 z-\d+ flex flex-col/, "the badge column must end before the heart's corner");
+  assert.match(TILE, /absolute left-2 right-14 top-2 z-\d+ flex flex-col/, "the badge column must end before the heart's corner (right-2 + the 48px touch heart)");
   assert.match(TILE, /\[&>\*\]:truncate/, "each badge must truncate rather than run under the heart");
 });

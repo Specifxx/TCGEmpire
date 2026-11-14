@@ -23798,3 +23798,60 @@ wave. `tests/november-2026-bans.test.ts` pins the rows, the wording switch, the 
 
 The merge carries `[deploy]` without `[urgent]`: the news is a day old and other sites already list it, so it should not wait
 a day, but the 12-hour gate still decides whether it builds now or rides the next release.
+
+## 2026-11-14: Polish pass: names and labels that fit, one shape for every tile, a search dead end that helps
+
+The owner asked for the sites to look significantly better and feel friendlier. The pages were judged on a 390px phone first,
+then at 1440px, in both themes, from screenshots and measurements (page width, tap targets, text contrast). Nothing was added to
+any page: each change below repairs or quietens something that was already there.
+
+**No paid link, ad placement, URL or metadata changed.** Compared with scripts off on eight pages (the home page, /browse,
+/sets/radiance, a card page, a sealed product page, /sealed, /price-guide and a 404), before against after: the title, every
+meta tag, the canonical and alternates, every JSON-LD node, the h1 and the h2 list are identical, and so is every paid `<a>`
+(the same tags, in the same order). The pinned eBay and TCGplayer rows are byte for byte the same markup on the card page and
+the sealed page; the Amazon row, the ad block, the eBay boxes and every button were not touched. Store rows are still sorted
+by price. So the 19 November clicks-per-placement recheck is unaffected.
+
+- **Card page, the figures under the name** (`CardMarketSection` `CardMetrics`): the labels name the market ("In stock at · the
+  United States"), and in a grid of equal thirds or quarters that label broke over three lines on a phone and two on a desktop,
+  beside empty space. The tiles are now a wrapping row, each as wide as its own one-line label; the price tile still leads and
+  still takes the full row on a phone.
+- **A store's name is never cut short.** On a phone the card page's table read "Stomping Ground…", "Level Up Games …" and the
+  sealed page "Miniature…", "Sweets a…", "Shippin T…". In a store row the name now wraps, and the thumbs drop under a name that
+  needs the line. The pinned marketplace rows keep `truncate` and their exact markup (their names are one word).
+- **Sealed page, sold-out rows**: the whole row was faded to 55%, which put the store's name and price at 2.4 to 2.6:1 in both
+  themes. A sold-out row is now told by its grey name, its struck-through price and the words "Sold out", all at 4.5:1 or
+  better. Open rows are unchanged.
+- **Sealed page, the alert form on a phone**: beside the product photo it had a 190px column, the label ran to four lines and
+  the field read "you@e". The form has its own full-width row under the photo and the price (from `lg` the card is one column,
+  as before), and the field and button wrap rather than squeeze.
+- **Card tile, one shape** (`CardTile`): the store count sat beside the price and dropped under it only when the two did not
+  fit, so in one row "US$897.99 · 1 store" was two lines and "US$850.00 / 3 stores" three, and neighbouring prices sat at
+  different heights. The count now shares the small "from" line and the price has the row to itself. On a touch screen the
+  heart is 48px, and "Signature" ran under it on the home shelf's 144px tiles: the badge column stops 56px short of the corner
+  and the chips are a size smaller below `sm`. `tests/card-tile-overflow.test.ts` pins the new shape in place of the old
+  wrap-to-avoid-overlap mechanism; the reason it existed (a price drawn through the count) cannot happen when the two are on
+  different lines.
+- **A search or filter that finds nothing** (`BrowseMarketBoard`, `SetMarketBoard`): the panel read "No cards found. Try
+  adjusting your filters or search." with a button named "Reset", whatever the visitor had done. A name that matches nothing
+  now says so with the name, says what to try (check the spelling, one word is enough) and lists the released sets as links; a
+  filter combination says to take one or two off; the button says what it does ("See every card", "Clear the filters"). Less
+  padding on a phone, where the words had a 200px column. The eBay search under it is as it was.
+- **/sets/radiance showed the same line twice within one screen**: "Radiance is out. Every card's live price… See Radiance
+  prices", once under the header and once after the chase-card form, both linking to the page's own price guide. The second
+  placement is now for the pre-release season only (`tests/radiance-preorder-cta.test.ts` updated to say so). On the set
+  pages that placement never carried the eBay line (`RadianceCtaEbayLine` returns nothing under /sets/), so no paid link went
+  with it. The articles keep both placements.
+- **Set page price guide, light theme**: the rarity column wrote the raw rarity colour (Showcase 2.0:1, Common 2.6:1,
+  Uncommon 3.2:1 on white). It passes the colour as `--data-ink` like every other rarity chip, so the light theme darkens it.
+  The dark theme is pixel-identical.
+- **Breadcrumbs** (every `nav[aria-label="Breadcrumb"]`, one rule in `globals.css`): a crumb was a 16px-tall target; it is
+  24px for a mouse and 40px for a finger. Words, trail and JSON-LD unchanged.
+- **Home page**: the chase-cards shelf's heading and description stack above the "All … cards" button on a phone (beside it
+  the description was a narrow column of six lines); "All deals" and "All movers" are 40px tall (were 30px); "How it's built"
+  sits on the same line as the Index title on a phone.
+
+Seen and left, with the reason: the store thumbs (20px by 16px) are the owner's "very tiny area" (2026-11-13 note); the card
+page's phone buy box repeats the cheapest price shown just under it, but it is a paid placement and frozen until the 19th; the
+"updated 13h ago" words appear on each table row after the page loads, also inside the frozen rows; "+ I own this" on the set
+list is 26px tall and belongs to the shared vault stylesheet.

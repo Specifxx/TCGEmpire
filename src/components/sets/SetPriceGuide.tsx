@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
@@ -52,7 +53,9 @@ export function SetPriceGuide({
                   </Link>{" "}
                   <span className="num text-xs text-slate-500">{r.collectorNumber}</span>
                 </td>
-                <td className="whitespace-nowrap px-3 py-1.5" style={{ color: rarityInfo(r.rarity).color }}>
+                {/* --data-ink, not `color`, so the light theme can darken it (globals.css .data-ink): the raw rarity hexes
+                    read 2.0-3.9:1 on the light theme's white row (measured 2026-11-14). */}
+                <td className="data-ink whitespace-nowrap px-3 py-1.5" style={{ "--data-ink": rarityInfo(r.rarity).color } as CSSProperties}>
                   {rarityInfo(r.rarity).label}
                 </td>
                 <td className="num whitespace-nowrap px-3 py-1.5 text-right font-semibold text-white">

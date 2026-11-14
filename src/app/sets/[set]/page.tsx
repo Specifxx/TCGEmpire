@@ -24,7 +24,7 @@ import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
 import { RadiancePreorderCta } from "@/components/RadiancePreorderCta";
 import { RadianceReveals } from "@/components/sets/RadianceReveals";
 import { getRadianceReveals } from "@/lib/radiance-reveals";
-import { RADIANCE_FAQ } from "@/lib/sets/radiance";
+import { RADIANCE_FAQ, isBeforeRadianceRelease } from "@/lib/sets/radiance";
 import { faqPage } from "@/lib/jsonld";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { ChaseWatchCta } from "@/components/ChaseWatchCta";
@@ -572,7 +572,10 @@ export default async function SetPage({
           account already watching Radiance's Signature and over-numbered cards. */}
       {set.slug === "radiance" && chaseCards.length > 0 && <ChaseWatchCta cards={chaseCards} released={live} />}
       {set.slug === "radiance" && <RadianceReveals data={radianceReveals} />}
-      {set.slug === "radiance" && <RadiancePreorderCta placement="section" />}
+      {/* The second placement only before release (2026-11-14): once the set is out both placements are the same one
+          line, "Radiance is out … See Radiance prices", linking to this page's own price guide, and it showed twice
+          within one screen. */}
+      {set.slug === "radiance" && isBeforeRadianceRelease() && <RadiancePreorderCta placement="section" />}
       {set.slug === "radiance" && <RadianceHub country={country} />}
       {/* Legacy's hub (2026-11-01), the same role RadianceHub played before
           Radiance's cards imported: it is what earns LGC's hubReady. */}

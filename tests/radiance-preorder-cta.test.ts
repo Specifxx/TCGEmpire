@@ -65,7 +65,9 @@ test("two placements per page: near the top, and after the first major section",
   );
   const set = read("src/app/sets/[set]/page.tsx");
   assert.match(set, /set\.slug === "radiance" && <RadiancePreorderCta placement="top" \/>/);
-  assert.match(set, /set\.slug === "radiance" && <RadiancePreorderCta placement="section" \/>/);
+  // After release both placements are the same one line linking to this page's own price guide, so the set page
+  // keeps the second one for the pre-release season only (2026-11-14).
+  assert.match(set, /set\.slug === "radiance" && isBeforeRadianceRelease\(\) && <RadiancePreorderCta placement="section" \/>/);
 });
 
 test("the price is the cheapest OPEN Booster Box offer in the visitor's market, never another market's", () => {

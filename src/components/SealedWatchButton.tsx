@@ -243,7 +243,9 @@ function AnonymousSealedWatchForm({ groupKey, name, market, className }: { group
       <label htmlFor={`sealed-watch-email-${groupKey.replace(/[^a-z0-9]/gi, "-")}`} className="text-xs text-slate-400">
         Email me when it&apos;s back in stock, at RRP, or on a real drop ({market}). No account needed.
       </label>
-      <div className="mt-1.5 flex gap-2">
+      {/* flex-wrap and a 9rem floor on the field (2026-11-14): beside the product photo on a phone this column is about
+          190px, and the field was squeezed to "you@e" next to its button. There the button drops under a full-width field. */}
+      <div className="mt-1.5 flex flex-wrap gap-2">
         <input
           id={`sealed-watch-email-${groupKey.replace(/[^a-z0-9]/gi, "-")}`}
           type="email"
@@ -253,7 +255,7 @@ function AnonymousSealedWatchForm({ groupKey, name, market, className }: { group
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="input min-w-0 flex-1 text-sm"
+          className="input min-w-[9rem] flex-1 text-sm"
         />
         <button type="submit" disabled={phase === "busy"} className="btn-primary shrink-0 text-xs">
           {phase === "busy" ? "Saving…" : remembered ? "♡ Watch" : "Notify me"}

@@ -239,10 +239,14 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
           const isBest = l === best;
           const pinned = lead.includes(l);
           return [
-            <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"} ${(() => { const o = rowOutline({ cheapest: isBest && listings.length > 1, ebay: pinned && l === pin.ebay }); return o ? `-mx-2 px-2 ${o}` : ""; })()}`}>
+            <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5  ${(() => { const o = rowOutline({ cheapest: isBest && listings.length > 1, ebay: pinned && l === pin.ebay }); return o ? `-mx-2 px-2 ${o}` : ""; })()}`}>
               <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 items-center gap-1.5">
-                  <span className="truncate text-sm font-semibold text-white">{l.retailerName}</span>
+                <div className={pinned ? "flex min-w-0 items-center gap-1.5" : "flex min-w-0 flex-wrap items-center gap-x-1.5"}>
+                  {/* A store's name wraps instead of being cut ("Miniature…", "Sweets a…" on a phone, 2026-11-14), and the
+                      thumbs drop under a name that needs the row. A sold-out row is told by its grey name, its struck
+                      price and "Sold out", no longer by fading the whole row to 55% (2.4:1). The pinned marketplace
+                      rows keep their markup. */}
+                  <span className={pinned ? "truncate text-sm font-semibold text-white" : `min-w-0 max-w-full text-sm font-semibold [overflow-wrap:anywhere] ${isOpen ? "text-white" : "text-slate-400"}`}>{l.retailerName}</span>
                   <StoreVote url={l.url} name={l.retailerName} className="shrink-0 text-slate-400" />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
@@ -267,7 +271,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
               </div>
               {/* On a phone the chip squeezed the store's name to three letters: the label moves under it there. */}
               {isBest && <span className="chip hidden shrink-0 bg-gold/20 text-gold sm:inline-flex">Best price</span>}
-              <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "text-slate-500 line-through" : ""}`}>
+              <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "!text-slate-500 line-through" : ""}`}>
                 {fmt(l.priceCents)}
               </div>
               {isOpen && (

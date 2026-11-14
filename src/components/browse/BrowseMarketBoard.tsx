@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { COUNTRIES, type Country } from "@/lib/country";
+import { SETS } from "@/lib/constants";
 import type { BrowseView } from "@/lib/browse-view";
 import { BROWSE_DEFAULT_SORT } from "@/lib/browse-shared";
 import type { CardQuery } from "@/lib/cards";
@@ -178,14 +179,33 @@ export function BrowseMarketBoard({
               <Link href="/browse" className="text-brand-400 hover:underline">Browse all cards</Link>
             </p>
           ) : (
-            <div className="card-surface grid place-items-center p-16 text-center">
+            // WHAT TO TRY, AND WAYS BACK IN (2026-11-14). This panel read "No cards found. Try adjusting your filters
+            // or search." with a button named "Reset", whether the visitor had typed a name or ticked a filter. It now
+            // answers the case in front of it and offers the sets, which every visitor can pick from. p-6 on a phone:
+            // at p-16 the words had a 200px column.
+            <div className="card-surface grid place-items-center p-6 text-center sm:p-12">
               <p className="text-lg font-semibold text-white">
-                {total > 0 ? "Nothing on this page" : "No cards found"}
+                {total > 0 ? "That page is past the end of the list" : q ? <>We couldn&apos;t find a card called “{q}”</> : "No cards match these filters"}
               </p>
-              <p className="mt-1 text-sm text-slate-400">
-                {total > 0 ? "Try an earlier page." : "Try adjusting your filters or search."}
+              <p className="mt-1 max-w-md text-sm text-slate-400">
+                {total > 0
+                  ? "Go back to the first page to see every match."
+                  : q
+                    ? "Check the spelling, or type just part of the name: one word is enough. You can also pick a set and look through it."
+                    : "Take one or two off and the list will fill again, or start over with every card."}
               </p>
-              <Link href="/browse" className="btn-primary mt-4">Reset</Link>
+              <Link href="/browse" className="btn-primary mt-4">{total > 0 ? "Back to the first page" : q ? "See every card" : "Clear the filters"}</Link>
+              {total === 0 && (
+                <ul className="mt-5 flex flex-wrap justify-center gap-2">
+                  {SETS.filter((s) => !s.comingSoon).map((s) => (
+                    <li key={s.code}>
+                      <Link href={`/sets/${s.slug}`} className="chip min-h-9 border border-ink-700 bg-ink-900 px-3 text-sm text-slate-200 transition-colors duration-fast hover:border-ink-600 hover:bg-ink-800">
+                        {s.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
           {/* A search our database has no card for (a typo, a set we have
