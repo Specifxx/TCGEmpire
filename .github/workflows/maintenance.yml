@@ -5972,7 +5972,10 @@ jobs:
         if: inputs.task == 'gsc-coverage'
         env:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
-          SAMPLE: "30"
+          # 20, not 30: at 30 the 45-minute job was cancelled before the last sites (2026-11-07, -14).
+          SAMPLE: "20"
+          # `url` = comma list of host substrings: only those sites (e.g. kaeyoung,scentcompare)
+          ONLY: ${{ inputs.url }}
         run: npx tsx scripts/gsc-sister-coverage.ts
 
       - name: Search Console cannibalisation report, every property (read-only)
