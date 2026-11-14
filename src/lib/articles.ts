@@ -1372,7 +1372,7 @@ Two of these are worth a note. The bluffing rule puts in writing what most playe
 
 ## What this update does not do
 
-It does not ban anything. The last changes to the ban list took effect on 18 September, and our **[ban list explainer](/guides/riftbound-banlist-explained)** has the current list. It does not change any card's power level, because Riot rules that out in the patch notes. It does not rotate any set out of Standard: the only Standard change is that Radiance joins.
+It does not ban anything. Bans are announced separately (the newest wave takes effect on 23 November 2026), and our **[ban list explainer](/guides/riftbound-banlist-explained)** has the current list. It does not change any card's power level, because Riot rules that out in the patch notes. It does not rotate any set out of Standard: the only Standard change is that Radiance joins.
 
 Riot also says that a bigger rules rewrite is coming in January with **Legacy**. It will reformat the rules to make them easier to read, and Riot says it will not change how any mechanic works. A further FAQ article is planned after Radiance releases.
 
@@ -4858,7 +4858,7 @@ The only cards not legal are the specific ones on the **[ban list](/guides/riftb
 
 These get conflated constantly, and the difference matters a lot for what you buy.
 
-**A ban is a scalpel.** It removes one named card because that card is distorting the format. It is targeted, it is rare, and it is announced with a reason. Riftbound's **[September 2026 bans](/blog/riftbound-september-2026-bans-meta-shift)** are the most recent example, after the **[July 2026 wave](/blog/riftbound-july-2026-ban-list-update)**.
+**A ban is a scalpel.** It removes one named card because that card is distorting the format. It is targeted, it is rare, and it is announced with a reason. Riftbound's **[November 2026 bans](/blog/riftbound-november-2026-bans-riven-baited-hook)** are the most recent example, after the **[September](/blog/riftbound-september-2026-bans-meta-shift)** and **[July 2026](/blog/riftbound-july-2026-ban-list-update)** waves.
 
 **A rotation is a scheduled amputation.** It removes entire sets at once on a calendar, whether or not their cards were causing any problem at all. Cards that were perfectly reasonable simply stop being legal because of their age. Several long-running card games work this way; Riftbound, so far, does not.
 
@@ -7395,11 +7395,11 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
     // `updated` below.
     title: `Riftbound Ban List (${monthYear(BANLIST_UPDATED)}): ${BANNED_CARDS.length} Banned Cards`,
     excerpt:
-      "Which Riftbound cards are banned in Standard and 2v2 right now, what the September 2026 wave added, and why Riot banned each one — with live prices.",
+      "All 23 Riftbound cards banned in Standard and 2v2, including the 10 added from 23 Nov 2026 (Riven, Baited Hook), why Riot banned each, and live prices.",
     author: "RiftCompare",
     date: "2026-07-16",
     updated: BANLIST_UPDATED,
-    readMins: 7,
+    readMins: 9,
     tags: ["banlist", "competitive", "rules", "guide"],
     // ItemList JSON-LD from the same list as the table under the H1.
     itemList: {
@@ -7413,7 +7413,15 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
     faq: [
       {
         q: "What cards are banned in Riftbound?",
-        a: "There have been three waves of bans so far: Riot banned seven cards from competitive constructed play on 31 March 2026, four more bans effective 24 July 2026, and two more effective 18 September 2026. The July wave also introduced a separate Constructed 2v2 ban list.",
+        a: "There have been four waves of bans so far: Riot banned seven cards from competitive constructed play on 31 March 2026, four more effective 24 July 2026, two more effective 18 September 2026, and ten more effective 23 November 2026 (Riven, Broken Blade, Zhonya's Hourglass, Stellacorn Herder, Nocturne, Horrifying, Rhasa the Sunderer, Brynhir Thundersong, Dazzling Aurora, Baited Hook, Emperor's Dais and Star Spring). The July wave also introduced a separate Constructed 2v2 ban list. The table at the top of this page lists every card.",
+      },
+      {
+        q: "Is Riven, Broken Blade banned in Riftbound?",
+        a: "Yes, from 23 November 2026, in both Standard and Constructed 2v2. Riot announced it on 13 November 2026 after Riven decks made up 43% of registered decks at the European Regional Championship and took three of the top four places. The battlefields Star Spring and Emperor's Dais were banned with it. The Riven legends are not banned.",
+      },
+      {
+        q: "Is Baited Hook banned in Riftbound?",
+        a: "Yes, from 23 November 2026, in both Standard and Constructed 2v2. Riot said the card puts expensive units into play for free because it checks Might, not Energy cost, and that it expects cards in upcoming sets, Legacy included, to combine badly with it. Dazzling Aurora, the other Origins epic in the wave, was banned on the same date.",
       },
       {
         q: "Why was Ekko, Recurrent banned?",
@@ -7448,6 +7456,23 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
     // [[embed:N]] appears under, so a new wave goes at index 0 and the rest shift.
     embeds: [
       {
+        title: "November 2026 additions",
+        note: "The 10 additions to the banlist on 13 November 2026 (effective 23 November), with live prices across every store RiftCompare tracks.",
+        slugs: [
+          "riven-broken-blade-rad-043-167",
+          "riven-broken-blade-rad-043a-167",
+          "zhonya-s-hourglass-ogn-077-298",
+          "stellacorn-herder-sfd-048-221",
+          "nocturne-horrifying-ogn-194-298",
+          "rhasa-the-sunderer-ogn-195-298",
+          "brynhir-thundersong-ogn-026-298",
+          "dazzling-aurora-ogn-160-298",
+          "baited-hook-ogn-242-298",
+          "emperor-s-dais-sfd-207-221",
+          "star-spring-unl-215-219",
+        ],
+      },
+      {
         title: "September 2026 additions",
         note: "The 2 cards added to the banlist on 15 September 2026 (effective 18 September), with live prices across every store RiftCompare tracks.",
         slugs: ["ekko-recurrent-ogn-110-298", "stacked-deck-ogn-183-298"],
@@ -7477,7 +7502,27 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
         ],
       },
     ],
-    body: `Riftbound's first banlist landed on **31 March 2026**, when Riot Games banned seven cards from competitive constructed play. On **17 July 2026** Riot announced a second wave — four more bans, effective **24 July 2026** — plus a brand-new **Constructed 2v2 ban list**. On **15 September 2026** Riot announced a third wave — two more bans, effective **18 September 2026** — the first wave to hit the Standard and 2v2 ban lists together from day one, rather than needing a separate 2v2-only addendum. Here's the complete, current picture: every banned card, why each was banned, and what it means if you own one.
+    body: `Riftbound's first banlist landed on **31 March 2026**, when Riot Games banned seven cards from competitive constructed play. On **17 July 2026** Riot announced a second wave — four more bans, effective **24 July 2026** — plus a brand-new **Constructed 2v2 ban list**. On **15 September 2026** Riot announced a third wave — two more bans, effective **18 September 2026** — the first wave to hit the Standard and 2v2 ban lists together from day one, rather than needing a separate 2v2-only addendum. On **13 November 2026** Riot announced the fourth and largest wave: eight cards and two battlefields, effective **23 November 2026**, again on both lists. Here's the complete, current picture: every banned card, why each was banned, and what it means if you own one.
+
+## November 2026 update: 10 more bans, led by Riven
+
+Effective **23 November 2026**, Riot adds ten entries to **both** the Standard and Constructed 2v2 ban lists. Until that date all ten are still legal.
+
+- **Riven, Broken Blade** (Radiance, Calm) — Riot says Riven decks were 43% of registered decks at the European Regional Championship, took three of the top four places and won about 60% or more of their games against the rest of the field. It calls this 4-cost Unit "an incredible guaranteed turn two play". The Riven legends stay legal.
+- **Star Spring** (Unleashed, Battlefield) and **Emperor's Dais** (Spiritforged, Battlefield) — banned with Riven because, in Riot's words, they "negate the risk of conquering", the same problem as Reaver's Row.
+- **Zhonya's Hourglass** (Origins, Calm) — strong with Astral Heron and hard to answer because it gets around Gear removal.
+- **Stellacorn Herder** (Spiritforged, Calm) — a reward for movement effects with no limit on how often it pays out; Riot says it "shores up the weaknesses of the Calm domain too well".
+- **Nocturne, Horrifying** (Origins, Chaos) — a "zero energy play" that costs no card when the deck finds it. Riot calls Kennen's best draws with it "a pretty unhealthy pattern".
+- **Rhasa the Sunderer** (Origins, Chaos) — a very strong payoff for filling the trash that costs 0 Energy when it lands. September's ban of Stacked Deck went around Nocturne and Rhasa; this wave bans them directly. Kennen is not banned.
+- **Brynhir Thundersong** (Origins, Fury) — can stop an opponent playing cards on their own turn, and with blink effects becomes "an extremely powerful removal tool".
+- **Dazzling Aurora** (Origins, Body) — Riot says it "homogenizes all energy-ramping decks into one form".
+- **Baited Hook** (Origins, Order) — checks Might, not Energy cost, so it "cheats out free units of high cost". Banned ahead of the January World Showcase because Riot expects cards in upcoming sets, Legacy included, to combine badly with it.
+
+Three more things changed with this wave. **The global ban list is over:** ban lists now follow each regional circuit, and these ten bans do not apply to competitive events in Korea or the Traditional Chinese regions until Radiance releases there. **Bans get a calendar from 2027:** Riot will announce changes in ban windows, on the Friday two weeks before each Continental event and the Friday two weeks after. **And store events count:** Riot says banned cards cannot be played at official events, Nexus Nights included.
+
+[[embed:0]]
+
+For what each of the ten cost on the eve of the announcement, and the full timeline of events either side of 23 November, see **[our November ban wave breakdown](/blog/riftbound-november-2026-bans-riven-baited-hook)**.
 
 ## September 2026 update: 2 more bans, hitting both formats at once
 
@@ -7488,7 +7533,7 @@ Effective **18 September 2026**, Riot added two cards to **both** the Standard a
 
 Riot published the reasoning fast on purpose: the **Shenyang Regional Open** had just wrapped, and with the **Los Angeles Regional Qualifier** and the **Chengdu Major** both ahead, Riot wanted players adjusting decklists before either event rather than after. Both cards are two-year-old Origins prints, not new Vendetta cards — a reminder that a card can sit fine in the format for a long time and still get banned once a later set's release changes what it enables.
 
-[[embed:0]]
+[[embed:1]]
 
 For how the community reacted to this specific wave, and the (explicitly speculative) theories going around about which decks gain ground now that Chaos lost one of its cheapest consistency pieces, see **[our September ban reaction roundup](/blog/riftbound-september-2026-bans-meta-shift)**.
 
@@ -7506,7 +7551,7 @@ Effective **24 July 2026**, Riot added three cards to the Standard banlist and o
 
 Riot's own words on how they decide a ban: *"there are three questions we ask ourselves when considering whether to ban a card: is this card overrepresented in an unhealthy way? Are the problems with this card likely to get better or worse over time? Does this card promote unhealthy play patterns?"* Going forward, Riot says any ban that applies to both formats will say so explicitly — otherwise assume a new Standard ban does **not** automatically apply to 2v2, and vice versa.
 
-[[embed:1]]
+[[embed:2]]
 
 ## The original 7 banned cards (31 March 2026)
 
@@ -7518,11 +7563,11 @@ Riot's own words on how they decide a ban: *"there are three questions we ask ou
 - **The Dreaming Tree** (Origins) — provided so much card flow it tipped the balance toward specific deck styles.
 - **Obelisk of Power** (Origins) — banned for its sheer ubiquity; it was in nearly every competitive list.
 
-[[embed:2]]
+[[embed:3]]
 
 ## What "banned" actually means
 
-A banned card can't be included in a deck for **competitive constructed play** — organized tournaments and ranked events run under Riot's official rules. It doesn't necessarily mean your local game store's casual nights follow the same list; check with your local organizer if you're unsure, since casual play often runs looser rules than sanctioned events. And as of July 2026, "banned" isn't one list any more — a card can be banned in Standard, in 2v2 only, or in both. September's wave was the first to do the latter from day one, hitting both lists in the same announcement rather than needing a separate 2v2-only addendum.
+A banned card can't be included in a deck for **competitive constructed play** — organized tournaments and ranked events run under Riot's official rules. It doesn't necessarily mean your local game store's casual nights follow the same list; check with your local organizer if you're unsure, since casual play often runs looser rules than sanctioned events. And as of July 2026, "banned" isn't one list any more — a card can be banned in Standard, in 2v2 only, or in both. September's wave was the first to hit both lists in the same announcement, and November's did the same. Since November 2026 the list can also differ by region: check your local organiser if you play in Korea or a Traditional Chinese region.
 
 ## Does a ban affect a card's price?
 
@@ -7534,7 +7579,7 @@ If you're building a deck today, none of the cards above are legal in sanctioned
 
 We'll update this guide the moment any further changes to either ban list are announced.
 
-*Ban reasoning summarized from Riot Games' official announcements (31 March 2026, 17 July 2026 and 15 September 2026) and community coverage of Riftbound's ban history.*`,
+*Ban reasoning summarized from Riot Games' official announcements (31 March 2026, 17 July 2026, 15 September 2026 and 13 November 2026) and community coverage of Riftbound's ban history.*`,
   },
   {
     slug: "riftbound-july-2026-ban-list-update",
@@ -7617,6 +7662,192 @@ Same as any ban: these cards stay perfectly playable outside sanctioned events (
 For the complete, always-current picture — including March's original 7 bans — see our **[full Riftbound banlist guide](/guides/riftbound-banlist-explained)**, which we update the moment anything changes.
 
 *Ban reasoning and effective dates are Riot Games' own words from their 17 July 2026 announcement.*`,
+  },
+  {
+    slug: "riftbound-november-2026-bans-riven-baited-hook",
+    category: "blog",
+    title: "Riftbound Bans Nov 2026: Riven, Baited Hook +8",
+    excerpt:
+      "Riot bans Riven, Broken Blade, Baited Hook, Dazzling Aurora and seven more Riftbound cards from 23 November 2026. The list, Riot's reasons and prices.",
+    author: "RiftCompare",
+    date: "2026-11-14",
+    readMins: 8,
+    tags: ["banlist", "news", "competitive", "meta", "radiance"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
+    ],
+    summary: [
+      "**Riot banned 8 cards and 2 battlefields on 13 November 2026**, effective **Monday 23 November**, in both Standard and Constructed 2v2: Riven, Broken Blade, Zhonya's Hourglass, Stellacorn Herder, Nocturne, Horrifying, Rhasa the Sunderer, Brynhir Thundersong, Dazzling Aurora, Baited Hook, Emperor's Dais and Star Spring.",
+      "**Riven drove the wave:** Riot says Riven decks were 43% of registered decks at the European Regional Championship and took three of the top four places.",
+      "**The money is in three Origins cards.** On 13 November, before the news, the cheapest Baited Hook we tracked was $30.37, Dazzling Aurora $15.82 and Zhonya's Hourglass $8.85; the other seven cards together cost under $7.",
+      "**The global ban list is over.** Lists now follow each regional circuit, and these bans wait for Radiance's release in Korea and the Traditional Chinese regions.",
+      "**From 2027 bans come in set windows:** the Friday two weeks before each Continental event and the Friday two weeks after.",
+    ],
+    faq: [
+      {
+        q: "Which cards did Riftbound ban in November 2026?",
+        a: "Ten: Riven, Broken Blade, Zhonya's Hourglass, Stellacorn Herder, Nocturne, Horrifying, Rhasa the Sunderer, Brynhir Thundersong, Dazzling Aurora and Baited Hook, plus the battlefields Emperor's Dais and Star Spring. Riot announced them on 13 November 2026 and they apply to the Standard and Constructed 2v2 ban lists from 23 November 2026.",
+      },
+      {
+        q: "When do the November 2026 Riftbound bans take effect?",
+        a: "Monday 23 November 2026. The cards stay legal until then, so events on the weekends of 13 to 15 and 20 to 22 November are played with them. In Korea and the Traditional Chinese regions the bans do not apply until Radiance releases there.",
+      },
+      {
+        q: "Why was Riven, Broken Blade banned?",
+        a: "Riot's announcement says Riven decks were 43% of registered decks at the European Regional Championship, took three of the top four places and won about 60% or more of their games against the rest of the field. It banned the 4-cost Unit Riven, Broken Blade and the battlefields Star Spring and Emperor's Dais, not the Riven legends.",
+      },
+      {
+        q: "Is Kennen banned in Riftbound?",
+        a: "No. Kennen stays legal, but two of the deck's payoff cards, Nocturne, Horrifying and Rhasa the Sunderer, are banned from 23 November 2026, after Stacked Deck was banned in September.",
+      },
+      {
+        q: "Can I play the banned cards at my local store?",
+        a: "Not at official events from 23 November 2026: Riot's announcement says banned cards cannot be played at official events and names Nexus Nights as included. Casual games outside official events are up to the players.",
+      },
+      {
+        q: "Where can I see Riftbound's complete, current ban list?",
+        a: "The ban list guide has every banned card in Standard and 2v2 in one table, with the date each ban applies and its live price.",
+      },
+    ],
+    embeds: [{
+      title: "The 10 newly banned cards",
+      note: "Banned 13 November 2026, effective 23 November, with live prices across every store RiftCompare tracks. Riven's Showcase printing is banned with the base card.",
+      slugs: [
+        "baited-hook-ogn-242-298",
+        "dazzling-aurora-ogn-160-298",
+        "zhonya-s-hourglass-ogn-077-298",
+        "riven-broken-blade-rad-043-167",
+        "riven-broken-blade-rad-043a-167",
+        "brynhir-thundersong-ogn-026-298",
+        "nocturne-horrifying-ogn-194-298",
+        "rhasa-the-sunderer-ogn-195-298",
+        "stellacorn-herder-sfd-048-221",
+        "emperor-s-dais-sfd-207-221",
+        "star-spring-unl-215-219",
+      ],
+    }],
+    browseCta: {
+      href: "/guides/riftbound-banlist-explained",
+      label: "See the complete, current ban list →",
+      blurb: "Every banned card in Standard and 2v2 in one table, with the date each ban applies and its live price.",
+    },
+    body: `Riot announced Riftbound's fourth and largest ban wave on **13 November 2026**: eight cards and two battlefields, all effective **Monday 23 November 2026**, all added to both the Standard and Constructed 2v2 ban lists. The headline is **Riven, Broken Blade**, a Radiance rare that is barely six weeks old, but the wave reaches back to Origins for some of the most expensive Gear in the game, **Baited Hook** and **Dazzling Aurora** included. The complete list of every banned card, old and new, is in **[our ban list guide](/guides/riftbound-banlist-explained)**. This piece covers the new wave on its own: what was banned, what Riot said about each card, what the cards cost on the eve of the news, and what changes about bans from 2027.
+
+## Every card banned from 23 November
+
+**Cards (8):**
+
+- **[Riven, Broken Blade](/card/riven-broken-blade-rad-043-167)** — Calm Unit, Radiance (rare, plus a Showcase printing)
+- **[Zhonya's Hourglass](/card/zhonya-s-hourglass-ogn-077-298)** — Calm Gear, Origins
+- **[Stellacorn Herder](/card/stellacorn-herder-sfd-048-221)** — Calm Unit, Spiritforged
+- **[Nocturne, Horrifying](/card/nocturne-horrifying-ogn-194-298)** — Chaos Unit, Origins
+- **[Rhasa the Sunderer](/card/rhasa-the-sunderer-ogn-195-298)** — Chaos Unit, Origins
+- **[Brynhir Thundersong](/card/brynhir-thundersong-ogn-026-298)** — Fury Unit, Origins
+- **[Dazzling Aurora](/card/dazzling-aurora-ogn-160-298)** — Body Gear, Origins (epic)
+- **[Baited Hook](/card/baited-hook-ogn-242-298)** — Order Gear, Origins (epic)
+
+**Battlefields (2):**
+
+- **[Emperor's Dais](/card/emperor-s-dais-sfd-207-221)** — Spiritforged
+- **[Star Spring](/card/star-spring-unl-215-219)** — Unleashed
+
+That takes the Standard ban list from 12 cards to 22, and the Constructed 2v2 list from 13 to 23 (2v2 also bans Master Yi, Wuju Bladesman). A ban covers every printing of a card, so Riven's Showcase version and Stellacorn Herder's promo are banned along with the base cards.
+
+[[embed:0]]
+
+## When it takes effect, and where
+
+The bans apply from **Monday 23 November 2026**. Until then all of them are legal, which matters for anyone playing this weekend: Riot's announcement says it avoids changing the list within two weeks of a premier event, and it lists the events around this wave. The CCS 50K in Houston (13 to 15 November) and the Ningbo Minor and Gen.G Showdown in Los Angeles (20 to 22 November) are played before the bans apply. The Qingdao Minor (5 to 6 December), the North America Regional Championship in Las Vegas (11 to 13 December) and the China Regional Championship in Guangzhou (2 to 3 January) are played after.
+
+Two details are easy to miss:
+
+- **Store play counts.** Riot's announcement says banned cards cannot be played at official events, and it names Nexus Nights as included. Casual games at a kitchen table are your own business; an official store event is not.
+- **Korea and Traditional Chinese regions are different.** The announcement ends the single global ban list. Ban lists now follow each regional circuit, and these ten bans do not apply to competitive events in Korea or the Traditional Chinese regions until Radiance releases there. Riot also says some cards may be unbanned in those regions until Spiritforged, Vendetta and Radiance arrive, with dates that can differ. If you play in one of those regions, check your local organiser rather than this list.
+
+## Why Riot banned each card
+
+Riot's game director Dave Guskin signed the announcement and repeated the three questions the team asks before any ban: is the card overrepresented in an unhealthy way, will the problem get better or worse over time, and does the card promote unhealthy play patterns. Here is what the announcement says about each card, in our words, with Riot's own numbers where it gave them.
+
+### Riven, Broken Blade, Star Spring and Emperor's Dais
+
+This is the part of the wave driven by tournament results. Riot says Riven decks were **43% of registered decks** at the European Regional Championship, took **three of the top four places**, and won about **60% or more** of their games against the rest of the field once mirror matches are left out. Riot describes the 4-cost Riven, Broken Blade as "an incredible guaranteed turn two play", and banned it rather than a Riven legend.
+
+The two battlefields go with her. Riot's reasoning is that Star Spring and Emperor's Dais "negate the risk of conquering", and it compares them directly to Reaver's Row, a battlefield banned in the first wave on 31 March. Battlefields have now been banned in three of the four waves, after The Arena's Greatest and Aspirant's Climb in July.
+
+### Zhonya's Hourglass and Stellacorn Herder
+
+Both are Calm cards, like Riven. Riot says Zhonya's Hourglass "seems somewhat innocuous" on its face but is strong alongside Astral Heron and is hard to answer because it gets around Gear removal. Stellacorn Herder is described as a very strong reward for movement effects with no limit on how many times it pays out in a turn, and Riot's summary is that it "shores up the weaknesses of the Calm domain too well". Taken with Riven, three of the eight banned cards are Calm.
+
+### Nocturne, Horrifying and Rhasa the Sunderer
+
+These two are the Chaos cards the September wave went around. In September Riot banned Stacked Deck, the cheap card that helped Kennen decks find Nocturne and fill the trash for Rhasa, and said at the time it wanted to bring Kennen back in line rather than remove the deck. This wave bans the payoffs themselves. Riot calls Nocturne a "zero energy play" that does not cost a card when the deck finds it, and says Kennen's best draws with it are "a pretty unhealthy pattern". Rhasa is called a very strong payoff for filling the trash that costs 0 Energy when it lands, so there is little cost to building around it.
+
+Kennen himself is not banned. Riot notes that a Kennen deck still won the European event, with about 15% of registered players on the legend.
+
+### Brynhir Thundersong
+
+A Fury Unit from Origins. Riot says Brynhir can stop an opponent from playing cards on their own turn, and that with blink effects it turns into "an extremely powerful removal tool". The concern here is the play pattern, a locked-out opponent, more than a win rate.
+
+### Dazzling Aurora
+
+One of the two epics in the wave. Riot says Dazzling Aurora has been a long-running problem for decks that ramp Energy, and that it "homogenizes all energy-ramping decks into one form": if you ramp, you play Aurora, and every ramp deck ends up looking the same. The announcement also says the team has held back from banning some epic staples since launch out of respect for what players paid for them, which makes this ban, and the next one, a change of approach.
+
+### Baited Hook
+
+The other epic, and the most expensive card in the wave. Baited Hook checks a Unit's Might, not its Energy cost, so in Riot's words it "cheats out free units of high cost". The reason for banning it now is forward-looking: Riot says it expects cards in upcoming sets, **[Legacy](/legacy-preorders)** included, to combine badly with it, and it wanted the card gone before the World Showcase in January rather than after.
+
+## What the banned cards cost on the eve of the ban
+
+These are the cheapest in-stock listings RiftCompare tracked across all stores and markets on **13 November 2026**, converted to US dollars. That snapshot was taken before Riot's announcement, so it is the last full day of prices from a format where all of them were legal.
+
+| Card | Rarity | Cheapest listing, 13 Nov |
+|---|---|---|
+| Baited Hook | Epic | $30.37 |
+| Dazzling Aurora | Epic | $15.82 |
+| Zhonya's Hourglass | Rare | $8.85 |
+| Riven, Broken Blade (Showcase) | Showcase | $4.99 |
+| Brynhir Thundersong | Rare | $3.11 |
+| Nocturne, Horrifying | Rare | $1.53 |
+| Rhasa the Sunderer | Rare | $0.99 |
+| Stellacorn Herder | Uncommon | $0.80 |
+| Riven, Broken Blade | Rare | $0.13 |
+| Star Spring | Uncommon | $0.10 |
+| Emperor's Dais | Uncommon | $0.06 |
+
+Two things stand out. The money in this wave is in three cards: Baited Hook, Dazzling Aurora and Zhonya's Hourglass together cost about $55 a copy on 13 November, and the other seven cards together cost under $7. And the card that dominated the European Regional Championship, the base Riven, Broken Blade, was a 13-cent rare, because Radiance is still being opened in volume.
+
+We are not going to tell you where these prices go next. A ban usually removes tournament demand, and tournament demand is most of the reason a $30 Gear costs $30, but collectors, casual players and the regions where the card stays legal all still buy. The live prices are in the card gallery above and on each card's own page, where the price history chart shows what has happened since the announcement. If you are selling, compare stores first: the gap between the cheapest and the dearest listing of a just-banned card is usually wide in the first week, while stores reprice at different speeds.
+
+## What changes from 2027: ban windows
+
+The announcement also changes how bans are scheduled. From 2027, Riot says it will use **ban windows**: an announcement on the Friday two weeks before each Continental event, and another on the Friday two weeks after it. The aim is that players know in advance which Fridays can bring a ban, instead of a wave arriving whenever a problem gets bad enough.
+
+Two more signals for next year:
+
+- Riot says its tolerance for unhealthy cards will be "a bit stricter" than it has been. Ten bans in one wave, after two in September, is already a step in that direction.
+- For 2v2, Riot notes Yasuo is strong but makes no 2v2-only changes now, and says it will share 2v2 changes early next year.
+
+For how bans sit next to set rotation, which Riftbound still does not have, see **[does Riftbound rotate?](/guides/riftbound-format-legality-rotation)**.
+
+## If you own these cards
+
+- **Playing an event before 23 November?** The cards are legal. Nothing changes for this weekend or next.
+- **Playing after 23 November?** Take all ten out of Standard and 2v2 lists. The **[deck builder](/deck)** prices your replacement cards at the cheapest store in your market as you edit the list.
+- **Riven players** lose the 4-cost Unit and both battlefields, not the legend. Check the full **[ban list](/guides/riftbound-banlist-explained)** before you pick new battlefields. Five are banned in total: Reaver's Row, The Arena's Greatest, Aspirant's Climb, Emperor's Dais and Star Spring.
+- **Holding Baited Hook or Dazzling Aurora?** Both are still real cards for casual play and for regions where the ban does not apply yet. Check the live price before you decide anything, and set a **[price alert](/alerts)** if you would rather buy them cheaply than sell them.
+
+## The four waves so far
+
+| Announced | Effective | Cards |
+|---|---|---|
+| 31 March 2026 | 31 March 2026 | 7: Scrapheap, Called Shot, Draven, Vanquisher, Reaver's Row, Fight or Flight, The Dreaming Tree, Obelisk of Power |
+| 17 July 2026 | 24 July 2026 | 4: Stealthy Pursuer, The Arena's Greatest, Aspirant's Climb, plus Master Yi, Wuju Bladesman in 2v2 only |
+| 15 September 2026 | 18 September 2026 | 2: Ekko, Recurrent and Stacked Deck |
+| 13 November 2026 | 23 November 2026 | 10: this wave |
+
+The earlier waves are covered in **[July's ban update](/blog/riftbound-july-2026-ban-list-update)** and **[September's ban reaction](/blog/riftbound-september-2026-bans-meta-shift)**, and the weekly **[price movers](/movers)** show which cards are rising and falling as lists get rebuilt.
+
+*Ban facts (cards, effective date, tournament figures and Riot's stated reasoning) are from [Riot Games' 13 November 2026 announcement](https://playriftbound.com/en-us/news/announcements/radiance-ban-list-updates-effective-november-23-2026/), summarised in our own words with short quotations. Prices are RiftCompare's own daily record of the cheapest in-stock listing for each card on 13 November 2026.*`,
   },
   {
     slug: "riftbound-september-2026-bans-meta-shift",
@@ -10150,7 +10381,8 @@ Vendetta introduced three mechanics, and they generate the bulk of current rules
 ## What's currently legal
 
 - **[The banlist explained](/guides/riftbound-banlist-explained)** — how bans work and what they mean for your decks, kept current with every wave.
-- **[September 2026 ban reaction & meta shift](/blog/riftbound-september-2026-bans-meta-shift)** — the most recent wave, plus how the community thinks the meta responds.
+- **[November 2026 ban wave](/blog/riftbound-november-2026-bans-riven-baited-hook)** — the most recent wave: Riven, Baited Hook and eight more, effective 23 November.
+- **[September 2026 ban reaction & meta shift](/blog/riftbound-september-2026-bans-meta-shift)** — the wave before it, plus how the community thought the meta would respond.
 
 Bans and errata move prices as well as decks — **[why Riftbound prices change](/guides/why-riftbound-card-prices-change)** covers that side.
 
@@ -10173,7 +10405,7 @@ Each keyword family has its own explainer: **[combat keywords](/guides/riftbound
       { q: "What is Flow in Riftbound?", a: "Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand, so your discarded and used cards become a second pool of plays rather than being gone for good." },
       { q: "What is Burn in Riftbound?", a: "Burn sends cards from a Main Deck to the trash — either your own (to fuel Flow and other trash payoffs) or your opponent's (a deck attack)." },
       { q: "What does Overnumbered mean on a Riftbound card?", a: "It's a collector number that runs past the set's stated total, marking a chase printing that sits outside the main numbered run. Overnumbered prints and signed prints are distinct — the Overnumbers guide covers the difference." },
-      { q: "Where can I find Riftbound's current banned cards?", a: "RiftCompare's banlist guide explains how bans work in Riftbound and stays current with every wave, and the September 2026 ban reaction piece covers the most recent changes." },
+      { q: "Where can I find Riftbound's current banned cards?", a: "RiftCompare's banlist guide explains how bans work in Riftbound and stays current with every wave, and the November 2026 ban wave breakdown covers the most recent changes." },
     ],
   },
   {

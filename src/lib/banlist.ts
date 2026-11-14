@@ -7,11 +7,13 @@
 // structured data (0.2% CTR on 8,720 impressions). One list now feeds the
 // table under the H1, the "N cards banned" line and the ItemList JSON-LD.
 //
-// Sources: Riot's ban announcements of 31 March, 17 July (effective 24 July)
-// and 15 September (effective 18 September) 2026. When Riot bans a card, add a
+// Sources: Riot's ban announcements of 31 March, 17 July (effective 24 July),
+// 15 September (effective 18 September) and 13 November (effective 23
+// November) 2026. A row whose date is still ahead reads "from", not "since"
+// (banIsUpcoming): the November wave was announced ten days before it applied. When Riot bans a card, add a
 // row here AND bump BANLIST_UPDATED to the announcement date.
 
-export const BANLIST_UPDATED = "2026-09-15";
+export const BANLIST_UPDATED = "2026-11-13";
 export const BANLIST_SLUG = "riftbound-banlist-explained";
 
 export type BanFormat = "Standard" | "2v2";
@@ -31,6 +33,16 @@ const BOTH: BanFormat[] = ["Standard", "2v2"];
 // (July 2026) as the whole Standard list plus Master Yi, so every Standard ban
 // is also a 2v2 ban.
 export const BANNED_CARDS: BannedCard[] = [
+  { name: "Riven, Broken Blade", slug: "riven-broken-blade-rad-043-167", formats: BOTH, effective: "2026-11-23" },
+  { name: "Zhonya's Hourglass", slug: "zhonya-s-hourglass-ogn-077-298", formats: BOTH, effective: "2026-11-23" },
+  { name: "Stellacorn Herder", slug: "stellacorn-herder-sfd-048-221", formats: BOTH, effective: "2026-11-23" },
+  { name: "Nocturne, Horrifying", slug: "nocturne-horrifying-ogn-194-298", formats: BOTH, effective: "2026-11-23" },
+  { name: "Rhasa the Sunderer", slug: "rhasa-the-sunderer-ogn-195-298", formats: BOTH, effective: "2026-11-23" },
+  { name: "Brynhir Thundersong", slug: "brynhir-thundersong-ogn-026-298", formats: BOTH, effective: "2026-11-23" },
+  { name: "Dazzling Aurora", slug: "dazzling-aurora-ogn-160-298", formats: BOTH, effective: "2026-11-23" },
+  { name: "Baited Hook", slug: "baited-hook-ogn-242-298", formats: BOTH, effective: "2026-11-23" },
+  { name: "Emperor's Dais", slug: "emperor-s-dais-sfd-207-221", formats: BOTH, effective: "2026-11-23" },
+  { name: "Star Spring", slug: "star-spring-unl-215-219", formats: BOTH, effective: "2026-11-23" },
   { name: "Ekko, Recurrent", slug: "ekko-recurrent-ogn-110-298", formats: BOTH, effective: "2026-09-18" },
   { name: "Stacked Deck", slug: "stacked-deck-ogn-183-298", formats: BOTH, effective: "2026-09-18" },
   { name: "Stealthy Pursuer", slug: "stealthy-pursuer-ogn-177-298", formats: BOTH, effective: "2026-07-24" },
@@ -49,6 +61,11 @@ export const BANNED_CARDS: BannedCard[] = [
 /** "15 Sep 2026" */
 export function banDate(iso: string): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+}
+
+/** True while a ban has been announced but is not in force yet. */
+export function banIsUpcoming(ban: BannedCard, now: Date = new Date()): boolean {
+  return now.getTime() < new Date(`${ban.effective}T00:00:00Z`).getTime();
 }
 
 /** The guide every ban notice links to. */

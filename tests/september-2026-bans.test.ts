@@ -27,7 +27,8 @@ function reactionPost() {
 
 test("the banlist guide carries the September 2026 wave", () => {
   const a = guide();
-  assert.equal(a.updated, "2026-09-15");
+  // `updated` moved on with the November wave (tests/november-2026-bans.test.ts).
+  assert.ok(a.updated! >= "2026-09-15");
   assert.match(a.body, /Ekko, Recurrent/);
   assert.match(a.body, /Stacked Deck/);
   assert.match(a.body, /effective \*\*18 September 2026\*\*/);
@@ -37,14 +38,15 @@ test("the banlist guide carries the September 2026 wave", () => {
 test("the guide's embeds are ordered newest-first and match the body's [[embed:N]] references", () => {
   const a = guide();
   assert.ok(a.embeds, "expected the plural embeds array");
-  assert.equal(a.embeds![0].title, "September 2026 additions");
-  assert.deepEqual(a.embeds![0].slugs, ["ekko-recurrent-ogn-110-298", "stacked-deck-ogn-183-298"]);
-  assert.equal(a.embeds![1].title, "July 2026 additions");
-  assert.equal(a.embeds![2].title, "The original 7 banned cards");
+  assert.equal(a.embeds![0].title, "November 2026 additions");
+  assert.equal(a.embeds![1].title, "September 2026 additions");
+  assert.deepEqual(a.embeds![1].slugs, ["ekko-recurrent-ogn-110-298", "stacked-deck-ogn-183-298"]);
+  assert.equal(a.embeds![2].title, "July 2026 additions");
+  assert.equal(a.embeds![3].title, "The original 7 banned cards");
 
   // Every [[embed:N]] in the body must reference an index that exists.
   const refs = [...a.body.matchAll(/\[\[embed:(\d+)\]\]/g)].map((m) => Number(m[1]));
-  assert.deepEqual(refs, [0, 1, 2], "body must reference embeds in the same order they're declared");
+  assert.deepEqual(refs, [0, 1, 2, 3], "body must reference embeds in the same order they're declared");
 });
 
 test("the guide cross-links the new reaction post, and vice versa", () => {
