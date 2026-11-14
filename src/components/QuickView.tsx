@@ -20,6 +20,7 @@ import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, isPaidLink, riftboundEbayQuery } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
+import { CartAddButton } from "@/components/cart/CartAddButton";
 import { StoreCodeChip } from "./StoreCodeChip";
 import { FeaturedListingBox } from "./FeaturedListingBox";
 import { featuredListingFor } from "@/lib/featured-listings";
@@ -671,6 +672,20 @@ function QuickViewModal({
                           )}
                         </div>
                       </div>
+                      {/* The card page's "Add to cart" beside the buy button (owner, 2026-11-14: the quick view needs it
+                          too); on phones both share the row's own full-width line. */}
+                      <div className="order-last flex w-full basis-full items-stretch gap-2 md:order-none md:w-auto md:basis-auto">
+                      <CartAddButton
+                        href={p.buyHref}
+                        productUrl={p.url}
+                        storeName={p.retailerName}
+                        title={cardDisplayName(card.name, card)}
+                        detail={[p.condition, p.isFoil ? "Foil" : null].filter(Boolean).join(" · ") || null}
+                        priceCents={p.priceCents}
+                        currency={COUNTRIES[country].currency}
+                        image={cardImageSrc(card)}
+                        className="text-slate-300"
+                      />
                       <OutboundLink
                         href={p.buyHref}
                         retailer={p.retailer}
@@ -684,10 +699,11 @@ function QuickViewModal({
                         variant={p.isFoil ? "foil" : "nonfoil"}
                         condition={p.condition}
                         surface="modal"
-                        className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center px-3 py-1.5 text-xs md:order-none md:w-auto md:basis-auto`}
+                        className={`${buyButtonClass(p.retailer)} flex-1 justify-center px-3 py-1.5 text-xs md:flex-none`}
                       >
                         {buyButtonLabel(p.retailer)}
                       </OutboundLink>
+                      </div>
                     </li>
                     );
                   })}
