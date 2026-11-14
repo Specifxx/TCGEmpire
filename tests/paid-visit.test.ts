@@ -81,6 +81,7 @@ test("posted stats are validated per known test", () => {
   assert.deepEqual(Object.keys(s), ["dex-test-2026-11"]);
   assert.equal(s["dex-test-2026-11"].spendCents, 487);
   assert.equal(s["dex-test-2026-11"].currency, "AUD");
+  assert.equal(parseAdStats({ stats: { "dex-test-2026-11": { spend: 1, visitors: null } } })["dex-test-2026-11"].visitors, null, "an unread figure stays unknown, not 0");
   const rows = adTestRows(s, [[]], "AUD");
   const r = rows.find((x) => x.test.site === "dex")!;
   assert.equal(r.costPerClick, 487 / 12);
