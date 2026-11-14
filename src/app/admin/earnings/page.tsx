@@ -24,6 +24,8 @@ import {
 import { EARNINGS_SINCE, loadEarnings } from "@/lib/earnings/sources";
 import { loadCosts } from "@/lib/earnings/costs";
 import { siteLedger } from "@/lib/earnings/sites";
+import { AD_STATS_KEY, ATTRIBUTION_DAYS, adTestRows, type AdStats } from "@/lib/earnings/ad-tests";
+import { readStored } from "@/lib/earnings/stored";
 import { ManualEarningsForm } from "@/components/admin/ManualEarningsForm";
 import { loadAmazonClicks } from "@/lib/earnings/amazon-clicks";
 import { AmazonUploadForm } from "@/components/admin/AmazonUploadForm";
@@ -118,6 +120,13 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
     return { key: st.key, label: st.label, from: r?._min.day ?? null, to: r?._max.day ?? null };
   });
   const amazonClicks = await loadAmazonClicks().catch(() => null);
+  // Ad tests (2026-11-14, owner): spend from the ad network, earned from the sales whose tag carries the ad's marker.
+  const adStats = (await readStored<Record<string, AdStats>>([AD_STATS_KEY])).get(AD_STATS_KEY) ?? null;
+  const adRows = adTestRows(
+    adStats,
+    sources.filter((s) => s.tags).map((s) => s.tags!),
+    display,
+  );
   const oldest = Math.min(...sources.map((s) => s.fetchedAt));
   // eBay by tracking tag (2026-10-25, owner): one EPN account, every site's links.
   // TCGplayer by tag (2026-10-26): Impact's sharedid, broken down the same way.
@@ -359,6 +368,62 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
         </section>
       ))}
       {/* Every site: what it earned, what its Vercel project cost, and the difference */}
+      {/* Ad tests (2026-11-14): did each paid ad earn back what it cost? lib/earnings/ad-tests.ts */}
+      <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-ad-tests>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-extrabold text-white">Ad tests: spend vs what their visitors earned</h2>
+          <span className="text-xs text-slate-400">
+            Earned = real TCGplayer, eBay and Amazon sales from ad visitors (their links carry the tag &ldquo;fbad&rdquo;), up to {ATTRIBUTION_DAYS} days after the ad ends. Spend, clicks and visits are read from Meta and Vercel each day.
+          </span>
+        </div>
+        <div className="mt-3 overflow-x-auto rounded-xl border border-ink-700">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs text-slate-400">
+              <tr>
+                <th className="px-3 py-2 font-semibold">Ad</th>
+                <th className="px-3 py-2 text-right font-semibold">Spent</th>
+                <th className="px-3 py-2 text-right font-semibold">Link clicks</th>
+                <th className="px-3 py-2 text-right font-semibold">Visitors</th>
+                <th className="px-3 py-2 text-right font-semibold">Sales</th>
+                <th className="px-3 py-2 text-right font-semibold">Earned</th>
+                <th className="px-3 py-2 text-right font-semibold">Per click: cost / earned</th>
+                <th className="px-3 py-2 text-right font-semibold">Back per $1</th>
+                <th className="px-3 py-2 font-semibold">Verdict</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-800">
+              {adRows.map((r) => (
+                <tr key={r.test.id} data-ad-test={r.test.id} data-ad-verdict={r.verdict.key}>
+                  <td className="px-3 py-2 text-white">
+                    {r.test.siteLabel}
+                    <span className="block text-xs text-slate-500">
+                      {r.test.network} · {r.test.countries} · {r.test.start} to {r.test.end}
+                      {r.stats ? ` · ${r.stats.delivery ?? "?"} · read ${r.stats.asOf.slice(0, 16).replace("T", " ")} UTC` : ""}
+                    </span>
+                  </td>
+                  <td className="num px-3 py-2 text-right text-slate-200">{r.spend == null ? "—" : money(r.spend)}</td>
+                  <td className="num px-3 py-2 text-right text-slate-200">{r.stats?.linkClicks ?? "—"}</td>
+                  <td className="num px-3 py-2 text-right text-slate-200">{r.stats?.visitors ?? "—"}</td>
+                  <td className="num px-3 py-2 text-right text-slate-200">{r.earned.sales}</td>
+                  <td className="num px-3 py-2 text-right text-white">
+                    {money(r.earned.cents)}
+                    {r.earned.pendingCents ? <span className="block text-xs text-slate-500">{money(r.earned.pendingCents)} pending</span> : null}
+                  </td>
+                  <td className="num px-3 py-2 text-right text-slate-300">
+                    {r.costPerClick == null ? "—" : `${money(Math.round(r.costPerClick))} / ${money(Math.round(r.earnedPerClick ?? 0))}`}
+                  </td>
+                  <td className={`num px-3 py-2 text-right font-bold ${r.verdict.roi != null && r.verdict.roi < 1 ? "text-rose-400" : "text-white"}`}>
+                    {r.verdict.roi == null ? "—" : money(Math.round(r.verdict.roi * 100))}
+                  </td>
+                  <td className={`px-3 py-2 text-xs font-bold ${r.verdict.key === "pause" || r.verdict.key === "losing" ? "text-rose-400" : r.verdict.key === "profit" ? "text-emerald-400" : "text-slate-300"}`}>
+                    {r.verdict.label}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
       <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-site-ledger>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-sm font-extrabold text-white">By site: earned vs Vercel cost · {RANGES.find((r) => r.key === range)!.label}, and all time</h2>
