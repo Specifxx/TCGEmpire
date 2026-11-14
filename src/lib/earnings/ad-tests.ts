@@ -61,6 +61,7 @@ export interface AdStats {
 export const AD_STATS_KEY = "ad-stats";
 
 const int = (v: unknown): number | null => {
+  if (v == null || v === "") return null; // not read (Number(null) would be 0)
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
 };
