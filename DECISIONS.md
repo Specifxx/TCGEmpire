@@ -23918,3 +23918,10 @@ text button (`inline`) is drawn as a bordered button (`cart.css`). Neutral, neve
 filled action and the calm three-colour rule holds. Nothing else moved: which rows can be added (open store rows, eBay and
 Amazon with a live price; never a marketplace or a search row), the line's buy link and its affiliate tag, the row order, the
 buy button and every placement are unchanged. A caller can still ask for the bare icon (`label={false}`).
+
+## 2026-11-14: The quick view gets "Add to cart" too
+
+The owner, the same day: the quick view pop-ups need the add to cart button as well. The card quick view had no cart button at
+all (only the card page did); its store and eBay rows now carry the same `CartAddButton` the card page uses, beside the buy
+button, sharing its full-width line on a phone. TCGplayer rows never get one (a marketplace, as on the page). The row order,
+links, tags and buy button are unchanged.
