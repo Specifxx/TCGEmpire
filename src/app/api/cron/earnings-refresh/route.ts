@@ -3,6 +3,7 @@ import { loadEarnings } from "@/lib/earnings/sources";
 import { loadCosts } from "@/lib/earnings/costs";
 import { storeAmazonClicks } from "@/lib/earnings/amazon-clicks";
 import { storeSearchTest } from "@/lib/earnings/search-test";
+import { storeAbTest } from "@/lib/earnings/ab-test";
 import { liveRoute } from "@/lib/public-data/live-route";
 
 // Refreshes the earnings dashboard's stored copy (lib/earnings/stored.ts; DECISIONS.md
@@ -20,8 +21,9 @@ async function handleGET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const started = Date.now();
-  const [sources, costs, clicks, search] = await Promise.all([loadEarnings(true), loadCosts(true), storeAmazonClicks(), storeSearchTest()]);
-  const status = [...sources.map((s) => ({ key: s.key, status: s.status })), ...costs.filter((c) => !c.entry).map((c) => ({ key: c.key, status: c.status })), { key: "amazon-clicks", status: clicks.status }, { key: "search-test", status: search.status }];
+  // storeAbTest: the quick view's A/B tests on DexCompare and MTG Compare (lib/earnings/ab-test.ts); idle outside their dates.
+  const [sources, costs, clicks, search, ab] = await Promise.all([loadEarnings(true), loadCosts(true), storeAmazonClicks(), storeSearchTest(), storeAbTest()]);
+  const status = [...sources.map((s) => ({ key: s.key, status: s.status })), ...costs.filter((c) => !c.entry).map((c) => ({ key: c.key, status: c.status })), { key: "amazon-clicks", status: clicks.status }, { key: "search-test", status: search.status }, { key: "ab-test", status: ab.status }];
   return NextResponse.json({ ok: status.every((s) => s.status !== "error"), seconds: Math.round((Date.now() - started) / 1000), status });
 }
 

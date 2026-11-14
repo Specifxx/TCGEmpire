@@ -11,6 +11,7 @@ import { pctChange } from "@/lib/hq/view";
 import { GROWTH_TARGETS } from "@/lib/admin-growth";
 import { StepDone } from "./StepDone";
 import { loadSearchTest, searchTestInput } from "@/lib/earnings/search-test";
+import { abTestLines, loadAbTest } from "@/lib/earnings/ab-test";
 import { loadEarnings } from "@/lib/earnings/sources";
 import { searchTestLines } from "@/lib/hq/weekly-email";
 import { dayIn } from "@/lib/earnings/core";
@@ -58,7 +59,8 @@ export default async function HqPage({ searchParams }: { searchParams: { key?: s
   const me = await getCurrentUser();
   if (!(keyOk || me?.isAdmin)) notFound();
 
-  const [hq, searchTest, sources] = await Promise.all([loadHq(), loadSearchTest().catch(() => null), loadEarnings(false).catch(() => null)]);
+  const [hq, searchTest, sources, abTest] = await Promise.all([loadHq(), loadSearchTest().catch(() => null), loadEarnings(false).catch(() => null), loadAbTest().catch(() => null)]);
+  const abLines = abTestLines(abTest, dayIn(Date.now()));
   const searchLines = searchTestLines(searchTestInput(searchTest, sources, dayIn(Date.now())));
   const now = Date.now();
   const open = hq.steps.filter((s) => !s.doneAt);
@@ -187,6 +189,20 @@ export default async function HqPage({ searchParams }: { searchParams: { key?: s
           compareempire.com/search, from Web Analytics (refreshed every three hours). Paid clicks are the pinned eBay row; earned is eBay sales tagged ce-search or ce-mcp. Go on 8 Dec if search earns more than its Vercel cost and paid clicks per 100 searches are at least half DexCompare&apos;s per 100 visits.
         </p>
       </section>
+
+      {abLines.length > 0 && (
+        <section id="ab-tests" className="mt-6 rounded-xl border border-ink-700 bg-ink-850 p-4">
+          <h2 className="text-sm font-semibold text-white">A/B tests, quick view (20 Nov to 3 Dec)</h2>
+          <div className="mt-2 space-y-1 text-sm text-slate-300">
+            {abLines.map((l) => (
+              <p key={l}>{l}</p>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-slate-500">
+            DexCompare and MTG Compare, inside the quick view only, 50/50, from Web Analytics (refreshed every three hours). Every figure is a share of the visits that opened a quick view; A is the site as it was. A test is won only at p under 0.05 on its first measure once the last day has passed.
+          </p>
+        </section>
+      )}
     </div>
   );
 }
