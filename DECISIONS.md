@@ -23960,3 +23960,11 @@ tracking IDs, so its Amazon money stays on "Amazon, shared ID" until the owner g
 
 The owner asked for this row urgently (2026-11-15), so it went out in an `[urgent]` release instead of waiting for the next
 scheduled one.
+
+## 2026-11-15: no owner email for a new sister-site alert or weekly-drops sign-up
+
+Owner: "Stop sending me new price alert emails." The mail was the inbox notification `notifyOwnerBounded` sent to the
+site inbox for every first sign-up through `/api/sister-alerts` ("[RiftCompare inbox] Sister-site price alert"), not a
+subscription of his. Both calls are removed. The sign-up is still saved, still gets its double opt-in confirmation, still
+counts in the Monday report (`signupLines`) and the alert and weekly-drops mail to subscribers is untouched. Other forms
+(contact, feedback, wrong price, support) still notify. This is the one public form that does not, on purpose.

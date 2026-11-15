@@ -28,7 +28,7 @@ test("every public form tells the owner as soon as something is saved", () => {
     ["src/app/api/price-report/route.ts", /kind: "price-report"/],
     ["src/app/api/stores/suggest/route.ts", /kind: "store-suggestion"/],
     ["src/app/api/support/route.ts", /kind: "support"/],
-    ["src/app/api/sister-alerts/route.ts", /kind: "sister-alert"/],
+    // Sister-site alert sign-ups send NO owner email (owner, 2026-11-15); they count in the Monday report.
   ];
   for (const [file, kind] of forms) {
     const src = code(file);
@@ -39,6 +39,10 @@ test("every public form tells the owner as soon as something is saved", () => {
     const notify = src.indexOf("notifyOwnerBounded({");
     assert.ok(create >= 0 && notify > create, `${file}: notify after create`);
   }
+});
+
+test("sister-site alert sign-ups never email the owner (owner, 2026-11-15)", () => {
+  assert.doesNotMatch(code("src/app/api/sister-alerts/route.ts"), /notifyOwnerBounded/);
 });
 
 test("written feedback reaches the site inbox; ratings send no email and wait in the admin summary (owner, 2026-10-27 and 2026-10-30)", () => {
