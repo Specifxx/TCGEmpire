@@ -3,7 +3,6 @@ import { randomBytes } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 import { SISTER_ALERT_KEYS, SISTER_REGIONS, allowedOrigin, corsHeaders, sisterSite } from "@/lib/sister-alerts/sites";
 import { buildConfirmEmail, buildWeeklyConfirmEmail, fromFor } from "@/lib/sister-alerts/email";
 import { sendSisterMail } from "@/lib/sister-alerts/send";
@@ -126,9 +125,6 @@ export async function POST(req: Request) {
       const sent = await sendSisterMail(site, email, mail.subject, mail.html, { text: mail.text, from: fromFor(sisterSite(site)!) });
       if (sent) await prisma.sisterAlertAddress.update({ where: { email }, data: { confirmSentAt: now } });
     }
-    if (!existing) {
-      await notifyOwnerBounded({ kind: "sister-alert", headline: `New price alert on ${fromSite.name}`, fields: [["Site", fromSite.name], ["Region", region], ["Product", productId]] });
-    }
     return NextResponse.json({ ok: true, status: "confirm" }, { headers });
   } catch (e) {
     console.warn("[sister-alerts] signup failed:", e);
@@ -165,9 +161,6 @@ async function weeklyOnly(
       const mail = buildWeeklyConfirmEmail(site, address.token, region);
       const sent = await sendSisterMail(site, email, mail.subject, mail.html, { text: mail.text, from: fromFor(sisterSite(site)!) });
       if (sent) await prisma.sisterAlertAddress.update({ where: { email }, data: { confirmSentAt: now } });
-    }
-    if (!existing) {
-      await notifyOwnerBounded({ kind: "sister-alert", headline: `New weekly-drops sign-up on ${siteName}`, fields: [["Site", siteName], ["Region", region]] });
     }
     return NextResponse.json({ ok: true, status: "confirm" }, { headers });
   } catch (e) {
