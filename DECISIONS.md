@@ -23947,3 +23947,13 @@ the page like the others: the trail ("Home / Learn Riftbound", matching its exis
 intro and the same two buttons, left-aligned. No word, link or button changed.
 
 **No paid link, placement, URL or metadata changed**, so the 19 November clicks-per-placement recheck is unaffected.
+
+## 2026-11-15: TCG Prices (tcgprices.app) is a row on the earnings dashboard
+
+Owner: "we're earning money with TCG prices as well". `src/lib/earnings/sites.ts` lists it as `tcgprices` (Vercel project
+`tcgprices`, or the old `tcgcompare` name) and `TAG_NAMES` names the tag group, so its eBay (EPN customid `tcgprices-…`),
+TCGplayer (Impact sharedid and subId1 `tcgprices-…`) and Amazon (ascsubtag) money, its Vercel cost and any hand-entered cost
+whose label names it ("tcgprices.app domain", US$10.99) all land on its own row instead of "No tag" or "Shared". No new
+source and no estimate: the row adds up the same stored figures as every other site. Amazon on this site uses the shared
+tracking IDs, so its Amazon money stays on "Amazon, shared ID" until the owner gives it IDs of its own
+(`AMAZON_TRACKING_SITES`).
