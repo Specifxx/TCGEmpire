@@ -23957,3 +23957,6 @@ whose label names it ("tcgprices.app domain", US$10.99) all land on its own row 
 source and no estimate: the row adds up the same stored figures as every other site. Amazon on this site uses the shared
 tracking IDs, so its Amazon money stays on "Amazon, shared ID" until the owner gives it IDs of its own
 (`AMAZON_TRACKING_SITES`).
+
+The owner asked for this row urgently (2026-11-15), so it went out in an `[urgent]` release instead of waiting for the next
+scheduled one.
