@@ -129,3 +129,19 @@ test("SportsCardCompare's Vercel project (waxcompare) and a hand-entered domain 
   assert.equal(wax.other, 1800);
   assert.equal(rows.find((r) => r.key === "shared")!.other, 500);
 });
+
+test("TCG Prices has its own row: its Vercel project, tags and tcgprices.app domain land on it", () => {
+  assert.equal(siteForProject("tcgprices"), "tcgprices");
+  assert.equal(siteForProject("tcgcompare"), "tcgprices");
+  assert.equal(siteForLabel("tcgprices.app domain"), "tcgprices");
+  const src: SourceResult = {
+    key: "ebay",
+    days: [{ day: "2026-11-15", currency: "USD", cents: 500 }],
+    tags: [{ day: "2026-11-15", currency: "USD", cents: 500, tag: "tcgprices-us-ebay_pinned-1", pendingCents: 0, sales: 1 }],
+  } as unknown as SourceResult;
+  const rows = siteLedger([src], [{ day: "2026-11-15", project: "tcgprices", currency: "USD", cents: 100 }], [], "2026-11-15", "2026-11-15", "USD");
+  const r = rows.find((x) => x.key === "tcgprices");
+  assert.equal(r?.label, "TCG Prices");
+  assert.equal(r?.earned, 500);
+  assert.equal(r?.vercel, 100);
+});
