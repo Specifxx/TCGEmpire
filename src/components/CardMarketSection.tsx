@@ -425,6 +425,7 @@ export function CardPriceComparison({
       // the QuickView wraps a raw url itself. That difference is why the shared
       // helper returns rows rather than a finished block.
       href: src.buyHref,
+      productUrl: rowStoreUrl(src),
     };
   }, [rows, country]);
   // Cardmarket reference price — same shape as the TCGplayer block above, but
@@ -460,6 +461,18 @@ export function CardPriceComparison({
                   <div className="shrink-0 text-right">
                     <div className="num text-lg font-bold text-white">{fmt(r.priceCents)}</div>
                   </div>
+                  <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
+                  <CartAddButton
+                    href={r.url}
+                    productUrl={r.url}
+                    storeName="Fetch TCG"
+                    title={displayName}
+                    detail={[r.condition, r.finish === "Foil" ? "Foil" : null].filter(Boolean).join(" · ") || null}
+                    priceCents={r.priceCents}
+                    currency="AUD"
+                    image={image}
+                    className="text-slate-300"
+                  />
                   <OutboundLink
                     href={r.url}
                     retailer="fetchtcg"
@@ -472,10 +485,11 @@ export function CardPriceComparison({
                     variant={r.finish === "Foil" ? "foil" : "nonfoil"}
                     condition={r.condition}
                     surface="table"
-                    className="btn-buy order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                    className="btn-buy flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]"
                   >
                     View on Fetch TCG →
                   </OutboundLink>
+                  </div>
                 </li>
   );
   const fetchItems = country === "AU" && fetchRows ? fetchRows.rows.map((r) => ({ price: r.priceCents, node: renderFetchRow(r) })) : [];
@@ -724,6 +738,20 @@ export function CardPriceComparison({
                       </div>
                     )}
                     {tcg.href && (
+                      <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
+                      {(tcg.usdCents ?? tcg.usdCentsFoil) != null && (
+                        <CartAddButton
+                          href={tcg.href}
+                          productUrl={tcg.productUrl}
+                          storeName="TCGplayer"
+                          title={displayName}
+                          detail={tcg.usdCents == null ? "Foil" : null}
+                          priceCents={convertUsdCents((tcg.usdCents ?? tcg.usdCentsFoil)!, COUNTRIES[country].currency)}
+                          currency={COUNTRIES[country].currency}
+                          image={image}
+                          className="text-slate-300"
+                        />
+                      )}
                       <OutboundLink
                         href={tcg.href}
                         retailer="tcgplayer"
@@ -732,10 +760,11 @@ export function CardPriceComparison({
                         cardName={displayName}
                         pageType="card_detail"
                         surface="table_pinned"
-                        className="btn-tcg order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                        className="btn-tcg flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]"
                       >
                         Buy on TCGplayer →
                       </OutboundLink>
+                      </div>
                     )}
                   </li>
                 )}

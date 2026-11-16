@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { cardImageSrc } from "@/lib/card-image-url";
 import { INTL_ENABLED } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
+import { fetchRowsFor } from "@/lib/fetchtcg";
 
 // Card detail (incl. live retailer prices) for the quick-view modal. Resolves by
 // slug or legacy id. Cached at the CDN for six hours, a day stale (cost,
@@ -83,7 +84,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   // column still holds the CDN's dead `originals/` path, and this response is a
   // documented public endpoint — third parties get the URL that resolves, the
   // same one the site itself renders.
-  const body = { ...card, imageUrl: cardImageSrc(card, { full: true, absolute: true }), imageThumbUrl: cardImageSrc(card, { absolute: true }) };
+  // Fetch TCG's own AU listing of this printing, the same rows the full card page draws (lib/fetchtcg.ts; null without the
+  // build-time file). The quick view read only retailerPrices and so said "nothing in stock" where the page showed Fetch.
+  const fetchRows = fetchRowsFor(card);
+  const body = { ...card, fetchRows, imageUrl: cardImageSrc(card, { full: true, absolute: true }), imageThumbUrl: cardImageSrc(card, { absolute: true }) };
 
   return NextResponse.json(body, {
     headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },

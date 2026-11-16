@@ -5,6 +5,7 @@ import { OutboundLink } from "./OutboundLink";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { formatMoney } from "@/lib/format";
 import { convertUsdCents } from "@/lib/fx";
+import { CartAddButton } from "@/components/cart/CartAddButton";
 
 // TCGplayer MARKET PRICE, converted into the visitor's currency — a reference anchor
 // shown on every card that TCGplayer prices, ESPECIALLY the low-data ones with no
@@ -34,12 +35,20 @@ export function TcgMarketPrice({
   // identical, because a reference price that says less in the popup than on
   // the page is how the two surfaces start disagreeing.
   compact = false,
+  // The cart line (owner, 2026-11-16: TCGplayer is a store row like any other, so it gets "Add to cart" too). Without a title
+  // there is nothing to put in the cart and the button is left out.
+  cartTitle,
+  productUrl,
+  image,
 }: {
   usdCents: number | null; // standard (non-foil) TCGplayer market price, USD cents
   usdCentsFoil: number | null; // foil market price, USD cents (if the card has a foil)
   href: string | null; // affiliate-wrapped TCGplayer product URL
   disclosure?: boolean;
   compact?: boolean;
+  cartTitle?: string;
+  productUrl?: string | null;
+  image?: string | null;
 }) {
   const { country, currency: cur } = useCountry();
   if (usdCents == null && usdCentsFoil == null) return null;
@@ -86,14 +95,28 @@ export function TcgMarketPrice({
         {href && disclosure && <AffiliateDisclosure partner="tcgplayer" tight />}
       </div>
       {href && (
-        <OutboundLink
-          href={href}
-          retailer="tcgplayer"
-          country={country}
-          className="btn-tcg shrink-0 text-sm"
-        >
-          Buy on TCGplayer →
-        </OutboundLink>
+        <div className="flex w-full items-stretch gap-2 sm:w-auto">
+          {cartTitle && std != null && (
+            <CartAddButton
+              href={href}
+              productUrl={productUrl}
+              storeName="TCGplayer"
+              title={cartTitle}
+              priceCents={std}
+              currency={cur}
+              image={image}
+              className="text-slate-300"
+            />
+          )}
+          <OutboundLink
+            href={href}
+            retailer="tcgplayer"
+            country={country}
+            className="btn-tcg flex-1 justify-center text-sm sm:flex-none"
+          >
+            Buy on TCGplayer →
+          </OutboundLink>
+        </div>
       )}
     </div>
   );
