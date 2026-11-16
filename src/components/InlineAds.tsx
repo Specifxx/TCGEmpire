@@ -37,7 +37,7 @@ const inflight = new Map<string, Promise<MiniData | null>>();
 function load(set: string): Promise<MiniData | null> {
   let p = inflight.get(set);
   if (!p) {
-    p = fetch(`/api/mini-picks${set ? `?set=${encodeURIComponent(set)}` : ""}`)
+    p = fetch(inlinePicksUrl(set))
       .then((r) => (r.ok ? (r.json() as Promise<MiniData>) : null))
       .catch(() => null);
     inflight.set(set, p);
@@ -48,6 +48,11 @@ function load(set: string): Promise<MiniData | null> {
 // Reserved height: label row + 5:7 picture of TILE_W + two-line title + price + padding.
 const TILE_W = 152;
 const BLOCK_MIN_H = 24 + Math.round((TILE_W * 7) / 5) + 8 + 36 + 22 + 28 + 40;
+
+/** The URL InlineAds fetches for a set; the card page preloads this exact address so the fetch starts with the HTML, not after hydration. */
+export function inlinePicksUrl(set: string): string {
+  return `/api/mini-picks${set ? `?set=${encodeURIComponent(set)}` : ""}`;
+}
 
 export function InlineAds({ setCode = "", pageType, className = "" }: { setCode?: string; pageType: string; className?: string }) {
   const { country } = useCountry();
