@@ -26,6 +26,7 @@ import { USD_TO, convertCents } from "./fx";
 import { implausiblyCheap } from "./price-sanity";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { fetchCardHiveProducts } from "./cardhive";
+import { fetchCardCritterProducts } from "./cardcritter";
 import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { fetchHtmlStoreProducts } from "./storefront-html";
 import { isShopify, withShopifyVariant, withoutShopifyVariant } from "./checkout-link";
@@ -1864,6 +1865,8 @@ export async function importPrices(): Promise<ImportSummary> {
         ? await fetchWooStoreProducts(store)
         : store.platform === "cardhive"
           ? await fetchCardHiveProducts(store.base, allCardRows)
+          : store.platform === "cardcritter"
+          ? await fetchCardCritterProducts(store.base, allCardRows)
           : store.platform === "bigcommerce" || store.platform === "shopware"
             ? await fetchHtmlStoreProducts(store, store.collections ?? [])
             : await fetchShopifyStoreProducts(store);

@@ -124,6 +124,8 @@ export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
   // cannot read. Its page bundle's own checkout rules: Royal Mail Tracked 48,
   // £2.90 as a large letter up to 10 singles, UK addresses only.
   thecardhive: { status: "unmeasured", note: "Not cart-probed (a Firebase shop, not Shopify); its checkout charges Royal Mail Tracked 48 from £2.90, UK addresses only" },
+  // Card Critter (added 2026-11-16) is a Next.js shop the Shopify cart probe cannot read.
+  cardcritter: { status: "unmeasured", note: "Not cart-probed (not Shopify); its shipping page: A$2.50 letter, A$9.95 tracked (required over A$50), free over A$75" },
   // ── Stores that do not post (at all, or to this market) ──
   // Each re-probed 2026-09-25 (every cart empty at New York, San Francisco,
   // Dallas and Chicago) and checked through the Storefront API (no delivery

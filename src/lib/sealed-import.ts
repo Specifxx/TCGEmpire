@@ -642,7 +642,7 @@ export async function importSealed(): Promise<number> {
     // licenses the replace below even when it is read strictly (strictTitles).
     const batches: { products: ShopifyProd[]; strict: boolean; own?: boolean }[] = [];
     // The Card Hive's own shop (lib/cardhive.ts) is read for singles only.
-    if (store.platform === "cardhive") continue;
+    if (store.platform === "cardhive" || store.platform === "cardcritter") continue;
     if (store.platform === "woocommerce") {
       batches.push({ products: await fetchWooSealedProducts(store), strict: false });
     } else if (store.platform === "bigcommerce" || store.platform === "shopware") {

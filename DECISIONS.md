@@ -23989,3 +23989,17 @@ The Pokémon section is a different site from DexCompare, owned by the same pers
 (the store-by-store table lives there), not a sitewide footer; they are per product and per page, and they stay out of
 `sister-sites.ts`. Baselines for judging it: Search Console Links for dexcompare.app on 25 Nov and 7 Dec, and Googlebot's
 crawl of `/us/p/` URLs (it fetched 105 distinct DexCompare URLs in 90 days, 22 Oct to 14 Nov). No deploy marker.
+
+## 2026-11-16: Card Critter (AU) added with its own reader
+
+Card Critter (cardcritter.com.au, Brendale QLD) asked to be listed through the suggest-a-store form on 2026-11-01 and had waited 14 days.
+It is a Next.js shop, neither Shopify nor Woo, so `/products.json` returns nothing. A raw-HTML probe on 2026-11-16 (four GETs from the
+owner's PC, a second apart, never `/api/`) showed its `/riftbound/cards?page=N` list pages are server-rendered with name, set, number,
+rarity, stock badge and price, 60 a page, 24 pages. Its prices are its own AUD selling prices (US market plus a margin, converted, and
+the page says so), so they are real store prices. It holds its own stock (every copy scanned, "last one in stock", posted next day).
+No ABN is visible on its pages; that is the one thing left unchecked.
+
+`lib/cardcritter.ts` reads the list once a day after checking robots.txt, matches a listing only by set name + collector number + card
+name (an unknown set, an ambiguous number or a disagreeing name is unmatched), and a failed page keeps yesterday's rows. Shipping is
+an unmeasured estimate from its shipping page. Singles only; the sealed importer skips it. Like The Card Hive, it is not Shopify, so the
+cart probe does not cover it. No deploy marker: it rides the daily release.

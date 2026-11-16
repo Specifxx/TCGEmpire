@@ -55,13 +55,17 @@ export interface RetailerInfo {
   // public Firestore `shop` list and matched by Riot's card picture — see
   // lib/cardhive.ts. Singles only: the sealed importer skips it.
   //
+  // "cardcritter" is ONE AU store's own Next.js shop (Card Critter), read from its
+  // server-rendered /riftbound/cards list pages — see lib/cardcritter.ts. Singles
+  // only: the sealed importer skips it.
+  //
   // "bigcommerce" and "shopware" read the store's server-rendered category
   // pages (lib/storefront-html.ts, 2026-11-04): `collections` are then the
   // category PATHS holding singles ("/tcgs/riftbound/riftbound-singles/"), and
   // `sealedCollections` the paths the sealed importer reads. A theme that draws
   // its grid in the browser cannot be read; the probe
   // (scripts/probe-html-stores.ts) proves a store before it is added.
-  platform?: "shopify" | "woocommerce" | "cardhive" | "bigcommerce" | "shopware";
+  platform?: "shopify" | "woocommerce" | "cardhive" | "cardcritter" | "bigcommerce" | "shopware";
   // BigCommerce / Shopware only: category paths holding Riftbound SEALED product,
   // read by lib/sealed-import.ts (the Shopify path discovers these itself).
   sealedCollections?: string[];
@@ -1441,6 +1445,23 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 0,
     shippingNote: "est. £2.90 (Royal Mail Tracked 48)",
     country: "UK",
+  },
+
+  // Card Critter (Brendale QLD), asked to be listed through the suggest-a-store
+  // form on 2026-11-01. A Next.js shop, read by lib/cardcritter.ts (24 list pages
+  // a day, robots.txt obeyed, never /api/). Its own checkout rules (shipping
+  // page, 2026-11-16): A$2.50 letter, A$9.95 tracked, tracked required over A$50
+  // and free over A$75. Not cart-probed (the probe is Shopify-only).
+  cardcritter: {
+    key: "cardcritter",
+    name: "Card Critter",
+    base: "https://cardcritter.com.au",
+    collections: [],
+    platform: "cardcritter",
+    shippingFlatCents: 250,
+    freeOverCents: 7500,
+    shippingNote: "est. A$2.50 letter; tracked A$9.95 (required over A$50), free over A$75",
+    country: "AU",
   },
 
   // ---- UK leads checked and NOT added ----------------------------------------
