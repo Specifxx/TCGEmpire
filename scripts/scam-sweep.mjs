@@ -136,7 +136,14 @@ Reply with JSON only: {"risk":0-100,"verdict":"low|medium|high","reasons":["..."
     }
     const j = await r.json();
     const m = /\{[\s\S]*\}/.exec(j.content?.[0]?.text ?? "");
-    const o = m ? JSON.parse(m[0]) : null;
+    let o = null;
+    try {
+      o = m ? JSON.parse(m[0]) : null;
+    } catch {}
+    if (!(o && Number.isFinite(o.risk)) && !aiRead.warned) {
+      aiRead.warned = true;
+      console.log(`::warning::AI read unparseable (stop=${j.stop_reason}, chars=${(j.content?.[0]?.text ?? "").length})`);
+    }
     return o && Number.isFinite(o.risk) ? { risk: Math.max(0, Math.min(100, o.risk)), verdict: o.verdict, reasons: (o.reasons ?? []).slice(0, 4) } : null;
   } catch (e) {
     if (!aiRead.warned) {
@@ -216,6 +223,7 @@ async function main() {
   const rot = (h) => [...h].reduce((n, c) => (n * 31 + c.charCodeAt(0) + week) % 1_000_003, 7);
   const candidates = rows.filter((r) => r.text && !r.s.groups.includes("banned")).sort((a, b) => b.s.score - a.s.score || rot(a.host) - rot(b.host)).slice(0, AI_MAX);
   let aiRead_ = 0;
+  console.log(`AI candidates: ${candidates.length} of ${rows.length} hosts (${rows.filter((r) => r.text).length} with page text), key ${process.env.SCAM_AI_KEY ? "present" : "MISSING"}`);
   for (const r of candidates) {
     const ai = await aiRead(r.host, r.text, r.input.evidence);
     if (ai) {
