@@ -109,14 +109,14 @@ on:
           - probe-history    # READ-ONLY survey of PriceHistory across EVERY history project (HISTORY_DATABASE_URL_3 / _2 / HISTORY_DATABASE_URL / RH11 / RH10 / RH9 / RH8 / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4): row counts, day ranges, per-country coverage, and — the number that actually matters — how many of each project's cardIds still resolve against the LIVE Card table. A project can be full of rows and still render empty charts if its cardIds belong to a retired operational database. RUN THIS FIRST when price history looks stale or a card's chart is blank.
           - probe-databases  # READ-ONLY survey of EVERY database in both rotations (RM5/RM4/RM3/DATABASE_URL_2/DATABASE_URL + RH7…RH5 + the older history vars): which ones still answer, and how many User/MarketplaceListing/Order/SellerProfile rows each holds. Writes nothing. RUN THIS FIRST when data appears to be missing — it tells you which source is worth restoring from.
           - restore-accounts-into-rm5 # copy ONLY the account/marketplace tables from a chosen source (source input: RM4/RM3/DATABASE_URL_2/DATABASE_URL/RH7/RH6/RH5) into RM5, leaving RM5's freshly-rebuilt Card/RetailerPrice catalogue untouched. Aborts before writing anything if the dump fails or the source holds no rows.
-          - migrate-main-db-rm10-to-rm11 # CURRENT operational cutover (2026-11-06): full pg_dump/restore of the live RM10 project into RM11 + all-table row-count verification + a schema re-push. RM10 reached its 5 GB monthly transfer allowance (live since 2026-10-25). RM11 is a RECYCLED project (last live 2026-08-29..09-03), so --clean wipes it once probe-databases confirms it sits behind RM10 on every metric that holds user data. Run probe-databases first, run this twice (the second immediately before the chain flip), then ship the OPERATIONAL_VARS = ["RM11"] commit.
+          - migrate-main-db-rm11-to-rm12 # CURRENT operational cutover (2026-11-16): full pg_dump/restore of the live RM11 project into RM12 + all-table row-count verification + a schema re-push. RM11 is on course for its 5 GB monthly transfer allowance ~2026-11-21. RM12 is a RECYCLED project (last live 2026-09-18..09-22). Run probe-databases first, run this twice (the second immediately before the chain flip), then ship the OPERATIONAL_VARS = ["RM12"] commit.
+          - migrate-main-db-rm10-to-rm11 # LEGACY (superseded by migrate-main-db-rm11-to-rm12 on 2026-11-16) operational cutover (2026-11-06): full pg_dump/restore of the live RM10 project into RM11 + all-table row-count verification + a schema re-push. RM10 reached its 5 GB monthly transfer allowance (live since 2026-10-25). RM11 is a RECYCLED project (last live 2026-08-29..09-03), so --clean wipes it once probe-databases confirms it sits behind RM10 on every metric that holds user data. Run probe-databases first, run this twice (the second immediately before the chain flip), then ship the OPERATIONAL_VARS = ["RM11"] commit.
           - migrate-main-db-rm9-to-rm10 # LEGACY (superseded by migrate-main-db-rm10-to-rm11 on 2026-11-06) operational cutover (2026-10-25): full pg_dump/restore of the live RM9 project into RM10 + all-table row-count verification + a schema re-push. RM9 reached its 5 GB monthly transfer allowance (live since 2026-10-17). RM10 is a RECYCLED project on its third term (last live 2026-09-14..09-18), so --clean wipes it once probe-databases confirms it sits behind RM9 on every metric that holds user data. Run probe-databases first, run this twice (the second immediately before the chain flip), then ship the OPERATIONAL_VARS = ["RM10"] commit. Replaces the 2026-09-14 task of the same name.
           - migrate-main-db-rm8-to-rm9 # LEGACY (superseded by migrate-main-db-rm9-to-rm10 on 2026-10-25) operational cutover (2026-10-17): full pg_dump/restore of the live RM8 project into RM9 + all-table row-count verification + a schema re-push. RM8 reached its 5 GB monthly transfer allowance three days into service (live since 2026-10-14). RM9 is a RECYCLED project on its third term (last live 2026-09-11..09-14), so --clean wipes it once probe-databases confirms it sits behind RM8 on every metric. Run probe-databases first, run this twice (the second immediately before the chain flip), then ship the OPERATIONAL_VARS = ["RM9"] commit. Replaces the 2026-09-11 task of the same name.
           - migrate-main-db-rm7-to-rm8 # LEGACY (superseded by migrate-main-db-rm8-to-rm9 on 2026-10-17) operational cutover (2026-10-14): full pg_dump/restore of the live RM7 project into RM8 + all-table row-count verification + a schema re-push. RM7 reached its 5 GB monthly transfer allowance five days into service (live since 2026-10-09). RM8 is a RECYCLED project (last live 2026-09-08..09-11, holding that stale snapshot, behind RM7 on every metric per probe-databases), so --clean wipes it. Run probe-databases first, run this twice (the second immediately before the chain flip), then ship the OPERATIONAL_VARS = ["RM8"] commit.
           - migrate-main-db-rm6-to-rm7 # LEGACY (superseded by migrate-main-db-rm7-to-rm8 on 2026-10-14) operational cutover (2026-10-09): full pg_dump/restore of the live RM6 project into RM7 + all-table row-count verification + a schema re-push. RM6 is nearly at its 5 GB monthly transfer allowance. RM7 is a RECYCLED project (last live 2026-09-05..09-08) — run probe-databases first and confirm it answers AND sits BEHIND RM6 on every metric. RUN THIS BEFORE deploying the RM7-only chain.
           - migrate-main-db-rm5-to-rm6 # LEGACY (superseded by migrate-main-db-rm6-to-rm7 on 2026-10-09) operational cutover (2026-10-04): full pg_dump/restore of the live RM5 project into RM6 + all-table row-count verification + a schema re-push. RM5 has reached its 5 GB monthly transfer allowance. RM6 is a RECYCLED project (last live 2026-08-17..08-20) — run probe-databases first and confirm it answers AND sits BEHIND RM5 on every metric. RUN THIS BEFORE deploying the RM6-only chain.
           - migrate-main-db-rm12-to-rm3 # LEGACY (RM12 -> RM3 cutover, 2026-09-22, kept for reference; superseded by migrate-main-db-rm3-to-rm4 on 2026-09-25): full pg_dump/restore of the live RM12 project into RM3 + all-table row-count verification + a schema re-push. RM12 is approaching its 5 GB monthly transfer allowance four days into service. RM3 is a RECYCLED project (the third this site used, rested since ~2026-08-04) so its allowance has long reset — run probe-databases first and confirm RM3 answers AND sits BEHIND RM12 on every metric, then this restore's --clean pass safely wipes that stale August snapshot. NOTE the owner first asked for DATABASE_URL as the target; the 2026-08-12 step below records why that name must not be rotated onto again ("THE MOST DANGEROUS NAME IN THIS REPO"), and RM3 was chosen instead. RUN THIS BEFORE deploying the RM3-only chain.
-          - migrate-main-db-rm10-to-rm12 # CURRENT operational cutover (2026-09-18): full pg_dump/restore of the live RM10 project into RM12 + all-table row-count verification + a schema re-push. RM10 reached its 5 GB monthly transfer allowance after four days live. UNLIKE every cutover since RM6, RM12 is a genuinely NEW Neon project, not a recycled name — so its monthly allowance is untouched, where RM11 (the obvious rested candidate) is itself already at its limit from its 2026-08-29..09-03 term. A 2026-09-18 probe-databases run confirmed RM10 still REACHABLE and ahead of every other project on every metric (User=370, CollectionCard=1823, PriceAlert=213, RetailerPrice=131,599, Card=1431), so the data is drainable and this is a planned rotation rather than a recovery. Because the target is FRESH, its pre-restore inventory is expected to be empty/absent — that is the one place this differs from the recycled-target cutovers below, and it makes the schema re-push at the end load-bearing rather than belt-and-braces. RUN THIS BEFORE deploying the RM12-only chain.
           - migrate-main-db-to-rm6 # LEGACY (DATABASE_URL_2 → RM6 cutover, kept for reference): full pg_dump/restore of the live DATABASE_URL_2 project into RM6 + row-count verification. DATABASE_URL_2 hit 4.8 of its 5 GB monthly transfer allowance just three days after the 2026-08-14 cutover onto it, so it rotated onto RM6 — a genuinely NEW project (RM3, the obvious rested candidate, was already at its own capacity).
           - migrate-main-db-to-original # LEGACY (RM5 → DATABASE_URL cutover, kept for reference): full pg_dump/restore of RM5 into the ORIGINAL project (the DATABASE_URL secret) + row-count verification. Rotates BACK onto the first project this site ever used, whose monthly Neon allowance has reset, because RM5 is nearing its own. DESTRUCTIVE to the target (it still holds the old catalogue it served months ago) — dumps before it restores and verifies row counts after. RUN THIS BEFORE deploying the DATABASE_URL-first chain.
           - migrate-main-db-rm5 # LEGACY (RM4 → RM5 cutover, kept for reference): full pg_dump/restore of the OPERATIONAL database (RM4) into RM5 + row-count verification. RUN THIS FIRST once RM5 is set — every other task already resolves RM5-first. NOTE: needs RM4 to be reachable; it exhausted its transfer allowance on 2026-08-10, so if the dump fails with P1001 the data cannot be drained until RM4's allowance resets or its plan is raised.
@@ -127,7 +127,7 @@ on:
         type: boolean
         default: false
       overwrite_live_db:
-        description: "migrate-main-db-rm10-to-rm11/rm7-to-rm8/rm6-to-rm7/rm5-to-rm6/rm12-to-rm3/rm10-to-rm12/rm9-to-rm10/rm8-to-rm9/rm7-to-rm8/rm6-to-rm7/rm11-to-rm6/to-rm11/rm10/rm9/rm8/rm7/rm6/du2 and migrate-history-db-hdu2-to-hdu3 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
+        description: "migrate-main-db-rm11-to-rm12/rm10-to-rm11/rm7-to-rm8/rm6-to-rm7/rm5-to-rm6/rm12-to-rm3/rm9-to-rm10/rm8-to-rm9/rm7-to-rm8/rm6-to-rm7/rm11-to-rm6/to-rm11/rm10/rm9/rm8/rm7/rm6/du2 and migrate-history-db-hdu2-to-hdu3 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
         type: boolean
         default: false
       ebay_sg:
@@ -401,7 +401,7 @@ jobs:
           # Install from PGDG's own apt repo rather than guessing a version.
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -625,7 +625,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -773,7 +773,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -919,7 +919,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1081,7 +1081,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1240,7 +1240,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1391,7 +1391,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1540,7 +1540,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1692,7 +1692,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1845,7 +1845,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1997,7 +1997,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2154,7 +2154,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2341,7 +2341,7 @@ jobs:
           # Install from PGDG's own apt repo rather than guessing a version.
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2504,7 +2504,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2584,6 +2584,215 @@ jobs:
           echo "     if the allowance still drains fast, grep Vercel logs for"
           echo "     [egress-guard:history] to find the next offender."
 
+      - name: Migrate main (operational) database to RM12
+        # CURRENT operational cutover (2026-11-16). RM11 (live since 2026-11-06)
+        # is on course to reach its 5 GB monthly transfer allowance around
+        # 2026-11-21 (ops-monitor 2026-11-16: 3.41 GB used, ~0.27 GB a day,
+        # resets in 15 days). RM12 is a RECYCLED project (last live
+        # 2026-09-18..09-22), rested since, so its allowance has reset. Built
+        # from the RM10 -> RM11 step below with the names moved one along; the
+        # comments inside still describe that step's guards, which are the same.
+        if: inputs.task == 'migrate-main-db-rm11-to-rm12'
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.RM11 || vars.RM11 }}
+          TARGET_DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_DATABASE_URL" ]; then
+            echo "::error::RM12 is not visible to Actions — the Neon project may exist and be set in Vercel, but this migration runs in GitHub Actions and needs its OWN secret there. Add it under Settings → Secrets and variables → Actions (exact name RM12)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_DATABASE_URL" ]; then
+            echo "::error::RM11 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_DATABASE_URL" = "$TARGET_DATABASE_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database. RM12 must point at a DIFFERENT Neon project than RM11. Aborting before doing anything."
+            exit 1
+          fi
+
+          echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          # ── SAFETY: never overwrite the database production is serving ──────
+          # READS db-chains.ts, NOT db.ts — db.ts delegates to
+          # resolveUrl(OPERATIONAL_VARS) and holds no process.env reference of
+          # its own, so parse the head of OPERATIONAL_VARS straight out of the
+          # single source of truth (tests/db-chain.test.ts keeps it honest).
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          if [ "$FIRST_IN_CHAIN" = "RM12" ]; then
+            if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
+              echo "::error::REFUSING TO RUN — RM12 is LIVE. src/lib/db-chains.ts resolves it first, so it is the database production is serving right now. This task would restore RM11 over it and discard every row written since the cutover. Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
+              exit 1
+            fi
+            echo "::warning::RM12 is LIVE and overwrite_live_db was set. Proceeding with a DESTRUCTIVE overwrite of production data."
+          fi
+
+          echo "== Can the source still be reached at all? =="
+          if ! psql "$SOURCE_DATABASE_URL" -tAc "SELECT 1" >/dev/null 2>&1; then
+            echo "::error::the SOURCE project is unreachable — most likely its transfer allowance is spent, so there is nothing to dump FROM. RM12 has NOT been touched. Run probe-databases to see which projects still answer."
+            exit 1
+          fi
+          echo "Source answered — proceeding."
+
+          # RM12's pre-restore contents, for the record. RM12 IS A RECYCLED
+          # PROJECT, retired for months — so unlike a freshly-provisioned
+          # target, real but ancient row counts here are the EXPECTED
+          # answer, not a warning. What matters is that they sit far BEHIND
+          # the source on every metric: that is the signature of a genuinely
+          # rested project rather than something still in use. --clean below
+          # then wipes all of it.
+          #
+          # STOP AND LOOK if any of these comes back AHEAD of RM11's own
+          # numbers (printed by probe-databases, and by the verification
+          # below). A "rested" project holding MORE rows than the live one is
+          # not rested — it is something else, and --clean would destroy it.
+          #
+          # `|| true` per iteration: a target with no schema at all must not
+          # kill this step under `bash -e {0}` before a single byte is restored.
+          echo "== What RM12 (TARGET) holds BEFORE we restore (expected: a stale, far-behind early-September snapshot — it is a RECYCLED project) =="
+          for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — table missing or unreadable)";; esac
+            echo "  target $T: $N"
+          done
+
+          # DROP EVERY TABLE ON THE TARGET THAT ISN'T IN THE SOURCE'S SCHEMA
+          # (2026-09-25). A recycled project like RM12 can carry schema debris
+          # from its old life -- e.g. a legacy "EbayAuction" table (superseded
+          # by EbayAuctionListing) with an FK onto Card. Because that table
+          # doesn't exist in the SOURCE, it's absent from the pg_dump's TOC
+          # entirely, so `pg_restore --clean` never emits a DROP for it or its
+          # FK, which blocks `DROP TABLE Card` (dependent constraint), which
+          # cascades into "relation already exists" and stale-schema COPY
+          # failures. Drop target-only tables up front so restore always
+          # starts from a schema that's a subset of the source's.
+          echo "== Dropping target-only tables absent from the source's schema (stale debris from RM12's old schema) =="
+          SOURCE_TABLES=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT tablename FROM pg_tables WHERE schemaname='public'")
+          TARGET_TABLES=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT tablename FROM pg_tables WHERE schemaname='public'" 2>/dev/null || true)
+          for T in $TARGET_TABLES; do
+            if ! grep -qxF "$T" <<<"$SOURCE_TABLES"; then
+              echo "  dropping public.\"$T\" (target-only, not in source) CASCADE"
+              psql "$TARGET_DATABASE_URL" -c "DROP TABLE IF EXISTS public.\"$T\" CASCADE;"
+            fi
+          done
+
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_DATABASE_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== Dumping the operational database (schema + data) =="
+          if ! pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom \
+            --exclude-table-data='public."PriceHistory"' \
+            --exclude-table-data='public."ClickEvent"' \
+            -f main.dump; then
+            echo "::error::pg_dump FAILED against the SOURCE project — almost certainly RM11's transfer allowance dying mid-stream. RM12 has NOT been touched; a partial dump is never restored."
+            exit 1
+          fi
+          echo "Dump size: $(du -h main.dump | cut -f1)"
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
+          for T in User Card MarketplaceListing; do
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
+              echo "::error::the dump has no data section for table $T — it is incomplete. RM12 has NOT been touched."
+              exit 1
+            fi
+          done
+          echo "Dump contains a data section for every expected table — proceeding to restore."
+
+          echo "== Restoring into RM12 (a RECYCLED project — --clean/--if-exists DROPS its stale early-September schema and data first) =="
+          set +e
+          pg_restore --no-owner --no-acl --clean --if-exists --verbose -d "$TARGET_DATABASE_URL" main.dump > restore.log 2>&1
+          RC=$?
+          set -e
+          echo "pg_restore exit code: $RC — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
+          echo "-- restore.log (first 40 lines) --"; head -40 restore.log
+          echo "-- restore.log (last 20 lines) --"; tail -20 restore.log
+          echo "-- restore.log: every line mentioning Card (diagnostic, 2026-09-25) --"
+          grep -i card restore.log || echo "(no Card-related lines in restore.log)"
+
+          echo "== Target inventory after restore =="
+          psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
+
+          echo "== Verifying row counts (RM11 source vs RM12 target) =="
+          sleep 3
+          set +e
+          TABLES=$(psql "$SOURCE_DATABASE_URL" -tAc \
+            "SELECT quote_ident(tablename) FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('PriceHistory','ClickEvent') ORDER BY tablename")
+          if [ -z "$TABLES" ]; then
+            echo "::error::could not enumerate source tables — refusing to report an unverified migration as verified."
+            exit 1
+          fi
+          echo "Verifying $(printf '%s\n' "$TABLES" | wc -l) tables."
+          MISMATCH=0
+          for T in $(printf 'public.%s\n' $TABLES); do
+            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          echo "(PriceHistory + ClickEvent intentionally not copied — served from the history project.)"
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch on at least one table — do NOT deploy the RM12-only chain yet."
+            exit 1
+          fi
+          echo "All verified tables match — RM12 now holds a full copy of the operational data."
+
+          # ── RE-ALIGN THE SCHEMA TO THE DEPLOYED CODE ────────────────────────
+          echo ""
+          echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
+          DIRECT_TARGET_URL="${TARGET_DATABASE_URL/-pooler/}"
+          if ! DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss; then
+            echo "::error::schema push against RM12 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
+            exit 1
+          fi
+          echo "TARGET schema now matches this ref."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything written"
+          echo "     to RM11 in the meantime (signups, orders, price imports) is included."
+          echo "  2. Ship the commit that sets OPERATIONAL_VARS = [\"RM12\"] in"
+          echo "     src/lib/db-chains.ts (and the matching CURRENT_OP in"
+          echo "     scripts/build-db-push.sh, and every workflow's DATABASE_URL"
+          echo "     default) — that is the actual cutover; this task alone does not"
+          echo "     move traffic. Confirm RM12 is set in Vercel for Production,"
+          echo "     Preview AND Development first."
+          echo "  3. THE BURN RATE IS STILL UNEXPLAINED. A new project buys time, not"
+          echo "     a fix — run audit-egress a few hours after cutover and fix the"
+          echo "     query it names (see the note on RetailerPrice in src/lib/db.ts)."
+
       - name: Migrate main (operational) database to RM11
         # CURRENT operational cutover (2026-11-06). RM10 is at its 5 GB monthly
         # transfer allowance (live since 2026-10-25; the owner: "we are at
@@ -2624,7 +2833,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2847,7 +3056,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3070,7 +3279,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3291,7 +3500,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3510,7 +3719,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3728,7 +3937,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3985,7 +4194,7 @@ jobs:
           # of guessing a version; it always tracks Postgres's current release.
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4175,7 +4384,7 @@ jobs:
           set -uo pipefail
           echo "== Installing PostgreSQL client tools =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4329,7 +4538,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4510,7 +4719,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4728,7 +4937,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4886,254 +5095,6 @@ jobs:
           echo "     a fix — run audit-egress a few hours after cutover and fix the"
           echo "     query it names (see the note on RetailerPrice in src/lib/db.ts)."
 
-      - name: Migrate main (operational) database to RM12
-        # CURRENT operational cutover (2026-09-18). RM10 reached its 5 GB
-        # monthly transfer allowance after four days live (cut over
-        # 2026-09-14) — the same ~2 GB/day burn that has now ended every
-        # project in this rotation, and the second full project life since the
-        # 2026-09-11 deploy-cadence gate. That gate was once the leading
-        # explanation for the burn; two projects dying on the old schedule
-        # since it landed says it is not the cause. Run audit-egress against
-        # RM12 a few hours after cutover — a new project buys time, not a fix.
-        #
-        # RM12 replaces it, still as a SINGLE name — after this,
-        # src/lib/db-chains.ts's OPERATIONAL_VARS holds RM12 alone. See the long
-        # note there for why the chain shape stays one name.
-        #
-        # RM12 IS A GENUINELY NEW PROJECT, AND THAT IS THE POINT. Every cutover
-        # since RM6 has recycled a rested name, and each inherited whatever was
-        # left of that project's monthly allowance. RM11 was the obvious
-        # candidate here and is itself already at its limit from its
-        # 2026-08-29..09-03 term, so the rotation had run out of genuinely
-        # rested names. A new project starts with the full 5 GB.
-        #
-        # THERE IS THEREFORE NOTHING TO RE-VERIFY ON THE TARGET, which is the
-        # one way this differs from every predecessor below: db-chains.ts's
-        # rule that "a recycled target must be re-verified each time it comes
-        # back around" does not apply to a project that has never been used.
-        # What replaces it is the opposite check — the pre-restore inventory
-        # below expects RM12 to be EMPTY, and a non-empty answer means the
-        # secret points at something other than the new project.
-        #
-        # A 2026-09-18 probe-databases run established the source side:
-        #   RM10 (live)  User=370  PriceAlert=213  CollectionCard=1823  RetailerPrice=131599  Card=1431
-        #   RM9          User=347  PriceAlert=204  CollectionCard=1389  RetailerPrice=131008  Card=1431
-        #   RM7          User=308  PriceAlert=158  CollectionCard=1163  RetailerPrice=89877   Card=1429
-        #   RM6          User=298  PriceAlert=158  CollectionCard=1160  RetailerPrice=90372   Card=1429
-        #   RM11         User=281  PriceAlert=131  CollectionCard=1029  RetailerPrice=90721   Card=1429
-        #   RM8          UNREACHABLE ("Your project has exceeded…")
-        # RM10 leads every metric, which is what the live database looks like,
-        # and it still ANSWERS — so this is a planned rotation with the data
-        # fully drainable, not a recovery from a dead project.
-        #
-        # SOURCE IS RM10, THE CURRENTLY LIVE PROJECT — AND IT IS AT ITS LIMIT.
-        # That makes the DUMP the step most likely to fail here, not the
-        # restore. Every failure path below leaves RM12 untouched and a partial
-        # dump is never restored, so a mid-stream death is recoverable: re-run
-        # once the allowance resets, or fall back to a different target. Pinned
-        # by NAME on both ends, deliberately NOT using the job-level
-        # DATABASE_URL default — reusing that default here would point source
-        # and target at the same database once the RM12 cutover ships, and the
-        # migration would silently no-op while reporting every row count as
-        # matching.
-        #
-        # RUN THIS BEFORE the commit that flips OPERATIONAL_VARS to ["RM12"]
-        # ships, not after. Deploying that flip while RM12 is still EMPTY is
-        # the 2026-08-22 outage shape, and worse here than with a recycled
-        # target: an empty database serves no error, it serves a site with no
-        # cards. A database can only be promoted once it already holds the data
-        # traffic is about to depend on.
-        #
-        # THE SCHEMA RE-PUSH AT THE END IS LOAD-BEARING HERE, not belt-and-
-        # braces. A recycled target already had a schema close to current; RM12
-        # has only whatever the dump carried, so the push is what guarantees it
-        # matches the deployed code.
-        #
-        # PriceHistory/ClickEvent DATA is excluded (schema kept): those are
-        # served from the history project, and copying them would spend RM10's
-        # already-exhausted transfer allowance on rows this database does not
-        # serve.
-        #
-        # Read-only against the source — safe to re-run. Each run fully
-        # re-syncs the target from the source's CURRENT state, so run it once
-        # for the bulk copy and again immediately before cutting traffic over.
-        if: inputs.task == 'migrate-main-db-rm10-to-rm12'
-        env:
-          SOURCE_DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
-          TARGET_DATABASE_URL: ${{ secrets.RM3 || vars.RM3 }}
-        run: |
-          set -uo pipefail
-
-          if [ -z "$TARGET_DATABASE_URL" ]; then
-            echo "::error::RM12 is not visible to Actions — the Neon project may exist and be set in Vercel, but this migration runs in GitHub Actions and needs its OWN secret there. Add it under Settings → Secrets and variables → Actions (exact name RM12)."
-            exit 1
-          fi
-          if [ -z "$SOURCE_DATABASE_URL" ]; then
-            echo "::error::RM10 is not visible to Actions — nothing to migrate FROM."
-            exit 1
-          fi
-          if [ "$SOURCE_DATABASE_URL" = "$TARGET_DATABASE_URL" ]; then
-            echo "::error::SOURCE and TARGET resolve to the SAME database. RM12 must point at a DIFFERENT Neon project than RM10. Aborting before doing anything."
-            exit 1
-          fi
-
-          echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
-          sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
-          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-18
-          export PATH="/usr/lib/postgresql/18/bin:$PATH"
-          pg_dump --version; psql --version
-
-          # ── SAFETY: never overwrite the database production is serving ──────
-          # READS db-chains.ts, NOT db.ts — db.ts delegates to
-          # resolveUrl(OPERATIONAL_VARS) and holds no process.env reference of
-          # its own, so parse the head of OPERATIONAL_VARS straight out of the
-          # single source of truth (tests/db-chain.test.ts keeps it honest).
-          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
-            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
-          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
-            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
-            exit 1
-          fi
-          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
-          if [ "$FIRST_IN_CHAIN" = "RM12" ]; then
-            if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
-              echo "::error::REFUSING TO RUN — RM12 is LIVE. src/lib/db-chains.ts resolves it first, so it is the database production is serving right now. This task would restore RM10 over it and discard every row written since the cutover. Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
-              exit 1
-            fi
-            echo "::warning::RM12 is LIVE and overwrite_live_db was set. Proceeding with a DESTRUCTIVE overwrite of production data."
-          fi
-
-          echo "== Can the source still be reached at all? =="
-          if ! psql "$SOURCE_DATABASE_URL" -tAc "SELECT 1" >/dev/null 2>&1; then
-            echo "::error::the SOURCE project is unreachable — most likely its transfer allowance is spent, so there is nothing to dump FROM. RM12 has NOT been touched. Run probe-databases to see which projects still answer."
-            exit 1
-          fi
-          echo "Source answered — proceeding."
-
-          # RM12's pre-restore contents, for the record. THIS IS THE ONE PLACE
-          # THIS TASK DIFFERS FROM ITS RECYCLED-TARGET PREDECESSORS: RM12 is a
-          # genuinely NEW Neon project, so "(absent)" on every line is the
-          # EXPECTED answer, not a warning. A recycled target printed real,
-          # superseded row counts that the operator had to judge; a fresh one
-          # has nothing to judge, which is precisely why it was chosen.
-          #
-          # If these come back NON-EMPTY, STOP and work out what RM12 actually
-          # is before continuing — a "new" project that already holds rows is
-          # not the project you think it is, and --clean would wipe it.
-          #
-          # `|| true` per iteration: a target with no schema at all must not
-          # kill this step under `bash -e {0}` before a single byte is restored.
-          echo "== What RM12 (TARGET) holds BEFORE we restore (expected: nothing — it is a NEW project) =="
-          for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
-            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
-            case "$N" in ''|*[!0-9]*) N="(absent — table missing or unreadable)";; esac
-            echo "  target $T: $N"
-          done
-
-          echo "== Source table sizes (from catalog — negligible transfer) =="
-          psql "$SOURCE_DATABASE_URL" -P pager=off -c "
-            SELECT relname AS table,
-                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
-                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
-            FROM pg_stat_user_tables
-            ORDER BY pg_total_relation_size(relid) DESC
-            LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
-
-          echo "== Dumping the operational database (schema + data) =="
-          if ! pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom \
-            --exclude-table-data='public."PriceHistory"' \
-            --exclude-table-data='public."ClickEvent"' \
-            -f main.dump; then
-            echo "::error::pg_dump FAILED against the SOURCE project — almost certainly RM10's transfer allowance dying mid-stream. RM12 has NOT been touched; a partial dump is never restored."
-            exit 1
-          fi
-          echo "Dump size: $(du -h main.dump | cut -f1)"
-          # Captured into a variable, not piped straight into grep -q: `grep -q`
-          # exits the instant it finds a match, closing its end of the pipe
-          # while pg_restore -l may still be writing — which pg_restore (18.6)
-          # reports as a hard error ("could not close file: Broken pipe") and
-          # a non-zero exit, so `pipefail` failed this check even when the
-          # dump was complete. Non-deterministic: depends on how much of the
-          # listing had been written before grep was satisfied, which is why
-          # this passed on identical code moments earlier and then failed here.
-          DUMP_TOC=$(pg_restore -l main.dump)
-          for T in User Card MarketplaceListing; do
-            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
-              echo "::error::the dump has no data section for table $T — it is incomplete. RM12 has NOT been touched."
-              exit 1
-            fi
-          done
-          echo "Dump contains a data section for every expected table — proceeding to restore."
-
-          echo "== Restoring into RM12 (a FRESH project — --clean/--if-exists simply finds nothing to drop) =="
-          set +e
-          pg_restore --no-owner --no-acl --clean --if-exists --verbose -d "$TARGET_DATABASE_URL" main.dump > restore.log 2>&1
-          RC=$?
-          set -e
-          echo "pg_restore exit code: $RC — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
-          echo "-- restore.log (first 40 lines) --"; head -40 restore.log
-          echo "-- restore.log (last 20 lines) --"; tail -20 restore.log
-
-          echo "== Target inventory after restore =="
-          psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
-
-          echo "== Verifying row counts (RM10 source vs RM12 target) =="
-          sleep 3
-          set +e
-          TABLES=$(psql "$SOURCE_DATABASE_URL" -tAc \
-            "SELECT quote_ident(tablename) FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('PriceHistory','ClickEvent') ORDER BY tablename")
-          if [ -z "$TABLES" ]; then
-            echo "::error::could not enumerate source tables — refusing to report an unverified migration as verified."
-            exit 1
-          fi
-          echo "Verifying $(printf '%s\n' "$TABLES" | wc -l) tables."
-          MISMATCH=0
-          for T in $(printf 'public.%s\n' $TABLES); do
-            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
-            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
-            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
-            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
-            if [ "$SRC" = "$DST" ]; then
-              echo "$T: source=$SRC target=$DST ✓"
-            else
-              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
-              MISMATCH=1
-            fi
-          done
-          set -e
-          echo "(PriceHistory + ClickEvent intentionally not copied — served from the history project.)"
-          if [ "$MISMATCH" = "1" ]; then
-            echo "::error::Row-count mismatch on at least one table — do NOT deploy the RM12-only chain yet."
-            exit 1
-          fi
-          echo "All verified tables match — RM12 now holds a full copy of the operational data."
-
-          # ── RE-ALIGN THE SCHEMA TO THE DEPLOYED CODE ────────────────────────
-          echo ""
-          echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
-          DIRECT_TARGET_URL="${TARGET_DATABASE_URL/-pooler/}"
-          if ! DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss; then
-            echo "::error::schema push against RM12 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
-            exit 1
-          fi
-          echo "TARGET schema now matches this ref."
-          echo ""
-          echo "NEXT STEPS:"
-          echo "  1. Re-run this task immediately before deploying, so anything written"
-          echo "     to RM10 in the meantime (signups, orders, price imports) is included."
-          echo "  2. Ship the commit that sets OPERATIONAL_VARS = [\"RM12\"] in"
-          echo "     src/lib/db-chains.ts (and the matching CURRENT_OP in"
-          echo "     scripts/build-db-push.sh, and every workflow's DATABASE_URL"
-          echo "     default) — that is the actual cutover; this task alone does not"
-          echo "     move traffic. Confirm RM12 is set in Vercel for Production,"
-          echo "     Preview AND Development first."
-          echo "  3. THE BURN RATE IS STILL UNEXPLAINED. A new project buys time, not"
-          echo "     a fix — run audit-egress a few hours after cutover and fix the"
-          echo "     query it names (see the note on RetailerPrice in src/lib/db.ts)."
-
       - name: Migrate main (operational) database to RM6
         # LEGACY (2026-08-17 cutover, kept for reference — superseded by
         # migrate-main-db-to-rm7 above on 2026-08-20). DATABASE_URL_2 hit 4.8 of
@@ -5213,7 +5174,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -5325,7 +5286,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -5431,7 +5392,7 @@ jobs:
             exit 1
           fi
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18

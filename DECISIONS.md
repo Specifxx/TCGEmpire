@@ -23989,3 +23989,24 @@ The Pokémon section is a different site from DexCompare, owned by the same pers
 (the store-by-store table lives there), not a sitewide footer; they are per product and per page, and they stay out of
 `sister-sites.ts`. Baselines for judging it: Search Console Links for dexcompare.app on 25 Nov and 7 Dec, and Googlebot's
 crawl of `/us/p/` URLs (it fetched 105 distinct DexCompare URLs in 90 days, 22 Oct to 14 Nov). No deploy marker.
+
+## The operational database moves to RM12 — 2026-11-16
+
+Raised from the COO board's sprint (Monday report: "3.35 of 5 GB, runs out in ~4.4 days"). Checked against live data first:
+the 16 Nov ops-monitor run read RM11 at **3.41 GB of 5.00 GB (68%), about 0.27 GB a day, out in ~5.8 days, reset in 15 days**.
+So RM11 would hit its monthly transfer allowance around 21–22 Nov, well before the reset. RM11 lasted ten days at a much lower
+burn than RM9/RM10; the rotation still buys time, not a fix. No money spent: RM12 is a rested free-tier project.
+
+**Before touching anything.** `probe-databases` (07:28 UTC) found RM12 reachable and behind RM11 on every table, holding the
+snapshot from its 18–22 Sep term: User 379 vs 637, CollectionCard 2,149 vs 4,078, PriceAlert 210 vs 700, Card 1,432 vs 1,741,
+RetailerPrice 132,235 vs 236,855, SealedListing 2,744 vs 3,320. Vercel already has `RM12` (Production).
+
+**The task.** `migrate-main-db-rm11-to-rm12`, the RM10 → RM11 step with the names moved one along. The legacy
+`migrate-main-db-rm10-to-rm12` step (2026-09-18) is removed rather than kept beside it (CURRENT-STATE: never keep two tasks for a
+recycled name), which also keeps `maintenance.yml` under the 452 KB size guard. Every PGDG key download in the file now retries
+and falls back to apt.postgresql.org: postgresql.org dropped it twice in a row this morning (curl 56).
+
+**The flip.** `OPERATIONAL_VARS = ["RM12"]`, `build-db-push.sh`, every workflow's `DATABASE_URL`/`DB_SOURCE_NAME`,
+`ci-build.yml`, `package.json`'s preview condition, `tests/ops-wiring.test.ts`. The ops monitor's growth-snapshot step now also
+sets `DB_SOURCE_NAME`, which is why it logged "resolved from NONE". Final migrate pass immediately before the merge; merged with
+`[deploy] [urgent]` (Rift database changes ship at once, the owner's standing rule). RM11 is the rollback.
