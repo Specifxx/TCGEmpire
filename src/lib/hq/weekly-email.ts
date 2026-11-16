@@ -12,6 +12,7 @@ import type { Hq } from "./load";
 import { pctChange, type Week } from "./view";
 import { GROWTH_TARGETS } from "../admin-growth";
 import { paidPer100, type SearchTest } from "../earnings/search-test";
+import { FAMILY_TRENDS, trendMet } from "./trends";
 import type { NetworkCounts } from "../analytics/click-networks";
 
 export const WEEKLY_SUBJECT_PREFIX = "Empire weekly";
@@ -29,8 +30,16 @@ function targetLine(label: string, w: Week, target: number): { text: string; met
   return { text: `${label}: ${n(w.last7)} Google clicks vs ${n(w.prev7)} (${pct(pctChange(w)) || "no change data"}; target ${goal})`, met };
 }
 
+/** Family trend target line: visitors or earnings this week against the one before (hq/trends.ts). */
+export function trendTargetLine(label: string, w: Week, target: number, unit: "visitors" | "money"): { text: string; met: boolean | null } {
+  const f = (v: number | null) => (unit === "money" ? money(v) : n(v));
+  return { text: `${label}: ${f(w.last7)} vs ${f(w.prev7)} (${pct(pctChange(w)) || "no change data"}; target +${target}%)`, met: trendMet(w, target) };
+}
+
 export interface WeeklyInput {
   hq: Hq;
+  /** Family trend targets (hq/trends.ts), or absent when not read. */
+  trends?: { visitors: Week; earnings: Week } | null;
   /** RiftCompare's own checks (its monitor's latest report). */
   riftChecks: readonly CheckResult[];
   /** The money section (lib/earnings/digest.ts), already built. */
@@ -110,6 +119,12 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
     targetLine("Sister sites", hq.totals.sisters, GROWTH_TARGETS.sisters.pct),
     targetLine("RiftCompare", hq.totals.rift, GROWTH_TARGETS.rift.pct),
     targetLine("Every site", hq.totals.all, GROWTH_TARGETS.family.pct),
+    ...(x.trends
+      ? [
+          trendTargetLine(FAMILY_TRENDS.visitors.label, x.trends.visitors, FAMILY_TRENDS.visitors.pct, "visitors"),
+          trendTargetLine(FAMILY_TRENDS.earnings.label, x.trends.earnings, FAMILY_TRENDS.earnings.pct, "money"),
+        ]
+      : []),
   ];
 
   const bits = [red.length ? `${plural(red.length, "site")} need action` : amber.length ? `${plural(amber.length, "site")} to watch` : "all sites healthy", open.length ? `${plural(open.length, "step")} for you` : ""].filter(Boolean);

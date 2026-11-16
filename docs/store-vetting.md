@@ -66,3 +66,19 @@ A store that took money and didn't ship, or is a copy of another shop, also goes
 `data/store-vetting/banned.json` (and, on MTG and DexCompare, `BLOCKED_STORES`).
 A store that moved to a new domain is re-checked under the new name before its
 registry entry is updated.
+
+## Scam sweep: scoring, AI reading and the shared denylist (owner, 2026-11-16)
+
+Started by a visitor finding TCGShopUK (Trustpilot 2.2, 86% one-star, non-delivery) on MTG Compare. `scripts/scam-sweep.mjs`
+(`scam-sweep.yml`, Mondays 04:41 UTC) scores every store host on every site (13 registries plus TCG Prices and
+WaxCompare): banned list, visitor reports (`store-problem` issues), review evidence (`data/store-vetting/review-evidence.json`,
+entered by hand or an agent browser because Trustpilot refuses runners), domain age, no contact, WhatsApp/crypto/gift-card
+payment, fees after checkout, and an AI reading of the shop's home page (secret `SCAM_AI_KEY`, Haiku, at most 60 pages a run,
+riskiest first; no key = no AI points). A store is hidden at score 70 or more WITH two independent signal groups; one noisy
+signal only ever puts it on watch. A verified store (verified.json) never goes above watch.
+
+- `denylist.json` is the file sites read: banned + auto-hidden - overrides. `scam-scores.json` has every score and reason;
+  `scam-log.jsonl` logs every hide, restore and change. This repo is public: domains and reasons only.
+- Rollback: repository variable `SCAM_AUTOHIDE=0` (report only; banned stays), or a domain in `overrides.json`
+  (a banned store is never overridden).
+- Sites consume the denylist at import (follow-up per site; MTG, Dex and TCG Prices also keep their own blocklists).

@@ -11,6 +11,7 @@ import { buildGrowthReport, growthReportText, WEEKS } from "@/lib/earnings/growt
 import { readClickCounts } from "@/lib/click-counter";
 import { getLatestReport } from "@/lib/ops/snapshot";
 import { loadHq } from "@/lib/hq/load";
+import { earningsTrend, visitorsWeek } from "@/lib/hq/trends";
 import { buildWeeklyEmail, buyClicksBySite } from "@/lib/hq/weekly-email";
 import { bingLines, bingSubmitLines, loadBing, loadBingSubmit } from "@/lib/hq/bing";
 import { loadBuyClickCounts } from "@/lib/analytics/vercel";
@@ -55,7 +56,7 @@ async function handlePOST(req: Request) {
     within(loadEarnings(false), 25_000, null),
     within(loadCosts(false), 25_000, null),
     within(readClickCounts(addDays(today, -7 * WEEKS - 1)), 10_000, new Map()),
-    within(loadBuyClickCounts(weekFrom, weekTo), 20_000, null),
+    within(loadBuyClickCounts(addDays(today, -14), weekTo), 20_000, null),
     within(loadNetworkClicks(weekFrom, weekTo), 30_000, null),
     within(loadSearchTest(), 10_000, null),
     within(loadBing(), 10_000, null),
@@ -73,7 +74,7 @@ async function handlePOST(req: Request) {
         }),
       )
     : null;
-  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null, networks: nets?.status === "ok" ? nets.sites : null, search: searchTestInput(searchTest, sources, today), abTests: abTestLines(abTest, today), bing: bingLines(bing), bingSubmit: bingSubmitLines(bingSubmit), signups: signupLines(signups) });
+  const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null, trends: sources ? { visitors: visitorsWeek(buy?.status === "ok" ? buy.sites : [], today), earnings: earningsTrend(sources, today) } : null, networks: nets?.status === "ok" ? nets.sites : null, search: searchTestInput(searchTest, sources, today), abTests: abTestLines(abTest, today), bing: bingLines(bing), bingSubmit: bingSubmitLines(bingSubmit), signups: signupLines(signups) });
 
   const recipients = [...new Set([ownerEmail(), growthReportEmail()])];
   let sent = 0;

@@ -9,6 +9,9 @@ import { loadHq } from "@/lib/hq/load";
 import type { Week } from "@/lib/hq/view";
 import { pctChange } from "@/lib/hq/view";
 import { GROWTH_TARGETS } from "@/lib/admin-growth";
+import { FAMILY_TRENDS, earningsTrend, trendMet, visitorsWeek } from "@/lib/hq/trends";
+import { loadBuyClickCounts } from "@/lib/analytics/vercel";
+import { addDays } from "@/lib/earnings/core";
 import { StepDone } from "./StepDone";
 import { loadSearchTest, searchTestInput } from "@/lib/earnings/search-test";
 import { abTestLines, loadAbTest } from "@/lib/earnings/ab-test";
@@ -40,13 +43,13 @@ function Change({ w }: { w: Week }) {
   return <span className={p >= 0 ? "text-up" : "text-rose-400"}>{p > 0 ? "+" : ""}{p}%</span>;
 }
 
-function Target({ label, w, target }: { label: string; w: Week; target: number }) {
-  const met = w.last7 == null || w.prev7 == null ? null : w.last7 >= w.prev7 * (1 + target / 100);
+function Target({ label, w, target, fmt = n, met: metIn }: { label: string; w: Week; target: number; fmt?: (v: number | null) => string; met?: boolean | null }) {
+  const met = metIn !== undefined ? metIn : w.last7 == null || w.prev7 == null ? null : w.last7 >= w.prev7 * (1 + target / 100);
   return (
     <div className="rounded-xl border border-ink-700 bg-ink-850 p-3">
       <div className="text-xs uppercase tracking-wide text-slate-500">{label} · target {target ? `+${target}%` : "hold"}</div>
       <div className="mt-1 text-xl font-extrabold text-white">
-        {n(w.last7)} <span className="text-sm font-normal text-slate-400">vs {n(w.prev7)}</span> <span className="text-sm"><Change w={w} /></span>
+        {fmt(w.last7)} <span className="text-sm font-normal text-slate-400">vs {fmt(w.prev7)}</span> <span className="text-sm"><Change w={w} /></span>
       </div>
       <div className={`text-xs font-bold ${met == null ? "text-slate-500" : met ? "text-up" : "text-rose-400"}`}>{met == null ? "not enough data yet" : met ? "on target" : "below target"}</div>
     </div>
@@ -59,7 +62,15 @@ export default async function HqPage({ searchParams }: { searchParams: { key?: s
   const me = await getCurrentUser();
   if (!(keyOk || me?.isAdmin)) notFound();
 
-  const [hq, searchTest, sources, abTest] = await Promise.all([loadHq(), loadSearchTest().catch(() => null), loadEarnings(false).catch(() => null), loadAbTest().catch(() => null)]);
+  const [hq, searchTest, sources, abTest, buy] = await Promise.all([
+    loadHq(),
+    loadSearchTest().catch(() => null),
+    loadEarnings(false).catch(() => null),
+    loadAbTest().catch(() => null),
+    loadBuyClickCounts(addDays(dayIn(Date.now()), -14), addDays(dayIn(Date.now()), -1)).catch(() => null),
+  ]);
+  const visitors = visitorsWeek(buy?.status === "ok" ? buy.sites : [], dayIn(Date.now()));
+  const earnings = sources ? earningsTrend(sources, dayIn(Date.now())) : { last7: null, prev7: null };
   const abLines = abTestLines(abTest, dayIn(Date.now()));
   const searchLines = searchTestLines(searchTestInput(searchTest, sources, dayIn(Date.now())));
   const now = Date.now();
@@ -84,10 +95,12 @@ export default async function HqPage({ searchParams }: { searchParams: { key?: s
         </ul>
       )}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Target label="Sister sites" w={hq.totals.sisters} target={GROWTH_TARGETS.sisters.pct} />
         <Target label="RiftCompare" w={hq.totals.rift} target={GROWTH_TARGETS.rift.pct} />
         <Target label="Every site" w={hq.totals.all} target={GROWTH_TARGETS.family.pct} />
+        <Target label={FAMILY_TRENDS.visitors.label} w={visitors} target={FAMILY_TRENDS.visitors.pct} met={trendMet(visitors, FAMILY_TRENDS.visitors.pct)} />
+        <Target label={FAMILY_TRENDS.earnings.label} w={earnings} target={FAMILY_TRENDS.earnings.pct} fmt={money} met={trendMet(earnings, FAMILY_TRENDS.earnings.pct)} />
       </div>
 
       <section id="steps" className="mt-6 rounded-xl border border-ink-700 bg-ink-850 p-4">

@@ -1,0 +1,42 @@
+# Weekly scam-store sweep (scripts/scam-sweep.mjs; owner, 2026-11-16). Scores every store host on every site,
+# lets an AI read the riskiest shops' pages, and writes the shared denylist (data/store-vetting/denylist.json).
+# Rollback: set the repository variable SCAM_AUTOHIDE=0 (report only) or add a domain to overrides.json.
+name: Scam sweep
+on:
+  schedule:
+    - cron: "41 4 * * 1" # Mondays, an hour after Store vetting
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Comma-separated site keys (blank = all; a partial run writes nothing)"
+        required: false
+permissions:
+  contents: write
+concurrency:
+  group: scam-sweep
+  cancel-in-progress: false
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts
+            data/store-vetting
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/scam-sweep.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ONLY: ${{ inputs.only }}
+          SCAM_AI_KEY: ${{ secrets.SCAM_AI_KEY }}
+          SCAM_AUTOHIDE: ${{ vars.SCAM_AUTOHIDE }}
+      - name: Commit the denylist and log
+        run: |
+          git config user.name "scam-sweep"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/store-vetting
+          if ! git diff --cached --quiet; then git commit -m "Scam sweep: update denylist and log" && git push; fi
