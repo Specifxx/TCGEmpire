@@ -199,7 +199,10 @@ async function main() {
     }),
   );
   // Pass 2: AI reads the riskiest unresolved pages (a banned or clear-evidence store needs no reading).
-  const candidates = rows.filter((r) => r.text && r.s.score >= 10 && !r.s.groups.includes("banned")).sort((a, b) => b.s.score - a.s.score).slice(0, AI_MAX);
+  // Riskiest first; below that a weekly-rotating sample of clean shops, so every shop is read over a few weeks.
+  const week = Math.floor(Date.now() / (7 * 86_400_000));
+  const rot = (h) => [...h].reduce((n, c) => (n * 31 + c.charCodeAt(0) + week) % 1_000_003, 7);
+  const candidates = rows.filter((r) => r.text && !r.s.groups.includes("banned")).sort((a, b) => b.s.score - a.s.score || rot(a.host) - rot(b.host)).slice(0, AI_MAX);
   let aiRead_ = 0;
   for (const r of candidates) {
     const ai = await aiRead(r.host, r.text, r.input.evidence);
@@ -226,7 +229,8 @@ async function main() {
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## Scam sweep\n\n${JSON.stringify(summary)}\n`);
   if (DRY || only.length) return;
   const w = (name, data) => writeFileSync(new URL(name, DIR), JSON.stringify(data, null, 1) + "\n");
-  w("scam-scores.json", { at: now, stores: stores.map((s) => ({ ...s, hiddenAt: hidden.find((h) => h.domain === s.host)?.at })) });
+  // Only shops with a signal are kept (the file is public and rewritten weekly); the rest are counted.
+  w("scam-scores.json", { at: now, checked: stores.length, stores: stores.filter((s) => s.score > 0).map((s) => ({ ...s, hiddenAt: hidden.find((h) => h.domain === s.host)?.at })) });
   w("auto-hidden.json", hidden);
   w("denylist.json", { at: now, autohide, domains: denylist });
   if (log.length) appendFileSync(new URL("scam-log.jsonl", DIR), log.map((l) => JSON.stringify(l)).join("\n") + "\n");
