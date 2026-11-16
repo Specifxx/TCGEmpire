@@ -36,3 +36,10 @@ test("Amazon has no search-link row: the slot draws nothing without a real price
     assert.doesNotMatch(s, /Also on Amazon: we don/, p);
   }
 });
+
+test("Amazon also-link: a line under the sealed page's list, not a row, not the quick view", () => {
+  const q = readFileSync(new URL("../src/components/SealedQuickView.tsx", import.meta.url), "utf8");
+  assert.match(q, /source === "sealed-page" && amazonStore && amazonHref && <AmazonAlsoLink/);
+  const slot = readFileSync(new URL("../src/components/AmazonLiveSlot.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(slot, /amazon_also/);
+});
