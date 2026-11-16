@@ -5,6 +5,7 @@
 // same loaders its pages read. The daily check fetches that file from the
 // site's CDN: no sister database, repo token or data branch is read.
 //
+// TCG Prices (tcgprices.app) joined on 2026-11-16 (owner: urgent, so its alerts need no wait).
 // Not here, on purpose: RiftCompare itself and OP Compare (their own account
 // alerts), CamCompare and Compare Empire (their own alert tables), KaeYoung (left out, owner
 // 2026-11-02, unless the owner asks).
