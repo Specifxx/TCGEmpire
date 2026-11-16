@@ -4380,6 +4380,7 @@ jobs:
           P_HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           P_HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           P_HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
         run: |
           set -uo pipefail
           echo "== Installing PostgreSQL client tools =="
@@ -4485,6 +4486,9 @@ jobs:
           echo "counts and restore from it with the restore-accounts-into-rm5 task."
           # A survey must never fail the job on the strength of one dead
           # candidate — a dead candidate IS the finding.
+          echo ""
+          echo "===== NEON USAGE THIS MONTH (control-plane API; no database touched) ====="
+          npx tsx scripts/neon-usage-all.ts || true
           exit 0
 
       - name: "[LEGACY] Migrate main (operational) database to RM5 (the 2026-08-era task)"
