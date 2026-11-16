@@ -32,10 +32,11 @@
       "CA": 19995,
       "EU": 11900,
       "SG": 20000,
-      "UK": 10799,
-      "US": 14953
+      "UK": 9000,
+      "US": 14949
     },
     "LGC|Booster Case": {
+      "EU": 72000,
       "UK": 62995,
       "US": 85012
     },
@@ -83,11 +84,17 @@
       "SG": 3000,
       "UK": 2000
     },
+    "LGC|Champion Deck (Tryndamere, Ashe, Lux, Garen)": {
+      "EU": 10000
+    },
     "LGC|Champion Deck Display": {
       "CA": 8995
     },
     "LGC|Champion Deck Set (4)": {
       "CA": 8994
+    },
+    "LGC|Pre-Rift Event Kit": {
+      "EU": 4000
     },
     "LGC|Pre-Rift Kit": {
       "CA": 3499,
@@ -106,17 +113,17 @@
       "CA": 29500,
       "EU": 6497,
       "UK": 13303,
-      "US": 21500
+      "US": 21300
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 129497
+      "US": 124492
     },
     "OGN|Booster Pack": {
       "CA": 1199,
       "UK": 700,
-      "US": 1099
+      "US": 1150
     },
     "OGN|Box Set": {
       "EU": 47990,
@@ -138,7 +145,7 @@
       "AU": 3000,
       "EU": 799,
       "SG": 3086,
-      "UK": 1685,
+      "UK": 5799,
       "US": 1999
     },
     "OGN|Champion Deck (Jinx) Display": {
@@ -204,11 +211,11 @@
     },
     "RAD|Booster Box": {
       "AU": 19000,
-      "CA": 14995,
+      "CA": 14500,
       "EU": 9300,
       "SG": 15000,
       "UK": 7558,
-      "US": 9699
+      "US": 8475
     },
     "RAD|Booster Case": {
       "AU": 130000,
@@ -229,10 +236,10 @@
       "EU": 2750,
       "SG": 4558,
       "UK": 2799,
-      "US": 2799
+      "US": 1959
     },
     "RAD|Bundle Case": {
-      "US": 43261
+      "US": 42998
     },
     "RAD|Nexus Night Pack": {
       "US": 960
@@ -277,6 +284,9 @@
       "EU": 11900,
       "US": 13499
     },
+    "REC|Booster Case": {
+      "EU": 72000
+    },
     "REC|Bundle": {
       "CA": 4995,
       "US": 4999
@@ -301,7 +311,7 @@
       "CA": 150000,
       "EU": 59990,
       "UK": 79999,
-      "US": 98900
+      "US": 98890
     },
     "SFD|Booster Pack": {
       "AU": 1200,
@@ -411,7 +421,7 @@
     },
     "UNL|Booster Pack": {
       "AU": 1100,
-      "CA": 899,
+      "CA": 999,
       "US": 528
     },
     "UNL|Bundle": {
@@ -438,7 +448,7 @@
     },
     "UNL|Champion Deck (Vex) Display": {
       "AU": 4000,
-      "US": 8200
+      "US": 8900
     },
     "UNL|Champion Deck (Vi)": {
       "AU": 1999,
@@ -461,7 +471,7 @@
     },
     "UNL|Pre-Rift Event Kit": {
       "EU": 4500,
-      "US": 67500
+      "US": 67495
     },
     "UNL|Pre-Rift Kit": {
       "AU": 5000,
@@ -492,7 +502,7 @@
       "EU": 8800,
       "SG": 21600,
       "UK": 9250,
-      "US": 10889
+      "US": 10900
     },
     "VEN|Booster Case": {
       "AU": 131070,
@@ -555,7 +565,7 @@
     "VEN|Showdown Decks Display": {
       "AU": 4499,
       "CA": 4995,
-      "US": 4300
+      "US": 4299
     },
     "VEN|Sleeved Booster": {
       "CA": 995,
@@ -782,10 +792,10 @@
     "riftboundworldsbundle2025": {
       "CA": 149999,
       "UK": 50000,
-      "US": 59499
+      "US": 60000
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 34499
+      "US": 33000
     },
     "riftboundzedvsshenshowdowndeck": {
       "CA": 2155
