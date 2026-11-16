@@ -21,6 +21,7 @@ import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, isPaidLink, riftboundEbayQuery } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { CartAddButton } from "@/components/cart/CartAddButton";
+import type { FetchRows } from "@/lib/fetchtcg";
 import { StoreCodeChip } from "./StoreCodeChip";
 import { FeaturedListingBox } from "./FeaturedListingBox";
 import { featuredListingFor } from "@/lib/featured-listings";
@@ -158,6 +159,7 @@ function QuickViewModal({
   // The history series' newest recorded day for the market it was fetched for
   // (the history route's `lastKnown`), so a late response for another market is
   // never shown under this one. Display-only: see lib/last-known-price.ts.
+  const [fetchRows, setFetchRows] = useState<FetchRows | null>(null);
   const [recorded, setRecorded] = useState<{ country: string; price: LastKnownPrice | null } | null>(null);
   const [coll, setColl] = useState<"idle" | "saving" | "added" | "full" | "signin" | "error">("idle");
   const [collFoil, setCollFoil] = useState(false);
@@ -215,7 +217,7 @@ function QuickViewModal({
     sendCardView(ref, "view", card.id);
     fetch(`/api/card/${ref}`)
       .then((r) => r.json())
-      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setAdListings(d.ebayAdListings ?? []); setGraded(d.ebayGradedListings ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); } })
+      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setAdListings(d.ebayAdListings ?? []); setGraded(d.ebayGradedListings ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); setFetchRows(d.fetchRows ?? null); } })
       .catch(() => { if (alive) setPrices([]); });
     // Region-specific price history (its own currency), keyed by URL for clean caching.
     fetch(`/api/card/${ref}/history?country=${country}`)
@@ -257,6 +259,11 @@ function QuickViewModal({
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0), buyHref: affiliateUrl(p.url, p.retailer, href) };
     })
     .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
+
+  // Fetch TCG (AU only), an ordinary store row exactly as on the card page (CardMarketSection); the full page lists it
+  // even when no other store has stock, so this popup must too (owner, 2026-11-16: Defy in Australia said "nothing in
+  // stock" beside a page that showed Fetch).
+  const fetchHere = country === "AU" && fetchRows ? fetchRows.rows : [];
 
   // One entry per STORE for the report picker — in-stock and out-of-stock alike,
   // since "you list it as available and it isn't" is one of the issue types and
@@ -301,6 +308,7 @@ function QuickViewModal({
       // Raw url here, unlike the card page's pre-wrapped buyHref — same call the
       // comparison rows' buy buttons make.
       href: affiliateUrl(src.url, src.retailer),
+      productUrl: src.url,
     };
   })();
 
@@ -576,9 +584,9 @@ function QuickViewModal({
                   <Spinner size="sm" />
                   Loading live prices…
                 </div>
-              ) : inStock.length === 0 ? (
+              ) : inStock.length === 0 && fetchHere.length === 0 ? (
                 <div className="py-4 text-sm text-slate-500">
-                  <p>No in-stock listings right now.</p>
+                  <p>{tcgRef ? "No local store has it in stock right now." : "No in-stock listings right now."}</p>
                   {/* Never a dead end: a zero-stock modal still offers the
                       affiliate eBay search. An OutboundLink, like the fallback
                       further down (2026-09-26): as a bare <a> this was the one
@@ -610,6 +618,51 @@ function QuickViewModal({
                 </div>
               ) : (
                 <ul className="divide-y divide-ink-800">
+                  {fetchHere.map((r) => (
+                    <li key={`fetchtcg-${r.finish}`} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 md:flex-nowrap">
+                      <div className="min-w-0 flex-1">
+                        <span className="min-w-0 truncate text-sm font-semibold text-white">Fetch TCG</span>
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500">
+                          {r.finish === "Foil" && <span className="font-semibold text-gold">✦ Foil</span>}
+                          <span>{normaliseCondition(r.condition) ? CONDITIONS[normaliseCondition(r.condition)!].label : r.condition}</span>
+                          <span className="text-up">● In stock</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-white">{fmt(r.priceCents)}</div>
+                        <div className="text-[10px] text-slate-500">+ postage</div>
+                      </div>
+                      <div className="order-last flex w-full basis-full items-stretch gap-2 md:order-none md:w-auto md:basis-auto">
+                        <CartAddButton
+                          href={r.url}
+                          productUrl={r.url}
+                          storeName="Fetch TCG"
+                          title={cardDisplayName(card.name, card)}
+                          detail={[r.condition, r.finish === "Foil" ? "Foil" : null].filter(Boolean).join(" · ") || null}
+                          priceCents={r.priceCents}
+                          currency="AUD"
+                          image={cardImageSrc(card)}
+                          className="text-slate-300"
+                        />
+                        <OutboundLink
+                          href={r.url}
+                          retailer="fetchtcg"
+                          country={country}
+                          cardId={card.id}
+                          cardName={cardDisplayName(card.name, card)}
+                          price={r.priceCents / 100}
+                          pageType="card_detail"
+                          inStock
+                          variant={r.finish === "Foil" ? "foil" : "nonfoil"}
+                          condition={r.condition}
+                          surface="modal"
+                          className="btn-buy flex-1 justify-center px-3 py-1.5 text-xs md:flex-none"
+                        >
+                          View on Fetch TCG →
+                        </OutboundLink>
+                      </div>
+                    </li>
+                  ))}
                   {/* eBay and TCGplayer first, the cheaper on top (pinMarketplaces, owner 2026-10-27); `i`
                       stays the PRICE rank, so "Cheapest" stays on the cheapest. */}
                   {(() => {
@@ -762,6 +815,9 @@ function QuickViewModal({
                 usdCentsFoil={tcgRef.usdCentsFoil}
                 href={tcgRef.href}
                 compact
+                cartTitle={cardDisplayName(card.name, card)}
+                productUrl={tcgRef.productUrl}
+                image={cardImageSrc(card)}
               />
             )}
 

@@ -184,6 +184,7 @@ const nextConfig = {
       // API routes and the child sitemaps (src/lib/pokemon/store.ts). Never "/**":
       // ~300 Riftbound functions have no use for them.
       "/card/[id]": ["./data/fetch-live/**/*.json"],
+      "/api/card/[id]": ["./data/fetch-live/**/*.json"],
       "/pokemon/**": ["./data/pokemon/**/*.json"],
       "/api/pokemon/**": ["./data/pokemon/**/*.json"],
       "/sitemaps/**": ["./data/pokemon/**/*.json"],
