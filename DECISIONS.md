@@ -23968,3 +23968,24 @@ site inbox for every first sign-up through `/api/sister-alerts` ("[RiftCompare i
 subscription of his. Both calls are removed. The sign-up is still saved, still gets its double opt-in confirmation, still
 counts in the Monday report (`signupLines`) and the alert and weekly-drops mail to subscribers is untouched. Other forms
 (contact, feedback, wrong price, support) still notify. This is the one public form that does not, on purpose.
+
+## 2026-11-16: the Pokémon section's indexable pages pass DexCompare's product pages a followed link
+
+Bill asked why DexCompare gets so little Google traffic. Search Console (bill.jyang101, 28 days to 13 Nov) showed 273 clicks and 459
+impressions on 7 pages, almost all brand, 1 page indexed, and a Links report of 15 linking sites (13 ours) whose every link points at the
+home page. The "about 700 links from Rift's Pokémon section to DexCompare product pages" (2026-11-07) pass nothing: they sit on the
+noindex `/pokemon/sealed/<slug>` pages (`POKEMON_INDEX_PRODUCTS` is off) and all carry `DEX_REL` (nofollow). The 49 indexable
+Pokémon pages carried about 47 followed DexCompare links, all to hubs.
+
+Now the indexable pages (set pages, the three kind hubs, `/pokemon/sealed` page 1, price per pack) end their grid or table with a
+visible "store prices on DexCompare" list (`DexStoreLinks`): one followed (`DEX_FOLLOW_REL`), clean-URL link per product to
+`dexcompare.app/<market>/p/<slug>`, only where DexCompare's page exists with two or more stores (`dexStoreLinks`) and only in the
+markets where DexCompare indexes its product pages (US, AU, UK, CA; NZ, EU and SG are noindex there). Each kind hub also links
+the matching DexCompare type hub, followed. The noindex product pages, the quick view and the tiles keep `DEX_REL`. The list is
+visible text for the visitor ("where are the independent stores' prices"), not a hidden block, and no DexCompare link is ever an
+offer row or ranked in a comparison. The `/pokemon` home already links the type hubs followed.
+
+The Pokémon section is a different site from DexCompare, owned by the same person, so these are cross-site links with a purpose
+(the store-by-store table lives there), not a sitewide footer; they are per product and per page, and they stay out of
+`sister-sites.ts`. Baselines for judging it: Search Console Links for dexcompare.app on 25 Nov and 7 Dec, and Googlebot's
+crawl of `/us/p/` URLs (it fetched 105 distinct DexCompare URLs in 90 days, 22 Oct to 14 Nov). No deploy marker.

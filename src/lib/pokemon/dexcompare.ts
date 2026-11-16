@@ -157,11 +157,11 @@ export function dexLinkFor(
 }
 
 /** The figures a grid tile shows: the product only (a tile never links a set). */
-export type DexTileFigures = Pick<Extract<DexLink, { kind: "product" }>, "cents" | "inStock" | "listed" | "marketplace">;
+export type DexTileFigures = Pick<Extract<DexLink, { kind: "product" }>, "slug" | "cents" | "inStock" | "listed" | "marketplace">;
 
 export function dexTileFigures(index: DexMarket | null, id: number): DexTileFigures | null {
   const row = index?.byId[id];
-  return row ? { cents: row[1], inStock: row[2], listed: row[3], marketplace: row[4] === 1 } : null;
+  return row ? { slug: row[0], cents: row[1], inStock: row[2], listed: row[3], marketplace: row[4] === 1 } : null;
 }
 
 /** The grid's tiles with this market's DexCompare figures attached (null where not joined). */
@@ -197,6 +197,10 @@ export function dexOpen(d: { cents: number | null; inStock: number; marketplace:
 // cross-linked sitewide read as a link network).
 
 export const DEX_REL = "nofollow noopener";
+// 2026-11-16: a nofollow on EVERY product link left DexCompare's product pages with no referring page at all (Search Console
+// Links: 15 linking sites, every one to the home page; the noindex /pokemon/sealed/<slug> pages carry most of these links, and
+// they stay nofollow here). The followed exceptions are the visible "store prices" lists on this site's INDEXABLE pages
+// (dexStoreLinks): one link per listed product, only where DexCompare's page exists with two or more stores.
 /** The followed variant (SEO-8, 2026-11-10): the set page's link to its DexCompare set hub and the section home's links to the type hubs, the only places this site passes DexCompare's hubs a followed link. Search Console showed no referring page for them. */
 export const DEX_FOLLOW_REL = "noopener";
 
@@ -232,4 +236,26 @@ export function dexHomeHref(market: Country, surface: DexSurface): string {
 /** "8 stores" / "1 store". */
 export function storesWord(n: number): string {
   return `${n} ${n === 1 ? "store" : "stores"}`;
+}
+
+/** Markets whose DexCompare product pages are indexable there (its INDEXED_DETAIL_REGIONS); NZ, EU and SG pages are noindex, so they get no followed link. */
+export const DEX_INDEXED_MARKETS: readonly Country[] = ["US", "AU", "UK", "CA"];
+
+/** A DexCompare product page in the market, a clean URL: https://dexcompare.app/us/p/<slug>. */
+export function dexProductHref(market: Country, slug: string): string {
+  return dexUrl(`/${DEX_REGION[market]}/p/${slug}`, "product");
+}
+
+/**
+ * The tiles that earn a followed "store prices" link on an indexable page: DexCompare has the product in this market with TWO OR
+ * MORE stores listing it (a one-store page is thin and may be noindex there), in an indexable market. Empty otherwise.
+ */
+export function dexStoreLinks<T extends { id: number; name: string; dex?: DexTileFigures | null }>(
+  tiles: readonly T[],
+  market: Country,
+): { id: number; name: string; slug: string; listed: number }[] {
+  if (!DEX_INDEXED_MARKETS.includes(market)) return [];
+  const out: { id: number; name: string; slug: string; listed: number }[] = [];
+  for (const t of tiles) if (t.dex && t.dex.listed >= 2) out.push({ id: t.id, name: t.name, slug: t.dex.slug, listed: t.dex.listed });
+  return out;
 }
