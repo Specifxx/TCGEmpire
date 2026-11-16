@@ -6,6 +6,7 @@ import { prisma } from "./db";
 import { writeSealedHistoryDay } from "./price-history-store";
 import { sydneyDay, cachedOrDirect } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
+import { deniedKeys, loadDenylist } from "./denylist";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
 import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, FEED_STORES, parseProductPage, parseSealedFeed, isPurchaseLocked } from "./sealed-stores";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
@@ -613,7 +614,10 @@ export async function importSealed(): Promise<number> {
   let count = 0;
   // Sealed-only stores (lib/sealed-stores.ts) are read exactly like the
   // registry's Shopify stores; they are just kept out of RETAILERS.
-  for (const store of [...RETAILER_LIST, ...SEALED_ONLY_SHOPIFY] as RetailerInfo[]) {
+  const allStores = [...RETAILER_LIST, ...SEALED_ONLY_SHOPIFY] as RetailerInfo[];
+  const denied = deniedKeys(allStores, await loadDenylist()); // shared scam denylist (price-import purges their rows)
+  for (const store of allStores) {
+    if (denied.includes(store.key)) continue;
     const cc = store.country ?? "AU";
     // Currency guard at the source too (lib/offer-currency.ts): never write a
     // row a market would have to refuse. Logged, so a misconfigured store is
