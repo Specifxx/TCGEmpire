@@ -1,0 +1,2717 @@
+{
+ "at": "2026-11-16T22:50:03.310Z",
+ "checked": 2505,
+ "stores": [
+  {
+   "host": "tcgshopuk.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 100,
+   "verdict": "hide",
+   "signals": [
+    "on the banned list",
+    "86% one-star over 14 reviews (Trustpilot (read 2026-11-16))",
+    "reviewers report non-delivery or refused refunds"
+   ]
+  },
+  {
+   "host": "kitcheneconomy.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 25,
+   "verdict": "ok",
+   "signals": [
+    "domain 56 days old"
+   ]
+  },
+  {
+   "host": "pokaratcg.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 25,
+   "verdict": "ok",
+   "signals": [
+    "domain 78 days old"
+   ]
+  },
+  {
+   "host": "skinseoul.co.uk",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 25,
+   "verdict": "ok",
+   "signals": [
+    "domain 252 days old",
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "tcgora.com",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 25,
+   "verdict": "ok",
+   "signals": [
+    "domain 253 days old",
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "kaizencards.de",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 23,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "manavortex.es",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 23,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pokechest.at",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 23,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram",
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "shop.peterrogers-photo.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 23,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram",
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "doubleboxgames.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 18,
+   "verdict": "ok",
+   "signals": [
+    "domain 103 days old",
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "madridnortetcg.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 18,
+   "verdict": "ok",
+   "signals": [
+    "domain 316 days old",
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "rarepokemoncards.co.uk",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 18,
+   "verdict": "ok",
+   "signals": [
+    "domain 187 days old",
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "appliancesonline.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "bandegames.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "bestbuy.com",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "bydash.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "calumet.de",
+   "sites": [
+    "camcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "cardcapital.shop",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "cardshq.com",
+   "sites": [
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "centrecom.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "chefswarehouse.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "consiglioskitchenware.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "comic-attack.de",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "davidjones.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "deckeadittos.com",
+   "sites": [
+    "cyberpunkcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "dockingbay93.com",
+   "sites": [
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "droix.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "finanime.fi",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "flagshipgames.sg",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "foto-erhardt.de",
+   "sites": [
+    "camcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "gamesempire.com.au",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "goldcoasthifi.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "harveynorman.com.au",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "hobbyexpert.ca",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "holastylekorean.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "imyourwardrobe.com",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "jbhifi.com.au",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "k-beauty4you.de",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "kitchenkapers.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "lowes.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "lthobbies.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "wargamecompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "meeplesandbeyond.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "mimo-mimo.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "mytoque.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "playntradewpg.com",
+   "sites": [
+    "mtgcompare",
+    "ygocompare",
+    "wargamecompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "samsclub.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "seoulbeautystore.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "scorptec.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "shopee.sg",
+   "sites": [
+    "camcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "smythstoys.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "solacido.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "startfitness.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "store.sony.com.sg",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "swagykarp.fi",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "thecardhive.co.uk",
+   "sites": [
+    "riftcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "thevacuumshop.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "tradingcardworld.store",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "unpluggedgames.com.au",
+   "sites": [
+    "mtgcompare",
+    "lorcanacompare",
+    "wargamecompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "unsettledgeeks.com",
+   "sites": [
+    "opcompare",
+    "lorcanacompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "walmart.com",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "wayfair.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "westendgames.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "wnygaming.com",
+   "sites": [
+    "lorcanacompare",
+    "ygocompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "yorokonde.de",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "6ixtcgsmarkham.ca",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "dexcompare",
+    "ygocompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 134 days old"
+   ]
+  },
+  {
+   "host": "ateliertcg.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 202 days old"
+   ]
+  },
+  {
+   "host": "aurak.co.uk",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 151 days old"
+   ]
+  },
+  {
+   "host": "belvera.co.uk",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 342 days old"
+   ]
+  },
+  {
+   "host": "boostrclub.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 276 days old"
+   ]
+  },
+  {
+   "host": "buyanycards.co.uk",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 353 days old"
+   ]
+  },
+  {
+   "host": "cardhaven-games.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 269 days old"
+   ]
+  },
+  {
+   "host": "collectionhousecafe.com",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 198 days old"
+   ]
+  },
+  {
+   "host": "dealinghigh.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 211 days old"
+   ]
+  },
+  {
+   "host": "elitestoretcg.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 357 days old"
+   ]
+  },
+  {
+   "host": "fafnirshoard.ca",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "cyberpunkcompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 332 days old"
+   ]
+  },
+  {
+   "host": "feisgames.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 264 days old"
+   ]
+  },
+  {
+   "host": "finalformcards.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 332 days old"
+   ]
+  },
+  {
+   "host": "foxfablehaven.com",
+   "sites": [
+    "ygocompare",
+    "bandaicompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 317 days old"
+   ]
+  },
+  {
+   "host": "fuhrious-tc.shop",
+   "sites": [
+    "mtgcompare",
+    "dexcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 333 days old"
+   ]
+  },
+  {
+   "host": "gamefellastcgandgames.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 269 days old"
+   ]
+  },
+  {
+   "host": "gamers-academy.org",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 335 days old"
+   ]
+  },
+  {
+   "host": "hideyoshitcg.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 364 days old"
+   ]
+  },
+  {
+   "host": "humbletcg.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 153 days old"
+   ]
+  },
+  {
+   "host": "iberiancollect.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 109 days old"
+   ]
+  },
+  {
+   "host": "jiggletcg.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 145 days old"
+   ]
+  },
+  {
+   "host": "k-beautystudio.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 222 days old"
+   ]
+  },
+  {
+   "host": "landfalloutpost.com",
+   "sites": [
+    "dexcompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 312 days old"
+   ]
+  },
+  {
+   "host": "lemantcg.fr",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 329 days old"
+   ]
+  },
+  {
+   "host": "limitbreakcards.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 224 days old"
+   ]
+  },
+  {
+   "host": "magnoliatcgexchange.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 272 days old"
+   ]
+  },
+  {
+   "host": "mantisgamestudio.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "figurecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 208 days old"
+   ]
+  },
+  {
+   "host": "mentalvaultgames.com",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 360 days old"
+   ]
+  },
+  {
+   "host": "mintsidecards.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 143 days old"
+   ]
+  },
+  {
+   "host": "multivers.ca",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 354 days old"
+   ]
+  },
+  {
+   "host": "mymintcards.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 251 days old"
+   ]
+  },
+  {
+   "host": "mythic-hobbies.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 354 days old"
+   ]
+  },
+  {
+   "host": "nexuslgs.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 318 days old"
+   ]
+  },
+  {
+   "host": "nexustabletopgames.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "bandaicompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 290 days old"
+   ]
+  },
+  {
+   "host": "ninpostore.com",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 209 days old"
+   ]
+  },
+  {
+   "host": "npcollectibles.ca",
+   "sites": [
+    "riftcompare",
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 255 days old"
+   ]
+  },
+  {
+   "host": "oportogg.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 265 days old"
+   ]
+  },
+  {
+   "host": "orbitopia-figures.com",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 258 days old"
+   ]
+  },
+  {
+   "host": "pantheoncards.store",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 140 days old"
+   ]
+  },
+  {
+   "host": "piratecards.shop",
+   "sites": [
+    "opcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 158 days old"
+   ]
+  },
+  {
+   "host": "playontcg.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 298 days old"
+   ]
+  },
+  {
+   "host": "prestigegames.ca",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 234 days old"
+   ]
+  },
+  {
+   "host": "qollectorau.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 249 days old"
+   ]
+  },
+  {
+   "host": "radgameshop.ca",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 155 days old"
+   ]
+  },
+  {
+   "host": "rawmon.org",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 165 days old"
+   ]
+  },
+  {
+   "host": "razzocards.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 311 days old"
+   ]
+  },
+  {
+   "host": "ri-play.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 316 days old"
+   ]
+  },
+  {
+   "host": "shopmancalamonk.com",
+   "sites": [
+    "mtgcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 354 days old"
+   ]
+  },
+  {
+   "host": "shopmysterytavern.co.uk",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 278 days old"
+   ]
+  },
+  {
+   "host": "showdownvaluecardsandgames.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 332 days old"
+   ]
+  },
+  {
+   "host": "sidequestgames.uk",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 184 days old"
+   ]
+  },
+  {
+   "host": "sleevedupcollectibles.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 175 days old"
+   ]
+  },
+  {
+   "host": "stonebrookcollectibles.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 333 days old"
+   ]
+  },
+  {
+   "host": "tabletcg.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 200 days old"
+   ]
+  },
+  {
+   "host": "tcgmanavault.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 115 days old"
+   ]
+  },
+  {
+   "host": "tcgzonecanada.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 150 days old"
+   ]
+  },
+  {
+   "host": "teamcollectors.com",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 340 days old"
+   ]
+  },
+  {
+   "host": "thecoffeecollective.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 159 days old"
+   ]
+  },
+  {
+   "host": "thedropcardshop.com",
+   "sites": [
+    "riftcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 318 days old"
+   ]
+  },
+  {
+   "host": "thekavecollectibles.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 195 days old"
+   ]
+  },
+  {
+   "host": "thesocialboardhq.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 284 days old"
+   ]
+  },
+  {
+   "host": "thetcgalchemists.com",
+   "sites": [
+    "riftcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 188 days old"
+   ]
+  },
+  {
+   "host": "thetrainercourt.com",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 313 days old"
+   ]
+  },
+  {
+   "host": "treasurehubtcg.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 229 days old"
+   ]
+  },
+  {
+   "host": "treasurevaultau.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 294 days old"
+   ]
+  },
+  {
+   "host": "truetoys.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 251 days old"
+   ]
+  },
+  {
+   "host": "twinmoonstcg.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 215 days old"
+   ]
+  },
+  {
+   "host": "twinfusecollectibles.com",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 122 days old"
+   ]
+  },
+  {
+   "host": "vaultedcardclub.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 251 days old"
+   ]
+  },
+  {
+   "host": "vglebeauty.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 173 days old"
+   ]
+  },
+  {
+   "host": "watsontcg.com",
+   "sites": [
+    "dexcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 214 days old"
+   ]
+  },
+  {
+   "host": "westcoast-hobbies.com",
+   "sites": [
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 275 days old"
+   ]
+  },
+  {
+   "host": "waywardcitygames.net",
+   "sites": [
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 95 days old"
+   ]
+  },
+  {
+   "host": "wilsontradingcardco.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 201 days old"
+   ]
+  },
+  {
+   "host": "wyattswarehouse.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 328 days old"
+   ]
+  },
+  {
+   "host": "xraygamestcg.com",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 230 days old"
+   ]
+  },
+  {
+   "host": "zone151.ca",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 193 days old"
+   ]
+  },
+  {
+   "host": "amp3.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "ani-mecha.com",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "aniimeshop.com",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "animerch.nl",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "aurynskin.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "baruzcard.it",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "bayzing.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "brothersincards.nl",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "card-binder.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "cardconnectsg.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "cardcorner.at",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "cardoni.com.au",
+   "sites": [
+    "opcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "chemexcoffeemaker.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "cosmadic.de",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "curibo.co.uk",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "daimonjitcg.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "de-dondersteen.nl",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "dronesdirect.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "davidptcg.nl",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "dxcollection.com.sg",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "elduelista.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "exchangeplayinvest.com",
+   "sites": [
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "fumetteriageco.it",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "gamingotaku.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "goattcg.com",
+   "sites": [
+    "riftcompare",
+    "lorcanacompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "gs-gameon.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "hitechgames.it",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "industria61.com",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "itsmaxtoys.nl",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "kaibacards.at",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "kaiofcards.com",
+   "sites": [
+    "opcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "kenkyohobby.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "keeobeauty.fr",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "kurogami.com",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "lakecards.de",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "laliane.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "magicomens.com",
+   "sites": [
+    "mtgcompare",
+    "gundamcompare",
+    "bandaicompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mayer.sg",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mightytoys.com.au",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "metamorfo.es",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "miraicards.pt",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mistcards.nl",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mr-collect.de",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mtgprecons.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "nerdbank.de",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "opssmarket.com",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pelikrypta.fi",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pixel-hub.co.uk",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "planeswalkers.shop",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pokeca.nl",
+   "sites": [
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "bandaicompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pokestock.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pro.wildthingsgames.com",
+   "sites": [
+    "opcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "bandaicompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pruckis.de",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "rarecards.nl",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "sawadeekard.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "sc-collection.sg",
+   "sites": [
+    "riftcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "secretwonderscollectibles.be",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "sg.narwal.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "shopponistore.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "skupisve.hr",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "spearingcollectibles.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "spielewelt.de",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "spelenmeer.nl",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "sweetsnthings.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "theboardgamehut.co.uk",
+   "sites": [
+    "mtgcompare",
+    "ygocompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "thediscdjstore.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "theludoquist.com",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "thepokestops.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "thetcgshop.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "timetwistergames.it",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "todohits.com",
+   "sites": [
+    "dexcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "toycoin.com.sg",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "toyspace.com.sg",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "tozostore.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "welpietoys.nl",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  }
+ ]
+}
