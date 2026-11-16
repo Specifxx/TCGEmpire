@@ -401,7 +401,7 @@ jobs:
           # Install from PGDG's own apt repo rather than guessing a version.
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -625,7 +625,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -773,7 +773,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -919,7 +919,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1081,7 +1081,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1240,7 +1240,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1391,7 +1391,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1540,7 +1540,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1692,7 +1692,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1845,7 +1845,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -1997,7 +1997,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2154,7 +2154,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2341,7 +2341,7 @@ jobs:
           # Install from PGDG's own apt repo rather than guessing a version.
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2504,7 +2504,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2614,7 +2614,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -2833,7 +2833,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3056,7 +3056,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3279,7 +3279,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3500,7 +3500,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3719,7 +3719,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -3937,7 +3937,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4194,7 +4194,7 @@ jobs:
           # of guessing a version; it always tracks Postgres's current release.
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4384,7 +4384,7 @@ jobs:
           set -uo pipefail
           echo "== Installing PostgreSQL client tools =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4538,7 +4538,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4719,7 +4719,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -4937,7 +4937,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -5174,7 +5174,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -5286,7 +5286,7 @@ jobs:
 
           echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
@@ -5392,7 +5392,7 @@ jobs:
             exit 1
           fi
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          K=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; [ -s $K ] || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://www.postgresql.org/media/keys/ACCC4CF8.asc || sudo curl -sSf --retry 4 --retry-all-errors -o $K https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
