@@ -27,11 +27,11 @@ test("every home has one structure: hero, Top Deals, HomeSections, then the edit
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = code(f);
     assert.doesNotMatch(src, /<PriceGuideCallout/);
-    const order = ["<CinematicHero", "<TodaysTopDeals", "<HomeSections", "<EditorialHub"].map((t) => src.indexOf(t));
+    const order = ["<CinematicHero", "<HomeSections", "<EditorialHub"].map((t) => src.indexOf(t));
     assert.ok(order[0] >= 0 && order.every((v, i) => i === 0 || v > order[i - 1]), `${f}: ${order}`);
     assert.equal(src.split("<EditorialHub").length - 1, 1, `${f}: one band`);
     assert.doesNotMatch(src, /<PriceTodayTable|getPriceTable\(/);
-    assert.match(src, /showTopDeals=\{false\}/, "HomeSections does not render the deals a second time");
+    assert.doesNotMatch(src, /<TodaysTopDeals/, "the deals render once, inside HomeSections, under the chase cards");
   }
   // "/" is market-neutral; a region home leads "Start here" with its own guide.
   assert.match(code("src/app/page.tsx"), /<EditorialHub freshness=\{freshness\} freshnessAt=\{freshnessAt\} \/>/);

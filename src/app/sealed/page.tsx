@@ -8,6 +8,7 @@ import { SealedMarketBoard } from "@/components/SealedMarketBoard";
 import { SealedMarketplaceSearches } from "@/components/SealedMarketplaceSearches";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { HubIntro } from "@/components/HubIntro";
+import { RiotExclusives } from "@/components/RiotExclusives";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { SITE_URL } from "@/lib/site";
@@ -185,6 +186,9 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       {/* The filters, count, sort and grid for the visitor's market; the HTML
           carries the baseline market's (see the island). */}
       <SealedMarketBoard baseline={view} query={sealedQuery(searchParams)} />
+
+      {/* Riot's drawing-only boxes: facts and imagery are Riot's, prices are the board's search (owner, 2026-11-16). */}
+      {!isFilteredParams(searchParams) && <RiotExclusives />}
 
       {/* The guides that explain this page, after its own data and before the
           marketplace searches below: our content leads, the affiliate block

@@ -153,11 +153,6 @@ export function HomeSections({
           "how it works" story still ends past the till at something playable,
           and nothing was removed to make room — all still pinned by the same
           test file. Hidden entirely if no market has data. */}
-      {showTopDeals && anyDeals && (
-        <Reveal>
-          <TodaysTopDeals dealsByCountry={Object.fromEntries(Object.entries(topDealsByCountry).map(([c, d]) => [c, topDealsForGrid(d)])) as Record<Country, TopDeals>} />
-        </Reveal>
-      )}
 
       {/* THE 2026-11-13 ORDER (owner: "we're making things too complicated, and before it was simplicity that was
           driving it"; DECISIONS.md "Minimal redesign"): Top Deals, the chase cards, the one ad block, the sets. Nothing
@@ -196,6 +191,13 @@ export function HomeSections({
         storeCount={storeCount}
         storeWord={storeWord}
       />
+
+      {/* Today's Top Deals sit BELOW the chase cards on every home (owner, 2026-11-16). */}
+      {showTopDeals && anyDeals && (
+        <Reveal>
+          <TodaysTopDeals dealsByCountry={Object.fromEntries(Object.entries(topDealsByCountry).map(([c, d]) => [c, topDealsForGrid(d)])) as Record<Country, TopDeals>} />
+        </Reveal>
+      )}
 
       {/* Real, consented, approved reviews — renders NOTHING when there are
           none (see ReviewsSection); no placeholder or seeded example. Moved up
