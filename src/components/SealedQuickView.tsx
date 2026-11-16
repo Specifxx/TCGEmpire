@@ -23,6 +23,7 @@ import { PIN_OUTLINE, pinMarketplaces, rowOutline } from "@/lib/market-rows";
 import { amazonFor, amazonSearchUrl, amazonSellsSealed } from "@/lib/amazon";
 import { sealedPath, sealedSlug } from "@/lib/sealed-slug";
 import { AmazonLiveSlot } from "./AmazonLiveSlot";
+import { AmazonAlsoLink } from "./AmazonAlsoLink";
 import Link from "next/link";
 
 // Quick-view popup for sealed products — the sealed twin of QuickView.tsx (cards).
@@ -308,6 +309,8 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
       </ul>
     )}
 
+    {/* The small unpriced "Also on Amazon" line (2026-11-16), the product page only, when the row above has no price. */}
+    {listings.length > 0 && source === "sealed-page" && amazonStore && amazonHref && <AmazonAlsoLink country={country} slug={sealedSlug(group.groupKey)} name={group.name} label={amazonStore.label} href={amazonHref} />}
     {listings.length > 0 && (
       <p className="mt-2 border-t border-ink-800 pt-2 text-right text-[11px]">
         <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="font-semibold text-brand-400 hover:underline">

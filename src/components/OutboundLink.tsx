@@ -153,6 +153,8 @@ export function OutboundLink({
    *    cart for the whole list, 2026-10-27);
    *  - `amazon_search`: a price board's "Check price on Amazon" search
    *    (lib/amazon.ts, 2026-10-29);
+   *  - `amazon_also`: the small unpriced "Also on Amazon" line under the sealed
+   *    page's price list (2026-11-16), shown only when the row has no live price;
    *  - `amazon_live`: the same row with Amazon's own price from the Creators
    *    API and a link to its item page (lib/amazon-live.ts, 2026-11-05). */
   surface?:
@@ -190,7 +192,8 @@ export function OutboundLink({
     | "sealed_pinned"
     | "sealed_row"
     | "ebay_pinned"
-    | "amazon_search";
+    | "amazon_search"
+    | "amazon_also";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
   // the signup popup (removed 2026-09-30) could stay off the buy path; kept as

@@ -24010,3 +24010,10 @@ and falls back to apt.postgresql.org: postgresql.org dropped it twice in a row t
 `ci-build.yml`, `package.json`'s preview condition, `tests/ops-wiring.test.ts`. The ops monitor's growth-snapshot step now also
 sets `DB_SOURCE_NAME`, which is why it logged "resolved from NONE". Final migrate pass immediately before the merge; merged with
 `[deploy] [urgent]` (Rift database changes ship at once, the owner's standing rule). RM11 is the rollback.
+
+## 2026-11-16: A small unpriced "Also on Amazon" line under the sealed page's list
+
+The 2026-11-12 rule (Amazon row only with a real price) took Amazon buy clicks to zero from 13 Nov. Not a row: `AmazonAlsoLink`, one line under the
+product page's price list (`/sealed/<slug>` only, never the quick view), the tagged search, labelled paid, price not shown, only for a
+product Amazon sells (`amazonSellsSealed`) and only after the price lookup answers "no live price". Surface `amazon_also`. Never pinned, best,
+a deal or an alert. Read Amazon clicks per day against 7-12 Nov.
