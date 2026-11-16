@@ -24017,3 +24017,7 @@ The 2026-11-12 rule (Amazon row only with a real price) took Amazon buy clicks t
 product page's price list (`/sealed/<slug>` only, never the quick view), the tagged search, labelled paid, price not shown, only for a
 product Amazon sells (`amazonSellsSealed`) and only after the price lookup answers "no live price". Surface `amazon_also`. Never pinned, best,
 a deal or an alert. Read Amazon clicks per day against 7-12 Nov.
+
+## 2026-11-16: urgent release of the "Also on Amazon" line
+
+Amazon clicks were about 0 a day since 13 Nov. The owner approved one urgent production build (subject carries the urgent marker) so the unpriced matched line goes live now instead of waiting for the next daily release. One build, no previews.
