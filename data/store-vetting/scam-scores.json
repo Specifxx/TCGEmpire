@@ -1,5 +1,5 @@
 {
- "at": "2026-11-16T22:50:03.310Z",
+ "at": "2026-11-16T23:20:39.246Z",
  "checked": 2505,
  "stores": [
   {
@@ -13,6 +13,31 @@
     "on the banned list",
     "86% one-star over 14 reviews (Trustpilot (read 2026-11-16))",
     "reviewers report non-delivery or refused refunds"
+   ]
+  },
+  {
+   "host": "walmart.com",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 30,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+   ]
+  },
+  {
+   "host": "deckeadittos.com",
+   "sites": [
+    "cyberpunkcompare"
+   ],
+   "score": 25,
+   "verdict": "ok",
+   "signals": [
+    "domain 279 days old",
+    "no contact or policy links"
    ]
   },
   {
@@ -287,17 +312,6 @@
    ]
   },
   {
-   "host": "deckeadittos.com",
-   "sites": [
-    "cyberpunkcompare"
-   ],
-   "score": 15,
-   "verdict": "ok",
-   "signals": [
-    "no contact or policy links"
-   ]
-  },
-  {
    "host": "dockingbay93.com",
    "sites": [
     "ygocompare",
@@ -332,11 +346,9 @@
    ]
   },
   {
-   "host": "flagshipgames.sg",
+   "host": "foto-erhardt.de",
    "sites": [
-    "mtgcompare",
-    "dexcompare",
-    "tcgprices"
+    "camcompare"
    ],
    "score": 15,
    "verdict": "ok",
@@ -345,9 +357,11 @@
    ]
   },
   {
-   "host": "foto-erhardt.de",
+   "host": "flagshipgames.sg",
    "sites": [
-    "camcompare"
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
    ],
    "score": 15,
    "verdict": "ok",
@@ -545,9 +559,9 @@
    ]
   },
   {
-   "host": "samsclub.com",
+   "host": "seoulbeautystore.com",
    "sites": [
-    "compareempire"
+    "kaeyoung"
    ],
    "score": 15,
    "verdict": "ok",
@@ -556,9 +570,9 @@
    ]
   },
   {
-   "host": "seoulbeautystore.com",
+   "host": "samsclub.com",
    "sites": [
-    "kaeyoung"
+    "compareempire"
    ],
    "score": 15,
    "verdict": "ok",
@@ -713,18 +727,6 @@
    ]
   },
   {
-   "host": "walmart.com",
-   "sites": [
-    "camcompare",
-    "compareempire"
-   ],
-   "score": 15,
-   "verdict": "ok",
-   "signals": [
-    "no contact or policy links"
-   ]
-  },
-  {
    "host": "wayfair.com",
    "sites": [
     "compareempire"
@@ -855,7 +857,7 @@
    "score": 10,
    "verdict": "ok",
    "signals": [
-    "domain 269 days old"
+    "domain 270 days old"
    ]
   },
   {
@@ -1274,18 +1276,6 @@
    ]
   },
   {
-   "host": "piratecards.shop",
-   "sites": [
-    "opcompare",
-    "tcgprices"
-   ],
-   "score": 10,
-   "verdict": "ok",
-   "signals": [
-    "domain 158 days old"
-   ]
-  },
-  {
    "host": "playontcg.com",
    "sites": [
     "dexcompare",
@@ -1311,7 +1301,7 @@
    "score": 10,
    "verdict": "ok",
    "signals": [
-    "domain 234 days old"
+    "domain 235 days old"
    ]
   },
   {
@@ -1683,6 +1673,18 @@
    ]
   },
   {
+   "host": "waywardcitygames.net",
+   "sites": [
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 95 days old"
+   ]
+  },
+  {
    "host": "westcoast-hobbies.com",
    "sites": [
     "dexcompare",
@@ -1693,18 +1695,6 @@
    "verdict": "ok",
    "signals": [
     "domain 275 days old"
-   ]
-  },
-  {
-   "host": "waywardcitygames.net",
-   "sites": [
-    "bandaicompare",
-    "tcgprices"
-   ],
-   "score": 10,
-   "verdict": "ok",
-   "signals": [
-    "domain 95 days old"
    ]
   },
   {
@@ -1801,6 +1791,17 @@
    "sites": [
     "dexcompare",
     "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "assemblycoffee.co.uk",
+   "sites": [
+    "compareempire"
    ],
    "score": 8,
    "verdict": "ok",
@@ -1956,6 +1957,18 @@
    ]
   },
   {
+   "host": "davidptcg.nl",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
    "host": "de-dondersteen.nl",
    "sites": [
     "mtgcompare",
@@ -1972,18 +1985,6 @@
    "host": "dronesdirect.com.au",
    "sites": [
     "compareempire"
-   ],
-   "score": 8,
-   "verdict": "ok",
-   "signals": [
-    "contact only via WhatsApp or Telegram"
-   ]
-  },
-  {
-   "host": "davidptcg.nl",
-   "sites": [
-    "dexcompare",
-    "tcgprices"
    ],
    "score": 8,
    "verdict": "ok",
@@ -2114,9 +2115,12 @@
    ]
   },
   {
-   "host": "itsmaxtoys.nl",
+   "host": "kaiofcards.com",
    "sites": [
-    "cyberpunkcompare",
+    "opcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "bandaicompare",
     "tcgprices"
    ],
    "score": 8,
@@ -2128,21 +2132,6 @@
   {
    "host": "kaibacards.at",
    "sites": [
-    "tcgprices"
-   ],
-   "score": 8,
-   "verdict": "ok",
-   "signals": [
-    "contact only via WhatsApp or Telegram"
-   ]
-  },
-  {
-   "host": "kaiofcards.com",
-   "sites": [
-    "opcompare",
-    "gundamcompare",
-    "lorcanacompare",
-    "bandaicompare",
     "tcgprices"
    ],
    "score": 8,
@@ -2167,6 +2156,18 @@
    "host": "keeobeauty.fr",
    "sites": [
     "kaeyoung"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "itsmaxtoys.nl",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
    ],
    "score": 8,
    "verdict": "ok",
@@ -2262,12 +2263,9 @@
    ]
   },
   {
-   "host": "miraicards.pt",
+   "host": "mistcards.nl",
    "sites": [
-    "mtgcompare",
     "dexcompare",
-    "gundamcompare",
-    "lorcanacompare",
     "tcgprices"
    ],
    "score": 8,
@@ -2277,9 +2275,12 @@
    ]
   },
   {
-   "host": "mistcards.nl",
+   "host": "miraicards.pt",
    "sites": [
+    "mtgcompare",
     "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
     "tcgprices"
    ],
    "score": 8,
