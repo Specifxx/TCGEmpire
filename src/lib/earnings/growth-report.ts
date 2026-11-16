@@ -173,6 +173,19 @@ function change(weeks: readonly number[]): string {
 }
 
 /** Plain text, one table per section: easy to read in a mail client and easy for the growth review to parse. */
+/**
+ * Two-week averages, so one lumpy week (a few huge TCGplayer orders) cannot read as a slowdown or a
+ * surge on its own (owner asked 2026-11-16: "are we slowing down?"). Needs four whole weeks.
+ */
+export function trendLine(totals: readonly number[], money: (c: number) => string): string {
+  if (totals.length < 4) return "";
+  const avg = (a: readonly number[]) => a.reduce((x, y) => x + y, 0) / a.length;
+  const prev = avg(totals.slice(-4, -2));
+  const cur = avg(totals.slice(-2));
+  const pct = prev > 0 ? ` (${cur >= prev ? "+" : ""}${Math.round(((cur - prev) / prev) * 100)}%)` : "";
+  return `TREND, average of 2 weeks: ${money(Math.round(prev))} then ${money(Math.round(cur))}${pct}. Judge growth on this, not on one week.`;
+}
+
 export function growthReportText(r: GrowthReport): string {
   const money = (c: number) => formatMoney(c, DISPLAY);
   const head = `Weeks (Sydney days): ${r.weeks.map((w, i) => `W${i + 1} ${w.start}..${w.end}`).join(", ")}. Amounts in AUD incl. pending; last column is W${r.weeks.length} vs W${r.weeks.length - 1}.`;
@@ -186,6 +199,7 @@ export function growthReportText(r: GrowthReport): string {
     "GROWTH REPORT",
     head,
     `TOTAL: ${totals.map(money).join(" | ")} ${change(totals)}`.trimEnd(),
+    trendLine(totals, money),
     table("BY SOURCE", r.sources, false),
     siteTable(r, money),
     table("AFFILIATE BY SITE", r.bySite, true),
