@@ -14,7 +14,9 @@ import { Breadcrumbs } from "../Breadcrumbs";
 import { EbaySearchPanel } from "../EbaySearchPanel";
 import { AffiliateDisclosure } from "../AffiliateDisclosure";
 import { EbayRowLink, PaidLinksMarker } from "./PerPackTable";
-import { storePriceCents, storesWord } from "@/lib/pokemon/dexcompare";
+import { storePriceCents, storesWord, dexTypeHubHref, DEX_TYPE_HUBS } from "@/lib/pokemon/dexcompare";
+import { DexAnchor } from "./DexStores";
+import { DexStoreLinks } from "./DexStoreLinks";
 
 // One kind hub (/pokemon/booster-boxes, /elite-trainer-boxes, /booster-bundles):
 // every product of the hub's kinds in one table, the sentences written from
@@ -110,6 +112,18 @@ export function KindHubView({
           <HubTable tiles={tiles} currency={currency} country={country} perPack={perPack} />
           <AffiliateDisclosure partner="ebay" />
         </section>
+      )}
+
+      {tiles.length > 0 && (
+        <DexStoreLinks tiles={tiles} market={country} heading={`${hub.label}: store prices on DexCompare`} className="mb-8" />
+      )}
+      {tiles.length > 0 && DEX_TYPE_HUBS.some(([slug]) => slug === hub.slug) && ["US", "AU", "UK", "CA"].includes(country) && (
+        <p className="-mt-4 mb-8 text-sm text-slate-300">
+          Buying from a shop?{" "}
+          <DexAnchor href={dexTypeHubHref(country, hub.slug)} surface="home" market={country} follow className="font-semibold text-emerald-300 hover:underline">
+            Pokémon {hub.label.toLowerCase()} at independent stores on DexCompare ↗
+          </DexAnchor>
+        </p>
       )}
 
       {!perPack && (

@@ -9,6 +9,9 @@ import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { pokemonEnabled } from "@/lib/pokemon/gate";
 import { getPokemonCatalog } from "@/lib/pokemon/data";
 import { toDisplay } from "@/lib/pokemon/browse";
+import { getDexMarket } from "@/lib/pokemon/dexcompare-data";
+import { withDex } from "@/lib/pokemon/dexcompare";
+import { DexStoreLinks } from "@/components/pokemon/DexStoreLinks";
 import { pokemonEbayQuery } from "@/lib/pokemon/ebay-query";
 import { PER_PACK_METHOD, PER_PACK_TOP, perPackPage, proseLabel } from "@/lib/pokemon/hubs";
 import { pokemonItemList, pokemonMeta, productIsIndexed } from "@/lib/pokemon/seo";
@@ -51,7 +54,7 @@ export default async function PokemonPricePerPackPage() {
   const currency = getDisplayCurrency(country);
   const catalog = await getPokemonCatalog(country);
   const showEur = country === "UK" && currency === "EUR";
-  const tiles = toDisplay(catalog.tiles, showEur);
+  const tiles = toDisplay(withDex(catalog.tiles, await getDexMarket(country)), showEur);
   const page = perPackPage({ tiles });
   const asOf = asOfLabel(catalog.pricesAsOf);
   const place = COUNTRIES[country].place;
@@ -112,6 +115,7 @@ export default async function PokemonPricePerPackPage() {
             caption={`The ${PER_PACK_TOP} sealed products with the lowest price per pack`}
             showKind
           />
+          <DexStoreLinks tiles={page.top} market={country} heading="Store prices on DexCompare" className="mt-4" />
           {/* Built from the market's own figures; share-text converts pounds to euros itself and says so. */}
           <CopyPrices
             className="mt-3"

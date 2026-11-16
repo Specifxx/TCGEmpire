@@ -10,6 +10,7 @@ import { getPokemonCatalog } from "@/lib/pokemon/data";
 import { getDexMarket } from "@/lib/pokemon/dexcompare-data";
 import { dexHref, dexSetSlug, withDex } from "@/lib/pokemon/dexcompare";
 import { DexAnchor } from "@/components/pokemon/DexStores";
+import { DexStoreLinks } from "@/components/pokemon/DexStoreLinks";
 import { COUNTRIES } from "@/lib/country";
 import { sortTiles, toDisplay } from "@/lib/pokemon/browse";
 import { PK_KINDS } from "@/lib/pokemon/kinds";
@@ -181,6 +182,8 @@ export default async function PokemonSetPage({ params }: { params: Params }) {
           </div>
         </section>
       ))}
+
+      <DexStoreLinks tiles={tiles} market={country} heading={`${set.name}: store prices on DexCompare`} className="mb-6" />
 
       <EbaySearchPanel
         heading={`${set.name} on eBay`}

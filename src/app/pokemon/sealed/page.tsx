@@ -20,6 +20,7 @@ import { SealedSort } from "@/components/SealedSort";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { PokemonTile } from "@/components/pokemon/PokemonTile";
+import { DexStoreLinks } from "@/components/pokemon/DexStoreLinks";
 
 // Every Pokémon sealed product, filtered and sorted on the server from the
 // market's cached catalogue — the /sealed page's shape (force-dynamic,
@@ -158,6 +159,11 @@ export default async function PokemonSealedPage({ searchParams }: { searchParams
                 <PokemonTile key={t.id} tile={t} currency={currency} eager={i < 4} />
               ))}
             </div>
+          )}
+
+          {/* Followed store links only on the clean, indexable page 1 (a filtered, sorted or later page is noindex). */}
+          {!sealedIndexing(query).noindex && (
+            <DexStoreLinks tiles={shown} market={country} heading="Store prices on DexCompare" className="mt-6" />
           )}
 
           {pages > 1 && (

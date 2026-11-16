@@ -12,6 +12,9 @@ import {
   dexOpen,
   dexSetSlug,
   dexTileFigures,
+  dexStoreLinks,
+  dexProductHref,
+  DEX_REL,
   parseDexIndex,
   storePriceCents,
   tcgplayerIdFromImage,
@@ -117,7 +120,7 @@ test("the loader never passes an explicit cache option to fetch (it throws insid
 
 test("tile figures and the open rule follow DexCompare's own (a store in stock, or TCGplayer in the US)", () => {
   const m = au();
-  assert.deepEqual(dexTileFigures(m, 712094), { cents: 33500, inStock: 8, listed: 17, marketplace: false });
+  assert.deepEqual(dexTileFigures(m, 712094), { slug: "delta-reign-booster-box", cents: 33500, inStock: 8, listed: 17, marketplace: false });
   assert.equal(dexTileFigures(m, 1), null);
   assert.equal(dexOpen({ cents: 33500, inStock: 8, marketplace: false }), true);
   assert.equal(dexOpen({ cents: null, inStock: 0, marketplace: false }), false);
@@ -166,4 +169,36 @@ test("SEO-8: the set page's DexCompare set link and the section home's type-hub 
   assert.match(set, /surface="set"[\s\S]{0,80}\bfollow\b/);
   const band = readFileSync("src/components/pokemon/HomeStoresBand.tsx", "utf8");
   assert.match(band, /dexTypeHubHref\(market, slug\)[^>]*\bfollow\b/);
+});
+
+test("followed store links: only DexCompare pages with 2+ stores, only in markets where they are indexable, clean URLs", () => {
+  const m = au();
+  const tiles = [
+    { id: 712094, name: "Delta Reign Booster Box", dex: dexTileFigures(m, 712094) },
+    { id: 565630, name: "Surging Sparks ETB", dex: dexTileFigures(m, 565630) },
+    { id: 219005, name: "Champion's Path ETB", dex: dexTileFigures(m, 219005) },
+    { id: 1, name: "Not joined", dex: null },
+  ];
+  assert.deepEqual(
+    dexStoreLinks(tiles, "AU").map((l) => [l.slug, l.listed]),
+    [["delta-reign-booster-box", 17], ["surging-sparks-elite-trainer-box", 5], ["champion-s-path-elite-trainer-box", 4]],
+  );
+  const one = [{ id: 9, name: "One store", dex: { slug: "x", cents: 1, inStock: 1, listed: 1, marketplace: false } }];
+  assert.deepEqual(dexStoreLinks(one, "AU"), [], "a one-store DexCompare page is not linked");
+  for (const noIndex of ["EU", "SG"] as const) assert.deepEqual(dexStoreLinks(tiles, noIndex), [], `${noIndex}: DexCompare's page is noindex there`);
+  const href = dexProductHref("AU", "delta-reign-booster-box");
+  assert.equal(href, "https://dexcompare.app/au/p/delta-reign-booster-box");
+  assert.ok(!href.includes("?"), "robots.txt on DexCompare blocks every query string");
+  assert.equal(DEX_REL, "nofollow noopener", "the quick view and the noindex product pages stay nofollow");
+});
+
+test("the followed list is on the indexable pages and the product page and quick view stay nofollow", () => {
+  for (const f of [
+    "src/app/pokemon/sets/[set]/page.tsx",
+    "src/app/pokemon/sealed/page.tsx",
+    "src/app/pokemon/price-per-pack/page.tsx",
+    "src/components/pokemon/KindHubView.tsx",
+  ]) assert.match(readFileSync(f, "utf8"), /DexStoreLinks/, f);
+  assert.doesNotMatch(readFileSync("src/app/pokemon/sealed/[slug]/page.tsx", "utf8"), /DexStoreLinks|\n\s+follow\n/);
+  assert.doesNotMatch(readFileSync("src/components/pokemon/PokemonQuickView.tsx", "utf8"), /DexStoreLinks/);
 });

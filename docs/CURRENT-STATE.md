@@ -1395,7 +1395,9 @@ longer lands on its entry.
   only as a store's (`storePriceCents`): never when TCGplayer is in DexCompare's
   figure. A sold-out or set-only block goes after the eBay search. The fetch
   never passes `cache: "no-store"` (it breaks ISR inside `unstable_cache`). Every DexCompare link opens
-  a new tab, `rel="nofollow noopener"`, `pokemon_dexcompare_click`. DexCompare
+  a new tab, `rel="nofollow noopener"`, `pokemon_dexcompare_click`, except the visible "store prices" lists on the indexable pages (set pages,
+  kind hubs, `/pokemon/sealed` page 1, price per pack: one followed link per product with 2+ stores on DexCompare, US/AU/UK/CA only,
+  [2026-11-16](../DECISIONS.md)). DexCompare
   links back through `/pokemon/tcgplayer/<id>`. The ops monitor watches the index
   (`partner:dexcompare`). [2026-10-15](../DECISIONS.md#L17162)
 
