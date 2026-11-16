@@ -1,5 +1,5 @@
 import { metalKindOf } from "@/lib/metal-cards";
-import { InlineAds } from "@/components/InlineAds";
+import { InlineAds, inlinePicksUrl } from "@/components/InlineAds";
 import { publicRead, routeRaw } from "@/lib/public-data/route";
 import { BanNotice } from "@/components/BanNotice";
 import type { Metadata } from "next";

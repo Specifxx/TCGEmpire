@@ -36,7 +36,7 @@ const inflight = new Map<string, Promise<MiniData | null>>();
 function load(set: string): Promise<MiniData | null> {
   let p = inflight.get(set);
   if (!p) {
-    p = fetch(`/api/mini-picks${set ? `?set=${encodeURIComponent(set)}` : ""}`)
+    p = fetch(inlinePicksUrl(set))
       .then((r) => (r.ok ? (r.json() as Promise<MiniData>) : null))
       .catch(() => null);
     inflight.set(set, p);
@@ -81,6 +81,11 @@ function Banner({ brand, headline, cta, ctaHref, ctaRetailer, tiles, retailer, n
       <p className="mt-auto h-3.5 truncate text-[11px] leading-[14px] text-slate-400">{note}</p>
     </aside>
   );
+}
+
+/** The URL InlineAds fetches for a set; the card page preloads this exact address so the fetch starts with the HTML, not after hydration. */
+export function inlinePicksUrl(set: string): string {
+  return `/api/mini-picks${set ? `?set=${encodeURIComponent(set)}` : ""}`;
 }
 
 export function InlineAds({ setCode = "", pageType, className = "" }: { setCode?: string; pageType: string; className?: string }) {
