@@ -60,7 +60,7 @@ function pickPages(urls: string[]): string[] {
     const key = /^(uk|au|eu|sg|ca|nz|us)$/.test(seg[0]) && seg[1] ? `${seg[0]}/${seg[1]}` : seg[0];
     (groups.get(key) ?? groups.set(key, []).get(key)!).push(p.toString());
   }
-  const ranked = [...groups.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, 5);
+  const ranked = [...groups.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, Math.max(3, Number(process.env.SEO_GROUPS) || 5));
   return ranked.map(([, list]) => list[Math.floor(list.length / 3)]);
 }
 
@@ -132,4 +132,10 @@ function lighthouse(url: string): { score: number; fails: Fail[] } {
     }
   }
   console.log("SEOJSON " + JSON.stringify({ origin, sitemapUrls: urls.length, results }));
+  // A page under 100 (or one that could not be measured) fails the job, so GitHub emails the owner.
+  const bad = results.filter((r) => r.score !== 100);
+  if (bad.length) {
+    console.log(`::error::${origin}: ${bad.length} page(s) below Lighthouse SEO 100`);
+    process.exit(1);
+  }
 })();

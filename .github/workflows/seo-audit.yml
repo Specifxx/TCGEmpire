@@ -2,7 +2,11 @@ name: SEO audit (Lighthouse SEO category, every site)
 
 # Read-only: Lighthouse's SEO category on mobile for each live site's home page and one indexable page from each of
 # its biggest sitemap path groups. Runs when this file or the script changes on a claude/* branch, or by hand.
+# Weekly (Monday 03:17 UTC): a site with any page under 100 fails its job and GitHub emails the owner.
+# tcgprices.app (which grows) gets nine path groups instead of five.
 on:
+  schedule:
+    - cron: "17 3 * * 1"
   workflow_dispatch:
   push:
     branches: ["claude/**"]
@@ -47,6 +51,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Lighthouse SEO
+        env:
+          SEO_GROUPS: ${{ contains(matrix.site, 'tcgprices') && '9' || '5' }}
         run: |
           export CHROME_PATH=$(node -e "console.log(require('playwright').chromium.executablePath())")
           npx tsx scripts/seo-audit.ts "${{ matrix.site }}"
