@@ -1,0 +1,58 @@
+name: SEO audit (Lighthouse SEO category, every site)
+
+# Read-only: Lighthouse's SEO category on mobile for each live site's home page and one indexable page from each of
+# its biggest sitemap path groups. Runs when this file or the script changes on a claude/* branch, or by hand.
+# Weekly (Monday 03:17 UTC): a site with any page under 100 fails its job and GitHub emails the owner.
+# tcgprices.app (which grows) gets nine path groups instead of five.
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/seo-audit.yml", "scripts/seo-audit.ts"]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        site:
+          - https://riftcompare.com
+          - https://dexcompare.app
+          - https://opcompare.app
+          - https://mtgcompare.app
+          - https://ygocompare.com
+          - https://lorcanacompare.com
+          - https://gundamcompare.com
+          - https://cyberpunkcompare.com
+          - https://bandaicompare.com
+          - https://wargamecompare.com
+          - https://figurecompare.com
+          - https://kaeyoung.com
+          - https://scentcompare.app
+          - https://sportscardcompare.com
+          - https://motorcompare.app
+          - https://www.camcompare.app
+          - https://compareempire.com
+          - https://tcgprices.app
+          - https://bargle.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Lighthouse SEO
+        env:
+          SEO_GROUPS: ${{ contains(matrix.site, 'tcgprices') && '9' || '5' }}
+        run: |
+          export CHROME_PATH=$(node -e "console.log(require('playwright').chromium.executablePath())")
+          npx tsx scripts/seo-audit.ts "${{ matrix.site }}"
