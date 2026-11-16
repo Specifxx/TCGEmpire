@@ -62,7 +62,11 @@ set -uo pipefail
 # CUT OVER TO RM11 ON 2026-11-06 (RM10 reached its 5 GB monthly transfer allowance
 # twelve days into service); migrate-main-db-rm10-to-rm11 copied RM10 onto the
 # recycled RM11 and verified every table.
-CURRENT_OP="RM11"
+#
+# CUT OVER TO RM12 ON 2026-11-16 (RM11 was on course for its 5 GB monthly transfer
+# allowance around 2026-11-21); migrate-main-db-rm11-to-rm12 copied RM11 onto the
+# recycled RM12 and verified every table.
+CURRENT_OP="RM12"
 # CUT OVER TO HISTORY_DATABASE_URL_4 ON 2026-09-26 (HISTORY_DATABASE_URL_3
 # reached its 5 GB monthly transfer allowance four days into service).
 # HISTORY_DATABASE_URL_4 is a RECYCLED project — retired since 2026-08-21 — not
@@ -88,14 +92,14 @@ CURRENT_HIST="HISTORY_DATABASE_URL_4"
 # the app then deployed resolving no database at all ("operational database
 # resolved from NONE"): every DB-backed page broken behind a green build. Failing
 # keeps the previous deployment serving until the variable is set in Vercel.
-if [ "${VERCEL_ENV:-}" = "production" ] && [ -z "${RM11:-}" ]; then
-  echo "::error::[build-db-push] RM11 is not set for this Vercel PRODUCTION build, so the app would deploy with no operational database. Set RM11 in Vercel (Production, Preview and Development) and redeploy. Failing the build so the current deployment keeps serving."
+if [ "${VERCEL_ENV:-}" = "production" ] && [ -z "${RM12:-}" ]; then
+  echo "::error::[build-db-push] RM12 is not set for this Vercel PRODUCTION build, so the app would deploy with no operational database. Set RM12 in Vercel (Production, Preview and Development) and redeploy. Failing the build so the current deployment keeps serving."
   exit 1
 fi
 
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM11:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM11) — skipping schema push."
+   || [ -z "${RM12:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM12) — skipping schema push."
   exit 0
 fi
 
@@ -104,8 +108,8 @@ fi
 # happens to hold while the app (src/lib/db-chains.ts) reads RM3. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-export DATABASE_URL="$RM11"
-SOURCE="RM11"
+export DATABASE_URL="$RM12"
+SOURCE="RM12"
 # Name the winner, never the value (it's a credential). There is only one
 # possible value now (the gate above already required RM3 to be set), but this
 # stays as the one line that answers "which database did this build actually
