@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { SourceResult } from "../src/lib/earnings/core";
-import { buildGrowthReport, growthReportText, reportWeeks, tagParts } from "../src/lib/earnings/growth-report";
+import { buildGrowthReport, growthReportText, reportWeeks, tagParts, trendLine } from "../src/lib/earnings/growth-report";
 import { growthReportEmail } from "../src/lib/ops/owner";
 
 const today = "2026-10-30";
@@ -50,4 +50,13 @@ test("the word-of-mouth section counts share taps and shared-link visits per sit
   assert.deepEqual(r.wordOfMouth, [{ site: "Gundam Compare", shares: [0, 0, 0, 3], visits: [0, 0, 0, 7] }]);
   assert.match(growthReportText(r), /WORD OF MOUTH[^\n]*\n  Gundam Compare: 0\/0 \| 0\/0 \| 0\/0 \| 3\/7 new/);
   assert.match(growthReportText(buildGrowthReport([], new Map(), "2026-11-30")), /WORD OF MOUTH[^\n]*\n  Not connected/);
+});
+
+test("trendLine averages two weeks so one lumpy week does not read as a slowdown", () => {
+  const m = (c: number) => `$${c}`;
+  assert.equal(
+    trendLine([56600, 66400, 113900, 79400], m),
+    "TREND, average of 2 weeks: $61500 then $96650 (+57%). Judge growth on this, not on one week.",
+  );
+  assert.equal(trendLine([1, 2, 3], m), "");
 });
