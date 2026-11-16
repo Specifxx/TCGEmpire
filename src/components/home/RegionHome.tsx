@@ -11,7 +11,6 @@ import { ebayLabel } from "@/lib/affiliate";
 import { CinematicHero } from "./CinematicHero";
 import { HomeFeaturedListing } from "./HomeFeaturedListing";
 import { HomeSections } from "./HomeSections";
-import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { EditorialHub } from "./EditorialHub";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
@@ -70,7 +69,6 @@ export async function RegionHome({ region }: { region: Country }) {
   const guideSlug = COUNTRY_GUIDE_SLUGS[region];
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
-  const topDealsAny = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
 
   // Both answers corrected 2026-09-26 ("Blog and tools, joined up" in
   // DECISIONS.md). The first claimed a ranking "by total delivered cost":
@@ -113,7 +111,6 @@ export async function RegionHome({ region }: { region: Country }) {
           2026-10-19): the editorial band moved to the bottom of the page and
           the price guide callout went. HomeSections gets showTopDeals={false}
           so the deals render once. */}
-      {topDealsAny && <TodaysTopDeals dealsByCountry={topDealsByCountry} />}
 
       {/* The full "/" feature set — Top Deals, eBay Picks, popular cards, How
           It Works, Explore, reviews, partners — see HomeSections.tsx and this
@@ -129,7 +126,7 @@ export async function RegionHome({ region }: { region: Country }) {
         chaseCards={chaseCards}
         chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
-        showTopDeals={false}
+        showTopDeals
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

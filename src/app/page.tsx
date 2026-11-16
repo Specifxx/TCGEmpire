@@ -13,7 +13,6 @@ import { HomeSections } from "@/components/home/HomeSections";
 import { HomeFeaturedListing } from "@/components/home/HomeFeaturedListing";
 import { RIOT_DRAWINGS } from "@/lib/riot-drawings";
 import { EditorialHub } from "@/components/home/EditorialHub";
-import { TodaysTopDeals } from "@/components/TodaysTopDeals";
 import { COUNTRIES } from "@/lib/country";
 import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
@@ -319,8 +318,6 @@ export default async function HomePage() {
   // client-side to whichever market the VISITOR is actually in (see its own
   // doc comment) — not just the AU baseline this page's ISR render bakes in.
   const topDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, topDealsArr[i]])) as Record<Country, TopDeals>;
-  const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
-  const gridDealsByCountry = Object.fromEntries(COUNTRY_CODES.map((c) => [c, topDealsForGrid(topDealsByCountry[c])])) as Record<Country, TopDeals>;
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
 
   return (
@@ -351,11 +348,6 @@ export default async function HomePage() {
           wrapper is different: pure CSS, tied to the scroll position, so it
           needs no hydration and anything already on screen is already in
           place (globals.css, "Scroll motion"). */}
-      {anyDeals && (
-        <div className="rb-sd">
-          <TodaysTopDeals dealsByCountry={gridDealsByCountry} />
-        </div>
-      )}
 
       {/* REMOVED 2026-09-30: "Riftbound card prices today", the price table
           (PriceTodayTable, lib/price-table.ts), on the owner's instruction ("get
@@ -392,7 +384,7 @@ export default async function HomePage() {
         chaseCards={chaseCards}
         chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
-        showTopDeals={false}
+        showTopDeals
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

@@ -35,10 +35,8 @@ test("every home: Today's Top Deals, then HomeSections; no price table and no pr
     assert.doesNotMatch(src, /<PriceTodayTable|getPriceTable\(/, f);
     // The price guide callout left the homepage on 2026-10-19 (owner).
     assert.doesNotMatch(src, /<PriceGuideCallout/, f);
-    const deals = src.indexOf("<TodaysTopDeals");
-    const rest = src.indexOf("<HomeSections");
-    assert.ok(deals > 0 && deals < rest, `${f}: deals < HomeSections`);
-    assert.match(src, /showTopDeals=\{false\}/, `${f}: the deals render once`);
+    assert.doesNotMatch(src, /<TodaysTopDeals/, `${f}: the deals render once, inside HomeSections`);
+    assert.match(src, /\bshowTopDeals\b/, `${f}: HomeSections draws them`);
   }
   const c = read("src/components/home/PriceGuideCallout.tsx");
   assert.match(c, /href="\/price-guide"/);

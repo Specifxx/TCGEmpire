@@ -24,7 +24,7 @@ test("the in-page ad block (2026-11-13) renders once per home, from HomeSections
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
     const src = code(f);
     assert.doesNotMatch(src, /<(EbayPicks|TcgplayerPicks|InlineAds)\b/, `${f}: HomeSections draws it, once`);
-    assert.match(src, /showTopDeals=\{false\}/, `${f}: HomeSections must not render Top Deals a second time`);
+    assert.doesNotMatch(src, /<TodaysTopDeals/, `${f}: HomeSections draws Top Deals once, under the chase cards (owner, 2026-11-16)`);
     assert.doesNotMatch(src, /showEbayPicks=\{false\}/, `${f}: HomeSections must render the block`);
   }
   const sections = code("src/components/home/HomeSections.tsx");
@@ -45,7 +45,7 @@ test("the Most popular shelf is back and carries the ItemList on every home", ()
   }
   // No home has a price table any more (2026-10-02), so the shelf always carries it.
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
-    assert.match(code(f), /\bpopularItemList\n\s*showTopDeals=\{false\}/, f);
+    assert.match(code(f), /\bpopularItemList\n\s*showTopDeals\n/, f);
   }
   const home = code("src/components/home/HomeSections.tsx");
   assert.match(home, /popularItemList = true,/);
