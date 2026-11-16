@@ -9,6 +9,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { writeCardHistoryDay, writeGradedHistoryDay } from "./price-history-store";
 import { gradedSnapshot } from "./graded-history";
+import { deniedKeys, loadDenylist } from "./denylist";
 import { DECOMMISSIONED_RETAILERS, RETAILER_LIST, RetailerInfo, SINGLES_RETIRED_RETAILERS, STORE_ROWS_MAX_AGE_H } from "./retailers";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
@@ -1826,8 +1827,13 @@ export async function importPrices(): Promise<ImportSummary> {
   // A store removed from RETAILERS is never visited by the loop below, so its
   // rows would otherwise sit on card pages indefinitely. Idempotent and indexed
   // on `retailer`; a no-op once the rows are gone.
-  if (DECOMMISSIONED_RETAILERS.length) {
-    const where = { retailer: { in: [...DECOMMISSIONED_RETAILERS] } };
+  // The shared scam denylist (TCGEmpire scam sweep, owner 2026-11-16): denied stores are skipped and their rows purged.
+  // Best-effort: a failed fetch denies nothing.
+  const deny = await loadDenylist();
+  const denied = deniedKeys(RETAILER_LIST, deny);
+  if (denied.length) console.log(`Shared scam denylist: skipping and purging ${denied.join(", ")}.`);
+  if (DECOMMISSIONED_RETAILERS.length || denied.length) {
+    const where = { retailer: { in: [...DECOMMISSIONED_RETAILERS, ...denied] } };
     const purged = await prisma.retailerPrice.deleteMany({ where });
     const purgedSealed = await prisma.sealedListing.deleteMany({ where });
     if (purged.count || purgedSealed.count) {
@@ -1850,6 +1856,7 @@ export async function importPrices(): Promise<ImportSummary> {
   let tooCheap = 0;
 
   for (const store of RETAILER_LIST) {
+    if (denied.includes(store.key)) continue;
     const cc = store.country ?? "AU";
     if (onlyCountry && cc !== onlyCountry) continue;
     // Currency guard (lib/offer-currency.ts): a store that charges in another
