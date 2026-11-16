@@ -1,5 +1,5 @@
 {
- "at": "2026-11-16T23:20:39.246Z",
+ "at": "2026-11-16T23:31:04.407Z",
  "checked": 2505,
  "stores": [
   {
@@ -100,22 +100,21 @@
    ]
   },
   {
-   "host": "manavortex.es",
+   "host": "pokechest.at",
    "sites": [
-    "dexcompare",
     "tcgprices"
    ],
    "score": 23,
    "verdict": "ok",
    "signals": [
-    "no contact or policy links",
-    "contact only via WhatsApp or Telegram"
+    "contact only via WhatsApp or Telegram",
+    "asks for crypto, Zelle, gift-card or bank-transfer payment"
    ]
   },
   {
-   "host": "pokechest.at",
+   "host": "scan.co.uk",
    "sites": [
-    "tcgprices"
+    "compareempire"
    ],
    "score": 23,
    "verdict": "ok",
@@ -197,9 +196,8 @@
    ]
   },
   {
-   "host": "bestbuy.com",
+   "host": "bydash.com",
    "sites": [
-    "camcompare",
     "compareempire"
    ],
    "score": 15,
@@ -209,8 +207,9 @@
    ]
   },
   {
-   "host": "bydash.com",
+   "host": "bestbuy.com",
    "sites": [
+    "camcompare",
     "compareempire"
    ],
    "score": 15,
@@ -338,17 +337,6 @@
    "host": "finanime.fi",
    "sites": [
     "figurecompare"
-   ],
-   "score": 15,
-   "verdict": "ok",
-   "signals": [
-    "no contact or policy links"
-   ]
-  },
-  {
-   "host": "foto-erhardt.de",
-   "sites": [
-    "camcompare"
    ],
    "score": 15,
    "verdict": "ok",
@@ -559,17 +547,6 @@
    ]
   },
   {
-   "host": "seoulbeautystore.com",
-   "sites": [
-    "kaeyoung"
-   ],
-   "score": 15,
-   "verdict": "ok",
-   "signals": [
-    "no contact or policy links"
-   ]
-  },
-  {
    "host": "samsclub.com",
    "sites": [
     "compareempire"
@@ -581,14 +558,14 @@
    ]
   },
   {
-   "host": "scorptec.com.au",
+   "host": "seoulbeautystore.com",
    "sites": [
-    "compareempire"
+    "kaeyoung"
    ],
    "score": 15,
    "verdict": "ok",
    "signals": [
-    "asks for crypto, Zelle, gift-card or bank-transfer payment"
+    "no contact or policy links"
    ]
   },
   {
@@ -644,18 +621,6 @@
    "sites": [
     "camcompare",
     "compareempire"
-   ],
-   "score": 15,
-   "verdict": "ok",
-   "signals": [
-    "no contact or policy links"
-   ]
-  },
-  {
-   "host": "swagykarp.fi",
-   "sites": [
-    "dexcompare",
-    "tcgprices"
    ],
    "score": 15,
    "verdict": "ok",
@@ -953,18 +918,6 @@
    ]
   },
   {
-   "host": "fuhrious-tc.shop",
-   "sites": [
-    "mtgcompare",
-    "dexcompare"
-   ],
-   "score": 10,
-   "verdict": "ok",
-   "signals": [
-    "domain 333 days old"
-   ]
-  },
-  {
    "host": "gamefellastcgandgames.com",
    "sites": [
     "opcompare"
@@ -1196,6 +1149,18 @@
    ]
   },
   {
+   "host": "ninpostore.com",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 209 days old"
+   ]
+  },
+  {
    "host": "nexustabletopgames.com",
    "sites": [
     "riftcompare",
@@ -1210,18 +1175,6 @@
    "verdict": "ok",
    "signals": [
     "domain 290 days old"
-   ]
-  },
-  {
-   "host": "ninpostore.com",
-   "sites": [
-    "cyberpunkcompare",
-    "tcgprices"
-   ],
-   "score": 10,
-   "verdict": "ok",
-   "signals": [
-    "domain 209 days old"
    ]
   },
   {
@@ -1395,17 +1348,6 @@
    ]
   },
   {
-   "host": "showdownvaluecardsandgames.com",
-   "sites": [
-    "opcompare"
-   ],
-   "score": 10,
-   "verdict": "ok",
-   "signals": [
-    "domain 332 days old"
-   ]
-  },
-  {
    "host": "sidequestgames.uk",
    "sites": [
     "opcompare",
@@ -1420,6 +1362,17 @@
    "verdict": "ok",
    "signals": [
     "domain 184 days old"
+   ]
+  },
+  {
+   "host": "showdownvaluecardsandgames.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 332 days old"
    ]
   },
   {
@@ -1754,9 +1707,9 @@
    ]
   },
   {
-   "host": "amp3.co.uk",
+   "host": "aniimeshop.com",
    "sites": [
-    "compareempire"
+    "figurecompare"
    ],
    "score": 8,
    "verdict": "ok",
@@ -1776,9 +1729,9 @@
    ]
   },
   {
-   "host": "aniimeshop.com",
+   "host": "amp3.co.uk",
    "sites": [
-    "figurecompare"
+    "compareempire"
    ],
    "score": 8,
    "verdict": "ok",
@@ -1871,10 +1824,9 @@
    ]
   },
   {
-   "host": "cardconnectsg.com",
+   "host": "cardcorner.at",
    "sites": [
     "mtgcompare",
-    "dexcompare",
     "tcgprices"
    ],
    "score": 8,
@@ -1884,9 +1836,10 @@
    ]
   },
   {
-   "host": "cardcorner.at",
+   "host": "cardconnectsg.com",
    "sites": [
     "mtgcompare",
+    "dexcompare",
     "tcgprices"
    ],
    "score": 8,
@@ -1909,6 +1862,17 @@
   },
   {
    "host": "chemexcoffeemaker.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "chriscoffee.com",
    "sites": [
     "compareempire"
    ],
@@ -1985,19 +1949,6 @@
    "host": "dronesdirect.com.au",
    "sites": [
     "compareempire"
-   ],
-   "score": 8,
-   "verdict": "ok",
-   "signals": [
-    "contact only via WhatsApp or Telegram"
-   ]
-  },
-  {
-   "host": "dxcollection.com.sg",
-   "sites": [
-    "mtgcompare",
-    "dexcompare",
-    "tcgprices"
    ],
    "score": 8,
    "verdict": "ok",
@@ -2115,12 +2066,9 @@
    ]
   },
   {
-   "host": "kaiofcards.com",
+   "host": "itsmaxtoys.nl",
    "sites": [
-    "opcompare",
-    "gundamcompare",
-    "lorcanacompare",
-    "bandaicompare",
+    "cyberpunkcompare",
     "tcgprices"
    ],
    "score": 8,
@@ -2132,6 +2080,21 @@
   {
    "host": "kaibacards.at",
    "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "kaiofcards.com",
+   "sites": [
+    "opcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "bandaicompare",
     "tcgprices"
    ],
    "score": 8,
@@ -2156,18 +2119,6 @@
    "host": "keeobeauty.fr",
    "sites": [
     "kaeyoung"
-   ],
-   "score": 8,
-   "verdict": "ok",
-   "signals": [
-    "contact only via WhatsApp or Telegram"
-   ]
-  },
-  {
-   "host": "itsmaxtoys.nl",
-   "sites": [
-    "cyberpunkcompare",
-    "tcgprices"
    ],
    "score": 8,
    "verdict": "ok",
@@ -2252,9 +2203,13 @@
    ]
   },
   {
-   "host": "metamorfo.es",
+   "host": "miraicards.pt",
    "sites": [
-    "dexcompare"
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "tcgprices"
    ],
    "score": 8,
    "verdict": "ok",
@@ -2275,13 +2230,9 @@
    ]
   },
   {
-   "host": "miraicards.pt",
+   "host": "metamorfo.es",
    "sites": [
-    "mtgcompare",
-    "dexcompare",
-    "gundamcompare",
-    "lorcanacompare",
-    "tcgprices"
+    "dexcompare"
    ],
    "score": 8,
    "verdict": "ok",
