@@ -143,7 +143,7 @@ async function fileText(repo, path) {
   return r.text();
 }
 
-async function registryHosts(site) {
+export async function registryHosts(site) {
   const { repo, files } = SITES[site];
   const hosts = new Set();
   for (const f of files) {

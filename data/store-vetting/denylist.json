@@ -1,0 +1,46 @@
+{
+ "at": "2026-11-16T22:01:14.225Z",
+ "autohide": true,
+ "domains": [
+  {
+   "domain": "hbtcollectables.com",
+   "source": "banned",
+   "why": "asked not to be linked; legal notice to the owner (2026-11-04)"
+  },
+  {
+   "domain": "tcgshopuk.co.uk",
+   "source": "banned",
+   "why": "scam: Trustpilot 2.2, 86% one-star, non-delivery, post-checkout fee demands, refunds refused (2026-11-16)"
+  },
+  {
+   "domain": "tcgshopuk.com",
+   "source": "banned",
+   "why": "scam: Trustpilot 2.2, 86% one-star, non-delivery, post-checkout fee demands, refunds refused (2026-11-16)"
+  },
+  {
+   "domain": "tcgsynergy.com",
+   "source": "banned",
+   "why": "scam store (owner, 2026-10-31)"
+  },
+  {
+   "domain": "tcgsynergy.myshopify.com",
+   "source": "banned",
+   "why": "scam store (owner, 2026-10-31)"
+  },
+  {
+   "domain": "www.hbtcollectables.com",
+   "source": "banned",
+   "why": "asked not to be linked; legal notice to the owner (2026-11-04)"
+  },
+  {
+   "domain": "www.tcgshopuk.co.uk",
+   "source": "banned",
+   "why": "scam: Trustpilot 2.2, 86% one-star, non-delivery, post-checkout fee demands, refunds refused (2026-11-16)"
+  },
+  {
+   "domain": "www.tcgshopuk.com",
+   "source": "banned",
+   "why": "scam: Trustpilot 2.2, 86% one-star, non-delivery, post-checkout fee demands, refunds refused (2026-11-16)"
+  }
+ ]
+}
