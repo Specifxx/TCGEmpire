@@ -122,7 +122,7 @@ Reply with JSON only: {"risk":0-100,"verdict":"low|medium|high","reasons":["..."
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: AI_MODEL, max_tokens: 400, messages: [{ role: "user", content: prompt }] }),
+      body: JSON.stringify({ model: AI_MODEL, max_tokens: 2000, messages: [{ role: "user", content: prompt }] }),
       signal: AbortSignal.timeout(30_000),
     });
     if (!r.ok) {
@@ -135,14 +135,15 @@ Reply with JSON only: {"risk":0-100,"verdict":"low|medium|high","reasons":["..."
       return null;
     }
     const j = await r.json();
-    const m = /\{[\s\S]*\}/.exec(j.content?.[0]?.text ?? "");
+    const replyText = (j.content ?? []).filter((b) => b.type === "text").map((b) => b.text).join("\n");
+    const m = /\{[\s\S]*\}/.exec(replyText);
     let o = null;
     try {
       o = m ? JSON.parse(m[0]) : null;
     } catch {}
     if (!(o && Number.isFinite(o.risk)) && !aiRead.warned) {
       aiRead.warned = true;
-      console.log(`::warning::AI read unparseable (stop=${j.stop_reason}, chars=${(j.content?.[0]?.text ?? "").length})`);
+      console.log(`::warning::AI read unparseable (stop=${j.stop_reason}, chars=${replyText.length})`);
     }
     return o && Number.isFinite(o.risk) ? { risk: Math.max(0, Math.min(100, o.risk)), verdict: o.verdict, reasons: (o.reasons ?? []).slice(0, 4) } : null;
   } catch (e) {
