@@ -63,7 +63,7 @@ test("footer: two internal links (other-games hub, /our-sites); the article bloc
   assert.match(footer, /href="\/our-sites"/);
   assert.match(footer, /href="\/tcg-price-comparison"/);
   const page = read("src/app/our-sites/page.tsx");
-  assert.match(page, /FAMILY_SITES\.filter\(\(s\) => s\.id !== "rift"\)/);
+  assert.match(page, /FAMILY_SITES\.filter\(\(s\) => s\.id !== "rift" && sameSide\("rift", s\.id\)\)/);
   assert.match(page, /rel="noopener"/);
   assert.doesNotMatch(page, /nofollow|sponsored|prisma|@\/lib\/db/);
   const block = read("src/components/SisterSites.tsx");

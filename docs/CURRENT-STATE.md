@@ -922,6 +922,7 @@ longer lands on its entry.
   Pairs) were replaced by Seraphine's Piano, a Radiance rhythm game timed on
   the Web Audio clock and drawn on one rAF canvas. Retired game routes 301 to
   it. [2026-10-16](../DECISIONS.md#L17753)
+- **Two sides of the network (2026-11-17):** card-game and wargame sites never list, tile or link a perfume, K-beauty, car-parts, camera, figure, sports-card or tech site, and the reverse (`sameSide` in `lib/family-network.ts`); one footer link to /our-sites, which lists same-side sites only ([2026-11-17](../DECISIONS.md#L24040)).
 - **Sister sites:** the footer links no sister site: two internal links, /tcg-price-comparison and
   /our-sites, which lists every family site once by name ([2026-11-08](../DECISIONS.md#L22955); was the
   card sites by name, [2026-11-02](../DECISIONS.md#L21572); the whole family, [2026-10-27](../DECISIONS.md#L20126)). The deals,

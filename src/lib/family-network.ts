@@ -91,9 +91,26 @@ export function familySite(id: FamilySiteId): FamilySite {
   return s;
 }
 
-/** The other sites in a cluster, in registry order. */
+/**
+ * The two sides of the network (owner, 2026-11-17, Grok growth report item 9): the trading-card and
+ * wargame sites on one side, everything else (perfume, K-beauty, car parts, cameras, figures, sports
+ * cards, tech) on the other. A site never links, tiles or lists a site on the other side: unrelated
+ * audiences cross-linked sitewide read as a link network. Same side only.
+ */
+const TCG_SIDE: readonly string[] = ["rift", "op", "dex", "mtg", "gundam", "lorcana", "ygo", "cyberpunk", "bandai", "sealed", "wargame"];
+
+export function isTcgSide(id: string): boolean {
+  return TCG_SIDE.includes(id);
+}
+
+/** True when two sites are on the same side of the network (see TCG_SIDE). */
+export function sameSide(a: string, b: string): boolean {
+  return isTcgSide(a) === isTcgSide(b);
+}
+
+/** The other sites in a cluster, on this site's side of the network, in registry order. */
 export function clusterSisters(self: FamilySiteId, cluster: ClusterId): FamilySite[] {
-  return FAMILY_SITES.filter((s) => s.id !== self && s.clusters.includes(cluster));
+  return FAMILY_SITES.filter((s) => s.id !== self && s.clusters.includes(cluster) && sameSide(self, s.id));
 }
 
 /**
@@ -155,12 +172,16 @@ export const FEED_MAX_PRODUCTS = 4000;
 const REF_LABELS: readonly RefLabel[] = ["median store price", "TCGplayer market price", "RRP", "MSRP", "dearest store"];
 const CURRENCY_OF: Record<FamilyRegion, string> = { US: "USD", UK: "GBP", AU: "AUD", CA: "CAD", NZ: "NZD", EU: "EUR", SG: "SGD" };
 
+/** A site's earlier address, still accepted in a feed until it republishes (DexCompare moved to dexcompare.io on 2026-11-17; the old host 301s). */
+const LEGACY_HOSTS: Record<string, readonly string[]> = { dex: ["dexcompare.app"] };
+
 function onSite(url: unknown, site: FamilySite): url is string {
   if (typeof url !== "string") return false;
   try {
     const u = new URL(url);
     const home = new URL(site.url);
-    return u.protocol === "https:" && u.hostname.replace(/^www\./, "") === home.hostname.replace(/^www\./, "");
+    const host = u.hostname.replace(/^www\./, "");
+    return u.protocol === "https:" && (host === home.hostname.replace(/^www\./, "") || (LEGACY_HOSTS[site.id] ?? []).includes(host));
   } catch {
     return false;
   }

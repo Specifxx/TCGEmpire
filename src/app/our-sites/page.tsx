@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FAMILY_SITES, NETWORK_PAGE } from "@/lib/family-network";
+import { FAMILY_SITES, sameSide } from "@/lib/family-network";
 import { SITE_NAME } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default function OurSitesPage() {
-  const sites = FAMILY_SITES.filter((s) => s.id !== "rift");
+  const sites = FAMILY_SITES.filter((s) => s.id !== "rift" && sameSide("rift", s.id));
   return (
     <article className="mx-auto max-w-3xl">
       <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
@@ -39,9 +39,6 @@ export default function OurSitesPage() {
           </li>
         ))}
       </ul>
-      <p className="mt-6 text-sm text-slate-400">
-        <a href={NETWORK_PAGE} rel="noopener" className="tap-link hover:underline">Every Compare Empire site →</a>
-      </p>
     </article>
   );
 }
