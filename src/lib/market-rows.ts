@@ -161,8 +161,7 @@ export function pinMarketplaces<T extends { retailer: string; priceCents: number
  * partner that pays about 2.5 times more per click to the second row.
  */
 export function tcgplayerLeads(_ebay?: { priceCents: number } | null, _tcgplayer?: { priceCents: number } | null): boolean {
-  // Since 2026-11-06 eBay always leads (owner: eBay and Amazon rows "sit on the very top",
-  // eBay first, Amazon second), so TCGplayer never goes above it. Kept as a function so
+  // Owner, 2026-11-17 (final): eBay first, then TCGplayer, then Amazon, so TCGplayer never goes above eBay. Kept as a function so
   // every caller's `tcgFirst` branch stays one switch.
   return false;
 }

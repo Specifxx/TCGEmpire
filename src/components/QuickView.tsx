@@ -74,6 +74,7 @@ export function QuickViewProvider({
 }) {
   const [card, setCard] = useState<CardTileData | null>(null);
   const pushedRef = useRef(false);
+  const openedAtRef = useRef(0);
   // The last card shown, kept around through a close so the panel still has
   // something to render WHILE Dialog's exit transition plays — `card` itself
   // goes null the instant close() runs, but the fade-out needs a frame or two
@@ -87,6 +88,7 @@ export function QuickViewProvider({
   // the browser Back button closes the modal, and visiting that URL directly still
   // renders the full card page.
   const open = useCallback((c: CardTileData) => {
+    openedAtRef.current = performance.now();
     setCard(c);
     const url = cardHref(c);
     if (typeof window !== "undefined" && window.location.pathname !== url) {
@@ -117,6 +119,37 @@ export function QuickViewProvider({
       window.history.back(); // restore the previous URL
     }
   }, []);
+
+  // Owner, 2026-11-17: the quick view opens from EVERY card link, not only the tiles that wrap CardQuickLink. A plain /card/<slug>
+  // link is caught in the capture phase (before Next's Link would navigate), its default is stopped, and once the click has been
+  // handled everywhere: if nothing called open() meanwhile (a tile's own handler does), the card is read from /api/card/<slug> and
+  // opened; if that read fails the browser goes to the card's page as it always did.
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const t = e.target as Element | null;
+      if (!t?.closest || t.closest("button")) return;
+      const a = t.closest("a[href]") as HTMLAnchorElement | null;
+      if (!a || (a.target && a.target !== "_self") || a.hasAttribute("download") || a.closest("[role=dialog]")) return;
+      const href = a.getAttribute("href") ?? "";
+      const m = /^\/card\/([^/?#]+)\/?$/.exec(href);
+      if (!m || window.location.pathname.replace(/\/$/, "") === href.replace(/\/$/, "")) return;
+      e.preventDefault();
+      const at = performance.now();
+      setTimeout(() => {
+        if (openedAtRef.current >= at) return; // the link's own handler opened it
+        fetch(`/api/card/${m[1]}`)
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error("card"))))
+          .then((d: CardTileData) => {
+            if (!d?.id) throw new Error("card");
+            open(d);
+          })
+          .catch(() => window.location.assign(href));
+      }, 0);
+    };
+    document.addEventListener("click", onDocClick, true);
+    return () => document.removeEventListener("click", onDocClick, true);
+  }, [open]);
 
   // Back/forward button: just close the modal (the URL has already changed).
   useEffect(() => {

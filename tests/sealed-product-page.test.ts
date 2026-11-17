@@ -75,7 +75,7 @@ test("nothing the page's server render reaches reads the visitor (one CDN copy s
 test("Amazon is the second row, right under eBay; the quick view has its tagged link but never its price (owner, 2026-11-06)", () => {
   const qv = read("src/components/SealedQuickView.tsx");
   assert.match(qv, /\{!pin\.ebay && amazonRow\}/, "right after eBay's search row when eBay has no listing");
-  assert.match(qv, /pin\.ebay && l === pin\.ebay \? amazonRow : null/, "right after the eBay row");
+  assert.match(qv, /lead\.length && l === lead\[lead\.length - 1\] \? amazonRow : null/, "right after the last pinned row");
   assert.match(qv, /const amazonStore = amazon && amazonSellsSealed\(group\) \? amazonFor\(country\) : null;/, "only for set products Amazon sells (2026-11-12)");
   assert.match(qv, /<AffiliateDisclosure partner="amazon" \/>/, "Amazon's statement beside its link");
   const modal = qv.slice(qv.indexOf("function SealedQuickViewModal"), qv.indexOf("export function SealedOffers"));
