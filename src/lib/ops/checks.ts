@@ -632,7 +632,7 @@ export async function siteProbe(d: OpsDeps): Promise<CheckResult> {
 // ── Partner data ────────────────────────────────────────────────────────────
 
 /**
- * DexCompare's browse index (www.dexcompare.app/api/browse/<region>), which the Pokémon
+ * DexCompare's browse index (dexcompare.io/api/browse/<region>), which the Pokémon
  * section reads for its "Independent stores" lines (DECISIONS.md, 2026-10-15). The
  * section hides those lines quietly when the index cannot be read, so nothing on the
  * site would say they had gone: this does. Unreachable is grey (another site's outage,
@@ -682,7 +682,7 @@ export async function dexcompareIndex(d: OpsDeps): Promise<CheckResult> {
   let body: unknown;
   try {
     const res = await retry(d, async () => {
-      const r = await d.fetch("https://www.dexcompare.app/api/browse/us", { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+      const r = await d.fetch("https://dexcompare.io/api/browse/us", { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
       if (r.status >= 500) throw new Error(`HTTP ${r.status}`);
       return r;
     });

@@ -48,8 +48,8 @@ export const HQ_SITES: HqSite[] = [
   {
     key: "dex",
     label: "DexCompare",
-    url: "https://dexcompare.app",
-    host: "dexcompare.app",
+    url: "https://dexcompare.io",
+    host: "dexcompare.io",
     repo: "CompareEmpire",
     tags: ["dex"],
     monitor: null,

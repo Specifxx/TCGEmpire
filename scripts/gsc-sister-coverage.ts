@@ -16,7 +16,7 @@ const SAMPLE = Math.max(5, Math.min(200, Number(process.env.SAMPLE ?? 30)));
 // Every Compare Empire site (2026-11-07). The Search Console property is found from the service account's own list:
 // the domain property when it has one, else a URL-prefix property on the same host.
 const ORIGINS = [
-  "https://riftcompare.com", "https://dexcompare.app", "https://opcompare.app", "https://mtgcompare.app",
+  "https://riftcompare.com", "https://dexcompare.io", "https://opcompare.app", "https://mtgcompare.app",
   "https://gundamcompare.com", "https://lorcanacompare.com", "https://ygocompare.com", "https://cyberpunkcompare.com",
   "https://bandaicompare.com", "https://www.camcompare.app", "https://compareempire.com", "https://wargamecompare.com",
   "https://figurecompare.com", "https://kaeyoung.com", "https://scentcompare.app", "https://sportscardcompare.com", "https://motorcompare.app", "https://riftboundstocks.com",

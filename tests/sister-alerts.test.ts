@@ -14,6 +14,9 @@ const DAY = 86_400_000;
 const now = new Date("2026-11-10T14:20:00Z");
 
 test("only the sister sites' own origins may call the signup API", () => {
+  assert.equal(allowedOrigin("https://dexcompare.io")?.key, "dex");
+  assert.equal(allowedOrigin("https://dexcompare.app")?.key, "dex", "Dex's old host still posts (moved 2026-11-17)");
+  assert.equal(allowedOrigin("https://www.dexcompare.app")?.key, "dex");
   assert.equal(allowedOrigin("https://mtgcompare.app")?.key, "mtg");
   assert.equal(allowedOrigin("https://www.figurecompare.com")?.key, "figure");
   assert.equal(allowedOrigin("http://mtgcompare.app"), null, "https only");

@@ -22,7 +22,7 @@
 import type { Country } from "../country";
 
 /** The site, as a link prefix. */
-export const DEX_ORIGIN = "https://dexcompare.app";
+export const DEX_ORIGIN = "https://dexcompare.io";
 
 /** This section's market → DexCompare's region path. DexCompare also has NZ, which this site does not. */
 export const DEX_REGION: Record<Country, string> = { US: "us", AU: "au", UK: "uk", CA: "ca", EU: "eu", SG: "sg" };
@@ -212,7 +212,7 @@ export const DEX_TYPE_HUBS: readonly (readonly [slug: string, label: string])[] 
   ["collections", "Collections"],
 ];
 
-/** A DexCompare type hub in the market, a clean URL: https://dexcompare.app/us/type/booster-boxes. */
+/** A DexCompare type hub in the market, a clean URL: https://dexcompare.io/us/type/booster-boxes. */
 export function dexTypeHubHref(market: Country, slug: string): string {
   return dexUrl(`/${DEX_REGION[market]}/type/${slug}`, "home");
 }
@@ -241,7 +241,7 @@ export function storesWord(n: number): string {
 /** Markets whose DexCompare product pages are indexable there (its INDEXED_DETAIL_REGIONS); NZ, EU and SG pages are noindex, so they get no followed link. */
 export const DEX_INDEXED_MARKETS: readonly Country[] = ["US", "AU", "UK", "CA"];
 
-/** A DexCompare product page in the market, a clean URL: https://dexcompare.app/us/p/<slug>. */
+/** A DexCompare product page in the market, a clean URL: https://dexcompare.io/us/p/<slug>. */
 export function dexProductHref(market: Country, slug: string): string {
   return dexUrl(`/${DEX_REGION[market]}/p/${slug}`, "product");
 }

@@ -22,7 +22,7 @@ export const ROTATION: SitePages[] = [
   { name: "Compare Empire", url: "https://compareempire.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["Deals"] },
   { name: "Gundam Compare", url: "https://gundamcompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["GundamCardGame", "TCG"] },
   { name: "FigureCompare", url: "https://figurecompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["AnimeFigures", "Nendoroid"] },
-  { name: "DexCompare", url: "https://dexcompare.app", pages: ["/us"], blackFriday: "/us/black-friday", tags: ["PokemonTCG"] },
+  { name: "DexCompare", url: "https://dexcompare.io", pages: ["/us"], blackFriday: "/us/black-friday", tags: ["PokemonTCG"] },
   { name: "Lorcana Compare", url: "https://lorcanacompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["Lorcana", "DisneyLorcana"] },
   { name: "CamCompare", url: "https://www.camcompare.app", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["Photography", "Cameras"] },
   { name: "YGO Compare", url: "https://ygocompare.com", pages: ["/price-report"], blackFriday: "/black-friday", tags: ["YuGiOh", "TCG"] },

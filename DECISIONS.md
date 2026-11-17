@@ -24028,3 +24028,11 @@ price, a deal or an alert.
 ## 2026-11-16: urgent release of the "Also on Amazon" line
 
 Amazon clicks were about 0 a day since 13 Nov. The owner approved one urgent production build (subject carries the urgent marker) so the unpriced matched line goes live now instead of waiting for the next daily release. One build, no previews.
+
+## 2026-11-17: DexCompare moved to dexcompare.io
+
+Owner: DexCompare's main address is dexcompare.io from 17 Nov 2026; dexcompare.app 301s every page to it
+(CompareEmpire `apps/dexcompare-sealed/DECISIONS.md`, "Moving to dexcompare.io"). Rift's links, the Pokémon section's Dex links, the
+family network, HQ and the ops and audit scripts now name dexcompare.io. The sister-alerts and sister-premium origin checks accept
+`oldHosts` (dexcompare.app) as well, so a Dex form already open on the old host still works; the old host is never linked. Mail stays
+from alerts@dexcompare.app (its Brevo sender domain). The Search Console export keeps reading the old property until the new one has data.
