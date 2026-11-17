@@ -600,6 +600,18 @@ function QuickViewModal({
                       clicks apart from the card page's identical fallback. */}
                   {ebaySearchUrl && ebayMkt && (
                     <>
+                      <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                      <CartAddButton
+                        href={ebaySearchUrl}
+                        productUrl={ebaySearchUrl}
+                        storeName={ebayMkt.label}
+                        title={cardDisplayName(card.name, card)}
+                        detail="Search results"
+                        priceCents={0}
+                        currency={COUNTRIES[country].currency}
+                        image={cardImageSrc(card)}
+                        className="text-slate-300"
+                      />
                       <OutboundLink
                         href={ebaySearchUrl}
                         retailer="ebay_no_listing"
@@ -608,10 +620,11 @@ function QuickViewModal({
                         cardName={cardDisplayName(card.name, card)}
                         pageType="quickview"
                         surface="ebay_fallback"
-                        className="btn-buy mt-3 inline-flex text-xs"
+                        className="btn-buy inline-flex text-xs"
                       >
                         Search {ebayMkt.label} →
                       </OutboundLink>
+                      </div>
                       <AffiliateDisclosure partner="ebay" tight />
                     </>
                   )}
@@ -860,6 +873,21 @@ function QuickViewModal({
                 </span>
                 <span className="shrink-0 text-xs font-semibold text-slate-300">Search {ebayMkt.label} →</span>
               </OutboundLink>
+            )}
+            {ebaySearchUrl && ebayMkt && (
+              <div className="mt-2 flex justify-start">
+                <CartAddButton
+                  href={ebaySearchUrl}
+                  productUrl={ebaySearchUrl}
+                  storeName={ebayMkt.label}
+                  title={cardDisplayName(card.name, card)}
+                  detail="Search results"
+                  priceCents={0}
+                  currency={COUNTRIES[country].currency}
+                  image={cardImageSrc(card)}
+                  className="text-slate-300"
+                />
+              </div>
             )}
             {ebaySearchUrl && ebayMkt && <AffiliateDisclosure partner="ebay" tight />}
 

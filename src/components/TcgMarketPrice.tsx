@@ -96,13 +96,13 @@ export function TcgMarketPrice({
       </div>
       {href && (
         <div className="flex w-full items-stretch gap-2 sm:w-auto">
-          {cartTitle && std != null && (
+          {cartTitle && (
             <CartAddButton
               href={href}
               productUrl={productUrl}
               storeName="TCGplayer"
               title={cartTitle}
-              priceCents={std}
+              priceCents={std ?? 0}
               currency={cur}
               image={image}
               className="text-slate-300"

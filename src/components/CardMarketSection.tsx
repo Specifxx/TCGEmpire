@@ -702,6 +702,19 @@ export function CardPriceComparison({
                         <PaidLinkTag />
                       </p>
                     </div>
+                    {/* Every price row has an Add to cart (owner, 2026-11-17), a search row too: the line opens this tagged search and says "See today's price". */}
+                    <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
+                    <CartAddButton
+                      href={ebay.url}
+                      productUrl={ebay.url}
+                      storeName={ebay.label}
+                      title={displayName}
+                      detail="Search results"
+                      priceCents={0}
+                      currency={COUNTRIES[country].currency}
+                      image={image}
+                      className="text-slate-300"
+                    />
                     <OutboundLink
                       href={ebay.url}
                       retailer="ebay_no_listing"
@@ -710,10 +723,11 @@ export function CardPriceComparison({
                       cardName={displayName}
                       pageType="card_detail"
                       surface="ebay_fallback"
-                      className="btn-buy order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]"
+                      className="btn-buy flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]"
                     >
                       Search {ebay.label} →
                     </OutboundLink>
+                    </div>
                   </li>
                 )}
             {pin.tcgFirst
@@ -741,19 +755,17 @@ export function CardPriceComparison({
                     )}
                     {tcg.href && (
                       <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
-                      {(tcg.usdCents ?? tcg.usdCentsFoil) != null && (
-                        <CartAddButton
-                          href={tcg.href}
-                          productUrl={tcg.productUrl}
-                          storeName="TCGplayer"
-                          title={displayName}
-                          detail={tcg.usdCents == null ? "Foil" : null}
-                          priceCents={convertUsdCents((tcg.usdCents ?? tcg.usdCentsFoil)!, COUNTRIES[country].currency)}
-                          currency={COUNTRIES[country].currency}
-                          image={image}
-                          className="text-slate-300"
-                        />
-                      )}
+                      <CartAddButton
+                        href={tcg.href}
+                        productUrl={tcg.productUrl}
+                        storeName="TCGplayer"
+                        title={displayName}
+                        detail={(tcg.usdCents ?? tcg.usdCentsFoil) == null ? "Search results" : tcg.usdCents == null ? "Foil" : null}
+                        priceCents={(tcg.usdCents ?? tcg.usdCentsFoil) != null ? convertUsdCents((tcg.usdCents ?? tcg.usdCentsFoil)!, COUNTRIES[country].currency) : 0}
+                        currency={COUNTRIES[country].currency}
+                        image={image}
+                        className="text-slate-300"
+                      />
                       <OutboundLink
                         href={tcg.href}
                         retailer="tcgplayer"
