@@ -1022,6 +1022,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       </nav>
 
       {/* The two big ad banners (owner, 2026-11-14): at the top, under the breadcrumbs. */}
+      {/* Speed (2026-11-16): the banners' data starts loading with the HTML, not after hydration. Nothing visible. */}
+      <link rel="preload" as="fetch" href={inlinePicksUrl(card.setCode)} crossOrigin="anonymous" />
       <InlineAds setCode={card.setCode} pageType="card_detail" className="mb-4 lg:mb-6" />
 
       <div className="grid grid-cols-1 gap-4 lg:gap-6 lg:grid-cols-[160px_1fr] xl:grid-cols-[320px_1fr]">

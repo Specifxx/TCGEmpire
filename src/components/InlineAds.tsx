@@ -63,13 +63,13 @@ function Banner({ brand, headline, cta, ctaHref, ctaRetailer, tiles, retailer, n
         </OutboundLink>
       </div>
       <ul role="list" className="mt-3 flex h-[176px] shrink-0 snap-x gap-3 overflow-x-auto overflow-y-hidden">
-        {tiles.map((t) => (
+        {tiles.map((t, i) => (
           <li key={`${retailer}-${t.key}`} className="w-[120px] shrink-0 snap-start">
             <OutboundLink href={t.href} retailer={retailer} country={country} cardId={t.cardId} cardName={t.name} price={t.cents / 100} pageType={pageType} surface="inline_ads" className="group flex h-full flex-col">
               <span className="relative block h-[100px] w-full overflow-hidden rounded-md border border-ink-700 bg-ink-950" title={`${t.name} · ${t.price}`}>
                 {t.image && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={t.image} alt={t.name} width={120} height={100} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+                  <img src={t.image} alt={t.name} width={120} height={100} loading={i < 3 ? "eager" : "lazy"} decoding="async" className="absolute inset-0 h-full w-full object-cover" />
                 )}
               </span>
               <span className="mt-1.5 line-clamp-2 block h-8 text-[11px] font-semibold leading-4 text-slate-200 group-hover:text-white">{t.name}</span>
