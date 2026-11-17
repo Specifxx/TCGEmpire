@@ -77,7 +77,7 @@ export default function robots(): MetadataRoute.Robots {
         // Console "Blocked by robots.txt" and "Indexed, though blocked by
         // robots.txt" buckets. Leaving these pages crawlable lets Google read the
         // noindex and drop them cleanly (as "Excluded by noindex tag").
-        disallow: ["/api/", QUERY_DISALLOW],
+        disallow: ["/api/", "/out/", QUERY_DISALLOW],
       },
       {
         // AI citation/search crawlers: public content + the agent-readable surfaces.
@@ -85,7 +85,7 @@ export default function robots(): MetadataRoute.Robots {
         // (auth/account/machine routes) blocked — Allow is more specific, so it wins.
         userAgent: CITATION_BOTS,
         allow: ["/", "/api/v1/", "/llms.txt", "/llms-full.txt", ...QUERY_ALLOWS],
-        disallow: ["/api/", QUERY_DISALLOW],
+        disallow: ["/api/", "/out/", QUERY_DISALLOW],
       },
       {
         // Non-citing bulk scrapers: no crawl.

@@ -31,6 +31,14 @@ export const IMPACT_SITE_VERIFICATION_2 = "b0a3bf2e-0c8b-4a57-a2cc-02209020d340"
 export const TCGPLAYER_IMPACT_LINK =
   process.env.TCGPLAYER_IMPACT_LINK || "https://partner.tcgplayer.com/c/7385758/1780961/21018";
 
+/** Our own redirect to TCGplayer through Impact (src/app/out/tcgplayer/route.ts). */
+export const OUT_TCGPLAYER_PATH = "/out/tcgplayer";
+
+/** The Impact deep link to a tcgplayer.com URL: what /out/tcgplayer sends a person to. */
+export function impactUrl(plainTcgplayerUrl: string, sharedId: string): string {
+  return `${TCGPLAYER_IMPACT_LINK}?u=${encodeURIComponent(plainTcgplayerUrl)}&sharedid=${encodeURIComponent(sharedId)}`;
+}
+
 // eBay Partner Network link parameters per marketplace we actually have a real,
 // commission-eligible rotation for. The Browse API is supposed to return
 // pre-tagged URLs (itemAffiliateWebUrl) when we pass the campaign, but in
@@ -410,10 +418,13 @@ export function affiliateUrl(
     // `sharedid` is Impact's sub-id field; it shows up as "SubId1"/"Shared ID" in
     // the TCGplayer partner reports, so placements are comparable to eBay's.
     if (TCGPLAYER_IMPACT_LINK && /(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) {
-      return (
-        `${TCGPLAYER_IMPACT_LINK}?u=${encodeURIComponent(url)}` +
-        `&sharedid=${encodeURIComponent(affiliateSubId(subId, page))}`
-      );
+      const sid = affiliateSubId(subId, page);
+      // Pages and the public API link to OUR /out/tcgplayer, never straight to Impact: a crawler that follows a link
+      // would otherwise reach the network as our click, with no way for us to see or stop it (2026-11-17, "Bot clicks on
+      // TCGplayer" in DECISIONS.md). The route sends a person on to Impact and a bot to TCGplayer, untagged. An email
+      // keeps the direct link: a mail client's click arrives cross-site, which the route would read as a bot.
+      if (page?.startsWith("email")) return impactUrl(url, sid);
+      return `${SITE_URL}${OUT_TCGPLAYER_PATH}?u=${encodeURIComponent(url)}&sharedid=${encodeURIComponent(sid)}`;
     }
     // Cardmarket has no affiliate program we are in (their partnership track is
     // separately "subject to approval" — see lib/cardmarket.ts's header), so
@@ -473,7 +484,8 @@ export function outboundRel(_href: string): string {
 export function isPaidLink(href: string | null | undefined): boolean {
   if (!href) return false;
   try {
-    const u = new URL(href);
+    const u = new URL(href, SITE_URL);
+    if (u.pathname === OUT_TCGPLAYER_PATH) return true;
     if (/(?:^|\.)ebay\./i.test(u.hostname)) return true;
     if (/(?:^|\.)amazon\./i.test(u.hostname)) return true;
     if (TCGPLAYER_IMPACT_LINK && /(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) return true;

@@ -9,7 +9,7 @@ import {
   ALL_FALLBACK_RETAILERS, AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS,
   SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS,
 } from "../src/lib/constants";
-import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, ebaySearchUrl, ebayLabel, EBAY_CAMPAIGN_ID } from "../src/lib/affiliate";
+import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, ebaySearchUrl, ebayLabel, EBAY_CAMPAIGN_ID, isPaidLink } from "../src/lib/affiliate";
 import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA, TCG_EU } from "../src/lib/tcgplayer";
 import { computeMarket } from "../src/lib/market-rows";
 import { COUNTRY_LIST } from "../src/lib/country";
@@ -256,11 +256,18 @@ test("two placements on the same market are distinguishable", () => {
   assert.notEqual(cardPage.searchParams.get("customid"), browse.searchParams.get("customid"));
 });
 
-test("TCGplayer links go through Impact AND carry a sub-id", () => {
+test("TCGplayer links go through our /out/tcgplayer (to Impact for a person) AND carry a sub-id", () => {
   const out = affiliateUrl("https://www.tcgplayer.com/product/123", "tcgplayer", "https://riftcompare.com/card/x");
-  assert.ok(out.startsWith("https://partner.tcgplayer.com/"), out);
+  assert.ok(out.includes("/out/tcgplayer?"), out);
   assert.ok(out.includes("u=" + encodeURIComponent("https://www.tcgplayer.com/product/123")), out);
   assert.match(out, /[?&]sharedid=/, `no Impact sub-id: ${out}`);
+  assert.ok(isPaidLink(out), "the /out link is still a paid link");
+});
+
+test("an email keeps the direct Impact link (a mail client's click is cross-site)", () => {
+  const out = affiliateUrl("https://www.tcgplayer.com/product/123", "tcgplayer", "/email-alert-sealed");
+  assert.ok(out.startsWith("https://partner.tcgplayer.com/"), out);
+  assert.match(out, /[?&]sharedid=/);
 });
 
 test("Amazon links keep the associate tag and gain a sub-tag", () => {
@@ -456,7 +463,7 @@ test("the US row IS a real buyable store", () => {
 test("every market's TCGplayer link is affiliate-tagged", () => {
   for (const m of TCG_MARKETS) {
     const out = affiliateUrl("https://www.tcgplayer.com/product/123", m.retailer, "https://riftcompare.com/card/x");
-    assert.ok(out.startsWith("https://partner.tcgplayer.com/"), `${m.country}: not routed through Impact`);
+    assert.ok(out.includes("/out/tcgplayer?"), `${m.country}: not routed through /out/tcgplayer`);
     assert.match(out, /[?&]sharedid=/, `${m.country}: no sub-id`);
   }
 });
