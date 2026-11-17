@@ -24117,3 +24117,12 @@ Applied here (the full reasoning is in DexCompare's DECISIONS.md, same date):
   "Add to cart" (owner, 2026-11-14: a literal "Add to cart" on every row).
 - **The quick view sets the tab title and description while it is open** and restores them on close (the tab used to keep the list's title).
 - Already true here, no change: an eBay or Amazon row is never "the cheapest" or "Best price" (`neverCheapest`), so the table never contradicts its own headline.
+
+## 2026-11-17: The quick view's row-order test is retired; the Monday report reads two tests, not three
+
+The owner fixed the paid rows' order for everyone on 2026-11-17 (eBay, TCGplayer, Amazon, then the stores; CompareEmpire #257,
+mtgcompare #183), three days before the A/B tests of 2026-11-14 start. The `order` arm no longer draws anything different, so it is
+out of `AB_TESTS` (`src/lib/earnings/ab-test.ts`) and out of the Monday report and Empire HQ: printing it would show two identical
+halves with a p-value, and one time in twenty a "winner". The sites' key keeps its first letter (`us:ab-`), which the reader ignores.
+The `mini` test (DexCompare, phones) and the `cta` test ("Buy now" against "View deal") run as planned, 20 November to 3 December,
+under the same rules. `tests/earnings-ab-test.test.ts` pins that `order` is never printed.

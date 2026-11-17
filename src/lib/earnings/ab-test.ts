@@ -5,9 +5,11 @@ import { readStored, writeStored } from "./stored";
 import { valueCounts } from "./search-test";
 
 // THE QUICK VIEW'S A/B TESTS ON DEXCOMPARE AND MTG COMPARE (owner, 2026-11-14: "we need to do some A/B testing to determine what
-// is the best way for us to earn more revenue"; each site's DECISIONS.md, 2026-11-14, and its src/lib/ab.ts). Three 50/50 splits
+// is the best way for us to earn more revenue"; each site's DECISIONS.md, 2026-11-14, and its src/lib/ab.ts). Two 50/50 splits (three were planned)
 // inside the quick view (drawn in the browser, in no page's HTML), 20 November to 3 December 2026:
-//   order  US only: eBay's pinned row then TCGplayer's (a), against TCGplayer's priced row first (b).
+//   order  RETIRED before it started (owner, 2026-11-17: the paid rows' order is fixed for everyone, eBay, TCGplayer, Amazon,
+//          then the stores; CompareEmpire #257, mtgcompare #183). The key keeps its first letter, but both letters draw the
+//          same quick view, so it is not read as a test and not printed.
 //   mini   DexCompare, phones only: the small eBay + TCGplayer pair under the price rows (a), against above them (b).
 //   cta    TCGplayer's priced row's button says "View deal" (a), against "Buy now" (b).
 // The sites send Web Analytics events with ONE property, k = "<region>:<order><mini><cta>" ("us:ab-"; "-" where a test does not
@@ -30,7 +32,6 @@ export type AbTestName = "order" | "mini" | "cta";
 
 /** What each test changes, the events it is read on (the first is the one that decides), and the sites it runs on. */
 export const AB_TESTS: { name: AbTestName; what: string; sites: string[]; read: AbEvent[] }[] = [
-  { name: "order", what: "US: TCGplayer's row pinned above eBay's (B) or under it (A)", sites: ["dex", "mtg"], read: ["ab_tcg", "ab_ebay", "ab_paid"] },
   { name: "mini", what: "phones: the small eBay + TCGplayer pair above the price rows (B) or under them (A)", sites: ["dex"], read: ["ab_paid", "ab_mini_tcg", "ab_mini_ebay", "ab_tcg", "ab_ebay"] },
   { name: "cta", what: "TCGplayer's button says \"Buy now\" (B) or \"View deal\" (A)", sites: ["dex", "mtg"], read: ["ab_tcg", "ab_paid"] },
 ];
