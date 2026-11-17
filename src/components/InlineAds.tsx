@@ -5,6 +5,7 @@ import { OutboundLink } from "./OutboundLink";
 import { usePremium } from "./PremiumProvider";
 import { useCountry } from "./CountryProvider";
 import { affiliateUrl, ebaySearchUrl } from "@/lib/affiliate";
+import { inlinePicksUrl } from "@/lib/inline-picks-url";
 import { railTiles, TCG_SEARCH, type MiniData, type Tile } from "./PhoneDockAds";
 
 // The two big ad banners (owner, 2026-11-14: "separate big ad banners for TCGplayer and eBay", replacing the one mixed block of
@@ -81,11 +82,6 @@ function Banner({ brand, headline, cta, ctaHref, ctaRetailer, tiles, retailer, n
       <p className="mt-auto h-3.5 truncate text-[11px] leading-[14px] text-slate-400">{note}</p>
     </aside>
   );
-}
-
-/** The URL InlineAds fetches for a set; the card page preloads this exact address so the fetch starts with the HTML, not after hydration. */
-export function inlinePicksUrl(set: string): string {
-  return `/api/mini-picks${set ? `?set=${encodeURIComponent(set)}` : ""}`;
 }
 
 export function InlineAds({ setCode = "", pageType, className = "" }: { setCode?: string; pageType: string; className?: string }) {
