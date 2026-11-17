@@ -52,7 +52,7 @@ test("/browse owns 'Riftbound Card List' in both its title and its H1", () => {
   const src = read(BROWSE_SEO);
   assert.match(
     src,
-    /title: q \? .* : `Riftbound Card List — Browse & Compare Prices\$\{pageSuffix\}`/,
+    /title: q \? .* : `Riftbound Card List — Every Card, Filterable\$\{pageSuffix\}`/,
     "the default (unsearched) /browse title must lead with the exact phrase",
   );
   assert.match(
@@ -70,7 +70,7 @@ test("/browse's own description carries the phrase too, and names every tracked 
   // do not match the homepage's is its own small trust problem, so it is pinned.
   // Scoped to the description literal rather than the whole file, so an unrelated
   // mention of a market name elsewhere in the route can't satisfy it.
-  const desc = /The full Riftbound card list — every card in one database, with live prices compared across ([^"]+)"/.exec(src)?.[1] ?? "";
+  const desc = /The full Riftbound card list — every card in one database, filterable by set, domain, rarity and printing, with stores in the ([^"]+)"/.exec(src)?.[1] ?? "";
   assert.ok(desc, "expected the default (page 1) description literal");
   for (const market of ["US", "AU", "UK", "Singapore", "Canada", "EU"]) {
     assert.ok(desc.includes(market), `/browse description must name ${market} — got "${desc}"`);
