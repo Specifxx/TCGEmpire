@@ -130,13 +130,13 @@ test("tile figures and the open rule follow DexCompare's own (a store in stock, 
 test("links go to the visitor's market on DexCompare, as clean URLs Googlebot may follow (DexCompare disallows query strings)", () => {
   assert.equal(
     dexHref("UK", { kind: "product", slug: "x-booster-box", cents: 1, inStock: 1, listed: 1, marketplace: false, checkedAt: null }, "product"),
-    "https://dexcompare.app/uk/p/x-booster-box",
+    "https://dexcompare.io/uk/p/x-booster-box",
   );
   assert.equal(
     dexHref("EU", { kind: "set", setSlug: "surging-sparks", setName: "Surging Sparks" }, "quickview"),
-    "https://dexcompare.app/eu/sets/surging-sparks",
+    "https://dexcompare.io/eu/sets/surging-sparks",
   );
-  assert.equal(dexHomeHref("SG", "subnav"), "https://dexcompare.app/sg");
+  assert.equal(dexHomeHref("SG", "subnav"), "https://dexcompare.io/sg");
   assert.deepEqual(Object.keys(DEX_REGION).sort(), ["AU", "CA", "EU", "SG", "UK", "US"]);
 });
 
@@ -158,11 +158,11 @@ test("every DexCompare link is nofollow and opens in a new tab", () => {
 
 test("SEO-8: the set page's DexCompare set link and the section home's type-hub links are followed and clean", () => {
   assert.equal(DEX_FOLLOW_REL, "noopener");
-  assert.equal(dexTypeHubHref("US", "booster-boxes"), "https://dexcompare.app/us/type/booster-boxes");
-  assert.equal(dexTypeHubHref("AU", "elite-trainer-boxes"), "https://dexcompare.app/au/type/elite-trainer-boxes");
+  assert.equal(dexTypeHubHref("US", "booster-boxes"), "https://dexcompare.io/us/type/booster-boxes");
+  assert.equal(dexTypeHubHref("AU", "elite-trainer-boxes"), "https://dexcompare.io/au/type/elite-trainer-boxes");
   assert.equal(
     dexHref("US", { kind: "set", setSlug: "delta-reign", setName: "Delta Reign" }, "set"),
-    "https://dexcompare.app/us/sets/delta-reign",
+    "https://dexcompare.io/us/sets/delta-reign",
   );
   for (const [slug] of DEX_TYPE_HUBS) assert.ok(!dexTypeHubHref("US", slug).includes("?"));
   const set = readFileSync("src/app/pokemon/sets/[set]/page.tsx", "utf8");
@@ -187,7 +187,7 @@ test("followed store links: only DexCompare pages with 2+ stores, only in market
   assert.deepEqual(dexStoreLinks(one, "AU"), [], "a one-store DexCompare page is not linked");
   for (const noIndex of ["EU", "SG"] as const) assert.deepEqual(dexStoreLinks(tiles, noIndex), [], `${noIndex}: DexCompare's page is noindex there`);
   const href = dexProductHref("AU", "delta-reign-booster-box");
-  assert.equal(href, "https://dexcompare.app/au/p/delta-reign-booster-box");
+  assert.equal(href, "https://dexcompare.io/au/p/delta-reign-booster-box");
   assert.ok(!href.includes("?"), "robots.txt on DexCompare blocks every query string");
   assert.equal(DEX_REL, "nofollow noopener", "the quick view and the noindex product pages stay nofollow");
 });

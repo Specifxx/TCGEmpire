@@ -24,7 +24,7 @@ jobs:
       matrix:
         site:
           - https://riftcompare.com
-          - https://dexcompare.app
+          - https://dexcompare.io
           - https://opcompare.app
           - https://mtgcompare.app
           - https://ygocompare.com

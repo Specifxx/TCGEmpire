@@ -62,7 +62,7 @@ const SITE_URLS = {
   riftcompare: "https://riftcompare.com",
   opcompare: "https://opcompare.com",
   mtgcompare: "https://mtgcompare.com",
-  dexcompare: "https://dexcompare.app",
+  dexcompare: "https://dexcompare.io",
   gundamcompare: "https://gundamcompare.com",
   lorcanacompare: "https://lorcanacompare.com",
   ygocompare: "https://ygocompare.com",

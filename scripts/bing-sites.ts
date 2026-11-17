@@ -21,7 +21,7 @@ import { parseDotNetDate, pick, pickString, unwrapD } from "./bing-coverage";
 const API_BASE = "https://ssl.bing.com/webmaster/api.svc/json";
 const REPORT_PATH = "data/hq/bing-sites.json";
 /** Hosts that never get a resubmit (the plan's rule for Dex and Compare Empire). */
-export const SKIP_HOSTS = ["dexcompare.app", "compareempire.com"];
+export const SKIP_HOSTS = ["dexcompare.app", "dexcompare.io", "compareempire.com"];
 export const STALE_DAYS = 14;
 
 export const hostOf = (u: string) => u.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "").toLowerCase();

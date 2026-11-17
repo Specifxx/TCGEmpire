@@ -39,7 +39,7 @@ export const RIFT_SITE_KEY = "riftcompare";
 
 export const SISTER_REVIEW_SITES: SisterReviewSite[] = [
   { key: "op", name: "OP Compare", url: "https://opcompare.app" },
-  { key: "dex", name: "DexCompare", url: "https://dexcompare.app" },
+  { key: "dex", name: "DexCompare", url: "https://dexcompare.io" },
   { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app" },
   { key: "gundam", name: "Gundam Compare", url: "https://gundamcompare.com" },
   { key: "lorcana", name: "Lorcana Compare", url: "https://lorcanacompare.com" },

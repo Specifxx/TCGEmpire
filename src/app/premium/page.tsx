@@ -345,7 +345,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
             </CtaZone>
             <p className="mt-3 text-center text-sm text-slate-400">
               One membership, two sites: Premium also works on{" "}
-              <a href="https://dexcompare.app/premium" className="underline">DexCompare</a> (back-in-stock alerts and a watch list for Pokémon sealed).
+              <a href="https://dexcompare.io/premium" className="underline">DexCompare</a> (back-in-stock alerts and a watch list for Pokémon sealed).
             </p>
             {/* The terms, said once: what happens today, the way out, who takes the money. */}
             <p className="mx-auto mt-4 max-w-2xl text-center text-xs font-semibold text-slate-400" data-premium-terms>

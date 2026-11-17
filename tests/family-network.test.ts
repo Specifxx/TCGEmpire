@@ -91,7 +91,7 @@ test("pickTiles: one per sister, the visitor's region first, then the US, then t
   const feeds = [
     feed("op", [deal({ region: "US" }), deal({ region: "AU", currency: "AUD", cents: 15000, refCents: 19000, url: "https://opcompare.app/au/x" })]),
     feed("mtg", [deal({ url: "https://mtgcompare.app/us/p/x", refLabel: "median store price" })]),
-    feed("dex", [{ kind: "preorder", cluster: "cards", region: "AU", title: "Box", url: "https://dexcompare.app/au/p/box", cents: 20000, currency: "AUD", store: "S", releaseDate: "2026-11-14" }]),
+    feed("dex", [{ kind: "preorder", cluster: "cards", region: "AU", title: "Box", url: "https://dexcompare.io/au/p/box", cents: 20000, currency: "AUD", store: "S", releaseDate: "2026-11-14" }]),
     feed("figure", [deal({ cluster: "hobby", url: "https://figurecompare.com/figure/x" })]),
   ];
   const t = pickTiles(feeds, { self: "rift", cluster: "cards", kind: "deal", region: "AU" });

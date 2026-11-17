@@ -20,7 +20,7 @@ import { addLink, emptyTally, hostOf, trackedShare, type SiteTally } from "../sr
 const ALL = [
   "https://riftcompare.com",
   "https://opcompare.app",
-  "https://dexcompare.app",
+  "https://dexcompare.io",
   "https://mtgcompare.app",
   "https://gundamcompare.com",
   "https://lorcanacompare.com",

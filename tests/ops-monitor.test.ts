@@ -492,12 +492,12 @@ test("DexCompare index: a readable index is ok, a changed format warns, an outag
   const img = (n: number) => `https://tcgplayer-cdn.tcgplayer.com/product/${n}_in_1000x1000.jpg`;
   const rows = Array.from({ length: 120 }, (_, i) => [`p-${i}`, "P", "Booster Box", "sv8", img(1000 + i), 100, 1, 1, 0, null]);
   const on = { "https://riftcompare.com/pokemon": () => new Response("", { status: 200 }) };
-  const ok = await dexcompareIndex(deps({ fetch: fakeFetch({ ...on, "https://www.dexcompare.app/api/browse/us": json({ v: 1, region: "us", checkedAt: null, rows }) }).f }));
+  const ok = await dexcompareIndex(deps({ fetch: fakeFetch({ ...on, "https://dexcompare.io/api/browse/us": json({ v: 1, region: "us", checkedAt: null, rows }) }).f }));
   assert.equal(ok.severity, "ok");
-  const changed = await dexcompareIndex(deps({ fetch: fakeFetch({ ...on, "https://www.dexcompare.app/api/browse/us": json({ v: 2, region: "us", rows }) }).f }));
+  const changed = await dexcompareIndex(deps({ fetch: fakeFetch({ ...on, "https://dexcompare.io/api/browse/us": json({ v: 2, region: "us", rows }) }).f }));
   assert.equal(changed.severity, "warn");
   assert.match(changed.action ?? "", /DexCompare parser/);
-  const down = await dexcompareIndex(deps({ fetch: fakeFetch({ ...on, "https://www.dexcompare.app/api/browse/us": () => new Response("x", { status: 503 }) }).f }));
+  const down = await dexcompareIndex(deps({ fetch: fakeFetch({ ...on, "https://dexcompare.io/api/browse/us": () => new Response("x", { status: 503 }) }).f }));
   assert.equal(down.severity, "unknown");
   // The section switched off: grey, and DexCompare is not even asked.
   const off = fakeFetch({ "https://riftcompare.com/pokemon": () => new Response("", { status: 404 }) });

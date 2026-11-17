@@ -22,10 +22,12 @@ export interface SisterAlertSite {
   group: SisterGroup;
   /** Brand colour for the email's buttons. */
   color: string;
+  /** Hosts the site answered on before (a form already open there still posts from them); allowed as origins, never linked. */
+  oldHosts?: string[];
 }
 
 export const SISTER_ALERT_SITES: SisterAlertSite[] = [
-  { key: "dex", name: "DexCompare", url: "https://dexcompare.app", group: "cards", color: "#e3350d" },
+  { key: "dex", name: "DexCompare", url: "https://dexcompare.io", group: "cards", color: "#e3350d", oldHosts: ["dexcompare.app"] },
   { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app", group: "cards", color: "#7c3aed" },
   { key: "gundam", name: "Gundam Compare", url: "https://gundamcompare.com", group: "cards", color: "#1d4ed8" },
   { key: "lorcana", name: "Lorcana Compare", url: "https://lorcanacompare.com", group: "cards", color: "#6d28d9" },
@@ -66,7 +68,7 @@ export function allowedOrigin(origin: string | null): SisterAlertSite | null {
     return null;
   }
   const bare = host.replace(/^www\./, "");
-  return SISTER_ALERT_SITES.find((s) => new URL(s.url).hostname.replace(/^www\./, "") === bare) ?? null;
+  return SISTER_ALERT_SITES.find((s) => new URL(s.url).hostname.replace(/^www\./, "") === bare || (s.oldHosts ?? []).includes(bare)) ?? null;
 }
 
 export function corsHeaders(origin: string | null): Record<string, string> {

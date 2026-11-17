@@ -21,10 +21,12 @@ export interface PremiumSite {
   name: string;
   /** Canonical origin, no trailing slash. */
   url: string;
+  /** Hosts the site answered on before (DexCompare: dexcompare.app until 2026-11-17); accepted as origins, never used to link. */
+  oldHosts?: string[];
 }
 
 /** Sites whose members can use their RiftCompare Premium there. Add a site here only once it has the perks. */
-export const SISTER_PREMIUM_SITES: PremiumSite[] = [{ key: "dex", name: "DexCompare", url: "https://dexcompare.app" }];
+export const SISTER_PREMIUM_SITES: PremiumSite[] = [{ key: "dex", name: "DexCompare", url: "https://dexcompare.io", oldHosts: ["dexcompare.app"] }];
 
 export const PREMIUM_SESSION_DAYS = 60;
 const KID = "sister-sign-in-1";
@@ -40,7 +42,7 @@ export function premiumSiteForOrigin(origin: string | null): PremiumSite | null 
     const u = new URL(origin);
     if (u.protocol !== "https:" || u.port) return null;
     const bare = u.hostname.toLowerCase().replace(/^www\./, "");
-    return SISTER_PREMIUM_SITES.find((s) => new URL(s.url).hostname === bare) ?? null;
+    return SISTER_PREMIUM_SITES.find((s) => new URL(s.url).hostname === bare || (s.oldHosts ?? []).includes(bare)) ?? null;
   } catch {
     return null;
   }

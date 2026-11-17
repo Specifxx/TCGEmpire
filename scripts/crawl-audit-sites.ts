@@ -23,7 +23,7 @@ const ALL = [
   "https://riftcompare.com",
   "https://opcompare.app",
   "https://mtgcompare.app",
-  "https://dexcompare.app",
+  "https://dexcompare.io",
   "https://gundamcompare.com",
   "https://lorcanacompare.com",
   "https://ygocompare.com",

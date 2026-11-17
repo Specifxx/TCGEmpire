@@ -59,7 +59,7 @@ export const TARGETS: { host: string; repo: string }[] = [
   { host: "ygocompare.com", repo: "Specifxx/ygocompare" },
   { host: "cyberpunkcompare.com", repo: "Specifxx/cyberpunkcompare" },
 ];
-export const NEVER_HOSTS = ["dexcompare.app", "compareempire.com"];
+export const NEVER_HOSTS = ["dexcompare.app", "dexcompare.io", "compareempire.com"];
 
 export const hostOf = (u: string) => u.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "").toLowerCase();
 

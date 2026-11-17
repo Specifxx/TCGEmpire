@@ -55,16 +55,16 @@ export const SISTER_SITES: SisterSite[] = [
   },
   {
     key: "dex",
-    search: "https://dexcompare.app/us/sealed?q={q}",
+    search: "https://dexcompare.io/us/sealed?q={q}",
     name: "DexCompare",
-    url: "https://dexcompare.app",
+    url: "https://dexcompare.io",
     game: "Pokémon",
     anchor: "Pokémon TCG sealed prices",
     what: "Pokémon booster box, Elite Trainer Box and bundle prices across independent stores in seven markets",
     links: [
-      { label: "Pick your country", href: "https://dexcompare.app/" },
-      { label: "Pokémon booster boxes", href: "https://dexcompare.app/us/type/booster-boxes" },
-      { label: "Pokémon release calendar", href: "https://dexcompare.app/us/releases" },
+      { label: "Pick your country", href: "https://dexcompare.io/" },
+      { label: "Pokémon booster boxes", href: "https://dexcompare.io/us/type/booster-boxes" },
+      { label: "Pokémon release calendar", href: "https://dexcompare.io/us/releases" },
     ],
   },
   {

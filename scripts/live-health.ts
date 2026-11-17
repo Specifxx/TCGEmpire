@@ -13,7 +13,7 @@ import { writeFileSync } from "node:fs";
 const SITES: { host: string; canonicalHost: string }[] = [
   { host: "riftcompare.com", canonicalHost: "riftcompare.com" },
   { host: "opcompare.app", canonicalHost: "opcompare.app" },
-  { host: "dexcompare.app", canonicalHost: "dexcompare.app" },
+  { host: "dexcompare.io", canonicalHost: "dexcompare.io" },
   { host: "mtgcompare.app", canonicalHost: "mtgcompare.app" },
   { host: "gundamcompare.com", canonicalHost: "gundamcompare.com" },
   { host: "lorcanacompare.com", canonicalHost: "lorcanacompare.com" },

@@ -12,7 +12,7 @@ export const EPN_CAMPAIGN = "5339155912";
 
 /** Our own sites: links between them are not store links. */
 export const FAMILY_HOSTS = [
-  "riftcompare.com", "opcompare.app", "mtgcompare.app", "dexcompare.app", "gundamcompare.com",
+  "riftcompare.com", "opcompare.app", "mtgcompare.app", "dexcompare.io", "gundamcompare.com",
   "lorcanacompare.com", "ygocompare.com", "cyberpunkcompare.com", "bandaicompare.com",
   "camcompare.app", "compareempire.com", "wargamecompare.com", "figurecompare.com", "kaeyoung.com",
   "scentcompare.app", "sportscardcompare.com", "motorcompare.app", "billyang.site",

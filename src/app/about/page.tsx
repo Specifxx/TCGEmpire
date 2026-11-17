@@ -286,7 +286,7 @@ export default async function AboutPage() {
             store we compare. Card names and artwork are the property of Riot Games and are used under
             Riot&rsquo;s &ldquo;Legal Jibber Jabber&rdquo; policy to identify the cards being priced. We also
             run a sister site,{" "}
-            <a href="https://dexcompare.app" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">DexCompare</a>,
+            <a href="https://dexcompare.io" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">DexCompare</a>,
             for the Pokémon TCG.
           </p>
         </section>

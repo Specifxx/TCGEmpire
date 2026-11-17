@@ -11,13 +11,13 @@ import { buildAlertEmail } from "../src/lib/sister-alerts/email";
 const read = (f: string) => readFileSync(join(__dirname, "..", f), "utf8");
 
 test("only DexCompare's exact https origin may ask", () => {
+  assert.equal(premiumSiteForOrigin("https://dexcompare.io")?.key, "dex");
   assert.equal(premiumSiteForOrigin("https://dexcompare.app")?.key, "dex");
-  assert.equal(premiumSiteForOrigin("https://www.dexcompare.app")?.key, "dex");
-  for (const o of [null, "http://dexcompare.app", "https://dexcompare.app:8443", "https://dexcompare.app.evil.com", "https://mtgcompare.app", "https://riftcompare.com"]) {
+  for (const o of [null, "http://dexcompare.app", "https://dexcompare.io:8443", "https://dexcompare.io.evil.com", "https://mtgcompare.app", "https://riftcompare.com"]) {
     assert.equal(premiumSiteForOrigin(o), null, String(o));
   }
   assert.equal(premiumCors("https://evil.com")["Access-Control-Allow-Origin"], undefined);
-  assert.equal(premiumCors("https://dexcompare.app")["Access-Control-Allow-Origin"], "https://dexcompare.app");
+  assert.equal(premiumCors("https://dexcompare.io")["Access-Control-Allow-Origin"], "https://dexcompare.io");
   assert.deepEqual(SISTER_PREMIUM_SITES.map((s) => s.key), ["dex"]);
 });
 
@@ -89,7 +89,7 @@ test("sign-in on the sister site: an email-link code is its own kind, for its ow
   const sess = await signPremiumSession(dex, "a@b.com");
   assert.equal(await verifyEmailLinkCode(sess, dex), null, "a session is not a link code");
   assert.equal(await verifyEmailLinkCode(code, { ...dex, url: "https://evil.example" }), null);
-  assert.match(emailLinkUrl(dex, code), /^https:\/\/dexcompare\.app\/account\/verify#c=/);
+  assert.match(emailLinkUrl(dex, code), /^https:\/\/dexcompare\.io\/account\/verify#c=/);
   assert.match(googleClientIdFor(dex, {}) ?? "", /^36388598689-.*\.apps\.googleusercontent\.com$/);
   assert.equal(googleClientIdFor(dex, { DEX_GOOGLE_CLIENT_ID: " abc.apps.googleusercontent.com " }), "abc.apps.googleusercontent.com");
 });
