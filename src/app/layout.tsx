@@ -599,6 +599,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             of date — always confirm on the retailer&apos;s site.
           </p>
           <p>RiftCompare is not affiliated with Riot Games, eBay, TCGplayer or Amazon.</p>
+          <p>This product uses TCGplayer data but is not endorsed or certified by TCGplayer.</p>
           {/* Riot's Legal Jibber Jabber policy requires this EXACT notice, displayed
               conspicuously, for any fan project using Riot-owned assets (card art,
               names, the Riftbound marks). Keep the wording verbatim — it's what
