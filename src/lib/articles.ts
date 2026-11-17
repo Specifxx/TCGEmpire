@@ -13280,6 +13280,11 @@ We will update this post as the price is confirmed and as the first store listin
     // without the measurement loses to every result that has it. The answer
     // leads the title, the description and the body's first sentence.
     title: "Riftbound Card Size: 63 × 88 mm + Sleeve Guide",
+    // R&D test R17 (2026-11-18): the SERP title is the searcher's own question
+    // plus the answer. 28 days to 17 Nov: 8,338 impressions, 34 clicks (0.4%) at
+    // position 6.2. The h1, URL, canonical and excerpt are unchanged. Read the
+    // page's CTR 14 days after the release carrying this against that baseline.
+    seoTitle: "What Size Are Riftbound Cards? 63 × 88 mm — RiftCompare",
     excerpt:
       "Riftbound cards are 63 × 88 mm (2.5 × 3.5 in), standard TCG size. Which sleeves fit (66 × 91 mm), how many a deck needs, and the boxes and binders to use.",
     author: "RiftCompare",

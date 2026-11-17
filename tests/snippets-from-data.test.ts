@@ -63,6 +63,9 @@ test("card size: the answer leads the title, the description and the first sente
   assert.match(a.excerpt, /^Riftbound cards are 63 × 88 mm/);
   assert.match(a.body, /^Riftbound cards are \*\*63 × 88 mm\*\*/);
   assert.equal(a.updated, "2026-09-24");
+  // R17: the SERP title asks the searcher's question and answers it, within 60.
+  assert.match(a.seoTitle ?? "", /^What Size Are Riftbound Cards\? 63 × 88 mm/);
+  assert.ok((a.seoTitle ?? "").length <= 60);
 });
 
 test("set pages: 'Card List: All N Cards + Prices' leads, and the grid is not pushed below the intro", () => {

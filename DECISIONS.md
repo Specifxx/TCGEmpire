@@ -24117,3 +24117,7 @@ Applied here (the full reasoning is in DexCompare's DECISIONS.md, same date):
   "Add to cart" (owner, 2026-11-14: a literal "Add to cart" on every row).
 - **The quick view sets the tab title and description while it is open** and restores them on close (the tab used to keep the list's title).
 - Already true here, no change: an eBay or Amazon row is never "the cheapest" or "Best price" (`neverCheapest`), so the table never contradicts its own headline.
+
+## 2026-11-18: R&D test R17, question-form SERP title on the card-size guide
+
+Seven Rift guides sit at position 6-8 with about 0.5% CTR (26,659 impressions, 140 clicks, 28 days to 17 Nov, Search Console) while signature-cards at position 6.1 gets 11.1%. The card-size guide (8,338 impressions, 34 clicks, 0.4%, position 6.2) already led its title with the answer, so this test changes only the SERP title (`seoTitle`) to the searcher's own question plus the number. The h1, URL, canonical, excerpt and schema are unchanged. One page first so the read is not confounded. Read its CTR 14 days after the release carrying it: 1.0% or more at position within 1.5 and 3,000+ impressions keeps it and rolls the pattern to the other six; under 0.6% kills it. No deploy marker; it rides the daily release.
