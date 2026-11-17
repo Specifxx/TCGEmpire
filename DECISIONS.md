@@ -24088,3 +24088,17 @@ added, and `data/hq/owner-steps.json` carries a step asking whether he wants it.
 ## 2026-11-17: TCGplayer data notice in the footer
 
 Grok growth report (2026-11-17), item 8 ("plain not-affiliated footer lines"), and the image-licence report (`/mnt/project-files/seo/grok-2026-11-17/image-licence-report.md`, item 11): TCGplayer's API terms ask for the notice "This product uses TCGplayer data but is not endorsed or certified by TCGplayer.", and no footer carried it. It is now one plain line in the footer, beside the existing not-affiliated lines (which are unchanged). Nothing else changed: no price, link, order or cache rule.
+
+## 2026-11-17: Bot clicks on TCGplayer (every TCGplayer link goes through /out/tcgplayer)
+
+Owner (2026-11-17): Impact showed 700 to 800 TCGplayer clicks a day, largely bots. Vercel's browser-side `buy_click` events for the week 10 to 17 November
+counted about 1,150 TCGplayer clicks across Dex, MTG, Rift, OP and TCG Prices (about 165 a day), so most of Impact's clicks were not people using our pages.
+Dex and the card sites already send every outbound link through `/go` with a bot guard (DECISIONS 2026-11-13, 2026-11-15); Rift, MTG and OP put the
+Impact URL straight in the page HTML, so a crawler that follows links reached Impact as our click and we could neither see nor stop it. Now `affiliateUrl()`
+returns `https://riftcompare.com/out/tcgplayer?u=<tcgplayer url>&sharedid=<sub id>` for a TCGplayer link, and `src/app/out/tcgplayer/route.ts` sends a person on to
+Impact and a bot (`lib/bot-click.ts`: bot User-Agent, no Accept-Language, no Sec-Fetch-Mode, or a Sec-Fetch-Site that is not same-origin or same-site) to
+TCGplayer's own page, untagged, so Impact never counts it. The destination must be https on tcgplayer.com (no open redirect). The route is `no-store`,
+`X-Robots-Tag: noindex, nofollow` and disallowed in robots.txt, and the anchors keep `rel="nofollow sponsored"`. No page is cloaked: a bot and a person
+read the same HTML. A link inside an email keeps the direct Impact link, because a mail client's click is cross-site and would be read as a bot.
+`isPaidLink` and `classifyLink` treat the `/out/tcgplayer` path as a paid TCGplayer link. A bot that follows a link in a real browser from our own page is
+same-origin and still passes; that needs a Vercel Firewall rate limit on `/out/*`, not code. Counts stay a trend line, never a payout.
