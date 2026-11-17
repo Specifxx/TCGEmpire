@@ -2,7 +2,7 @@
 
 import { CartAddButton } from "@/components/cart/CartAddButton";
 import { StoreVote } from "./StoreVote";
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import type { SealedGroup } from "@/lib/sealed-import";
 import { OutboundLink } from "./OutboundLink";
@@ -77,6 +77,22 @@ export function SealedQuickViewProvider({ children }: { children: React.ReactNod
 function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup; currency: string; onClose: () => void }) {
   const { country } = useCountry();
   const fmt = (cents: number) => formatMoney(cents, currency);
+
+  // The tab's title and description follow the product while its quick view is open (Fiverr review F8, 2026-11-17: the tab kept the list's
+  // title); both go back on close. Only the browser's document is touched, never the server's HTML.
+  useEffect(() => {
+    if (!group.name) return;
+    const prevTitle = document.title;
+    const suffix = prevTitle.includes(" | ") ? prevTitle.slice(prevTitle.lastIndexOf(" | ")) : "";
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    const prevDesc = meta?.content;
+    document.title = `${group.name} prices${suffix}`;
+    if (meta) meta.content = `Compare every store's price for ${group.name}, cheapest first.`;
+    return () => {
+      document.title = prevTitle;
+      if (meta && prevDesc != null) meta.content = prevDesc;
+    };
+  }, [group.name]);
 
   const lowest = group.lowestPriceCents;
 
