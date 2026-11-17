@@ -153,7 +153,7 @@ export function OutboundLink({
    *    cart for the whole list, 2026-10-27);
    *  - `amazon_search`: a price board's "Check price on Amazon" search
    *    (lib/amazon.ts, 2026-10-29);
-   *  - `amazon_also`: the small unpriced "Also on Amazon" line under the sealed
+   *  - `amazon_also`: the unpriced "Check on Amazon" last row of the sealed
    *    page's price list (2026-11-16), shown only when the row has no live price;
    *  - `amazon_live`: the same row with Amazon's own price from the Creators
    *    API and a link to its item page (lib/amazon-live.ts, 2026-11-05). */

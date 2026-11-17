@@ -24018,6 +24018,13 @@ product page's price list (`/sealed/<slug>` only, never the quick view), the tag
 product Amazon sells (`amazonSellsSealed`) and only after the price lookup answers "no live price". Surface `amazon_also`. Never pinned, best,
 a deal or an alert. Read Amazon clicks per day against 7-12 Nov.
 
+## 2026-11-17: "Check on Amazon" is a last row on the sealed page and the quick view
+
+Owner: "even if there are no Amazon prices available, we should have an option to check on Amazon in our price rows." The 2026-11-16 line
+under the list becomes `AmazonCheckRow`: an ordinary last row labelled "Check on Amazon" (paid-link tag, shared tag, surface
+`amazon_also`) for a product Amazon sells (`amazonSellsSealed`), on the page after the price lookup says there is no live price and in the
+quick view always (the lookup is page-only). A priced Amazon row still pins as before; the check row is never pinned, ranked, the best
+price, a deal or an alert.
 ## 2026-11-16: urgent release of the "Also on Amazon" line
 
 Amazon clicks were about 0 a day since 13 Nov. The owner approved one urgent production build (subject carries the urgent marker) so the unpriced matched line goes live now instead of waiting for the next daily release. One build, no previews.
