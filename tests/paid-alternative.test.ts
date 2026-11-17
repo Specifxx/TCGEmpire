@@ -44,3 +44,28 @@ test("the line sits inside CardTopBuy only, measured by its own surface, and nev
   assert.match(src, /<PaidLinkTag/);
   assert.doesNotMatch(src, /\.sort\(/);
 });
+
+test("an eBay row within 8% is named ahead of a cheaper TCGplayer row, with the plain amount more", () => {
+  const prices = [
+    { priceCents: 1000, buyHref: "store:a", retailer: "cherry" },
+    { priceCents: 1030, buyHref: "paid:tcg", retailer: "tcgplayer" },
+    { priceCents: 1070, buyHref: "paid:ebay", retailer: "ebay_us" },
+  ];
+  const alt = paidAlternative(prices, paid);
+  assert.equal(alt?.row, prices[2]);
+  assert.equal(alt?.moreCents, 70);
+});
+
+test("an eBay row past 8% does not jump the queue, and a different finish is never the alternative", () => {
+  const far = [
+    { priceCents: 1000, buyHref: "store:a", retailer: "cherry" },
+    { priceCents: 1030, buyHref: "paid:tcg", retailer: "tcgplayer" },
+    { priceCents: 1150, buyHref: "paid:ebay", retailer: "ebay_us" },
+  ];
+  assert.equal(paidAlternative(far, paid)?.row, far[1]);
+  const foil = [
+    { priceCents: 1000, buyHref: "store:a", retailer: "cherry", isFoil: false },
+    { priceCents: 1020, buyHref: "paid:ebay", retailer: "ebay_us", isFoil: true },
+  ];
+  assert.equal(paidAlternative(foil, paid), null);
+});

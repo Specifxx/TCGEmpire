@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { readClickMix, summariseMix, type CountryMix } from "@/lib/click-mix";
+import { sydneyDay } from "@/lib/click-counter";
 import { loadGrowth, type Series, type TargetRow } from "@/lib/admin-growth";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +71,56 @@ function Card({ s }: { s: Series }) {
   );
 }
 
+function ClickMix({ rows, days }: { rows: CountryMix[]; days: number }) {
+  const pct = (v: number | null) => (v == null ? "–" : `${(v * 100).toFixed(0)}%`);
+  return (
+    <section className="mt-6 rounded-xl border border-ink-700 bg-ink-850 p-4">
+      <h2 className="font-semibold text-white">Click mix by market, last {days} days</h2>
+      <p className="mt-1 max-w-3xl text-xs text-slate-500">
+        Outbound clicks by the market the visitor was shopping. Paid is eBay, TCGplayer and any store link that earns. First row is the
+        share of clicks on the first row of its list by item price (rows are never re-sorted; postage is shown, not added). Within 8%
+        is paid clicks on a row 1 to 8% above that list&apos;s cheapest. Counted since 17 Nov 2026 by /api/click; a trend line, never a payout.
+      </p>
+      {rows.length === 0 ? (
+        <p className="mt-3 text-sm text-slate-400">No clicks counted yet.</p>
+      ) : (
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="py-1 pr-3">Market</th>
+                <th className="py-1 pr-3 text-right">Clicks</th>
+                <th className="py-1 pr-3 text-right">Paid share</th>
+                <th className="py-1 pr-3 text-right">eBay</th>
+                <th className="py-1 pr-3 text-right">TCGplayer</th>
+                <th className="py-1 pr-3 text-right">Paid stores</th>
+                <th className="py-1 pr-3 text-right">Unpaid stores</th>
+                <th className="py-1 pr-3 text-right">First row</th>
+                <th className="py-1 text-right">Paid, within 8%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.country} className="border-t border-ink-800 text-slate-300">
+                  <td className="py-1 pr-3 text-slate-200">{r.country}</td>
+                  <td className="py-1 pr-3 text-right">{r.clicks.toLocaleString("en-AU")}</td>
+                  <td className="py-1 pr-3 text-right font-bold text-white">{pct(r.paidShare)}</td>
+                  <td className="py-1 pr-3 text-right">{r.ebay.toLocaleString("en-AU")}</td>
+                  <td className="py-1 pr-3 text-right">{r.tcgplayer.toLocaleString("en-AU")}</td>
+                  <td className="py-1 pr-3 text-right">{r.paidStore.toLocaleString("en-AU")}</td>
+                  <td className="py-1 pr-3 text-right">{r.unpaidStore.toLocaleString("en-AU")}</td>
+                  <td className="py-1 pr-3 text-right">{pct(r.firstRowShare)}</td>
+                  <td className="py-1 text-right">{r.paidWithin8.toLocaleString("en-AU")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Targets({ rows }: { rows: TargetRow[] }) {
   if (!rows.length) return null;
   return (
@@ -106,6 +158,13 @@ export default async function GrowthPage({ searchParams }: { searchParams: { key
   if (!(keyOk || me?.isAdmin)) notFound();
 
   const { series, earningsBySource, targets, gscUpdatedAt, splits, errors } = await loadGrowth();
+  const MIX_DAYS = 28;
+  const mix = await readClickMix(sydneyDay(Date.now() - MIX_DAYS * 86400_000))
+    .then(summariseMix)
+    .catch(() => {
+      errors.push("Click mix: could not read the counters.");
+      return [] as CountryMix[];
+    });
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <Link href="/admin" className="text-sm text-brand-400 hover:underline">← Admin</Link>
@@ -122,6 +181,7 @@ export default async function GrowthPage({ searchParams }: { searchParams: { key
         </ul>
       )}
       <Targets rows={targets} />
+      <ClickMix rows={mix} days={MIX_DAYS} />
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {series.map((s) => (
           <Card key={s.key} s={s} />

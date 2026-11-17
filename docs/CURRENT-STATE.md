@@ -1136,6 +1136,9 @@ longer lands on its entry.
 
 ## Prices & data
 
+- **Click mix (2026-11-17):** every outbound click adds one Counter row keyed by market, paid or not, page, item-price position and gap
+  vs the cheapest (`lib/click-mix.ts`, read on `/admin/growth`); never a ClickEvent row per click. The phone paid line prefers eBay within
+  8%; no landed-cost sort (item-price order stands). [2026-11-17](../DECISIONS.md#L24040)
 - **In-stock Shopify store rows open the store's checkout** (cart permalink with the
   priced variant, `lib/checkout-link.ts`), except stores on Awin or a partner
   programme, emails and the public API. eBay, TCGplayer and Amazon keep product
