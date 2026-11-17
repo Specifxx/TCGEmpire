@@ -210,7 +210,7 @@ test("QuickView's two no-eBay-row searches are eBay-blue fallbacks with honest c
     assert.match(l, /pageType="quickview"/);
     assert.doesNotMatch(codeOnly(l.slice(0, l.indexOf("</OutboundLink>"))), /amber|gold|btn-primary/);
   }
-  assert.match(links[0], /className="btn-buy mt-3 inline-flex text-xs"/);
+  assert.match(links[0], /className="btn-buy inline-flex text-xs"/);
   const block = codeOnly(links[1].slice(0, links[1].indexOf("</OutboundLink>")));
   assert.match(block, /rounded-lg border border-ink-800 p-3/);
   assert.match(block, /Search \{ebayMkt\.label\} for \{cardDisplayName\(card\.name, card\)\}/);
