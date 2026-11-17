@@ -57,6 +57,7 @@ export function CardTopBuy({ rows, displayName }: { rows: MarketRow[]; displayNa
           cardName={displayName}
           price={best.priceCents / 100}
           positionInList={1}
+          cheapestPrice={best.priceCents / 100}
           pageType="card_detail"
           inStock
           variant={best.isFoil ? "foil" : "nonfoil"}
@@ -79,6 +80,7 @@ export function CardTopBuy({ rows, displayName }: { rows: MarketRow[]; displayNa
             cardName={displayName}
             price={alt.row.priceCents / 100}
             positionInList={prices.indexOf(alt.row) + 1}
+            cheapestPrice={best.priceCents / 100}
             pageType="card_detail"
             inStock
             variant={alt.row.isFoil ? "foil" : "nonfoil"}
@@ -86,8 +88,8 @@ export function CardTopBuy({ rows, displayName }: { rows: MarketRow[]; displayNa
             surface="card_top_alt"
             className="block min-w-0 flex-1 truncate py-2 font-semibold text-brand-300 hover:underline"
           >
-            or <span className="num">{fmt(alt.row.priceCents)}</span> on {paidAlternativeName(alt.row.retailer, alt.row.retailerName)}
-            {alt.pctMore > 0 ? ` (+${alt.pctMore}%)` : ""} →
+            or <span className="num">{fmt(alt.row.priceCents)}</span> at {paidAlternativeName(alt.row.retailer, alt.row.retailerName)}
+            {alt.moreCents > 0 ? ` (${fmt(alt.moreCents)} more)` : ""} →
           </OutboundLink>
           <PaidLinkTag className="shrink-0" />
         </div>

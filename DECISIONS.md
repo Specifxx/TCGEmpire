@@ -24036,3 +24036,37 @@ Owner: DexCompare's main address is dexcompare.io from 17 Nov 2026; dexcompare.a
 family network, HQ and the ops and audit scripts now name dexcompare.io. The sister-alerts and sister-premium origin checks accept
 `oldHosts` (dexcompare.app) as well, so a Dex form already open on the old host still works; the old host is never linked. Mail stays
 from alerts@dexcompare.app (its Brevo sender domain). The Search Console export keeps reading the old property until the new one has data.
+
+## 2026-11-17: Growth report (Grok): click mix, eBay-first paid alternative, inline alerts, "prices checked", scope on /methodology
+
+Bill adopted the report's recommendations except where his standing rules win. What shipped here, and what did not.
+
+**Item 1, the click mix.** The beacon (`/api/click`) now also sends the market, whether the link pays (`isPaidLink`), the page type, the
+1-based position in its list and the percent the row sits above the list's cheapest item price (`OutboundLink` `cheapestPrice`, wired on the
+card page's table and phone buy block). `lib/click-mix.ts` turns those into ONE more Counter row per click, keyed
+`clickmix:<day>:<market>:<network>:<paid|unpaid>:<page>:<position bucket>:<gap bucket>`. Every part is a closed set or a bucket (a forged
+beacon can only reach a fixed grid; never request text), so there is no `ClickEvent` row per click (those were switched off for Neon transfer,
+2026-10-27) and no read on the request path. `/admin/growth` reads the last 28 days (one bounded `take: 5000` of tiny rows, admin only) and
+shows, per market, clicks, paid share, eBay / TCGplayer / paid-store / unpaid-store clicks, first-row share and paid clicks within 8%.
+That is the AU / US / EU paid-share comparison. Honest limits: rank and gap are by ITEM price, because no site-wide postage figure ranks a
+row by landed cost and rows are never re-sorted; the report starts 17 Nov 2026; counts are a trend line, never a payout. Not added: store
+name per click (the monthly per-store counter already exists) and the sealed page's rows (their link has no list position yet).
+
+**Item 2, what fits Bill's rules.** The phone Cheapest block's paid line (`lib/paid-alternative.ts`) now prefers an eBay row within 8% of the
+cheapest unpaid row (`EBAY_PREFERRED_BAND`) over a cheaper TCGplayer row, still only within the old 20% band, never for a different finish,
+and reads plainly "or US$X at eBay (US$0.70 more)". It never re-orders anything and never says cheaper. CLASH, not built: a landed-cost
+DEFAULT SORT and a stronger paid second row at 8% against the rules that rows sort by item price with eBay and TCGplayer pinned, postage
+shown and not added, no currency converted for ranking, commission never deciding order. PROPOSAL for Bill if he wants it: keep the sort,
+and add a labelled toggle "Sort by delivered price" (default off, free postage and known postage only, "postage at checkout" rows sort last,
+never changes the pinned rows or the Cheapest chip). The click mix above will say first whether AU visitors skip paid rows; decide on that number.
+
+**Items 6, 7, 8.** The sealed page already had an inline, no-account email form; it gains an optional "only when under" price (the route
+already took `targetCents`). The card page's signed-out box had only Google / Discord and a link to a dialog; it now has an inline email
+field (the modal's own POST, the same remembered address). A target price for an address with no account is not added on the card page: a
+target is a per-account Plus feature there (`alert-limits.ts`) and the anonymous route has none; a signed-in visitor still sets one on the
+watch. "Prices checked {time}" is on the card page's price table header (newest listing, plus the oldest) and under the sealed page's store
+count. Soft 200: unknown card, set, store and sealed slugs already return 404 (`notFound`); a sold-out product keeps its page, which is real
+content, so nothing new is noindexed. `/methodology` gains "Who edits this, what we track and what we don't", with the affiliate disclosure
+pointing to the policy page; the footer gains a plain "not affiliated with Riot Games, eBay, TCGplayer or Amazon" line above Riot's required
+notice, which stays verbatim. The editor is named "Bill, its founder", as everywhere on the site; no surname is published anywhere, so none was
+added, and `data/hq/owner-steps.json` carries a step asking whether he wants it.

@@ -1,14 +1,98 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMe } from "@/lib/use-me";
 import { useWatchlist } from "@/lib/use-watchlist";
 import { useCountry } from "./CountryProvider";
 import { markSignupSource } from "@/lib/signup-source";
 import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
 import { trackAuthStart, trackSignupCta } from "@/lib/growth-events";
-import type { FreeLimitBody } from "@/lib/free-limits";
+import { FREE_LIMIT_STATUS, parseFreeLimit, type FreeLimitBody } from "@/lib/free-limits";
 import { FreeLimitPanel } from "./FreeLimitPanel";
+import { trackEvent } from "@/lib/analytics";
+
+// The address PriceAlertModal remembers (its EMAIL_KEY): one remembered address for every alert door.
+const EMAIL_KEY = "rc_alert_email";
+
+// An email field on the card page itself (2026-11-17, "Growth report" in DECISIONS.md): the
+// signed-out visitor types an address and the alert is made, with no dialog in between.
+// The same POST the modal makes (/api/alerts/subscribe), the same remembered address.
+function InlineEmailAlert({ cardId, market, submit }: { cardId: string; market: string; submit: string }) {
+  const [email, setEmail] = useState("");
+  const [phase, setPhase] = useState<"form" | "busy" | "done">("form");
+  const [error, setError] = useState<string | null>(null);
+  const [limit, setLimit] = useState<FreeLimitBody | null>(null);
+  useEffect(() => {
+    try {
+      const e = localStorage.getItem(EMAIL_KEY);
+      if (e) setEmail(e);
+    } catch {
+      /* private mode */
+    }
+  }, []);
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (phase === "busy") return;
+    const addr = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) {
+      setError("Enter the email address to send the alert to.");
+      return;
+    }
+    setPhase("busy");
+    setError(null);
+    const res = await fetch("/api/alerts/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: addr, cardIds: [cardId], market }),
+    }).catch(() => null);
+    if (res?.ok) {
+      try {
+        localStorage.setItem(EMAIL_KEY, addr);
+      } catch {
+        /* private mode */
+      }
+      trackEvent("price_alert_subscribed", { card: cardId, via: "inline" });
+      setPhase("done");
+      return;
+    }
+    if (res?.status === FREE_LIMIT_STATUS) setLimit(parseFreeLimit(await res.json().catch(() => null)));
+    else setError("Couldn't save that. Try again.");
+    setPhase("form");
+  }
+  if (phase === "done") {
+    return (
+      <p role="status" className="mt-2.5 text-xs text-brand-400">
+        ✓ Alert set for {email.trim().toLowerCase()}. Every email has a stop link.
+      </p>
+    );
+  }
+  return (
+    <form onSubmit={onSubmit} className="mt-2.5">
+      <div className="flex flex-wrap gap-2">
+        <input
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          required
+          aria-label="Email address for the price alert"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="input min-w-[9rem] flex-1 text-sm"
+        />
+        <button type="submit" disabled={phase === "busy"} className="btn-primary shrink-0 text-sm">
+          {phase === "busy" ? "Saving…" : submit}
+        </button>
+      </div>
+      {error && (
+        <p role="alert" className="mt-1 text-xs text-amber-300">
+          {error}
+        </p>
+      )}
+      {limit && <FreeLimitPanel kind="watchlist" count={limit.count} onClose={() => setLimit(null)} className="mt-2 w-full" />}
+    </form>
+  );
+}
 
 // "Get a price-drop alert" — the card page's PRIMARY call to action, directly
 // under the cheapest price (2026-09-24 growth pass).
@@ -227,18 +311,9 @@ export function PriceDropAlertCta({
             Continue with Discord
           </a>
         )}
-        {/* No provider configured (a preview, a rotated secret): the email
-            alert becomes the primary action rather than a dead box. */}
-        {providers.length === 0 ? (
-          <button type="button" onClick={emailInstead} className="btn-primary text-sm">
-            {copy.email}
-          </button>
-        ) : (
-          <button type="button" onClick={emailInstead} className="tap-link text-xs text-slate-400 underline-offset-2 hover:text-white hover:underline">
-            or just email me
-          </button>
-        )}
       </div>
+      <p className="mt-2.5 text-xs text-slate-500">{providers.length === 0 ? "" : "Or without an account:"}</p>
+      <InlineEmailAlert cardId={cardId} market={country} submit="Notify me" />
     </div>
   );
 }

@@ -10,6 +10,8 @@ import { FREE_SEALED_WATCH_IN_USE, FREE_SEALED_WATCH_LIMIT, SEALED_CHECK_CADENCE
 import { ENTRY_TIER_NAME } from "@/lib/site";
 import { sealedPath } from "@/lib/sealed-slug";
 import { trackEvent } from "@/lib/analytics";
+import { currencyOf, type Country } from "@/lib/country";
+import { clampTargetCents, parseMoneyInput } from "@/lib/target-price";
 
 // "Watch this sealed product" (2026-09-29): a toggle for any signed-in account
 // — an email when it is back in stock after selling out everywhere, when a
@@ -175,6 +177,8 @@ function AnonymousSealedWatchForm({ groupKey, name, market, className }: { group
   const [phase, setPhase] = useState<"form" | "busy" | "done" | "limit">("form");
   const [error, setError] = useState<string | null>(null);
   const [remembered, setRemembered] = useState(false);
+  // Optional "only below this price" (the route's targetCents), in the market's own currency.
+  const [target, setTarget] = useState("");
   useEffect(() => {
     const e = readEmail();
     if (e) {
@@ -192,12 +196,18 @@ function AnonymousSealedWatchForm({ groupKey, name, market, className }: { group
       setError("Enter the email address to send the alert to.");
       return;
     }
+    const parsed = target.trim() ? parseMoneyInput(target) : null;
+    const targetCents = parsed == null ? null : clampTargetCents(parsed);
+    if (target.trim() && parsed == null) {
+      setError("Enter the price as a number, like 89.95, or leave it empty.");
+      return;
+    }
     setPhase("busy");
     setError(null);
     const res = await fetch("/api/watches/sealed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: addr, groupKey }),
+      body: JSON.stringify({ email: addr, groupKey, ...(targetCents != null ? { targetCents } : {}) }),
     }).catch(() => null);
     const body = res ? ((await res.json().catch(() => null)) as Record<string, unknown> | null) : null;
     if (res?.ok) {
@@ -260,6 +270,20 @@ function AnonymousSealedWatchForm({ groupKey, name, market, className }: { group
         <button type="submit" disabled={phase === "busy"} className="btn-primary shrink-0 text-xs">
           {phase === "busy" ? "Saving…" : remembered ? "♡ Watch" : "Notify me"}
         </button>
+      </div>
+      <div className="mt-1.5 flex items-center gap-2">
+        <label htmlFor={`sealed-watch-target-${groupKey.replace(/[^a-z0-9]/gi, "-")}`} className="text-[11px] text-slate-400">
+          Only when it is under ({currencyOf(market as Country)}), optional
+        </label>
+        <input
+          id={`sealed-watch-target-${groupKey.replace(/[^a-z0-9]/gi, "-")}`}
+          type="text"
+          inputMode="decimal"
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          placeholder="e.g. 89.95"
+          className="input w-24 text-xs"
+        />
       </div>
       <p className="mt-1 text-[11px] text-slate-500">Checked {SEALED_CHECK_CADENCE}; a Discord stock bot may be faster. At-RRP alerts: {SEALED_RRP_ONLY}. One free sealed alert per address.</p>
       {error && (

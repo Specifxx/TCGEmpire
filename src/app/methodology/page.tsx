@@ -71,6 +71,7 @@ export default function MethodologyPage() {
   ];
 
   const sections: [id: string, label: string][] = [
+    ["scope", "Scope and editor"],
     ["sources", "Sources"],
     ["matching", "Matching"],
     ["conditions", "Conditions"],
@@ -116,6 +117,36 @@ export default function MethodologyPage() {
       </nav>
 
       <div className="mt-8 space-y-8 border-t border-ink-800 pt-8 text-sm leading-relaxed text-slate-300">
+        <section id="scope" className="scroll-mt-header space-y-3">
+          <h2 className="text-lg font-bold text-white">Who edits this, what we track and what we don&rsquo;t</h2>
+          <p>
+            {SITE_NAME} is edited by{" "}
+            <Link href="/authors/bill" className="text-brand-400 hover:underline">Bill</Link>, its founder, who
+            makes the editorial calls and answers corrections sent through the{" "}
+            <Link href="/contact" className="text-brand-400 hover:underline">contact form</Link>.
+          </p>
+          <p>
+            <strong className="text-white">We track:</strong> the in-stock, new-or-stated-condition item price of
+            Riftbound cards and sealed product at the stores listed on{" "}
+            <Link href="/stores/tracked" className="text-brand-400 hover:underline">stores we track</Link>, eBay
+            listings, TCGplayer&rsquo;s listings and market price, and the postage each store charges, measured
+            from its own checkout. Every price page shows when its prices were last checked.
+          </p>
+          <p>
+            <strong className="text-white">We don&rsquo;t track:</strong> anything behind a login, private sales,
+            a listing that cannot be tied to one card or product (it is skipped, not guessed), out-of-stock
+            prices as live prices (they appear as &ldquo;last seen&rdquo; and never rank), or what you buy: we
+            see that a link was clicked, never the purchase. Postage is shown beside a price and never silently
+            added to it, and one currency is never converted into another to rank a row.
+          </p>
+          <p>
+            <strong className="text-white">How we are paid:</strong> some links (eBay, TCGplayer, Amazon and a few
+            stores) earn us a commission when you buy; they are marked &ldquo;Paid link&rdquo;. Commission never
+            decides the order, which is by item price. The full statement is under{" "}
+            <Link href="/editorial-policy#money" className="text-brand-400 hover:underline">how we make money</Link>.
+          </p>
+        </section>
+
         <section id="sources" className="scroll-mt-header space-y-3">
           <h2 className="text-lg font-bold text-white">Where our data comes from</h2>
           <ul className="list-disc space-y-2 pl-5">
