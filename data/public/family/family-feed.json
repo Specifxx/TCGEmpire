@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "rift",
- "generatedAt": "2026-11-16T18:11:30.064Z",
+ "generatedAt": "2026-11-17T18:08:05.186Z",
  "links": {
   "US": {
    "deals": "https://riftcompare.com/black-friday",
@@ -119,10 +119,10 @@
    "region": "CA",
    "title": "Riftbound Legacy Booster Box",
    "url": "https://riftcompare.com/legacy-preorders",
-   "cents": 19995,
+   "cents": 17499,
    "currency": "CAD",
-   "store": "Cartes Sportives Rive Sud",
-   "image": "https://cdn.shopify.com/s/files/1/0699/8736/9247/files/riftbound-league-of-legends-tcg-legacy-booster-display-pre-order-league-of-legends-810155276980-1333544.png?v=1786733950",
+   "store": "PvP Shoppe",
+   "image": "https://cdn.shopify.com/s/files/1/0608/9605/1374/files/raw_29.png?v=1794866879",
    "releaseDate": "2027-01-29"
   },
   {
@@ -131,10 +131,10 @@
    "region": "CA",
    "title": "Riftbound The Reckoning Booster Box",
    "url": "https://riftcompare.com/the-reckoning-preorders",
-   "cents": 14995,
+   "cents": 16995,
    "currency": "CAD",
-   "store": "401 Games",
-   "image": "https://cdn.shopify.com/s/files/1/1704/1809/files/raw_0987ffff-9f24-484a-9fb3-bcff2bbbaa97.jpg?v=1794433624",
+   "store": "Banana Games & Hobby",
+   "image": "https://cdn.shopify.com/s/files/1/0620/7658/4128/files/raw_ad7c1a09-aede-43ab-bad0-323d85791fff.jpg?v=1794444670",
    "releaseDate": "2027-04-30"
   },
   {
@@ -169,6 +169,20 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "CA",
+   "title": "Riftbound Origins Booster Pack",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Booster%20Pack",
+   "cents": 1199,
+   "currency": "CAD",
+   "store": "Desert City Games",
+   "image": "https://cdn.shopify.com/s/files/1/0881/9956/1503/files/tmzopqxchvslwymnjtf6.png?v=1764024680",
+   "refCents": 1899,
+   "refLabel": "median store price",
+   "savingPct": 37
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "CA",
    "title": "Riftbound Origins Champion Deck (Lee Sin)",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Champion%20Deck%20(Lee%20Sin)",
    "cents": 2899,
@@ -178,20 +192,6 @@
    "refCents": 4548,
    "refLabel": "median store price",
    "savingPct": 36
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "CA",
-   "title": "Riftbound Origins Booster Pack",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Booster%20Pack",
-   "cents": 1199,
-   "currency": "CAD",
-   "store": "Desert City Games",
-   "image": "https://cdn.shopify.com/s/files/1/0881/9956/1503/files/tmzopqxchvslwymnjtf6.png?v=1764024680",
-   "refCents": 1849,
-   "refLabel": "median store price",
-   "savingPct": 35
   },
   {
    "kind": "deal",
@@ -211,15 +211,15 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "CA",
-   "title": "Riftbound Spirit Forged Champion Deck (Fiora)",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Spirit%20Forged%20Champion%20Deck%20(Fiora)",
-   "cents": 2294,
+   "title": "Riftbound Radiance Bundle",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Bundle",
+   "cents": 3999,
    "currency": "CAD",
-   "store": "Let's Play! Cards and Games",
-   "image": "https://cdn.shopify.com/s/files/1/0327/1016/4618/files/raw_6d171276-5129-4dca-8c31-f68a469fb880.png?v=1770835313",
-   "refCents": 3397,
+   "store": "Hobbiesville",
+   "image": "https://cdn.shopify.com/s/files/1/0261/9795/0486/files/DISOUNT_InstagramPost_-2026-10-01T201519.455.png?v=1790900131",
+   "refCents": 5999,
    "refLabel": "median store price",
-   "savingPct": 32
+   "savingPct": 33
   },
   {
    "kind": "preorder",
@@ -227,10 +227,10 @@
    "region": "EU",
    "title": "Riftbound Legacy Booster Box",
    "url": "https://riftcompare.com/legacy-preorders",
-   "cents": 11900,
+   "cents": 12500,
    "currency": "EUR",
-   "store": "SpellNexus",
-   "image": "https://cdn.shopify.com/s/files/1/1048/0061/6789/files/RiftboundLegacyBoosterBoxEnglish.png?v=1786358525",
+   "store": "Universe TCG",
+   "image": "https://cdn.shopify.com/s/files/1/0912/3554/9525/files/uvsrb06bd01en.png?v=1794781719",
    "releaseDate": "2027-01-29"
   },
   {
@@ -269,9 +269,9 @@
    "currency": "EUR",
    "store": "Lake Cards",
    "image": "https://cdn.shopify.com/s/files/1/0781/5856/1615/files/riftbound-vendetta-zed-vs-shen-showdown-deck-en-1200-transparent.png?v=1788537824",
-   "refCents": 3343,
+   "refCents": 3395,
    "refLabel": "median store price",
-   "savingPct": 40
+   "savingPct": 41
   },
   {
    "kind": "deal",
@@ -305,6 +305,20 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "EU",
+   "title": "Riftbound Spirit Forged Booster Box",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Spirit%20Forged%20Booster%20Box",
+   "cents": 14900,
+   "currency": "EUR",
+   "store": "SpellNexus",
+   "image": "https://cdn.shopify.com/s/files/1/1048/0061/6789/files/RiftboundSpiritforgedBoosterBoxEnglish.png?v=1786008615",
+   "refCents": 17395,
+   "refLabel": "median store price",
+   "savingPct": 14
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "EU",
    "title": "Riftbound Radiance Bundle",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Bundle",
    "cents": 3050,
@@ -312,20 +326,6 @@
    "store": "SpellNexus",
    "image": "https://cdn.shopify.com/s/files/1/1048/0061/6789/files/RiftboundRadianceVaultEnglish.png?v=1786093881",
    "refCents": 3470,
-   "refLabel": "median store price",
-   "savingPct": 12
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "EU",
-   "title": "Riftbound Radiance Booster Box",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Booster%20Box",
-   "cents": 10500,
-   "currency": "EUR",
-   "store": "SpellNexus",
-   "image": "https://cdn.shopify.com/s/files/1/1048/0061/6789/files/Riftbound_Radiance_Booster_Box_English.png?v=1791475508",
-   "refCents": 11950,
    "refLabel": "median store price",
    "savingPct": 12
   },
@@ -419,7 +419,7 @@
    "currency": "GBP",
    "store": "Roll N Play",
    "image": "https://cdn.shopify.com/s/files/1/0909/8297/3773/files/lol_riftbound-s5-render-boosterbox-front.png?v=1790750195",
-   "refCents": 11976,
+   "refCents": 11986,
    "refLabel": "median store price",
    "savingPct": 17
   },
@@ -485,9 +485,9 @@
    "currency": "USD",
    "store": "Triad Cards and Gaming",
    "image": "https://cdn.shopify.com/s/files/1/0713/8007/4695/files/653154_in_1000x1000_aa30a575-6cf8-4a9b-8e9d-09e83a951f2b.jpg?v=1782501582",
-   "refCents": 5462,
+   "refCents": 5175,
    "refLabel": "median store price",
-   "savingPct": 45
+   "savingPct": 42
   },
   {
    "kind": "deal",
@@ -499,9 +499,9 @@
    "currency": "USD",
    "store": "Gator's Card Den",
    "image": "https://cdn.shopify.com/s/files/1/0714/4774/0450/files/SpiritforgedFioraDeck.png?v=1770924232",
-   "refCents": 3199,
+   "refCents": 3299,
    "refLabel": "median store price",
-   "savingPct": 38
+   "savingPct": 39
   },
   {
    "kind": "deal",
@@ -513,9 +513,9 @@
    "currency": "USD",
    "store": "Gator's Card Den",
    "image": "https://cdn.shopify.com/s/files/1/0714/4774/0450/files/RiftboundEvelybbvsSeraphineShowdownDeck.png?v=1792590563",
-   "refCents": 2694,
+   "refCents": 2544,
    "refLabel": "median store price",
-   "savingPct": 33
+   "savingPct": 29
   },
   {
    "kind": "deal",
@@ -539,8 +539,8 @@
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Unleashed%20Champion%20Deck%20(Vi)",
    "cents": 1499,
    "currency": "USD",
-   "store": "OneStopTCG",
-   "image": "https://cdn.shopify.com/s/files/1/0777/2323/8715/files/678157_in_800x800_b756f046-e09b-4272-969a-5ab42e20c73d.jpg?v=1771174141",
+   "store": "Wulf Gaming",
+   "image": "https://cdn.shopify.com/s/files/1/0602/6349/7898/files/678157_fa0ee96a-9477-4713-a2d7-0ca58c86bfcf.jpg?v=1784712939",
    "refCents": 1999,
    "refLabel": "median store price",
    "savingPct": 25
