@@ -24088,3 +24088,15 @@ added, and `data/hq/owner-steps.json` carries a step asking whether he wants it.
 ## 2026-11-17: TCGplayer data notice in the footer
 
 Grok growth report (2026-11-17), item 8 ("plain not-affiliated footer lines"), and the image-licence report (`/mnt/project-files/seo/grok-2026-11-17/image-licence-report.md`, item 11): TCGplayer's API terms ask for the notice "This product uses TCGplayer data but is not endorsed or certified by TCGplayer.", and no footer carried it. It is now one plain line in the footer, beside the existing not-affiliated lines (which are unchanged). Nothing else changed: no price, link, order or cache rule.
+
+## /browse stops asking for the price search — 2026-11-17
+
+The 27 Oct re-check of the page folds (`gsc-queries`, 18 Oct–14 Nov): "riftbound radiance card list" fell from 6,134 to 272 impressions a
+month (launch demand gone), still split gallery (206 at 8.0) against `/sets/radiance` (54 at 10.3); the set page itself has 5,020
+impressions at 8.0 on price queries and the gallery 2,120 at 7.7, so Google has not yet folded them. The canonical stays on the set page:
+flipping it now would restart the consolidation. The new pair in SPLIT QUERIES was `/` against `/browse` on "riftbound card prices" and its
+variants (about 3,200 impressions a month, both near position 8). `/browse`'s title ("… — Compare Prices") and description ("live prices
+compared") were asking for the homepage's query. The title is now "Riftbound Card List — Every Card, Filterable" and the description
+names what the page is (the card list, its filters, the six markets); prices stay on the page, the snippet just stops competing. Google
+clicks over the same window: about 215 a day in late October, 90–130 a day in November, so the site is below its launch-week level, not
+above it; the folds are still being reindexed (the old heartsteel URL still shows 68 impressions). Next read in mid-December.

@@ -63,7 +63,12 @@ export async function browseMetadata(searchParams: BrowseParams): Promise<Metada
   // The /browse-vs-"/" split that audit established is UNCHANGED and is what
   // makes this safe: /browse owns card-database/list intent, "/" owns
   // comparison intent ("Riftbound prices", "riftbound price check"). Neither
-  // title now contains the other's phrase.
+  // title now contains the other's phrase. 2026-11-17: the title's "Compare
+  // Prices" tail and the description's "live prices compared" went too; Search
+  // Console had Google splitting "riftbound card prices" and its variants
+  // (about 3,200 impressions a month) between "/" and this page, both near
+  // position 8 ("Competing pages folded" in DECISIONS.md). Prices stay on the
+  // page; the snippet just stops asking for the price query.
   // NO manual "| RiftCompare" suffix — title is a plain string here (not
   // wrapped in { absolute: ... }), so layout.tsx's title template ("%s —
   // RiftCompare") already appends it once; adding it by hand doubled the
@@ -81,15 +86,15 @@ export async function browseMetadata(searchParams: BrowseParams): Promise<Metada
   // canonicalization).
   const pageSuffix = page > 1 ? ` — Page ${page}` : "";
   const base = {
-    title: q ? `${q} — Riftbound cards & prices${pageSuffix}` : `Riftbound Card List — Browse & Compare Prices${pageSuffix}`,
+    title: q ? `${q} — Riftbound cards & prices${pageSuffix}` : `Riftbound Card List — Every Card, Filterable${pageSuffix}`,
     // Market list corrected to all six tracked markets while this copy was being
     // rewritten anyway: it still said "AU, US, UK & SG" — the set of markets as
     // they stood before Canada (2026-08) and the EU (2026-08-23) launched, both
     // of which the homepage description has named for weeks.
     description:
       page > 1
-        ? `The full Riftbound card list — every card in one database, with live prices across US, AU, UK, Singapore, Canada & EU stores. Page ${page}.`
-        : "The full Riftbound card list — every card in one database, with live prices compared across US, AU, UK, Singapore, Canada & EU stores. Updated twice a day.",
+        ? `The full Riftbound card list — every card in one database, filterable by set, domain, rarity and printing, with stores in the US, AU, UK, Singapore, Canada & EU. Page ${page}.`
+        : "The full Riftbound card list — every card in one database, filterable by set, domain, rarity and printing, with stores in the US, AU, UK, Singapore, Canada & EU. Updated twice a day.",
   };
   if (q) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
   if (page > 1 && isCleanPagination(searchParams)) {
