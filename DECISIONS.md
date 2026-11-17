@@ -24121,3 +24121,12 @@ Applied here (the full reasoning is in DexCompare's DECISIONS.md, same date):
 ## 2026-11-18: R&D test R17, question-form SERP title on the card-size guide
 
 Seven Rift guides sit at position 6-8 with about 0.5% CTR (26,659 impressions, 140 clicks, 28 days to 17 Nov, Search Console) while signature-cards at position 6.1 gets 11.1%. The card-size guide (8,338 impressions, 34 clicks, 0.4%, position 6.2) already led its title with the answer, so this test changes only the SERP title (`seoTitle`) to the searcher's own question plus the number. The h1, URL, canonical, excerpt and schema are unchanged. One page first so the read is not confounded. Read its CTR 14 days after the release carrying it: 1.0% or more at position within 1.5 and 3,000+ impressions keeps it and rolls the pattern to the other six; under 0.6% kills it. No deploy marker; it rides the daily release.
+
+## 2026-11-17: The quick view's row-order test is retired; the Monday report reads two tests, not three
+
+The owner fixed the paid rows' order for everyone on 2026-11-17 (eBay, TCGplayer, Amazon, then the stores; CompareEmpire #257,
+mtgcompare #183), three days before the A/B tests of 2026-11-14 start. The `order` arm no longer draws anything different, so it is
+out of `AB_TESTS` (`src/lib/earnings/ab-test.ts`) and out of the Monday report and Empire HQ: printing it would show two identical
+halves with a p-value, and one time in twenty a "winner". The sites' key keeps its first letter (`us:ab-`), which the reader ignores.
+The `mini` test (DexCompare, phones) and the `cta` test ("Buy now" against "View deal") run as planned, 20 November to 3 December,
+under the same rules. `tests/earnings-ab-test.test.ts` pins that `order` is never printed.

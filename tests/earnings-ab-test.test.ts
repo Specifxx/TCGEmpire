@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { AB_FROM, AB_SHOWN_UNTIL, AB_TO, abTestLines, armOfKey, compare, normalCdf, splitByArm, type AbTest } from "../src/lib/earnings/ab-test";
+import { AB_TESTS, AB_FROM, AB_SHOWN_UNTIL, AB_TO, abTestLines, armOfKey, compare, normalCdf, splitByArm, type AbTest } from "../src/lib/earnings/ab-test";
 
 // The quick view's A/B tests on DexCompare and MTG Compare (owner, 2026-11-14; DECISIONS.md): the reader's arithmetic, the
 // fixed dates, and the rule that no verdict is printed before the last day.
@@ -26,7 +26,7 @@ const stored: AbTest = {
   status: "ok",
   fetchedAt: 0,
   sites: [
-    { key: "dex", counts: { ab_seen: { "us:aaa": 1000, "us:baa": 1000 }, ab_tcg: { "us:aaa": 100, "us:baa": 130 }, ab_ebay: { "us:aaa": 60, "us:baa": 55 }, ab_paid: { "us:aaa": 150, "us:baa": 175 } } },
+    { key: "dex", counts: { ab_seen: { "us:aaa": 1000, "us:aab": 1000 }, ab_tcg: { "us:aaa": 100, "us:aab": 130 }, ab_ebay: { "us:aaa": 60, "us:aab": 55 }, ab_paid: { "us:aaa": 150, "us:aab": 175 } } },
     { key: "mtg", counts: {} },
   ],
 };
@@ -44,19 +44,22 @@ test("nothing before the first day or after the last report; no verdict while th
   const running = abTestLines(stored, "2026-11-23");
   assert.match(running[0], /Running.*no verdict before the last day/);
   assert.ok(running.every((l) => !/RESULT/.test(l)));
-  const dex = running.find((l) => l.startsWith("DexCompare, order"));
+  const dex = running.find((l) => l.startsWith("DexCompare, cta"));
   assert.ok(dex);
   assert.match(dex, /visits A 1,000, B 1,000\. TCGplayer click A 10\.0% \(100\), B 13\.0% \(130\), \+30%, p 0\.03\d/);
-  assert.ok(running.some((l) => /^MTG Compare, order.*No visits in both arms yet/.test(l)));
+  assert.ok(running.some((l) => /^MTG Compare, cta.*No visits in both arms yet/.test(l)));
   assert.ok(!running.some((l) => l.startsWith("MTG Compare, mini")), "MTG Compare's quick view has no small ad pair");
+  // the paid rows' order was fixed for everyone on 2026-11-17: that split draws one quick view, so it is never printed as a test
+  assert.ok(!running.some((l) => /, order \(/.test(l)));
+  assert.deepEqual(AB_TESTS.map((t) => t.name), ["mini", "cta"]);
 });
 
 test("after the last day the first measure decides, at p under 0.05, else the control stays", () => {
   const done = abTestLines(stored, "2026-12-04");
   assert.match(done[0], /^Finished/);
-  assert.match(done.find((l) => l.startsWith("DexCompare, order")) ?? "", /RESULT: B wins\.$/);
-  const flat: AbTest = { ...stored, sites: [{ key: "dex", counts: { ab_seen: { "us:aaa": 1000, "us:baa": 1000 }, ab_tcg: { "us:aaa": 100, "us:baa": 104 } } }] };
-  assert.match(abTestLines(flat, "2026-12-04").find((l) => l.startsWith("DexCompare, order")) ?? "", /RESULT: no difference found, the control stays\.$/);
+  assert.match(done.find((l) => l.startsWith("DexCompare, cta")) ?? "", /RESULT: B wins\.$/);
+  const flat: AbTest = { ...stored, sites: [{ key: "dex", counts: { ab_seen: { "us:aaa": 1000, "us:aab": 1000 }, ab_tcg: { "us:aaa": 100, "us:aab": 104 } } }] };
+  assert.match(abTestLines(flat, "2026-12-04").find((l) => l.startsWith("DexCompare, cta")) ?? "", /RESULT: no difference found, the control stays\.$/);
   assert.deepEqual(abTestLines(null, "2026-11-23"), ["Not collected yet (the earnings refresh reads it every three hours)."]);
 });
 
