@@ -217,3 +217,9 @@ test("Riftbound 2048 is retired: no page, no registry entry, no links, and its U
   assert.ok(at > 0, "the old URL must redirect");
   assert.match(cfg.slice(at, at + 120), /destination: "\/games",\s*permanent: true/);
 });
+
+test("the footer carries the TCGplayer data notice beside the Riot lines (2026-11-17)", () => {
+  const layout = read("src/app/layout.tsx");
+  assert.ok(layout.includes("This product uses TCGplayer data but is not endorsed or certified by TCGplayer."));
+  assert.ok(layout.includes("RiftCompare is not affiliated with Riot Games, eBay, TCGplayer or Amazon."));
+});
