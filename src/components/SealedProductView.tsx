@@ -5,6 +5,7 @@ import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { sealedImageAlt } from "@/lib/image-alt";
 import { useCountry } from "./CountryProvider";
+import { CheckedAgo } from "./CheckedAgo";
 import { SealedOffers } from "./SealedQuickView";
 import { SealedWatchButton } from "./SealedWatchButton";
 
@@ -22,6 +23,8 @@ export function SealedProductView({ byMarket }: { byMarket: Partial<Record<Count
   const currency = COUNTRIES[shownMarket].currency;
   const fmt = (cents: number) => formatMoney(cents, currency);
   const lowest = group.lowestPriceCents;
+  // The newest time any of this product's listings was read: "Prices checked 3h ago" (2026-11-17).
+  const checkedAt = group.listings.reduce<string | null>((nw, l) => (l.lastSeen && (!nw || l.lastSeen > nw) ? l.lastSeen : nw), null);
 
   return (
     <>
@@ -48,6 +51,12 @@ export function SealedProductView({ byMarket }: { byMarket: Partial<Record<Count
           )}
           <p className="mt-1 text-xs text-slate-500">
             {group.storeCount} {group.storeCount === 1 ? "store" : "stores"} in stock
+            {checkedAt && (
+              <>
+                {" · Prices "}
+                <CheckedAgo iso={checkedAt} />
+              </>
+            )}
           </p>
           {lowest != null && group.msrpCents != null && (
             <div className="mt-2">

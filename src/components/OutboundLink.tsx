@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { trackEvent } from "@/lib/analytics";
-import { outboundRel } from "@/lib/affiliate";
+import { isPaidLink, outboundRel } from "@/lib/affiliate";
 import { markBuyClick, registerBuyLink } from "@/lib/buy-intent";
 import { reportOutboundConversion } from "@/lib/google-ads";
 import { readEntrySource } from "@/lib/entry-source";
@@ -67,6 +67,7 @@ export function OutboundLink({
   cardName,
   price,
   positionInList,
+  cheapestPrice,
   pageType,
   inStock,
   variant,
@@ -101,6 +102,10 @@ export function OutboundLink({
   /** 1-based rank of this link within whatever list it's rendered in (a top-
    *  deals row, a store-price table, search suggestions, etc.), when known. */
   positionInList?: number;
+  /** The cheapest in-stock item price of the same list, same units as `price`;
+   *  with `price` it gives the click's gap above the cheapest for the click mix
+   *  (lib/click-mix.ts). Omit when the list has no such notion. */
+  cheapestPrice?: number;
   /** What kind of page this click happened on (e.g. "homepage", "card_detail",
    *  "deals", "sealed") — lets the GA4 report segment buy_click by origin
    *  without joining back to page_location. */
@@ -229,7 +234,12 @@ export function OutboundLink({
     });
     // Our own daily click count per network for /admin/growth (lib/click-counter.ts).
     try {
-      navigator.sendBeacon?.(`/api/click?r=${encodeURIComponent(retailer)}${checkout ? "&t=checkout" : ""}`);
+      const q = new URLSearchParams({ r: retailer, c: country });
+      if (isPaidLink(href)) q.set("paid", "1");
+      if (pageType) q.set("pg", pageType);
+      if (positionInList) q.set("p", String(positionInList));
+      if (price != null && cheapestPrice != null && cheapestPrice > 0) q.set("g", String(Math.round((price / cheapestPrice - 1) * 100)));
+      navigator.sendBeacon?.(`/api/click?${q}${checkout ? "&t=checkout" : ""}`);
     } catch {}
     // Paid Google Ads conversion tracking (lib/google-ads.ts) — a no-op unless a
     // conversion action is configured in env, and gated by the same Consent Mode

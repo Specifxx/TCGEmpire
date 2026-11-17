@@ -624,6 +624,7 @@ export function CardPriceComparison({
                   cardName={displayName}
                   price={p.priceCents / 100}
                   positionInList={i + 1}
+                  cheapestPrice={prices[0].priceCents / 100}
                   pageType="card_detail"
                   inStock
                   variant={p.isFoil ? "foil" : "nonfoil"}
@@ -672,7 +673,8 @@ export function CardPriceComparison({
               this header line is the panel's worst case, not its best. */}
           {mounted && prices.length > 0 && (
             <span className="whitespace-nowrap text-xs text-slate-500">
-              oldest listing {timeAgo(prices.reduce((old, p) => (p.lastSeen < old ? p.lastSeen : old), prices[0].lastSeen))}
+              prices checked {timeAgo(prices.reduce((nw, p) => (p.lastSeen > nw ? p.lastSeen : nw), prices[0].lastSeen))} · oldest listing{" "}
+              {timeAgo(prices.reduce((old, p) => (p.lastSeen < old ? p.lastSeen : old), prices[0].lastSeen))}
             </span>
           )}
         </div>

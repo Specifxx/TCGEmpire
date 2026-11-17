@@ -171,6 +171,15 @@
       "added": "2026-11-05",
       "prompt": "compare-empire/chrome-prompt-awin-feeds.md",
       "done": null
+    },
+    {
+      "id": "editor-full-name",
+      "site": "riftcompare",
+      "kind": "decision",
+      "title": "Say whether the editor's full name goes on /methodology and /authors/bill (today it says only \"Bill\")",
+      "why": "The Grok growth report asks for a named human editor. The site names \"Bill, its founder\" everywhere and has never published a surname, so none was added. If you want it, tell a session the exact name and it is a one-line change.",
+      "added": "2026-11-17",
+      "prompt": "seo/grok-2026-11-17/BRIEF.md (item 8)"
     }
   ]
 }

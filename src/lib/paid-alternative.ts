@@ -21,22 +21,33 @@ import { isPaidLink } from "./affiliate";
 /** At most 20% above the cheapest in-stock item price. */
 export const PAID_ALTERNATIVE_BAND = 1.2;
 
+/** An eBay listing this close to the cheapest unpaid row is named ahead of a
+ *  cheaper paid row elsewhere (2026-11-17, "Growth report" in DECISIONS.md). */
+export const EBAY_PREFERRED_BAND = 1.08;
+
 export interface PricedRow {
   priceCents: number;
   buyHref: string;
+  /** Store key; lets the rule prefer an eBay row ("ebay_us"…). */
+  retailer?: string;
+  /** Same finish as the cheapest row, when both say: never offer a foil as the alternative to a non-foil. */
+  isFoil?: boolean;
 }
 
 /** `prices` cheapest first, as computeMarket returns them. */
 export function paidAlternative<T extends PricedRow>(
   prices: T[],
   isPaid: (href: string) => boolean = isPaidLink,
-): { row: T; pctMore: number } | null {
+): { row: T; pctMore: number; moreCents: number } | null {
   const best = prices[0];
   if (!best || isPaid(best.buyHref)) return null;
-  const row = prices.find((p) => isPaid(p.buyHref));
+  const sameSku = (p: T) => p.isFoil == null || best.isFoil == null || p.isFoil === best.isFoil;
+  const paidRows = prices.filter((p) => isPaid(p.buyHref) && sameSku(p));
+  const ebay = paidRows.find((p) => p.retailer?.startsWith("ebay") && p.priceCents <= best.priceCents * EBAY_PREFERRED_BAND);
+  const row = ebay ?? paidRows[0];
   if (!row || row.priceCents > best.priceCents * PAID_ALTERNATIVE_BAND) return null;
   const pctMore = best.priceCents > 0 ? Math.round(((row.priceCents - best.priceCents) / best.priceCents) * 100) : 0;
-  return { row, pctMore };
+  return { row, pctMore, moreCents: Math.max(0, row.priceCents - best.priceCents) };
 }
 
 /** "TCGplayer", "eBay" or the store's own name. */
