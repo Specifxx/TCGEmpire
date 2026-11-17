@@ -8,6 +8,7 @@ import { DeckLibrary, type LibraryDeck } from "@/components/decks/DeckLibrary";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { currentTotals, liveDecksOrNull } from "@/lib/published-decks-server";
 import { pageAlternates } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 
 // The public deck library (2026-09-26, DECISIONS.md "Public decks"). ISR: one
 // render every six hours (an hour until 2026-10-14, DECISIONS.md, "Cached pages
@@ -56,8 +57,26 @@ export default async function DecksPage() {
   );
   const domains = [...new Set(rows.flatMap((d) => d.domains))].sort();
 
+  // ItemList of the newest decks the library lists (capped, so the JSON-LD
+  // stays small); only when there are decks, the same rule as the index tag.
+  const itemListLd =
+    rows.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Riftbound decks",
+          itemListElement: rows.slice(0, 50).map((d, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: d.title,
+            url: `${SITE_URL}/decks/${d.slug}`,
+          })),
+        }
+      : null;
+
   return (
     <div>
+      {itemListLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />}
       <Breadcrumbs trail={[{ name: "Decks", href: "/decks" }]} />
       <h1 className="text-2xl font-extrabold text-white">Riftbound decks</h1>
       {/* How a deck's total is worked out and what a missing one means
