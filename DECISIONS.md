@@ -24102,3 +24102,7 @@ TCGplayer's own page, untagged, so Impact never counts it. The destination must 
 read the same HTML. A link inside an email keeps the direct Impact link, because a mail client's click is cross-site and would be read as a bot.
 `isPaidLink` and `classifyLink` treat the `/out/tcgplayer` path as a paid TCGplayer link. A bot that follows a link in a real browser from our own page is
 same-origin and still passes; that needs a Vercel Firewall rate limit on `/out/*`, not code. Counts stay a trend line, never a payout.
+
+## 2026-11-17: AI assistants: count their visits
+
+Crawl access, llms.txt and JSON-LD were already in place; nothing showed whether AI answers send visitors. `AiReferralTracker` (client, once per session) reads `document.referrer` and `utm_source` (ChatGPT adds `utm_source=chatgpt.com`) through `lib/ai-referral.ts` and sends the custom event `ai_referral` (assistant, landing path) through `trackEvent`. Low volume by design, so it does not threaten the event quota. No spend, no change to ranking or links.
