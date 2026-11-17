@@ -209,9 +209,12 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
     {listings.length === 0 ? (
       <div className="p-4 text-center text-sm text-slate-400">
         <p>No store is listing this right now.</p>
-        <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-buy mt-3 inline-flex text-xs">
-          Search on eBay →
-        </OutboundLink>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+          <CartAddButton href={ebayHref} productUrl={ebayHref} storeName="eBay" title={group.name} detail="Search results" priceCents={0} currency={currency} image={group.imageUrl} className="text-slate-300" />
+          <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="btn-buy inline-flex text-xs">
+            Search on eBay →
+          </OutboundLink>
+        </div>
         {amazonRow && <ul className="mt-3 border-t border-ink-800 text-left empty:hidden">{amazonRow}</ul>}
       </div>
     ) : (
@@ -227,6 +230,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
                 <PaidLinkTag />
               </div>
             </div>
+            <CartAddButton href={ebayHref} productUrl={ebayHref} storeName="eBay" title={group.name} detail="Search results" priceCents={0} currency={currency} image={group.imageUrl} className="text-slate-300" />
             <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_pinned" className="btn-buy px-3 py-1.5 text-xs">
               Search →
             </OutboundLink>
@@ -310,7 +314,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
     )}
 
     {/* The unpriced "Check on Amazon" row (2026-11-17): an ordinary last row, page and quick view, when there is no live Amazon price. */}
-    {amazonStore && amazonHref && <AmazonCheckRow country={country} slug={sealedSlug(group.groupKey)} name={group.name} label={amazonStore.label} href={amazonHref} lookup={source === "sealed-page"} />}
+    {amazonStore && amazonHref && <AmazonCheckRow country={country} slug={sealedSlug(group.groupKey)} name={group.name} label={amazonStore.label} href={amazonHref} lookup={source === "sealed-page"} currency={currency} image={group.imageUrl} />}
     {listings.length > 0 && (
       <p className="mt-2 border-t border-ink-800 pt-2 text-right text-[11px]">
         <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="font-semibold text-brand-400 hover:underline">
