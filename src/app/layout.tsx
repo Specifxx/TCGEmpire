@@ -5,6 +5,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 // The cart list's styles (components/cart): imported here, never from a component, so node tests can load them.
 import "@/components/cart/cart.css";
+import "@/components/cart/cart-drawer.css";
 import { Navbar } from "@/components/Navbar";
 import { PhoneDockAds } from "@/components/PhoneDockAds";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
