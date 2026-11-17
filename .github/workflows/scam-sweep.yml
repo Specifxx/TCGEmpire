@@ -39,4 +39,4 @@ jobs:
           git config user.name "scam-sweep"
           git config user.email "actions@users.noreply.github.com"
           git add data/store-vetting
-          if ! git diff --cached --quiet; then git commit -m "Scam sweep: update denylist and log" && git push; fi
+          if ! git diff --cached --quiet; then git commit -m "Scam sweep: update denylist and log" && git pull --rebase origin main && git push; fi

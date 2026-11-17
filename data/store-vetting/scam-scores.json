@@ -1,0 +1,3114 @@
+{
+ "at": "2026-11-16T23:44:46.590Z",
+ "checked": 2505,
+ "stores": [
+  {
+   "host": "tcgshopuk.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 100,
+   "verdict": "hide",
+   "signals": [
+    "on the banned list",
+    "86% one-star over 14 reviews (Trustpilot (read 2026-11-16))",
+    "reviewers report non-delivery or refused refunds"
+   ]
+  },
+  {
+   "host": "kitcheneconomy.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 58,
+   "verdict": "watch",
+   "signals": [
+    "domain 56 days old",
+    "AI read: medium (55/100)"
+   ],
+   "ai": [
+    "The provided review evidence is empty, so there is no independent customer feedback to confirm that orders are delivered or that payments are honoured.",
+    "The page shows no legal business name, registered address, company number, or VAT number. Only a generic copyright line and a 'Contact' link appear, and no contact details are visible in the text.",
+    "Currency is inconsistent: the banner promises 'Free shipping over £99', while the shipping bar says 'From all orders over $100'. The pricing is in pounds.",
+    "Ratings are uniformly 5 out of 5 but based on very small counts (mostly 1 to 7 reviews) for most products, which gives little reliable signal of quality or sales volume."
+   ]
+  },
+  {
+   "host": "pokechest.at",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 53,
+   "verdict": "watch",
+   "signals": [
+    "contact only via WhatsApp or Telegram",
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (50/100)"
+   ],
+   "ai": [
+    "No customer reviews were provided, so there is no independent evidence of past deliveries or payments.",
+    "The page text shows no product prices, so fake pricing cannot be assessed from this text.",
+    "The page promotes 'Zahlung mit Crypto!' (payment with crypto), a payment method that is hard to reverse and is often associated with scams.",
+    "The page links to an Impressum (legal notice), but its contents are not included in the text, so the operator's legal name and address cannot be verified."
+   ]
+  },
+  {
+   "host": "rarepokemoncards.co.uk",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 53,
+   "verdict": "watch",
+   "signals": [
+    "domain 187 days old",
+    "contact only via WhatsApp or Telegram",
+    "AI read: medium (58/100)"
+   ],
+   "ai": [
+    "The page text gives no registered company name, company number, or postal address, so the seller's legal identity cannot be verified from the text.",
+    "The only contact details shown are a support email and a WhatsApp link, with no phone number or physical location.",
+    "The free-shipping threshold is stated as €299 in the banner but as £50 in other sections, and prices are shown in pounds. This inconsistency cannot be resolved from the text.",
+    "Several listings show 'original price' figures with discounts of roughly 13–20%. The text does not show that these reference prices were ever actually charged, so the discounts cannot be verified."
+   ]
+  },
+  {
+   "host": "manavortex.es",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 50,
+   "verdict": "watch",
+   "signals": [
+    "no contact or policy links",
+    "contact only via WhatsApp or Telegram",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "No customer reviews were provided, so there is no independent evidence of past orders being delivered or paid.",
+    "The visible contact details are a mobile phone number and a free webmail address (gmail.com). No company name, business registration number, or physical address appears in the text.",
+    "The 'Condiciones legales', 'Política de devoluciones' and 'Política de Privacidad' links are listed, but their contents are not in the text, so shipping, refund and identity terms cannot be checked.",
+    "'Pago seguro' is asserted without naming any payment method or provider, so the payment arrangements cannot be verified."
+   ]
+  },
+  {
+   "host": "cardshq.com",
+   "sites": [
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 48,
+   "verdict": "watch",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (55/100)"
+   ],
+   "ai": [
+    "No public review evidence is available, so there is no independent record of whether customers received orders or were paid back.",
+    "The page text shows only a title and a 'Redirecting...' message. It contains no product listings, prices, payment methods, shipping terms, or return policy, so these cannot be checked.",
+    "No legal business name, registered address, or contact details appear in the provided text, so the seller's identity cannot be verified.",
+    "A page that only redirects without showing store content is a limited basis for trust. This is a weak signal on its own, not proof of wrongdoing."
+   ]
+  },
+  {
+   "host": "cherrycollectables.com.au",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "bandaicompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 48,
+   "verdict": "watch",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (55/100)"
+   ],
+   "ai": [
+    "No public review evidence was provided (the review field is empty), so there is no independent track record to check the shop against.",
+    "The home page text is mostly unrelated script code rather than shop content, so the page gives no verifiable details about products, prices, payment methods, shipping, returns or policies.",
+    "The title claims 'Official' Panini, Pokemon, Yu-Gi-Oh! and Magic trading cards, but the text contains no licence, authorised-distributor statement or supplier evidence to support that claim.",
+    "The only location given is 'Melb CBD', a general area rather than a street address, and no legal business name, ABN, or contact details appear in the text."
+   ]
+  },
+  {
+   "host": "imyourwardrobe.com",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 48,
+   "verdict": "watch",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (55/100)"
+   ],
+   "ai": [
+    "No legal business name, company registration number, or full street address appears on the page; the only location given is 'Ships from Auckland', which is a city.",
+    "The review evidence field is empty, so the claimed '4.9★ from 1,000+ reviews' and '10,000 customers across NZ' cannot be checked from the provided material.",
+    "The '100% authentic, every item checked' claim is not backed by any described authentication process, certifying body, or named authenticator; the only detail is 'Every item inspected and tagged'.",
+    "Supreme is sourced 'through our global network of trusted distributors', but no distributors, suppliers, or sourcing evidence are named, so the origin of high-value resale stock cannot be verified."
+   ]
+  },
+  {
+   "host": "pokaratcg.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 48,
+   "verdict": "watch",
+   "signals": [
+    "domain 78 days old",
+    "AI read: medium (38/100)"
+   ],
+   "ai": [
+    "The home page text shows no legal company name, registered address, company number, or VAT number, so the operator's identity cannot be verified from this text.",
+    "No contact details (email, phone, or postal address) appear in the text. Social media links are named but not given as URLs, so they cannot be checked.",
+    "No shipping, returns, or refund policy text appears. The page only says shipping is calculated at checkout.",
+    "The page has a working-looking cart and checkout flow, but nothing in the text shows how payment is taken or who receives it."
+   ]
+  },
+  {
+   "host": "tradingcardworld.store",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 48,
+   "verdict": "watch",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (55/100)"
+   ],
+   "ai": [
+    "No review evidence was provided (the field is empty), so there is no independent customer feedback to check the shop's delivery or payment history.",
+    "The page text shows no legal business name, registered address, phone number, or email contact, so the operator's identity cannot be verified from the text.",
+    "No shipping, returns, refund, or payment-dispute policy appears in the text, so buyer protections cannot be confirmed.",
+    "The page promotes paying with crypto for a 1.5% store credit back, and crypto payments are generally harder to reverse. This is a feature to weigh, not proof of fraud."
+   ]
+  },
+  {
+   "host": "doubleboxgames.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 47,
+   "verdict": "watch",
+   "signals": [
+    "domain 103 days old",
+    "contact only via WhatsApp or Telegram",
+    "AI read: medium (48/100)"
+   ],
+   "ai": [
+    "No review evidence was provided, so there is no independent customer experience to check shipping or delivery claims.",
+    "The page shows no full legal business name, registered address, or direct phone number. The only identity marker is the abbreviation 'DBG' in the copyright line, and the page offers only generic 'Contact' and 'Customer Service' links.",
+    "Claims such as '100% Factory Sealed', 'priced for value, every listing, no exceptions', and 'double-boxed' are asserted without verifiable detail such as sourcing, authentication, or return terms.",
+    "Pricing is presented without reference or comparison prices, so the page gives no basis for judging whether the listed prices are normal or unusually low."
+   ]
+  },
+  {
+   "host": "shop.peterrogers-photo.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 47,
+   "verdict": "watch",
+   "signals": [
+    "contact only via WhatsApp or Telegram",
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (40/100)"
+   ],
+   "ai": [
+    "The visible page text is mostly CSS font declarations and cuts off before any product listings, so no trading cards, collectibles, or prices can be verified.",
+    "The only descriptive text is a one-line tagline calling the business a photographic retailer in Stafford, which does not clearly match the trading-card or collectibles category being assessed.",
+    "No legal business name, company registration number, postal address, phone number, or contact email appears in the provided text.",
+    "No payment methods, checkout details, shipping terms, returns policy, or terms of sale are visible, so it cannot be determined whether orders are taken or fulfilled."
+   ]
+  },
+  {
+   "host": "davidjones.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 45,
+   "verdict": "watch",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (50/100)"
+   ],
+   "ai": [
+    "The only text provided is a browser bot-check interstitial, so the shop's products, prices, payment methods, and shipping terms cannot be assessed.",
+    "No legal name, business registration, physical address, or contact details appear in the provided text, so the shop's identity cannot be verified.",
+    "No public review evidence was supplied (the field is empty), so there is no independent track record to evaluate.",
+    "The page gives no sign of fraud, but the lack of any verifiable commerce or identity information means the risk cannot be assessed as low."
+   ]
+  },
+  {
+   "host": "madridnortetcg.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 45,
+   "verdict": "watch",
+   "signals": [
+    "domain 316 days old",
+    "contact only via WhatsApp or Telegram",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "No legal company name, registration number, or physical address appears in the page text, so the seller's identity cannot be verified from the page.",
+    "Contact details are limited to an email address, a WhatsApp number, and a phone number, all identical in the text, with no named contact person.",
+    "The footer reads only '© 2026' with no company name attached to the copyright.",
+    "No return, refund, shipping-cost, or terms-and-conditions text is visible, so the buyer's post-purchase rights cannot be confirmed from the text."
+   ]
+  },
+  {
+   "host": "smythstoys.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 45,
+   "verdict": "watch",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (50/100)"
+   ],
+   "ai": [
+    "The only text available is a browser bot-check interstitial, so there is no product catalogue, pricing, checkout, payment method, shipping policy, or returns information to assess.",
+    "No public reviews were provided (review evidence is empty), so there is no third-party evidence of whether orders are fulfilled or payments are honored.",
+    "No seller identity, company name, contact details, or physical address is visible, so the operator's identity cannot be verified from this text.",
+    "The interstitial itself is a neutral anti-bot notice and does not by itself indicate fraud, but it also gives no basis for confidence in the shop."
+   ]
+  },
+  {
+   "host": "flagshipgames.sg",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 44,
+   "verdict": "watch",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (48/100)"
+   ],
+   "ai": [
+    "No customer reviews were provided, so there is no independent evidence of delivery or service quality.",
+    "The page text shows no legal business name, registration number, postal address, or contact phone or email, so the operator's identity cannot be verified from the text.",
+    "Social media links (Facebook, Instagram, YouTube) are present, but the text does not show that these accounts belong to a registered business.",
+    "Most listed products are pre-orders with 2026 release dates, and the page states a 10% fee applies to cancellations. This shifts payment risk to the buyer before delivery."
+   ]
+  },
+  {
+   "host": "belvera.co.uk",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 43,
+   "verdict": "watch",
+   "signals": [
+    "domain 342 days old",
+    "AI read: medium (55/100)"
+   ],
+   "ai": [
+    "No legal business name, company registration number, postal address, or phone number appears in the provided text, so the seller's identity cannot be verified from this page.",
+    "The review evidence field is empty, so no independent customer feedback is available to corroborate delivery or refund claims.",
+    "The page promises free UK delivery and 30-day returns, but the returns policy, shipping terms, and contact details are not included in the text, so these claims cannot be checked.",
+    "Many products show the same price twice (for example £35.35 £35.35), and the '10% off' Christmas offer shows no original price to compare against, so the advertised discounts cannot be verified."
+   ]
+  },
+  {
+   "host": "appliancesonline.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 42,
+   "verdict": "watch",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "The supplied home page text names the shop and advertises free delivery, but gives no legal business name, ABN, registered address, or returns and refund policy.",
+    "The text does not show any trading cards, collectibles, or other goods, so it cannot be checked whether the listed products or prices are genuine.",
+    "The review evidence field is empty, so there is no public buyer feedback to confirm that orders are paid for and shipped.",
+    "The only contact given is a phone number (1300 000 500). The text does not show whether it belongs to the business, and it cannot be verified from this text alone."
+   ]
+  },
+  {
+   "host": "goldcoasthifi.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 42,
+   "verdict": "watch",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "No legal entity name (such as a Pty Ltd or company name), ABN, or business registration number appears in the page text, so the operating business cannot be verified from this text.",
+    "No physical street address is given. Only email addresses and a 'Online Shop 24/7' opening-hours line appear, which makes the trading location unverifiable.",
+    "Three different contact email domains are listed, and several store names (Southport, Cairns, Townsville, Mackay and others) are shown. The relationship between these names and the entity behind this site cannot be confirmed from the text.",
+    "Product prices are hidden behind 'Login to see prices' on the listed items, so the stated prices cannot be compared or checked."
+   ]
+  },
+  {
+   "host": "holastylekorean.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 42,
+   "verdict": "watch",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "The provided page text contains no legal business name, registered address, or contact details, so the operator's identity cannot be verified from this text.",
+    "Claims such as '100% Auténticos' and 'Libre de Aranceles' are marketing statements that cannot be verified from the text alone.",
+    "No shipping, return, refund, or payment policy text is visible, so payment and delivery terms cannot be assessed.",
+    "No product prices are shown in the text, so fake-pricing risk cannot be evaluated."
+   ]
+  },
+  {
+   "host": "startfitness.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 42,
+   "verdict": "watch",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "No product listings, prices, or payment methods appear in the supplied text, so fake-price and checkout risks cannot be assessed.",
+    "No shipping, delivery-time, returns, or refund policy text is present. The contact form references order tracking, delivery, and returns, but the policies themselves are not shown.",
+    "No legal company name, registered address, company number, or VAT number is visible in the text. The only identity markers are the storefront title 'Start Fitness' and the domain.",
+    "The shop's backend address (start-new-fitness.myshopify.com) differs from the storefront domain (startfitness.co.uk). This does not prove a problem, but the mismatch is not explained in the text."
+   ]
+  },
+  {
+   "host": "westendgames.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 42,
+   "verdict": "watch",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "No review evidence was provided, so there is no independent customer feedback to check the shop's reputation.",
+    "The page text shows no prices, product listings with stock or price details, or checkout information, so fake-pricing claims cannot be assessed.",
+    "No shipping, returns, or refund policy appears in the text, so it cannot be verified whether the shop delivers goods or how it handles disputes.",
+    "A company name with a 'Ltd' suffix appears in the page title, but no registration number, registered address, director name, or contact details are visible, so the identity cannot be verified from this text."
+   ]
+  },
+  {
+   "host": "kaizencards.de",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 41,
+   "verdict": "watch",
+   "signals": [
+    "no contact or policy links",
+    "contact only via WhatsApp or Telegram",
+    "AI read: low (30/100)"
+   ],
+   "ai": [
+    "The page names a company form (GmbH), a street address in Hannover with postcode, a contact email, and opening hours, so a legal entity and physical address are stated, though the text alone cannot confirm they are real or registered.",
+    "Links to Impressum, AGBs, Widerrufsrecht and Datenschutzerklärung are present, which suggests required legal pages exist, but their content is not in the text provided.",
+    "No review evidence was supplied (empty), so there is no independent customer feedback to check reputation.",
+    "The home page text shows no individual product prices, only category names and a shipping threshold, so fake-price patterns cannot be assessed from this text."
+   ]
+  },
+  {
+   "host": "finanime.fi",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 39,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (40/100)"
+   ],
+   "ai": [
+    "No customer reviews were provided, so there is no independent evidence about delivery, payment handling or customer experience.",
+    "The page text shows no product prices, currency details or sample product listings with prices, so price plausibility cannot be checked.",
+    "Payment methods, shipping terms, delivery times and return policies are referenced only as links (e.g. 'Toimitusehdot', 'Usein kysyttyä') and their content is not in the text, so they cannot be verified.",
+    "No legal company name, business ID (Y-tunnus), street address, phone number or contact email appears in the text, so the seller's identity cannot be verified from it."
+   ]
+  },
+  {
+   "host": "gamesempire.com.au",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 39,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (40/100)"
+   ],
+   "ai": [
+    "The page title names a company, \"Games Empire Pty Limited\", which is a legal-name format. The text cannot confirm that this entity is registered or that it matches the operator of the site.",
+    "No physical street address, phone number, ABN/ACN, or business registration number appears in the text. The only contact method shown is an email address (sales@gamesempire.com.au).",
+    "No product listings with prices appear, so pricing cannot be checked against market values. The visible prices are only a flat shipping fee of $8.99 and a currency note (AUD).",
+    "No payment methods, refund or returns policy, privacy policy, or terms of sale are visible in the text, so payment and post-purchase protections cannot be assessed."
+   ]
+  },
+  {
+   "host": "lowes.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 39,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (40/100)"
+   ],
+   "ai": [
+    "The provided page is an access-denied error, not a storefront, so it shows no products, prices, checkout, payment methods, or shipping terms.",
+    "No legal name, business address, contact details, or company registration appears in the text.",
+    "No public review evidence was supplied (empty), so there is no independent record of customer experience.",
+    "The page does not show whether the shop sells trading cards or collectibles, so the scam criteria cannot be checked against it."
+   ]
+  },
+  {
+   "host": "solacido.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 39,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (40/100)"
+   ],
+   "ai": [
+    "The only text available is a redirect notice with no store content, so the shop's products, prices, payment methods, shipping terms and return policy cannot be checked.",
+    "No review evidence was provided, so there is no public record of customer experiences to confirm or contradict legitimacy.",
+    "No legal business name, registered address, company number, or contact details appear in the text, so the seller's identity cannot be verified from this page.",
+    "The shop name and category label are unverified claims; nothing in the text confirms a registered business behind them."
+   ]
+  },
+  {
+   "host": "store.sony.com.sg",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 39,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (40/100)"
+   ],
+   "ai": [
+    "The page text is only a title and category keywords. It contains no product listings, prices, payment methods, shipping terms, or return policy, so pricing and fulfilment cannot be assessed.",
+    "No legal business name, registration number, physical address, or contact details appear in the text, so the operator's identity cannot be verified.",
+    "Review evidence is empty, so there is no independent record of whether customers received orders or were paid out.",
+    "The title names a well-known brand, but the text does not show any official affiliation, authorised-seller status, or ownership of the domain. This claim cannot be confirmed from the text."
+   ]
+  },
+  {
+   "host": "thecardhive.co.uk",
+   "sites": [
+    "riftcompare"
+   ],
+   "score": 39,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (50/100)"
+   ],
+   "ai": [
+    "No public review evidence was provided, so there is no independent record of customers receiving goods or being refunded.",
+    "The only page text available is a title line describing a UK Riftbound trading card store. It contains no product listings, prices, or stock information to check.",
+    "No legal business name, registered company number, or postal address is visible in the supplied text, so the seller's identity cannot be verified from this evidence.",
+    "No contact details, shipping terms, returns policy, or accepted payment methods are visible, so it cannot be determined whether the shop takes payment and ships goods."
+   ]
+  },
+  {
+   "host": "yorokonde.de",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 39,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (40/100)"
+   ],
+   "ai": [
+    "No public review evidence was provided, so there is no independent check of whether orders are shipped or paid for.",
+    "The home page text contains no legal name, company registration, or postal address. An Impressum link is present, but its content is not visible in the text, so the operator's identity cannot be verified from this text.",
+    "No product listings, prices, or discounts are visible, so fake-price patterns cannot be assessed.",
+    "Payment methods and shipping terms are only listed as link labels ('Zahlungsart', 'Versand', 'Versand und Zahlungsbedingungen'), with no details shown."
+   ]
+  },
+  {
+   "host": "mytoque.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 38,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (38/100)"
+   ],
+   "ai": [
+    "The page text describes a cookware and kitchenware store, not trading cards or collectibles, so the scam check is applied to a similar online goods shop.",
+    "No review evidence was provided (the review field is empty), so customer experience with shipping and fulfilment cannot be verified.",
+    "The page names a city (Santa Cruz) and a family-owned history since 1996, but gives no street address, legal entity name, company registration, or VAT/tax identifier.",
+    "The page lists a physical-store feature (in-store knife sharpening) but gives no store address or phone number, so the physical presence claimed cannot be checked from this text."
+   ]
+  },
+  {
+   "host": "sidequestgames.uk",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 37,
+   "verdict": "ok",
+   "signals": [
+    "domain 184 days old",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "The page contains no legal business name, registered company number, postal address, or VAT number, so the seller's identity cannot be verified from the text.",
+    "The page header reads 'E Toys World' while the brand shown is 'Side Quest' and the domain is sidequestgames.uk. The text does not explain this mismatch.",
+    "No contact details (email, phone, or contact form), returns policy, refund terms, or delivery times are shown, so the purchase terms cannot be checked.",
+    "Only a free-shipping threshold (over £50) is stated. No carriers, shipping costs, or dispatch timeframes are listed."
+   ]
+  },
+  {
+   "host": "thekavecollectibles.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 37,
+   "verdict": "ok",
+   "signals": [
+    "domain 195 days old",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "No public review evidence was provided, so the shop's reputation and buyer experience cannot be checked.",
+    "The visible page text shows a business city and state (Davie, FL) but no full street address, legal business name, or company registration details.",
+    "Contact, FAQ, and return-policy pages are only linked, and their content is not in the text, so the 30-day return claim and shipping terms cannot be verified.",
+    "The 'Established 2024' claim and the '100% AUTHENTIC' guarantee are stated without supporting documentation, certificates, or seller verification in the text."
+   ]
+  },
+  {
+   "host": "vglebeauty.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 37,
+   "verdict": "ok",
+   "signals": [
+    "domain 173 days old",
+    "AI read: medium (45/100)"
+   ],
+   "ai": [
+    "The review evidence field is empty, so there is no public customer feedback to confirm that orders are paid for, shipped, or refunded.",
+    "The page text shows no legal business name, registered address, phone number, or email, so the operator's identity cannot be verified from this text alone.",
+    "The text includes an 'About Us' link, but its content is not included, so it cannot be checked for company details.",
+    "No return, refund, cancellation, or shipping-timeline policy appears in the text, so buyer protections cannot be verified."
+   ]
+  },
+  {
+   "host": "cardcapital.shop",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 36,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: low (35/100)"
+   ],
+   "ai": [
+    "The page text shows no checkout, cart, payment method, shipping terms or purchase button, so it cannot be verified that it takes payment or ships goods.",
+    "The visible content is a card database, price reference and deckbuilder tool, not a storefront. Prices are labelled as non-binding 'Orientierung' (guidance) and 'Ø' averages, not as offers for sale.",
+    "The domain name (cardcapital.shop) does not match the brand shown on the page (ApexTCG), which cannot be explained from the text provided.",
+    "No legal entity name, registered address, contact details or company registration appear in the text. An 'Impressum' link is present, but its content is not included, so the operator's identity cannot be verified."
+   ]
+  },
+  {
+   "host": "consiglioskitchenware.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 36,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (35/100)"
+   ],
+   "ai": [
+    "No public review evidence was provided (the review field is empty), so customer experience with shipping and payment cannot be verified.",
+    "The home page text shows no legal business name, registered address, or company registration number. A 'Store Location' link is present, but no address appears in the text.",
+    "The claims 'Canadian owned and family run since 1975' and 'Fast free Canadian shipping over $69.99' are unsupported by any verifiable detail in the text.",
+    "Contact, FAQ, Track Order, and Reviews links are listed, but their contents are not included, so their existence cannot be confirmed as functional."
+   ]
+  },
+  {
+   "host": "harveynorman.com.au",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 36,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (35/100)"
+   ],
+   "ai": [
+    "The only page text is a bot-check interstitial asking the visitor to enable cookies and JavaScript. It shows no products, prices, payment methods, or shipping terms.",
+    "No public review evidence was provided, so there is no independent signal about customer experiences with delivery or refunds.",
+    "No legal business name, registration number, or physical address appears in the text, so the operator's identity cannot be verified from it.",
+    "The text shows no scam indicators such as fake prices or urgency tactics, but it also lacks the information needed to rule them out."
+   ]
+  },
+  {
+   "host": "k-beauty4you.de",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 36,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (35/100)"
+   ],
+   "ai": [
+    "No legal company name, registered address, or imprint (Impressum) appears in the provided text. The 'Über uns' link is listed, but its content is not included, so the operator's identity cannot be verified from this text.",
+    "No customer reviews or review evidence were provided (the review field is empty), so there is no independent check on whether orders are delivered.",
+    "The shipping claims ('Schneller Versand aus DE', free shipping within DE from 39 euro) are stated without any carrier, dispatch time, return policy, or payment method details in the text.",
+    "The listed prices are plausible for the product types shown, and the per-100 ml unit prices match the stated package sizes (e.g., 13,10 € for 50 ml = 26,20 €/100 ml). This does not confirm the shop is legitimate."
+   ]
+  },
+  {
+   "host": "lthobbies.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "wargamecompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 36,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (35/100)"
+   ],
+   "ai": [
+    "Review evidence is empty, so there is no public customer feedback to confirm whether orders are shipped and paid for as described.",
+    "The page lists a physical street address, a phone number, and a domain-matched email, which gives some contact points. The text alone cannot confirm that these are real or active.",
+    "No registered legal business name or company entity appears; only the trading name shown in the page header is given.",
+    "No shipping policy, return or refund policy, or payment-protection terms appear in the text, so buyer recourse cannot be assessed."
+   ]
+  },
+  {
+   "host": "mimo-mimo.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 36,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (35/100)"
+   ],
+   "ai": [
+    "The provided page text contains no legal entity name, postal address, imprint, company registration, or VAT number, so the seller's identity cannot be verified from this text.",
+    "No contact details, shipping terms, delivery times, return policy, or accepted payment methods appear in the text, so checkout and fulfilment claims cannot be assessed.",
+    "Review evidence is empty, so no independent customer reports of delivery or refunds are available to check.",
+    "The visible reviews are product-focused and several are translated or contain placeholder text (for example a string of 'x' characters), which means they cannot be treated as reliable proof of genuine purchases."
+   ]
+  },
+  {
+   "host": "unsettledgeeks.com",
+   "sites": [
+    "opcompare",
+    "lorcanacompare"
+   ],
+   "score": 36,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: medium (35/100)"
+   ],
+   "ai": [
+    "The page describes a physical store in Buckland Hills Mall, Manchester, CT. This location claim cannot be verified from the text alone, and no street address, phone number, or email appears.",
+    "No legal business name, company registration, or owner identity is shown. The only name given is the brand 'Unsettled Geeks'.",
+    "The page text includes no shipping policy, return or refund policy, terms of service, or privacy policy, so buyer protections cannot be assessed.",
+    "No public review evidence was provided (the field is empty), so customer experience with payment and delivery cannot be confirmed."
+   ]
+  },
+  {
+   "host": "wnygaming.com",
+   "sites": [
+    "lorcanacompare",
+    "ygocompare"
+   ],
+   "score": 36,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (35/100)"
+   ],
+   "ai": [
+    "No review evidence was provided, so customer experience with the shop cannot be checked.",
+    "The page text shows no legal business name, registered address, or phone number. Only a generic 'Contact Us' link appears, so the business identity cannot be verified from this text.",
+    "The text mentions in-store services (escape room, court rental, in-store food ordering) that suggest a physical venue, but no street address is given, so this claim cannot be confirmed.",
+    "The cart and checkout section says 'Shipping & taxes calculated at checkout' but shows no shipping, return, refund, or payment-method policy, so these cannot be verified."
+   ]
+  },
+  {
+   "host": "stonebrookcollectibles.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 35,
+   "verdict": "ok",
+   "signals": [
+    "domain 333 days old",
+    "AI read: medium (42/100)"
+   ],
+   "ai": [
+    "No review evidence was provided, so the claimed 4.94 rating from 223 reviews, '500+ orders' and '100% positive' cannot be checked.",
+    "The page shows a 'Verified' badge and a TCGplayer profile link, but the text gives no verification source or working link to confirm either.",
+    "No legal business name, owner name, or full street address appears in the page text. Only 'Maryland' is mentioned as the shipping location.",
+    "Contact details are limited to a 'Contact us' link. No phone number, email address, or physical location is shown in the text."
+   ]
+  },
+  {
+   "host": "walmart.com",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 35,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (8/100)"
+   ],
+   "ai": [
+    "The page text shows a full retail site structure: account sign-in, purchase history, store directory, help, careers, returns-related navigation, and a marketplace seller link.",
+    "The footer includes policy and compliance links (Terms of Use, Privacy Notice, California Supply Chain Act, Product Recalls, Accessibility), which are checkable but are not reviewed in this text.",
+    "The copyright line and trademark registration statement are present, but the text does not state a specific legal entity name or a postal address.",
+    "No public review evidence was provided, so reputation cannot be verified from this input."
+   ]
+  },
+  {
+   "host": "bandegames.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 33,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (30/100)"
+   ],
+   "ai": [
+    "The page text shows no business address, phone number, or registered legal entity name; the only name is a trade name in the copyright line, so identity cannot be verified from this text alone.",
+    "The page references an 'In-store' section, but no physical location is shown, so the claimed brick-and-mortar presence cannot be confirmed here.",
+    "Shipping, refund, privacy, terms, and contact policies are linked but their contents are not included, so their presence cannot be checked for accuracy or completeness.",
+    "Standard payment method logos are listed, but the text does not show whether payment is processed through a trusted gateway or whether checkout is secure."
+   ]
+  },
+  {
+   "host": "bydash.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 33,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: medium (30/100)"
+   ],
+   "ai": [
+    "The page text shows no legal business name, registered company details, postal address, or contact phone/email, so the operator's identity cannot be verified from this text.",
+    "Review evidence was not supplied (empty), so the listed ratings and review counts (e.g., 7,442 reviews) cannot be checked against any independent source.",
+    "Several listings show a sale price with a blank 'Regular price' field, so the claimed discounts cannot be verified from the text.",
+    "Policies are asserted only as headlines (free shipping over $50, 30-day returns, up to 2-year warranty) with no terms, return address, or warranty provider details visible."
+   ]
+  },
+  {
+   "host": "hobbyexpert.ca",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 33,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: low (30/100)"
+   ],
+   "ai": [
+    "The page lists a physical street address in Quebec City, a phone number, and business hours, which can be checked against outside sources but are not verified by this text.",
+    "The contact email uses a generic free provider domain (gmail.com) rather than a shop-branded domain, which is a common weak point in online shops.",
+    "No legal business name, company registration number, or owner identity appears in the text, so the operating entity cannot be confirmed from the page alone.",
+    "No shipping policy, delivery times, return or refund policy, or terms of sale appear in the visible text, so buyer protections cannot be assessed."
+   ]
+  },
+  {
+   "host": "swagykarp.fi",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 33,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: low (30/100)"
+   ],
+   "ai": [
+    "No public review evidence was provided, so there is no independent customer feedback to confirm that orders are shipped and paid for.",
+    "The page lists a street address, postal code, city, phone number, email, and opening hours, which gives some contact information that could be checked elsewhere.",
+    "No company legal name, business ID, or VAT number appears on the page, so the operating entity cannot be verified from this text.",
+    "Payment methods, shipping timelines, and the full terms of the returns and shipping policies are not shown in the text, so these cannot be assessed."
+   ]
+  },
+  {
+   "host": "chefswarehouse.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 30,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (25/100)"
+   ],
+   "ai": [
+    "The page gives a physical street address (30 Gordon Street, Rozelle NSW 2039), a landline phone number, and opening hours. These can be checked against outside sources, though the text itself does not confirm them.",
+    "No legal entity name, company registration number, or ABN appears in the text. The brand name is the only business identifier shown.",
+    "Review evidence is empty, so there is no independent customer feedback to confirm that orders are shipped or paid for.",
+    "The text mentions click and collect from a named shop and offers trade discounts to customers with an ABN, which suggests a real trading operation. The text does not verify this."
+   ]
+  },
+  {
+   "host": "comic-attack.de",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 30,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: low (25/100)"
+   ],
+   "ai": [
+    "The page lists a physical street address in Erfurt (Paulstraße 9, 99084 Erfurt) and opening hours. Whether this address is real and operated by the shop cannot be checked from this text alone.",
+    "The page links to Impressum, Datenschutz, AGB and Widerrufsbelehrung, but the text of these legal pages is not included, so the operator's legal name, registration and contact details cannot be verified.",
+    "No prices, payment methods, shipping terms or checkout process appear in the text, so fake pricing or payment-without-delivery risk cannot be assessed from it.",
+    "No public review evidence was provided (empty), so there is no independent track record to confirm or contradict the shop's claims."
+   ]
+  },
+  {
+   "host": "dockingbay93.com",
+   "sites": [
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 30,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: low (25/100)"
+   ],
+   "ai": [
+    "No review evidence was provided, so reputation cannot be checked from the available data.",
+    "A physical address (224 Stewart Rd #115, Mount Vernon, WA) and weekly hours are listed. The text cannot confirm that the address or business exists.",
+    "No legal business name, company registration, or owner identity appears in the text. Only the trade name 'Docking Bay 93' is shown.",
+    "The contact section lists a Facebook link and a contact page but shows no visible email or phone number."
+   ]
+  },
+  {
+   "host": "kitchenkapers.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 30,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (25/100)"
+   ],
+   "ai": [
+    "No review evidence was provided, so there is no third-party check on whether orders are delivered or payments are honored.",
+    "The page text shows no legal company name, registered business name, or street address. Contact details are limited to a phone number, an email link, and an About Us link, none of which can be verified from this text.",
+    "The claim of being established in 1975 and the 'Free Shipping on $75' and 'Most items ship same day' statements cannot be verified from the page text alone.",
+    "The page lists many product categories and brand partnerships, which is consistent with a established retailer, but these listings cannot be confirmed as authorized from this text."
+   ]
+  },
+  {
+   "host": "meeplesandbeyond.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 30,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (25/100)"
+   ],
+   "ai": [
+    "A street address, phone number, and store hours are listed (Phoenix, AZ), but the text does not show whether this is a verified storefront or a mail drop, so the address cannot be confirmed from the text alone.",
+    "No legal business name or entity (such as an LLC or corporation) appears in the text, only the brand name 'Meeples & Beyond'. The entity behind the shop cannot be verified.",
+    "The review evidence field is empty, so there is no public customer feedback to confirm that orders are paid for and shipped.",
+    "Shipping claims such as 'Next day shipping (Excludes Sundays & Holidays)' are stated but cannot be checked from this text."
+   ]
+  },
+  {
+   "host": "unpluggedgames.com.au",
+   "sites": [
+    "mtgcompare",
+    "lorcanacompare",
+    "wargamecompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 30,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (25/100)"
+   ],
+   "ai": [
+    "The page lists a physical street address (58 Ballina Rd, Lismore) and a phone number, but the text alone cannot confirm either is genuine or belongs to the seller.",
+    "No legal entity name, ABN, or company registration details appear in the text, so the seller's legal identity cannot be verified from the page.",
+    "No shipping, returns, refund, or payment policy text is visible, so the claim to take payment and ship goods cannot be checked.",
+    "No product prices appear in the text, so fake-price patterns cannot be assessed."
+   ]
+  },
+  {
+   "host": "scorptec.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 27,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (20/100)"
+   ],
+   "ai": [
+    "The page lists physical store locations by suburb and state (Clayton VIC, Dandenong VIC, Rowville VIC, Sth Melb VIC, Tingalpa QLD, Silverwater NSW) and offers Click & Collect, which is consistent with an established retailer, though none of these locations can be checked from the text alone.",
+    "The page shows standard shop features (cart, checkout, login/signup, Contact Us, delivery options), but the text does not show payment methods, shipping terms, return or refund policy, or order-handling details, so these cannot be assessed.",
+    "Claims of 'Over 25 Years in Tech' and 'Over 30,000 Reviews' are unverified marketing statements; the review evidence provided is empty, so they cannot be confirmed.",
+    "No prices appear in the text, so whether prices are fake or unusually low cannot be determined."
+   ]
+  },
+  {
+   "host": "samsclub.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 26,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: low (18/100)"
+   ],
+   "ai": [
+    "The provided text contains no customer reviews (review evidence is empty), so reputation cannot be checked from the supplied material.",
+    "The page shows a membership sign-in, account, help center, and a 'Register online' option, which are features of an established storefront, but the text does not show how these work or whether they are authentic.",
+    "Promotional pricing shows a current price, a 'was' price, and a percentage or dollar savings. The attached popup text describes how strikethrough prices are defined, which gives some detail but does not confirm the prices are genuine.",
+    "The text lists fulfillment details such as store IDs and delivery dates, but it does not include a shipping policy, return policy, or payment methods, so these cannot be verified."
+   ]
+  },
+  {
+   "host": "deckeadittos.com",
+   "sites": [
+    "cyberpunkcompare"
+   ],
+   "score": 25,
+   "verdict": "ok",
+   "signals": [
+    "domain 279 days old",
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "skinseoul.co.uk",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 25,
+   "verdict": "ok",
+   "signals": [
+    "domain 252 days old",
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "tcgora.com",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 25,
+   "verdict": "ok",
+   "signals": [
+    "domain 253 days old",
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "foto-erhardt.de",
+   "sites": [
+    "camcompare"
+   ],
+   "score": 24,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: low (15/100)"
+   ],
+   "ai": [
+    "The page describes an established retail operation with a broad catalog, brand shops, B2B offering, service lines, and references to physical branches (Filialen) and studios, which is consistent with a real business.",
+    "The page claims 59.100 ratings averaging 4.86 and more than 1.6 million customers, but review evidence is empty, so these claims cannot be verified from the provided material.",
+    "The page shows a shipping threshold (free shipping from 39 EUR within Germany) and a return-related link ('Bestellung widerrufen'), which are normal retail features, but no shipping terms, return policy, or payment methods are shown in the text.",
+    "No legal entity name, company registration, managing director, VAT ID, or postal address appears in the provided text, so the operator's identity cannot be verified from this content alone."
+   ]
+  },
+  {
+   "host": "jbhifi.com.au",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 24,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (15/100)"
+   ],
+   "ai": [
+    "The visible page text shows a consistent retail brand name and a domain that matches the shop identifier, which is a verifiable identity signal but not proof of the operating entity.",
+    "The navigation data lists a structured product catalogue with category and collection URLs under the same domain, which is consistent with an established storefront.",
+    "No prices, checkout, payment methods, shipping terms, returns policy, or contact details appear in the supplied text, so fake prices and non-shipping cannot be assessed from it.",
+    "No legal entity name, ABN, company registration, or physical address appears in the supplied text, so the operator's identity cannot be verified from this evidence alone."
+   ]
+  },
+  {
+   "host": "bestbuy.com",
+   "sites": [
+    "camcompare",
+    "compareempire"
+   ],
+   "score": 22,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (12/100)"
+   ],
+   "ai": [
+    "The page text shows a broad catalog with support, returns, price match, membership, and corporate-information links, which are common features of established retail sites.",
+    "No review evidence was provided, so reputation cannot be checked from the supplied material.",
+    "The text includes an unrendered template placeholder, '$(csi.user.businessName)', which is a page-rendering artifact. It cannot be verified from the text and is a minor quality concern, not evidence of fraud.",
+    "Price displays include 'The price was' comparisons and 'Save' amounts. The text does not show whether these reference prices are genuine, so the discount claims cannot be verified."
+   ]
+  },
+  {
+   "host": "calumet.de",
+   "sites": [
+    "camcompare"
+   ],
+   "score": 22,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links",
+    "AI read: low (12/100)"
+   ],
+   "ai": [
+    "The page describes a physical presence (13 branches in Germany, click and collect, trade-in service), but the text gives no addresses or branch locations to check against.",
+    "Listed prices are close to list prices (UVP), with discounts of roughly 5–26%, and none are drastically below market level.",
+    "The page sets out shipping, a 30-day free return policy, phone consultation, and stock and delivery times, which are checkable but not verified by this text.",
+    "The page contains a magazine, B2B and workshop sections, and a product range with specific model names, consistent with an established retailer."
+   ]
+  },
+  {
+   "host": "wayfair.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 21,
+   "verdict": "ok",
+   "signals": [
+    "asks for crypto, Zelle, gift-card or bank-transfer payment",
+    "AI read: low (10/100)"
+   ],
+   "ai": [
+    "The page text describes a home furnishings store (furniture, bedding, decor, outdoor goods), not trading cards or collectibles, so the main scam patterns for that category do not apply directly.",
+    "The review evidence field is empty, so no independent customer reports of non-delivery, payment problems or fake identity can be checked.",
+    "The page text does not show a legal business name, registered address, contact details, returns policy or company registration, so the shop's identity cannot be verified from this text alone.",
+    "The text contains promotional claims (free shipping over $35, a 100-night mattress trial, financing and delivery services) that cannot be verified from the text alone."
+   ]
+  },
+  {
+   "host": "centrecom.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "playntradewpg.com",
+   "sites": [
+    "mtgcompare",
+    "ygocompare",
+    "wargamecompare"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "seoulbeautystore.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "thevacuumshop.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 15,
+   "verdict": "ok",
+   "signals": [
+    "no contact or policy links"
+   ]
+  },
+  {
+   "host": "6ixtcgsmarkham.ca",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "dexcompare",
+    "ygocompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 134 days old"
+   ]
+  },
+  {
+   "host": "ateliertcg.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 202 days old"
+   ]
+  },
+  {
+   "host": "aurak.co.uk",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 151 days old"
+   ]
+  },
+  {
+   "host": "boostrclub.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 276 days old"
+   ]
+  },
+  {
+   "host": "buyanycards.co.uk",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 353 days old"
+   ]
+  },
+  {
+   "host": "cardhaven-games.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 270 days old"
+   ]
+  },
+  {
+   "host": "collectionhousecafe.com",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 198 days old"
+   ]
+  },
+  {
+   "host": "dealinghigh.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 211 days old"
+   ]
+  },
+  {
+   "host": "elitestoretcg.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 357 days old"
+   ]
+  },
+  {
+   "host": "fafnirshoard.ca",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "cyberpunkcompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 332 days old"
+   ]
+  },
+  {
+   "host": "feisgames.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 264 days old"
+   ]
+  },
+  {
+   "host": "finalformcards.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 332 days old"
+   ]
+  },
+  {
+   "host": "foxfablehaven.com",
+   "sites": [
+    "ygocompare",
+    "bandaicompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 317 days old"
+   ]
+  },
+  {
+   "host": "fuhrious-tc.shop",
+   "sites": [
+    "mtgcompare",
+    "dexcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 333 days old"
+   ]
+  },
+  {
+   "host": "gamefellastcgandgames.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 269 days old"
+   ]
+  },
+  {
+   "host": "gamers-academy.org",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 335 days old"
+   ]
+  },
+  {
+   "host": "hideyoshitcg.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 364 days old"
+   ]
+  },
+  {
+   "host": "humbletcg.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 153 days old"
+   ]
+  },
+  {
+   "host": "iberiancollect.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 109 days old"
+   ]
+  },
+  {
+   "host": "jiggletcg.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 145 days old"
+   ]
+  },
+  {
+   "host": "k-beautystudio.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 222 days old"
+   ]
+  },
+  {
+   "host": "landfalloutpost.com",
+   "sites": [
+    "dexcompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 312 days old"
+   ]
+  },
+  {
+   "host": "lemantcg.fr",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 329 days old"
+   ]
+  },
+  {
+   "host": "limitbreakcards.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 224 days old"
+   ]
+  },
+  {
+   "host": "magnoliatcgexchange.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 272 days old"
+   ]
+  },
+  {
+   "host": "mantisgamestudio.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "figurecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 208 days old"
+   ]
+  },
+  {
+   "host": "mentalvaultgames.com",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 360 days old"
+   ]
+  },
+  {
+   "host": "mintsidecards.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 143 days old"
+   ]
+  },
+  {
+   "host": "multivers.ca",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 354 days old"
+   ]
+  },
+  {
+   "host": "mymintcards.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 251 days old"
+   ]
+  },
+  {
+   "host": "mythic-hobbies.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 354 days old"
+   ]
+  },
+  {
+   "host": "nexuslgs.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 318 days old"
+   ]
+  },
+  {
+   "host": "ninpostore.com",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 209 days old"
+   ]
+  },
+  {
+   "host": "nexustabletopgames.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "bandaicompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 290 days old"
+   ]
+  },
+  {
+   "host": "npcollectibles.ca",
+   "sites": [
+    "riftcompare",
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 255 days old"
+   ]
+  },
+  {
+   "host": "oportogg.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 265 days old"
+   ]
+  },
+  {
+   "host": "orbitopia-figures.com",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 258 days old"
+   ]
+  },
+  {
+   "host": "pantheoncards.store",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 140 days old"
+   ]
+  },
+  {
+   "host": "playontcg.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 298 days old"
+   ]
+  },
+  {
+   "host": "prestigegames.ca",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 235 days old"
+   ]
+  },
+  {
+   "host": "qollectorau.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 249 days old"
+   ]
+  },
+  {
+   "host": "radgameshop.ca",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 155 days old"
+   ]
+  },
+  {
+   "host": "rawmon.org",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 165 days old"
+   ]
+  },
+  {
+   "host": "razzocards.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 311 days old"
+   ]
+  },
+  {
+   "host": "ri-play.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 316 days old"
+   ]
+  },
+  {
+   "host": "shopmancalamonk.com",
+   "sites": [
+    "mtgcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 354 days old"
+   ]
+  },
+  {
+   "host": "shopmysterytavern.co.uk",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 278 days old"
+   ]
+  },
+  {
+   "host": "showdownvaluecardsandgames.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 332 days old"
+   ]
+  },
+  {
+   "host": "sleevedupcollectibles.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 175 days old"
+   ]
+  },
+  {
+   "host": "tabletcg.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 200 days old"
+   ]
+  },
+  {
+   "host": "tcgmanavault.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 115 days old"
+   ]
+  },
+  {
+   "host": "tcgzonecanada.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 150 days old"
+   ]
+  },
+  {
+   "host": "teamcollectors.com",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 340 days old"
+   ]
+  },
+  {
+   "host": "thecoffeecollective.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 159 days old"
+   ]
+  },
+  {
+   "host": "thedropcardshop.com",
+   "sites": [
+    "riftcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 318 days old"
+   ]
+  },
+  {
+   "host": "thesocialboardhq.com",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 285 days old"
+   ]
+  },
+  {
+   "host": "thetcgalchemists.com",
+   "sites": [
+    "riftcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 188 days old"
+   ]
+  },
+  {
+   "host": "thetrainercourt.com",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 313 days old"
+   ]
+  },
+  {
+   "host": "treasurehubtcg.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 229 days old"
+   ]
+  },
+  {
+   "host": "treasurevaultau.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 294 days old"
+   ]
+  },
+  {
+   "host": "twinmoonstcg.com",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 215 days old"
+   ]
+  },
+  {
+   "host": "twinfusecollectibles.com",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 122 days old"
+   ]
+  },
+  {
+   "host": "truetoys.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 251 days old"
+   ]
+  },
+  {
+   "host": "vaultedcardclub.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 251 days old"
+   ]
+  },
+  {
+   "host": "watsontcg.com",
+   "sites": [
+    "dexcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 214 days old"
+   ]
+  },
+  {
+   "host": "waywardcitygames.net",
+   "sites": [
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 95 days old"
+   ]
+  },
+  {
+   "host": "westcoast-hobbies.com",
+   "sites": [
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 275 days old"
+   ]
+  },
+  {
+   "host": "wilsontradingcardco.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 201 days old"
+   ]
+  },
+  {
+   "host": "wyattswarehouse.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 328 days old"
+   ]
+  },
+  {
+   "host": "xraygamestcg.com",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 230 days old"
+   ]
+  },
+  {
+   "host": "zone151.ca",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 10,
+   "verdict": "ok",
+   "signals": [
+    "domain 193 days old"
+   ]
+  },
+  {
+   "host": "ani-mecha.com",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "aniimeshop.com",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "amp3.co.uk",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "animerch.nl",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "aurynskin.com",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "baruzcard.it",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "bayzing.com",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "card-binder.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "cardconnectsg.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "cardcorner.at",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "brothersincards.nl",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "cardoni.com.au",
+   "sites": [
+    "opcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "chemexcoffeemaker.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "cosmadic.de",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "curibo.co.uk",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "daimonjitcg.com",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "davidptcg.nl",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "de-dondersteen.nl",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "dronesdirect.com.au",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "dxcollection.com.sg",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "elduelista.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "exchangeplayinvest.com",
+   "sites": [
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "fumetteriageco.it",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "gamingotaku.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "goattcg.com",
+   "sites": [
+    "riftcompare",
+    "lorcanacompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "gs-gameon.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "hitechgames.it",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "industria61.com",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "itsmaxtoys.nl",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "kaibacards.at",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "kaiofcards.com",
+   "sites": [
+    "opcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "kenkyohobby.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "keeobeauty.fr",
+   "sites": [
+    "kaeyoung"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "kurogami.com",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "lakecards.de",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "ygocompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "laliane.com",
+   "sites": [
+    "mtgcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "magicomens.com",
+   "sites": [
+    "mtgcompare",
+    "gundamcompare",
+    "bandaicompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mayer.sg",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mightytoys.com.au",
+   "sites": [
+    "opcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "metamorfo.es",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "miraicards.pt",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mistcards.nl",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mr-collect.de",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "mtgprecons.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "nerdbank.de",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "opssmarket.com",
+   "sites": [
+    "opcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pelikrypta.fi",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pixel-hub.co.uk",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "planeswalkers.shop",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pokeca.nl",
+   "sites": [
+    "dexcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "bandaicompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pokestock.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pro.wildthingsgames.com",
+   "sites": [
+    "opcompare",
+    "lorcanacompare",
+    "ygocompare",
+    "bandaicompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "pruckis.de",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "rarecards.nl",
+   "sites": [
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "sawadeekard.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "sc-collection.sg",
+   "sites": [
+    "riftcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "secretwonderscollectibles.be",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "sg.narwal.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "shopponistore.com",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "skupisve.hr",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "spearingcollectibles.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "spielewelt.de",
+   "sites": [
+    "mtgcompare",
+    "dexcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "tcgprices",
+    "waxcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "spelenmeer.nl",
+   "sites": [
+    "dexcompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "sweetsnthings.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "theboardgamehut.co.uk",
+   "sites": [
+    "mtgcompare",
+    "ygocompare",
+    "wargamecompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "theludoquist.com",
+   "sites": [
+    "cyberpunkcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "thepokestops.com",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "thetcgshop.co.uk",
+   "sites": [
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "timetwistergames.it",
+   "sites": [
+    "riftcompare",
+    "opcompare",
+    "mtgcompare",
+    "dexcompare",
+    "gundamcompare",
+    "lorcanacompare",
+    "cyberpunkcompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "todohits.com",
+   "sites": [
+    "dexcompare",
+    "lorcanacompare",
+    "bandaicompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "toycoin.com.sg",
+   "sites": [
+    "figurecompare"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "toyspace.com.sg",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "tozostore.com",
+   "sites": [
+    "compareempire"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  },
+  {
+   "host": "welpietoys.nl",
+   "sites": [
+    "dexcompare",
+    "tcgprices"
+   ],
+   "score": 8,
+   "verdict": "ok",
+   "signals": [
+    "contact only via WhatsApp or Telegram"
+   ]
+  }
+ ]
+}

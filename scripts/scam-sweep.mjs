@@ -122,15 +122,35 @@ Reply with JSON only: {"risk":0-100,"verdict":"low|medium|high","reasons":["..."
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: AI_MODEL, max_tokens: 400, messages: [{ role: "user", content: prompt }] }),
+      body: JSON.stringify({ model: AI_MODEL, max_tokens: 2000, messages: [{ role: "user", content: prompt }] }),
       signal: AbortSignal.timeout(30_000),
     });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      // Status and the API's error type only (never the key or the page text), once per run, so a bad key or model is visible.
+      if (!aiRead.warned) {
+        aiRead.warned = true;
+        const body = await r.text().catch(() => "");
+        console.log(`::warning::AI read refused: HTTP ${r.status} ${body.slice(0, 200).replace(/sk-ant-[\w-]+/g, "***")}`);
+      }
+      return null;
+    }
     const j = await r.json();
-    const m = /\{[\s\S]*\}/.exec(j.content?.[0]?.text ?? "");
-    const o = m ? JSON.parse(m[0]) : null;
+    const replyText = (j.content ?? []).filter((b) => b.type === "text").map((b) => b.text).join("\n");
+    const m = /\{[\s\S]*\}/.exec(replyText);
+    let o = null;
+    try {
+      o = m ? JSON.parse(m[0]) : null;
+    } catch {}
+    if (!(o && Number.isFinite(o.risk)) && !aiRead.warned) {
+      aiRead.warned = true;
+      console.log(`::warning::AI read unparseable (stop=${j.stop_reason}, chars=${replyText.length})`);
+    }
     return o && Number.isFinite(o.risk) ? { risk: Math.max(0, Math.min(100, o.risk)), verdict: o.verdict, reasons: (o.reasons ?? []).slice(0, 4) } : null;
-  } catch {
+  } catch (e) {
+    if (!aiRead.warned) {
+      aiRead.warned = true;
+      console.log(`::warning::AI read failed: ${String(e?.message ?? e).slice(0, 160)}`);
+    }
     return null;
   }
 }
@@ -199,8 +219,12 @@ async function main() {
     }),
   );
   // Pass 2: AI reads the riskiest unresolved pages (a banned or clear-evidence store needs no reading).
-  const candidates = rows.filter((r) => r.text && r.s.score >= 10 && !r.s.groups.includes("banned")).sort((a, b) => b.s.score - a.s.score).slice(0, AI_MAX);
+  // Riskiest first; below that a weekly-rotating sample of clean shops, so every shop is read over a few weeks.
+  const week = Math.floor(Date.now() / (7 * 86_400_000));
+  const rot = (h) => [...h].reduce((n, c) => (n * 31 + c.charCodeAt(0) + week) % 1_000_003, 7);
+  const candidates = rows.filter((r) => r.text && !r.s.groups.includes("banned")).sort((a, b) => b.s.score - a.s.score || rot(a.host) - rot(b.host)).slice(0, AI_MAX);
   let aiRead_ = 0;
+  console.log(`AI candidates: ${candidates.length} of ${rows.length} hosts (${rows.filter((r) => r.text).length} with page text), key ${process.env.SCAM_AI_KEY ? "present" : "MISSING"}`);
   for (const r of candidates) {
     const ai = await aiRead(r.host, r.text, r.input.evidence);
     if (ai) {
@@ -226,7 +250,8 @@ async function main() {
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## Scam sweep\n\n${JSON.stringify(summary)}\n`);
   if (DRY || only.length) return;
   const w = (name, data) => writeFileSync(new URL(name, DIR), JSON.stringify(data, null, 1) + "\n");
-  w("scam-scores.json", { at: now, stores: stores.map((s) => ({ ...s, hiddenAt: hidden.find((h) => h.domain === s.host)?.at })) });
+  // Only shops with a signal are kept (the file is public and rewritten weekly); the rest are counted.
+  w("scam-scores.json", { at: now, checked: stores.length, stores: stores.filter((s) => s.score > 0).map((s) => ({ ...s, hiddenAt: hidden.find((h) => h.domain === s.host)?.at })) });
   w("auto-hidden.json", hidden);
   w("denylist.json", { at: now, autohide, domains: denylist });
   if (log.length) appendFileSync(new URL("scam-log.jsonl", DIR), log.map((l) => JSON.stringify(l)).join("\n") + "\n");

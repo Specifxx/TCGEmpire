@@ -24025,3 +24025,6 @@ under the list becomes `AmazonCheckRow`: an ordinary last row labelled "Check on
 `amazon_also`) for a product Amazon sells (`amazonSellsSealed`), on the page after the price lookup says there is no live price and in the
 quick view always (the lookup is page-only). A priced Amazon row still pins as before; the check row is never pinned, ranked, the best
 price, a deal or an alert.
+## 2026-11-16: urgent release of the "Also on Amazon" line
+
+Amazon clicks were about 0 a day since 13 Nov. The owner approved one urgent production build (subject carries the urgent marker) so the unpriced matched line goes live now instead of waiting for the next daily release. One build, no previews.
