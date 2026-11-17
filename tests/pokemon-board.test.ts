@@ -48,7 +48,7 @@ test("US: TCGplayer and eBay ranked by item price, eBay in its price position, m
   );
   assert.equal(b.headline?.source, "ebay");
   assert.deepEqual(b.references.map((r) => [r.source, r.priceCents, r.converted]), [["tcgplayer_market", 15213, false]]);
-  assert.match(b.listings[1].href, /^https:\/\/partner\.tcgplayer\.com\/.*sharedid=pkmn_tcgplayer-pokemon/, "TCGplayer through Impact, tagged pkmn");
+  assert.match(b.listings[1].href, /\/out\/tcgplayer\?.*sharedid=pkmn_tcgplayer-pokemon/, "TCGplayer via /out/tcgplayer to Impact, tagged pkmn");
   assert.match(b.listings[0].href, /customid=rc-us-pkmn_ebay-pokemon-product/, "eBay through EPN, tagged pkmn");
   assert.match(b.ebaySearch.href, /ebay\.com\/sch\/i\.html\?_nkw=Pokemon\+Phantasmal\+Flames\+Elite\+Trainer\+Box/);
   assert.match(b.ebaySearch.href, /customid=rc-us-pkmn-product-search/);

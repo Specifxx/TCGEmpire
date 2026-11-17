@@ -73,6 +73,7 @@ export function classifyLink(url: string): LinkKind {
     return /[?&]customid=[^&]+/.test(q) ? "ebay" : "ebay-no-customid";
   }
   if (/(^|\.)amazon\.[a-z.]+$/.test(h) || h === "amzn.to") return /[?&]tag=[^&]+/.test(q) || h === "amzn.to" ? "amazon" : "amazon-untagged";
+  if (u.pathname === "/out/tcgplayer") return "tcgplayer";
   if (/(^|\.)partner\.tcgplayer\.com$/.test(h) || /\.(pxf|sjv)\.io$/.test(h)) return "tcgplayer";
   if (/(^|\.)tcgplayer\.com$/.test(h)) return "tcgplayer-untagged";
   if (/(^|\.)awin1\.com$/.test(h)) return "awin";
