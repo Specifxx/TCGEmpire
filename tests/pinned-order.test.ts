@@ -5,20 +5,17 @@ import { PIN_OUTLINE, pinMarketplaces, rowOutline, tcgplayerLeads } from "../src
 
 const row = (retailer: string, priceCents: number) => ({ retailer, priceCents });
 
-test("the cheaper affiliated row leads, eBay on a tie (owner, 2026-11-17: all affiliated rows at the top by price)", () => {
-  assert.equal(tcgplayerLeads(row("ebay", 500), row("tcgplayer", 450)), true);
+test("eBay always leads, TCGplayer never goes above it (owner, 2026-11-06: eBay on the very top)", () => {
+  assert.equal(tcgplayerLeads(row("ebay", 500), row("tcgplayer", 450)), false);
   assert.equal(tcgplayerLeads(row("ebay", 450), row("tcgplayer", 450)), false);
-  assert.equal(tcgplayerLeads(row("ebay", 400), row("tcgplayer", 450)), false);
-  assert.equal(tcgplayerLeads(row("ebay", 0), row("tcgplayer", 450)), true);
-  assert.equal(tcgplayerLeads(row("ebay", 500), row("tcgplayer", 0)), false);
-  assert.equal(tcgplayerLeads(null, row("tcgplayer", 450)), true);
+  assert.equal(tcgplayerLeads(null, row("tcgplayer", 450)), false);
   assert.equal(tcgplayerLeads(null, null), false);
 });
 
-test("pinMarketplaces keeps the rest in price order; the cheaper of eBay and TCGplayer leads (owner, 2026-11-17)", () => {
+test("pinMarketplaces keeps the rest in price order, eBay on top", () => {
   const prices = [row("store-a", 300), row("tcgplayer", 350), row("store-b", 360), row("ebay", 420)];
   const pin = pinMarketplaces(prices);
-  assert.equal(pin.tcgFirst, true);
+  assert.equal(pin.tcgFirst, false);
   assert.equal(pin.ebay?.retailer, "ebay");
   assert.deepEqual(pin.rest.map((p) => p.retailer), ["store-a", "store-b"]);
 });

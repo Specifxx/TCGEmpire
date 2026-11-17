@@ -40,7 +40,7 @@ test("Amazon has no search-link row: the slot draws nothing without a real price
 test("Check on Amazon: an affiliated row at the top, under eBay, on the sealed page and the quick view (owner, 2026-11-17)", () => {
   const q = readFileSync(new URL("../src/components/SealedQuickView.tsx", import.meta.url), "utf8");
   assert.match(q, /const checkRow = amazonStore && amazonHref \? \(\s+<AmazonCheckRow/);
-  assert.match(q, /pin\.ebay && l === pin\.ebay \? checkRow : null/);
+  assert.match(q, /lead\.length && l === lead\[lead\.length - 1\] \? checkRow : null/);
   assert.match(q, /\{!pin\.ebay && checkRow\}/);
   assert.match(q, /lookup=\{source === "sealed-page"\}/);
   const slot = readFileSync(new URL("../src/components/AmazonLiveSlot.tsx", import.meta.url), "utf8");

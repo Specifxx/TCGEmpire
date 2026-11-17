@@ -160,10 +160,10 @@ export function pinMarketplaces<T extends { retailer: string; priceCents: number
  * US cards (TCGplayer is the cheapest row on about half of them) and pushed the
  * partner that pays about 2.5 times more per click to the second row.
  */
-export function tcgplayerLeads(ebay?: { priceCents: number } | null, tcgplayer?: { priceCents: number } | null): boolean {
-  // Owner, 2026-11-17: ALL affiliated rows at the top, cheapest price first. TCGplayer leads when it has a price and eBay has none or a
-  // dearer one (eBay on a tie, and as the first row when TCGplayer is unpriced). Every caller's `tcgFirst` branch stays one switch.
-  return !!tcgplayer && tcgplayer.priceCents > 0 && (!ebay || ebay.priceCents <= 0 || tcgplayer.priceCents < ebay.priceCents);
+export function tcgplayerLeads(_ebay?: { priceCents: number } | null, _tcgplayer?: { priceCents: number } | null): boolean {
+  // Owner, 2026-11-17 (final): eBay first, then TCGplayer, then Amazon, so TCGplayer never goes above eBay. Kept as a function so
+  // every caller's `tcgFirst` branch stays one switch.
+  return false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

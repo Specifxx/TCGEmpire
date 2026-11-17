@@ -313,8 +313,8 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
                 View →
               </OutboundLink>
             </li>,
-            pin.ebay && l === pin.ebay ? amazonRow : null,
-            pin.ebay && l === pin.ebay ? checkRow : null,
+            lead.length && l === lead[lead.length - 1] ? amazonRow : null,
+            lead.length && l === lead[lead.length - 1] ? checkRow : null,
           ];
         })}
       </ul>
