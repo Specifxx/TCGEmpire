@@ -203,6 +203,11 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
       </li>
     ) : null;
 
+  // The unpriced "Check on Amazon" row (2026-11-17), now at the top with the other affiliated rows (owner, 2026-11-17): right after the Amazon row.
+  const checkRow = amazonStore && amazonHref ? (
+    <AmazonCheckRow country={country} slug={sealedSlug(group.groupKey)} name={group.name} label={amazonStore.label} href={amazonHref} lookup={source === "sealed-page"} currency={currency} image={group.imageUrl} />
+  ) : null;
+
   return (
     <>
     <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
@@ -215,7 +220,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
             Search on eBay →
           </OutboundLink>
         </div>
-        {amazonRow && <ul className="mt-3 border-t border-ink-800 text-left empty:hidden">{amazonRow}</ul>}
+        {(amazonRow || checkRow) && <ul className="mt-3 border-t border-ink-800 text-left empty:hidden">{amazonRow}{checkRow}</ul>}
       </div>
     ) : (
       <ul className="divide-y divide-ink-800">
@@ -238,6 +243,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
         )}
         {/* Amazon is the second row, right under eBay (owner, 2026-11-06). */}
         {!pin.ebay && amazonRow}
+        {!pin.ebay && checkRow}
         {shown.map((l, i) => {
           const state = offerStock(l);
           const isOpen = state === "open";
@@ -308,13 +314,12 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
               </OutboundLink>
             </li>,
             pin.ebay && l === pin.ebay ? amazonRow : null,
+            pin.ebay && l === pin.ebay ? checkRow : null,
           ];
         })}
       </ul>
     )}
 
-    {/* The unpriced "Check on Amazon" row (2026-11-17): an ordinary last row, page and quick view, when there is no live Amazon price. */}
-    {amazonStore && amazonHref && <AmazonCheckRow country={country} slug={sealedSlug(group.groupKey)} name={group.name} label={amazonStore.label} href={amazonHref} lookup={source === "sealed-page"} currency={currency} image={group.imageUrl} />}
     {listings.length > 0 && (
       <p className="mt-2 border-t border-ink-800 pt-2 text-right text-[11px]">
         <OutboundLink href={ebayHref} retailer="ebay_sealed_search" country={country} kind="sealed" pageType="sealed" surface="ebay_search" className="font-semibold text-brand-400 hover:underline">
