@@ -11,6 +11,7 @@ import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { HomeFeaturedListing } from "@/components/home/HomeFeaturedListing";
+import { YourCardsToday } from "@/components/home/YourCardsToday";
 import { RIOT_DRAWINGS } from "@/lib/riot-drawings";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { COUNTRIES } from "@/lib/country";
@@ -347,6 +348,9 @@ export default async function HomePage() {
         freshnessAt={freshnessAt}
         rating={rating}
       />
+
+      {/* "Your cards today" (2026-11-18): an account's watched cards, browser-only, nothing in the server HTML or for visitors. */}
+      <YourCardsToday />
 
       {/* The reviews section, the sealed shelf and Welcome back left the front page 2026-11-13 (owner). */}
 

@@ -24372,3 +24372,15 @@ Deals stays in the menu. Cart, Menu, price rows, pinned rows, Cheapest and Add t
 member gets around, never what prices they see. Next steps in the plan: a "Your cards today" strip on the phone home and a dot on
 Watching when a watched card moved. 21 members is too few to split, so it is read before/after: members' visit days a week (the
 `return_visit` beacon), four weeks either side. Plan: project files strategy/premium-network-plan-2026-11-18.html.
+
+## 2026-11-18: "Your cards today": an account's watched cards first on the home page (a 50/50 test)
+
+Retention job C (owner's reassignment, 18 Nov). A signed-in account with watches sees its newest 8 watched cards right under the
+hero: today's price in its market, the change since its last look (a snapshot of the shown prices in localStorage `yct-seen`) and a
+30-day sparkline (`components/home/YourCardsToday.tsx`, `/api/alerts/today`, `lib/your-cards-today.ts`). Browser only: the home
+page's server HTML and cache are untouched, and a visitor without an account or watches gets nothing. The route is per user and
+uncached, one bounded read (40 watch rows, card fields only, no store-count subquery); the sparklines come from the committed price
+history files and drop methodology-break windows. A 50/50 arm (`yct-arm`): "off" sees nothing. `yct_eligible {arm}` fires once a
+day per eligible browser, so visit days per eligible account read on against off; `yct_shown`, `yct_click`. A member's phone bar
+shows a gold dot on Watching (`yct-moved`, "on" arm only) until they open /watching. Price rows, buy buttons and the quick view are
+untouched. Read about 2 Dec.
