@@ -1,3 +1,4 @@
+import { ShareButton } from "@/components/ShareButton";
 import type { Metadata } from "next";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
@@ -477,6 +478,7 @@ export default async function SetPage({
           <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
             Riftbound {set.name} card list &amp; prices
           </h1>
+          <ShareButton className="mt-3" name={`Riftbound ${set.name} card list & prices`} medium="set" />
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             {!live ? (
               <>
