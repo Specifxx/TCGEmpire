@@ -70,7 +70,12 @@ async function catalogue() {
   }
   // Red: a released set's NON-promo priced single with no page. Promos are a
   // known, separate list (PROMO_PRODUCT_OVERRIDES) and stay a report line.
-  const missing = unmatched.filter((p) => !isPromoProduct(p) && setOfProduct(p).released && (p.marketPrice ?? 0) >= 0.25);
+  // A product with no collector number is sealed (it has its own sealed page) and a
+  // "T02"-style number is a token: neither is a single card page we owe.
+  const isSingle = (p: TcgProduct) => /\d/.test(p.customAttributes?.number ?? "") && !/^T\d/i.test(p.customAttributes?.number ?? "");
+  const owed = unmatched.filter(isSingle);
+  say(`Of those, ${owed.length} are numbered singles (not sealed product, not tokens); ${owed.filter((p) => (p.marketPrice ?? 0) >= 1).length} trade at US$1 or more.`);
+  const missing = owed.filter((p) => !isPromoProduct(p) && setOfProduct(p).released && (p.marketPrice ?? 0) >= 1);
   if (missing.length >= 3) red.push(`${missing.length} priced TCGplayer singles from released sets have no card page (e.g. ${missing.slice(0, 3).map((p) => `${p.productName} ${p.customAttributes?.number ?? ""}`).join(", ")})`);
 
   say("");

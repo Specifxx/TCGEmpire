@@ -574,6 +574,14 @@ export async function buildTcgplayerRows(
     if (sc) byKey.set(`${sc}|${numKey(num)}`, c.id);
     else bySetlessNum.set(`${c.setCode}|${numKey(num)}`, c.id);
   }
+  // A set-less PROMO printing whose number no base card uses ("R06b", Vendetta's and
+  // Radiance's Nexus Night "b" runes) can take the set's own product by number: the
+  // key is unclaimed, so there is no base sibling to steal from or collide with.
+  // Without this, TCGplayer's "Order Rune (R06b)" in set Vendetta ($5.57, 2026-11-18)
+  // matched nothing and those pages showed no TCGplayer price at all.
+  for (const f of promoFallbackKeys) {
+    if (f.setless && !bySetlessNum.has(f.key)) bySetlessNum.set(f.key, f.cardId);
+  }
   // Seed byExternal with the verified promo-product pins: for each override, if
   // the card it names is actually in the database (found via its OWN, unchanged
   // externalId), register the product's id under the exact same "tcg-<id>" key
