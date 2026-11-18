@@ -24235,6 +24235,26 @@ engines have no first-touch capture yet, which is the next gap. Earnings stay un
 the placement, not the campaign); the scoreboard reports visitors, buy clicks and sign-ups by campaign, never an invented
 earnings split. `tests/entry-source.test.ts`.
 
+## 2026-11-18: Feedback asks: "Was this page useful?" in the footer, a /feedback page, counted by the daily triage (owner)
+
+The owner: "We need more feedback so can we find a way to get more". One RiftCompare visitor's note (sort the movers by %
+gain or loss) became a feature the same day, but across the network three weeks brought about 58 star ratings and fewer than
+ten written notes. Rift's own record also holds "too many popups asking for my opinion", so every ask here is inline.
+
+- `components/FeedbackAsk.tsx` (the same file on every site): one line at the top of the footer, "Was this page useful?
+  Yes / No". The tap is sent at once (a vote alone counts); only then does an optional "What would make it better?" box
+  open. Never a pop-up, nothing fixed or floating, hidden for the rest of the visit on a page already answered, and in no
+  quick view (the Dex / MTG quick-view A/B, 20 Nov to 3 Dec, is untouched).
+- `/feedback`: the full form (an idea, something wrong, something missing) and "You asked, we built it", the changes
+  visitors' notes have led to; add a line there when a note leads to a change. noindex, linked from the footer and the menu.
+- Both post to `/api/report` as kind `feedback` (`lib/reports-github.ts`). A note is an inbox file like any report; a bare
+  vote is `votes/<site>/<day>/<time>-up|down-<rand>.json`, counted from its file name by RiftCompare's daily *Reports
+  triage*, which now prints a 7-day feedback table per site and flags every note for a look. No email address is asked
+  for or kept: the thanks shows the site's inbox for anyone who wants a reply.
+- RiftCompare also adds one line to its price-alert email and to the sister sites' alert and weekly-drops emails: "What
+  would make <site> better? Tell us in a sentence", linking that site's `/feedback` (utm-tagged, no reply address needed).
+- TCG Prices, ScentCompare, SportsCardCompare and MotorCompare had no `reports` branch (their forms could not save; TCG
+  Prices' site id was not even in `SITE_REPOS`), so they now file on this repo's branch under their own `inbox/<site>/`.
 ## 2026-11-18: Share for a deal, and guides and set pages count their shares (owner)
 
 Owner: a share feature on every page that people pass around, and "if you share … you can open Deal Finder … gives incentive".
