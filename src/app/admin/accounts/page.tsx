@@ -8,6 +8,7 @@ import { GrantPremiumForm } from "@/components/admin/GrantPremiumForm";
 import { TierFloorForm } from "@/components/admin/TierFloorForm";
 import { NOT_SEED_WHERE } from "@/lib/premium";
 import { DexTab } from "./DexTab";
+import { SISTER_PREMIUM_SITES } from "@/lib/sister-premium";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export default async function AccountsAdminPage({
   const me = await getCurrentUser();
   if (!(keyOk || me?.isAdmin)) notFound(); // don't reveal the page exists
 
-  const dexTab = searchParams.site === "dex";
+  const sisterTab = SISTER_PREMIUM_SITES.find((s) => s.key === searchParams.site) ?? null;
   const q = (searchParams.q ?? "").trim();
   const FILTERS = ["paid", "plus", "premium", "verified", "active"] as const;
   const filter = (FILTERS as readonly string[]).includes(searchParams.f ?? "")
@@ -41,9 +42,9 @@ export default async function AccountsAdminPage({
   const tabKey = keyOk && !me?.isAdmin ? `key=${encodeURIComponent(token!)}` : "";
   const tabBar = (
     <div className="mt-3 flex gap-1.5">
-      {([["", "RiftCompare"], ["dex", "DexCompare"]] as const).map(([k, label]) => {
+      {([["", "RiftCompare"], ...SISTER_PREMIUM_SITES.map((s) => [s.key, s.name] as const)] as const).map(([k, label]) => {
         const qs = [k ? `site=${k}` : "", tabKey].filter(Boolean).join("&");
-        const on = (k === "dex") === dexTab;
+        const on = k === (sisterTab?.key ?? "");
         return (
           <Link
             key={label}
@@ -56,7 +57,7 @@ export default async function AccountsAdminPage({
       })}
     </div>
   );
-  if (dexTab) {
+  if (sisterTab) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10">
         <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
@@ -66,7 +67,7 @@ export default async function AccountsAdminPage({
         </nav>
         <h1 className="text-2xl font-bold text-white">Accounts</h1>
         {tabBar}
-        <DexTab />
+        <DexTab site={sisterTab.key} name={sisterTab.name} />
       </div>
     );
   }

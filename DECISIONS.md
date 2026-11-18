@@ -24176,3 +24176,10 @@ The owner wants every site's home page to lead with the items most likely to ear
 - Heroes stay words, search and ways in (owner, 2026-11-13): the ranking orders the lists, it adds no product to a hero.
 - Measure: buy clicks per visitor sitewide and on home pages, the week before (11-18 Nov) against the two weeks after the release;
   a demand file under 30 views for a list means that list ran on the fallback and is read apart.
+
+## 2026-11-18 — MTG Compare joins the sister account service
+
+Owner (18 Nov): expand accounts beyond RiftCompare and OP Compare. MTG Compare is the second site in `SISTER_PREMIUM_SITES`
+(`lib/sister-premium.ts`): sign-in by emailed link from the shared alert sender (no Google client yet), watch list, back-in-stock
+and Premium, exactly as DexCompare. The admin Accounts page now has a tab per account site (`DexTab` takes the site), so sign-ups
+are counted per site. TCG Prices joined the same day (no back-in-stock button there yet: its product pages are multi-market). Next in traffic order: Gundam, YGO, Lorcana.
