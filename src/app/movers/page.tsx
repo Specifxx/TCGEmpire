@@ -4,6 +4,7 @@ import { getPriceMovers, recentMethodologyBreak } from "@/lib/price-history";
 import { getTopDemand, FREE_DEMAND_ROWS } from "@/lib/demand";
 import { MostSearchedStrip } from "@/components/MostSearchedStrip";
 import { PriceWatch } from "@/components/PriceWatch";
+import { MoversTable } from "@/components/MoversTable";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { SETS } from "@/lib/constants";
 import { AnswerBox } from "@/components/AnswerBox";
@@ -228,6 +229,10 @@ export default async function MoversPage() {
               component — it localises with useCountry, so the page stays
               static — carrying its own disclosure; a buy path, not an ad. */}
           <EbayBuyCta source="movers" pageType="movers" />
+
+          {/* The panels' rows in one list with search and a % sort (visitor
+              feedback, 2026-11-18). Same data, nothing new loaded. */}
+          <MoversTable movers={movers} currency={info.currency} />
         </>
       ) : (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
