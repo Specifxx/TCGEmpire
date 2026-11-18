@@ -5,7 +5,7 @@
 // growth report (lib/earnings/growth-report.ts) counts both for every site.
 // DECISIONS.md, "Share buttons and shared lists".
 
-export type ShareMedium = "card" | "sealed" | "deck" | "list" | "page" | "daily" | "pulls" | "binder";
+export type ShareMedium = "card" | "sealed" | "deck" | "list" | "page" | "daily" | "pulls" | "binder" | "guide" | "set";
 
 /** `path` (an existing query string is kept) on `origin`, with the share tags. */
 export function shareUrl(origin: string, path: string, medium: ShareMedium): string {
@@ -45,4 +45,16 @@ export function priceGap(rows: readonly GapRow[]): PriceGap | null {
 export function shareText(name: string, gap: PriceGap | null, fmt: (cents: number) => string, site = "RiftCompare"): string {
   if (!gap) return `${name}: every store's price on ${site}`;
   return `${name}: ${fmt(gap.low.priceCents)} at ${gap.low.retailerName}, up to ${fmt(gap.high.priceCents)} elsewhere (${gap.pct}% less). Compared on ${site}`;
+}
+
+// Share-for-a-deal test (owner, 2026-11-18: "if you share … you can open Deal
+// Finder"). Half of browsers (kept in localStorage) see "Share · get a deal" and,
+// after a share completes, a small card under the button pointing to Deal
+// Finder's free views; the other half is the control. Nothing it shows is
+// gated: Deal Finder's free rows stay free for everyone, Premium stays as is.
+export type ShareArm = "reward" | "plain";
+export const SHARE_ARM_KEY = "share_arm";
+export function pickShareArm(saved: string | null | undefined, roll: number): ShareArm {
+  if (saved === "reward" || saved === "plain") return saved;
+  return roll < 0.5 ? "reward" : "plain";
 }
