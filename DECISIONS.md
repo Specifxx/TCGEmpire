@@ -24143,3 +24143,10 @@ Read after enough clicks per arm (target 14 days or about 400 clicks an arm): ke
 ## 2026-11-18: cart checkout opens every store or none (owner)
 
 Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.
+
+## 2026-11-18 — MTG Compare joins the sister account service
+
+Owner (18 Nov): expand accounts beyond RiftCompare and OP Compare. MTG Compare is the second site in `SISTER_PREMIUM_SITES`
+(`lib/sister-premium.ts`): sign-in by emailed link from the shared alert sender (no Google client yet), watch list, back-in-stock
+and Premium, exactly as DexCompare. The admin Accounts page now has a tab per account site (`DexTab` takes the site), so sign-ups
+are counted per site. Next in traffic order: TCG Prices, Gundam, YGO, Lorcana.

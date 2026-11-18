@@ -26,7 +26,12 @@ export interface PremiumSite {
 }
 
 /** Sites whose members can use their RiftCompare Premium there. Add a site here only once it has the perks. */
-export const SISTER_PREMIUM_SITES: PremiumSite[] = [{ key: "dex", name: "DexCompare", url: "https://dexcompare.io", oldHosts: ["dexcompare.app"] }];
+export const SISTER_PREMIUM_SITES: PremiumSite[] = [
+  { key: "dex", name: "DexCompare", url: "https://dexcompare.io", oldHosts: ["dexcompare.app"] },
+  // MTG Compare (2026-11-18, owner: expand accounts beyond Rift and OP): the same sign-in, watch list and Premium as DexCompare. Email
+  // link only until it has its own Google client (MTG_GOOGLE_CLIENT_ID); the email goes from the shared alert sender.
+  { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app" },
+];
 
 export const PREMIUM_SESSION_DAYS = 60;
 const KID = "sister-sign-in-1";
