@@ -1,3 +1,4 @@
+import { MAILING_ADDRESS, mailingAddressRow } from "./mailing-address";
 import {
   SITE_NAME,
   SITE_URL,
@@ -692,6 +693,7 @@ function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">):
     "You're getting this because you asked RiftCompare to watch these cards for price changes. Free alerts come at most once a week; Target, below-market and restock alerts on a paid plan can arrive after each price update.",
     `Pause alert emails (your watchlist is kept): ${links.pause}`,
     `Delete all my watches: ${links.deleteAll}`,
+    MAILING_ADDRESS,
   ].join("\n");
 }
 
@@ -885,6 +887,7 @@ export function emailShell(heading: string, inner: string, footer: string, prehe
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       ${inner}
       ${footer}
+      ${mailingAddressRow("#6b7585")}
     </table></td></tr></table></body></html>`;
 }
 

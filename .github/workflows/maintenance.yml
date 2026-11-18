@@ -85,6 +85,7 @@ on:
           - gsc-sites-daily  # read-only: every Search Console property's clicks/impressions per day (35d), weekly totals and pages with impressions. Counts only, no search terms. The family growth scoreboard.
           - gsc-diagnose     # read-only CLICK-DROP DIAGNOSIS: per property (url = comma list, empty = all) three settled weeks split by device, country, page type and brand, plus the queries and pages that lost or gained the most clicks.
           - gsc-identifiers  # read-only: every property's searches that name a product code (card number, barcode, ASIN, set or part code), 90 days, with the page shown. Search terms only.
+          - gsc-pagetypes    # read-only LONG-TAIL PAGE-TYPE REPORT: per property, 90 days of impressions grouped by page template (card, set, sealed, hub...), share of each template's sitemap that earns impressions, before/after the 10 Nov core update, query intent, and live sample page weight/text. Paths, counts and search terms only.
           - gsc-queries      # read-only SEARCH CONSOLE QUERY REPORT: top queries, striking-distance queries (position 4-20), rising queries and top pages for the last 28 days, so new articles target searches the site already nearly wins.
           - impact-report    # read-only DAILY IMPACT REPORT: per UTC day for the last 35 days, Search Console clicks/impressions, card views and searches (DemandSnapshot), new accounts by source and PremiumClick by surface, plus window averages around a change date (2026-10-09, the search allowance). Answers "did this change cost visitors or sign-ups?" days after it ships, where funnel-report's weeks are too coarse. Aggregate only, writes nothing.
           - funnel-report    # read-only WEEKLY PREMIUM FUNNEL: accounts, signup sources, PremiumClick, trial stamps and entitlement expiries from Postgres, joined to Stripe subscriptions/trials/conversions/churn, bucketed by ISO week for the last 8 (WEEKS= to change). Exists because neither admin page can answer "were more people signing up before?" — /admin/subscriptions' trial->paid is an ALL-TIME ratio with no time dimension, and /admin/accounts only looks back 30 days. Aggregate only, no PII. Writes nothing.
@@ -5989,6 +5990,13 @@ jobs:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
           GSC_PROPERTY: ${{ inputs.url }}
         run: npx tsx scripts/gsc-identifiers.ts
+
+      - name: Search Console long-tail page-type report (read-only)
+        if: inputs.task == 'gsc-pagetypes'
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          DIAG: ${{ inputs.url }}
+        run: npx tsx scripts/gsc-pagetypes.ts
 
       - name: Search Console query report (read-only)
         if: inputs.task == 'gsc-queries'

@@ -3,6 +3,7 @@
 // (its name and colour), sent from RiftCompare's verified domain, and saying so
 // in the footer. Every product name, path and deal comes from the site's own
 // feed; the confirmation carries nothing a form typed but the numbers.
+import { MAILING_ADDRESS, mailingAddressRow } from "../mailing-address";
 import { escapeHtml } from "../email";
 import { SITE_URL } from "../site";
 import { REGION_CURRENCY, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
@@ -49,6 +50,7 @@ export function shell(site: SisterAlertSite, heading: string, inner: string, foo
       <tr><td style="padding:6px 28px 4px"><h1 style="margin:0;font-size:19px;line-height:1.3;color:#111827">${heading}</h1></td></tr>
       ${inner}
       ${footer}
+      ${mailingAddressRow("#6b7280", 28)}
     </table></td></tr></table></body></html>`;
 }
 
@@ -157,6 +159,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
     deal ? `\nA deal on ${deal.site.name}: ${deal.deal.n}, ${money(deal.deal.p, deal.deal.r)}\n${siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`, deal.deal.r)}` : "",
     `\nWhat would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "sister-alert")}`,
     `\nManage or stop your alerts: ${serviceUrl("manage", token)}`,
+    `\n${MAILING_ADDRESS}`,
   ].join("\n");
   const heading = allRestock ? (rows.length === 1 ? "It's back in stock" : `${rows.length} products are back in stock`) : rows.length === 1 ? "Your price alert hit its target" : rows.some((a) => a.restock) ? `${rows.length} alerts fired` : `${rows.length} price alerts hit their target`;
   return { subject, html: shell(site, heading, items + dealHtml + note, footer, `${first.name}: ${money(first.priceCents, first.region)}`), text };
