@@ -45,6 +45,8 @@ const METHODS = flag("--methods", "simulate")
   .split(",")
   .map((m) => m.trim())
   .filter((m) => m === "simulate" || m === "devtools");
+/** `--diag`: print each run's layout-shift culprits and the failing speed insights, and skip the browser's list. */
+const DIAG = argv.includes("--diag");
 const SPECS = argv.filter((a) => /^[a-z0-9_-]+=/i.test(a));
 
 interface Target {
@@ -68,6 +70,8 @@ interface Run {
   before: { count: number; kb: number; scripts: number; scriptKb: number; thirdParty: number } | null;
   element: string;
   phases: string;
+  /** With --diag: the layout shifts' elements and the insights Lighthouse says would save time or bytes. */
+  diag?: string;
   error?: string;
 }
 
@@ -177,6 +181,7 @@ function lighthouseOnce(url: string, method: string): Run {
       before,
       element,
       phases: parts.join(" "),
+      diag: DIAG ? diagnose(a) : undefined,
     };
   } catch (e) {
     const err = e as { message?: string; stderr?: Buffer };
@@ -185,6 +190,23 @@ function lighthouseOnce(url: string, method: string): Run {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+/** --diag: what moved (layout shifts and their elements) and which insights or opportunities have savings. */
+function diagnose(a: Record<string, any>): string {
+  const out: string[] = [];
+  const shifts: any[] = a["layout-shifts"]?.details?.items ?? [];
+  for (const sh of shifts.slice(0, 4)) out.push(`shift ${Number(sh.score ?? 0).toFixed(3)} ${String(sh.node?.snippet ?? "?").slice(0, 150)}`);
+  for (const [id, au] of Object.entries(a)) {
+    if (au?.score == null || au.score >= 0.9) continue;
+    const save = au.metricSavings ? Object.entries(au.metricSavings).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}=${Math.round(Number(v))}`).join(",") : "";
+    const bytes = Number(au.details?.overallSavingsBytes ?? 0);
+    if (!save && bytes < 20_000) continue;
+    const first = au.details?.items?.[0];
+    const what = first?.url ?? first?.node?.snippet ?? "";
+    out.push(`${id}${au.displayValue ? ` (${au.displayValue})` : ""}${save ? ` ${save}` : ""}${what ? ` e.g. ${String(what).slice(0, 140)}` : ""}`);
+  }
+  return out.join("\n      ");
 }
 
 /** A plain phone-sized browser, no throttling: every largest-paint candidate the browser reports, in order. */
@@ -331,7 +353,7 @@ async function main() {
           `  ${t.label} #${i + 1}: score ${r.score}, first paint ${ms(r.fcp)}, largest paint ${ms(r.lcp)}, blocking ${ms(r.tbt)}, speed index ${ms(r.si)}, shift ${r.cls.toFixed(3)}` +
             ` | seen unthrottled: first paint ${ms(r.observedFcp)}, largest paint ${ms(r.observedLcp)}` +
             (b ? ` | finished before it: ${b.count} requests, ${b.kb} kB (${b.scripts} scripts, ${b.scriptKb} kB; ${b.thirdParty} from other hosts)` : "") +
-            ` | ${r.element}${r.phases ? ` | ${r.phases}` : ""}`,
+            ` | ${r.element}${r.phases ? ` | ${r.phases}` : ""}${r.diag ? `\n      ${r.diag}` : ""}`,
         );
       }
     }
@@ -351,7 +373,7 @@ async function main() {
     }
   }
 
-  await observe(open);
+  if (!DIAG) await observe(open);
 }
 
 main().catch((e) => {
