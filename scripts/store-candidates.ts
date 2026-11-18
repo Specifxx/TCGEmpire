@@ -14,6 +14,7 @@
 //   npx tsx scripts/store-candidates.ts
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { buildCardIndex, resolveCardId, type CardLite, type ShopifyProduct } from "../src/lib/price-import";
+import { DECOMMISSIONED_RETAILERS, RETAILERS } from "../src/lib/retailers";
 import { SCRAPE_HEADERS, robotsAllows, sleep, isRateLimited } from "../src/lib/scrape-http";
 import { vetHost } from "./store-vetting.mjs";
 
@@ -78,6 +79,8 @@ async function measure(c: Candidate) {
     }
   }
   const why: string[] = [];
+  if ((DECOMMISSIONED_RETAILERS as readonly string[]).includes(c.key)) why.push("decommissioned before (see retailers.ts and DECISIONS.md)");
+  if (RETAILERS[c.key]) why.push("already tracked");
   if (banned.has(host) || denied.has(host)) why.push("on the banned list or denylist");
   for (const f of vet.flags as { kind: string; red: boolean; detail: string }[]) if (f.red || f.kind === "young" || f.kind === "no-contact" || f.kind === "moved") why.push(f.detail);
   if (!allowed("/collections/x/products.json")) why.push("robots.txt disallows the catalogue");

@@ -29,15 +29,6 @@
    ]
   },
   {
-   "key": "columbuscardshop",
-   "name": "Columbus Card Shop",
-   "base": "https://columbuscardshop.com",
-   "country": "US",
-   "collections": [
-    "riftbound-league-of-legends-singles"
-   ]
-  },
-  {
    "key": "five6gaming",
    "name": "FIVE6 Gaming",
    "base": "https://www.five6gaming.com",
@@ -100,5 +91,13 @@
     "riftbound-singles"
    ]
   }
- ]
+ ],
+ "outcome_2026_11_18": {
+  "added": [
+   "cardsnmo",
+   "five6gaming",
+   "pcatoys"
+  ],
+  "held": "1stcapitalgaming, gamespacefl, totalescapegames (collection read empty); castlegameshoppe (0 in stock); foxfablehaven (1% matched, domain 319 days); manathril, nolatcg (14 in-stock matches); columbuscardshop (not taking online orders, 2026-10-16 audit)"
+ }
 }
