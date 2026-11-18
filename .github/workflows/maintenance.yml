@@ -5911,6 +5911,11 @@ jobs:
 
       - name: Retention census (read-only)
         if: inputs.task == 'retention-census'
+        env:
+          # The live operational project since the 2026-11-16 cutover (the job-level RM11 is the one before it).
+          RM12: ${{ secrets.RM12 || vars.RM12 }}
+          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          DB_SOURCE_NAME: RM12
         run: npx tsx scripts/retention-census.ts
 
       - name: Weekly premium funnel report (read-only)
