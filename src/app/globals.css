@@ -393,7 +393,7 @@ html {
   /* Amazon's own action (owner, 2026-11-18): a calm amber with DARK ink in both themes, so the Amazon row is never mistaken for the
      orange brand button, the green store button or the eBay and TCGplayer blues. Fixed hexes; tests/amazon-button.test.ts. */
   .btn-amazon {
-    @apply btn border border-[#e08a00] bg-[#ffa41c] text-[#111111] hover:bg-[#fa8900];
+    @apply btn border border-[#B7791F] bg-[#F5A524] text-[#111111] hover:bg-[#DC8A0B];
   }
   /* TCGplayer's button (owner, 2026-11-12): blue, white text, so the marketplace row is picked out by its button alone. */
   .btn-tcg {
