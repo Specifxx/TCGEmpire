@@ -8,11 +8,30 @@ import type { IndexConstituent } from "@/lib/market-index";
 import { cardImageAlt } from "@/lib/image-alt";
 import { cardThumbProps } from "@/lib/card-image-url";
 
-type SortKey = "rank" | "name" | "weight" | "price" | "d1" | "d7";
+type SortKey = "rank" | "name" | "weight" | "price" | "d1" | "d7" | "abs7";
 type Dir = "asc" | "desc";
 
 // Default direction when you first click a column (numbers → biggest first).
-const DEFAULT_DIR: Record<SortKey, Dir> = { rank: "asc", name: "asc", weight: "desc", price: "desc", d1: "desc", d7: "desc" };
+const DEFAULT_DIR: Record<SortKey, Dir> = { rank: "asc", name: "asc", weight: "desc", price: "desc", d1: "desc", d7: "desc", abs7: "desc" };
+
+// The "Sort by" menu (visitor feedback, 2026-11-18: "sort index by % of gain or
+// loss, this is better than just toggling the gainers or losers button"). The
+// headings still sort too; this is the control that is visible on phones, where
+// the Latest and 7-day columns are hidden. Every option is a (key, direction)
+// pair a heading click can also reach, plus "biggest move either way".
+const SORTS: { key: SortKey; dir: Dir; label: string }[] = [
+  { key: "rank", dir: "asc", label: "Index rank" },
+  { key: "d7", dir: "desc", label: "Biggest % gain (7 days)" },
+  { key: "d7", dir: "asc", label: "Biggest % loss (7 days)" },
+  { key: "abs7", dir: "desc", label: "Biggest % move, up or down (7 days)" },
+  { key: "d1", dir: "desc", label: "Biggest % gain (latest)" },
+  { key: "d1", dir: "asc", label: "Biggest % loss (latest)" },
+  { key: "price", dir: "desc", label: "Price: high to low" },
+  { key: "price", dir: "asc", label: "Price: low to high" },
+  { key: "weight", dir: "desc", label: "Index weight" },
+  { key: "name", dir: "asc", label: "Name A–Z" },
+];
+const HEADING: Record<SortKey, string> = { rank: "#", name: "Card", weight: "Weight", price: "Price", d1: "Latest %", d7: "7-day %", abs7: "7-day move" };
 
 // Interactive constituents table: text filter + gainers/fallers filter, and every
 // heading is a sort toggle (click to sort, click again to flip asc/descending).
@@ -26,9 +45,12 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
 
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
+    // Gainers/Fallers follow the period being sorted on: the latest move when
+    // sorting by it, else the 7-day move (the table's default period).
     const filtered = ranked.filter(({ c }) => {
-      if (move === "up" && !(c.d7pct != null && c.d7pct > 0)) return false;
-      if (move === "down" && !(c.d7pct != null && c.d7pct < 0)) return false;
+      const p = sortKey === "d1" ? c.d1pct : c.d7pct;
+      if (move === "up" && !(p != null && p > 0)) return false;
+      if (move === "down" && !(p != null && p < 0)) return false;
       if (needle && !`${c.name} ${c.setCode} ${c.collectorNumber}`.toLowerCase().includes(needle)) return false;
       return true;
     });
@@ -41,6 +63,7 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
         case "price": return r.c.priceCents;
         case "d1": return r.c.d1pct;
         case "d7": return r.c.d7pct;
+        case "abs7": return r.c.d7pct == null ? null : Math.abs(r.c.d7pct);
       }
     };
     const sign = dir === "asc" ? 1 : -1;
@@ -55,6 +78,27 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
       return ((va as number) - (vb as number)) * sign;
     });
   }, [ranked, q, move, sortKey, dir]);
+
+  const sortValue = `${sortKey}:${dir}`;
+  const known = SORTS.some((o) => `${o.key}:${o.dir}` === sortValue);
+  const phonePct = (c: IndexConstituent) => (sortKey === "d1" ? c.d1pct : c.d7pct);
+  const phonePeriod = sortKey === "d1" ? "latest" : "7d";
+
+  function pickSort(v: string) {
+    const [k, d] = v.split(":") as [SortKey, Dir];
+    setSortKey(k);
+    setDir(d);
+  }
+
+  // A Gainers/Fallers tap on the default order also puts the biggest move first,
+  // so the button and the sort agree; any sort the visitor chose is kept.
+  function pickMove(k: "all" | "up" | "down") {
+    setMove(k);
+    if (sortKey === "rank" && k !== "all") {
+      setSortKey("d7");
+      setDir(k === "up" ? "desc" : "asc");
+    }
+  }
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) setDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -82,11 +126,26 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
             className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-2 pl-9 pr-3 text-base text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0 sm:text-sm"
           />
         </div>
+        <label className="flex items-center gap-2 text-xs text-slate-400">
+          <span className="shrink-0 font-semibold">Sort by</span>
+          {/* text-base below sm for the same iOS zoom reason as the search box. */}
+          <select
+            value={sortValue}
+            onChange={(e) => pickSort(e.target.value)}
+            aria-label="Sort the Index"
+            className="min-h-11 w-full min-w-0 rounded-lg border border-ink-700 bg-ink-900 px-2 text-base text-white focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0 sm:w-auto sm:py-2 sm:text-sm"
+          >
+            {!known && <option value={sortValue}>{HEADING[sortKey]} {dir === "asc" ? "▲" : "▼"}</option>}
+            {SORTS.map((o) => (
+              <option key={`${o.key}:${o.dir}`} value={`${o.key}:${o.dir}`}>{o.label}</option>
+            ))}
+          </select>
+        </label>
         <div className="flex items-center gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1">
           {([["all", "All"], ["up", "▲ Gainers"], ["down", "▼ Fallers"]] as const).map(([k, label]) => (
             <button
               key={k}
-              onClick={() => setMove(k)}
+              onClick={() => pickMove(k)}
               aria-pressed={move === k}
               className={`inline-flex min-h-11 items-center rounded-md px-3 text-xs font-semibold transition-colors sm:min-h-0 sm:py-1.5 ${
                 move === k ? "bg-ink-800 text-white" : "text-slate-400 hover:text-white"
@@ -114,7 +173,7 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
               <SortTh label="Weight" col="weight" sortKey={sortKey} dir={dir} onSort={toggleSort} className="hidden px-2 sm:table-cell" align="right" />
               <SortTh label="Price" col="price" sortKey={sortKey} dir={dir} onSort={toggleSort} className="w-[6.75rem] pl-2 pr-3 sm:w-auto sm:px-2" align="right" />
               <SortTh label="Latest" col="d1" sortKey={sortKey} dir={dir} onSort={toggleSort} className="hidden px-2 sm:table-cell" align="right" />
-              <SortTh label="7-day" col="d7" sortKey={sortKey} dir={dir} onSort={toggleSort} className="hidden px-4 sm:table-cell" align="right" />
+              <SortTh label="7-day" col="d7" sortKey={sortKey === "abs7" ? "d7" : sortKey} dir={dir} onSort={toggleSort} className="hidden px-4 sm:table-cell" align="right" />
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-800">
@@ -140,7 +199,10 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
                   {formatMoney(c.priceCents, currency)}
                   {/* Phones only: the 7-day move rides under the price, since the
                       Latest/7-day columns are hidden below sm (PriceWatch's pattern). */}
-                  <span className={`block text-[11px] font-semibold sm:hidden ${pctClass(c.d7pct)}`}>{fmtPct(c.d7pct)}</span>
+                  <span className={`block text-[11px] font-semibold sm:hidden ${pctClass(phonePct(c))}`}>
+                    {fmtPct(phonePct(c))}
+                    <span className="font-normal text-slate-500"> {phonePeriod}</span>
+                  </span>
                 </td>
                 <PctCell pct={c.d1pct} className="hidden px-2 sm:table-cell" />
                 <PctCell pct={c.d7pct} className="hidden px-4 sm:table-cell" />
@@ -154,7 +216,7 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
         {rows.length === 0 && <p className="px-4 py-10 text-center text-sm text-slate-500">No cards match that filter.</p>}
       </div>
       <p className="mt-2 text-[11px] text-slate-600">
-        Showing {rows.length} of {constituents.length} · click a heading to sort ▲▼.
+        Showing {rows.length} of {constituents.length} · sorted by {(SORTS.find((o) => `${o.key}:${o.dir}` === sortValue)?.label ?? `${HEADING[sortKey]} ${dir === "asc" ? "▲" : "▼"}`).toLowerCase()} · % changes are each card&apos;s own price move.
       </p>
     </div>
   );

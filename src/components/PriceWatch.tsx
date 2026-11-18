@@ -93,7 +93,7 @@ function Panel({ title, subtitle, accent, movers, kind, currency, empty, ebaySea
       ) : (
         <ul className="divide-y divide-ink-800">
           {movers.map((m) => (
-            <Row key={m.card.id} m={m} up={kind === "up"} currency={currency} />
+            <MoverRow key={m.card.id} m={m} up={kind === "up"} currency={currency} />
           ))}
         </ul>
       )}
@@ -106,7 +106,7 @@ function Panel({ title, subtitle, accent, movers, kind, currency, empty, ebaySea
   );
 }
 
-function Row({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
+export function MoverRow({ m, up, currency, spark = true }: { m: Mover; up: boolean; currency: string; spark?: boolean }) {
   const { open } = useQuickView();
   const c = m.card;
   const pos = m.pct > 0;
@@ -141,9 +141,11 @@ function Row({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
             the full chart. `upIsGood`: these panels use the MARKET convention
             like their titles and the % beside it, so a riser is green here,
             not the per-card buyer red that drew red lines next to "+170%". */}
-        <div className="hidden shrink-0 min-[360px]:block xl:hidden 2xl:block">
-          <Sparkline points={m.points} up={up} upIsGood />
-        </div>
+        {spark && (
+          <div className="hidden shrink-0 min-[360px]:block xl:hidden 2xl:block">
+            <Sparkline points={m.points} up={up} upIsGood />
+          </div>
+        )}
         {/* A floor, not a fixed width: the old w-16 (64px) overflowed for 19
             of 60 prices ('US$1,099.99' is 84px), and a 5-digit price must
             grow the column rather than spill across the panel edge. */}

@@ -24140,3 +24140,14 @@ as now) and `low` (after it). A head script (`HOME_AB_BOOT_SCRIPT`, `lib/home-ab
 CSS shows one slot (`HomeAdSlot`), so the page is still one CDN copy, reads no cookie or header and keeps its reserved height (CLS 0). The arm reaches EPN's
 customid (`inlinetop` / `inlinelow`, `tcg_inlinetop` / `tcg_inlinelow`) and buy_click's pageType (`homepage-top` / `homepage-low`); a `home_ab` event counts visitors per arm.
 Read after enough clicks per arm (target 14 days or about 400 clicks an arm): keep the arm with more EPN clicks per visitor and delete the other. No pop-ups, nothing fixed.
+
+## 2026-11-18: Sort the Index and the movers by % gain or loss (visitor feedback)
+
+A visitor wrote: "Please add option to search and sort index by % of gain or loss (this is better than just toggling the gainers or losers button)".
+The Index table on `/market` could already sort by a heading, but the Latest and 7-day columns are hidden on phones, so a phone had no way to
+sort by %. It now has a visible "Sort by" menu (`IndexConstituents.tsx`): biggest % gain or loss over 7 days or the latest move, biggest
+move either way, price, weight, name. The headings still sort and the menu follows them; the Gainers/Fallers toggle still filters, follows the
+period being sorted on, and on the default order also puts that side's biggest move first. Phones show the sorted period's % under the price,
+labelled "7d" or "latest". `/movers` gains one searchable list of the risers and drops (`MoversTable.tsx`), sorted the same way, under the eBay
+CTA (which stays straight after the panels, as pinned). Both read the rows the page already had: no new query, no new fetch. Every % is the
+card's own move; nothing is estimated. The same control goes to every sister site with an index or a movers page.
