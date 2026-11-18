@@ -28,6 +28,7 @@ export type InlineSignupSurface = (typeof INLINE_SIGNUP_SURFACES)[number];
 
 export const SIGNUP_SOURCES = new Set<string>([
   "navbar",
+  "chat",
   // The Stores plan (2026-10-23): the subscribe form on /stores and the
   // signed-out /stores/account page.
   "stores_plan",

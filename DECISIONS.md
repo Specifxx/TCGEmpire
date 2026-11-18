@@ -24222,3 +24222,14 @@ The weekly GSC coverage run (16 Nov) also listed four cards "Excluded by noindex
 (`yasuo-remorseful-ogn-076b-298-promo`, `void-seeker-ogn-nn1-promo`, `poppy-defender-of-the-meek-unl-178a-219-promo`,
 `jinx-demolitionist-ogn-030-298-promo`). None is in a duplicate group, then or now, and the duplicate rule is the only
 noindex a card page carries, so those are Google's older crawls; re-read on the next run.
+
+## 2026-11-18: Live chat pilot, built off (owner: "live user chat could work")
+
+Catchback has a community chat; we had skipped it for needing a database and moderation. Rift has both (accounts, Neon), so the pilot lives
+here only (`docs/chat.md`, `lib/chat/`, `/chat`, `/api/chat*`, models `ChatMessage` and `ChatBan`). Members only post (signed in and email
+verified); reading is public so the CDN can hold one copy per room for 5 s. The real risk is compute, not transfer: polling keeps Neon awake
+while anyone reads. So: poll only while open and visible with back-off, a 5 s CDN window, bounded reads, and a kill switch the ops monitor
+trips itself at 75% of the compute allowance (`compute_time_seconds` from Neon's API; 100 CU-hours free plan, `NEON_COMPUTE_LIMIT_SECONDS`
+overrides) and clears below 60%. Ships `CHAT_MODE = "off"`; a follow-up flips it after the table exists and a smoke test passes. Moderation is
+report (3 hide), word list shared with the forum, per-member rate limit, admin hide/restore/mute/off. No DMs, links or images. Sister sites
+get nothing until the pilot's compute numbers are read.

@@ -78,6 +78,7 @@ test("the price chart and the history note print their days with formatDayUtc, n
 // below, so the list cannot go stale.
 const BROWSER_ONLY: Record<string, string> = {
   "src/components/cart/CartListView.tsx": "the time this browser last re-checked the cart: state set after the check, null in the server HTML",
+  "src/components/chat/ChatApp.tsx": "the time of each chat message, fetched after load: the list is empty in the server HTML",
   "src/components/NotificationBell.tsx": "dates of notifications fetched after sign-in: the list is empty in the server HTML",
 };
 const VISITOR_LOCALE = /\.toLocale(?:Date|Time)?String\(\s*(?:\)|undefined\b|\[\s*\])/;

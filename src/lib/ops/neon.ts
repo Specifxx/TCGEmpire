@@ -52,6 +52,8 @@ export interface NeonProjectUsage {
   quotaBytes: number | null;
   periodStart: Date | null;
   periodEnd: Date | null;
+  /** Compute-unit seconds used this period (Neon's compute_time_seconds; free plan: 100 CU-hours = 360,000), or null when the API omits it. */
+  computeSeconds: number | null;
 }
 
 interface ProjectDetail {
@@ -59,6 +61,7 @@ interface ProjectDetail {
     id?: string;
     name?: string;
     data_transfer_bytes?: number;
+    compute_time_seconds?: number;
     consumption_period_start?: string;
     consumption_period_end?: string;
     settings?: { quota?: { data_transfer_bytes?: number } };
@@ -77,6 +80,7 @@ export async function projectUsage(apiKey: string, projectId: string, f: FetchLi
     quotaBytes: typeof q === "number" && q > 0 ? q : null,
     periodStart: date(p.consumption_period_start),
     periodEnd: date(p.consumption_period_end),
+    computeSeconds: typeof p.compute_time_seconds === "number" ? p.compute_time_seconds : null,
   };
 }
 

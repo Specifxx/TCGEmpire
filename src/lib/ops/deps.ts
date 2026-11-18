@@ -41,6 +41,9 @@ export interface OpsDeps {
     /** Stores plans (lib/store-plan.ts): how many exist, and the paid ones not yet linked to a tracked store. */
     storePlans?(): Promise<{ total: number; unlinked: { storeName: string; createdAt: Date; activeUntil: Date | null }[] }>;
     /** TCGplayer Riftbound sets the sealed import could not map to SETS (lib/sealed-import.ts, recordUnknownSets); null before the first import wrote the row. */
+    /** Live chat's kill switch (lib/chat/core.ts CHAT_OFF_KEY): read it, and set it. Optional: older deps lack it. */
+    chatOff?(): Promise<boolean>;
+    setChatOff?(off: boolean): Promise<void>;
     unknownSets?(): Promise<{ checkedAt: Date | null; sets: { setName: string; sample: string }[] } | null>;
   };
 

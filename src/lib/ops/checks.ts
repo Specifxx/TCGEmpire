@@ -24,6 +24,7 @@ import {
   pushSample,
   recentRatePerDay,
 } from "./thresholds";
+import { NEON_FREE_COMPUTE_SECONDS, chatShouldBeOff } from "../chat/core";
 import { NeonApiError, endpointIdFromUrl, findProjectForEndpoint, projectUsage } from "./neon";
 import { COUNTRIES } from "../country";
 import { STORE_PLAN_LINK_SLA_HOURS, unlinkedTooLong } from "../store-plan";
@@ -133,6 +134,25 @@ export async function neonTransfer(d: OpsDeps, which: "operational" | "history")
     if (v.burnPerDay != null) parts.push(`about ${gb(v.burnPerDay)} a day`);
     if (v.daysToExhaust != null && v.severity !== "ok") parts.push(`runs out in ~${v.daysToExhaust < 10 ? v.daysToExhaust.toFixed(1) : Math.round(v.daysToExhaust)} days`);
     if (v.daysLeftInPeriod != null) parts.push(`resets in ${Math.ceil(v.daysLeftInPeriod)} days`);
+
+    // Live chat keeps the database awake while anyone reads it, so it trips itself off at 75% of the month's compute allowance and back on
+    // below 60% (lib/chat/core.ts chatShouldBeOff). Operational database only; never fails the check.
+    if (which === "operational" && u.computeSeconds != null) {
+      const cl = Number(d.env.NEON_COMPUTE_LIMIT_SECONDS) || NEON_FREE_COMPUTE_SECONDS;
+      parts.push(`compute ${(u.computeSeconds / 3600).toFixed(1)} of ${Math.round(cl / 3600)} CU-hours`);
+      try {
+        if (d.db?.chatOff && d.db.setChatOff) {
+          const was = await d.db.chatOff();
+          const off = chatShouldBeOff(u.computeSeconds, cl, was);
+          if (off !== was) {
+            await d.db.setChatOff(off);
+            parts.push(off ? "live chat switched off to save compute" : "live chat switched back on");
+          }
+        }
+      } catch {
+        /* the chat table or counter is unreachable: the transfer check still reports */
+      }
+    }
 
     let action: string | undefined;
     if (v.severity === "warn") {

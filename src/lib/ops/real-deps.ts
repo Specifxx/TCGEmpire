@@ -4,6 +4,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { prisma } from "../db";
+import { CHAT_OFF_KEY } from "../chat/core";
 import { UNKNOWN_SETS_KEY } from "../sealed-import";
 import { OPERATIONAL_VARS } from "../db-chains";
 import { getInboxCounts } from "./inbox-counts";
@@ -43,6 +44,10 @@ const opsDb = (): NonNullable<OpsDeps["db"]> => ({
       }),
     ]);
     return { total, unlinked };
+  },
+  chatOff: async () => !!(await prisma.counter.findUnique({ where: { key: CHAT_OFF_KEY }, select: { value: true } }))?.value,
+  setChatOff: async (off) => {
+    await prisma.counter.upsert({ where: { key: CHAT_OFF_KEY }, create: { key: CHAT_OFF_KEY, value: off ? 1 : 0 }, update: { value: off ? 1 : 0 } });
   },
   unknownSets: async () => {
     const row = await prisma.opsSnapshot.findUnique({ where: { key: UNKNOWN_SETS_KEY } });

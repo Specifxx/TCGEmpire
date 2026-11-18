@@ -2365,3 +2365,27 @@ model SisterAd {
   @@index([site, status, endsAt])
   @@index([status, createdAt])
 }
+
+// Live chat pilot (owner, 2026-11-18; lib/chat/, docs/chat.md). Signed-in members only, one table of short messages per room, purged after
+// 7 days. PRIVATE to the operational database: never exported to data/public, never in PUBLIC_MODELS. Additive: `prisma db push` adds it.
+model ChatMessage {
+  id        String   @id @default(cuid())
+  room      String
+  userId    String
+  name      String
+  body      String
+  hidden    Boolean  @default(false)
+  reports   Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([room, createdAt])
+  @@index([createdAt])
+}
+
+// A member the moderators muted from chat (until a date, or for good when `until` is null).
+model ChatBan {
+  userId    String    @id
+  until     DateTime?
+  reason    String    @default("")
+  createdAt DateTime  @default(now())
+}
