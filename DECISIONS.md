@@ -24140,6 +24140,9 @@ as now) and `low` (after it). A head script (`HOME_AB_BOOT_SCRIPT`, `lib/home-ab
 CSS shows one slot (`HomeAdSlot`), so the page is still one CDN copy, reads no cookie or header and keeps its reserved height (CLS 0). The arm reaches EPN's
 customid (`inlinetop` / `inlinelow`, `tcg_inlinetop` / `tcg_inlinelow`) and buy_click's pageType (`homepage-top` / `homepage-low`); a `home_ab` event counts visitors per arm.
 Read after enough clicks per arm (target 14 days or about 400 clicks an arm): keep the arm with more EPN clicks per visitor and delete the other. No pop-ups, nothing fixed.
+## 2026-11-18: cart checkout opens every store or none (owner)
+
+Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.
 
 ## 2026-11-18: Sort the Index and the movers by % gain or loss (visitor feedback)
 
