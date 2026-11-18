@@ -29,7 +29,7 @@
     },
     "LGC|Booster Box": {
       "AU": 34000,
-      "CA": 17499,
+      "CA": 14999,
       "EU": 12500,
       "SG": 20000,
       "UK": 10799,
@@ -113,12 +113,12 @@
       "EU": 6497,
       "SG": 33000,
       "UK": 13303,
-      "US": 17500
+      "US": 17298
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 116290
+      "US": 110000
     },
     "OGN|Booster Pack": {
       "CA": 1370,
@@ -420,7 +420,7 @@
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 55500,
-      "US": 99870
+      "US": 99869
     },
     "UNL|Booster Pack": {
       "AU": 1100,
@@ -527,7 +527,7 @@
       "US": 2499
     },
     "VEN|Bundle Case": {
-      "US": 50141
+      "US": 50100
     },
     "VEN|Champion Deck": {
       "CA": 5395
@@ -793,7 +793,7 @@
       "US": 50000
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 27099
+      "US": 27699
     },
     "riftboundxt12025worldschampionsignaturee": {
       "EU": 499900
