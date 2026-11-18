@@ -167,5 +167,5 @@ async function live() {
   writeFileSync("coverage-audit.json", JSON.stringify({ at: new Date(now).toISOString(), red, live: liveOut }, null, 1));
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join("\n") + "\n");
   for (const r of red) console.log(`::error::${r}`);
-  process.exit(red.length ? 1 : 0);
+  process.exit(red.length && !process.env.REPORT_ONLY ? 1 : 0);
 })();
