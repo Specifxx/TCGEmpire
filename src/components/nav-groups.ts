@@ -184,6 +184,9 @@ export const NAV_GROUPS: NavGroup[] = [
       // The creators hub (2026-10-15): beside Community links, where a reader
       // looking for "who else makes Riftbound content" looks. Moved from Help.
       { href: "/creators", label: "Riftbound Creators", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok", "buy a pack", "tip", "donate", "support creators"], hideInFooter: true },
+      // The prize draw (2026-11-18, closes 14 Dec 2026): free entry with an account. In the menu and the launcher
+      // while it runs; hideInFooter keeps the footer's columns at their ceiling.
+      { href: "/giveaway", label: "Giveaway", keywords: ["giveaway", "win", "prize", "contest", "competition", "free card", "draw", "miss fortune"], hideInFooter: true },
       { href: "/learn", label: "Learn Riftbound", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
       { href: "/authors", label: "Who writes this", keywords: ["authors", "team", "byline", "who writes"] },
       { href: "/editorial-policy", label: "Editorial policy", keywords: ["editorial", "policy", "standards", "corrections"] },

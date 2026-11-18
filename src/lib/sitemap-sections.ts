@@ -217,6 +217,8 @@ async function core(): Promise<SitemapEntry[]> {
     ...openAutoPreorderSets().map((s) => ({ url: `${SITE_URL}/preorders/${s.slug}`, changeFrequency: "daily" as const, priority: 0.8 })),
     // Black Friday sealed deals (2026-10-30), one URL kept year round so it builds history.
     { url: `${SITE_URL}/black-friday`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/black-friday") },
+    // The prize draw (2026-11-18): indexable while it runs, so "Riftbound giveaway" searches can find it.
+    { url: `${SITE_URL}/giveaway`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/giveaway") },
     // Cyber Monday's own URL (2026-11-06), the same page and price watch under the Monday query.
     { url: `${SITE_URL}/cyber-monday`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/cyber-monday") },
     // The seasonal sale pages (2026-11-02), one URL each kept year round like /black-friday.
