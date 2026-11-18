@@ -21,11 +21,11 @@
       "AU": 199900
     },
     "KDA|K/DA Couture Collection|EN": {
-      "AU": 54110,
-      "CA": 43999,
-      "EU": 26324,
+      "AU": 49995,
+      "CA": 45000,
+      "EU": 23971,
       "UK": 17750,
-      "US": 26995
+      "US": 26999
     },
     "LGC|Booster Box": {
       "AU": 34000,
@@ -33,11 +33,11 @@
       "EU": 12500,
       "SG": 20000,
       "UK": 10799,
-      "US": 14908
+      "US": 14902
     },
     "LGC|Booster Case": {
       "EU": 72000,
-      "US": 69590
+      "US": 69588
     },
     "LGC|Booster Pack": {
       "CA": 2400
@@ -113,17 +113,17 @@
       "EU": 6497,
       "SG": 33000,
       "UK": 13303,
-      "US": 18000
+      "US": 17500
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 115999
+      "US": 116290
     },
     "OGN|Booster Pack": {
       "CA": 1370,
       "UK": 700,
-      "US": 1147
+      "US": 1148
     },
     "OGN|Box Set": {
       "EU": 47990,
@@ -138,13 +138,13 @@
     "OGN|Champion Deck": {
       "AU": 2190,
       "CA": 1395,
-      "SG": 3079,
+      "SG": 3084,
       "US": 1999
     },
     "OGN|Champion Deck (Jinx)": {
       "AU": 3000,
       "EU": 799,
-      "SG": 3089,
+      "SG": 2807,
       "US": 1999
     },
     "OGN|Champion Deck (Jinx) Display": {
@@ -157,7 +157,7 @@
       "EU": 700,
       "SG": 2500,
       "UK": 1500,
-      "US": 3200
+      "US": 3199
     },
     "OGN|Champion Deck (Lee Sin) Display": {
       "AU": 4000,
@@ -167,7 +167,7 @@
       "AU": 2190,
       "CA": 5997,
       "EU": 799,
-      "SG": 7093,
+      "SG": 7090,
       "US": 6484
     },
     "OGN|Champion Deck (Viktor) Display": {
@@ -177,6 +177,7 @@
       "AU": 5000,
       "CA": 4500,
       "EU": 2900,
+      "SG": 5476,
       "UK": 2500,
       "US": 2649
     },
@@ -199,7 +200,7 @@
       "AU": 9995,
       "CA": 1105,
       "EU": 895,
-      "SG": 4628,
+      "SG": 4636,
       "UK": 1100,
       "US": 2549
     },
@@ -213,26 +214,26 @@
       "EU": 9399,
       "SG": 15000,
       "UK": 8799,
-      "US": 9526
+      "US": 9599
     },
     "RAD|Booster Case": {
       "AU": 130000,
       "CA": 129999,
       "EU": 58000,
       "UK": 53499,
-      "US": 51000
+      "US": 52499
     },
     "RAD|Booster Pack": {
       "AU": 1000,
       "CA": 699,
       "UK": 499,
-      "US": 465
+      "US": 464
     },
     "RAD|Bundle": {
       "AU": 4800,
       "CA": 3999,
       "EU": 2750,
-      "SG": 4722,
+      "SG": 4720,
       "UK": 2750,
       "US": 2800
     },
@@ -251,7 +252,7 @@
       "AU": 4500,
       "CA": 3995,
       "EU": 3199,
-      "UK": 2499,
+      "UK": 2750,
       "US": 2495
     },
     "RAD|Sealed": {
@@ -261,7 +262,7 @@
       "AU": 4499,
       "CA": 2499,
       "EU": 1499,
-      "SG": 3393,
+      "SG": 3399,
       "UK": 1999,
       "US": 1799
     },
@@ -306,16 +307,16 @@
       "AU": 27000,
       "CA": 22820,
       "EU": 9407,
-      "SG": 8406,
-      "UK": 11999,
-      "US": 15500
+      "SG": 8404,
+      "UK": 11499,
+      "US": 15699
     },
     "SFD|Booster Case": {
       "AU": 180000,
       "CA": 150000,
       "EU": 59990,
       "UK": 73999,
-      "US": 99900
+      "US": 99890
     },
     "SFD|Booster Pack": {
       "AU": 1400,
@@ -335,7 +336,7 @@
     "SFD|Champion Deck": {
       "AU": 3300,
       "CA": 2999,
-      "SG": 3089,
+      "SG": 3088,
       "UK": 2042,
       "US": 2199
     },
@@ -346,7 +347,7 @@
       "AU": 1999,
       "CA": 2294,
       "EU": 1200,
-      "SG": 3781,
+      "SG": 3780,
       "UK": 2199,
       "US": 1999
     },
@@ -370,7 +371,7 @@
       "AU": 24900
     },
     "SFD|Nexus Night Pack": {
-      "SG": 2776,
+      "EU": 1050,
       "UK": 1185,
       "US": 772
     },
@@ -396,15 +397,15 @@
       "US": 3200
     },
     "SFD|Starter Set": {
-      "SG": 11237
+      "SG": 11235
     },
     "T1S|T1 Signature Edition": {
       "EU": 115000
     },
     "T1S|T1 Signature Edition|EN": {
-      "AU": 1021070,
-      "CA": 786389,
-      "SG": 21069,
+      "AU": 971070,
+      "CA": 860000,
+      "SG": 21065,
       "UK": 306670,
       "US": 350000
     },
@@ -413,13 +414,13 @@
       "CA": 21995,
       "EU": 9200,
       "SG": 25000,
-      "UK": 18270,
+      "UK": 17062,
       "US": 16100
     },
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 55500,
-      "US": 99873
+      "US": 99870
     },
     "UNL|Booster Pack": {
       "AU": 1100,
@@ -428,7 +429,7 @@
     },
     "UNL|Bundle": {
       "EU": 5999,
-      "SG": 9086,
+      "SG": 9085,
       "US": 6500
     },
     "UNL|Champion Deck": {
@@ -440,7 +441,7 @@
       "AU": 3295,
       "CA": 3995,
       "EU": 1550,
-      "SG": 3089,
+      "SG": 3088,
       "UK": 1699,
       "US": 2199
     },
@@ -452,7 +453,7 @@
       "AU": 1999,
       "CA": 1799,
       "EU": 798,
-      "SG": 2082,
+      "SG": 2081,
       "UK": 1500,
       "US": 1399
     },
@@ -463,7 +464,7 @@
     "UNL|Nexus Night Pack": {
       "CA": 1900,
       "EU": 916,
-      "SG": 1390,
+      "SG": 1392,
       "UK": 1080,
       "US": 570
     },
@@ -499,15 +500,15 @@
       "CA": 15995,
       "EU": 9200,
       "SG": 19000,
-      "UK": 8899,
-      "US": 10999
+      "UK": 9199,
+      "US": 9899
     },
     "VEN|Booster Case": {
       "AU": 131070,
       "CA": 96999,
       "EU": 60000,
       "UK": 59999,
-      "US": 68490
+      "US": 68480
     },
     "VEN|Booster Pack": {
       "AU": 999,
@@ -556,8 +557,8 @@
       "AU": 3500,
       "CA": 1995,
       "EU": 1999,
-      "SG": 2931,
-      "UK": 1655,
+      "SG": 2626,
+      "UK": 1699,
       "US": 1168
     },
     "VEN|Showdown Decks Display": {
@@ -577,14 +578,15 @@
       "EU": 3295
     },
     "W26|Worlds 2026 Edition|EN": {
-      "AU": 50419,
-      "SG": 28090
+      "AU": 46499,
+      "SG": 28086,
+      "US": 20000
     },
     "ambessathewolfv1showcaset12025worldscham": {
       "EU": 35000
     },
     "arcaneboxset": {
-      "EU": 39000
+      "EU": 20000
     },
     "arcaneboxsetriftbound": {
       "CA": 51999
@@ -596,7 +598,7 @@
       "CA": 4500
     },
     "giftoftheriftbundle": {
-      "US": 19900
+      "US": 25659
     },
     "jinxchampiondeckriftboundleagueoflegends": {
       "EU": 6399
@@ -648,7 +650,7 @@
       "AU": 1999
     },
     "riftboundchampiondeckleesin": {
-      "AU": 3599,
+      "AU": 2500,
       "CA": 4500
     },
     "riftboundchampiondeckrumble": {
@@ -661,7 +663,7 @@
       "UK": 2000
     },
     "riftboundchampiondeckvex": {
-      "AU": 3295,
+      "AU": 3599,
       "CA": 3995
     },
     "riftboundchampiondeckvi": {
@@ -680,7 +682,7 @@
     },
     "riftboundleagueoflegendsarcaneboxset": {
       "CA": 97000,
-      "US": 37300
+      "US": 14900
     },
     "riftboundleagueoflegendsarcaneboxseteng": {
       "EU": 54499
@@ -696,7 +698,7 @@
     },
     "riftboundleagueoflegendsgiftoftheriftbun": {
       "CA": 34999,
-      "US": 19900
+      "US": 20000
     },
     "riftboundleagueoflegendsriftboundrumblec": {
       "AU": 3300
@@ -711,7 +713,7 @@
       "UK": 2180
     },
     "riftboundleagueoflegendstcggiftoftherift": {
-      "AU": 44900,
+      "AU": 38000,
       "EU": 24000,
       "US": 25999
     },
@@ -726,7 +728,7 @@
     },
     "riftboundleagueoflegendstcgzedvsshenshow": {
       "CA": 4899,
-      "UK": 1899
+      "UK": 1699
     },
     "riftboundleagueoflegendsworldsbundle2025": {
       "US": 79999
@@ -747,7 +749,7 @@
       "US": 1788
     },
     "riftboundshowdowndeckevelynnvsseraphine": {
-      "CA": 3235
+      "CA": 3295
     },
     "riftboundshowdowndeckzedvsshen": {
       "CA": 2155
@@ -774,7 +776,7 @@
       "CA": 6000
     },
     "riftboundtcgleagueoflegendschampiondeckv": {
-      "US": 1399
+      "US": 2000
     },
     "riftboundtcgrumblechampiondeck": {
       "CA": 3199
@@ -788,10 +790,13 @@
     "riftboundworldsbundle2025": {
       "CA": 149999,
       "UK": 50000,
-      "US": 62500
+      "US": 50000
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 28398
+      "US": 27099
+    },
+    "riftboundxt12025worldschampionsignaturee": {
+      "EU": 499900
     },
     "riftboundxworlds2026edition": {
       "EU": 60000
@@ -806,7 +811,7 @@
       "EU": 6999
     },
     "t1worldschampionplayerbundle": {
-      "US": 34000
+      "US": 19895
     },
     "t1worldschampionsignatureeditionbundle": {
       "US": 550000
@@ -821,7 +826,7 @@
       "EU": 32000
     },
     "worldsbundle2026": {
-      "EU": 32000
+      "EU": 19900
     },
     "xinzhaovigilantv1showcaset12025worldscha": {
       "EU": 39000
