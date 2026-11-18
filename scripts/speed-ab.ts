@@ -196,7 +196,11 @@ function lighthouseOnce(url: string, method: string): Run {
 function diagnose(a: Record<string, any>): string {
   const out: string[] = [];
   const shifts: any[] = a["layout-shifts"]?.details?.items ?? [];
-  for (const sh of shifts.slice(0, 4)) out.push(`shift ${Number(sh.score ?? 0).toFixed(3)} ${String(sh.node?.snippet ?? "?").slice(0, 150)}`);
+  for (const sh of shifts.slice(0, 4)) {
+    const causes = ((sh.subItems?.items ?? []) as any[]).map((c) => `${c.cause ?? "?"}${c.extra?.value ? ` ${String(c.extra.value).slice(0, 90)}` : ""}`);
+    const box = sh.node?.boundingRect ? ` at y=${Math.round(sh.node.boundingRect.top)}` : "";
+    out.push(`shift ${Number(sh.score ?? 0).toFixed(3)}${box} ${String(sh.node?.snippet ?? "?").slice(0, 150)}${causes.length ? ` (causes: ${causes.join("; ")})` : ""}`);
+  }
   for (const [id, au] of Object.entries(a)) {
     if (au?.score == null || au.score >= 0.9) continue;
     const save = au.metricSavings ? Object.entries(au.metricSavings).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}=${Math.round(Number(v))}`).join(",") : "";
