@@ -26,6 +26,30 @@
 //
 // Pure apart from the guarded localStorage/window helpers at the bottom.
 
+// The cart A/B (owner, 2026-11-18: buy clicks per visitor halved on OP and Compare Empire from 14 Nov, the day labelled
+// "Add to cart" went on every row; "we cannot sustain click leaks"). Half of the visitors (localStorage `cart-arm` "off") see no
+// cart at all; every buy_click carries `cart_arm`, so the cart's effect is buy clickers per arm. Storage that fails counts as
+// "off": the buy button alone. Read 2 Dec; roll back by making cartArm() return "on" (keep) or "off" (remove).
+export const CART_ARM_KEY = "cart-arm";
+export function cartArm(): "on" | "off" {
+  try {
+    const a = localStorage.getItem(CART_ARM_KEY);
+    if (a === "on" || a === "off") return a;
+    const n = Math.random() < 0.5 ? "on" : "off";
+    localStorage.setItem(CART_ARM_KEY, n);
+    return n;
+  } catch {
+    return "off";
+  }
+}
+/** The arm already given (never assigns one), for analytics. */
+export function cartArmNow(): string {
+  try {
+    return localStorage.getItem(CART_ARM_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
 export const CART_KEY = "ce_cart_v1";
 export const CART_EVENT = "ce-cart-change";
 export const CART_ADDED_EVENT = "ce-cart-added";
