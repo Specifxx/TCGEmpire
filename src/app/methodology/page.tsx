@@ -170,6 +170,12 @@ export default function MethodologyPage() {
               EU marketplace listings in the EU comparison.
             </li>
             <li>
+              <strong className="text-white">Fetch TCG</strong> — the listing feed of{" "}
+              <a href="https://www.fetchtcg.com/" className="text-brand-400 hover:underline">Fetch TCG</a>, the
+              Australian and New Zealand card marketplace, used with Fetch&rsquo;s permission. In Australia a card
+              Fetch lists shows its price as an ordinary store row, linked to that listing on Fetch.
+            </li>
+            <li>
               <strong className="text-white">Cardmarket</strong> — Cardmarket&rsquo;s public price-guide and
               product-catalogue files, used with Cardmarket&rsquo;s written permission, and only as a
               reference figure for the UK and the EU.
