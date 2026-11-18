@@ -12,6 +12,11 @@ export function POST(req: Request) {
   return handleReportPost(req, "riftcompare", {
     email: SUPPORT_EMAIL,
     also: async (r) => {
+      // A "Was this page useful?" tap is counted by the daily triage, never emailed; a feedback note is, like the feedback form's.
+      if (r.kind === "feedback") {
+        if (r.note) await notifyOwnerBounded({ kind: "feedback", headline: `Feedback (${r.issue ?? r.vote ?? "note"})`, fields: [["Page", r.page]], body: r.note });
+        return false;
+      }
       await notifyOwnerBounded({
         kind: "price-report",
         headline: `Store reported: ${r.store ?? r.storeUrl ?? "?"}`,

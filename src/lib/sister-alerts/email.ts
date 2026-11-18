@@ -34,6 +34,11 @@ export function siteLink(site: SisterAlertSite, path: string, campaign: string, 
   return u.toString();
 }
 
+/** One line asking for feedback (owner, 2026-11-18: "we need more feedback"): the site's own /feedback form, no reply address needed. */
+export function feedbackAsk(site: SisterAlertSite, campaign: string): string {
+  return `What would make ${escapeHtml(site.name)} better? <a href="${escapeHtml(siteLink(site, "/feedback", campaign))}" style="color:#4b5563;font-weight:700">Tell us in a sentence</a>.`;
+}
+
 export function shell(site: SisterAlertSite, heading: string, inner: string, footer: string, preheader: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px">${escapeHtml(preheader)}</div>
@@ -140,13 +145,14 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
           · ${escapeHtml(money(deal.deal.p, deal.deal.r))}${deal.deal.ref && deal.deal.refLabel ? ` (${escapeHtml(deal.deal.refLabel)} ${escapeHtml(money(deal.deal.ref, deal.deal.r))})` : ""}
         </div></td></tr>`
     : "";
-  const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Prices are the lowest in-stock store price we saw today, before postage. Stores change prices quickly, so check before you buy.</td></tr>`;
+  const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Prices are the lowest in-stock store price we saw today, before postage. Stores change prices quickly, so check before you buy.<br/>${feedbackAsk(site, "sister-alert")}</td></tr>`;
   const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>Sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
   const text = [
     subject,
     "",
     ...rows.map((a) => `${a.name}: ${a.restock ? `back in stock from ${money(a.priceCents, a.region)}` : `now ${money(a.priceCents, a.region)} (your alert: ${money(a.targetCents, a.region)} or less)`}\n${siteLink(site, a.path, "sister-alert", a.region)}`),
     deal ? `\nA deal on ${deal.site.name}: ${deal.deal.n}, ${money(deal.deal.p, deal.deal.r)}\n${siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`, deal.deal.r)}` : "",
+    `\nWhat would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "sister-alert")}`,
     `\nManage or stop your alerts: ${serviceUrl("manage", token)}`,
   ].join("\n");
   const heading = allRestock ? (rows.length === 1 ? "It's back in stock" : `${rows.length} products are back in stock`) : rows.length === 1 ? "Your price alert hit its target" : rows.some((a) => a.restock) ? `${rows.length} alerts fired` : `${rows.length} price alerts hit their target`;

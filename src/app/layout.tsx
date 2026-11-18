@@ -33,6 +33,7 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
 import { SignupWelcome } from "@/components/SignupWelcome";
 import { FeedbackLink } from "@/components/FeedbackLink";
+import { FeedbackAsk } from "@/components/FeedbackAsk";
 import { HolidayStrip } from "@/components/HolidayStrip";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
@@ -478,6 +479,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </CountryProvider>
         <footer className="border-t border-ink-800 py-8 text-center text-xs text-slate-500">
         <div className="container-app">
+          {/* "Was this page useful?" (owner, 2026-11-18: more feedback). One inline line, never a pop-up. */}
+          <div className="mb-6 flex justify-center text-left text-sm text-slate-300"><FeedbackAsk email={CONTACT_EMAIL} /></div>
           <NewsletterSignup siteName="RiftCompare" />
           {/* Site-map — surfaced here so every page links to every feature even
               now that no rail lists them (and on a phone, where none ever did). 4 columns
@@ -517,6 +520,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
             <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
             <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact</Link>
+            <Link href="/feedback" className="tap-link text-slate-300 hover:text-brand-400">Send feedback</Link>
             <FeedbackLink className="tap-link text-slate-300 hover:text-brand-400" />
             <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
             <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms of service</Link>
