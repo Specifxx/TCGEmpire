@@ -105,6 +105,52 @@ async function main() {
     prisma.sisterDigest.groupBy({ by: ["site"], where: { lastSentAt: { gte: ago(14) } }, _count: true }) as never,
   );
 
+  // What goes with coming back (2026-11-18 deep dive): accounts created 8-120 days ago, split by what they set up.
+  // Aggregate shares only. `back7` = active again 7+ days after sign-up; `days2` = active on 2+ days.
+  const drivers = await safe("drivers", async () => {
+    const rows = await prisma.user.findMany({
+      where: { AND: [real, { createdAt: { gte: ago(120), lt: ago(8) } }] },
+      select: { id: true, createdAt: true, lastActiveAt: true, activeDays: true, signupSource: true, emailVerified: true, premiumUntil: true },
+    });
+    const ids = rows.map((r) => r.id);
+    const [alerts, coll, sealed, deck] = await Promise.all([
+      prisma.priceAlert.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _count: true }),
+      prisma.collectionCard.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _count: true }),
+      safe("sw", () => prisma.sealedWatch.groupBy({ by: ["userId"], where: { userId: { in: ids } } as never, _count: true }) as never),
+      safe("dw", () => prisma.deckWatch.groupBy({ by: ["userId"], where: { userId: { in: ids } } as never, _count: true }) as never),
+    ]);
+    const has = (g: unknown) => new Set(Array.isArray(g) ? (g as { userId: string | null }[]).map((x) => x.userId ?? "") : []);
+    const A = has(alerts), C = has(coll), S = has(sealed), D = has(deck);
+    const notified = has(await prisma.priceAlert.groupBy({ by: ["userId"], where: { userId: { in: ids }, lastNotifiedAt: { not: null } } }));
+    const back = (r: (typeof rows)[number]) => !!r.lastActiveAt && r.lastActiveAt.getTime() - r.createdAt.getTime() >= 7 * DAY;
+    const seg: Record<string, { n: number; back7: number; days2: number; days5: number }> = {};
+    const add = (k: string, r: (typeof rows)[number]) => {
+      const x = (seg[k] ??= { n: 0, back7: 0, days2: 0, days5: 0 });
+      x.n++;
+      if (back(r)) x.back7++;
+      if (r.activeDays >= 2) x.days2++;
+      if (r.activeDays >= 5) x.days5++;
+    };
+    for (const r of rows) {
+      add("all", r);
+      const any = A.has(r.id) || C.has(r.id) || S.has(r.id) || D.has(r.id);
+      add(any ? "setUpSomething" : "setUpNothing", r);
+      add(A.has(r.id) ? "watchlistOrAlert:yes" : "watchlistOrAlert:no", r);
+      if (A.has(r.id)) add(notified.has(r.id) ? "alertEverFired:yes" : "alertEverFired:no", r);
+      add(C.has(r.id) ? "collection:yes" : "collection:no", r);
+      if (S.has(r.id) || D.has(r.id)) add("sealedOrDeckWatch:yes", r);
+      add(r.emailVerified ? "verified:yes" : "verified:no", r);
+      add(r.premiumUntil ? "premiumEver:yes" : "premiumEver:no", r);
+      add(`source:${r.signupSource ?? "unknown"}`, r);
+      const ageDays = Math.floor((Date.now() - r.createdAt.getTime()) / DAY);
+      add(ageDays < 31 ? "age:8-30d" : ageDays < 61 ? "age:31-60d" : "age:61-120d", r);
+    }
+    const fmt = (x: { n: number; back7: number; days2: number; days5: number }) =>
+      `n=${x.n} back7=${x.back7} (${x.n ? Math.round((100 * x.back7) / x.n) : 0}%) days2=${x.days2} (${x.n ? Math.round((100 * x.days2) / x.n) : 0}%) days5=${x.days5}`;
+    return Object.fromEntries(Object.entries(seg).filter(([, v]) => v.n >= 5).map(([k, v]) => [k, fmt(v)]));
+  });
+  out["drivers.signups8to120d"] = drivers;
+
   console.log("RETENTION CENSUS " + new Date().toISOString());
   console.log(JSON.stringify(out, null, 2));
 }
