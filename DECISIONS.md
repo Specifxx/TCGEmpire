@@ -24143,3 +24143,14 @@ Read after enough clicks per arm (target 14 days or about 400 clicks an arm): ke
 ## 2026-11-18: cart checkout opens every store or none (owner)
 
 Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.
+
+## 2026-11-18: Sort the Index and the movers by % gain or loss (visitor feedback)
+
+A visitor wrote: "Please add option to search and sort index by % of gain or loss (this is better than just toggling the gainers or losers button)".
+The Index table on `/market` could already sort by a heading, but the Latest and 7-day columns are hidden on phones, so a phone had no way to
+sort by %. It now has a visible "Sort by" menu (`IndexConstituents.tsx`): biggest % gain or loss over 7 days or the latest move, biggest
+move either way, price, weight, name. The headings still sort and the menu follows them; the Gainers/Fallers toggle still filters, follows the
+period being sorted on, and on the default order also puts that side's biggest move first. Phones show the sorted period's % under the price,
+labelled "7d" or "latest". `/movers` gains one searchable list of the risers and drops (`MoversTable.tsx`), sorted the same way, under the eBay
+CTA (which stays straight after the panels, as pinned). Both read the rows the page already had: no new query, no new fetch. Every % is the
+card's own move; nothing is estimated. The same control goes to every sister site with an index or a movers page.
