@@ -151,6 +151,29 @@ async function main() {
   });
   out["drivers.signups8to120d"] = drivers;
 
+  // Lever 3, the weekly watched-cards email (lib/watch-digest.ts, 2026-11-18): accounts that watch a card, by arm (offer =
+  // shown the opt-in on /watching, control = never). Active in the last 7 and 14 days, and opt-ins and sends.
+  out["watchDigest"] = await safe("wd", async () => {
+    const { watchDigestArm } = await import("../src/lib/watch-digest");
+    const watchers = await prisma.priceAlert.groupBy({ by: ["userId"], where: { userId: { not: null } } });
+    const ids = watchers.map((w) => w.userId as string);
+    const users = await prisma.user.findMany({ where: { AND: [real, { id: { in: ids } }] }, select: { id: true, lastActiveAt: true } });
+    const arms: Record<string, { n: number; active7: number; active14: number }> = {};
+    for (const u of users) {
+      const a = (arms[watchDigestArm(u.id)] ??= { n: 0, active7: 0, active14: 0 });
+      a.n++;
+      if (u.lastActiveAt && u.lastActiveAt >= ago(7)) a.active7++;
+      if (u.lastActiveAt && u.lastActiveAt >= ago(14)) a.active14++;
+    }
+    const subs = await prisma.watchDigestSub.findMany({ select: { optedOutAt: true, sentCount: true } });
+    return {
+      arms,
+      subscribers: subs.filter((x) => !x.optedOutAt).length,
+      stopped: subs.filter((x) => x.optedOutAt).length,
+      emailsSent: subs.reduce((t, x) => t + x.sentCount, 0),
+    } as never;
+  });
+
   console.log("RETENTION CENSUS " + new Date().toISOString());
   console.log(JSON.stringify(out, null, 2));
 }

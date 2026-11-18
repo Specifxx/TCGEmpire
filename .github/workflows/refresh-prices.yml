@@ -341,6 +341,22 @@ jobs:
           curl -s --max-time 120 "$SITE_URL/api/cron/price-alerts" -H "Authorization: Bearer $CRON_SECRET" || true
           echo
 
+      - name: Weekly watched-cards email (opt-in, retention lever 3)
+        # lib/watch-digest.ts: once an ISO week per subscriber, idempotent, so a
+        # daily call after the free alert run (whose lastPriceCents it reads)
+        # just finishes whoever is still due. Never fatal to the alert steps.
+        if: ${{ !cancelled() && steps.import.outcome == 'success' && github.event_name != 'push' && github.event.schedule == '0 7 * * *' }}
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "No CRON_SECRET secret — skipping the watched-cards email."
+            exit 0
+          fi
+          curl -s --max-time 120 "$SITE_URL/api/cron/watch-digest" -H "Authorization: Bearer $CRON_SECRET" || true
+          echo
+
       - name: Paid price alerts (targets + below-market + deck and sealed watches)
         # Plus/Premium target-price, below-market and restock alerts, checked
         # right after every price update (07:xx and 19:xx UTC) rather than once

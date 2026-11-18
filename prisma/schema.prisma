@@ -1871,6 +1871,24 @@ model UserDigestOptOut {
   @@index([lastEditionKey])
 }
 
+// The weekly "your watched cards" email (retention lever 3, owner 2026-11-18; lib/watch-digest.ts).
+// OPT-IN ONLY: a row exists once an account presses "Turn on" on /watching, and only accounts in the
+// offer arm (watchDigestArm, a hash of the user id) are shown that button; the control arm never is,
+// so the two arms' return rates measure the email. Keyed by user id; the email is the account's at
+// opt-in. optedOutAt set = stopped (from the email's link or /watching). lastEditionKey makes the
+// daily run idempotent per ISO week.
+model WatchDigestSub {
+  userId         String    @id
+  email          String
+  token          String    @unique
+  createdAt      DateTime  @default(now())
+  optedOutAt     DateTime?
+  lastEditionKey String?
+  sentCount      Int       @default(0)
+
+  @@index([optedOutAt])
+}
+
 // A visitor telling us one of our prices is wrong.
 //
 // ─────────────────────────────────────────────────────────────────────────────

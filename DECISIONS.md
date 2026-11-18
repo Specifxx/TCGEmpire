@@ -24363,3 +24363,20 @@ the footer, dialogs and the keyboard, ✕ for the visit, labelled Ad, rel sponso
 `dock_arm`. Verdict 2 Dec: buy clickers and paid buy clicks per arm. EPN's Network Agreement (Exhibit A §1.4, §2.5) puts any
 promotional method it does not expressly permit under prior written approval; the dock has run since 2026-11-06, this changes only
 when it shows. Not on Dex or MTG Compare (their phone A/B runs to 3 Dec).
+
+## 2026-11-18: The weekly "your watched cards" email, opt-in, tested by arm (retention lever 3)
+
+Accounts that watch a card come back after week one at 56% against 25% for those that don't (retention census, 18 Nov), and
+the owner wants retention email to opted-in people with a control group. The daily user digest that went off on 2026-11-09 was
+a broadcast; this is an email a person turns on for their own watchlist, so it is not marketing and does not pass `marketing`.
+
+- `/watching` shows one "Turn on" card only to the OFFER arm (`watchDigestArm`: a hash of the user id, half the accounts). The
+  CONTROL arm never sees it, and `/api/watch-digest` refuses it an opt-in, so the arms compare cleanly without anyone being
+  denied an email they asked for. The census's `watchDigest` block reads both arms' 7- and 14-day activity.
+- `WatchDigestSub` (one row per opted-in account) holds the stop token and the ISO-week edition. `refresh-prices.yml` calls
+  `/api/cron/watch-digest` after the 07:00 free alert run; each run sends to whoever is still due, at most `DIGEST_BATCH`
+  (120) through Brevo, leaving room in its 300 a day.
+- Prices are the ones the alert run already keeps on each watch (`lastPriceCents` against `startPriceCents`), no new query;
+  cheaper-than-when-you-started first. Cards link to their own pages, never eBay or another affiliate link (EPN messaging
+  approval is not granted). Every email has a stop link and a one-click List-Unsubscribe; the stop page mutates only on POST.
+- Read at the retention read of 2 Dec, then weekly: subscribers, sends, stops, and offer vs control activity.
