@@ -18,6 +18,7 @@ import type { Prisma as PrismaNS } from "@prisma/client";
 import type { prisma as Prisma } from "../db";
 import { escapeHtml, getLastEmailError } from "../email";
 import { sendSisterMail } from "./send";
+import { MAILING_ADDRESS } from "../mailing-address";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
 import { button, feedbackAsk, fromFor, money, REGION_LABEL, serviceUrl, shell, siteLink, type BuiltMail } from "./email";
 import { SISTER_ALERT_SITES, SISTER_REGIONS, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
@@ -157,6 +158,8 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
     `Lowest in-stock price at ${REGION_LABEL[region]} stores, this week against last week, before postage.`,
     `What would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "weekly-drops", region)}`,
     `Stop the weekly email: ${stop}`,
+    "",
+    MAILING_ADDRESS,
   ].join("\n");
   const heading = `${rows.length} biggest price drops this week`;
   return { subject, html: shell(site, heading, items + cta + note, footer, `${top.n}: ${money(top.now, region)}, down ${pctOff(top)}%`), text };
