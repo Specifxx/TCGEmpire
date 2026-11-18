@@ -7,6 +7,7 @@ import { escapeHtml } from "../email";
 import { SITE_URL } from "../site";
 import { REGION_CURRENCY, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
 import { resolvePath, type FeedDeal } from "./feed";
+import { RESTOCK_TARGET_CENTS } from "./evaluate";
 
 export const LOCALE: Record<SisterRegion, string> = { US: "en-US", UK: "en-GB", CA: "en-CA", AU: "en-AU", NZ: "en-NZ", EU: "en-IE", SG: "en-SG" };
 export const REGION_LABEL: Record<SisterRegion, string> = { US: "US", UK: "UK", CA: "Canadian", AU: "Australian", NZ: "NZ", EU: "EU", SG: "Singapore" };
@@ -63,14 +64,16 @@ export interface BuiltMail {
 export function buildConfirmEmail(siteKey: string, token: string, targetCents: number, region: SisterRegion, weekly = false): BuiltMail {
   const site = sisterSite(siteKey)!;
   const url = serviceUrl("confirm", token);
+  const restock = targetCents >= RESTOCK_TARGET_CENTS;
   const target = money(targetCents, region);
+  const what = restock ? `when a sold-out product is back in stock at ${REGION_LABEL[region]} stores` : `when a product drops to ${target} or less at ${REGION_LABEL[region]} stores`;
   const subject = `Confirm your ${site.name} price alert`;
   const inner = `
-    <tr><td style="padding:8px 28px 6px;font-size:14px;line-height:1.6;color:#374151">Someone, hopefully you, asked ${escapeHtml(site.name)} to email this address when a product drops to ${escapeHtml(target)} or less at ${REGION_LABEL[region]} stores${weekly ? `, and to send its biggest price drops once a week` : ""}. Confirm and we'll start checking prices every day.</td></tr>
+    <tr><td style="padding:8px 28px 6px;font-size:14px;line-height:1.6;color:#374151">Someone, hopefully you, asked ${escapeHtml(site.name)} to email this address ${escapeHtml(what)}${weekly ? `, and to send its biggest price drops once a week` : ""}. Confirm and we'll start checking prices every day.</td></tr>
     <tr><td style="padding:10px 28px 18px">${button(site, url, "Confirm my price alert")}</td></tr>
     <tr><td style="padding:0 28px 18px;font-size:13px;line-height:1.6;color:#6b7280">You only confirm once: alerts you add later on any of our sites start straight away. If you didn't ask for this, ignore this email and nothing will be sent.</td></tr>`;
   const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">${escapeHtml(site.name)} price alerts are sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
-  const text = `${subject}\n\nSomeone, hopefully you, asked ${site.name} to email this address when a product drops to ${target} or less at ${REGION_LABEL[region]} stores${weekly ? ", and to send its biggest price drops once a week" : ""}.\n\nConfirm: ${url}\n\nIf you didn't ask for this, ignore this email and nothing will be sent.`;
+  const text = `${subject}\n\nSomeone, hopefully you, asked ${site.name} to email this address ${what}${weekly ? ", and to send its biggest price drops once a week" : ""}.\n\nConfirm: ${url}\n\nIf you didn't ask for this, ignore this email and nothing will be sent.`;
   return { subject, html: shell(site, "Confirm your price alert", inner, footer, `One click and we'll watch the price for you.`), text };
 }
 
