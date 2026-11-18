@@ -24257,3 +24257,17 @@ the unpriced "Check on Amazon" row (`AmazonCheckRow`, was a text link). Rel, tra
 unchanged; the TCGplayer button and its wording are untouched. The quick views' full-page link (card, sealed, Pokémon) is now a
 full-width `btn-primary` of at least 44px reading "See full page: price history and details", under the header (sealed) or the
 image (card) instead of a small text link at the bottom. `tests/amazon-button.test.ts`.
+
+## 2026-11-18: Giveaway: one entry per account, the owner's own card, worldwide (owner)
+
+The owner asked whether a giveaway would bring people in. He offered a card he already has, a Miss Fortune, Captain Showcase
+alternate art from Origins (162a/298, about US$36 on TCGplayer), and asked that the draw be open worldwide because he will pay
+international postage. So nothing is bought. `/giveaway` holds the entry button and the official rules (no purchase necessary,
+18+, void where prohibited, one random draw on 15 Dec, 14 days to claim, one redraw). It is a static page (revalidate 86400)
+and asks `/api/giveaway` who is looking after mount, so the page itself never reads a cookie. To enter, a visitor needs a
+RiftCompare account with a confirmed email. The point of the draw is to grow sign-ups, and the account address is how we reach
+the winner. The unique `(giveaway, userId)` key on the new private `GiveawayEntry` table is the one-entry rule. Entering signs
+nobody up to marketing email: the 9 Nov promo-mail stop still stands. `/admin/giveaway` counts entries and draws a winner with
+`crypto.randomInt` among entries made inside the window. The draw stores nothing, so run it once.
+`notifyOwnerBounded` fires on the first entry and on every 50th rather than on each one, because the inbox mail cap is shared
+with sign-in mail. `tests/giveaway.test.ts`.
