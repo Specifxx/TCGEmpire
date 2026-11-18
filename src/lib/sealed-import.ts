@@ -20,7 +20,7 @@ import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { COUNTRY_LIST, DEFAULT_COUNTRY, currencyOf, isoCountry, type Country } from "./country";
 import { sealedSlug } from "./sealed-slug";
-import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
+import { isPreorderSetCode, EBAY_CA_RETAILER, SETS } from "./constants";
 import { convertCents } from "./fx";
 import { joinOverlapping, typeLabel } from "./price-report";
 import { RIOT_DRAWINGS } from "./riot-drawings";
@@ -349,6 +349,18 @@ const PREORDER_COLLECTION =
 // another game's "blooming-radiance-hbp01" or "flash-of-radiance" (seen in the
 // dry run), which only cost a wasted request but crowd the per-store cap.
 const RIFT_ADJACENT_COLLECTION = /^(?:riftbound-)?radiance(?:-|$)|league-of-legends|lol-tcg/i;
+// The NEXT sets' own pre-order collections (2026-11-18, Legacy's pre-order
+// window): the rule above was written for Radiance alone, so a store filing
+// Legacy under "legacy-pre-order" was read only if its sitemap also named a
+// generic pre-order handle. Built from SETS' coming-soon sets, never a hand
+// list, and only WITH the pre-order suffix: "legacy" alone is Magic's format
+// and Yu-Gi-Oh!'s "legacy-of-the-duelist"; "legacy-pre-order" is a set's
+// pre-orders, and its titles still have to pass STRICT_RIFTBOUND.
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const COMING_SET_PREORDER_COLLECTION = new RegExp(
+  `^(?:riftbound-)?(?:${SETS.filter((s) => s.comingSoon).map((s) => escapeRe(s.slug)).join("|") || "(?!)"})-pre-?orders?$`,
+  "i",
+);
 const MAX_PREORDER_HANDLES = 3;
 // Tried when a store's sitemap names no pre-order collection at all. Two 404s
 // at worst, per store per run.
@@ -361,8 +373,11 @@ export function collectionKind(handle: string): "riftbound" | "preorder" | null 
   if (/riftbound/i.test(handle)) return "riftbound";
   if (PREORDER_COLLECTION.test(handle)) return "preorder";
   if (RIFT_ADJACENT_COLLECTION.test(handle) && !/astral/i.test(handle)) return "preorder";
+  if (COMING_SET_PREORDER_COLLECTION.test(handle)) return "preorder";
   return null;
 }
+
+const setNamed = (h: string) => Number(RIFT_ADJACENT_COLLECTION.test(h) || COMING_SET_PREORDER_COLLECTION.test(h));
 
 export async function discoverCollections(base: string): Promise<{ riftbound: string[]; preorder: string[] }> {
   const allowed = await robotsAllows(base);
@@ -386,7 +401,7 @@ export async function discoverCollections(base: string): Promise<{ riftbound: st
     }
   }
   // Set-named collections first — they are the likeliest to hold the product.
-  const ranked = Array.from(preorder).sort((a, b) => Number(RIFT_ADJACENT_COLLECTION.test(b)) - Number(RIFT_ADJACENT_COLLECTION.test(a)));
+  const ranked = Array.from(preorder).sort((a, b) => setNamed(b) - setNamed(a));
   return {
     riftbound: Array.from(handles),
     preorder: ranked.length ? ranked.slice(0, MAX_PREORDER_HANDLES) : CONVENTIONAL_PREORDER_HANDLES,
