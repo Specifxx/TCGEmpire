@@ -1,0 +1,65 @@
+# New-set reveals, automatically (2026-11-18). During a set's reveal season (60 days
+# before its street date to 21 after: scripts/set-reveal-window.ts) this reads Riot's
+# official card gallery and imports whatever is revealed so far: the same two scripts
+# as maintenance.yml's set-pipeline task, additive and idempotent. Outside a season it
+# is a green no-op. The cards reach pages with the next daily snapshot and release.
+# Neon cost: one upsert pass of at most a few hundred Card rows every two days.
+name: Set reveals
+on:
+  schedule:
+    - cron: "37 5 */2 * *"
+  workflow_dispatch:
+    inputs:
+      set_slug:
+        description: "Force a set (slug or code). Blank: the set in its reveal season, if any."
+        required: false
+      dry_run:
+        description: "Preview only, no database writes"
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: set-reveals
+  cancel-in-progress: false
+jobs:
+  reveals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+      DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - id: window
+        run: |
+          slug=$(SET="${{ inputs.set_slug }}" npx tsx scripts/set-reveal-window.ts)
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+          if [ -z "$slug" ]; then echo "No set is in its reveal season today: nothing to do."; else echo "Reveal season: $slug"; fi
+      - if: steps.window.outputs.slug != ''
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then echo "::error::RM12 is not visible to Actions."; exit 1; fi
+          npx prisma generate
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+      - if: steps.window.outputs.slug != ''
+        env:
+          SET: ${{ steps.window.outputs.slug }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+        run: |
+          # Exit 2 is "the gallery shows no cards with this set's code": normal in the
+          # weeks before Riot's first preview, so a warning, not a red run. A wrong
+          # code after release is still caught by the weekly coverage audit (priced
+          # TCGplayer singles with no page are red there).
+          set +e
+          DUMP=1 npx tsx scripts/fetch-set-official.ts
+          code=$?
+          set -e
+          if [ "$code" = "2" ]; then echo "::warning::No $SET cards in the official gallery yet."; exit 0; fi
+          if [ "$code" != "0" ]; then exit "$code"; fi
+          npx tsx scripts/import-set-cards.ts
