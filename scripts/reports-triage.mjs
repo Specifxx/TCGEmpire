@@ -1,4 +1,4 @@
-// Daily triage of visitor reports (wrong prices, store suggestions) from every
+// Daily triage of visitor reports (wrong prices, store suggestions, feedback) from every
 // Compare Empire site. Each site files its reports in its OWN public repo, on a
 // `reports` branch that never deploys (src/lib/reports-github.ts, the same file in
 // every site repo): inbox/<site>/<day>/*.json, and done/<site>/... once handled.
@@ -40,6 +40,11 @@ export const SITE_REPOS = {
   wargamecompare: "Specifxx/wargamecompare",
   figurecompare: "Specifxx/figurecompare",
   kaeyoung: "Specifxx/Kaeyoung",
+  // No reports branch of their own: they file on this repo's, under inbox/<site>/ (2026-11-18).
+  tcgpricescompare: "Specifxx/TCGEmpire",
+  scentcompare: "Specifxx/TCGEmpire",
+  waxcompare: "Specifxx/TCGEmpire",
+  motorcompare: "Specifxx/TCGEmpire",
 };
 
 const SITE_NAMES = {
@@ -57,6 +62,10 @@ const SITE_NAMES = {
   wargamecompare: "WargameCompare",
   figurecompare: "FigureCompare",
   kaeyoung: "KaeYoung",
+  tcgpricescompare: "TCG Prices",
+  scentcompare: "ScentCompare",
+  waxcompare: "SportsCardCompare",
+  motorcompare: "MotorCompare",
 };
 const SITE_URLS = {
   riftcompare: "https://riftcompare.com",
@@ -73,9 +82,15 @@ const SITE_URLS = {
   wargamecompare: "https://wargamecompare.com",
   figurecompare: "https://figurecompare.com",
   kaeyoung: "https://kaeyoung.com",
+  tcgpricescompare: "https://tcgprices.app",
+  scentcompare: "https://scentcompare.app",
+  waxcompare: "https://sportscardcompare.com",
+  motorcompare: "https://motorcompare.app",
 };
 
 // ---- read every site's reports branch ----------------------------------------
+
+const trees = new Map();
 
 /** One site's open reports, read from its repo's `reports` branch. null = branch missing. */
 export async function loadSite(site) {
@@ -83,6 +98,7 @@ export async function loadSite(site) {
   const t = await gh(`/repos/${repo}/git/trees/${BRANCH}?recursive=1`);
   if (t.status === 404) return null;
   const tree = await t.json();
+  trees.set(site, tree);
   const files = (tree.tree ?? []).filter((e) => e.type === "blob" && e.path.startsWith(`inbox/${site}/`) && e.path.endsWith(".json"));
   const out = [];
   for (const e of files) {
@@ -97,6 +113,27 @@ export async function loadSite(site) {
     }
   }
   return out;
+}
+
+/**
+ * Feedback in the last `days` days, from file names alone (components/FeedbackAsk.tsx, 2026-11-18): bare "Was this page
+ * useful?" votes live in votes/<site>/<day>/<time>-up|down-<rand>.json; notes are *-feedback-*.json in inbox/ or done/.
+ */
+export function feedbackCounts(paths, site, now = NOW, days = 7) {
+  const since = new Date(now - days * DAY).toISOString().slice(0, 10);
+  const c = { up: 0, down: 0, notes: 0, acted: 0 };
+  for (const p of paths) {
+    const m = /^(votes|inbox|done)\/([^/]+)\/(\d{4}-\d{2}-\d{2})\/\d{6}-([a-z-]+)-[a-z0-9]+\.json$/.exec(p);
+    if (!m || m[2] !== site || m[3] < since) continue;
+    if (m[1] === "votes") {
+      if (m[4] === "up") c.up++;
+      else if (m[4] === "down") c.down++;
+    } else if (m[4] === "feedback") {
+      c.notes++;
+      if (m[1] === "done") c.acted++;
+    }
+  }
+  return c;
 }
 
 const norm = (s) => String(s ?? "").toLowerCase().replace(/\s+/g, " ").trim();
@@ -126,6 +163,10 @@ export function flag(reports, now = NOW) {
         // owner 2026-11-04: stores that come to us are encouraged): first in the
         // queue, and answered within two days.
         if (r.issue === "owner") (why.unshift("store owner asked: check the store and reply within two days"), (score += 6));
+      } else if (r.kind === "feedback") {
+        // What visitors ask us to build or fix: the reason the asks exist (owner, 2026-11-18). Always a look.
+        score += 3;
+        if (r.issue === "after-down") why.push("said the page was not useful");
       } else if (r.kind === "unreadable") {
         (why.push("unreadable file"), (score += 5));
       } else score += 1;
@@ -148,7 +189,9 @@ function line(r, site) {
       ? `**Store:** ${esc(r.store) || "?"}${r.storeUrl ? ` (${esc(r.storeUrl)})` : ""}${r.region ? ` · ${esc(r.region)}` : ""}`
       : r.kind === "wrong-price"
         ? `**${esc(r.product) || esc(r.page) || "?"}**${r.store ? ` at ${esc(r.store)}` : ""}${r.region ? ` (${esc(r.region)})` : ""}${r.issue ? ` · ${esc(r.issue)}` : ""}${r.shown ? ` · shown ${esc(r.shown)}` : ""}${r.actual ? ` · says ${esc(r.actual)}` : ""}`
-        : `**${esc(r.kind)}**${r.issue ? ` (${esc(r.issue)})` : ""}`;
+        : r.kind === "feedback"
+          ? `**Feedback**${r.issue ? ` (${esc(r.issue)})` : ""}`
+          : `**${esc(r.kind)}**${r.issue ? ` (${esc(r.issue)})` : ""}`;
   const note = r.note ? " · has a note" : "";
   const flags = r.why.length ? ` — _${r.why.join(", ")}_` : "";
   return `- [ ] ${r.attention ? "⚠️ " : ""}${what}${flags}\n  ${r.at ? r.at.slice(0, 16).replace("T", " ") + " UTC" : ""}${url ? ` · [page](${url})` : ""} · [report](${r.url ?? r.file})${note}`;
@@ -244,6 +287,8 @@ async function main() {
   }
   const summary = [];
   const fresh = [];
+  const fbRows = [];
+  const fbTotal = { up: 0, down: 0, notes: 0, acted: 0 };
   for (const site of Object.keys(SITE_REPOS)) {
     const reports = bySite.get(site) ?? [];
     const name = SITE_NAMES[site] ?? site;
@@ -253,13 +298,19 @@ async function main() {
     const newOnes = f.filter((r) => r.age < 1);
     if (reports.length) summary.push(`| ${name} | ${reports.length} | ${f.filter((r) => r.attention).length} | ${newOnes.length} |`);
     const owners = newOnes.filter((r) => r.kind === "suggest-store" && r.issue === "owner").length;
+    const fb = feedbackCounts((trees.get(site)?.tree ?? []).map((e) => e.path), site);
+    for (const k of Object.keys(fbTotal)) fbTotal[k] += fb[k];
+    if (fb.up + fb.down + fb.notes) fbRows.push(`| ${name} | ${fb.up} | ${fb.down} | ${fb.notes} | ${fb.acted} |`);
     if (newOnes.length) fresh.push(`- **${name}**: ${newOnes.length} new (${newOnes.filter((r) => r.kind === "wrong-price").length} wrong price, ${newOnes.filter((r) => r.kind === "suggest-store").length} store${owners ? `, **${owners} from a store owner: reply within two days**` : ""}), ${reports.length} open in all`);
   }
   const tok = await tokenCheck();
   const table = summary.length ? ["| Site | Open | Need a look | New today |", "|---|---|---|---|", ...summary].join("\n") : "No open reports on any site.";
   if (fresh.length) await digest([`**New visitor reports since yesterday**`, "", ...fresh, "", "Ask Claude to \"check the open reports\" to review and fix them."].join("\n"));
   const gap = missing.length ? `\n\nNo \`${BRANCH}\` branch yet (their reports cannot be saved): ${missing.join(", ")}.` : "";
-  const out = `## Visitor reports\n\n${table}\n\n${tok.note}${gap}\n`;
+  const fbTable = fbRows.length
+    ? ["| Site | Useful | Not useful | Notes | Notes handled |", "|---|---|---|---|---|", ...fbRows, `| **All** | ${fbTotal.up} | ${fbTotal.down} | ${fbTotal.notes} | ${fbTotal.acted} |`].join("\n")
+    : "No feedback in the last 7 days.";
+  const out = `## Visitor reports\n\n${table}\n\n## Feedback, last 7 days\n\n${fbTable}\n\n${tok.note}${gap}\n`;
   console.log(out);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, out);
   if (missing.length && !DRY) throw new Error(`No reports branch in: ${missing.join(", ")}. Their report forms cannot save; tell Claude "the reports branch is missing".`);
