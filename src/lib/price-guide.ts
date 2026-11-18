@@ -77,6 +77,8 @@ async function computePriceGuideRows(): Promise<PriceGuideRow[]> {
       rarity: true,
       variant: true,
       isPromo: true,
+      // Read only by buildDuplicateMap (a metal reprint is its own printing).
+      tags: true,
       isOvernumbered: true,
       energyCost: true,
       might: true,

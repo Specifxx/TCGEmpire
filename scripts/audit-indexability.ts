@@ -70,7 +70,7 @@ async function main() {
   const cards = await prisma.card.findMany({
     select: {
       id: true, slug: true, name: true, setCode: true, collectorNumber: true,
-      rarity: true, variant: true, isPromo: true, description: true, imageUrl: true,
+      rarity: true, variant: true, isPromo: true, tags: true, description: true, imageUrl: true,
     },
   });
   const byId = new Map(cards.map((c) => [c.id, c]));

@@ -24205,3 +24205,20 @@ Rollout: `BOTTOM_NAV` in `lib/site.ts` ("off" | "optin" | "on"). Shipped "optin"
 the phone harness passed on five screen sizes; `?bn=0` hides it for one visitor and "off" is the whole rollback. Browser only and below 768px:
 nothing in the server HTML, so SEO and first paint are unchanged. `tests/bottom-nav.test.ts` pins all of it, including that no `lvh`/`dvh`,
 no `visualViewport.height` and no animated `bottom` ever comes back.
+
+## 2026-11-18: A metal reprint is its own printing, not a duplicate of its promo
+
+`lib/card-duplicates.ts` treats two card rows as one printing when name, set, collector number, rarity, variant and the
+promo flag agree, then noindexes the extras, points their canonical at the shortest slug and leaves them out of the sitemap
+and the price guide. A metal Prize Wall or Best Of card (`lib/metal-cards.ts`) agrees with its promo on every one of those
+fields, so 37 groups collapsed: 48 metal and promo pages, Kai'Sa OGN 247's US$0.29 promo, US$2,147 Best Of and US$8,000
+Prize Wall among them (counted from `data/public/cards.json`). The pages Google most wants for "riftbound metal cards"
+were the ones telling it not to index them. The metal kind (`metalKindOf(tags)`) is now part of `identityKey`; with it the
+catalogue has no duplicate groups at all. `CardIdentity.tags` is required, so a caller that forgets to select it fails to
+compile; `tests/card-duplicates.test.ts` pins the real rows. Side effect, wanted: the price guide now names a metal row
+"Metal Prize Wall" / "Metal Best Of" (`cardDisplayName` reads the tags it was never given).
+
+The weekly GSC coverage run (16 Nov) also listed four cards "Excluded by noindex" while in the sitemap
+(`yasuo-remorseful-ogn-076b-298-promo`, `void-seeker-ogn-nn1-promo`, `poppy-defender-of-the-meek-unl-178a-219-promo`,
+`jinx-demolitionist-ogn-030-298-promo`). None is in a duplicate group, then or now, and the duplicate rule is the only
+noindex a card page carries, so those are Google's older crawls; re-read on the next run.

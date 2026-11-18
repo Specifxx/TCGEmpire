@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { metalKindOf } from "./metal-cards";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Duplicate card rows → one canonical URL, the rest noindexed.
@@ -51,6 +52,12 @@ export interface CardIdentity {
   rarity: string;
   variant: string | null;
   isPromo: boolean;
+  /**
+   * Card.tags — read ONLY for the metal kind (lib/metal-cards.ts). REQUIRED so a
+   * caller that forgets to select it fails to compile instead of silently
+   * merging a US$0.29 promo with its US$2,000 metal reprint (2026-11-18).
+   */
+  tags: string | null;
 }
 
 export interface CanonicalTwin {
@@ -58,9 +65,20 @@ export interface CanonicalTwin {
   slug: string | null;
 }
 
-/** The natural key two rows must share to be the same printing. */
+/**
+ * The natural key two rows must share to be the same printing.
+ *
+ * The METAL KIND is part of it (2026-11-18). A metal Prize Wall or Best Of card
+ * reuses its base card's name, number, rarity and promo flag — every other field
+ * here — but is a separate physical product priced in thousands
+ * (lib/metal-cards.ts; TCGplayer prices it from its own product id). Without the
+ * kind, 37 groups (48 metal and promo pages, e.g. Kai'Sa OGN 247's US$0.29
+ * promo, US$2,147 Best Of and US$8,000 Prize Wall) collapsed into one: the metal
+ * pages carried noindex, pointed their canonical at the promo, left the
+ * sitemap and dropped out of the price guide.
+ */
 export function identityKey(c: Omit<CardIdentity, "id" | "slug">): string {
-  return [c.name, c.setCode, c.collectorNumber, c.rarity, c.variant ?? "", c.isPromo ? "promo" : ""]
+  return [c.name, c.setCode, c.collectorNumber, c.rarity, c.variant ?? "", c.isPromo ? "promo" : "", metalKindOf(c.tags) ?? ""]
     .join("|")
     .toLowerCase();
 }
@@ -132,6 +150,7 @@ export async function getDuplicateMap(): Promise<Map<string, CanonicalTwin>> {
           rarity: true,
           variant: true,
           isPromo: true,
+          tags: true,
         },
       });
       const entry: Cached = { at: Date.now(), map: buildDuplicateMap(rows) };
