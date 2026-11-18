@@ -33,6 +33,9 @@ export const SISTER_PREMIUM_SITES: PremiumSite[] = [
   { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app" },
   // TCG Prices (2026-11-18): sign-in, watch list and Premium (no back-in-stock button yet: its pages are multi-market).
   { key: "tcgprices", name: "TCG Prices", url: "https://tcgprices.app" },
+  // Gundam Compare and YGO Compare (2026-11-18): the same sign-in, watch list and Premium, no back-in-stock button yet.
+  { key: "gundam", name: "Gundam Compare", url: "https://gundamcompare.com" },
+  { key: "ygo", name: "YGO Compare", url: "https://ygocompare.com" },
 ];
 
 export const PREMIUM_SESSION_DAYS = 60;
