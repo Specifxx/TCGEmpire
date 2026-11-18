@@ -13,19 +13,22 @@ const read = (f: string) => readFileSync(join(__dirname, "..", f), "utf8");
 test("only DexCompare's exact https origin may ask", () => {
   assert.equal(premiumSiteForOrigin("https://dexcompare.io")?.key, "dex");
   assert.equal(premiumSiteForOrigin("https://dexcompare.app")?.key, "dex");
-  for (const o of [null, "http://dexcompare.app", "https://dexcompare.io:8443", "https://dexcompare.io.evil.com", "https://mtgcompare.app", "https://riftcompare.com"]) {
+  for (const o of [null, "http://dexcompare.app", "https://dexcompare.io:8443", "https://dexcompare.io.evil.com", "https://mtgcompare.app.evil.com", "https://riftcompare.com"]) {
     assert.equal(premiumSiteForOrigin(o), null, String(o));
   }
   assert.equal(premiumCors("https://evil.com")["Access-Control-Allow-Origin"], undefined);
   assert.equal(premiumCors("https://dexcompare.io")["Access-Control-Allow-Origin"], "https://dexcompare.io");
-  assert.deepEqual(SISTER_PREMIUM_SITES.map((s) => s.key), ["dex"]);
+  assert.deepEqual(SISTER_PREMIUM_SITES.map((s) => s.key), ["dex", "mtg", "tcgprices", "gundam", "ygo"]);
+  assert.equal(premiumSiteForOrigin("https://www.gundamcompare.com")?.key, "gundam");
+  assert.equal(premiumSiteForOrigin("https://tcgprices.app")?.key, "tcgprices");
+  assert.equal(premiumSiteForOrigin("https://mtgcompare.app")?.key, "mtg");
 });
 
 test("a premium session verifies for its own site and address only; a sign-in link never stands in", async () => {
   const dex = premiumSite("dex")!;
   const token = await signPremiumSession(dex, "a@b.co");
   assert.equal(await verifyPremiumSession(token, dex), "a@b.co");
-  assert.equal(await verifyPremiumSession(token, { key: "x", name: "X", url: "https://mtgcompare.app" }), null);
+  assert.equal(await verifyPremiumSession(token, premiumSite("mtg")!), null, "a Dex token never works on MTG");
   assert.equal(await verifyPremiumSession(token + "x", dex), null);
   assert.equal(await verifyPremiumSession(undefined, dex), null);
   // an OP sign-in link (no `use` claim) is refused, even re-audienced

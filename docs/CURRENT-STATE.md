@@ -111,6 +111,8 @@ longer lands on its entry.
   deploy, import or purge. [2026-09-11](../DECISIONS.md#L5370),
   [2026-09-18](../DECISIONS.md#L8523), [2026-09-22](../DECISIONS.md#L10455)
 
+- **Home lists rank by demand × value (owner, 2026-11-18):** `src/lib/home-rank.ts` (same file in every repo) orders each home list by product page views and buy clicks (`data/demand.json`, from `/api/demand/<site>`, `src/lib/analytics/item-demand.ts`) times stock, paid rows, price and recency; one exploration slot in eight; `NEXT_PUBLIC_HOME_RANK=off` turns it off. [2026-11-18](../DECISIONS.md#2026-11-18-home-pages-rank-items-by-demand-owner-the-most-popular-items-should-be-on-the-homepage-in-that-order)
+
 ## Databases
 
 - **Public data can be served from files** (`data/public/`, `src/lib/public-data/`):
@@ -947,7 +949,7 @@ longer lands on its entry.
 - **The phone bottom nav is back, without position arithmetic** (owner, 2026-11-18: `BottomNav.tsx`, `BOTTOM_NAV` in
   `lib/site.ts` is the rollback, `?bn=0`/`?bn=1` per visitor): `fixed; bottom: 0`, transform only, hides on scroll down, zoom,
   keyboard, any dialog, the buy bar and over an Add to cart. Never compute where the browser's chrome is (the 2026-09-18 bar
-  died of that). Its Menu tab presses `HeaderMenuButton`, the one opener. [2026-11-18](../DECISIONS.md#L24158)
+  died of that). Its Menu tab presses `HeaderMenuButton`, the one opener. [2026-11-18](../DECISIONS.md#L24186)
 - **No notification bell** (build a `/notifications` page rather than
   restore it). One control opens `CinematicNavMenu` below lg.
   The one fixed-bottom exception is the card page's owner-requested sticky
