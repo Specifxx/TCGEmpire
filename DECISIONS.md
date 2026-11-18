@@ -24363,3 +24363,12 @@ the footer, dialogs and the keyboard, ✕ for the visit, labelled Ad, rel sponso
 `dock_arm`. Verdict 2 Dec: buy clickers and paid buy clicks per arm. EPN's Network Agreement (Exhibit A §1.4, §2.5) puts any
 promotional method it does not expressly permit under prior written approval; the dock has run since 2026-11-06, this changes only
 when it shows. Not on Dex or MTG Compare (their phone A/B runs to 3 Dec).
+## 2026-11-18: Premium on a phone: members' bottom bar (first step)
+
+Owner, 18 Nov: "if you're a premium and you're on mobile phone, the look and feel should be a lot different". Today a member's phone
+only drops the ad dock and banners. First step (`components/BottomNav.tsx`): for any paid tier (`useMe().tier`), the bar's Deals tab
+becomes **Watching** (`/watching`, active on `/portfolio` and `/alerts` too) and the bar carries a thin gold top line (`.bn[data-member]`).
+Deals stays in the menu. Cart, Menu, price rows, pinned rows, Cheapest and Add to cart are the same for members: the bar changes how a
+member gets around, never what prices they see. Next steps in the plan: a "Your cards today" strip on the phone home and a dot on
+Watching when a watched card moved. 21 members is too few to split, so it is read before/after: members' visit days a week (the
+`return_visit` beacon), four weeks either side. Plan: project files strategy/premium-network-plan-2026-11-18.html.
