@@ -42,6 +42,9 @@ export async function GET() {
       // sent raw so User.id stays server-side — see lib/ga-user-id.ts. Null when
       // signed out, which is what clears the id on the client.
       analyticsId: user ? analyticsUserId(user.id) : null,
+      // The member's own referral code (their User.id, the same code /profile's invite
+      // link shows): ShareButton puts it after the # of a shared link (lib/share-link.ts).
+      inviteCode: user ? user.id : null,
       premium: isPremium(user),
       // Whether to hide ads. Every paid tier is ad-free again (owner's call,
       // 2026-09-25 — DECISIONS.md, "Plus is ad-free again"); it was

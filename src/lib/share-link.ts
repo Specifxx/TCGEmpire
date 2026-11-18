@@ -58,3 +58,26 @@ export function pickShareArm(saved: string | null | undefined, roll: number): Sh
   if (saved === "reward" || saved === "plain") return saved;
   return roll < 0.5 ? "reward" : "plain";
 }
+
+// Invite links (owner, 2026-11-18: "people … share stuff with their friends"): a
+// signed-in member's share carries their referral code after the #, so every share
+// is also an invite. The # part never reaches the server: no new CDN copy of the
+// page and no database read until the friend signs up (lib/referral.ts, which
+// credits the referrer once per new account). ReferralCapture reads it back.
+const INVITE_CODE = /^[a-z0-9]{6,40}$/i;
+
+/** `url` with `#r=<code>` when `code` is a valid referral code, else `url` unchanged. */
+export function withInvite(url: string, code: string | null | undefined): string {
+  if (!code || !INVITE_CODE.test(code)) return url;
+  const u = new URL(url);
+  u.hash = `r=${code}`;
+  return u.toString();
+}
+
+/** The referral code a landing carries: `?ref=` (the profile's invite link) or `#r=` (a member's share). */
+export function inviteCodeFrom(search: string, hash: string): string | null {
+  const q = new URLSearchParams(search).get("ref");
+  if (q && INVITE_CODE.test(q)) return q;
+  const h = new URLSearchParams(hash.replace(/^#/, "")).get("r");
+  return h && INVITE_CODE.test(h) ? h : null;
+}

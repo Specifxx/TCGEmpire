@@ -24384,3 +24384,24 @@ history files and drop methodology-break windows. A 50/50 arm (`yct-arm`): "off"
 day per eligible browser, so visit days per eligible account read on against off; `yct_shown`, `yct_click`. A member's phone bar
 shows a gold dot on Watching (`yct-moved`, "on" arm only) until they open /watching. Price rows, buy buttons and the quick view are
 untouched. Read about 2 Dec.
+## 2026-11-18: Invite a friend, you both get a week of Premium, and every member's share is an invite
+
+**Owner:** "I really want people to share stuff with their friends … some sort of loyalty system", then on the decision card,
+"Both get 7 days Premium", and "premium isn't a feature that earns us a lot of money … we need to just have it somewhere".
+
+**What.** The referral program (`lib/referral.ts`, `?ref=<User.id>`, since August) gave the inviter 3 days and lived only on
+`/profile`. Now:
+- **Both sides get 7 days** (`lib/premium-days.ts`, hard numbers, not env defaults): the inviter per friend, the friend's new
+  account once, extend-only through `grantPremiumDays`. An emailed sign-up (`/api/auth/email-link/consume`) now applies the
+  invite too, not only OAuth.
+- **Every signed-in member's Share is an invite.** `/api/me` returns `inviteCode` (the member's own id, the code the invite
+  link already showed); `ShareButton` adds it as `#r=<code>` (`withInvite`). After the `#`, so it never reaches the server: no
+  new CDN copy of any page and no database read per visit. `ReferralCapture` reads `?ref=` or `#r=` (`inviteCodeFrom`).
+- **Visible.** "Invite friends · you both get 7 days Premium" in the account menu (to `/profile#invite`), and after every
+  completed share a small card: a member is told the link carried their invite, a visitor that signing in first earns them
+  both a week (`/login?src=referral`). The share-for-a-deal card (reward arm) gains the same line; the A/B's tap counts are
+  unchanged because the card shows only after a share.
+- **Counted.** `share_visit` gains `invite` (1 when the link carried `#r=`); each credited sign-up bumps the Counter row
+  `referral:YYYY-MM` (one upsert per referred sign-up, nothing per visit). Read with the share A/B around 2 Dec.
+
+**Not points or levels.** The owner switched off Coins on 2026-10-29; the reward is Premium time only.

@@ -37,3 +37,26 @@ test("guides and set pages share tagged links", () => {
   assert.match(fs.readFileSync("src/components/ArticleShare.tsx", "utf8"), /shareUrl\(clean, "", "guide"\)/);
   assert.match(fs.readFileSync("src/app/sets/[set]/page.tsx", "utf8"), /<ShareButton [^>]*medium="set"/);
 });
+
+// Invite links (owner, 2026-11-18): a member's share carries their code after the #.
+import { inviteCodeFrom, withInvite } from "../src/lib/share-link";
+import { REFERRAL_PREMIUM_DAYS, REFERRED_PREMIUM_DAYS } from "../src/lib/premium-days";
+
+test("withInvite puts a valid code after the # and leaves the query (the CDN key) alone", () => {
+  const url = "https://riftcompare.com/card/x?utm_source=share&utm_medium=card";
+  assert.equal(withInvite(url, "clabc123xyz"), `${url}#r=clabc123xyz`);
+  assert.equal(withInvite(url, null), url);
+  assert.equal(withInvite(url, "bad code!"), url);
+});
+
+test("inviteCodeFrom reads ?ref= first, then #r=, and refuses junk", () => {
+  assert.equal(inviteCodeFrom("?ref=clabc123xyz", ""), "clabc123xyz");
+  assert.equal(inviteCodeFrom("?utm_source=share", "#r=clzzz999aaa"), "clzzz999aaa");
+  assert.equal(inviteCodeFrom("", "#r=<script>"), null);
+  assert.equal(inviteCodeFrom("", ""), null);
+});
+
+test("both sides of an invite get the owner's week (2026-11-18)", () => {
+  assert.equal(REFERRAL_PREMIUM_DAYS, 7);
+  assert.equal(REFERRED_PREMIUM_DAYS, 7);
+});

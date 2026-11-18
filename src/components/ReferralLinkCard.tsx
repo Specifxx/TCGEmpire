@@ -37,14 +37,14 @@ export function ReferralLinkCard({ url, days }: { url: string; days: number }) {
   }
 
   return (
-    <div className="card-surface mt-5 p-5">
+    <div id="invite" className="card-surface mt-5 scroll-mt-24 p-5">
       <h2 className="font-bold text-white">Invite a friend</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Share your link — you get{" "}
+        Share your link, or tap Share on any page while signed in. When a friend creates a free account, you{" "}
         <span className="font-semibold text-gold">
-          {days === 1 ? "1 day" : `${days} days`} of {rewardName}
-        </span>{" "}
-        for every friend who creates a free account.
+          both get {days === 1 ? "1 day" : `${days} days`} of {rewardName}
+        </span>
+        .
       </p>
       <div className="mt-3 flex gap-2">
         <input

@@ -6,13 +6,16 @@
 import { useEffect } from "react";
 import { track } from "@vercel/analytics";
 
+
 export function ShareArrival() {
   useEffect(() => {
     try {
       const q = new URLSearchParams(location.search);
       if (q.get("utm_source") !== "share" || sessionStorage.getItem("share_visit")) return;
       sessionStorage.setItem("share_visit", "1");
-      track("share_visit", { medium: (q.get("utm_medium") || "page").slice(0, 20) });
+      // invite: whether the link was a signed-in member's (it carries #r=, lib/share-link.ts).
+      const invite = /(^#|&)r=/.test(location.hash) ? "1" : "0";
+      track("share_visit", { medium: (q.get("utm_medium") || "page").slice(0, 20), invite });
     } catch {
       /* never in the way */
     }
