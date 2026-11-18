@@ -1670,6 +1670,19 @@ model MarketplaceReview {
 // reachable without a raw-DDL migration channel; this table is the workaround.
 // Rows are seeded lazily (upsert) the first time each key is used, starting at the
 // offsets in lib/order-number.ts (orders @ 100000, tickets @ 10000).
+// Prize-draw entries (lib/giveaway.ts, owner 2026-11-18). One row per account per
+// giveaway; the unique key is the "one entry per account" rule. PRIVATE: never in
+// PUBLIC_MODELS or data/public. The winner is drawn by /admin/giveaway.
+model GiveawayEntry {
+  id        String   @id @default(cuid())
+  giveaway  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([giveaway, userId])
+  @@index([giveaway])
+}
+
 model Counter {
   key   String @id
   value Int

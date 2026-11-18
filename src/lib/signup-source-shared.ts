@@ -103,6 +103,8 @@ export const SIGNUP_SOURCES = new Set<string>([
   // The set tracker's "I own this" tick and "Sign up free" line on a released
   // /sets/[set] page (2026-09-29): the free front door, judged on sign-ups.
   "set_tracker",
+  // The prize draw's "Sign in free to enter" on /giveaway (2026-11-18): judged on sign-ups.
+  "giveaway",
   ...INLINE_SIGNUP_SURFACES,
   "other",
 ]);
