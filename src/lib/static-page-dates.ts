@@ -24,6 +24,7 @@ const STATIC_PAGE_DATES: Record<string, string> = {
   "/legacy-preorders": "2026-10-25",
   "/black-friday": "2026-11-07",
   "/cyber-monday": "2026-11-07",
+  "/giveaway": "2026-11-18",
   "/boxing-day": "2026-11-02",
   "/january-sales": "2026-11-02",
   "/lunar-new-year": "2026-11-02",
