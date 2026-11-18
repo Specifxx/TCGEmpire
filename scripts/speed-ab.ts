@@ -181,7 +181,7 @@ function lighthouseOnce(url: string, method: string): Run {
       before,
       element,
       phases: parts.join(" "),
-      diag: DIAG ? diagnose(a) : undefined,
+      diag: DIAG ? [diagnose(a), thirdPartyScripts(a, url)].filter(Boolean).join("\n      ") : undefined,
     };
   } catch (e) {
     const err = e as { message?: string; stderr?: Buffer };
@@ -207,6 +207,24 @@ function diagnose(a: Record<string, any>): string {
     out.push(`${id}${au.displayValue ? ` (${au.displayValue})` : ""}${save ? ` ${save}` : ""}${what ? ` e.g. ${String(what).slice(0, 140)}` : ""}`);
   }
   return out.join("\n      ");
+}
+
+/** --diag: the other hosts this page loads scripts from, with their transfer size. */
+function thirdPartyScripts(a: Record<string, any>, url: string): string {
+  const host = new URL(url).host;
+  const by = new Map<string, number>();
+  for (const r of (a["network-requests"]?.details?.items ?? []) as any[]) {
+    if (r.resourceType !== "Script") continue;
+    let h = "";
+    try {
+      h = new URL(r.url).host;
+    } catch {
+      continue;
+    }
+    if (h === host) continue;
+    by.set(h, (by.get(h) ?? 0) + (Number(r.transferSize) || 0));
+  }
+  return by.size ? `scripts from other hosts: ${[...by].map(([h, b]) => `${h} ${Math.round(b / 1024)} kB`).join(", ")}` : "";
 }
 
 /** A plain phone-sized browser, no throttling: every largest-paint candidate the browser reports, in order. */
