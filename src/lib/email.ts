@@ -723,6 +723,8 @@ export function buildPriceDropEmail(items: PriceDropItem[], unsubToken: string, 
   // A paid digest also links Deal Finder filtered to the member's own watchlist.
   const paid = sorted.some((i) => i.kind === "target" || i.kind === "below_market");
   const dealFinder = `${SITE_URL}/tools/deal-finder?mine=watch&${utm(campaign)}`;
+  // The feedback ask (owner, 2026-11-18: "we need more feedback"): the /feedback form, one line, no reply address needed.
+  const feedbackHref = `${SITE_URL}/feedback?${utm(campaign)}`;
   // Items past the rows above are NOT recorded as emailed (lib/price-alerts.ts
   // holds them), so they arrive in the next alert email.
   const moreLine = hidden > 0 ? `${hidden} more card${hidden === 1 ? "" : "s"} with news will come in your next alert email` : "";
@@ -731,7 +733,8 @@ export function buildPriceDropEmail(items: PriceDropItem[], unsubToken: string, 
     <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%">${full.map((i) => dropRow(i, campaign)).join("")}${compact.map((i) => compactRow(i, campaign)).join("")}</table>
     ${moreLine ? `<div style="margin-top:8px;font-size:13px"><a href="${escapeHtml(links.manage)}" style="color:#f29733;font-weight:700;text-decoration:none">${moreLine} →</a></div>` : ""}</td></tr>
     <tr><td style="padding:4px 32px 20px">${button(links.manage, "Manage your watchlist")}
-    ${paid ? `<div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(dealFinder)}" style="color:#f29733;font-weight:700;text-decoration:none">Your watched cards in Deal Finder →</a></div>` : ""}</td></tr>
+    ${paid ? `<div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(dealFinder)}" style="color:#f29733;font-weight:700;text-decoration:none">Your watched cards in Deal Finder →</a></div>` : ""}
+    <div style="margin-top:12px;font-size:13px;color:#b8c0cc">What would make RiftCompare better? <a href="${escapeHtml(feedbackHref)}" style="color:#f29733;font-weight:700;text-decoration:none">Tell us in a sentence →</a></div></td></tr>
     ${anonymous ? accountCtaBlock("price-drop", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
   const text = [
     heading,
@@ -742,6 +745,7 @@ export function buildPriceDropEmail(items: PriceDropItem[], unsubToken: string, 
     ...(moreLine ? [`${moreLine}: ${links.manage}`] : []),
     `Manage your watchlist: ${links.manage}`,
     ...(paid ? [`Your watched cards in Deal Finder: ${dealFinder}`] : []),
+    `What would make RiftCompare better? Tell us in a sentence: ${feedbackHref}`,
     "",
     alertFooterText(links),
   ]

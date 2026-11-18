@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { loadSite, issueBody, flag, SITE_REPOS } from "../scripts/reports-triage.mjs";
+import { loadSite, issueBody, flag, feedbackCounts, SITE_REPOS } from "../scripts/reports-triage.mjs";
 
 const report = (o: Record<string, unknown>) => ({ v: 1, at: "2026-10-30T01:00:00Z", site: "riftcompare", kind: "wrong-price", page: "/card/x", product: "Jinx", store: "Shop", note: "secret words", ...o });
 
@@ -44,10 +44,10 @@ test("repeat wrong prices are flagged first and notes are never quoted", () => {
   assert.match(body, /\[report\]\(u1\)/);
 });
 
-test("the triage knows the same fourteen repos as the writer", () => {
+test("the triage knows the same eighteen sites as the writer", () => {
   const src = readFileSync("src/lib/reports-github.ts", "utf8");
   for (const [site, repo] of Object.entries(SITE_REPOS as Record<string, string>)) assert.ok(src.includes(`${site}: "${repo}"`), site);
-  assert.equal(Object.keys(SITE_REPOS).length, 14);
+  assert.equal(Object.keys(SITE_REPOS).length, 18);
 });
 
 test("a store owner's own request is flagged first and asks for a reply within two days", () => {
@@ -60,4 +60,26 @@ test("a store owner's own request is flagged first and asks for a reply within t
   assert.ok(f[0].attention);
   assert.match(f[0].why[0], /store owner asked.*two days/);
   assert.match(issueBody("lorcanacompare", rs as never), /Needs a look[\s\S]*Shop B/);
+});
+
+test("feedback is counted per site for the last 7 days from file names alone", () => {
+  const paths = [
+    "votes/x/2026-11-18/010101-up-ab12.json",
+    "votes/x/2026-11-17/010101-down-ab12.json",
+    "inbox/x/2026-11-18/010101-feedback-abc123.json",
+    "done/x/2026-11-18/010101-feedback-abd123.json",
+    "inbox/x/2026-11-18/010101-wrong-price-abe123.json",
+    "votes/y/2026-11-18/010101-up-ab12.json",
+    "votes/x/2026-10-01/010101-up-ab12.json",
+  ];
+  assert.deepEqual(feedbackCounts(paths, "x", Date.parse("2026-11-18T12:00:00Z")), { up: 1, down: 1, notes: 2, acted: 1 });
+});
+
+test("a feedback note always needs a look, and is never quoted", () => {
+  const rs = [report({ kind: "feedback", issue: "idea", store: null, product: null, url: "u9" })];
+  const f = flag(rs, Date.parse("2026-10-31T00:00:00Z"));
+  assert.ok(f[0].attention);
+  const body = issueBody("riftcompare", rs);
+  assert.match(body, /\*\*Feedback\*\* \(idea\)/);
+  assert.ok(!body.includes("secret words"));
 });
