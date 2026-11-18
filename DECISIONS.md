@@ -24154,3 +24154,26 @@ period being sorted on, and on the default order also puts that side's biggest m
 labelled "7d" or "latest". `/movers` gains one searchable list of the risers and drops (`MoversTable.tsx`), sorted the same way, under the eBay
 CTA (which stays straight after the panels, as pinned). Both read the rows the page already had: no new query, no new fetch. Every % is the
 card's own move; nothing is estimated. The same control goes to every sister site with an index or a movers page.
+
+## 2026-11-18: The phone bottom nav comes back, with no position arithmetic (owner)
+
+"The bottom nav bar feature looks good there's just a bit of lag we can reduce. Happy to have that nav bar on all our sites." The owner tried
+TCG Prices' bar (after Catchback's) on his own phone; this is the same component (`components/BottomNav.tsx`), ported. It reverses
+"The mobile bottom tab bar is deleted" (2026-09-18) only in its conclusion, not its diagnosis: that bar died because it tried to work out where
+the browser's address bar was (`calc(100lvh - 100dvh)`, then a measured `visualViewport` lift). This one does no position maths at all. It is
+`position: fixed; bottom: 0` with the safe-area inset, the placement the ad dock and the card page's buy bar already run, and it moves on
+`transform` only. It hides on scroll down (shows on scroll up and near the top), while pinch-zoomed (the layout and visual viewports split,
+which floated the old bar), while a text field has focus, while any dialog, the menu or the cart drawer is open, on a page with the buy bar
+(`.buybar`), and whenever an Add to cart button is in the strip it would cover. The scroll handler reads `scrollY` and nothing else: no
+layout reads, no React state; everything that needs the DOM is cached by observers (the "lag" the owner saw on TCG Prices' first version).
+
+Tabs: Home, Search (`/browse`, where the header search goes), Deals (Deal Finder, Movers, Rising), Cart (opens the drawer), Menu.
+**One menu, still.** `tests/single-menu-entry.test.ts` pins that one control opens `CinematicNavMenu`; the Menu tab presses that control
+(`button[data-menu-button]`, `HeaderMenuButton`) rather than opening the menu itself, and `BottomNav.tsx` is now in that test's list.
+The ad dock yields while the nav shows (`html[data-bottomnav]`), so a phone screen still holds one bar; the corner buttons
+(`.above-bottombar`) lift above it; the room under the footer adds to the native banner's reservation (CSS, `html[data-bottomnav-on] body`).
+
+Rollout: `BOTTOM_NAV` in `lib/site.ts` ("off" | "optin" | "on"). Shipped "optin" (only `?bn=1`, kept in localStorage), flipped to "on" once
+the phone harness passed on five screen sizes; `?bn=0` hides it for one visitor and "off" is the whole rollback. Browser only and below 768px:
+nothing in the server HTML, so SEO and first paint are unchanged. `tests/bottom-nav.test.ts` pins all of it, including that no `lvh`/`dvh`,
+no `visualViewport.height` and no animated `bottom` ever comes back.

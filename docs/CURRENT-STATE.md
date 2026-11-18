@@ -944,8 +944,11 @@ longer lands on its entry.
   its button only. On /browse that is the same metered search as the header's.
   `q` is the search, not a facet: no chip, no count, and "Clear" keeps it and
   the sort (`clearedFilters`). [2026-10-19](../DECISIONS.md#L18619)
-- **No mobile bottom tab bar** (fixed-bottom UI cannot track browser chrome)
-  **and no notification bell** (build a `/notifications` page rather than
+- **The phone bottom nav is back, without position arithmetic** (owner, 2026-11-18: `BottomNav.tsx`, `BOTTOM_NAV` in
+  `lib/site.ts` is the rollback, `?bn=0`/`?bn=1` per visitor): `fixed; bottom: 0`, transform only, hides on scroll down, zoom,
+  keyboard, any dialog, the buy bar and over an Add to cart. Never compute where the browser's chrome is (the 2026-09-18 bar
+  died of that). Its Menu tab presses `HeaderMenuButton`, the one opener. [2026-11-18](../DECISIONS.md#L24158)
+- **No notification bell** (build a `/notifications` page rather than
   restore it). One control opens `CinematicNavMenu` below lg.
   The one fixed-bottom exception is the card page's owner-requested sticky
   buy bar (`CardStickyBuyBar`, below lg, hidden over the comparison); if it

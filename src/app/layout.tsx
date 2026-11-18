@@ -8,6 +8,7 @@ import "@/components/cart/cart.css";
 import "@/components/cart/cart-drawer.css";
 import { Navbar } from "@/components/Navbar";
 import { PhoneDockAds } from "@/components/PhoneDockAds";
+import { BottomNav } from "@/components/BottomNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { HOME_AB_BOOT_SCRIPT } from "@/lib/home-ab";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
@@ -22,7 +23,7 @@ import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
+import { BOTTOM_NAV, CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION, IMPACT_SITE_VERIFICATION_2 } from "@/lib/affiliate";
 import { FooterNav } from "@/components/FooterNav";
 import { enabledProviders } from "@/lib/oauth";
@@ -420,6 +421,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {/* The phone dock (PhoneDockAds.tsx; owner, 2026-11-06): browser-only, narrow screens, after a scroll, never on a product page;
                     none for ad-free members. The side rails are gone (2026-11-13). */}
                 <PhoneDockAds />
+                {/* The phone bottom nav (BottomNav.tsx; owner, 2026-11-18): browser-only, phones only, behind BOTTOM_NAV in lib/site.ts. */}
+                {BOTTOM_NAV !== "off" && <BottomNav mode={BOTTOM_NAV} />}
                 {/* No announcement ribbon here any more — the homepage's Vendetta
                     block (right under the hero) carries the "it's here" message
                     with real prices instead of a repeating marquee claim. */}

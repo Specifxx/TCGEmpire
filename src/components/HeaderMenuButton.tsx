@@ -50,6 +50,8 @@ export function HeaderMenuButton({ className = "" }: { className?: string }) {
   return (
     <button
       type="button"
+      // The phone bottom nav's Menu tab presses this button (BottomNav.tsx), so it stays the one opener.
+      data-menu-button=""
       onClick={() => setOpen(true)}
       aria-label="Open menu"
       aria-expanded={open}
