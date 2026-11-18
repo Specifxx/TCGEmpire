@@ -1826,6 +1826,12 @@ html[data-bottomnav-on] body { padding-bottom: calc(var(--native-banner-h, 0px) 
 /* While it shows, the corner buttons (feedback, rating card, toasts) lift above it, as they do for the buy bar and the ad dock. */
 html[data-bottomnav] .above-bottombar { bottom: calc(var(--native-banner-h, 0px) + env(safe-area-inset-bottom, 0px) + 4.5rem); }
 
+/* The dock A/B (lib/dock-arm.ts, 2026-11-18): in the "on" arm the phone dock stays up while the bottom nav shows, lifted just above it
+   (the nav is 56px plus its 1px border; the dock's own safe-area padding sits under the nav). Moved with `translate` only (CLS 0). */
+html [data-dock-stack] { transition: transform 0.2s ease-out, translate 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); }
+html[data-bottomnav] [data-dock-stack] { translate: 0 -57px; z-index: 29; }
+@media (prefers-reduced-motion: reduce) { html [data-dock-stack] { transition: none; } }
+
 @media (prefers-reduced-motion: reduce) {
   .plan-glow,
   .pricing-nudge,
@@ -1838,3 +1844,4 @@ html[data-bottomnav] .above-bottombar { bottom: calc(var(--native-banner-h, 0px)
     transition: none;
   }
 }
+

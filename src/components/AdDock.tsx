@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { dockArm } from "@/lib/dock-arm";
 
 // The phone dock (owner, 2026-11-06: "how can we have those [side rail ads] on mobile … in the best way that doesn't interrupt user
 // experience"): the side rails' eBay and TCGplayer tiles, one of each, side by side in a slim bar along the foot of a screen too narrow
@@ -112,6 +113,8 @@ export function AdDock({ label, sides, placement, minWidth, yieldTo = "[data-ad]
   const [shown, setShown] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [turn, setTurn] = useState(0);
+  // The dock A/B (lib/dock-arm.ts): "on" stacks the dock above the bottom nav instead of yielding to it. The dock mounts in the browser only.
+  const [stack] = useState(() => dockArm() === "on");
   const visible = shown && !dismissed;
 
   // When to show: scrolled past DOCK_ARM of a screen, and nothing that hides it is in (or 120 px from) view.
@@ -134,7 +137,7 @@ export function AdDock({ label, sides, placement, minWidth, yieldTo = "[data-ad]
           buybar: !!document.querySelector(buybar),
           // An ad-free visitor (Plus/Premium where a site has them) and a native app with its own banner: never. Nor while the
           // phone bottom nav shows (BottomNav.tsx): the two take turns, the nav on scroll up, the dock on scroll down.
-          modal: modal() || document.documentElement.matches("[data-adfree], .capacitor-native, [data-bottomnav]"),
+          modal: modal() || document.documentElement.matches(stack ? "[data-adfree], .capacitor-native" : "[data-adfree], .capacitor-native, [data-bottomnav]"),
           typing,
           dismissed: false,
         }),
@@ -193,7 +196,7 @@ export function AdDock({ label, sides, placement, minWidth, yieldTo = "[data-ad]
       document.removeEventListener("focusout", onBlur);
       wide.removeEventListener?.("change", update);
     };
-  }, [minWidth, yieldTo, buybar]);
+  }, [minWidth, yieldTo, buybar, stack]);
 
   // Each time it comes back, the next pair.
   useEffect(() => {
@@ -232,6 +235,7 @@ export function AdDock({ label, sides, placement, minWidth, yieldTo = "[data-ad]
       aria-hidden={visible ? undefined : true}
       data-ad={visible ? placement : undefined}
       data-dock={visible ? "shown" : "hidden"}
+      data-dock-stack={stack ? "" : undefined}
       className={`fixed inset-x-0 bottom-0 z-30 border-t border-ink-700 bg-ink-950/95 px-3 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_-12px_rgba(0,0,0,0.45)] backdrop-blur ${
         visible ? "translate-y-0 transition-transform duration-200 ease-out motion-reduce:transition-none" : "invisible translate-y-full"
       }`}
