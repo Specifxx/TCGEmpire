@@ -111,6 +111,8 @@ longer lands on its entry.
   deploy, import or purge. [2026-09-11](../DECISIONS.md#L5370),
   [2026-09-18](../DECISIONS.md#L8523), [2026-09-22](../DECISIONS.md#L10455)
 
+- **Home lists rank by demand × value (owner, 2026-11-18):** `src/lib/home-rank.ts` (same file in every repo) orders each home list by product page views and buy clicks (`data/demand.json`, from `/api/demand/<site>`, `src/lib/analytics/item-demand.ts`) times stock, paid rows, price and recency; one exploration slot in eight; `NEXT_PUBLIC_HOME_RANK=off` turns it off. [2026-11-18](../DECISIONS.md#2026-11-18-home-pages-rank-items-by-demand-owner-the-most-popular-items-should-be-on-the-homepage-in-that-order)
+
 ## Databases
 
 - **Public data can be served from files** (`data/public/`, `src/lib/public-data/`):
