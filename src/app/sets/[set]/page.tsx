@@ -557,8 +557,6 @@ export default async function SetPage({
           ) : null}
         </div>
       </section>
-      {/* The two big ad banners (owner, 2026-11-14): at the top, directly under the hero. */}
-      <InlineAds pageType="set_hub" setCode={set.code} />
 
       {/* Radiance content hub — confirmed facts, legends, products + a real
           pre-order table, a release timeline, and the FAQ backing faqLd above.
@@ -693,6 +691,8 @@ export default async function SetPage({
         </section>
       )}
 
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds pageType="set_hub" setCode={set.code} className="mt-8" />
       {/* One block per page (DECISIONS.md "Sites that grow each other"): the next set's page shows other games' pre-orders. */}
       <FamilyDeals kind={set.comingSoon ? "preorder" : "deal"} country={country} allMarkets className="" />
     </div>

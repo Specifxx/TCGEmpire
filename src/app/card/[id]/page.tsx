@@ -1,6 +1,5 @@
 import { metalKindOf } from "@/lib/metal-cards";
 import { InlineAds } from "@/components/InlineAds";
-import { inlinePicksUrl } from "@/lib/inline-picks-url";
 import { publicRead, routeRaw } from "@/lib/public-data/route";
 import { BanNotice } from "@/components/BanNotice";
 import type { Metadata } from "next";
@@ -1022,10 +1021,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </ol>
       </nav>
 
-      {/* The two big ad banners (owner, 2026-11-14): at the top, under the breadcrumbs. */}
-      {/* Speed (2026-11-16): the banners' data starts loading with the HTML, not after hydration. Nothing visible. */}
-      <link rel="preload" as="fetch" href={inlinePicksUrl(card.setCode)} crossOrigin="anonymous" />
-      <InlineAds setCode={card.setCode} pageType="card_detail" className="mb-4 lg:mb-6" />
 
       <div className="grid grid-cols-1 gap-4 lg:gap-6 lg:grid-cols-[160px_1fr] xl:grid-cols-[320px_1fr]">
         {/* Card visual. Capped much smaller on phones than desktop (was a flat
@@ -1744,6 +1739,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           Play online on Rift Atlas
         </a>
       </p>
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds setCode={card.setCode} pageType="card_detail" className="mt-8" />
     </div>
   );
 }

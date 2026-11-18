@@ -50,8 +50,6 @@ export default async function SealedProductPage({ params }: { params: { slug: st
           { name: g.name, href: `/sealed/${params.slug}` },
         ]}
       />
-      {/* The two big ad banners (owner, 2026-11-14): at the top, under the breadcrumbs. */}
-      <InlineAds setCode={g.setCode ?? ""} pageType="sealed_page" className="mb-5" />
       <header className="mb-5">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="chip bg-brand-500/15 font-semibold text-brand-300">{g.productType}</span>
@@ -82,6 +80,8 @@ export default async function SealedProductPage({ params }: { params: { slug: st
           </Link>
         )}
       </nav>
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds setCode={g.setCode ?? ""} pageType="sealed_page" className="mt-8" />
     </div>
   );
 }

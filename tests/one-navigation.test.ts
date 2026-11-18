@@ -98,13 +98,12 @@ test("nothing the rail linked was lost: the menu, the launcher and the footer al
   assert.match(read("src/components/CommandLauncher.tsx"), /NAV_GROUPS\.map/, "the ⌘K launcher searches the same index");
   // The footer's site map is the copy that is in every page's server HTML (the menu draws its links on first open).
   assert.match(read("src/components/FooterNav.tsx"), /FOOTER_GROUPS\.map/);
-  const inFooter = new Set(FOOTER_GROUPS.flatMap((g) => g.links.map((l) => l.href)));
-  for (const g of NAV_GROUPS) {
-    for (const l of g.links) {
-      if (l.hideInFooter) continue;
-      assert.ok(inFooter.has(l.href), `${l.href} (${g.title}) must be in the footer's site map`);
-    }
-  }
+  // Since 2026-11-19 (core-update quality pass) the footer is a short list (FOOTER_KEEP), not the whole index: every footer
+  // link is still one of the index's, and the menu and launcher keep the rest.
+  const everyLink = new Set(NAV_GROUPS.flatMap((g) => g.links.map((l) => l.href)));
+  const footerLinks = FOOTER_GROUPS.flatMap((g) => g.links);
+  assert.ok(footerLinks.length <= 32, `the footer's site map stays short, found ${footerLinks.length}`);
+  for (const l of footerLinks) assert.ok(everyLink.has(l.href) || l.external, `${l.href} in the footer is in the index`);
   // /creators is hideInFooter (the site map's column balance), and the rail and the hero badge were its links in
   // every page's HTML. The footer's always-visible row carries it now.
   assert.match(read("src/app/layout.tsx"), /<Link href="\/creators" className="tap-link text-slate-300 hover:text-brand-400">Creators<\/Link>/);

@@ -9,6 +9,10 @@ import { MarketSlots } from "@/components/MarketSlots";
  * from the sisters' own daily feeds on GitHub (lib/family.ts, cached six hours). One block per page;
  * nothing at all when no sister has anything real to show. Plain followed links: our own sites, no tag.
  */
+// Off (2026-11-19, core-update quality pass): a block of links to our other sites on many pages reads as a link
+// network. The one link to the family is the footer's /our-sites.
+export const CROSS_SITE_BLOCKS = false;
+
 export async function FamilyDeals({
   kind,
   country,
@@ -25,6 +29,7 @@ export async function FamilyDeals({
    */
   allMarkets?: boolean;
 }) {
+  if (!CROSS_SITE_BLOCKS) return null;
   if (!allMarkets) {
     const tiles = await getFamilyTiles(kind, country).catch(() => []);
     if (!tiles.length) return null;

@@ -1800,12 +1800,6 @@ html[data-ad-dock] .above-bottombar {
 .pricing-nudge-arrow {
   animation: pricing-nudge-bob 1.1s ease-in-out infinite;
 }
-/* The home pages' banner-position test (components/HomeAdSlot.tsx): the boot script sets data-rc-ab on <html>; exactly one slot shows. */
-html:not([data-rc-ab="low"]) [data-ab-slot="low"],
-html[data-rc-ab="low"] [data-ab-slot="top"] {
-  display: none;
-}
-
 /* The phone bottom nav (components/BottomNav.tsx; owner, 2026-11-18, ported from TCG Prices). Fixed to the foot of the screen with NO
    position arithmetic (DECISIONS.md "The mobile bottom tab bar is deleted", 2026-09-18, is why): it moves on transform only, is opaque
    (a blur on a fixed bar repaints every scroll frame on a phone) and sits above the native banner line like the buy bar. */

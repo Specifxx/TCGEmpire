@@ -399,7 +399,18 @@ const miscLinks = byTitle["Miscellaneous"] ?? [];
 // conventionally goes looking for the "for partners" link anyway.
 const storeLinks = byTitle["For stores"] ?? [];
 
-export const FOOTER_GROUPS: NavGroup[] = [
+// The footer keeps the pages a buyer and a search engine most need (2026-11-19, core-update quality pass: about 63
+// links on every page down to these). The full index stays in the header menu and /sitemap.
+const FOOTER_KEEP = new Set([
+  "/browse", "/price-guide", "/sets", "/cards", "/sealed", "/release-dates", "/market", "/movers", "/stores/tracked",
+  "/decks", "/deck", "/watching", "/portfolio", "/alerts",
+  "/tools/deal-finder", "/tools/best-basket", "/tools/box-ev", "/tools",
+  "/games/pack-sim", "/riftle",
+  "/learn", "/guides", "/blog", "/about", "/methodology", "/editorial-policy", "/how-we-pick-stores", "/contact",
+]);
+const keep = (l: NavGroupLink) => FOOTER_KEEP.has(l.href) || l.href === CARD_SHOP_FINDER.url;
+
+const FOOTER_ALL: NavGroup[] = [
   {
     title: "Shop",
     links: [...(byTitle["Prices"] ?? []), ...miscLinks, ...storeLinks],
@@ -428,3 +439,5 @@ export const FOOTER_GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+export const FOOTER_GROUPS: NavGroup[] = FOOTER_ALL.map((g) => ({ ...g, links: g.links.filter(keep) }));

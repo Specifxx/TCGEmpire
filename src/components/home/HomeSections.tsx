@@ -1,7 +1,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Reveal } from "@/components/Reveal";
-import { HomeAdSlot } from "@/components/HomeAdSlot";
+import { InlineAds } from "@/components/InlineAds";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { SETS, hasSetGallery, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
@@ -123,9 +123,6 @@ export function HomeSections({
 
   return (
     <>
-      {/* The two big ad banners (owner, 2026-11-14), eBay and TCGplayer apart: the first thing under the hero, the newest set's chase
-          cards. Every home renders them here. */}
-      {showEbayPicks && <HomeAdSlot arm="top" />}
 
       {/* Recently viewed WAS the first thing here (2026-09-19 to 2026-09-28).
           Removed from the homepage on the owner's instruction ("get rid of
@@ -199,8 +196,9 @@ export function HomeSections({
         </Reveal>
       )}
 
-      {/* The same banner pair, for the half of visitors in the "low" arm of the position test (HomeAdSlot): CSS shows exactly one slot. */}
-      {showEbayPicks && <HomeAdSlot arm="low" />}
+      {/* The two ad banners, below the chase cards and Today's Top Deals for every visitor (owner, 2026-11-19: ads that can hurt
+          indexing out, the rest placed lower). The top-vs-low position test ended here; "low" stays in the tags so clicks compare. */}
+      {showEbayPicks && <InlineAds pageType="homepage" arm="low" />}
 
       {/* Real, consented, approved reviews — renders NOTHING when there are
           none (see ReviewsSection); no placeholder or seeded example. Moved up
