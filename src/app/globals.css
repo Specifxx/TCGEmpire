@@ -1795,6 +1795,12 @@ html[data-ad-dock] .above-bottombar {
 .pricing-nudge-arrow {
   animation: pricing-nudge-bob 1.1s ease-in-out infinite;
 }
+/* The home pages' banner-position test (components/HomeAdSlot.tsx): the boot script sets data-rc-ab on <html>; exactly one slot shows. */
+html:not([data-rc-ab="low"]) [data-ab-slot="low"],
+html[data-rc-ab="low"] [data-ab-slot="top"] {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .plan-glow,
   .pricing-nudge,

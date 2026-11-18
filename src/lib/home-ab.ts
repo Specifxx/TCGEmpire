@@ -1,0 +1,3 @@
+// The boot script of the home pages' banner-position test (components/HomeAdSlot.tsx explains it). A plain module, not the client
+// component's file: the layout is a server component and a string exported from a "use client" file reaches it as a reference.
+export const HOME_AB_BOOT_SCRIPT = `(function(){var h=document.documentElement;try{if(!/^\\/(au|uk|ca|sg|eu)?\\/?$/.test(location.pathname))return;var k="rc_ab_home",a=localStorage.getItem(k);if(a!=="top"&&a!=="low"){a=Math.random()<.5?"top":"low";localStorage.setItem(k,a)}h.setAttribute("data-rc-ab",a)}catch(e){h.setAttribute("data-rc-ab","top")}})();`;
