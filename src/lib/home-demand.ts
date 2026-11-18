@@ -4,4 +4,4 @@
 import raw from "../../data/demand.json";
 import type { DemandFile } from "./home-rank";
 
-export const HOME_DEMAND = raw as DemandFile;
+export const HOME_DEMAND = raw as unknown as DemandFile; // via unknown: JSON arrays read as number[], never the [28d, 7d] tuple
