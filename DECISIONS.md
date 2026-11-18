@@ -24342,6 +24342,15 @@ showing the restock sentinel (`RESTOCK_TARGET_CENTS`) as a price. Why: Rift acco
 back at only 23%, so holding the perk back was costing returns and not earning upgrades. The sites' forms open it to visitors
 in their own PRs. Read at the retention read of 2 Dec: restock rows created without a member token, and `restock` sends.
 
+## Android app: closed test recruitment (2026-11-18)
+
+The Android app (`mobile/`, `com.riftcompare.app`) sat in Play Console's closed test for two months with 1 tester opted
+in. A new personal developer account may apply for production only after 12 testers stay opted in for 14 days in a row,
+and Play never emails the people on a tester email list, so the 347 addresses on "Riftcompare users" never got the link.
+Testers now come from an open Google Group (`riftcompare-android-testers`) plus the existing list, recruited by one email
+to the list (owner's yes, 2026-11-18) and `/android`, a noindex sign-up page linked once from the footer. The build itself
+needs no update: it targets SDK 36 and loads the live site. Take `/android` and its footer link down once the app is public.
+
 ## 2026-11-18: The dock A/B: the phone ad dock stays up above the bottom nav for half of the visitors
 
 Owner, 2026-11-18: "right above the nav bar, we should have those ads show up … very, very visible for mobile phone users." Since

@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-11-16T17:30:23.845Z",
+  "generatedAt": "2026-11-18T11:45:45.922Z",
   "sites": [
     {
       "host": "bandaicompare.com",
       "indexed": "4",
-      "crawled": "34",
+      "crawled": "107",
       "errors": "8",
-      "impr": "11",
+      "impr": "18",
       "clicks": "0",
       "sitemap": {
         "url": "https://bandaicompare.com/sitemap.xml",
         "lastCrawled": "2026-11-10",
         "status": "Failed"
       },
-      "action": "needs submit (Bing status \"Failed\")"
+      "action": "SUBMITTED (Bing status \"Failed\")"
     },
     {
       "host": "camcompare.vercel.app",
@@ -31,38 +31,52 @@
     },
     {
       "host": "cyberpunkcompare.com",
-      "indexed": "35",
-      "crawled": "1032",
+      "indexed": "53",
+      "crawled": "1294",
       "errors": "90",
-      "impr": "4591",
-      "clicks": "193",
+      "impr": "5117",
+      "clicks": "217",
       "sitemap": {
         "url": "https://cyberpunkcompare.com/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-08",
         "status": "Success"
       },
-      "action": "read 2026-11-07"
+      "action": "read 2026-11-08"
     },
     {
       "host": "dexcompare.app",
-      "indexed": "4004",
-      "crawled": "16724",
-      "errors": "15913",
-      "impr": "4333",
-      "clicks": "166",
+      "indexed": "3937",
+      "crawled": "18149",
+      "errors": "15968",
+      "impr": "4621",
+      "clicks": "182",
       "sitemap": {
         "url": "https://dexcompare.app/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-08",
+        "status": "Success"
+      },
+      "action": "skipped by rule"
+    },
+    {
+      "host": "dexcompare.io",
+      "indexed": "0",
+      "crawled": "0",
+      "errors": "0",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://dexcompare.io/sitemap.xml",
+        "lastCrawled": "2026-11-17",
         "status": "Success"
       },
       "action": "skipped by rule"
     },
     {
       "host": "figurecompare.com",
-      "indexed": "10",
-      "crawled": "175",
-      "errors": "6",
-      "impr": "37",
+      "indexed": "35",
+      "crawled": "235",
+      "errors": "14",
+      "impr": "41",
       "clicks": "0",
       "sitemap": {
         "url": "https://figurecompare.com/sitemap.xml",
@@ -73,31 +87,31 @@
     },
     {
       "host": "gundamcompare.com",
-      "indexed": "167",
-      "crawled": "962",
+      "indexed": "297",
+      "crawled": "1127",
       "errors": "49",
-      "impr": "245",
+      "impr": "267",
       "clicks": "4",
       "sitemap": {
         "url": "https://gundamcompare.com/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-09",
         "status": "Success"
       },
-      "action": "read 2026-11-07"
+      "action": "read 2026-11-09"
     },
     {
       "host": "kaeyoung.com",
-      "indexed": "2",
-      "crawled": "122",
-      "errors": "19",
-      "impr": "4",
+      "indexed": "25",
+      "crawled": "232",
+      "errors": "39",
+      "impr": "7",
       "clicks": "0",
       "sitemap": {
         "url": "https://kaeyoung.com/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-09",
         "status": "Success"
       },
-      "action": "read 2026-11-07"
+      "action": "read 2026-11-09"
     },
     {
       "host": "learnnarutomythos.app",
@@ -111,26 +125,26 @@
         "lastCrawled": "2026-11-07",
         "status": "Failed"
       },
-      "action": "needs submit (Bing status \"Failed\")"
+      "action": "SUBMITTED (Bing status \"Failed\")"
     },
     {
       "host": "lorcanacompare.com",
-      "indexed": "212",
-      "crawled": "1878",
-      "errors": "106",
-      "impr": "487",
-      "clicks": "12",
+      "indexed": "315",
+      "crawled": "2143",
+      "errors": "113",
+      "impr": "497",
+      "clicks": "17",
       "sitemap": {
         "url": "https://lorcanacompare.com/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-08",
         "status": "Success"
       },
-      "action": "read 2026-11-07"
+      "action": "read 2026-11-08"
     },
     {
       "host": "motorcompare.app",
       "indexed": "2",
-      "crawled": "0",
+      "crawled": "8",
       "errors": "0",
       "impr": "0",
       "clicks": "0",
@@ -143,38 +157,38 @@
     },
     {
       "host": "mtgcompare.app",
-      "indexed": "1514",
-      "crawled": "11644",
-      "errors": "1608",
-      "impr": "3192",
-      "clicks": "73",
+      "indexed": "1663",
+      "crawled": "12672",
+      "errors": "1637",
+      "impr": "3184",
+      "clicks": "71",
       "sitemap": {
         "url": "https://mtgcompare.app/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-09",
         "status": "Failed"
       },
-      "action": "needs submit (Bing status \"Failed\")"
+      "action": "SUBMITTED (Bing status \"Failed\")"
     },
     {
       "host": "opcompare.app",
-      "indexed": "1633",
-      "crawled": "3563",
+      "indexed": "1820",
+      "crawled": "3934",
       "errors": "111",
-      "impr": "1760",
-      "clicks": "114",
+      "impr": "2006",
+      "clicks": "129",
       "sitemap": {
         "url": "https://opcompare.app/sitemap.xml",
-        "lastCrawled": "2026-11-07",
-        "status": "Failed"
+        "lastCrawled": "2026-11-09",
+        "status": "Success"
       },
-      "action": "needs submit (Bing status \"Failed\")"
+      "action": "read 2026-11-09"
     },
     {
       "host": "riftboundstocks.com",
-      "indexed": "1291",
-      "crawled": "8601",
-      "errors": "182",
-      "impr": "1157",
+      "indexed": "1251",
+      "crawled": "8773",
+      "errors": "184",
+      "impr": "1134",
       "clicks": "42",
       "sitemap": {
         "url": "https://riftboundstocks.com/sitemap.xml",
@@ -185,24 +199,24 @@
     },
     {
       "host": "riftcompare.com",
-      "indexed": "3028",
-      "crawled": "139654",
-      "errors": "8912",
-      "impr": "39084",
-      "clicks": "1219",
+      "indexed": "3053",
+      "crawled": "142451",
+      "errors": "8966",
+      "impr": "37542",
+      "clicks": "1161",
       "sitemap": {
         "url": "https://riftcompare.com/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-10",
         "status": "Success"
       },
-      "action": "read 2026-11-07"
+      "action": "read 2026-11-10"
     },
     {
       "host": "scentcompare.app",
-      "indexed": "3",
-      "crawled": "20",
+      "indexed": "5",
+      "crawled": "42",
       "errors": "9",
-      "impr": "3",
+      "impr": "8",
       "clicks": "0",
       "sitemap": {
         "url": "https://scentcompare.app/sitemap.xml",
@@ -213,10 +227,10 @@
     },
     {
       "host": "sportscardcompare.com",
-      "indexed": "4",
-      "crawled": "99",
-      "errors": "4",
-      "impr": "2",
+      "indexed": "6",
+      "crawled": "221",
+      "errors": "8",
+      "impr": "5",
       "clicks": "0",
       "sitemap": {
         "url": "https://sportscardcompare.com/sitemap.xml",
@@ -228,7 +242,7 @@
     {
       "host": "tcgprices.app",
       "indexed": "0",
-      "crawled": "0",
+      "crawled": "5",
       "errors": "0",
       "impr": "0",
       "clicks": "0",
@@ -240,43 +254,57 @@
       "action": "read 2026-11-14"
     },
     {
+      "host": "tcgsinglesdb.com",
+      "indexed": "0",
+      "crawled": "0",
+      "errors": "0",
+      "impr": "0",
+      "clicks": "0",
+      "sitemap": {
+        "url": "https://tcgsinglesdb.com/sitemap.xml",
+        "lastCrawled": "2026-11-18",
+        "status": "Success"
+      },
+      "action": "read 2026-11-18"
+    },
+    {
       "host": "wargamecompare.com",
-      "indexed": "53",
-      "crawled": "1185",
-      "errors": "405",
-      "impr": "52",
+      "indexed": "62",
+      "crawled": "1283",
+      "errors": "407",
+      "impr": "61",
       "clicks": "2",
       "sitemap": {
         "url": "https://wargamecompare.com/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-09",
         "status": "Success"
       },
-      "action": "read 2026-11-07"
+      "action": "read 2026-11-09"
     },
     {
       "host": "camcompare.app",
-      "indexed": "615",
-      "crawled": "3419",
-      "errors": "277",
-      "impr": "532",
-      "clicks": "3",
+      "indexed": "726",
+      "crawled": "3857",
+      "errors": "300",
+      "impr": "601",
+      "clicks": "4",
       "sitemap": {
         "url": "https://www.camcompare.app/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-09",
         "status": "Success"
       },
-      "action": "read 2026-11-07"
+      "action": "read 2026-11-09"
     },
     {
       "host": "compareempire.com",
-      "indexed": "75",
-      "crawled": "1589",
-      "errors": "662",
-      "impr": "386",
-      "clicks": "5",
+      "indexed": "78",
+      "crawled": "1878",
+      "errors": "668",
+      "impr": "449",
+      "clicks": "7",
       "sitemap": {
         "url": "https://compareempire.com/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-09",
         "status": "Success"
       },
       "action": "skipped by rule"
@@ -293,17 +321,17 @@
     },
     {
       "host": "ygocompare.com",
-      "indexed": "20",
-      "crawled": "1236",
+      "indexed": "21",
+      "crawled": "1423",
       "errors": "72",
       "impr": "553",
       "clicks": "4",
       "sitemap": {
         "url": "https://ygocompare.com/sitemap.xml",
-        "lastCrawled": "2026-11-07",
+        "lastCrawled": "2026-11-09",
         "status": "Success"
       },
-      "action": "read 2026-11-07"
+      "action": "read 2026-11-09"
     }
   ]
 }
