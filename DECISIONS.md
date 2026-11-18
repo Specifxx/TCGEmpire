@@ -24248,6 +24248,7 @@ The share button, tagged links and share card already existed (2026-11-02, "Shar
 - **Guides were shared untagged.** `ArticleShare` (X, Reddit, Facebook, copy link) now shares `utm_source=share&utm_medium=guide`
   and sends `share { medium: "guide" }`, so a guide's shares and the visits they bring reach the growth report.
 - Set pages carry the share button (`medium: "set"`).
+
 ## 2026-11-18: Giveaway: one entry per account, the owner's own card, worldwide (owner)
 
 The owner asked whether a giveaway would bring people in. He offered a card he already has, a Miss Fortune, Captain Showcase
