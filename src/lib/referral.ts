@@ -8,7 +8,7 @@
 // must never block or fail signup.
 import { cookies } from "next/headers";
 import { prisma } from "./db";
-import { grantPremiumDays, REFERRAL_PREMIUM_DAYS } from "./premium";
+import { grantPremiumDays, REFERRAL_PREMIUM_DAYS, REFERRED_PREMIUM_DAYS } from "./premium";
 import { REFERRAL_COOKIE } from "./referral-cookie";
 import { rewardReferral } from "./coins-server";
 
@@ -29,10 +29,18 @@ export async function applyReferral(newUserId: string): Promise<void> {
     });
     if (!referrer || referrer.id === newUserId) return;
 
-    // Reward the referrer with +3 days of Premium per friend who joins (best-effort).
+    // Both sides get a week (owner, 2026-11-18): the referrer per friend who joins,
+    // and the friend's new account once (best-effort, extend-only).
     // Called exactly once per new signup (cookie is cleared above), so it's one grant
     // per referred user. No-op when REFERRAL_PREMIUM_DAYS=0.
     await grantPremiumDays(referrer.id, REFERRAL_PREMIUM_DAYS).catch(() => {});
+    await grantPremiumDays(newUserId, REFERRED_PREMIUM_DAYS).catch(() => {});
+    // One Counter row a month (referral:YYYY-MM), so the invite programme has a real
+    // sign-up count: one upsert per referred sign-up, nothing per visit.
+    const month = new Date().toISOString().slice(0, 7);
+    await prisma.counter
+      .upsert({ where: { key: `referral:${month}` }, create: { key: `referral:${month}`, value: 1 }, update: { value: { increment: 1 } } })
+      .catch(() => {});
     // And five coin pulls, if the referrer is a Premium member (RiftCompare
     // Coins, lib/coins-server.ts). Keyed by the new account, so once per friend.
     await rewardReferral(referrer.id, newUserId);
