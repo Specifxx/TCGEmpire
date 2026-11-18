@@ -7,6 +7,7 @@ import { cartArm, CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/l
 import { CartIcon } from "./cart/CartIcon";
 import { NavIcon } from "./NavIcon";
 import { useMe } from "@/lib/use-me";
+import { YCT_MOVED_KEY } from "@/lib/your-cards-today";
 import { bottomNavEnabled, bottomNavShows, isActivePath, nextDir, NAV_H, OPT_KEY, type BottomNavMode } from "@/lib/bottom-nav";
 
 // The phone bottom nav (owner, 2026-11-18, after Catchback's; ported from TCG Prices). READ DECISIONS.md "The mobile bottom tab bar is deleted" (2026-09-18)
@@ -59,6 +60,17 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
   const [count, setCount] = useState(0);
   const { tier } = useMe();
   const member = tier !== null;
+  // The Watching dot: a watched card moved since the member last opened /watching ("Your cards today" sets it; visiting clears it).
+  const [moved, setMoved] = useState(false);
+  useEffect(() => {
+    if (!member) return;
+    try {
+      if (pathname.startsWith("/watching")) localStorage.setItem(YCT_MOVED_KEY, "0");
+      setMoved(localStorage.getItem(YCT_MOVED_KEY) === "1");
+    } catch {
+      /* no storage, no dot */
+    }
+  }, [member, pathname]);
   // The cart A/B (lib/cart-list.ts cartArm): the "off" arm has no Cart tab unless its cart already holds lines.
   const [cartOn, setCartOn] = useState(false);
   useEffect(() => setCartOn(cartArm() === "on"), []);
@@ -252,7 +264,10 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
                   // The target starts loading on touch-down, a head start on the tap itself (one page, only when it is touched).
                   onPointerDown={() => router.prefetch(t.href!)}
                 >
-                  <span className="bn-ico">{t.icon}</span>
+                  <span className="bn-ico">
+                    {t.icon}
+                    {t.key === "watching" && moved && <span aria-hidden="true" className="bn-dot" />}
+                  </span>
                   <span className="bn-label">{t.label}</span>
                 </Link>
               ) : (
