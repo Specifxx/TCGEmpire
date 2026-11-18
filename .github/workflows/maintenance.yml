@@ -74,6 +74,7 @@ on:
           - grant-premium # restore/extend Premium on ONE account by email to an explicit end date, AND re-link its Stripe subscription (metadata.userId + User.stripeCustomerId) so renewals resume. Use after a restore has rolled back a paid period.
           - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
           - audit-users      # read-only user/Premium census (no PII printed)
+          - retention-census # read-only: accounts, return activity, watches, alerts, subscribers and sister members/alerts per site. Aggregate counts only.
           - apply-intro-to-trialists  # report unless apply=true: attaches the half-price intro to renewing, never-paid monthly trials that began before 2026-09-25 (owner-approved for the one 14-day trialist).
           - ensure-intro-coupons  # WRITES to Stripe (idempotent): creates the "first 3 months half price" coupon for each monthly price if missing, and prints what it will charge.
           - payment-failures-report # read-only: every Stripe charge in the last 30 days with WHO refused it (Radar block vs bank decline), Radar reason/rule/risk, CVC/postcode checks, card brand/funding/country, 3DS. Customers anonymised as #1, #2.
@@ -5907,6 +5908,10 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Retention census (read-only)
+        if: inputs.task == 'retention-census'
+        run: npx tsx scripts/retention-census.ts
 
       - name: Weekly premium funnel report (read-only)
         # The answer to "why did we have more premium users signing up before?"
