@@ -24323,3 +24323,10 @@ retention thread. Rollback: remove `<ReturnBeacon />` from the layout.
 
 Retention lever 2 ("Since your last visit", on the sister sites) is a 50/50 test under `since-arm`; `ARM_KEYS` in
 `lib/return-visit.ts` gains `since` so the file stays the same in every repo. Nothing changes on this site until it runs the lever.
+
+## /movers share image and share button (owner, 2026-11-18: "we need more shareable artefacts")
+
+`/movers` gets its own `opengraph-image.tsx`: this week's four biggest risers and three biggest drops from `getPriceMovers` (the
+page's own lists and basis), text only (the 2026-11-08 cost cap: no card art), ASCII signs, cached a day like the page; a plain
+card when the lists are empty or unreadable. The page's openGraph has no `images` key, so the sibling file is the preview. A share
+button under the h1 (medium `movers`, `utm_source=share&utm_medium=movers`).
