@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@vercel/analytics";
+import { shareUrl } from "@/lib/share-link";
 
 // Social share row for articles. Plain anchors to each network's share
 // endpoint — no third-party share SDKs, which are the usual source of both the
@@ -8,8 +10,17 @@ import { useState } from "react";
 //
 // The copy-link button is the one interactive part; it degrades to nothing on a
 // browser without the async clipboard API rather than showing a broken control.
-export function ArticleShare({ url, title }: { url: string; title: string }) {
+// 2026-11-18: every link it shares carries utm_source=share&utm_medium=guide
+// (lib/share-link.ts) and each tap sends share { medium: "guide" }, so guides
+// count in the growth report like the card page's button.
+export function ArticleShare({ url: clean, title }: { url: string; title: string }) {
   const [copied, setCopied] = useState(false);
+  const url = shareUrl(clean, "", "guide");
+  const count = () => {
+    try {
+      track("share", { medium: "guide" });
+    } catch {}
+  };
   const u = encodeURIComponent(url);
   const t = encodeURIComponent(title);
 
@@ -29,6 +40,7 @@ export function ArticleShare({ url, title }: { url: string; title: string }) {
           target="_blank"
           rel="noopener noreferrer nofollow"
           aria-label={l.label}
+          onClick={count}
           className="btn-ghost px-3 text-xs"
         >
           {l.short}
@@ -38,6 +50,7 @@ export function ArticleShare({ url, title }: { url: string; title: string }) {
         type="button"
         onClick={async () => {
           try {
+            count();
             await navigator.clipboard.writeText(url);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
