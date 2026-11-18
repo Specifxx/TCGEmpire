@@ -1835,6 +1835,120 @@ html [data-dock-stack] { transition: transform 0.2s ease-out, translate 0.22s cu
 html[data-bottomnav] [data-dock-stack] { translate: 0 -57px; z-index: 29; }
 @media (prefers-reduced-motion: reduce) { html [data-dock-stack] { transition: none; } }
 
+
+/* The ad-look A/B (lib/ad-look.ts, owner 2026-11-18: "more attractive … more decorated and more highlighted so people can actually
+   click on them"). Look "b" only; look "a" is everything above, unchanged. Each sponsored unit wears its brand's own colours (eBay's
+   four-colour stripe and blue button, TCGplayer's blue), a filled button with a slow shine, a lift on hover. Paint only: no size,
+   position, timing, label or content changes (CLS 0), and every motion stops under reduced motion. */
+html[data-adlook="b"] {
+  --al-ebay: #0064d2;
+  --al-ebay-stripe: linear-gradient(90deg, #e53238 0 25%, #0064d2 25% 50%, #f5af02 50% 75%, #86b817 75% 100%);
+  --al-tcg: #1f6fe5;
+  --al-tcg-stripe: linear-gradient(90deg, #0b2c6b, #1f6fe5 55%, #5fa0ff);
+}
+html[data-adlook="b"] aside[aria-label^="Sponsored"] {
+  position: relative;
+  border-color: color-mix(in srgb, var(--al-c, var(--al-ebay)) 50%, transparent);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--al-c, var(--al-ebay)) 16%, transparent), transparent 75%);
+  box-shadow: 0 10px 28px -14px color-mix(in srgb, var(--al-c, var(--al-ebay)) 55%, transparent);
+}
+html[data-adlook="b"] aside[aria-label^="Sponsored"][aria-label*="eBay"] { --al-c: var(--al-ebay); --al-s: var(--al-ebay-stripe); }
+html[data-adlook="b"] aside[aria-label^="Sponsored"][aria-label*="TCGplayer"] { --al-c: var(--al-tcg); --al-s: var(--al-tcg-stripe); }
+html[data-adlook="b"] aside[aria-label^="Sponsored"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--al-s, var(--al-ebay-stripe));
+  pointer-events: none;
+}
+/* The head's button: filled in the brand colour, white words, a soft glow and a shine that crosses it every few seconds. */
+html[data-adlook="b"] aside[aria-label^="Sponsored"] > div:first-child > a:is(.btn-ad, .rounded-full) {
+  position: relative;
+  overflow: hidden;
+  border-color: transparent;
+  border-radius: 9999px;
+  background: var(--al-c, var(--al-ebay));
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--al-c, var(--al-ebay)) 80%, transparent);
+}
+html[data-adlook="b"] aside[aria-label^="Sponsored"] > div:first-child > a:is(.btn-ad, .rounded-full):hover {
+  background: color-mix(in srgb, var(--al-c, var(--al-ebay)) 85%, #000);
+}
+html[data-adlook="b"] aside[aria-label^="Sponsored"] > div:first-child > a:is(.btn-ad, .rounded-full)::after,
+html[data-adlook="b"] [data-dock="shown"] .dock-cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: al-shine 5.5s ease-in-out 1.5s infinite;
+  pointer-events: none;
+}
+@keyframes al-shine {
+  0%, 70% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+/* The tiles: a lift and a brand ring on hover, the price in the brand colour. */
+html[data-adlook="b"] aside[aria-label^="Sponsored"] li > a {
+  border-radius: 10px;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+html[data-adlook="b"] aside[aria-label^="Sponsored"] li > a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--al-c, var(--al-ebay)) 45%, transparent), 0 8px 18px -10px rgb(0 0 0 / 0.35);
+}
+html[data-adlook="b"] aside[aria-label^="Sponsored"] li :is(.tabular, .num) {
+  color: color-mix(in srgb, var(--al-c, var(--al-ebay)) 65%, currentColor);
+}
+/* A head that links in words (no button): the words in the brand colour, bold. */
+html[data-adlook="b"] aside[aria-label^="Sponsored"] > div:first-child > a:not(.btn-ad, .rounded-full) {
+  color: color-mix(in srgb, var(--al-c, var(--al-ebay)) 75%, currentColor);
+  font-weight: 800;
+}
+/* The phone dock: the eBay stripe along its top edge and a filled button. */
+html[data-adlook="b"] [data-dock="shown"] {
+  border-top-color: transparent;
+  box-shadow: 0 -10px 26px -14px color-mix(in srgb, var(--al-ebay) 60%, transparent);
+}
+html[data-adlook="b"] [data-dock="shown"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--al-ebay-stripe);
+  pointer-events: none;
+}
+html[data-adlook="b"] [data-dock="shown"] .dock-cta {
+  position: relative;
+  overflow: hidden;
+  border-color: transparent;
+  background: var(--al-ebay);
+  color: #fff;
+  box-shadow: 0 4px 12px -5px color-mix(in srgb, var(--al-ebay) 80%, transparent);
+}
+/* The leave nudge: a brand stripe, a ring and a stronger shadow, so it reads as the offer it is. */
+html[data-adlook="b"] [data-leave-nudge] {
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--al-ebay) 35%, transparent);
+  box-shadow: 0 18px 40px -16px color-mix(in srgb, var(--al-ebay) 55%, transparent);
+}
+html[data-adlook="b"] [data-leave-nudge]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--al-ebay-stripe);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-adlook="b"] aside[aria-label^="Sponsored"] > div:first-child > a:is(.btn-ad, .rounded-full)::after,
+  html[data-adlook="b"] [data-dock="shown"] .dock-cta::after { animation: none; display: none; }
+  html[data-adlook="b"] aside[aria-label^="Sponsored"] li > a { transition: none; }
+  html[data-adlook="b"] aside[aria-label^="Sponsored"] li > a:hover { transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .plan-glow,
   .pricing-nudge,
