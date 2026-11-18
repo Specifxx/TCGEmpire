@@ -10,6 +10,7 @@ import { earnCoin } from "@/lib/coins-client";
 import { isCheckoutLink } from "@/lib/checkout-link";
 import { cartArmNow } from "@/lib/cart-list";
 import { dockArmNow } from "@/lib/dock-arm";
+import { adLookNow } from "@/lib/ad-look";
 
 // An outbound "buy" link. It fires a click beacon to /api/click, which adds one
 // to a per-day, per-network Counter row (2026-10-27, "Click counts by day" in
@@ -214,7 +215,7 @@ export function OutboundLink({
     // Straight-to-checkout test (lib/checkout-link.ts): did this click open the
     // store's checkout with the item in it, or its product page?
     const checkout = isCheckoutLink(href);
-    trackEvent("buy_click", { dock_arm: dockArmNow(), cart_arm: cartArmNow(),
+    trackEvent("buy_click", { dock_arm: dockArmNow(), ad_look: adLookNow(), cart_arm: cartArmNow(),
       link_type: checkout ? "checkout" : "product",
       retailer,
       country,

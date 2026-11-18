@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { applyAdLook } from "@/lib/ad-look";
 import { dockArm } from "@/lib/dock-arm";
 
 // The phone dock (owner, 2026-11-06: "how can we have those [side rail ads] on mobile … in the best way that doesn't interrupt user
@@ -109,6 +110,7 @@ export function DockTile({ img, alt, brand, title, price, cta, plate = false }: 
  * `buybar`: the site's phone buy bar (a page that has one never shows the dock).
  */
 export function AdDock({ label, sides, placement, minWidth, yieldTo = "[data-ad]", buybar = "[data-buybar]" }: { label: string; sides: DockSide[]; placement: string; minWidth: number; yieldTo?: string; buybar?: string }) {
+  useEffect(() => applyAdLook(), []);
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
   const [dismissed, setDismissed] = useState(false);
