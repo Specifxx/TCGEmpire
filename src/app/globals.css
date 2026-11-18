@@ -1801,10 +1801,35 @@ html[data-rc-ab="low"] [data-ab-slot="top"] {
   display: none;
 }
 
+/* The phone bottom nav (components/BottomNav.tsx; owner, 2026-11-18, ported from TCG Prices). Fixed to the foot of the screen with NO
+   position arithmetic (DECISIONS.md "The mobile bottom tab bar is deleted", 2026-09-18, is why): it moves on transform only, is opaque
+   (a blur on a fixed bar repaints every scroll frame on a phone) and sits above the native banner line like the buy bar. */
+.bn { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: rgb(var(--c-ink-950)); border-top: 1px solid rgb(var(--c-ink-700)); padding-bottom: env(safe-area-inset-bottom); contain: layout paint; will-change: transform; transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0s; transform: translateY(0); }
+.bn[data-bottomnav-bar="hidden"] { transform: translateY(100%); visibility: hidden; transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1), visibility 0s linear 0.22s; }
+.bn-row { display: flex; align-items: stretch; margin: 0 auto; max-width: 640px; padding: 0; list-style: none; }
+.bn-cell { display: flex; flex: 1 1 0; min-width: 0; }
+.bn-tab { position: relative; display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 3px; height: 56px; min-width: 0; font-size: 11px; font-weight: 600; line-height: 1; color: rgb(var(--c-slate-400)); background: transparent; border: 0; touch-action: manipulation; -webkit-tap-highlight-color: transparent; outline-offset: -3px; }
+.bn-ico { position: relative; display: inline-flex; transition: transform 0.12s ease-out; }
+.bn-tab:active { color: rgb(var(--c-slate-100)); background: rgb(var(--c-ink-850)); }
+.bn-tab:active .bn-ico { transform: scale(0.88); }
+.bn-tab[aria-current="page"] { color: rgb(var(--c-brand-400)); }
+.bn-tab[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 24%; right: 24%; height: 2px; border-radius: 0 0 2px 2px; background: rgb(var(--c-brand-400)); }
+.bn-tab[aria-current="page"] .bn-ico { transform: translateY(-1px); }
+.bn-badge { position: absolute; right: -10px; top: -6px; min-width: 16px; padding: 0 4px; border-radius: 999px; background: rgb(var(--c-brand-400)); color: rgb(var(--c-ink-950)); font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; }
+/* Room under the footer while the visitor has the bar, on top of the native banner's reservation (never in place of it). */
+html[data-bottomnav-on] body { padding-bottom: calc(var(--native-banner-h, 0px) + env(safe-area-inset-bottom, 0px) + 56px); }
+/* While it shows, the corner buttons (feedback, rating card, toasts) lift above it, as they do for the buy bar and the ad dock. */
+html[data-bottomnav] .above-bottombar { bottom: calc(var(--native-banner-h, 0px) + env(safe-area-inset-bottom, 0px) + 4.5rem); }
+
 @media (prefers-reduced-motion: reduce) {
   .plan-glow,
   .pricing-nudge,
   .pricing-nudge-arrow {
     animation: none;
+  }
+  .bn,
+  .bn[data-bottomnav-bar="hidden"],
+  .bn-ico {
+    transition: none;
   }
 }

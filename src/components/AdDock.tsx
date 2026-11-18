@@ -132,8 +132,9 @@ export function AdDock({ label, sides, placement, minWidth, yieldTo = "[data-ad]
           screen: window.innerHeight,
           blockers: blockers.size,
           buybar: !!document.querySelector(buybar),
-          // An ad-free visitor (Plus/Premium where a site has them) and a native app with its own banner: never.
-          modal: modal() || document.documentElement.matches("[data-adfree], .capacitor-native"),
+          // An ad-free visitor (Plus/Premium where a site has them) and a native app with its own banner: never. Nor while the
+          // phone bottom nav shows (BottomNav.tsx): the two take turns, the nav on scroll up, the dock on scroll down.
+          modal: modal() || document.documentElement.matches("[data-adfree], .capacitor-native, [data-bottomnav]"),
           typing,
           dismissed: false,
         }),

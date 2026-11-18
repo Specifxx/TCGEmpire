@@ -9,6 +9,10 @@ export const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? CONTACT_EMAIL;
 
 export const SITE_NAME = "RiftCompare";
 
+// The phone bottom nav (components/BottomNav.tsx; owner, 2026-11-18). "optin": only a visitor who opened a page with ?bn=1 has it
+// (?bn=0 clears it); "on": every phone visitor (?bn=0 still hides it for that visitor); "off": nobody, the rollback.
+export const BOTTOM_NAV: "off" | "optin" | "on" = "on";
+
 // Community Discord invite (permanent; opens in a new tab from the navbar icon).
 export const DISCORD_URL = "https://discord.gg/NypdmfAMTa";
 

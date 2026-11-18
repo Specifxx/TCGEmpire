@@ -58,6 +58,9 @@ test("exactly one component in the tree opens the mega menu", () => {
     "src/components/NavbarShell.tsx",
     "src/components/SideNav.tsx",
     "src/components/CommandLauncher.tsx",
+    // The phone bottom nav (2026-11-18, owner): its Menu tab PRESSES HeaderMenuButton, so it is a remote for the one opener, not a
+    // second one. It is listed so that an opener added to it fails here.
+    "src/components/BottomNav.tsx",
     "src/app/layout.tsx",
   ].filter((f) => existsSync(join(ROOT, f)));
   const openers = files.filter((f) => /setOpen\(true\)/.test(readCode(f)));
