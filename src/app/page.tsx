@@ -17,6 +17,9 @@ import { COUNTRIES } from "@/lib/country";
 import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage, webApplication } from "@/lib/jsonld";
 import { getSiteRating } from "@/lib/site-rating";
+import { rankItems, type RankFacts } from "@/lib/home-rank";
+import { HOME_DEMAND } from "@/lib/home-demand";
+import type { CardTileData } from "@/components/CardTile";
 
 // RESTORED (2026-08-17), overriding a same-day "one job" redesign that had
 // briefly replaced this body with ProofStrip + DealsRow: direct owner
@@ -259,6 +262,14 @@ const FAQS: { q: string; a: string }[] = [
   },
 ];
 
+/** What the home ranking reads of a card tile (the AU baseline the page renders on). */
+const cardFacts = (c: CardTileData & { storeCounts?: Partial<Record<Country, number>> }): RankFacts => ({
+  paths: [`/card/${c.slug}`, `/card/${c.id}`],
+  clickKey: c.slug ?? undefined,
+  priceCents: c.lowestPriceCents,
+  inStock: c.storeCounts?.[DEFAULT_COUNTRY] ?? 0,
+});
+
 export default async function HomePage() {
   // AU-baseline data on the cached render (deal sections are honestly labelled
   // "Australia"); CardTile re-prices to the visitor's market after hydration.
@@ -270,18 +281,18 @@ export default async function HomePage() {
   const chaseSet = featuredSet();
   const [
     { totalCards, statsByCountry, freshness, freshnessAt },
-    popularCards,
+    popularPool,
     topDealsArr,
     recentlyUpdated,
     moversArr,
-    chaseCards,
+    chasePool,
   ] = await Promise.all([
     // Per-market stat tiles + the "Prices updated Xh ago" freshness signal —
     // shared with the 4 region home pages (see lib/home-stats.ts) so they read
     // the exact same cached figures instead of a second, potentially-drifting copy.
     getHomeStats(),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
-    getPopularCards(12, country, undefined, FEATURE_FLOOR_CENTS[country].card),
+    getPopularCards(24, country, undefined, FEATURE_FLOOR_CENTS[country].card),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
@@ -310,6 +321,11 @@ export default async function HomePage() {
     // The featured set's chase printings, dearest first (16 rows).
     chaseSet ? getSetChaseTiles(chaseSet.code, 16, country) : Promise.resolve([]),
   ]);
+  // HOME RANKING (owner, 2026-11-18; lib/home-rank.ts, DECISIONS.md "Home pages rank items by demand"): the most-searched 24
+  // are ordered by what visitors did with each card (page views and buy clicks, data/demand.json) times what a click can earn
+  // (stores in stock, price), and the first 12 shown; the hero's six trending cards are the head of that list.
+  const popularCards = rankItems(popularPool, cardFacts, HOME_DEMAND).slice(0, 12);
+  const chaseCards = rankItems(chasePool, cardFacts, HOME_DEMAND);
   // One memoised aggregate; null (hidden) until 100 real ratings exist.
   const rating = await getSiteRating();
   const storeCount = statsByCountry[country].stores;

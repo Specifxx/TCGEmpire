@@ -263,6 +263,13 @@ jobs:
         if: ${{ !cancelled() }}
         run: bash scripts/publish-price-history.sh "refresh-prices.yml (${{ github.event_name }}, run ${{ github.run_id }})"
 
+      - name: Home page demand (the ranking's input)
+        # lib/home-rank.ts: product page views and buy clicks per card, last 28 and 7 days, from /api/demand/rc, committed to
+        # data/demand.json with no deploy marker (it rides the release below). Never fatal (DECISIONS.md, 2026-11-18).
+        if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 7 * * *') }}
+        continue-on-error: true
+        run: bash scripts/pull-demand.sh rc data/demand.json
+
       - name: Export and publish the public data snapshot
         id: export
         # data/public/ (src/lib/public-data/): every public table as files, so
