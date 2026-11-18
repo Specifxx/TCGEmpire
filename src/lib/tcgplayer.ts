@@ -522,9 +522,21 @@ export function tcgQuote(
 
 // Match products to cards and build RetailerPrice rows (no DB writes — caller
 // decides). Exported separately so a dry-run can inspect the match quality.
-export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: TcgProduct[]): Promise<TcgMatchResult> {
+/** The card fields the TCGplayer matcher reads. */
+export type TcgMatchCard = { id: string; setCode: string; collectorNumber: string; externalId: string | null; isPromo: boolean; tags: string | null };
+
+// `opts.cards` lets a read-only audit (scripts/coverage-audit.ts) run this exact
+// matcher over the public snapshot instead of the database; `opts.unmatched`
+// collects EVERY priced product no card took, not just the log's sample, and
+// `opts.matchedIds` every card id a product landed on.
+export async function buildTcgplayerRows(
+  mkt: TcgMarket = TCG_US,
+  products?: TcgProduct[],
+  opts: { cards?: TcgMatchCard[]; unmatched?: TcgProduct[]; matchedIds?: Set<string> } = {},
+): Promise<TcgMatchResult> {
   const items = products ?? (await fetchTcgplayerProducts());
-  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, collectorNumber: true, externalId: true, isPromo: true, tags: true } });
+  const cards =
+    opts.cards ?? (await prisma.card.findMany({ select: { id: true, setCode: true, collectorNumber: true, externalId: true, isPromo: true, tags: true } }));
   const byKey = new Map<string, string>();
   const byExternal = new Map<string, string>();
   // Set-less numbers (the "R04a"-style rune printings, "NN1", "WB25"…) keyed by the
@@ -605,11 +617,13 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     const market = p.marketPrice && p.marketPrice > 0 ? p.marketPrice : null;
     const { price, shippingCents, inStock } = tcgQuote(mkt, market, cheapestEnglishNm(p));
     if (!cardId) {
+      if (opts.unmatched && price && price > 0) opts.unmatched.push(p);
       if (price && price > 0 && unmatchedSamples.length < 25) {
         unmatchedSamples.push(`${p.productName} ${numStr ?? "?"} $${price}`);
       }
       continue;
     }
+    opts.matchedIds?.add(cardId);
     if (price == null || price <= 0) continue;
     const key = `${cardId}|${p.foilOnly ? "true" : "false"}`;
     const prev = best.get(key);

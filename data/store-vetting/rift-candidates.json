@@ -1,0 +1,104 @@
+{
+ "note": "Riftbound singles stores not yet on RiftCompare, found by TCG Singles DB store probe (data/stores/singles.json, 2026-11-18). Measured and vetted by scripts/store-candidates.ts before any goes into retailers.ts.",
+ "candidates": [
+  {
+   "key": "1stcapitalgaming",
+   "name": "1st Capital Gaming",
+   "base": "https://1stcapitalgaming.com",
+   "country": "US",
+   "collections": [
+    "york-riftbound-singles-for-online-kiosk"
+   ]
+  },
+  {
+   "key": "cardsnmo",
+   "name": "Cards N MO",
+   "base": "https://cardsnmo.com",
+   "country": "US",
+   "collections": [
+    "riftbound-singles"
+   ]
+  },
+  {
+   "key": "castlegameshoppe",
+   "name": "The Castle Games",
+   "base": "https://castlegameshoppe.com",
+   "country": "US",
+   "collections": [
+    "riftbound-single"
+   ]
+  },
+  {
+   "key": "columbuscardshop",
+   "name": "Columbus Card Shop",
+   "base": "https://columbuscardshop.com",
+   "country": "US",
+   "collections": [
+    "riftbound-league-of-legends-singles"
+   ]
+  },
+  {
+   "key": "five6gaming",
+   "name": "FIVE6 Gaming",
+   "base": "https://www.five6gaming.com",
+   "country": "US",
+   "collections": [
+    "in-stock-riftbound-singles"
+   ]
+  },
+  {
+   "key": "foxfablehaven",
+   "name": "Fox Fable Haven",
+   "base": "https://foxfablehaven.com",
+   "country": "US",
+   "collections": [
+    "riftbound-singles"
+   ]
+  },
+  {
+   "key": "gamespacefl",
+   "name": "Game Space LLC",
+   "base": "https://gamespacefl.com",
+   "country": "US",
+   "collections": [
+    "riftbound-league-of-legends-trading-card-game-singles"
+   ]
+  },
+  {
+   "key": "manathril",
+   "name": "Manathril Cards and Collectibles",
+   "base": "https://manathril.com",
+   "country": "US",
+   "collections": [
+    "riftbound-singles"
+   ]
+  },
+  {
+   "key": "nolatcg",
+   "name": "NOLA TCG Experience",
+   "base": "https://nolatcg.com",
+   "country": "US",
+   "collections": [
+    "riftbound-league-of-legends-tcg-all-singles"
+   ]
+  },
+  {
+   "key": "pcatoys",
+   "name": "PCA Designer Toys",
+   "base": "https://pcatoys.com",
+   "country": "US",
+   "collections": [
+    "riftbound-singles"
+   ]
+  },
+  {
+   "key": "totalescapegames",
+   "name": "Total Escape Games",
+   "base": "https://totalescapegames.com",
+   "country": "US",
+   "collections": [
+    "riftbound-singles"
+   ]
+  }
+ ]
+}
