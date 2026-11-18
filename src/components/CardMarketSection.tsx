@@ -16,6 +16,8 @@ import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
 import { normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { isPaidLink } from "@/lib/affiliate";
+import { bestTreatment } from "@/lib/best-price";
+import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
 import { playedDiscounts, playedDiscountText } from "@/lib/played-discount";
 import type { FetchRows } from "@/lib/fetchtcg";
 import { lastKnownLabel, lastKnownTitle, type LastKnownPrice } from "@/lib/last-known-price";
@@ -500,10 +502,12 @@ export function CardPriceComparison({
   // more says by how much.
   const renderRow = (p: ComputedRow, pinned: boolean) => {
     const i = prices.indexOf(p);
+    // Owner, 2026-11-18: the cheapest mark is loud only on a paid row; a plain store gets a small neutral tag and a note.
+    const best = bestTreatment(i === 0 && prices.length > 1, { ebay: p.retailer.startsWith("ebay"), source: p.retailer, paid: isPaidLink(p.buyHref) });
     return (
               <li
                 key={p.id}
-                className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4 ${rowOutline({ cheapest: i === 0 && prices.length > 1, ebay: pinned && p.retailer.startsWith("ebay") })}`}
+                className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4 ${rowOutline({ cheapest: best === "loud", ebay: pinned && p.retailer.startsWith("ebay") })}`}
               >
                 <div className="w-5 shrink-0 text-center text-sm font-bold text-slate-500 sm:w-6">{i + 1}</div>
                 <div className="min-w-0 flex-1">
@@ -515,12 +519,14 @@ export function CardPriceComparison({
                     {/* The cheapest row is the one visitors should click — a small
                         badge draws the eye there, the same way a highlighted price
                         naturally pulls clicks. */}
-                    {i === 0 && prices.length > 1 && (
+                    {best === "loud" && (
                       <span className="chip shrink-0 bg-buy/20 text-[10px] font-bold uppercase tracking-wide text-brand-300">
                         Cheapest
                       </span>
                     )}
+                    {best === "plain" && <BestPriceTag className="shrink-0" />}
                   </div>
+                  {best === "plain" && <BestPriceNote has={{ ebay: Boolean(pin.ebay || ebay), tcgplayer: Boolean(pin.tcgplayer || tcg) }} className="mt-0.5" />}
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                     {/* Foil is a per-row BADGE, never a filter: a foil listing
                         ranks in this one combined list on its price like any
@@ -580,7 +586,7 @@ export function CardPriceComparison({
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className={`num text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
+                  <div className={`num text-lg font-bold ${best === "loud" ? "text-accent" : "text-white"}`}>
                     {fmt(p.priceCents)}
                   </div>
                   {pinned && i > 0 && prices[0].priceCents > 0 && (
