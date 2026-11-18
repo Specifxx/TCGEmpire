@@ -6,6 +6,7 @@ import { escapeHtml } from "../email";
 import { money } from "./email";
 import { resolvePath } from "./feed";
 import { sisterSite, type SisterRegion } from "./sites";
+import { RESTOCK_TARGET_CENTS } from "./evaluate";
 
 export function page(title: string, body: string, status = 200): Response {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${escapeHtml(title)}</title>
@@ -30,7 +31,7 @@ export function alertLabel(a: ListedAlert): string {
   const site = sisterSite(a.site);
   const name = a.name ?? `Product ${a.productId}`;
   const link = site && a.path ? `<a href="${escapeHtml(new URL(resolvePath(a.path, a.region), site.url).toString())}">${escapeHtml(name)}</a>` : escapeHtml(name);
-  return `${link}<br><small>${escapeHtml(site?.name ?? a.site)} · ${escapeHtml(a.region)} · ${escapeHtml(money(a.targetCents, a.region as SisterRegion))} or less</small>`;
+  return `${link}<br><small>${escapeHtml(site?.name ?? a.site)} · ${escapeHtml(a.region)} · ${a.targetCents >= RESTOCK_TARGET_CENTS ? "back in stock" : `${escapeHtml(money(a.targetCents, a.region as SisterRegion))} or less`}</small>`;
 }
 
 export const badLink = () => page("Link not found", `<h1>That link has expired</h1><p>It may be from an alert you already stopped. You can set a new one on any of our sites.</p>`, 404);

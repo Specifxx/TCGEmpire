@@ -160,8 +160,8 @@ longer lands on its entry.
   30-a-day cap (DexCompare's mail, sent through its own Brevo account, counts on its own 250-a-day lane since 2026-11-12). Private tables `SisterAlert`, `SisterAlertAddress`. KaeYoung, OP Compare, CamCompare and Compare Empire are not in it.
   [2026-11-02](../DECISIONS.md#L21386)
 - **DexCompare Premium is a RiftCompare Premium account (2026-11-10):** `/sister-premium/dex` signs a premium-session token the
-  browser hands to Dex (fragment, 60 days); `/api/sister-premium/*` re-reads the account every call. Members get back-in-stock
-  watches (`RESTOCK_TARGET_CENTS`), 200 alerts and a watch list; free alerts stay free. Same Stripe, price and trial as Rift.
+  browser hands to Dex (fragment, 60 days); `/api/sister-premium/*` re-reads the account every call. Members get 200 alerts and
+  a watch list; back-in-stock watches (`RESTOCK_TARGET_CENTS`) are free for everyone since 2026-11-18 (owner; [entry](../DECISIONS.md#2026-11-18-back-in-stock-alerts-on-the-sister-sites-are-free-for-everyone-owner)). Same Stripe, price and trial as Rift.
   [2026-11-10](../DECISIONS.md#L23131)
 - **A weekly biggest-drops email for the sister sites (2026-11-08):** opt-in only (an unticked box on their alert form,
   a button on the manage page, or since 2026-11-12 the sites' own "weekly price drops" box, `kind: "weekly"`), double opt-in, one edition a week per site from its feed (8–60% drops, three or

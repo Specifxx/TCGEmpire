@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { signSisterSignIn, signInSite } from "../src/lib/sister-sign-in";
 import { maskEmail, SISTER_PREMIUM_SITES, premiumSite, premiumSiteForOrigin, premiumCors, signPremiumSession, verifyPremiumSession } from "../src/lib/sister-premium";
 import { evaluateAlert, isRestockTarget, RESTOCK_TARGET_CENTS } from "../src/lib/sister-alerts/evaluate";
-import { buildAlertEmail } from "../src/lib/sister-alerts/email";
+import { buildAlertEmail, buildConfirmEmail } from "../src/lib/sister-alerts/email";
 
 // DexCompare Premium is a RiftCompare Premium account (2026-11-10).
 const read = (f: string) => readFileSync(join(__dirname, "..", f), "utf8");
@@ -101,4 +101,13 @@ test("a Google credential that is not a Google-signed token is refused", async (
   const { verifyGoogleCredential } = await import("../src/lib/sister-premium");
   assert.equal(await verifyGoogleCredential("x".repeat(200), "abc.apps.googleusercontent.com"), null);
   assert.equal(await verifyGoogleCredential(42, "abc"), null);
+});
+
+test("back in stock is free for everyone (owner, 2026-11-18): no Premium gate on kind restock", () => {
+  const s = read("src/app/api/sister-alerts/route.ts");
+  assert.doesNotMatch(s, /Back-in-stock alerts are for Premium/);
+  assert.match(s, /if \(kind === "restock"\) targetCents = RESTOCK_TARGET_CENTS;/);
+  const m = buildConfirmEmail("dex", "tok", RESTOCK_TARGET_CENTS, "US");
+  assert.match(m.text, /back in stock/);
+  assert.doesNotMatch(m.text, /or less/);
 });

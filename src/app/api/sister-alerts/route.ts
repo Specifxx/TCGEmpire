@@ -41,7 +41,7 @@ const schema = z.object({
   targetCents: z.number().int().min(1).max(100_000_000).optional(),
   weekly: z.boolean().optional(),
   // DexCompare Premium (lib/sister-premium.ts): a member's token names the address (and its form
-  // email is ignored), lifts the 25-alert cap and unlocks kind "restock" (back in stock).
+  // email is ignored) and lifts the 25-alert cap. kind "restock" (back in stock) is open to everyone (2026-11-18).
   token: z.string().max(4096).optional(),
   kind: z.enum(["price", "restock", "weekly"]).optional(),
 });
@@ -76,10 +76,9 @@ export async function POST(req: Request) {
     email = proven;
     memberVerified = status.verified;
     if (status.premium) maxAlerts = MEMBER_MAX_ALERTS;
-    else if (kind === "restock") return NextResponse.json({ error: "Back-in-stock alerts are for Premium members.", premium: false }, { status: 403, headers });
-  } else if (kind === "restock") {
-    return NextResponse.json({ error: "Back-in-stock alerts are for Premium members.", premium: false }, { status: 403, headers });
   }
+  // Back in stock is free for everyone since 2026-11-18 (owner, retention programme): a visitor without an account gives an
+  // address and rides the same double opt-in as a price alert; a member's token still names the address.
   if (kind === "restock") targetCents = RESTOCK_TARGET_CENTS;
   if (kind === "weekly") {
     if (!email) return NextResponse.json({ error: "Please check the email address." }, { status: 400, headers });

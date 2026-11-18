@@ -24330,3 +24330,14 @@ Retention lever 2 ("Since your last visit", on the sister sites) is a 50/50 test
 page's own lists and basis), text only (the 2026-11-08 cost cap: no card art), ASCII signs, cached a day like the page; a plain
 card when the lists are empty or unreadable. The page's openGraph has no `images` key, so the sibling file is the preview. A share
 button under the h1 (medium `movers`, `utm_source=share&utm_medium=movers`).
+
+## 2026-11-18: back-in-stock alerts on the sister sites are free for everyone (owner)
+
+The owner chose "Free for everyone" on the retention thread's decision card. Until now `/api/sister-alerts` answered kind
+`restock` with 403 unless a Premium member's token came with it. Now any visitor's address can ask for one, on the same double
+opt-in as a price alert (one confirmation email, nothing until the click, the 25-alert cap, the shared mail cap); a member's
+token still names the address and lifts the cap. The confirmation email and the manage page say "back in stock" rather than
+showing the restock sentinel (`RESTOCK_TARGET_CENTS`) as a price. Why: Rift accounts with an alert came back after week one at
+56% against 25% without one (retention census, 18 Nov), sealed product sells out all the time, and accounts given Premium came
+back at only 23%, so holding the perk back was costing returns and not earning upgrades. The sites' forms open it to visitors
+in their own PRs. Read at the retention read of 2 Dec: restock rows created without a member token, and `restock` sends.
