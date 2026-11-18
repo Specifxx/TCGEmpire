@@ -10,7 +10,9 @@ import { StoreCodeChip } from "./StoreCodeChip";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
-import { affiliateUrl, ebaySearchUrl, riftboundEbayQuery } from "@/lib/affiliate";
+import { affiliateUrl, ebaySearchUrl, isPaidLink, riftboundEbayQuery } from "@/lib/affiliate";
+import { bestTreatment } from "@/lib/best-price";
+import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
 import { formatMoney } from "@/lib/format";
 import { sealedImageAlt } from "@/lib/image-alt";
 import { Dialog } from "./ui/Dialog";
@@ -267,8 +269,11 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
           const isOpen = state === "open";
           const isBest = l === best;
           const pinned = lead.includes(l);
+          // Owner, 2026-11-18: loud only on a paid cheapest row; a plain store gets a neutral tag and a note.
+          const bt = bestTreatment(isBest, { ebay: l.retailer.startsWith("ebay"), source: l.retailer, paid: isPaidLink(l.url) });
+          const noteHas = { ebay: true, tcgplayer: Boolean(pin.tcgplayer) };
           return [
-            <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5  ${(() => { const o = rowOutline({ cheapest: isBest && listings.length > 1, ebay: pinned && l === pin.ebay }); return o ? `-mx-2 px-2 ${o}` : ""; })()}`}>
+            <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5  ${(() => { const o = rowOutline({ cheapest: bt === "loud" && listings.length > 1, ebay: pinned && l === pin.ebay }); return o ? `-mx-2 px-2 ${o}` : ""; })()}`}>
               <div className="min-w-0 flex-1">
                 <div className={pinned ? "flex min-w-0 items-center gap-1.5" : "flex min-w-0 flex-wrap items-center gap-x-1.5"}>
                   {/* A store's name wraps instead of being cut ("Miniature…", "Sweets a…" on a phone, 2026-11-14), and the
@@ -278,9 +283,11 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
                   <span className={pinned ? "truncate text-sm font-semibold text-white" : `min-w-0 max-w-full text-sm font-semibold [overflow-wrap:anywhere] ${isOpen ? "text-white" : "text-slate-400"}`}>{l.retailerName}</span>
                   <StoreVote url={l.url} name={l.retailerName} className="shrink-0 text-slate-400" />
                 </div>
+                {bt === "plain" && <BestPriceNote has={noteHas} />}
                 <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
                   <span className={isOpen ? "text-up" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>
-                  {isBest && <span className="font-semibold text-gold sm:hidden">Best price</span>}
+                  {isBest && bt !== "plain" && <span className="font-semibold text-gold sm:hidden">Best price</span>}
+                  {bt === "plain" && <BestPriceTag className="sm:hidden" />}
                   <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
                   {isOpen && <StoreCodeChip href={l.url} className="text-[10px]" />}
                   {isOpen && (
@@ -299,8 +306,9 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
                 </div>
               </div>
               {/* On a phone the chip squeezed the store's name to three letters: the label moves under it there. */}
-              {isBest && <span className="chip hidden shrink-0 bg-gold/20 text-gold sm:inline-flex">Best price</span>}
-              <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "!text-slate-500 line-through" : ""}`}>
+              {isBest && bt !== "plain" && <span className="chip hidden shrink-0 bg-gold/20 text-gold sm:inline-flex">Best price</span>}
+              {bt === "plain" && <BestPriceTag className="hidden shrink-0 sm:inline-flex" />}
+              <div className={`num text-right text-sm font-bold ${isBest && bt !== "plain" ? "text-accent" : "text-white"} ${!isOpen ? "!text-slate-500 line-through" : ""}`}>
                 {fmt(l.priceCents)}
               </div>
               {isOpen && (

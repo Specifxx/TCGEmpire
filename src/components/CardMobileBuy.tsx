@@ -8,6 +8,8 @@ import { buyButtonClass } from "./CardMarketSection";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { paidAlternative, paidAlternativeName } from "@/lib/paid-alternative";
 import { PaidLinkTag } from "./AffiliateDisclosure";
+import { isPaidLink } from "@/lib/affiliate";
+import { bestTreatment } from "@/lib/best-price";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The card page's phone buy path (2026-09-26). At 390px the price comparison
@@ -39,12 +41,14 @@ export function CardTopBuy({ rows, displayName }: { rows: MarketRow[]; displayNa
   const { country, fmt, best, prices } = useCheapest(rows);
   const alt = useMemo(() => paidAlternative(prices), [prices]);
   if (!best) return null;
+  // Owner, 2026-11-18: a plain store's cheapest price is drawn neutrally (the paid alternative line below is its hint).
+  const plain = bestTreatment(true, { ebay: best.retailer.startsWith("ebay"), source: best.retailer, paid: isPaidLink(best.buyHref) }) === "plain";
   return (
-    <div {...{ [TOP_BUY_ATTR]: "" }} className="mt-3 rounded-lg border border-brand-500/30 bg-brand-500/[0.06] p-3 lg:hidden">
+    <div {...{ [TOP_BUY_ATTR]: "" }} data-best={plain ? "plain" : "loud"} className={`mt-3 rounded-lg border p-3 lg:hidden ${plain ? "border-ink-700 bg-ink-900/60" : "border-brand-500/30 bg-brand-500/[0.06]"}`}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Cheapest</div>
-          <div className="num text-lg font-bold text-accent">{fmt(best.priceCents)}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{plain ? "Best price" : "Cheapest"}</div>
+          <div className={`num text-lg font-bold ${plain ? "text-white" : "text-accent"}`}>{fmt(best.priceCents)}</div>
           <div className="truncate text-xs text-slate-400">
             at {best.retailerName}
             {best.ship == null ? " · + postage" : best.ship === 0 ? " · free postage" : ` · + ${fmt(best.ship)} postage`}

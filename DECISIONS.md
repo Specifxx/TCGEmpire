@@ -24363,3 +24363,16 @@ the footer, dialogs and the keyboard, ✕ for the visit, labelled Ad, rel sponso
 `dock_arm`. Verdict 2 Dec: buy clickers and paid buy clicks per arm. EPN's Network Agreement (Exhibit A §1.4, §2.5) puts any
 promotional method it does not expressly permit under prior written approval; the dock has run since 2026-11-06, this changes only
 when it shows. Not on Dex or MTG Compare (their phone A/B runs to 3 Dec).
+
+## 2026-11-18: "Best price" is loud only on a paid row
+
+Owner, 2026-11-18: when the cheapest row is a plain store we earn nothing from, stop drawing it as the thing to click. `lib/best-price.ts`
+(`bestTreatment`) decides: a cheapest row that is eBay, TCGplayer or a partner/affiliate link (`isPaidLink`) keeps the green edge, the green
+"Cheapest" chip and the primary button exactly as before; a non-affiliate cheapest row gets a small neutral "Best price" tag (no fill, no green),
+a plain white price (buttons unchanged), and one muted line under it, "Prices and stock change: also check eBay and TCGplayer", naming only the
+marketplace rows really on that list (no line when neither is there; never a claim that eBay is cheaper). Applied on the card page's price list, the card
+and sealed quick views (and the sealed page), the phone top buy block and the Pokémon board. Row order, sorting, labels, `rel`, tracking, the deal and price-drop
+badges, JSON-LD, feeds and alerts are untouched (display only). Pinned by `tests/best-price.test.ts`.
+
+**Why.** The loud green on a non-paying store pulled clicks away from our paid rows. **Measure:** paid clicks per 100 buy clicks (`buy_click` with
+`data-paid`) for two weeks before and after the release that carries this.
