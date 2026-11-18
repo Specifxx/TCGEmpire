@@ -3,13 +3,15 @@
 // The header's cart: an icon with the number of lines, on every screen size. A click (or adding a
 // row) opens the cart drawer on the same page (CartDrawer.tsx; src/lib/cart-list.ts).
 import { useCallback, useEffect, useState } from "react";
-import { CART_ADDED_EVENT, CART_CLOSE_EVENT, CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
+import { cartArm, CART_ADDED_EVENT, CART_CLOSE_EVENT, CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
 import { CartDrawer } from "./CartDrawer";
 import { CartIcon } from "./CartIcon";
 
 export function CartHeaderLink({ className = "", href = "/cart" }: { className?: string; href?: string }) {
   const [count, setCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [armOn, setArmOn] = useState(false);
+  useEffect(() => setArmOn(cartArm() === "on"), []);
   // Some headers render the button twice (desktop and phone): open and close travel as events, and one drawer draws.
   const close = useCallback(() => window.dispatchEvent(new CustomEvent(CART_CLOSE_EVENT)), []);
 
@@ -32,6 +34,8 @@ export function CartHeaderLink({ className = "", href = "/cart" }: { className?:
     };
   }, []);
 
+  // The cart A/B: the "off" arm sees the cart only once it holds lines (from before the test).
+  if (!armOn && count === 0 && !open) return null;
   return (
     <>
       {/* A real link to /cart for no-script and middle-click; a plain click opens the drawer instead. */}
