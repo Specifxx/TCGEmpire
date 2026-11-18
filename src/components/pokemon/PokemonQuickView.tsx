@@ -150,8 +150,8 @@ function QuickViewPanel({ tile, currency, onClose, onLeave }: { tile: PkTile; cu
                 <div className="text-sm font-semibold text-slate-400">No tracked listing in your market</div>
               )}
             </div>
-            <Link href={`/pokemon/sealed/${tile.slug}`} onClick={onLeave} className="mt-2 inline-block text-xs font-semibold text-brand-400 hover:underline">
-              Full price page, every market →
+            <Link href={`/pokemon/sealed/${tile.slug}`} onClick={onLeave} data-quickview-fullpage className="btn-primary mt-2 min-h-11 w-full text-sm">
+              See full page: price history and details →
             </Link>
           </div>
         </div>

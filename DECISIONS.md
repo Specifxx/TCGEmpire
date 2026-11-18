@@ -24269,6 +24269,15 @@ The share button, tagged links and share card already existed (2026-11-02, "Shar
   and sends `share { medium: "guide" }`, so a guide's shares and the visits they bring reach the growth report.
 - Set pages carry the share button (`medium: "set"`).
 
+## 2026-11-18: Amazon's button is amber, and the quick view's "See full page" is a real button (owner)
+
+Owner: the Amazon row's button must be visibly its own colour. `.btn-amazon` (`globals.css`): amber `#ffa41c` (hover `#fa8900`,
+1px `#e08a00` border) with dark ink `#111` in both themes, on both the priced row (`AmazonLiveSlot`, was green `btn-buy`) and
+the unpriced "Check on Amazon" row (`AmazonCheckRow`, was a text link). Rel, tracking, "Ad"/paid tags, row order and prices are
+unchanged; the TCGplayer button and its wording are untouched. The quick views' full-page link (card, sealed, Pokémon) is now a
+full-width `btn-primary` of at least 44px reading "See full page: price history and details", under the header (sealed) or the
+image (card) instead of a small text link at the bottom. `tests/amazon-button.test.ts`.
+
 ## 2026-11-18: Giveaway: one entry per account, the owner's own card, worldwide (owner)
 
 The owner asked whether a giveaway would bring people in. He offered a card he already has, a Miss Fortune, Captain Showcase
