@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSession } from "@/lib/auth";
 import { consumeSignInToken, setNameIfPlaceholder } from "@/lib/email-sign-in";
 import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
+import { applyReferral } from "@/lib/referral";
 import { rateLimit, tooManyRequests, clientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,9 @@ export async function POST(req: Request) {
     );
   }
   await setNameIfPlaceholder(result.userId, body?.name).catch(() => {});
+  // An invite (?ref= or a member's shared link, lib/referral.ts) counts for an emailed sign-up
+  // too, when the link is opened in the browser that carried it: both get a week (2026-11-18).
+  if (result.isNew) await applyReferral(result.userId).catch(() => {});
   await createSession(result.userId);
   const next = sanitizeNextPath(typeof body?.next === "string" ? body.next : null) ?? POST_SIGN_IN_FALLBACK;
   const dest = result.isNew ? `${next}${next.includes("?") ? "&" : "?"}welcome=email` : next;

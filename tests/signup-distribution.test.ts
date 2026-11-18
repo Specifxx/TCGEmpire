@@ -76,8 +76,10 @@ test("the referral program finally has a share surface, gated on the program bei
   const card = read("src/components/ReferralLinkCard.tsx");
   assert.match(card, /trackEvent\("referral_link_copied"\)/);
   // The link shape must match what ReferralCapture actually parses (?ref=<id>).
+  // ReferralCapture reads it through inviteCodeFrom (lib/share-link.ts), which also takes #r=.
   const capture = read("src/components/ReferralCapture.tsx");
-  assert.match(capture, /get\("ref"\)/);
+  assert.match(capture, /inviteCodeFrom\(/);
+  assert.match(read("src/lib/share-link.ts"), /get\("ref"\)/);
 });
 
 // ── /alerts page CTA ─────────────────────────────────────────────────────────

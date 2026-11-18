@@ -1820,6 +1820,9 @@ html[data-rc-ab="low"] [data-ab-slot="top"] {
 .bn-tab[aria-current="page"] { color: rgb(var(--c-brand-400)); }
 .bn-tab[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 24%; right: 24%; height: 2px; border-radius: 0 0 2px 2px; background: rgb(var(--c-brand-400)); }
 .bn-tab[aria-current="page"] .bn-ico { transform: translateY(-1px); }
+/* Members (BottomNav data-member, 2026-11-18): a thin gold line along the top of the bar, their Premium mark. No blur, no layout change. */
+.bn[data-member] { border-top-color: rgb(234 179 8 / 0.55); }
+.bn-dot { position: absolute; right: -3px; top: -2px; width: 8px; height: 8px; border-radius: 999px; background: rgb(234 179 8); }
 .bn-badge { position: absolute; right: -10px; top: -6px; min-width: 16px; padding: 0 4px; border-radius: 999px; background: rgb(var(--c-brand-400)); color: rgb(var(--c-ink-950)); font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; }
 /* Room under the footer while the visitor has the bar, on top of the native banner's reservation (never in place of it). */
 html[data-bottomnav-on] body { padding-bottom: calc(var(--native-banner-h, 0px) + env(safe-area-inset-bottom, 0px) + 56px); }

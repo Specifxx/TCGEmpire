@@ -98,3 +98,10 @@ test("the active tab: its own path and those under it, Home only on the home pag
   assert.ok(!isActivePath("/browser", "/browse"));
   assert.ok(isActivePath("/", "/") && !isActivePath("/sets", "/"));
 });
+
+test("members get Watching in place of Deals; Cart, Menu and every price surface are the same for them", () => {
+  const src = readFileSync(new URL("../src/components/BottomNav.tsx", import.meta.url), "utf8");
+  assert.ok(/const member = tier !== null;/.test(src), "any paid tier, from /api/me");
+  assert.ok(/member\s*\?\s*\{ key: "watching", label: "Watching", href: "\/watching"/.test(src));
+  assert.ok(/key: "cart"/.test(src) && /key: "menu"/.test(src), "the cart and menu tabs stay for members");
+});

@@ -24376,3 +24376,46 @@ badges, JSON-LD, feeds and alerts are untouched (display only). Pinned by `tests
 
 **Why.** The loud green on a non-paying store pulled clicks away from our paid rows. **Measure:** paid clicks per 100 buy clicks (`buy_click` with
 `data-paid`) for two weeks before and after the release that carries this.
+
+## 2026-11-18: Premium on a phone: members' bottom bar (first step)
+
+Owner, 18 Nov: "if you're a premium and you're on mobile phone, the look and feel should be a lot different". Today a member's phone
+only drops the ad dock and banners. First step (`components/BottomNav.tsx`): for any paid tier (`useMe().tier`), the bar's Deals tab
+becomes **Watching** (`/watching`, active on `/portfolio` and `/alerts` too) and the bar carries a thin gold top line (`.bn[data-member]`).
+Deals stays in the menu. Cart, Menu, price rows, pinned rows, Cheapest and Add to cart are the same for members: the bar changes how a
+member gets around, never what prices they see. Next steps in the plan: a "Your cards today" strip on the phone home and a dot on
+Watching when a watched card moved. 21 members is too few to split, so it is read before/after: members' visit days a week (the
+`return_visit` beacon), four weeks either side. Plan: project files strategy/premium-network-plan-2026-11-18.html.
+
+## 2026-11-18: "Your cards today": an account's watched cards first on the home page (a 50/50 test)
+
+Retention job C (owner's reassignment, 18 Nov). A signed-in account with watches sees its newest 8 watched cards right under the
+hero: today's price in its market, the change since its last look (a snapshot of the shown prices in localStorage `yct-seen`) and a
+30-day sparkline (`components/home/YourCardsToday.tsx`, `/api/alerts/today`, `lib/your-cards-today.ts`). Browser only: the home
+page's server HTML and cache are untouched, and a visitor without an account or watches gets nothing. The route is per user and
+uncached, one bounded read (40 watch rows, card fields only, no store-count subquery); the sparklines come from the committed price
+history files and drop methodology-break windows. A 50/50 arm (`yct-arm`): "off" sees nothing. `yct_eligible {arm}` fires once a
+day per eligible browser, so visit days per eligible account read on against off; `yct_shown`, `yct_click`. A member's phone bar
+shows a gold dot on Watching (`yct-moved`, "on" arm only) until they open /watching. Price rows, buy buttons and the quick view are
+untouched. Read about 2 Dec.
+## 2026-11-18: Invite a friend, you both get a week of Premium, and every member's share is an invite
+
+**Owner:** "I really want people to share stuff with their friends … some sort of loyalty system", then on the decision card,
+"Both get 7 days Premium", and "premium isn't a feature that earns us a lot of money … we need to just have it somewhere".
+
+**What.** The referral program (`lib/referral.ts`, `?ref=<User.id>`, since August) gave the inviter 3 days and lived only on
+`/profile`. Now:
+- **Both sides get 7 days** (`lib/premium-days.ts`, hard numbers, not env defaults): the inviter per friend, the friend's new
+  account once, extend-only through `grantPremiumDays`. An emailed sign-up (`/api/auth/email-link/consume`) now applies the
+  invite too, not only OAuth.
+- **Every signed-in member's Share is an invite.** `/api/me` returns `inviteCode` (the member's own id, the code the invite
+  link already showed); `ShareButton` adds it as `#r=<code>` (`withInvite`). After the `#`, so it never reaches the server: no
+  new CDN copy of any page and no database read per visit. `ReferralCapture` reads `?ref=` or `#r=` (`inviteCodeFrom`).
+- **Visible.** "Invite friends · you both get 7 days Premium" in the account menu (to `/profile#invite`), and after every
+  completed share a small card: a member is told the link carried their invite, a visitor that signing in first earns them
+  both a week (`/login?src=referral`). The share-for-a-deal card (reward arm) gains the same line; the A/B's tap counts are
+  unchanged because the card shows only after a share.
+- **Counted.** `share_visit` gains `invite` (1 when the link carried `#r=`); each credited sign-up bumps the Counter row
+  `referral:YYYY-MM` (one upsert per referred sign-up, nothing per visit). Read with the share A/B around 2 Dec.
+
+**Not points or levels.** The owner switched off Coins on 2026-10-29; the reward is Premium time only.

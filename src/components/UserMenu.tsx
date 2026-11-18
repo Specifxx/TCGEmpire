@@ -193,6 +193,8 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
               </PremiumNavLink>
             )}
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
+            {/* Invite a friend, both get a week (owner, 2026-11-18): the link and the reward, one tap from every page. */}
+            <MenuLink href="/profile#invite" onClick={() => setOpen(false)}>Invite friends · you both get 7 days Premium</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
             <MenuLink href="/watching" onClick={() => setOpen(false)}>My watchlist</MenuLink>
             {/* The P2P marketplace was removed entirely (2026-08), so the seller
