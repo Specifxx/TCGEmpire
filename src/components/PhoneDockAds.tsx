@@ -30,10 +30,10 @@ export interface MiniData {
 export type Tile = { key: string; href: string; image: string | null; name: string; price: string; cardId: string; cents: number };
 
 /** The dock's and the in-page block's tiles, each tagged with where it shows (dock_us / inline_us, tcg_dock / tcg_inline). Pure. */
-export function railTiles(data: MiniData, country: string, where: "inline" | "dock"): { ebay: Tile[]; tcg: Tile[] } {
+export function railTiles(data: MiniData, country: string, where: "inline" | "dock", arm = ""): { ebay: Tile[]; tcg: Tile[] } {
   const ebay: Tile[] = selectPicks(data.ebay, country, MAX_TILES).map((l) => ({
     key: l.cardId,
-    href: affiliateUrl(l.url, `${where}_${l.country.toLowerCase()}`, `/${where}-ads`),
+    href: affiliateUrl(l.url, `${where}${arm}_${l.country.toLowerCase()}`, `/${where}-ads`),
     image: l.imageUrl ? ebayImg(l.imageUrl, 225) : null,
     name: l.cardName,
     price: formatMoney(l.priceCents, l.currency),
@@ -42,7 +42,7 @@ export function railTiles(data: MiniData, country: string, where: "inline" | "do
   }));
   const tcg: Tile[] = data.tcg.slice(0, MAX_TILES).map((p) => ({
     key: p.cardId,
-    href: affiliateUrl(p.url, `tcg_${where}`, `/${where}-ads`),
+    href: affiliateUrl(p.url, `tcg_${where}${arm}`, `/${where}-ads`),
     image: p.imageUrl,
     name: p.name,
     price: formatMoney(p.priceCents, "USD"),

@@ -25,8 +25,8 @@ import { railTiles, TCG_SEARCH, type MiniData, type Tile } from "./PhoneDockAds"
 export const INLINE_MAX = 4;
 
 /** The banners' tiles: up to four of eBay's and up to four of TCGplayer's; a side with fewer than two is empty. Pure, for the tests. */
-export function inlineTiles(data: MiniData, country: string): { ebay: Tile[]; tcg: Tile[] } {
-  const all = railTiles(data, country, "inline");
+export function inlineTiles(data: MiniData, country: string, arm = ""): { ebay: Tile[]; tcg: Tile[] } {
+  const all = railTiles(data, country, "inline", arm);
   const ebayAll = all.ebay.filter((t) => t.image);
   const tcgAll = all.tcg.filter((t) => t.image);
   return { ebay: ebayAll.length >= 2 ? ebayAll.slice(0, INLINE_MAX) : [], tcg: tcgAll.length >= 2 ? tcgAll.slice(0, INLINE_MAX) : [] };
@@ -84,7 +84,8 @@ function Banner({ brand, headline, cta, ctaHref, ctaRetailer, tiles, retailer, n
   );
 }
 
-export function InlineAds({ setCode = "", pageType, className = "" }: { setCode?: string; pageType: string; className?: string }) {
+// `arm` ("top" | "low") is the home page's banner-position test (HomeAdSlot): it reaches EPN's customid and buy_click's pageType.
+export function InlineAds({ setCode = "", pageType, className = "", arm = "" }: { setCode?: string; pageType: string; className?: string; arm?: string }) {
   const { country } = useCountry();
   const adFree = usePremium();
   const [data, setData] = useState<MiniData | null | undefined>(undefined);
@@ -105,31 +106,32 @@ export function InlineAds({ setCode = "", pageType, className = "" }: { setCode?
       </div>
     );
   }
-  const { ebay, tcg } = inlineTiles(data, country);
+  const { ebay, tcg } = inlineTiles(data, country, arm);
+  const pt = arm ? `${pageType}-${arm}` : pageType;
   return (
     <div className={`grid gap-3 lg:grid-cols-2 ${className}`}>
       <Banner
         brand="eBay"
         headline="Riftbound cards on eBay · live listings"
         cta="Browse on eBay"
-        ctaHref={ebaySearchUrl(country, "Riftbound", "inline")}
+        ctaHref={ebaySearchUrl(country, "Riftbound", `inline${arm}`)}
         ctaRetailer="ebay_inline"
         tiles={ebay}
         retailer="ebay_inline"
         note="Affiliate links: RiftCompare may earn a commission, at no extra cost to you."
-        pageType={pageType}
+        pageType={pt}
         country={country}
       />
       <Banner
         brand="TCGplayer"
         headline="Riftbound cards on TCGplayer · market prices"
         cta="Browse on TCGplayer"
-        ctaHref={affiliateUrl(TCG_SEARCH, "tcg_inline", `/${pageType}`)}
+        ctaHref={affiliateUrl(TCG_SEARCH, `tcg_inline${arm}`, `/${pageType}`)}
         ctaRetailer="tcgplayer_inline"
         tiles={tcg}
         retailer="tcgplayer_inline"
         note={`Affiliate links: RiftCompare may earn a commission, at no extra cost to you.${country !== "US" ? " Prices in US$." : ""}`}
-        pageType={pageType}
+        pageType={pt}
         country={country}
       />
     </div>

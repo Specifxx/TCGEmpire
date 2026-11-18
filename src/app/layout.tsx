@@ -9,6 +9,7 @@ import "@/components/cart/cart-drawer.css";
 import { Navbar } from "@/components/Navbar";
 import { PhoneDockAds } from "@/components/PhoneDockAds";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
+import { HOME_AB_BOOT_SCRIPT } from "@/lib/home-ab";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT, MOBILE_NO_VIGNETTE_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
@@ -372,6 +373,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             light), so the page never flashes the wrong palette. Generated in
             src/lib/theme-shared.ts. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: HOME_AB_BOOT_SCRIPT }} />
         {/* Seasonal theme (Halloween until 31 October): data-season on <html>
             from the visitor's own date, before first paint. lib/season.ts. */}
         <script dangerouslySetInnerHTML={{ __html: SEASON_BOOT_SCRIPT }} />

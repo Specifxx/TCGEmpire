@@ -24130,3 +24130,13 @@ out of `AB_TESTS` (`src/lib/earnings/ab-test.ts`) and out of the Monday report a
 halves with a p-value, and one time in twenty a "winner". The sites' key keeps its first letter (`us:ab-`), which the reader ignores.
 The `mini` test (DexCompare, phones) and the `cta` test ("Buy now" against "View deal") run as planned, 20 November to 3 December,
 under the same rules. `tests/earnings-ab-test.test.ts` pins that `order` is never printed.
+
+## 2026-11-18: The home pages' banner position is a 50/50 test (owner, via the click-drop review)
+
+Clicks fell from about 250 a day to 150-160 from 15 November while visitors held steady, and the fall is Rift's alone. The 13-16 November redesigns moved
+the big eBay and TCGplayer banners to lead the home page under the hero. Placement data say rows and the quick view drive clicks and banners earn little, but the
+cause is not proven, so nothing is reverted. Instead every home ("/" and the five region homes) draws one of two arms, 50/50: `top` (banners before Today's Top Deals,
+as now) and `low` (after it). A head script (`HOME_AB_BOOT_SCRIPT`, `lib/home-ab.ts`) draws the arm into localStorage `rc_ab_home` and sets `data-rc-ab` on `<html>`;
+CSS shows one slot (`HomeAdSlot`), so the page is still one CDN copy, reads no cookie or header and keeps its reserved height (CLS 0). The arm reaches EPN's
+customid (`inlinetop` / `inlinelow`, `tcg_inlinetop` / `tcg_inlinelow`) and buy_click's pageType (`homepage-top` / `homepage-low`); a `home_ab` event counts visitors per arm.
+Read after enough clicks per arm (target 14 days or about 400 clicks an arm): keep the arm with more EPN clicks per visitor and delete the other. No pop-ups, nothing fixed.

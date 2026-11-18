@@ -48,7 +48,8 @@ test("the side rails and the small strips are gone; the phone dock stays", () =>
 
 test("one block per page: where it sits, and never on an article, a quick view or beside a price", async () => {
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) assert.doesNotMatch(code(f), /<(EbayPicks|TcgplayerPicks|InlineAds)\b/, `${f}: HomeSections renders it`);
-  assert.equal(code("src/components/home/HomeSections.tsx").match(/<InlineAds\b/g)?.length, 1);
+  assert.equal(code("src/components/home/HomeSections.tsx").match(/<HomeAdSlot\b/g)?.length, 2, "the position test: two slots, CSS shows one");
+  assert.equal(code("src/components/HomeAdSlot.tsx").match(/<InlineAds\b/g)?.length, 1);
   assert.equal(code("src/app/card/[id]/page.tsx").match(/<InlineAds\b/g)?.length, 1);
   assert.doesNotMatch(code("src/app/card/[id]/page.tsx"), /<(MiniPicks|TcgplayerPicks)\b/);
   assert.equal(code("src/app/sealed/[slug]/page.tsx").match(/<InlineAds\b/g)?.length, 1);

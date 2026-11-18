@@ -88,7 +88,7 @@ test("the phone Explore overlay has a Games group with something to play", () =>
 test("the homepage's commercial-vs-playable order is the owner's, and is asserted rather than assumed", () => {
   const code = readCode("src/components/home/HomeSections.tsx");
   const deals = code.indexOf("<TodaysTopDeals");
-  const ebay = code.indexOf("<InlineAds");
+  const ebay = code.indexOf("<HomeAdSlot");
   assert.ok(deals > 0 && ebay > 0, "expected the deals and the one ad block to render");
 
   // The 2026-09-21 order, top down: Top Deals → the ad block. Recently viewed

@@ -29,8 +29,10 @@ test("the in-page ad block (2026-11-13) renders once per home, from HomeSections
   }
   const sections = code("src/components/home/HomeSections.tsx");
   assert.match(sections, /showEbayPicks = true,/);
-  assert.match(sections, /\{showEbayPicks && <InlineAds pageType="homepage" \/>\}/);
-  assert.ok(sections.indexOf("<InlineAds") < sections.indexOf("<TodaysTopDeals"), "the banners lead (owner, 2026-11-14), never in the hero");
+  // 2026-11-18: a 50/50 position test (HomeAdSlot, tests/home-ab.test.ts): the pair leads in arm "top" and follows the deals in arm "low".
+  assert.match(sections, /\{showEbayPicks && <HomeAdSlot arm="top" \/>\}/);
+  assert.match(sections, /\{showEbayPicks && <HomeAdSlot arm="low" \/>\}/);
+  assert.ok(sections.indexOf('<HomeAdSlot arm="top"') < sections.indexOf("<TodaysTopDeals"), "the banners lead in the top arm (owner, 2026-11-14), never in the hero");
 });
 
 test("Cheapest on eBay left Today's Top Deals for Deal Finder (2026-09-30)", () => {
