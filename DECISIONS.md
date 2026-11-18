@@ -24234,3 +24234,17 @@ hand out: `?utm_source=<platform>&utm_medium=creator|social&utm_campaign=<handle
 engines have no first-touch capture yet, which is the next gap. Earnings stay unattributable per creator (affiliate customids carry
 the placement, not the campaign); the scoreboard reports visitors, buy clicks and sign-ups by campaign, never an invented
 earnings split. `tests/entry-source.test.ts`.
+
+## 2026-11-18: Share for a deal, and guides and set pages count their shares (owner)
+
+Owner: a share feature on every page that people pass around, and "if you share … you can open Deal Finder … gives incentive".
+The share button, tagged links and share card already existed (2026-11-02, "Share buttons and shared lists"), so this adds:
+
+- **Share-for-a-deal test.** Half of browsers (`share_arm` in localStorage, `pickShareArm` in `lib/share-link.ts`) see
+  "Share · get a deal"; after a share completes (share sheet or copied link) a small card opens under the button, on the
+  visitor's own tap and closed with ✕, pointing to Deal Finder. Nothing is unlocked that was gated: Deal Finder's free views
+  stay free for everyone and Premium is unchanged. The other half is the control. Events `share { medium, arm }` and
+  `share_unlock { medium }`; read the share rate per arm after two weeks and keep the offer only if it raises sharing.
+- **Guides were shared untagged.** `ArticleShare` (X, Reddit, Facebook, copy link) now shares `utm_source=share&utm_medium=guide`
+  and sends `share { medium: "guide" }`, so a guide's shares and the visits they bring reach the growth report.
+- Set pages carry the share button (`medium: "set"`).

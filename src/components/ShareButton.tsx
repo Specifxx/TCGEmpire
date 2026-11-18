@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { track } from "@vercel/analytics";
 import { earnCoin } from "@/lib/coins-client";
 import { useCountryMaybe } from "@/components/CountryProvider";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
-import { priceGap, shareText, shareUrl, type GapRow, type ShareMedium } from "@/lib/share-link";
+import { pickShareArm, priceGap, SHARE_ARM_KEY, shareText, shareUrl, type GapRow, type ShareArm, type ShareMedium } from "@/lib/share-link";
 
 // Share (2026-11-02, word of mouth; a copy-the-link button since 2026-09): the
 // phone's own share sheet where there is one, else the link copied. No pop-up.
@@ -36,10 +37,28 @@ export function ShareButton({
   path?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  // Share-for-a-deal (lib/share-link.ts): the arm, and the thank-you card once a share completes.
+  const [arm, setArm] = useState<ShareArm>("plain");
+  const [thanks, setThanks] = useState(false);
+  useEffect(() => {
+    try {
+      const a = pickShareArm(localStorage.getItem(SHARE_ARM_KEY), Math.random());
+      localStorage.setItem(SHARE_ARM_KEY, a);
+      setArm(a);
+    } catch {}
+  }, []);
+  const unlock = () => {
+    if (arm !== "reward") return;
+    setThanks(true);
+    try {
+      track("share_unlock", { medium });
+    } catch {}
+  };
   const ctx = useCountryMaybe();
   const country = ctx?.country;
   const market = useMemo(() => (rows && country ? computeMarket(rows, country).prices : null), [rows, country]);
   return (
+    <span className="relative inline-flex">
     <button
       onClick={async () => {
         const url = shareUrl(location.origin, path ?? location.pathname, medium);
@@ -48,7 +67,7 @@ export function ShareButton({
         const title = name ?? document.title;
         const text = shareText(title, gapRows ? priceGap(gapRows) : null, fmt);
         try {
-          track("share", { medium });
+          track("share", { medium, arm });
         } catch {
           /* analytics never gets in the way */
         }
@@ -57,6 +76,7 @@ export function ShareButton({
         if (typeof navigator.share === "function") {
           try {
             await navigator.share({ title, text, url });
+            unlock();
             return;
           } catch (e) {
             if ((e as Error)?.name === "AbortError") return;
@@ -66,6 +86,7 @@ export function ShareButton({
           await navigator.clipboard.writeText(`${text} ${url}`);
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
+          unlock();
         } catch {
           /* clipboard unavailable — ignore */
         }
@@ -87,7 +108,18 @@ export function ShareButton({
           </>
         )}
       </svg>
-      <span className={responsive ? "hidden sm:inline" : undefined}>{copied ? "Link copied" : "Share"}</span>
+      <span className={responsive && arm !== "reward" ? "hidden sm:inline" : arm === "reward" ? "text-xs sm:text-sm" : undefined}>{copied ? "Link copied" : arm === "reward" ? "Share · get a deal" : "Share"}</span>
     </button>
+    {thanks && (
+      <span className="absolute right-0 top-full z-20 mt-2 flex w-72 max-w-[85vw] flex-col gap-1.5 rounded-xl border border-white/10 bg-slate-900 p-3 text-left text-sm text-slate-200 shadow-lg">
+        <span className="flex items-start justify-between gap-2">
+          <span className="font-semibold text-white">Thanks for sharing. Your deal:</span>
+          <button type="button" onClick={() => setThanks(false)} className="text-slate-400" aria-label="Close">✕</button>
+        </span>
+        <span className="text-slate-400">Today’s Riftbound cards selling below TCGplayer market, and the ones cheapest on eBay, checked every day.</span>
+        <Link href="/tools/deal-finder?utm_source=share&utm_medium=unlock" prefetch={false} className="text-xs font-semibold text-brand-400 underline">Open Deal Finder →</Link>
+      </span>
+    )}
+    </span>
   );
 }
