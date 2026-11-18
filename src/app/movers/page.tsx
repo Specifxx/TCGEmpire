@@ -20,6 +20,7 @@ import { HubIntro } from "@/components/HubIntro";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { guidesForTool } from "@/lib/content/tool-guides";
 import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
+import { ShareButton } from "@/components/ShareButton";
 
 // ISR: the price history gains one snapshot a day, and it reaches the site with
 // each daily release (the files in data/price-history, lib/price-history-store.ts),
@@ -189,6 +190,7 @@ export default async function MoversPage() {
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
           Riftbound price movers — this week
         </h1>
+        <ShareButton className="mt-3" name="Riftbound price movers this week" medium="movers" path="/movers" />
         {/* How the lists are built and the guide behind them (2026-09-26,
             "Blog and tools, joined up"): lib/content/hub-intros.ts, in place
             of the old one-paragraph lede. The answer box below still states the
