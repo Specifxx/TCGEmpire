@@ -11,6 +11,8 @@
 //     dead        the domain does not resolve or answer at all
 //     parked      the page says the domain is for sale or parked
 //     new+hidden  the domain is under a year old AND the home page shows no contact
+//   (dead is only called after a second try: the home page again after a pause,
+//    then the shop's /products.json and robots.txt; any answer means "alive")
 //   LOOK (listed in the "Store vetting" issue, checked by hand):
 //     moved       the home page now redirects to a different domain
 //     young       the domain was registered under a year ago (RDAP)
@@ -199,10 +201,33 @@ export async function vetHost(host, banned, verified = new Set()) {
   try {
     finalHost = new URL(home.url).host.replace(/^www\./, "");
   } catch {}
-  const page = judgePage({ status: home.status, finalHost, host, body: home.body });
+  let page = judgePage({ status: home.status, finalHost, host, body: home.body });
+  if (page.state === "error") {
+    // One 5xx is not a dead shop. Shopify and Cloudflare hand out the odd 500/502
+    // to a bot on a busy minute, and the RED list changed almost entirely from one
+    // Monday to the next (9 Nov: 88gamesarena, card-knights; 16 Nov: boardgamebliss,
+    // flagshipgames, gundamlab), while those stores' own imports kept reading their
+    // catalogues. So: ask the home page again after a pause, then the shop's own
+    // catalogue and robots.txt. Dead means all of them fail.
+    const again = await recheck(host);
+    if (again.home) {
+      home = again.home;
+      try {
+        finalHost = new URL(home.url).host.replace(/^www\./, "");
+      } catch {}
+      page = judgePage({ status: home.status, finalHost, host, body: home.body });
+    } else if (again.alive) {
+      page = { state: "ok", flags: [{ kind: "home-error", red: false, detail: `home page answers ${page.detail}, but the shop itself answers (${again.alive})` }] };
+    }
+  }
   out.state = page.state === "blocked" ? "blocked" : "ok";
-  if (page.state === "error") out.flags.push({ kind: "dead", red: true, detail: `home page answers ${page.detail}` });
+  if (page.state === "error") out.flags.push({ kind: "dead", red: true, detail: `home page answers ${page.detail}, again after a pause, and neither its catalogue nor robots.txt answers` });
   if (page.flags) out.flags.push(...page.flags);
+  // A home page that shows no contact link may still have a contact or policy page
+  // (a theme that loads its footer with script, a one-page landing). Before calling
+  // a shop hidden, ask for the pages a real shop has.
+  const noContact = out.flags.findIndex((f) => f.kind === "no-contact");
+  if (noContact >= 0 && (await hasContactPage(host))) out.flags.splice(noContact, 1);
   if (/\.myshopify\.com$/.test(host)) {
     out.flags.push({ kind: "no-domain", red: false, detail: "no domain of its own (myshopify.com address)" });
     return out;
@@ -218,6 +243,43 @@ export async function vetHost(host, banned, verified = new Set()) {
     out.flags.push({ kind: "young", red: hidden, detail: `domain registered ${out.age} days ago${hidden ? ", with no contact details" : ""}` });
   }
   return out;
+}
+
+const sleepMs = (ms) => new Promise((r) => setTimeout(r, ms));
+/** Pause between a 5xx and its re-check. Tests set STORE_VETTING_RECHECK_MS=0. */
+const RECHECK_MS = Number(process.env.STORE_VETTING_RECHECK_MS ?? 20_000);
+
+/**
+ * After a 5xx/404/410 home page: { home } when the home page answers properly on a
+ * second try, { alive: "what answered" } when the shop's catalogue or robots.txt
+ * answers, or {} when nothing does. Never throws.
+ */
+export async function recheck(host) {
+  if (RECHECK_MS > 0) await sleepMs(RECHECK_MS);
+  const home = await get(`https://${host}/`);
+  if (home.status >= 200 && home.status < 400 && home.body) return { home };
+  if (home.status === 403 || home.status === 429 || home.status === 503) return { home };
+  for (const path of ["/products.json?limit=1", "/robots.txt"]) {
+    const r = await get(`https://${host}${path}`);
+    if (r.status === 200 && r.body && r.body.length > 20) return { alive: `${path.split("?")[0]} answers 200` };
+  }
+  return {};
+}
+
+const CONTACT_PATHS = ["/pages/contact", "/pages/contact-us", "/contact", "/policies/refund-policy", "/policies/contact-information"];
+/** True when one of a shop's usual contact or policy pages answers with a page of its own. Never throws. */
+export async function hasContactPage(host) {
+  for (const path of CONTACT_PATHS) {
+    const r = await get(`https://${host}${path}`);
+    if (r.status !== 200 || !r.body || r.body.length < 500) continue;
+    let landed = "";
+    try {
+      landed = new URL(r.url).pathname.replace(/\/$/, "");
+    } catch {}
+    // A shop that sends every unknown path to its home page has no such page.
+    if (landed && landed !== "" && landed !== "/") return true;
+  }
+  return false;
 }
 
 async function pool(items, n, fn) {

@@ -375,3 +375,30 @@ test("the repair script for cards already written by the drifted rule exists and
     "--apply alone must NOT move a live slug; that needs --reslug as well",
   );
 });
+
+// 2026-11-18 coverage audit: TCGplayer files Vendetta's Nexus Night "b" runes under the
+// set itself ("Order Rune (R06b)", set Vendetta), while our cards for them are promos.
+// The number was unclaimed, yet nothing matched, so those pages had no TCGplayer price.
+test("a set-less promo printing takes its set's product when no base card holds that number", async () => {
+  const { buildTcgplayerRows } = await import("../src/lib/tcgplayer");
+  const cards = [
+    { id: "base-r06", setCode: "VEN", collectorNumber: "R06", externalId: null, isPromo: false, tags: null },
+    { id: "promo-r06b", setCode: "VEN", collectorNumber: "R06B", externalId: null, isPromo: true, tags: null },
+    { id: "base-041", setCode: "VEN", collectorNumber: "041/166", externalId: null, isPromo: false, tags: null },
+    { id: "promo-041", setCode: "VEN", collectorNumber: "041/166", externalId: null, isPromo: true, tags: null },
+  ];
+  const prod = (id: number, name: string, number: string, setName: string, market: number): TcgProduct => ({
+    productId: id, productName: name, productUrlName: name, setUrlName: setName, productLineUrlName: "riftbound", setName,
+    marketPrice: market, lowestPrice: market, foilOnly: false, sealed: false, customAttributes: { number }, listings: [],
+  });
+  const matchedIds = new Set<string>();
+  await buildTcgplayerRows(undefined, [
+    prod(1, "Order Rune (R06b)", "R06b", "Vendetta", 5.57),
+    prod(2, "Order Rune", "R06", "Vendetta", 0.25),
+    // An OP promo reusing a base number still never lands by number.
+    prod(3, "Riven, Shattered", "041/166", "Riftbound Organized Play Promotional Cards", 1.25),
+  ], { cards, matchedIds });
+  assert.ok(matchedIds.has("promo-r06b"), "the R06b product lands on the R06B promo card");
+  assert.ok(matchedIds.has("base-r06"));
+  assert.ok(!matchedIds.has("promo-041"), "a promo product with a base sibling's number is still never matched by number");
+});

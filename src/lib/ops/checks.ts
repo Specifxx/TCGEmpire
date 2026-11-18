@@ -481,6 +481,10 @@ export const JOBS: { file: string; title: string; staleH: number; scheduledSince
   // fails: this row is how a failed gate is heard. Not on a clock of its own: it follows the
   // release, and a release the 12-hour build gate skips leaves a gap of up to two days.
   { file: "seo-preview-gate.yml", title: "After-deploy SEO check", staleH: 60 },
+  // Weekly (2026-11-18): every priced TCGplayer single has a card page, prices fresh, pages fast (scripts/coverage-audit.ts).
+  // Every two days (2026-11-18): a set's revealed cards from Riot's gallery, a no-op outside reveal season.
+  { file: "set-reveals.yml", title: "New-set reveals job", staleH: 60, scheduledSince: "2026-11-19T05:37:00Z" },
+  { file: "coverage-audit.yml", title: "Riftbound coverage audit (weekly)", staleH: 200, scheduledSince: "2026-11-24T09:23:00Z" },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {

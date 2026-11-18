@@ -194,3 +194,15 @@ test("no script declares its own operational-database chain", () => {
       "through on an UNSET variable, never an unreachable one:\n" + offenders.join("\n")
   );
 });
+
+// 2026-11-18: maintenance.yml's job-level default still named RM11 two days after the
+// RM11 -> RM12 cutover, so every dispatched task (card syncs, the spoiler pipeline,
+// audits) read or wrote the retired project. Its default must be the chain's head.
+test("maintenance.yml's default database is the operational chain's head", async () => {
+  const { OPERATIONAL_VARS } = await import("../src/lib/db-chains");
+  const wf = readFileSync(".github/workflows/maintenance.yml", "utf8");
+  const head = OPERATIONAL_VARS[0];
+  const jobEnv = wf.slice(wf.indexOf("\n    env:\n"), wf.indexOf("\n    steps:\n"));
+  assert.ok(jobEnv.includes(`DATABASE_URL: \${{ secrets.${head} || vars.${head} }}`), `maintenance.yml job env must use ${head}`);
+  assert.ok(jobEnv.includes(`'${head}'`), "DB_SOURCE_NAME names the head too");
+});
