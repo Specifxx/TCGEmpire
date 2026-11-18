@@ -1043,9 +1043,10 @@ longer lands on its entry.
   `FACET_THIN_THRESHOLD`, champions `CHAMPION_THIN_THRESHOLD`.
   [2026-10-23](../DECISIONS.md#L19025)
 - **Card pages are always indexable** (09-17 reversed Phase 7a); only
-  `getCanonicalTwin` duplicates are noindexed. Card titles aim for 60
+  `getCanonicalTwin` duplicates are noindexed (a metal Prize Wall / Best Of
+  reprint is never a duplicate of its promo). Card titles aim for 60
   characters, but uniqueness beats length.
-  [2026-09-17](../DECISIONS.md#L7393), [2026-09-17](../DECISIONS.md#L7801)
+  [2026-09-17](../DECISIONS.md#L7393), [2026-09-17](../DECISIONS.md#L7801), [2026-11-18](../DECISIONS.md#L24209)
 - **Set-agnostic code:** nothing names the current set; a new set is a data
   row. [2026-08-27](../DECISIONS.md#L3501), [2026-09-21](../DECISIONS.md#L9560)
 - **"New" is a badge, not a release (2026-10-12):** `SetInfo.newFrom` plus

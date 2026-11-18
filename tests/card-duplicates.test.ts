@@ -19,6 +19,7 @@ const base: Omit<CardIdentity, "id" | "slug"> = {
   rarity: "Epic",
   variant: null,
   isPromo: true,
+  tags: null,
 };
 
 const card = (id: string, slug: string | null, over: Partial<CardIdentity> = {}): CardIdentity => ({
@@ -132,4 +133,50 @@ test("a null slug falls back to the id and never crashes", () => {
   const rows = [card("zzzzid", null), card("aid", null)];
   assert.equal(primaryOf(rows).id, "aid", "shortest, then lexical");
   assert.equal(buildDuplicateMap(rows).get("zzzzid")?.id, "aid");
+});
+
+// ── Metal reprints are their own printing (2026-11-18) ──────────────────────
+// A metal Prize Wall / Best Of card shares EVERY other identity field with its
+// promo (lib/metal-cards.ts). Before the metal kind joined the key, 37 groups
+// collapsed: the metal pages were noindexed, canonicalised to the promo, left
+// out of the sitemap and the price guide. These are the real rows from
+// data/public/cards.json.
+const KAISA = { name: "Kai'Sa, Daughter of the Void", setCode: "OGN", collectorNumber: "247/298", rarity: "Rare" };
+
+test("a promo and its metal Best Of and Prize Wall reprints are three printings, not one", () => {
+  const rows = [
+    card("k1", "kai-sa-daughter-of-the-void-ogn-247-298-promo", { ...KAISA, tags: null }),
+    card("k2", "kai-sa-daughter-of-the-void-ogn-247-298-metal-best-of", { ...KAISA, tags: "metal,best of" }),
+    card("k3", "kai-sa-daughter-of-the-void-ogn-247-298-metal-prize-wall", { ...KAISA, tags: "metal,prize wall" }),
+  ];
+  assert.equal(buildDuplicateMap(rows).size, 0);
+});
+
+test("Best Of and Prize Wall metals of one card stay apart", () => {
+  const ANNIE = { name: "Annie, Dark Child", setCode: "OGS", collectorNumber: "017/024", rarity: "Rare" };
+  const rows = [
+    card("a1", "annie-dark-child-ogs-017-024-metal-best-of", { ...ANNIE, tags: "metal,best of" }),
+    card("a2", "annie-dark-child-ogs-017-024-metal-prize-wall", { ...ANNIE, tags: "metal,prize wall" }),
+  ];
+  assert.equal(buildDuplicateMap(rows).size, 0);
+});
+
+test("two rows of the SAME metal kind are still duplicates", () => {
+  const rows = [
+    card("k2", "kai-sa-daughter-of-the-void-ogn-247-298-metal-best-of", { ...KAISA, tags: "metal,best of" }),
+    card("k9", "kai-sa-daughter-of-the-void-ogn-247-298-metal-best-of-7", { ...KAISA, tags: "Metal, Best Of" }),
+  ];
+  assert.equal(buildDuplicateMap(rows).get("k9")?.id, "k2");
+});
+
+test("identityKey reads only the metal kind from tags, not other tags", () => {
+  assert.equal(identityKey(base), identityKey({ ...base, tags: "champion,legend" }));
+  assert.notEqual(identityKey(base), identityKey({ ...base, tags: "metal" }));
+});
+
+test("every caller of buildDuplicateMap selects tags", async () => {
+  const { readFileSync } = await import("node:fs");
+  for (const f of ["src/lib/card-duplicates.ts", "src/lib/price-guide.ts", "scripts/audit-indexability.ts"]) {
+    assert.match(readFileSync(f, "utf8"), /tags: true/, `${f} must select Card.tags for the metal kind`);
+  }
 });
