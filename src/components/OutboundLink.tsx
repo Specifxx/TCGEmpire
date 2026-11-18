@@ -5,7 +5,7 @@ import { trackEvent } from "@/lib/analytics";
 import { isPaidLink, outboundRel } from "@/lib/affiliate";
 import { markBuyClick, registerBuyLink } from "@/lib/buy-intent";
 import { reportOutboundConversion } from "@/lib/google-ads";
-import { readEntrySource } from "@/lib/entry-source";
+import { readCampaign, readEntrySource } from "@/lib/entry-source";
 import { earnCoin } from "@/lib/coins-client";
 import { isCheckoutLink } from "@/lib/checkout-link";
 
@@ -230,6 +230,7 @@ export function OutboundLink({
       // touch — lib/entry-source.ts. Answers "do the Reddit readers click
       // through?", which neither destination could before.
       entry: readEntrySource(),
+      campaign: readCampaign(),
       transport_type: "beacon",
     });
     // Our own daily click count per network for /admin/growth (lib/click-counter.ts).

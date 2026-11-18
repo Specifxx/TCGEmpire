@@ -100,3 +100,27 @@ export function readEntrySource(): EntrySource | undefined {
     return undefined;
   }
 }
+
+// WHICH CREATOR OR POST (2026-11-18, owner: "how do we measure exactly the impact of creator outreach
+// and social media?"). The bucket above says "social" or "reddit"; it cannot say which creator or which
+// post. Every link we give a creator or post on social now carries utm_campaign=<handle-or-post>, and
+// the first touch of the tab stamps it onto buy_click as `campaign`, so buy clicks can be counted per
+// creator and per post. A tag, never a person: letters, digits, dash and underscore, 40 characters.
+const CAMPAIGN_KEY = "rc_campaign";
+
+/** Pure: a safe campaign tag from a landing URL's query string, or undefined. */
+export function cleanCampaign(search: string): string | undefined {
+  const raw = (new URLSearchParams(search).get("utm_campaign") ?? "").trim().toLowerCase();
+  const tag = raw.replace(/[^a-z0-9_-]/g, "").slice(0, 40);
+  return tag || undefined;
+}
+
+/** Client: the first-touch campaign tag of this tab, or undefined. Only the first call in a tab writes. */
+export function readCampaign(): string | undefined {
+  try {
+    if (sessionStorage.getItem(CAMPAIGN_KEY) === null) sessionStorage.setItem(CAMPAIGN_KEY, cleanCampaign(window.location.search) ?? "");
+    return sessionStorage.getItem(CAMPAIGN_KEY) || undefined;
+  } catch {
+    return undefined;
+  }
+}

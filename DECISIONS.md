@@ -24222,3 +24222,15 @@ The weekly GSC coverage run (16 Nov) also listed four cards "Excluded by noindex
 (`yasuo-remorseful-ogn-076b-298-promo`, `void-seeker-ogn-nn1-promo`, `poppy-defender-of-the-meek-unl-178a-219-promo`,
 `jinx-demolitionist-ogn-030-298-promo`). None is in a duplicate group, then or now, and the duplicate rule is the only
 noindex a card page carries, so those are Google's older crawls; re-read on the next run.
+
+## 2026-11-18: Every creator and social link carries a campaign tag, and buy_click says which (owner)
+
+The owner asked how to measure exactly what creator outreach and social posts bring. The audit: `lib/entry-source.ts` already
+stamped a coarse first-touch bucket (reddit, social, search, email…) on `buy_click`, but nothing said WHICH creator or post, and
+the creator DMs of 8 Nov (`dexcompare-creator-outreach-log.md`) recorded no tagged link, so nothing sent so far can be
+attributed per creator. Now `utm_campaign=<handle-or-post>` (letters, digits, dash, underscore, 40 characters; a tag, never a
+person) is read once per tab (`readCampaign`, `cleanCampaign`) and sent as `campaign` on `buy_click`. Convention for every link we
+hand out: `?utm_source=<platform>&utm_medium=creator|social&utm_campaign=<handle or post>`. RiftCompare only: the other sites'
+engines have no first-touch capture yet, which is the next gap. Earnings stay unattributable per creator (affiliate customids carry
+the placement, not the campaign); the scoreboard reports visitors, buy clicks and sign-ups by campaign, never an invented
+earnings split. `tests/entry-source.test.ts`.
