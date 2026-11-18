@@ -42,6 +42,7 @@ import { ShareArrival } from "@/components/ShareArrival";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED, ADSENSE_SERVING } from "@/lib/adsense";
 import NextTopLoader from "nextjs-toploader";
+import { ReturnBeacon } from "@/components/ReturnBeacon";
 
 // Not needed for the initial paint or SEO: the alert modal only opens in
 // response to a PriceWatchButton click. ssr:false + dynamic import keeps it out
@@ -643,6 +644,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ShareArrival />
         </PremiumDialogProvider>
         </PremiumProvider>
+        <ReturnBeacon />
       </body>
     </html>
   );
