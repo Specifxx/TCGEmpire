@@ -516,6 +516,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 rail and by the home hero's badge. Both went with the minimal redesign, so its one server-rendered
                 link is here. */}
             <Link href="/creators" className="tap-link text-slate-300 hover:text-brand-400">Creators</Link>
+            {/* Android beta sign-up (2026-11-18): Play needs 12 testers for 14 days before launch. */}
+            <Link href="/android" prefetch={false} className="tap-link text-slate-300 hover:text-brand-400">Android app (beta)</Link>
             <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About us</Link>
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
