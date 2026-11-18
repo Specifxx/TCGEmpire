@@ -23,6 +23,17 @@ test("pre-order collections are read — generic ones and set-named ones, never 
   }
 });
 
+test("the coming sets' own pre-order collections are read; their bare names are not (2026-11-18)", () => {
+  for (const h of ["legacy-pre-order", "legacy-preorders", "Legacy-Pre-Orders", "the-reckoning-pre-order"]) {
+    assert.equal(collectionKind(h), "preorder", h);
+  }
+  assert.equal(collectionKind("riftbound-legacy-preorder"), "riftbound", "already read whole, as a Riftbound collection");
+  // Magic's Legacy format, Yu-Gi-Oh!'s Legacy products, a shipped set's handle.
+  for (const h of ["legacy", "legacy-singles", "mtg-legacy-staples", "legacy-of-the-duelist", "legacy-of-destruction-pre-order", "origins-pre-order"]) {
+    assert.equal(collectionKind(h), null, h);
+  }
+});
+
 test("what a mixed pre-order collection yields must name Riftbound outright", () => {
   const src = read("src/lib/sealed-import.ts");
   assert.match(src, /const STRICT_RIFTBOUND = \/riftbound\|league\\s\*of\\s\*legends\/i;/);
