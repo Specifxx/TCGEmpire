@@ -894,7 +894,8 @@ longer lands on its entry.
 - **Footer:** the always-visible row is Home, Blog, Guides, Tools, About us,
   Editorial policy, Methodology, Who writes this, Contact & feedback, Privacy
   policy, Terms of service (the site map stays collapsed on `/`). Privacy and
-  Terms are also in the menu's Help group (`hideInFooter`). The footer's share band is gone (2026-11-13). `InlineAdsZone` (2026-11-13: the footer banner pair is gone, one block per page)
+  Terms are also in the menu's Help group (`hideInFooter`). The footer's share band is gone (2026-11-13). Since 2026-11-19 every page's ad block sits below its own content (`InlineAdsZone` after `{children}`; the
+  home position test ended) and the site map is the short `FOOTER_KEEP` list. `InlineAdsZone` (2026-11-13: the footer banner pair is gone, one block per page)
   renders no ad block on /about, /authors(/*), /contact, /editorial-policy,
   /methodology, /privacy, /support and /terms, nor on `/pokemon` (another game:
   `OFF_TOPIC_ROUTES`). The arcade (/games/*, /riftle) is ad-free for everyone:

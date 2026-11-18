@@ -114,10 +114,10 @@ export default async function AboutPage() {
         <section id="who-runs-riftcompare" className="scroll-mt-header space-y-2">
           <h2 className="text-lg font-bold text-white">Who runs RiftCompare</h2>
           <p>
-            {SITE_NAME} is built and run by one person: <strong className="text-white">Bill</strong>, its
-            founder. There is no team behind the name and no separate support desk. Bill keeps the price
-            imports running, looks after the tools and reads what is
-            sent to{" "}
+            {SITE_NAME} is run by its two co-founders, <strong className="text-white">Bill</strong> and{" "}
+            <strong className="text-white">George</strong>. It is independent: no publisher, store or
+            distributor owns a share or pays for a place in a comparison. There is no separate support desk;
+            the two of us keep the price imports running, look after the tools and read what is sent to{" "}
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>.
             Where this site says &ldquo;we&rdquo;, that is who it means.
           </p>
@@ -242,6 +242,11 @@ export default async function AboutPage() {
             comparison, including a store on the Stores plan. The details are in our{" "}
             <Link href="/editorial-policy#money" className="text-brand-400 hover:underline">editorial policy</Link>{" "}
             and our <Link href="/privacy" className="text-brand-400 hover:underline">privacy policy</Link>.
+          </p>
+          <p>
+            What it costs: hosting, the databases, the daily price imports and the tools we build with come to
+            about A$790 a month for {SITE_NAME} and our other price sites together (our own books, the 30 days
+            to 15 November 2026). That is what the money above pays for.
           </p>
         </section>
 

@@ -10,7 +10,6 @@ import { Navbar } from "@/components/Navbar";
 import { PhoneDockAds } from "@/components/PhoneDockAds";
 import { BottomNav } from "@/components/BottomNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
-import { HOME_AB_BOOT_SCRIPT } from "@/lib/home-ab";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT, MOBILE_NO_VIGNETTE_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
@@ -376,7 +375,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             light), so the page never flashes the wrong palette. Generated in
             src/lib/theme-shared.ts. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
-        <script dangerouslySetInnerHTML={{ __html: HOME_AB_BOOT_SCRIPT }} />
         {/* Seasonal theme (Halloween until 31 October): data-season on <html>
             from the visitor's own date, before first paint. lib/season.ts. */}
         <script dangerouslySetInnerHTML={{ __html: SEASON_BOOT_SCRIPT }} />
@@ -436,11 +434,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       homepage's full-bleed hero (-mt-6) never slides over it. */}
                   <HolidayStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
-                    {/* The two big ad banners (owner, 2026-11-14) at the TOP of every page that does not place them itself (policy and
-                        trust pages carry none, FooterAds' BANNER_FREE_ROUTES, owner decision 2026-09-26). The market comes from the client
-                        country context, so the layout stays cookie-free and cacheable. */}
-                    <InlineAdsZone />
                     {children}
+                    {/* The two ad banners sit BELOW every page's own content (owner, 2026-11-19: "all the ads that can negatively
+                        impact our indexing let's remove and have more strategically placed ads"), on pages that do not place them
+                        themselves; policy and trust pages carry none. Client country context, so the layout stays cacheable. */}
+                    <InlineAdsZone />
                     {/* "Rate us" at the end of every page's content: in the
                         page, never a pop-up; gone once this browser rated. */}
                     <RateUsStrip />

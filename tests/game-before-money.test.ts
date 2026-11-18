@@ -88,14 +88,14 @@ test("the phone Explore overlay has a Games group with something to play", () =>
 test("the homepage's commercial-vs-playable order is the owner's, and is asserted rather than assumed", () => {
   const code = readCode("src/components/home/HomeSections.tsx");
   const deals = code.indexOf("<TodaysTopDeals");
-  const ebay = code.indexOf("<HomeAdSlot");
+  const ebay = code.indexOf("<InlineAds");
   assert.ok(deals > 0 && ebay > 0, "expected the deals and the one ad block to render");
 
   // The 2026-09-21 order, top down: Top Deals → the ad block. Recently viewed
   // sat above Top Deals until 2026-09-28, when the owner took it off the
   // homepage (tests/homepage-declutter.test.ts).
   assert.ok(!code.includes("<RecentlyViewedRail"), "Recently viewed is off the homepage (owner, 2026-09-28)");
-  assert.ok(ebay < deals, "the ad banners lead and Today's Top Deals follows, now under the chase cards (owner, 2026-11-16)");
+  assert.ok(ebay > deals, "Today's Top Deals come first and the ad banners follow, below the content (owner, 2026-11-19)");
   assert.ok(code.indexOf("<PopularCardsCarousel") < deals, "Top Deals sit below the chase cards (owner, 2026-11-16)");
 
   // AMENDED 2026-11-13 (owner: "we're making things too complicated … cull the features that we show"; DECISIONS.md

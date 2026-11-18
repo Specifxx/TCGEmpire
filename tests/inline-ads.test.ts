@@ -48,8 +48,7 @@ test("the side rails and the small strips are gone; the phone dock stays", () =>
 
 test("one block per page: where it sits, and never on an article, a quick view or beside a price", async () => {
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) assert.doesNotMatch(code(f), /<(EbayPicks|TcgplayerPicks|InlineAds)\b/, `${f}: HomeSections renders it`);
-  assert.equal(code("src/components/home/HomeSections.tsx").match(/<HomeAdSlot\b/g)?.length, 2, "the position test: two slots, CSS shows one");
-  assert.equal(code("src/components/HomeAdSlot.tsx").match(/<InlineAds\b/g)?.length, 1);
+  assert.equal(code("src/components/home/HomeSections.tsx").match(/<InlineAds\b/g)?.length, 1, "one block on the home pages (the position test ended 2026-11-19)");
   assert.equal(code("src/app/card/[id]/page.tsx").match(/<InlineAds\b/g)?.length, 1);
   assert.doesNotMatch(code("src/app/card/[id]/page.tsx"), /<(MiniPicks|TcgplayerPicks)\b/);
   assert.equal(code("src/app/sealed/[slug]/page.tsx").match(/<InlineAds\b/g)?.length, 1);
@@ -63,8 +62,14 @@ test("one block per page: where it sits, and never on an article, a quick view o
   for (const p of ["/sealed", "/movers", "/trade"]) assert.equal(inlineAdsAllowed(p), true, p);
 });
 
-test("the card page's banners sit at the top, under the breadcrumbs, never beside a buy button", () => {
+test("the card page's banners sit below the content, never above the price table or beside a buy button (2026-11-19)", () => {
   const s = read("src/app/card/[id]/page.tsx");
-  assert.ok(s.indexOf("<InlineAds") < s.indexOf("<EbayCardPanel"), "the banners are at the top of the card page (owner, 2026-11-14), above the price table");
-  assert.ok(s.indexOf("<InlineAds") < s.indexOf("<PriceDropAlertCta"), "above the alert and price tiles");
+  assert.ok(s.indexOf("<InlineAds") > s.indexOf("<EbayCardPanel"), "the banners follow the price table (owner, 2026-11-19)");
+  assert.ok(s.indexOf("<InlineAds") > s.indexOf("<PriceDropAlertCta"), "and the alert and price tiles");
+  const sealed = code("src/app/sealed/[slug]/page.tsx");
+  assert.ok(sealed.indexOf("<InlineAds") > sealed.indexOf("<header"), "the sealed page's block follows its own header and prices");
+  const set = code("src/app/sets/[set]/page.tsx");
+  assert.ok(set.indexOf("<InlineAds") > set.indexOf("<SetMarketBoard"), "the set page's block follows its price board");
+  const layout = read("src/app/layout.tsx");
+  assert.ok(layout.indexOf("<InlineAdsZone />") > layout.indexOf("{children}"), "the layout's zone follows the page");
 });

@@ -24447,3 +24447,23 @@ sitting on top of it.
   `var(--bn-space)` + a small gap up, and the body's bottom padding follows it. Hidden, it slides fully off-screen (transform only, CLS 0).
 - **Measured** (local build, dock stacked): Pixel 7 412×915 nav + dock take 129px (14.1%); iPhone 15 393×852 with a 34px safe area
   143px (16.8%); iPhone SE 375×667 129px (19.3%); the old flush bar took about the same plus the full safe area.
+
+## Ads below content, the position test ended, fewer footer links, two co-founders (2026-11-19)
+
+Owner, 2026-11-19 (core-update quality pass): "all the ads that can negatively impact our indexing let's remove and have
+more strategically placed ads". Google's core update from 10 Nov judges page quality, and a pair of 280px ad banners
+above the content of every page is the first thing it sees.
+
+- **Below the content, every page.** `InlineAdsZone` now follows `{children}` in the layout; the card, sealed and set
+  pages place their `InlineAds` last (the card page's preload of the banners' data went with it, so it no longer
+  competes with the page's own first paint).
+- **The home position test is over.** The 2026-11-18 top-vs-low split (`HomeAdSlot`, `lib/home-ab.ts`, its boot
+  script and CSS) is removed: every visitor gets the pair below the chase cards and Today's Top Deals, tagged `low`
+  so its clicks still compare with the test's.
+- **No cross-site block.** `FamilyDeals` is off (`CROSS_SITE_BLOCKS`); the one family link is the footer's `/our-sites`.
+- **Footer site map** about 63 links → 24 (`FOOTER_KEEP` in `nav-groups.ts`); the header menu still has the full index.
+- **About**: run by its two co-founders, Bill and George; AI tools help with code and article drafts; the group costs
+  about A$790 a month to run (our books, 30 days to 15 Nov 2026).
+
+Kept: the phone dock (after a scroll, dismissible, never on a product page), the in-page "Rate us" strip and the
+engaged-only corner rating card.
