@@ -127,7 +127,7 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
       if (show) el.removeAttribute("aria-hidden");
       else el.setAttribute("aria-hidden", "true");
       root.toggleAttribute("data-bottomnav", show);
-      root.style.scrollPaddingBottom = show ? `calc(${NAV_H}px + env(safe-area-inset-bottom))` : "";
+      root.style.scrollPaddingBottom = show ? `calc(${NAV_H}px + var(--bn-gap, env(safe-area-inset-bottom)) + 8px)` : "";
     };
     const decide = () => {
       const y = Math.max(0, window.scrollY); // iOS rubber-banding reports negative values past the top
