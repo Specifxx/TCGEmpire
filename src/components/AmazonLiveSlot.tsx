@@ -61,7 +61,7 @@ export function AmazonLiveSlot({ country, slug, label, searchHref, cart, priced 
         </span>
       )}
       {live && cartInput && <CartAddButton {...cartInput} className="hidden text-slate-300 sm:inline-flex" />}
-      <OutboundLink href={live?.url ?? searchHref} retailer="amazon_sealed" country={country} kind="sealed" pageType="sealed" surface={live ? "amazon_live" : "amazon_search"} className="btn-buy px-3 py-1.5 text-xs">
+      <OutboundLink href={live?.url ?? searchHref} retailer="amazon_sealed" country={country} kind="sealed" pageType="sealed" surface={live ? "amazon_live" : "amazon_search"} className="btn-amazon px-3 py-1.5 text-xs">
         View →
       </OutboundLink>
     </>

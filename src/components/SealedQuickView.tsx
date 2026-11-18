@@ -159,14 +159,16 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
               already says what Plus does for this box and sells it in place, and
               this is an overlay — one Plus line per view. */}
 
+          {/* "See full page" (owner, 2026-11-18): a real button right under the header, visible without scrolling on a phone. */}
+          <div className="border-b border-ink-800 px-4 pb-4 pt-0 sm:px-5">
+            <Link href={sealedPath(group.groupKey)} prefetch={false} onClick={onClose} data-quickview-fullpage className="btn-primary min-h-11 w-full text-sm">
+              See full page: price history and details →
+            </Link>
+          </div>
+
           {/* Price comparison — every tracked store, cheapest in-stock first */}
           <div className="p-4">
             <SealedOffers group={group} currency={currency} amazon />
-            <p className="mt-3 text-center text-xs">
-              <Link href={sealedPath(group.groupKey)} prefetch={false} onClick={onClose} className="font-semibold text-brand-400 hover:underline">
-                Open the full price page →
-              </Link>
-            </p>
           </div>
         </div>
     </div>

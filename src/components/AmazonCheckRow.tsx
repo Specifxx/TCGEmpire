@@ -40,7 +40,7 @@ export function AmazonCheckRow({ country, slug, name, label, href, lookup, curre
       </div>
       {/* Every price row has an Add to cart (owner, 2026-11-17): this unpriced row adds a line on the tagged search ("See today's price"). */}
       <CartAddButton href={href} productUrl={href} storeName={label} title={name} detail="Search results" priceCents={0} currency={currency} image={image ?? null} className="shrink-0 text-slate-300" />
-      <OutboundLink href={href} retailer="amazon_sealed" country={country} kind="sealed" pageType="sealed" surface="amazon_also" className="shrink-0 px-3 py-1.5 text-xs font-semibold text-brand-400 hover:underline">
+      <OutboundLink href={href} retailer="amazon_sealed" country={country} kind="sealed" pageType="sealed" surface="amazon_also" className="btn-amazon shrink-0 px-3 py-1.5 text-xs">
         Check on Amazon ↗
       </OutboundLink>
     </li>
