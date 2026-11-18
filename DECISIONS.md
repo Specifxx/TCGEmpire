@@ -24149,4 +24149,4 @@ Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store i
 Owner (18 Nov): expand accounts beyond RiftCompare and OP Compare. MTG Compare is the second site in `SISTER_PREMIUM_SITES`
 (`lib/sister-premium.ts`): sign-in by emailed link from the shared alert sender (no Google client yet), watch list, back-in-stock
 and Premium, exactly as DexCompare. The admin Accounts page now has a tab per account site (`DexTab` takes the site), so sign-ups
-are counted per site. Next in traffic order: TCG Prices, Gundam, YGO, Lorcana.
+are counted per site. TCG Prices joined the same day (no back-in-stock button there yet: its product pages are multi-market). Next in traffic order: Gundam, YGO, Lorcana.

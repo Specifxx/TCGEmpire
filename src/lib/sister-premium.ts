@@ -31,6 +31,8 @@ export const SISTER_PREMIUM_SITES: PremiumSite[] = [
   // MTG Compare (2026-11-18, owner: expand accounts beyond Rift and OP): the same sign-in, watch list and Premium as DexCompare. Email
   // link only until it has its own Google client (MTG_GOOGLE_CLIENT_ID); the email goes from the shared alert sender.
   { key: "mtg", name: "MTG Compare", url: "https://mtgcompare.app" },
+  // TCG Prices (2026-11-18): sign-in, watch list and Premium (no back-in-stock button yet: its pages are multi-market).
+  { key: "tcgprices", name: "TCG Prices", url: "https://tcgprices.app" },
 ];
 
 export const PREMIUM_SESSION_DAYS = 60;
