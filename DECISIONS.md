@@ -24758,6 +24758,30 @@ website, so the testers' build gets it with the next release and no new upload i
 - **Links**: stores open in a Custom Tab; the cart opens one store per tap in the app; launcher shortcuts and App Links route to
   their page; the app's own "Android app" promo is hidden in it. Plugins come from the app's injected runtime, never from npm
   (`tests/app-auth.test.ts`), so the website and the build cannot drift apart again.
+## 2026-11-19 — A graded-slab variant never prices the raw card
+
+A store can sell a raw single and its slabs as variants of ONE Shopify product ("Near Mint" A$344 beside "Graded -
+Beckett 9.5" US$115, found on OP Compare). `conditionRank` reads a slab label as an unstated condition (Near Mint), so
+the cheaper slab priced the raw card. The Shopify store pass and `bestVariantPrice` (the verify pass) now drop any
+variant `isGradedVariant` (lib/condition.ts) reads as a slab before choosing; a slab-only product gives no row. Slabs
+stay where they belong, in the eBay graded panel. `tests/graded-variant.test.ts`.
+## 2026-11-19: TCGplayer's market price on the price history chart
+
+Owner: "I really really like opcompare's price history where you have the tcgplayer market price as well as the cheapest price
+locally. Can we pls copy it across all our tcg websites?" The card page's chart (`LocalizedPriceHistory` → `PriceChart`) and the
+quick view's now draw a second, dashed gold line under the cheapest-price line: TCGplayer's US market price per day, converted to
+the visitor's market at the same reference rate as the card's own series (`historySource`), labelled "TCGplayer market
+(converted)" outside the US, in the tooltip and a legend. The stats header (Now / Low / High / change) stays the cheapest price's.
+
+- The data is new: `scripts/record-tcg-market.ts`, a step of `refresh-prices.yml` right after the import, writes
+  `data/price-history/tcg-market/<Sydney day>.json` (US cents per card, same shape as `cards/`) from ONE query of the US TCGplayer
+  market rows the import just wrote, never a derived row, market rows preferred over the legacy row (`preferMarketRows`). Never
+  fatal. The publish step commits it with the day's other history; no new eBay or TCGplayer request, no new page database read
+  (the routes read the bundled files).
+- It is a separate script on purpose: a change to `price-import.ts` re-runs the whole import on push.
+- The free 90-day window and Plus's full history apply to it exactly as to the main line. Display only: never a price row, a
+  best price, a deal, an alert, a sort or structured data. It starts with the next import; until then the chart is unchanged.
+
 
 ## Card scanner v2: live viewfinder, and open to everyone signed in (2026-11-19)
 

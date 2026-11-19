@@ -27,6 +27,8 @@ const RANGES = [
   { key: "ALL", days: Infinity },
 ] as const;
 type RangeKey = (typeof RANGES)[number]["key"];
+/** The reference line's gold: OP Compare's TCGplayer market line, dark enough for 3:1 on the light theme's white. */
+const REF_COLOR = "#c8961e";
 
 // `fmt` overrides how values are labelled (default: money). Lets the same chart
 // plot non-currency series like the RiftCompare Index ("104.2 pts").
@@ -39,6 +41,8 @@ export function PriceChart({
   nowOverrideCents,
   rawCardHistory = false,
   onLockedRange,
+  reference,
+  referenceLabel = "TCGplayer market",
 }: {
   points: PricePoint[];
   currency?: string;
@@ -80,6 +84,14 @@ export function PriceChart({
    * the 3M and All pills show a lock and call this instead of switching range.
    */
   onLockedRange?: () => void;
+  /**
+   * A second, dashed gold line read against the first: TCGplayer's market price per day in the same currency (owner,
+   * 2026-11-19, OP Compare's chart: "the tcgplayer market price as well as the cheapest price locally"). Matched to the
+   * main series by day (each day takes the newest reference point on or before it, never one more than three days old),
+   * shown in the tooltip and a legend; the stats header stays the main series'.
+   */
+  reference?: PricePoint[];
+  referenceLabel?: string;
 }) {
   const label = fmt ?? ((v: number) => formatMoney(v, currency));
   const [range, setRange] = useState<RangeKey>(onLockedRange ? "1M" : "ALL");
@@ -125,7 +137,18 @@ export function PriceChart({
     );
   }
 
-  const vs = data.map((p) => p.v);
+  // The reference value on each of the main series' days (null before it starts or when it has gone stale).
+  const ref: (number | null)[] = [];
+  if (reference?.length) {
+    const rs = [...reference].sort((a, b) => a.t - b.t);
+    let j = -1;
+    for (const p of data) {
+      while (j + 1 < rs.length && rs[j + 1].t <= p.t) j++;
+      ref.push(j >= 0 && p.t - rs[j].t <= 3 * 86400_000 && rs[j].v > 0 ? rs[j].v : null);
+    }
+  }
+  const hasRef = ref.filter((v) => v != null).length >= 1;
+  const vs = [...data.map((p) => p.v), ...(ref.filter((v) => v != null) as number[])];
   const min = Math.min(...vs);
   const max = Math.max(...vs);
   const span = Math.max(1, max - min);
@@ -140,6 +163,12 @@ export function PriceChart({
   const y = (v: number) => PAD.t + (1 - (v - min) / span) * (H - PAD.t - PAD.b);
 
   const line = data.map((p, i) => `${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ");
+  // The reference as a path broken where it has no value (a lone day is a dot).
+  let refPath = "";
+  ref.forEach((v, i) => {
+    if (v == null) return;
+    refPath += `${i > 0 && ref[i - 1] != null ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`;
+  });
   const area = `${padL},${(H - PAD.b).toFixed(1)} ${line} ${(W - PAD.r).toFixed(1)},${(H - PAD.b).toFixed(1)}`;
 
   const first = data[0].v;
@@ -255,6 +284,8 @@ export function PriceChart({
 
           <polygon points={area} fill={`url(#${fillId})`} />
           <polyline points={line} fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
+          {hasRef && <path d={refPath} fill="none" stroke={REF_COLOR} strokeWidth="2" strokeDasharray="5 4" strokeLinejoin="round" strokeLinecap="round" />}
+          {hasRef && n <= 60 && ref.map((v, i) => (v == null ? null : <circle key={`r${i}`} cx={x(i)} cy={y(v)} r="2.25" fill={REF_COLOR} />))}
 
           {/* scatter dots (skip when very dense) — a ring in the card-surface
               colour (stroke-ink-900, themed) separates each point from the
@@ -275,6 +306,7 @@ export function PriceChart({
             <g>
               <line x1={x(hover!)} x2={x(hover!)} y1={PAD.t} y2={H - PAD.b} stroke="currentColor" strokeOpacity="0.45" strokeWidth="1" strokeDasharray="3 3" />
               <circle cx={x(hover!)} cy={y(hp.v)} r="4" fill="currentColor" strokeWidth="1.5" className="stroke-ink-900" />
+              {ref[hover!] != null && <circle cx={x(hover!)} cy={y(ref[hover!]!)} r="4" fill={REF_COLOR} strokeWidth="1.5" className="stroke-ink-900" />}
             </g>
           )}
         </svg>
@@ -286,13 +318,31 @@ export function PriceChart({
         {hp && (
           <div
             className="pointer-events-none absolute -translate-x-1/2 rounded-lg border border-ink-700 bg-ink-950/95 px-2.5 py-1.5 text-center shadow-xl"
-            style={{ left: `clamp(4rem, ${(x(hover!) / W) * 100}%, calc(100% - 4rem))`, top: 0 }}
+            style={{ left: hasRef ? `clamp(6.5rem, ${(x(hover!) / W) * 100}%, calc(100% - 6.5rem))` : `clamp(4rem, ${(x(hover!) / W) * 100}%, calc(100% - 4rem))`, top: 0 }}
           >
             <div className="text-sm font-bold text-accent">{label(hp.v)}</div>
+            {hasRef && (
+              <div className="whitespace-nowrap text-[11px] text-slate-300">
+                <span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: REF_COLOR }} />
+                {referenceLabel}: <b className="tabular-nums">{ref[hover!] != null ? label(ref[hover!]!) : "—"}</b>
+              </div>
+            )}
             <div className="whitespace-nowrap text-[10px] text-slate-400">{formatDayUtc(hp.t, true)}</div>
           </div>
         )}
       </div>
+      {hasRef && (
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-4 border-t-2 border-current text-brand-400" />
+            Cheapest listing
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-4" style={{ borderTop: `2px dashed ${REF_COLOR}` }} />
+            {referenceLabel}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

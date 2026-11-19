@@ -20,7 +20,7 @@ import { refreshTcgplayerPrices } from "./tcgplayer";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { refreshCardTraderPrices } from "./cardtrader";
-import { conditionRank, listingCondition } from "./condition";
+import { conditionRank, isGradedVariant, listingCondition } from "./condition";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO, convertCents } from "./fx";
@@ -401,7 +401,7 @@ export function bestVariantPrice(
   variants: ShopifyVariant[],
   sameConditionAs?: { condition: string | null },
 ): { priceCents: number; condition: string | null; variantId?: number } | null {
-  let priced = variants.filter((v) => parseFloat(v.price) > 0 && (v.available as boolean | null | undefined) !== false);
+  let priced = variants.filter((v) => parseFloat(v.price) > 0 && (v.available as boolean | null | undefined) !== false && !isGradedVariant(v.title));
   if (sameConditionAs) {
     const rank = conditionRank(sameConditionAs.condition ?? "");
     priced = priced.filter((v) => conditionRank(v.title) === rank);
@@ -1914,7 +1914,7 @@ export async function importPrices(): Promise<ImportSummary> {
       // Prefer in-stock variants. If none are available but the store still LISTS
       // the card with a price, record it as out-of-stock so the card page can show
       // "Store had it — currently sold out" (useful demand/availability signal).
-      const priced = p.variants.filter((v) => parseFloat(v.price) > 0);
+      const priced = p.variants.filter((v) => parseFloat(v.price) > 0 && !isGradedVariant(v.title));
       if (!priced.length) continue;
       const avail = priced.filter((v) => v.available);
       const inStock = avail.length > 0;

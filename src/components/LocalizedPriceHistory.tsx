@@ -27,6 +27,7 @@ import { ENTRY_TIER_NAME } from "@/lib/site";
 export function LocalizedPriceHistory({
   cardId,
   initialPoints,
+  initialMarket = [],
   initialOlderFrom = null,
   initialCountry,
   rows,
@@ -34,6 +35,8 @@ export function LocalizedPriceHistory({
   cardId: string;
   /** The free window: the last FREE_HISTORY_DAYS (lib/history-access.ts). */
   initialPoints: PricePoint[];
+  /** TCGplayer's US market price per day in the same market's currency (the dashed line), the same window. */
+  initialMarket?: PricePoint[];
   /** When the series older than the free window starts, or null if there is none. */
   initialOlderFrom?: number | null;
   initialCountry: Country;
@@ -46,6 +49,7 @@ export function LocalizedPriceHistory({
 }) {
   const { country, isEurDisplay } = useCountry();
   const [points, setPoints] = useState<PricePoint[]>(initialPoints);
+  const [market, setMarket] = useState<PricePoint[]>(initialMarket);
   const [loaded, setLoaded] = useState<Country>(initialCountry);
   const [loading, setLoading] = useState(false);
   // Plus and Premium read the whole series (./history/full); everyone else the
@@ -67,6 +71,7 @@ export function LocalizedPriceHistory({
       .then((d) => {
         if (!cancelled && d && Array.isArray(d.points)) {
           setPoints(d.points);
+          setMarket(Array.isArray(d.market) ? d.market : []);
           setLoaded(country);
           if (d.full) setFullFor(country);
           else setOlder(typeof d.olderFrom === "number" ? d.olderFrom : null);
@@ -88,6 +93,7 @@ export function LocalizedPriceHistory({
   const showEur = loaded === "UK" && loaded === country && isEurDisplay;
   const currency = showEur ? "EUR" : currencyOf(loaded);
   const chartPoints = useMemo(() => (showEur ? points.map((p) => ({ ...p, v: gbpCentsToEur(p.v) })) : points), [points, showEur]);
+  const marketPoints = useMemo(() => (showEur ? market.map((p) => ({ ...p, v: gbpCentsToEur(p.v) })) : market), [market, showEur]);
 
   // Only trust the live figure once the chart has actually caught up to this
   // market (loaded === country) — mid-fetch, `chartPoints` is still the OLD
@@ -115,6 +121,8 @@ export function LocalizedPriceHistory({
         <PriceChart
           key={member ? "full" : "free"}
           points={chartPoints}
+          reference={marketPoints}
+          referenceLabel={loaded === "US" && !showEur ? "TCGplayer market" : "TCGplayer market (converted)"}
           currency={currency}
           nowOverrideCents={liveLowestCents}
           rawCardHistory

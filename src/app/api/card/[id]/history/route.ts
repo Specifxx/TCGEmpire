@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getPriceHistory } from "@/lib/price-history";
+import { getPriceHistory, getTcgMarketHistory } from "@/lib/price-history";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { olderFrom, recentWindow } from "@/lib/history-access";
 import { newestRecordedPrice } from "@/lib/last-known-price";
@@ -36,7 +36,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   // known price · <day>" where its price box would read "—" and no market has
   // the card in stock (lib/last-known-price.ts). Never a current price.
   return NextResponse.json(
-    { points: recentWindow(all), olderFrom: olderFrom(all), lastKnown: newestRecordedPrice(all), country },
+    // `market`: TCGplayer's US market price per day in this market's currency (the chart's dashed line), the same window.
+    { points: recentWindow(all), olderFrom: olderFrom(all), lastKnown: newestRecordedPrice(all), market: recentWindow(getTcgMarketHistory(card.id, country)), country },
     { headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" } }
   );
 }
