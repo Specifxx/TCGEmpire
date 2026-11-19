@@ -82,3 +82,10 @@ test("the Creators API client is reached only through lib/amazon-live.ts, only f
   assert.match(slot, /24 \* 3600_000/, "the browser shows a price under 24 hours old only");
   assert.match(slot, /accurate as of the date\/time indicated/, "Amazon's disclaimer beside the price");
 });
+
+test("the request-time Amazon price is off and asks Amazon nothing (owner, 2026-11-19)", () => {
+  const src = fs.readFileSync(path.join(process.cwd(), "src/lib/amazon-live.ts"), "utf8");
+  assert.match(src, /export const AMAZON_LIVE_ON = false;/);
+  const body = src.slice(src.indexOf("export async function amazonLivePrice"));
+  assert.ok(body.indexOf('if (!AMAZON_LIVE_ON) return { status: "off" };') < body.indexOf("searchItems("), "off returns before any call");
+});

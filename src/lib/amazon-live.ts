@@ -9,7 +9,14 @@ import { AmazonRefused, credentialsFor, MARKETS, pickListing, searchItems } from
 import type { Country } from "./country";
 import { classifySealed, detectSet, isTrackableSealedTitle } from "./sealed-import";
 
-export type AmazonLiveStatus = "ok" | "none" | "no-credentials" | "no-store" | "refused" | "error";
+export type AmazonLiveStatus = "ok" | "none" | "off" | "no-credentials" | "no-store" | "refused" | "error";
+
+/**
+ * Off (owner, 2026-11-19): card buyers do not buy on Amazon, and the network's Creators API allowance (one account a
+ * country, shared by every site) goes to ScentCompare and KaeYoung. The route answers "off" without calling Amazon, so the
+ * row keeps its tagged search link. Turning it back on is the owner's call (DECISIONS.md).
+ */
+export const AMAZON_LIVE_ON = false;
 export interface AmazonLiveAnswer {
   status: AmazonLiveStatus;
   /** Amazon's own item page, tagged, with the sub id (only with a price). */
@@ -79,6 +86,7 @@ export async function amazonLivePrice(
   const store = amazonFor(country);
   const market = MARKETS[country];
   if (!store || !market) return { status: "no-store" };
+  if (!AMAZON_LIVE_ON) return { status: "off" };
   const creds = credentialsFor(country);
   if (!creds) return { status: "no-credentials" };
   try {
