@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { PRODUCT_PAGE_STORES, SEALED_ONLY_SHOPIFY, productPageReplaceScope } from "../src/lib/sealed-stores";
 import { RETAILER_LIST } from "../src/lib/retailers";
+import { titleGroupKey } from "../src/lib/sealed-import";
 
 // 2026-11-19: the product-page pass deleted every row of its store, so Miniature
 // Market's category read (~24 products, shopware) was wiped by its one product
@@ -28,4 +29,11 @@ test("every product-page store that is also a category store is scoped", () => {
     assert.equal(!!scope.groupKey, categoryKeys.has(s.key), s.key);
     for (const u of s.productUrls) assert.ok(u.startsWith(s.base + "/"), `${s.key}: ${u} is on its own host`);
   }
+});
+
+test("Game Nerdz's Gift of the Rift pre-order page lands on the bundle's one page", () => {
+  const gn = PRODUCT_PAGE_STORES.find((s) => s.key === "gamenerdz");
+  assert.ok(gn?.productUrls.some((u) => /gift-of-the-rift-bundle/.test(u)), "the bundle's page is read (releases 4 Dec)");
+  // Its page title on 19 Nov 2026.
+  assert.equal(titleGroupKey("Riftbound: League of Legends TCG: Gift of the Rift Bundle (Preorder)"), "giftoftheriftbundle");
 });

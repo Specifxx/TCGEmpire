@@ -286,7 +286,12 @@ export const PRODUCT_PAGE_STORES: ProductPageStore[] = [
     country: "US",
     currency: "USD",
     platform: "product-pages",
-    productUrls: ["https://www.gamenerdz.com/riftbound-league-of-legends-tcg-radiance-booster-box-preorder"],
+    // Gift of the Rift Bundle added 2026-11-19 (releases 4 Dec): its own pre-order page, filed under the one
+    // SET_LESS_GROUPS key. Game Nerdz listed no Legacy (Set 6) page that day; add one when it does.
+    productUrls: [
+      "https://www.gamenerdz.com/riftbound-league-of-legends-tcg-radiance-booster-box-preorder",
+      "https://www.gamenerdz.com/riftbound-league-of-legends-tcg-gift-of-the-rift-bundle-preorder",
+    ],
     crawlDelayMs: 10_000,
   },
   {
