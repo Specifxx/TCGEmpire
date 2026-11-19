@@ -24838,3 +24838,19 @@ RiftCompare (owner, 2026-11-17), so `wax` is now `quiet` (its emails say "our sh
 `sports`, instead of `cards`: a Sports card alert no longer ends with a DexCompare deal, nor a card alert with a Sports card deal.
 The same rule moved WargameCompare from `hobby` to `cards` (it is on the cards side) and left FigureCompare alone in `hobby`, now
 quiet too.
+
+## 2026-11-19 — Black Friday strip on sealed pages
+
+The owner's board (19 Nov): ride Black Friday on the pages we already have, no new URLs. `/sealed/<slug>` shows one short card
+above the product's price and board, through 1 Dec (`lib/bf-strip.ts`, `lib/bf-strip-sealed.ts`, `BlackFridayStrip.tsx`, labelled
+by `saleStrip`: Black Friday, then Cyber Monday), in the visitor's market: the cheapest open price today and where, "Free shipping"
+only when that store's MEASURED checkout (`shippingFor`, shipping-rates.json) posts the order free (the probe measured card-sized
+carts, so a paid rate is never quoted for a box), when that price was read, the pre-order date, and where today's price sits
+against the product's own sealed history (data/price-history/sealed). The cue needs 14 priced days in the last 90; it says "Lowest
+price in 90 days" only when the history reaches back 90 days, otherwise "Lowest price since <first day>"; a price that never moved
+says "Same price since <first day>"; above the low it gives the window's real low and its day. A day under half the window's median
+is a wrong listing and never the low, and a window whose prices (or today's against them) differ by more than 2x gets no cue: the
+sealed series holds weeks of wrong-product rows (Origins booster box at US$60 from 29 Sep to 6 Nov), and the strip must not repeat
+them. Built per market on the server and picked in SealedProductView, so the one CDN copy still reads no cookie. No new read, no eBay
+call; the quick view and the phone strip ad are untouched. Same strip on DexCompare, MTG Compare and OP Compare. Judge on buy clicks
+per sealed-page view, 24 Nov to 1 Dec against 10 to 17 Nov.
