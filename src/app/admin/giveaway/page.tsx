@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { isAdminEmail } from "@/lib/admin-emails";
-import { GIVEAWAYS, giveawayState, sydneyDay, MAX_REFERRAL_ENTRIES } from "@/lib/giveaway";
+import { GIVEAWAYS, giveawayState, giveawayFunnel, sydneyDay, MAX_REFERRAL_ENTRIES } from "@/lib/giveaway";
 import { giveawayEntrants, type Entrant } from "@/lib/giveaway-server";
 import { GiveawayDrawButton } from "@/components/giveaway/GiveawayDrawButton";
 
@@ -43,6 +43,8 @@ export default async function GiveawayAdminPage() {
         const perDay = new Map<string, number>();
         for (const r of valid) perDay.set(sydneyDay(r.enteredAt), (perDay.get(sydneyDay(r.enteredAt)) ?? 0) + 1);
         const newestFirst = [...(rows ?? [])].reverse();
+        const funnel = giveawayFunnel(valid, g);
+        const pct = (n: number) => (funnel.entrants ? `${Math.round((100 * n) / funnel.entrants)}% of entrants` : "");
         return (
           <section key={g.key} className="mt-6 rounded-xl border border-white/10 p-4">
             <h2 className="font-semibold">{g.title}</h2>
@@ -58,6 +60,18 @@ export default async function GiveawayAdminPage() {
                   <Stat label="Entries in the draw" value={entries} />
                   <Stat label="On 3+ entries" value={valid.filter((r) => r.weight >= 3).length} />
                   <Stat label="Team (excluded)" value={(rows?.length ?? 0) - valid.length} />
+                </div>
+
+                {/* Owner, 20 Nov 2026: judged as an acquisition campaign (accounts, watches, returns, referrals), not entries. */}
+                <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide opacity-70">Did it bring people in?</h3>
+                <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <Stat label={`New accounts · ${pct(funnel.newAccounts)}`} value={funnel.newAccounts} />
+                  <Stat label={`Signed up on /giveaway · ${pct(funnel.fromGiveawayPage)}`} value={funnel.fromGiveawayPage} />
+                  <Stat label={`Watching a price · ${pct(funnel.watching)}`} value={funnel.watching} />
+                  <Stat label={`Came back another day · ${pct(funnel.cameBack)}`} value={funnel.cameBack} />
+                  <Stat label={`Invited a friend who joined · ${pct(funnel.referrers)}`} value={funnel.referrers} />
+                  <Stat label="Confirmed friends joined" value={funnel.confirmedReferrals} />
+                  <Stat label={`Active after the close · ${state === "closed" ? pct(funnel.activeAfterClose) : "reads after the close"}`} value={funnel.activeAfterClose} />
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-3">
