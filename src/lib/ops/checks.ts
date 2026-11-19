@@ -763,6 +763,7 @@ export async function amazonPrices(d: OpsDeps): Promise<CheckResult> {
   const r = await d.fetch(`${SITE}/api/amazon/sealed/${slug}?c=US`, ua);
   const st = r.ok ? ((await r.json()) as { status?: string }).status ?? "error" : `HTTP ${r.status}`;
   const action = 'Set AMAZON_CREATORS_AU_CLIENT_ID / _CLIENT_SECRET / _VERSION in Vercel (Production) once Associates Central shows the credential; a 403 means the US store\'s account has no qualifying sales yet. Tell Claude: "the Amazon prices check says <status>".';
+  if (st === "off") return result(d, { id, area, title, severity: "ok", summary: "Off by the owner's choice (2026-11-19: the Amazon API allowance goes to ScentCompare); the rows are search links." });
   if (st === "no-credentials") return unknown(d, id, area, title, "No AMAZON_CREATORS_* variables in Vercel: the Amazon rows are search links.");
   if (st === "ok") return result(d, { id, area, title, severity: "ok", summary: `Amazon US priced /sealed/${slug}.` });
   if (st === "none") return result(d, { id, area, title, severity: "ok", summary: `Amazon US answered for /sealed/${slug}; no listing matched it (the row keeps its search link).` });
