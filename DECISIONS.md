@@ -24467,3 +24467,20 @@ above the content of every page is the first thing it sees.
 
 Kept: the phone dock (after a scroll, dismissible, never on a product page), the in-page "Rate us" strip and the
 engaged-only corner rating card.
+
+## eBay calls go to sealed first, the most popular first; cards get what is left (2026-11-19, owner)
+
+The owner, once singles were live on several sites: "we cannot go past the eBay quota … everything goes to sealed
+products first, or at least the most in-demand sealed products, and not the least popular ones … they have TCGplayer
+prices, and they also have their own store prices … we cannot kill the eBay quota." A card page already shows
+TCGplayer's market price and the stores'; a sealed product's eBay price is the one shoppers compare against. So every
+eBay plan now searches every due sealed product, ordered by demand, before any single, and a single gets a call only
+from what sealed leaves. Measured 17-18 Nov before the change: no keyset ran out, but several shared ones ended the
+day at 88-96% of 5,000, and on RiftCompare the singles pass (2,081 calls on 18 Nov) ran before the sealed pass with
+no ceiling of its own.
+
+RiftCompare: the singles passes (catalogue and chase) prime the budget with `hold: SEALED_EBAY_HOLD` (500, env
+`EBAY_SEALED_HOLD`), so they stop 500 calls above the 600 reserve and the sealed pass after them in
+`refresh-prices.yml` always has its calls; the sealed pass primes with no hold and now logs `eBay sealed: spent N`.
+The live-remaining reserve stays the hard stop. If the workflow ever runs sealed before singles, drop the hold
+(`tests/ebay-sealed-first.test.ts` checks the order).
