@@ -182,8 +182,8 @@ export function CardScanner() {
             )}
 
             {it.result && (it.result.alternates.length > 0 || it.result.card) && (
-              <details className="mt-3" open={it.result.confidence === "low"}>
-                <summary className="cursor-pointer text-sm text-ink-200">Wrong card? Pick the right printing</summary>
+              <details className="mt-3" open={it.result.confidence !== "high"}>
+                <summary className="cursor-pointer text-sm text-ink-200">{it.result.confidence === "high" ? "Wrong card? Pick the right printing" : "Which one is yours? Tap to pick"}</summary>
                 <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {[it.result.card, ...it.result.alternates].filter((c): c is CardTileData => !!c).map((c) => (
                     <button

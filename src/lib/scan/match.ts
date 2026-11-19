@@ -189,20 +189,35 @@ function rankByName(byName: { c: ScanCatalogCard; s: number }[], set: string | n
  * any letter or star, a different image. Best first, at most `max`, one card per distinct image. Empty when the best
  * card has no look-alike to tell apart (most cards), so no second call is made.
  */
-export function visualTwins(bestId: string, catalog: ScanCatalogCard[], max = 4): ScanCatalogCard[] {
+export function visualTwins(bestId: string, catalog: ScanCatalogCard[], max = 4, readNumber?: string | null): ScanCatalogCard[] {
   const best = catalog.find((c) => c.id === bestId);
   if (!best?.imageUrl) return [];
   const base = catalogNumber(best).base;
+  // A letter or star the model DID read is evidence the picture check must not overrule (eval v2: Ahri 303* read
+  // right, then "corrected" to 303 by the pictures). Only a bare number leaves the letter open.
+  const readSuffix = parseNumber(readNumber)?.suffix ?? "";
   const seen = new Set<string>([best.imageUrl]);
   const out = [best];
   for (const c of catalog) {
     if (c.id === best.id || c.setCode !== best.setCode || !c.imageUrl || seen.has(c.imageUrl)) continue;
     if (catalogNumber(c).base !== base) continue;
+    if (readSuffix && catalogNumber(c).suffix !== readSuffix) continue;
     if (normName(c.name) !== normName(best.name) && nameSimilarity(normName(c.name), normName(best.name)) < 0.6) continue;
     seen.add(c.imageUrl);
     out.push(c);
   }
   return out.length > 1 ? out.slice(0, max) : [];
+}
+
+/**
+ * Twins that share the full printed number and differ only in being the promo (eval v2: the picture check chose
+ * wrong on 13 of 36 promo photos, because a promo's official image is often the same art). The photo cannot settle
+ * these, so they are never "Match": the page asks which one with both shown.
+ */
+export function onlyPromoTwins(twins: ScanCatalogCard[]): boolean {
+  if (twins.length < 2) return false;
+  const n = (c: ScanCatalogCard) => `${catalogNumber(c).base}${catalogNumber(c).suffix}`;
+  return twins.every((c) => n(c) === n(twins[0]));
 }
 
 function uniq<T>(xs: T[]): T[] {

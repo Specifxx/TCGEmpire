@@ -28,7 +28,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.SCAM_AI_KEY }}
           EVAL_CARDS: "100"
-          EVAL_COMPARE: "1"
+          EVAL_COMPARE: "0" # Sonnet 5.5 measured in run 2 (results-v2): 99.2% vs Haiku 96.7% on hard images, ~20x the price
       - run: cat scripts/scan-eval/results/summary.md >> "$GITHUB_STEP_SUMMARY"
         if: always()
       - name: Commit results

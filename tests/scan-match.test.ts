@@ -107,3 +107,15 @@ test("look-alike printings: a promo with its own photo and an alt art are offere
   const lone = catalog.find((c) => catalog.filter((x) => x.setCode === c.setCode && parseNumber(x.collectorNumber)?.base === parseNumber(c.collectorNumber)?.base).length === 1)!;
   assert.deepEqual(visualTwins(lone.id, catalog), []);
 });
+
+test("a letter or star the model read narrows the look-alikes; booster-vs-promo twins are flagged for the visitor", async () => {
+  const { onlyPromoTwins } = await import("../src/lib/scan/match");
+  const star = catalog.find((c) => c.collectorNumber === "303*/298")!;
+  assert.ok(visualTwins(star.id, catalog, 4, "303*/298").every((c) => c.collectorNumber === "303*/298"));
+  const b = catalog.find((c) => (c as unknown as { externalId: string }).externalId === "ogn-055-298")!;
+  const tw = visualTwins(b.id, catalog, 4, "055/298");
+  assert.ok(tw.length >= 2);
+  assert.equal(onlyPromoTwins(tw), true);
+  const alt = catalog.find((c) => (c as unknown as { externalId: string }).externalId === "ogn-007-298")!;
+  assert.equal(onlyPromoTwins(visualTwins(alt.id, catalog, 4, "007/298")), false);
+});
