@@ -39,6 +39,8 @@ export interface Me {
   // Which OAuth sign-in buttons are configured — for client components that
   // render AuthForm themselves (PremiumDialog's signed-out state).
   providers: ("google" | "discord")[];
+  // The card scanner is open to this viewer (/api/me, lib/scan/caps.ts): the nav's Scan links show.
+  scan?: boolean;
   // /api/me really answered (2xx). False for the EMPTY_ME a failed request
   // falls back to — which reads as "signed out", and must not be acted on as
   // one by anything that would undo a member's state (PremiumProvider's

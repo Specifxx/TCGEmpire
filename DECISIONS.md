@@ -24706,3 +24706,16 @@ eBay link wearing the filled site button (`a[data-ebay].btn-primary`; `OutboundL
 #0064d2 with white ink; arm "a" keeps the orange. Colour only: no outline, tint, position or label changes. `buy_click` carries
 `ebay_btn`. Read 3 Dec with the top-pair test: eBay clicks per arm (the split is even, so totals compare; total buy clicks per arm
 check the split). Keep: `ebayBtn()` returns "b"; drop: "a".
+
+## 2026-11-19: Scan a card leads the binder; Collection and Scan in the desktop header
+
+Owner, 19 Nov: "the scan a card should be within the collection page on mobile and on pc it should be visible somewhere as well
+in the navigation". The navigation, by device:
+
+- Phone: the bottom bar's Collection tab opens `/portfolio`, whose first button is now **Scan a card** (`/scan`). The scanner is not
+  a sixth tab: the bar stays five.
+- Computer: the header carries **Collection** (from xl) and **Scan** (from lg; the search is the row's one flexible element and
+  gives the room), beside Sealed, plus Pricing and the account control as before (`HeaderCollectionLinks.tsx`).
+
+Scan shows only when the scanner is open to the viewer: `/api/me`'s `scan` flag and the binder's `canScan` both come from
+`lib/scan/caps.ts` (`scanAccess`, or public), so the links follow the scanner's own switch and never point at a page that refuses.

@@ -4,6 +4,7 @@ import { analyticsUserId } from "@/lib/ga-user-id";
 import { enabledProviders } from "@/lib/oauth";
 import { isPremium, premiumCheckoutEnabled, trialOfferedTo, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, introEligibleFor } from "@/lib/premium";
 import { billingStateFor } from "@/lib/billing-state";
+import { scanAccess, scanConfig } from "@/lib/scan/caps";
 
 // Session endpoint for the client-side chrome (UserMenu, wishlist sync,
 // premium ad-hiding).
@@ -82,6 +83,14 @@ export async function GET() {
       // thread a prop through. PriceAlertModal still takes its list from the
       // layout; unify later, not in this pass.
       providers: enabledProviders(),
+      // The card scanner is open to this viewer (lib/scan/caps.ts: admins in the beta, everyone once SCAN_PUBLIC=1), so the
+      // header's "Scan" link and the binder's "Scan a card" button show (owner, 2026-11-19: scan inside the collection on phones,
+      // visible in the navigation on a computer). A signed-out visitor counts once it is public: /scan asks them to sign in.
+      scan: (() => {
+        const cfg = scanConfig();
+        const a = scanAccess(cfg, user ? { isAdmin: user.isAdmin, premium: isPremium(user) } : null);
+        return a.ok || (cfg.enabled && cfg.public);
+      })(),
     },
     { headers: { "Cache-Control": "no-store" } }
   );
