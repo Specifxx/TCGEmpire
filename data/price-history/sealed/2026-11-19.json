@@ -33,14 +33,15 @@
       "EU": 12500,
       "SG": 20000,
       "UK": 10799,
-      "US": 14902
+      "US": 12999
     },
     "LGC|Booster Case": {
       "EU": 72000,
-      "US": 69500
+      "US": 69490
     },
     "LGC|Booster Pack": {
-      "CA": 2400
+      "CA": 2400,
+      "US": 599
     },
     "LGC|Bundle": {
       "AU": 6500,
@@ -113,17 +114,17 @@
       "AU": 39900,
       "CA": 26999,
       "EU": 6497,
-      "SG": 33000,
       "UK": 13303,
-      "US": 16992
+      "US": 16493
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 106599
+      "US": 106998
     },
     "OGN|Booster Pack": {
-      "CA": 1370,
+      "AU": 1800,
+      "CA": 1395,
       "UK": 700,
       "US": 500
     },
@@ -170,7 +171,7 @@
       "CA": 5997,
       "EU": 799,
       "SG": 7090,
-      "US": 6346
+      "US": 6484
     },
     "OGN|Champion Deck (Viktor) Display": {
       "US": 27296
@@ -237,10 +238,10 @@
       "EU": 2750,
       "SG": 4720,
       "UK": 2750,
-      "US": 1676
+      "US": 2675
     },
     "RAD|Bundle Case": {
-      "US": 40736
+      "US": 39900
     },
     "RAD|Nexus Night Pack": {
       "US": 899
@@ -310,11 +311,11 @@
     },
     "SFD|Booster Box": {
       "AU": 27000,
-      "CA": 22820,
+      "CA": 23767,
       "EU": 9407,
       "SG": 8404,
       "UK": 11499,
-      "US": 15698
+      "US": 14399
     },
     "SFD|Booster Case": {
       "AU": 180000,
@@ -519,7 +520,7 @@
       "US": 67995
     },
     "VEN|Booster Pack": {
-      "AU": 999,
+      "AU": 1000,
       "CA": 695,
       "EU": 795,
       "SG": 800,
@@ -556,7 +557,7 @@
       "AU": 4500,
       "CA": 4499,
       "EU": 3450,
-      "US": 3192
+      "US": 3200
     },
     "VEN|Sealed": {
       "EU": 300
@@ -567,7 +568,7 @@
       "EU": 1999,
       "SG": 2626,
       "UK": 1699,
-      "US": 1156
+      "US": 1154
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -577,7 +578,7 @@
     "VEN|Sleeved Booster": {
       "CA": 995,
       "EU": 3700,
-      "US": 700
+      "US": 795
     },
     "VEN|Sleeved Booster (Art Set)": {
       "US": 2250
@@ -757,22 +758,22 @@
       "CA": 2155
     },
     "riftboundslabcaitlyn068aarcaneboxsetcgcp": {
-      "CA": 34999
+      "CA": 29999
     },
     "riftboundslabheimerdinger111aarcaneboxse": {
-      "CA": 39999
+      "CA": 34999
     },
     "riftboundslabjinx202barcaneboxsetcgc10ge": {
-      "CA": 39999
+      "CA": 34999
     },
     "riftboundslabvi036aarcaneboxsetcgc9mint2": {
-      "CA": 14999
+      "CA": 12999
     },
     "riftboundslabviktor247barcaneboxsetcgcpr": {
-      "CA": 24999
+      "CA": 19999
     },
     "riftboundslabwarwick159aarcaneboxsetcgcp": {
-      "CA": 29999
+      "CA": 24999
     },
     "riftboundtcgfiorachampiondeck": {
       "CA": 6000
@@ -795,7 +796,7 @@
       "US": 50000
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 25000
+      "US": 27697
     },
     "riftboundxt12025worldschampionsignaturee": {
       "EU": 499900
