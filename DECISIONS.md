@@ -24610,3 +24610,19 @@ your collection." The bottom nav's last tab is now Collection, a link to `/portf
 about it changes; a signed-out visitor is sent to `/login?next=/portfolio` by the page itself). The menu is still one tap away on
 the header's menu button, which stays the one opener (`tests/single-menu-entry.test.ts`). Members keep Watching in place of
 Deals. Same tab as DexCompare, MTG Compare and YGO Compare.
+## 2026-11-19: One group for Gift of the Rift
+
+The Gift of the Rift Bundle (4 Dec 2026) has no set code, so every listing was grouped by its own title cut to 40 letters:
+the 19 Nov sealed data held it under eight such groups ("riftboundleagueoflegendstcggiftoftherift",
+"riftboundgiftoftheriftbundlepreorder", …), each page with one to twelve rows, plus TCGplayer's own row alone under
+"giftoftheriftbundle". TCG Prices takes a Rift group only by the TCGplayer id of that group's own TCGplayer row, so it
+showed the bundle with no store at all, against about 20 store listings here.
+
+`SET_LESS_GROUPS` (`lib/sealed-import.ts`) gives a set-less product ONE fixed key wherever a title is grouped (store
+feeds, product pages, Shopify collections, the TCGplayer catalogue): the key TCGplayer's row already had, so
+`/sealed/giftoftheriftbundle` keeps its URL. It is checked before the set (the bundle's packs come from five sets, and
+a title naming one must not file it under that set), needs the word "bundle", and never takes a case, a lot or several
+bundles. The old title-derived pages are not left to 404 (URL freeze): `/sealed/[slug]` sends any hyphen-less slug
+holding "giftoftherift" to the one page with a permanent redirect (`setLessSlugRedirect`). Add a product to the list
+only with real store titles in `tests/sealed-set-less-groups.test.ts`. Champion Decks that name no champion have the
+same problem and are not on the list: a title without the champion cannot say which deck it is.
