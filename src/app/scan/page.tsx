@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 const STEPS = [
-  { n: "1", title: "Frame it", text: "Fit one card inside the frame, front up." },
-  { n: "2", title: "Hold steady", text: "The edges light up and it snaps on its own." },
+  { n: "1", title: "Point", text: "Hold one card anywhere in view, front up." },
+  { n: "2", title: "Hold steady", text: "It finds the card, outlines it and snaps on its own." },
   { n: "3", title: "See the price", text: "The exact printing, today's prices, one tap to your collection." },
 ];
 
