@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 import { premiumAnnualEnabled, plusAnnualEnabled, tierFromPriceId, priceIdFor, introDiscountsForPriceChange } from "@/lib/premium";
+import { APP_NO_PURCHASE, isAppUserAgent } from "@/lib/app-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,10 @@ export const dynamic = "force-dynamic";
 // the unused part of the current month, and renews a year out. Entitlement then
 // re-stamps itself the usual way — the resulting invoice.paid hits the webhook,
 // which sets premiumUntil to the new (yearly) period end. Nothing to hand-sync.
-export async function POST() {
+export async function POST(req: Request) {
+  // Google Play does not allow a digital subscription to be sold in the Android app outside Play billing (owner, 2026-11-19:
+  // "hide buying in the app for now"). Members keep everything they have there.
+  if (isAppUserAgent(req.headers.get("user-agent"))) return NextResponse.json({ error: APP_NO_PURCHASE }, { status: 403 });
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
   // Which tier's annual price to check for isn't known until the live

@@ -24730,6 +24730,41 @@ blue again (#3665f3, white ink, fixed in both themes) on every site; nothing els
 label), and the cheapest row keeps its mark. RiftCompare and OP Compare had started a 50/50 the same morning; it ended for
 everyone. Read: eBay buy clicks per 100 visitors, the week after release vs 12-18 Nov.
 
+## 2026-11-19: The Android app matches the phone site (sign-in, Premium, ads, links)
+
+Owner (2026-11-19): make the RiftCompare app "a lot better and mobile optimised just like the web app". The app (Play closed test,
+build 1.0.0 from branch `claude/riftcompare-android-app-pone02`: Capacitor 8, App Links on riftcompare.com, the
+`com.riftcompare.app://` scheme, `RiftCompareApp` in its User-Agent) is a WebView of this site, but the website half of that
+branch never merged, so `main`'s old NativeShell ran against it. Audit: the bottom nav and the phone ad strip were switched OFF in
+the app (both treated `.capacitor-native` as "hide": they made room for a native AdMob banner), and that banner ran on Google's
+TEST unit ids (no `NEXT_PUBLIC_ADMOB_*` set), so it earned nothing; Google sign-in fails (Google refuses OAuth in a WebView) and an
+emailed link opened in Chrome, signing in the wrong cookie jar; Premium was sold through Stripe inside the app, which Google Play's
+payments policy forbids for a digital subscription; the cart's "open every store" opened nothing in a WebView. All fixed on the
+website, so the testers' build gets it with the next release and no new upload is needed:
+
+- **Sign-in** (`lib/app-auth.ts`, `lib/native.ts`): in the app a provider link opens the provider in a Custom Tab with a signed
+  state carrying a PKCE-style challenge (the verifier stays in the WebView's localStorage); the callback mints a five-minute,
+  single-use `AuthToken` (purpose "app", token `<challenge>.<code>`) and sends Chrome to `com.riftcompare.app://auth?code=`; the
+  app opens `/login/app`, which trades code + verifier at `/api/auth/app-exchange` for a session in its own jar. A leaked or
+  planted code is useless without the verifier. The web flow is untouched (its hex state still needs the cookie).
+- **App Links**: `public/.well-known/assetlinks.json` names Play's app signing key (Play Console's own snippet), so an emailed
+  sign-in link or any riftcompare.com link opens in the app; `/api/*` and `/go/*` are excluded (Android 15 dynamic rules) so a
+  web sign-in in Chrome is never pulled into the app mid-flow.
+- **Ads**: the AdMob banner is gone (an older one is taken down); the app shows the phone site's bottom nav and ad strip.
+- **Premium** (owner's choice on the card, "hide buying in the app for now"): checkout, upgrade and switch-to-annual refuse the
+  app's User-Agent; `PremiumCta` and `GuestCheckoutButton` render nothing in the app; links to `/premium` and `/premium/start`
+  are hidden and those pages are covered by `AppPremiumNotice`, which names no other way to pay (Play forbids that too). A member
+  keeps every Premium feature after signing in. Play Billing is the later option if the app earns it.
+- **Links**: stores open in a Custom Tab; the cart opens one store per tap in the app; launcher shortcuts and App Links route to
+  their page; the app's own "Android app" promo is hidden in it. Plugins come from the app's injected runtime, never from npm
+  (`tests/app-auth.test.ts`), so the website and the build cannot drift apart again.
+## 2026-11-19 — A graded-slab variant never prices the raw card
+
+A store can sell a raw single and its slabs as variants of ONE Shopify product ("Near Mint" A$344 beside "Graded -
+Beckett 9.5" US$115, found on OP Compare). `conditionRank` reads a slab label as an unstated condition (Near Mint), so
+the cheaper slab priced the raw card. The Shopify store pass and `bestVariantPrice` (the verify pass) now drop any
+variant `isGradedVariant` (lib/condition.ts) reads as a slab before choosing; a slab-only product gives no row. Slabs
+stay where they belong, in the eBay graded panel. `tests/graded-variant.test.ts`.
 ## 2026-11-19: TCGplayer's market price on the price history chart
 
 Owner: "I really really like opcompare's price history where you have the tcgplayer market price as well as the cheapest price

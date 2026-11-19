@@ -12,6 +12,7 @@ import { cookies } from "next/headers";
 import { affiliateCheckoutDiscount, findActiveAffiliate } from "@/lib/creator-affiliate";
 import { AFFILIATE_COOKIE } from "@/lib/creator-affiliate-code";
 import type { CheckoutAffiliate } from "@/lib/checkout-params";
+import { APP_NO_PURCHASE, isAppUserAgent } from "@/lib/app-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,9 @@ export const dynamic = "force-dynamic";
 // email's account. The sign-in step before paying was where most of the
 // Premium page's visitors stopped (DECISIONS.md, "Premium without signing in first").
 export async function POST(req: Request) {
+  // Google Play does not allow a digital subscription to be sold in the Android app outside Play billing (owner, 2026-11-19:
+  // "hide buying in the app for now"). Members keep everything they have there.
+  if (isAppUserAgent(req.headers.get("user-agent"))) return NextResponse.json({ error: APP_NO_PURCHASE }, { status: 403 });
   const user = await getCurrentUser();
   if (!premiumCheckoutEnabled()) {
     return NextResponse.json({ error: "Premium checkout isn't configured yet" }, { status: 503 });

@@ -18,6 +18,7 @@ import { browserKind, buildCheckout, checkLines, isGone, openAll, popupSteps, re
 import { CART_SITE } from "./cart-config";
 import { CartThumb } from "./CartThumb";
 import { CartIcon } from "./CartIcon";
+import { isNativeApp, openExternal } from "@/lib/native";
 
 function track(name: string, params: Record<string, unknown>) {
   try {
@@ -141,7 +142,16 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     setAgain(readPopupMemory());
     setHelp({ kind: browserKind(navigator.userAgent), host: location.host });
   }, []);
+  // Inside the Android app there are no tabs: each store opens in its own browser sheet, one per tap, and the button then
+  // names the next store (lib/native.ts).
+  const [inApp, setInApp] = useState(false);
+  useEffect(() => setInApp(isNativeApp()), []);
   const checkout = () => {
+    if (inApp) {
+      const first = todo[0];
+      if (first) void openExternal(first.url).then((ok) => ok && markDone(first, "app"));
+      return;
+    }
     const r = openAll(todo);
     for (const it of r.opened) markDone(it, blockedTry ? "drawer-retry" : "drawer");
     if (r.opened.length > 1) {
@@ -283,7 +293,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                 <p className="cd-alldone">All {items.length} stores are open. Finish paying in each tab.</p>
               ) : (
                 <button type="button" className="cd-btn" onClick={checkout} disabled={!items.length}>
-                  {showHelp ? `Try again: open all ${todo.length} stores` : started ? `Open the other ${todo.length === 1 ? "store" : `${todo.length} stores`}` : `Check out ${items.length} stores`}
+                  {inApp && todo[0] ? `Open ${todo[0].storeName}${todo.length > 1 ? `, then ${todo.length - 1} more` : ""}` : showHelp ? `Try again: open all ${todo.length} stores` : started ? `Open the other ${todo.length === 1 ? "store" : `${todo.length} stores`}` : `Check out ${items.length} stores`}
                 </button>
               )}
               <div className="cd-links2">

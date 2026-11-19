@@ -160,8 +160,7 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
         // The cart drawer is always in the DOM, aria-modal but inert and aria-hidden while closed: only an open one counts.
         [...document.querySelectorAll("dialog[open], [aria-modal='true']")].some((d) => !d.closest("[inert], [aria-hidden='true']")) ||
         document.body.style.overflow === "hidden" ||
-        root.style.overflow === "hidden" ||
-        root.matches(".capacitor-native");
+        root.style.overflow === "hidden";
       buybar = !!document.querySelector(".buybar, [data-buybar]"); // Rift's card-page buy bar is `.buybar` (CardMobileBuy)
       decide();
     };

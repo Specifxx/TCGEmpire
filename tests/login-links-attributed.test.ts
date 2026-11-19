@@ -35,6 +35,9 @@ const ALLOWLIST = new Set([
   "src/components/AccountForms.tsx",
   "src/app/premium/page.tsx",
   "src/components/PremiumPricingCards.tsx",
+  // The Android app's sign-in return: an error or a retry back to /login, not a sign-up surface (lib/app-auth.ts).
+  "src/components/NativeShell.tsx",
+  "src/components/AppSignInFinish.tsx",
 ]);
 
 // Files whose /login link marks the source on click instead of in the URL.
