@@ -6,15 +6,14 @@
 export const DOCK_ARM_KEY = "dock-arm";
 
 export function dockArm(): "on" | "off" {
+  // Ended 2026-11-19 (owner: "I want it for all the sites, so people have an ad on their phone right there"): every visitor gets the
+  // "on" arm, the dock stacked above the bottom nav. The key is still written so buy_click's `dock_arm` keeps meaning the same.
   try {
-    const a = localStorage.getItem(DOCK_ARM_KEY);
-    if (a === "on" || a === "off") return a;
-    const n = Math.random() < 0.5 ? "on" : "off";
-    localStorage.setItem(DOCK_ARM_KEY, n);
-    return n;
+    localStorage.setItem(DOCK_ARM_KEY, "on");
   } catch {
-    return "off";
+    /* storage refused: still on */
   }
+  return "on";
 }
 
 /** The arm already given (never assigns one), for analytics. */
