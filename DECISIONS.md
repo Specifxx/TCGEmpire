@@ -24520,3 +24520,9 @@ to do monthly giveaways".
   `GET /api/admin/giveaway`, and a draw weighted by entries (`weightedPick`, `crypto.randomInt`) that leaves the team out.
 - `/giveaway` says a giveaway is planned every month (a plan, no prize promised), and has its own share image drawn from
   the prize's art (`assets/og/giveaway-mf-captain.jpg`).
+
+## 2026-11-19: No ads on Premium, account, collection, watches, sign-in or giveaway pages
+
+A production check on a sister site found /premium opening on phones under ad blocks. Premium promises no ads, and these are
+conversion and utility pages, so the layout's ad units (PhoneDockAds) stand down on them (`lib/ad-free-paths.ts`,
+`AdRouteGate.tsx`, `tests/ad-free-paths.test.ts`).

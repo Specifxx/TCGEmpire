@@ -42,6 +42,7 @@ import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED, ADSENSE_SERVING } from "@/lib/adsense";
 import NextTopLoader from "nextjs-toploader";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
+import { AdRouteGate } from "@/components/AdRouteGate";
 
 // Not needed for the initial paint or SEO: the alert modal only opens in
 // response to a PriceWatchButton click. ssr:false + dynamic import keeps it out
@@ -420,7 +421,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Navbar />
                 {/* The phone dock (PhoneDockAds.tsx; owner, 2026-11-06): browser-only, narrow screens, after a scroll, never on a product page;
                     none for ad-free members. The side rails are gone (2026-11-13). */}
-                <PhoneDockAds />
+                <AdRouteGate><PhoneDockAds /></AdRouteGate>
                 {/* The phone bottom nav (BottomNav.tsx; owner, 2026-11-18): browser-only, phones only, behind BOTTOM_NAV in lib/site.ts. */}
                 {BOTTOM_NAV !== "off" && <BottomNav mode={BOTTOM_NAV} />}
                 {/* No announcement ribbon here any more — the homepage's Vendetta
