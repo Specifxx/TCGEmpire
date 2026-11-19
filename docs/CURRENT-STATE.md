@@ -297,7 +297,7 @@ longer lands on its entry.
   A$0.04, A$25 trial cap) or a creator code, A$300 a month in all; a creator's link
   (`utm_medium=creator`) tags their visitors' sub-ids `cr<handle6>`, and the "Paid creators"
   panel on /admin/earnings sets paid ("Creators" costs naming `[id]`) against real tagged sales;
-  under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24871)
+  under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24883)
 - **RiftCompare Premium at $4.99/mo or $39.99/yr with a free 14-day trial again (owner,
   2026-11-05: "use something that we used early on which had the best
   retention"; August's setup, 7 of 7 trials paid):** the

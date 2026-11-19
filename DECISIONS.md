@@ -24857,6 +24857,18 @@ search row wears the filled button, so it is eBay blue like the others. And `scr
 every TCGplayer link must go through Impact (/out/tcgplayer), checked with `classifyLink`, and no component may hard-code a bare eBay
 or TCGplayer href. A failure stops the release: a paid link going out untagged costs more than a late one.
 
+## 2026-11-19: The shared account and alert service never names RiftCompare on another site's flow
+
+Owner, 2026-11-19: "I don't want them to redirect. I don't want the [RiftCompare] logo to appear on any of the site signups."
+
+- Every sister's mail footer now reads "Sent by our shared alert service" (`senderOf`), not only the quiet sites'; the confirm and
+  manage pages' footer reads "Price alerts from our shared alert service". `tests/sister-no-rift-branding.test.ts` pins it.
+- `/api/sister-alerts/unsubscribe` answers with a RELATIVE `Location`, so a visitor who reached it through a sister's own
+  `/account-service/alerts/unsubscribe` rewrite stays on that sister's address.
+- `serviceUrl(path, token, site)` gives a sister's own `/account-service/alerts/<path>` address once its key is in
+  `ON_SITE_ALERT_LINKS` (empty today): add a key only after that sister's `next.config.js` rewrite is live in production.
+- Still RiftCompare's, and only the owner can change them: the Google consent screen's app name, the Discord app's name, Stripe
+  Checkout's business name, and the `noreply@riftcompare.com` sender address.
 
 ## 2026-11-19: [urgent] needs eight hours too: a network ceiling of 57 builds a day
 

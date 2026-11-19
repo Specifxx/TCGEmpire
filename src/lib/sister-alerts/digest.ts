@@ -148,8 +148,8 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
     .join("");
   const cta = `<tr><td style="padding:14px 28px 6px">${button(site, siteLink(site, "/", "weekly-drops", region), `Compare prices on ${site.name}`)}</td></tr>`;
   const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Each price is the lowest in-stock price at ${REGION_LABEL[region]} stores we compare, this week against last week, before postage. Stores change prices quickly, so check before you buy.<br/>${feedbackAsk(site, "weekly-drops")}</td></tr>`;
-  const stop = `${serviceUrl("manage", token)}&stop=${encodeURIComponent(`digest:${site.key}`)}`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you asked ${escapeHtml(site.name)} for its weekly biggest price drops. <a href="${escapeHtml(stop)}" style="color:#4b5563">Stop the weekly email</a> · <a href="${escapeHtml(serviceUrl("manage", token))}" style="color:#4b5563">Manage your emails</a><br/>Sent by ${senderOf(site)}.</td></tr>`;
+  const stop = `${serviceUrl("manage", token, site)}&stop=${encodeURIComponent(`digest:${site.key}`)}`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you asked ${escapeHtml(site.name)} for its weekly biggest price drops. <a href="${escapeHtml(stop)}" style="color:#4b5563">Stop the weekly email</a> · <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your emails</a><br/>Sent by ${senderOf(site)}.</td></tr>`;
   const text = [
     subject,
     "",
