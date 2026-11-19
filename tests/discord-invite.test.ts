@@ -26,3 +26,14 @@ test("RiftCompare points at the hub with its own invite, and shows a reason to j
   assert.match(readFileSync("src/app/layout.tsx", "utf8"), /<DiscordCta /);
   assert.match(readFileSync("src/app/sealed/[slug]/page.tsx", "utf8"), /<DiscordCta /);
 });
+
+test("the hub member count is status only: ok with a number, unknown otherwise, never an alert", async () => {
+  const { discordMembers } = await import("../src/lib/ops/checks");
+  const mk = (res: () => Response) =>
+    ({ now: new Date("2026-11-20T00:00:00Z"), sleep: async () => {}, fetch: async () => res() }) as unknown as Parameters<typeof discordMembers>[0];
+  const ok = await discordMembers(mk(() => new Response(JSON.stringify({ approximate_member_count: 12, approximate_presence_count: 3 }), { status: 200 })));
+  assert.equal(ok.severity, "ok");
+  assert.match(ok.summary, /12 members/);
+  assert.equal((await discordMembers(mk(() => new Response("x", { status: 403 })))).severity, "unknown");
+  assert.equal((await discordMembers(mk(() => { throw new Error("down"); }))).severity, "unknown");
+});
