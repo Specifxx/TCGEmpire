@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { matchScan, parseNumber, normName, type ScanCatalogCard, type ScanReading } from "../src/lib/scan/match";
+import { matchScan, parseNumber, normName, visualTwins, type ScanCatalogCard, type ScanReading } from "../src/lib/scan/match";
 import { scanAccess, scanConfig } from "../src/lib/scan/caps";
 
 const ROOT = process.cwd();
@@ -96,4 +96,14 @@ test("a scan never reaches eBay and the page stays a static, unindexed shell", (
   const page = readFileSync(join(ROOT, "src/app/scan/page.tsx"), "utf8");
   assert.match(page, /index: false/);
   assert.doesNotMatch(page, /getCurrentUser|cookies\(|headers\(|@\/lib\/db/);
+});
+
+test("look-alike printings: a promo with its own photo and an alt art are offered to the picture check; a lone card is not", () => {
+  const base = catalog.find((c) => (c as unknown as { externalId: string }).externalId === "ogn-007-298")!;
+  const twins = visualTwins(base.id, catalog);
+  assert.equal(twins[0].id, base.id);
+  assert.ok(twins.length >= 2 && twins.length <= 4);
+  assert.equal(new Set(twins.map((c) => c.imageUrl)).size, twins.length, "one card per distinct picture");
+  const lone = catalog.find((c) => catalog.filter((x) => x.setCode === c.setCode && parseNumber(x.collectorNumber)?.base === parseNumber(c.collectorNumber)?.base).length === 1)!;
+  assert.deepEqual(visualTwins(lone.id, catalog), []);
 });

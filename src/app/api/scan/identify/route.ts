@@ -5,8 +5,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { cardTileSelect, withStoreCounts } from "@/lib/cards";
 import { getCountry } from "@/lib/get-country";
-import { readCard, scanCostUsd, SCAN_MODEL } from "@/lib/scan/read";
-import { matchScan } from "@/lib/scan/match";
+import { SCAN_MODEL } from "@/lib/scan/read";
+import { identifyCard } from "@/lib/scan/identify";
 import { getScanCatalog } from "@/lib/scan/catalog";
 import { scanAccess, scanConfig, SCAN_MAX_IMAGE_BYTES, utcDay } from "@/lib/scan/caps";
 
@@ -15,8 +15,8 @@ export const maxDuration = 30;
 
 const NO_STORE = { "Cache-Control": "private, no-store" };
 
-// POST { image: <base64 JPEG, no data: prefix> } -> what was read, the matched card (quick-view tile data) and the
-// other printings for "Wrong card?". One Haiku call; never eBay; the photo is not stored (DECISIONS.md 2026-11-19).
+// POST { image: <base64 JPEG, no data: prefix> } -> what was read (lib/scan/identify.ts), the matched card (quick-view tile data) and the
+// other printings for "Wrong card?". One Haiku call, two for look-alike printings; never eBay; the photo is not stored (DECISIONS.md 2026-11-19).
 export async function POST(req: Request) {
   const cfg = scanConfig();
   const user = await getCurrentUser();
@@ -44,16 +44,15 @@ export async function POST(req: Request) {
     }
   }
 
-  let read;
+  const catalog = await getScanCatalog();
+  let m;
   try {
-    read = await readCard(new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 1, timeout: 20_000 }), image);
+    m = await identifyCard(new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 1, timeout: 20_000 }), image, catalog);
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return NextResponse.json({ error: "Too many scans at once. Try again in a moment." }, { status: 429, headers: NO_STORE });
     return NextResponse.json({ error: "We couldn't read that photo right now. Try again." }, { status: 502, headers: NO_STORE });
   }
 
-  const catalog = await getScanCatalog();
-  const m = matchScan(read.reading, catalog);
   const ids = m.bestId ? [m.bestId, ...m.alternateIds] : [];
   const country = getCountry();
   const rows = ids.length
@@ -62,14 +61,15 @@ export async function POST(req: Request) {
   const byId = new Map(rows.map((r) => [r.id, r]));
   return NextResponse.json(
     {
-      reading: read.reading,
+      reading: m.reading,
       confidence: m.confidence,
       why: m.why,
       card: m.bestId ? byId.get(m.bestId) ?? null : null,
       alternates: m.alternateIds.map((id) => byId.get(id)).filter(Boolean),
-      ms: read.ms,
+      ms: m.ms,
       model: SCAN_MODEL,
-      costUsd: Number(scanCostUsd(read.usage).toFixed(6)),
+      twinCheck: m.twinCheck,
+      costUsd: Number(m.costUsd.toFixed(6)),
     },
     { headers: NO_STORE },
   );

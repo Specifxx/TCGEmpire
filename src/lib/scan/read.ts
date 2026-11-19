@@ -49,7 +49,7 @@ export async function readCard(client: Anthropic, imageBase64: string, opts: { m
     model: opts.model ?? SCAN_MODEL,
     max_tokens: 400,
     // Reading printed text needs no reasoning; thinking off keeps a scan near one second.
-    thinking: { type: "disabled" },
+    thinking: thinkingOff(opts.model ?? SCAN_MODEL),
     output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA as unknown as Record<string, unknown> } },
     system: SYSTEM,
     messages: [
@@ -86,6 +86,71 @@ export async function readCard(client: Anthropic, imageBase64: string, opts: { m
     usage,
     ms: Date.now() - t0,
   };
+}
+
+/** "Thinking off" is spelled differently per model: Sonnet 5.5 refuses `disabled` and takes `between_tools`. */
+export function thinkingOff(model: string): Anthropic.ThinkingConfigParam {
+  return (model.startsWith("claude-sonnet-5-5") ? { type: "between_tools" } : { type: "disabled" }) as Anthropic.ThinkingConfigParam;
+}
+
+const TWIN_SYSTEM = [
+  "You compare a phone photo of one trading card with official images of several printings of that same card.",
+  "The printings differ in artwork, frame, foil treatment, a promo stamp, a signature or the collector number's letter or star.",
+  "Pick the official image that shows the same printing as the photo. Ignore glare, angle, lighting and the photo's background.",
+  "If two images look identical, or you cannot tell, set sure to false.",
+].join("\n");
+
+const TWIN_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["choice", "sure"],
+  properties: {
+    choice: { type: "integer", description: "the number of the matching official image (1-based), or 0 if none matches" },
+    sure: { type: "boolean" },
+  },
+} as const;
+
+/**
+ * Step 1b, only when the printed number points at printings with DIFFERENT pictures (a promo with its own art, an
+ * alt art read without its letter, an overnumbered star): one more call with the photo and up to four official images
+ * (fetched by Anthropic from their URLs). Returns the index into `images` or null when not sure.
+ */
+export async function pickTwin(
+  client: Anthropic,
+  imageBase64: string,
+  images: string[],
+  opts: { model?: string } = {},
+): Promise<{ index: number | null; usage: { inputTokens: number; outputTokens: number }; ms: number }> {
+  const t0 = Date.now();
+  const model = opts.model ?? SCAN_MODEL;
+  const content: Anthropic.ContentBlockParam[] = [
+    { type: "text", text: "Photo:" },
+    { type: "image", source: { type: "base64", media_type: "image/jpeg", data: imageBase64 } },
+  ];
+  images.slice(0, 4).forEach((url, i) => {
+    content.push({ type: "text", text: `Official image ${i + 1}:` });
+    content.push({ type: "image", source: { type: "url", url } });
+  });
+  content.push({ type: "text", text: "Which official image is the same printing as the photo?" });
+  const res = await client.messages.create({
+    model,
+    max_tokens: 200,
+    thinking: thinkingOff(model),
+    output_config: { effort: "low", format: { type: "json_schema", schema: TWIN_SCHEMA as unknown as Record<string, unknown> } },
+    system: TWIN_SYSTEM,
+    messages: [{ role: "user", content }],
+  });
+  const usage = { inputTokens: res.usage.input_tokens, outputTokens: res.usage.output_tokens };
+  let index: number | null = null;
+  if (res.stop_reason !== "refusal") {
+    try {
+      const p = JSON.parse(res.content.map((b) => (b.type === "text" ? b.text : "")).join("")) as { choice?: number; sure?: boolean };
+      if (p.sure === true && Number.isInteger(p.choice) && p.choice! >= 1 && p.choice! <= Math.min(4, images.length)) index = p.choice! - 1;
+    } catch {
+      /* not sure */
+    }
+  }
+  return { index, usage, ms: Date.now() - t0 };
 }
 
 /** US dollars for one call at the model's published price (Haiku 5.5 unless told otherwise). */

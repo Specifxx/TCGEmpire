@@ -13,13 +13,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { matchScan, normName, type ScanCatalogCard } from "../../src/lib/scan/match";
-import { readCard, scanCostUsd, SCAN_MODEL } from "../../src/lib/scan/read";
+import { normName, type ScanCatalogCard } from "../../src/lib/scan/match";
+import { SCAN_MODEL } from "../../src/lib/scan/read";
+import { identifyCard } from "../../src/lib/scan/identify";
 
 type Card = ScanCatalogCard & { externalId: string; imageUrl: string | null; orientation: string | null; type: string; rarity: string; isOvernumbered: boolean };
 const ROOT = process.cwd();
 const OUT = join(ROOT, "scripts/scan-eval/results");
 const catalog: Card[] = JSON.parse(readFileSync(join(ROOT, "data/public/cards.json"), "utf8"));
+// What production matches against (lib/scan/catalog.ts): the thumbnail stands in for the image in the twin check.
+const scanCatalog: ScanCatalogCard[] = catalog.map((c) => ({ ...c, imageUrl: (c as Card & { imageThumbUrl?: string | null }).imageThumbUrl ?? c.imageUrl }));
 const N = Number(process.env.EVAL_CARDS || 100);
 const COMPARE = process.env.EVAL_COMPARE === "1";
 const client = new Anthropic({ maxRetries: 3, timeout: 60_000 });
@@ -88,7 +91,7 @@ const CONDITIONS: Record<string, (img: Buffer) => Promise<Buffer>> = {
 const HARD = ["dim light", "far and small", "glare"];
 
 // ── run ─────────────────────────────────────────────────────────────────────
-interface Row { card: string; externalId: string; stratum: string; condition: string; model: string; read: unknown; bestId: string | null; bestExt: string | null; confidence: string; exact: boolean; sameArt: boolean; nameRight: boolean; inPicker: boolean; ms: number; costUsd: number; error?: string }
+interface Row { twinCheck?: string; calls?: number; card: string; externalId: string; stratum: string; condition: string; model: string; read: unknown; bestId: string | null; bestExt: string | null; confidence: string; exact: boolean; sameArt: boolean; nameRight: boolean; inPicker: boolean; ms: number; costUsd: number; error?: string }
 const byId = new Map(catalog.map((c) => [c.id, c]));
 async function fetchImage(url: string): Promise<Buffer | null> {
   for (let i = 0; i < 3; i++) {
@@ -128,8 +131,8 @@ async function main() {
   await pool(jobs, 6, async (j) => {
     const truth = j.card;
     try {
-      const r = await readCard(client, j.img.toString("base64"), { model: j.model });
-      const m = matchScan(r.reading, catalog);
+      const m = await identifyCard(client, j.img.toString("base64"), scanCatalog, { model: j.model });
+      const r = { reading: m.reading, ms: m.ms };
       const best = m.bestId ? byId.get(m.bestId) : undefined;
       const exact = m.bestId === truth.id;
       const sameArt = exact || (!!best && !!best.imageUrl && best.imageUrl === truth.imageUrl);
@@ -137,7 +140,7 @@ async function main() {
         card: truth.name, externalId: truth.externalId, stratum: j.stratum, condition: j.condition, model: j.model, read: r.reading,
         bestId: m.bestId, bestExt: best?.externalId ?? null, confidence: m.confidence, exact, sameArt,
         nameRight: !!best && normName(best.name) === normName(truth.name),
-        inPicker: exact || m.alternateIds.includes(truth.id), ms: r.ms, costUsd: scanCostUsd(r.usage, j.model),
+        inPicker: exact || m.alternateIds.includes(truth.id), ms: r.ms, costUsd: m.costUsd, twinCheck: m.twinCheck, calls: m.calls,
       });
     } catch (e) {
       rows.push({ card: truth.name, externalId: truth.externalId, stratum: j.stratum, condition: j.condition, model: j.model, read: null, bestId: null, bestExt: null, confidence: "error", exact: false, sameArt: false, nameRight: false, inPicker: false, ms: 0, costUsd: 0, error: String((e as Error).message).slice(0, 200) });
@@ -176,7 +179,10 @@ function summarise(all: Row[], skipped: string[]) {
   const conf = groupBy(h, (r) => r.confidence);
   s += `\n### When the page says…\n\n| confidence | images | share of scans | right printing |\n|---|---:|---:|---:|\n`;
   for (const k of ["high", "medium", "low", "none", "error"]) { const rs = conf.get(k) ?? []; if (rs.length) s += `| ${k} | ${rs.length} | ${pct(rs.length, h.length)} | ${pct(rs.filter((r) => r.sameArt).length, rs.length)} |\n`; }
-  s += `\nLatency (model call): median ${(q(0.5) / 1000).toFixed(2)} s, 90th percentile ${(q(0.9) / 1000).toFixed(2)} s. Cost of this whole run: US$${cost.toFixed(3)}; per Haiku scan US$${(h.reduce((a, r) => a + r.costUsd, 0) / Math.max(1, h.length)).toFixed(5)}.\n`;
+  const tw = groupBy(h, (r) => r.twinCheck ?? "none");
+  s += `\n### Look-alike printings (second call comparing pictures)\n\n| twin check | images | right printing |\n|---|---:|---:|\n`;
+  for (const [k, rs] of tw) s += `| ${k} | ${rs.length} | ${pct(rs.filter((r) => r.sameArt).length, rs.length)} |\n`;
+  s += `\nLatency (model calls, both steps): median ${(q(0.5) / 1000).toFixed(2)} s, 90th percentile ${(q(0.9) / 1000).toFixed(2)} s. Cost of this whole run: US$${cost.toFixed(3)}; per Haiku scan US$${(h.reduce((a, r) => a + r.costUsd, 0) / Math.max(1, h.length)).toFixed(5)}.\n`;
   const son = all.filter((r) => r.model !== SCAN_MODEL);
   if (son.length) {
     const keys = new Set(son.map((r) => `${r.externalId}|${r.condition}`));

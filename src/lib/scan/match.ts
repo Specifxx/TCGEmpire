@@ -184,6 +184,27 @@ function rankByName(byName: { c: ScanCatalogCard; s: number }[], set: string | n
   return uniq([...twinsFirst, ...rest, ...byName.map((x) => x.c)].map((c) => c.id)).map((id) => [...pool, ...byName.map((x) => x.c)].find((c) => c.id === id)!);
 }
 
+/**
+ * The printings a photo could be, when the number points at more than one PICTURE: same set and same number before
+ * any letter or star, a different image. Best first, at most `max`, one card per distinct image. Empty when the best
+ * card has no look-alike to tell apart (most cards), so no second call is made.
+ */
+export function visualTwins(bestId: string, catalog: ScanCatalogCard[], max = 4): ScanCatalogCard[] {
+  const best = catalog.find((c) => c.id === bestId);
+  if (!best?.imageUrl) return [];
+  const base = catalogNumber(best).base;
+  const seen = new Set<string>([best.imageUrl]);
+  const out = [best];
+  for (const c of catalog) {
+    if (c.id === best.id || c.setCode !== best.setCode || !c.imageUrl || seen.has(c.imageUrl)) continue;
+    if (catalogNumber(c).base !== base) continue;
+    if (normName(c.name) !== normName(best.name) && nameSimilarity(normName(c.name), normName(best.name)) < 0.6) continue;
+    seen.add(c.imageUrl);
+    out.push(c);
+  }
+  return out.length > 1 ? out.slice(0, max) : [];
+}
+
 function uniq<T>(xs: T[]): T[] {
   return [...new Set(xs)];
 }

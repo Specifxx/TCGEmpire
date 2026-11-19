@@ -85,7 +85,7 @@ test("no request-time AI call exists, and the policy says so", () => {
     }
   };
   walk("src");
-  assert.deepEqual(users.sort(), ["src/app/api/scan/identify/route.ts", "src/lib/scan/read.ts"], "only the card scanner calls a model");
+  assert.deepEqual(users.sort(), ["src/app/api/scan/identify/route.ts", "src/lib/scan/identify.ts", "src/lib/scan/read.ts"], "only the card scanner calls a model");
 });
 
 // ── /about ────────────────────────────────────────────────────────────────────
