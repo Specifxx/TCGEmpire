@@ -39,6 +39,8 @@ export const SIGNUP_SOURCES = new Set<string>([
   "email_link",
   // /featured's "Sign in to feature a listing" (2026-11-07, lib/featured/).
   "featured",
+  // The Android app's Premium page, which sells nothing there (2026-11-19, components/AppPremiumNotice.tsx).
+  "app_premium",
   // RETIRED 2026-09-30 with the sign-up popup ("The sign-up slider is gone").
   // Kept, like "gate" below, so accounts that carry it and a cookie set just
   // before the deploy still parse.

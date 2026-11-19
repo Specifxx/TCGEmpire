@@ -1,0 +1,21 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.riftcompare.app",
+      "sha256_cert_fingerprints": [
+        "C4:01:2A:E4:22:18:CF:55:3B:FA:15:4C:FF:E3:AF:6D:E1:99:97:2A:90:86:23:F3:DA:F6:0D:D7:7A:14:97:09"
+      ]
+    },
+    "relation_extensions": {
+      "delegate_permission/common.handle_all_urls": {
+        "dynamic_app_link_components": [
+          { "/": "/api/*", "exclude": true },
+          { "/": "/go/*", "exclude": true },
+          { "/": "*" }
+        ]
+      }
+    }
+  }
+]

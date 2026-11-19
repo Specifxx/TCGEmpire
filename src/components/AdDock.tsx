@@ -137,9 +137,9 @@ export function AdDock({ label, sides, placement, minWidth, yieldTo = "[data-ad]
           screen: window.innerHeight,
           blockers: blockers.size,
           buybar: !!document.querySelector(buybar),
-          // An ad-free visitor (Plus/Premium where a site has them) and a native app with its own banner: never. Nor while the
+          // An ad-free visitor (Plus/Premium where a site has them): never (the Android app shows it like the phone site). Nor while the
           // phone bottom nav shows (BottomNav.tsx): the two take turns, the nav on scroll up, the dock on scroll down.
-          modal: modal() || document.documentElement.matches(stack ? "[data-adfree], .capacitor-native" : "[data-adfree], .capacitor-native, [data-bottomnav]"),
+          modal: modal() || document.documentElement.matches(stack ? "[data-adfree]" : "[data-adfree], [data-bottomnav]"),
           typing,
           dismissed: false,
         }),
