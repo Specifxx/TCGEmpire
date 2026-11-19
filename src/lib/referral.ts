@@ -11,6 +11,7 @@ import { prisma } from "./db";
 import { grantPremiumDays, REFERRAL_PREMIUM_DAYS, REFERRED_PREMIUM_DAYS } from "./premium";
 import { REFERRAL_COOKIE } from "./referral-cookie";
 import { rewardReferral } from "./coins-server";
+import { CURRENT_GIVEAWAY, giveawayState } from "./giveaway";
 
 export { REFERRAL_COOKIE };
 
@@ -44,6 +45,12 @@ export async function applyReferral(newUserId: string): Promise<void> {
     // And five coin pulls, if the referrer is a Premium member (RiftCompare
     // Coins, lib/coins-server.ts). Keyed by the new account, so once per friend.
     await rewardReferral(referrer.id, newUserId);
+    // A friend who joins while a giveaway is open can earn the inviter a bonus entry (lib/giveaway.ts).
+    if (giveawayState(CURRENT_GIVEAWAY, new Date()) === "open") {
+      await prisma.giveawayReferral
+        .create({ data: { giveaway: CURRENT_GIVEAWAY.key, referrerId: referrer.id, referredId: newUserId }, select: { id: true } })
+        .catch(() => {});
+    }
   } catch {
     // Referral is a bonus, never a gate — swallow everything.
   }

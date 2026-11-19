@@ -69,3 +69,61 @@ export function entryCounts(g: Giveaway, createdAt: Date): boolean {
 export function notifyOnCount(count: number): boolean {
   return count === 1 || (count > 0 && count % 50 === 0);
 }
+
+// ENTRIES PER ACCOUNT (owner, 2026-11-19: "if you are a premium user, you get triple the amount of entries", and
+// "you can increase your entries by referring a friend and getting them to sign up"). Everything here is checked by
+// the site itself, never self-reported:
+// - Every entry starts at BASE_ENTRIES.
+// - A Premium account counts BONUS_ENTRIES instead. So that buying never beats entering free (the rules' "no
+//   purchase necessary"), a free account gets exactly the same BONUS_ENTRIES once it watches the price of at least one
+//   card or sealed product, which is free for every account (lib/free-limits.ts).
+// - Each friend who creates an account through the entrant's invite link while the giveaway is open, and confirms
+//   their email, adds one entry, up to MAX_REFERRAL_ENTRIES. One credit per new account (GiveawayReferral's unique
+//   key), never for the inviter's own account (lib/referral.ts).
+// No "follow us" entries: a follow can't be checked, and many subreddits ban follow-to-enter.
+export const BASE_ENTRIES = 1;
+export const BONUS_ENTRIES = 3;
+export const MAX_REFERRAL_ENTRIES = 10;
+
+export type EntryReason = "premium" | "watch" | "base";
+
+export function entryWeight(opts: { premium: boolean; watches: number; referrals?: number }): {
+  weight: number;
+  reason: EntryReason;
+  referralEntries: number;
+} {
+  const referralEntries = Math.max(0, Math.min(MAX_REFERRAL_ENTRIES, Math.floor(opts.referrals ?? 0)));
+  const reason: EntryReason = opts.premium ? "premium" : opts.watches > 0 ? "watch" : "base";
+  const base = reason === "base" ? BASE_ENTRIES : BONUS_ENTRIES;
+  return { weight: base + referralEntries, reason, referralEntries };
+}
+
+/** The leaderboard's public name: first name and last initial ("Bill Y."), never an email or a full surname. */
+export function publicName(displayName: string | null | undefined, show: boolean): string {
+  if (!show) return "Anonymous entrant";
+  const clean = (displayName ?? "").replace(/\S+@\S+/g, "").replace(/[^\p{L}\p{N} .'_-]/gu, "").trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "Anonymous entrant";
+  const first = parts[0].slice(0, 20);
+  if (parts.length > 1) return `${first} ${parts[parts.length - 1][0].toUpperCase()}.`;
+  // One word with digits, dots or underscores is usually an email's local part or a handle: keep three characters.
+  return /[\d._]/.test(first) ? `${first.slice(0, 3)}***` : first;
+}
+
+/** A weighted draw: each item's chance is its weight over the total. `rand(n)` returns an integer in [0, n). */
+export function weightedPick<T extends { weight: number }>(items: T[], rand: (n: number) => number): T | null {
+  const pool = items.filter((i) => Number.isInteger(i.weight) && i.weight > 0);
+  const total = pool.reduce((s, i) => s + i.weight, 0);
+  if (total === 0) return null;
+  let ticket = rand(total);
+  for (const i of pool) {
+    if (ticket < i.weight) return i;
+    ticket -= i.weight;
+  }
+  return null;
+}
+
+/** "2026-11-19" in Sydney time, for the admin page's entries per day. */
+export function sydneyDay(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}

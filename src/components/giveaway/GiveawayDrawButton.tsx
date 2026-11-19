@@ -12,7 +12,7 @@ export function GiveawayDrawButton({ giveaway }: { giveaway: string }) {
       body: JSON.stringify({ giveaway, exclude: exclude || undefined }),
     });
     const j = await r.json().catch(() => ({}));
-    setOut(r.ok ? `Winner: ${j.winnerEmail} (from ${j.entries} entries)` : (j.error ?? "Draw failed"));
+    setOut(r.ok ? `Winner: ${j.winnerName} <${j.winnerEmail}>, holding ${j.winnerEntries} of ${j.entries} entries (${j.entrants} entrants)` : (j.error ?? "Draw failed"));
   }
   return (
     <div className="mt-3 space-y-2">
