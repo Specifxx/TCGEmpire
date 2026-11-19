@@ -43,6 +43,8 @@ export const SISTER_PREMIUM_SITES: PremiumSite[] = [
   // Lorcana Compare and Cyberpunk Compare (2026-11-19, the same rollout): sign-in, watch list, collection behind sign-in and Premium.
   { key: "lorcana", name: "Lorcana Compare", url: "https://lorcanacompare.com" },
   { key: "cyberpunk", name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com" },
+  // SportsCardCompare (2026-11-19, the same rollout): sign-in, watch list, back-in-stock, collection behind sign-in and Premium. Quiet.
+  { key: "wax", name: "SportsCardCompare", url: "https://sportscardcompare.com" },
 ];
 
 export const PREMIUM_SESSION_DAYS = 60;
