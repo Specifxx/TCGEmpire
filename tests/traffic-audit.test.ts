@@ -14,5 +14,5 @@ test("traffic audit rows: value → [visitors, pageviews], an empty value is (no
 test("the audit is counts only: no path or query-string dimension", () => {
   for (const d of AUDIT_DIMS) assert.ok(!/path|query|url/i.test(d), d);
   const route = readFileSync("src/app/api/demand/[site]/route.ts", "utf8");
-  assert.match(route, /audit") === "1"/);
+  assert.ok(route.includes(`get("audit") === "1"`));
 });
