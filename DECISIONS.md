@@ -24695,3 +24695,14 @@ read only replaces the groups its pages read (`productPageReplaceScope`, `tests/
 store (Game Nerdz) still replaces all its rows, so a page it stops listing drops out. Miniature Market's Legacy booster box, pack
 and Vault Bundle pages (UVSRB06…) were added to its product pages, so the boxes buyers search for are read even on a day the
 category read fails. Game Nerdz has no Legacy page yet.
+
+## 2026-11-19: eBay's own blue on its button, 50/50 (eBay-button A/B)
+
+Owner (2026-11-19) wants more eBay clicks through placement and visibility. Vercel buy clicks, 5-11 Nov vs 12-18 Nov: eBay fell
+31% on DexCompare, 45% here and 60% on OP Compare, from the day the calm palette (2026-11-12) took the colour off the pinned eBay
+row; TCGplayer, which kept its own blue button, rose (Dex +43%, MTG +127%). The calm-palette entry said to strengthen eBay's button
+before bringing any outline back. Test (`lib/ebay-btn.ts`, localStorage `ebay-btn`, 50/50, browser only): arm "b" draws every
+eBay link wearing the filled site button (`a[data-ebay].btn-primary`; `OutboundLink` marks eBay links `data-ebay`) in eBay blue
+#0064d2 with white ink; arm "a" keeps the orange. Colour only: no outline, tint, position or label changes. `buy_click` carries
+`ebay_btn`. Read 3 Dec with the top-pair test: eBay clicks per arm (the split is even, so totals compare; total buy clicks per arm
+check the split). Keep: `ebayBtn()` returns "b"; drop: "a".
