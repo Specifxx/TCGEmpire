@@ -19,7 +19,7 @@ import { inboxEmail } from "./owner";
 export const MAX_PER_HOUR = 8;
 export const MAX_PER_DAY = 25;
 
-export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate" | "creator-profile" | "store-plan" | "sister-alert" | "sister-ad" | "giveaway" | "coach";
+export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate" | "creator-profile" | "store-plan" | "sister-alert" | "sister-ad" | "giveaway" | "checkup";
 
 export interface InboxItem {
   kind: InboxKind;
@@ -47,8 +47,8 @@ const LABEL: Record<InboxKind, string> = {
   "sister-ad": "Paid featured listing",
   // A prize-draw entry milestone (lib/giveaway.ts): the first entry and every 50th, not each one.
   giveaway: "Giveaway entries",
-  // A Deck Coach request (lib/coach.ts, 2026-11-19 test): a deck to review by hand.
-  coach: "Deck Coach request",
+  // A collection check-up request (lib/checkup.ts, 2026-11-19 test): written by hand.
+  checkup: "Collection check-up request",
 };
 
 /** Where the email's button goes: creator applications are reviewed in /admin/affiliates, Stores plans linked in /admin/store-partners. */

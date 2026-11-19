@@ -24643,6 +24643,35 @@ bundles. The old title-derived pages are not left to 404 (URL freeze): `/sealed/
 holding "giftoftherift" to the one page with a permanent redirect (`setLessSlugRedirect`). Add a product to the list
 only with real store titles in `tests/sealed-set-less-groups.test.ts`. Champion Decks that name no champion have the
 same problem and are not on the list: a title without the champion cannot say which deck it is.
+
+## 2026-11-19: Deck Coach test withdrawn
+
+The owner stopped the Deck Coach test the same day (19 Nov): the money in trading cards comes from collectors, not
+players, so a deck-review subscription aims at the wrong buyer. `/coach`, `/api/coach`, `/admin/coach` and
+`lib/coach.ts` are removed before a release shipped them, and the Reddit post is cancelled. Any AI subscription idea
+starts from collectors.
+
+## 2026-11-19: Collection check-up test
+
+In place of the Deck Coach test, the owner chose (decision card, 19 Nov) a collector-first test of the AI subscription
+idea "Collection Advisor": a weekly note on a member's own collection (worth grading, what moved, wishlist cards at a
+good price). Collectors already pay for the data under it (Card Ladder US$20 a month, Market Movers US$9.99 to US$49.99,
+PriceCharting US$5.99) and new AI apps sell "buy/sell signals" at US$7.99. Before anything is built, two weeks of
+hand-written check-ups:
+
+- Rift's binder (`/portfolio`) shows a "Free binder check-up" card to a member with 10+ saved cards
+  (`CHECKUP_MIN_ITEMS`). One tap sends their list (name, set, number, condition, today's value, what they paid) to
+  `/api/checkup`, with an optional question and a "save me the founder price (US$5.99 instead of US$7.99), no charge"
+  tick. The wording is binder language, not trading-desk language (the 2026-09-16 rule on this page).
+- MTG Compare, OP Compare and DexCompare post the same request cross-origin from their exact https origins
+  (`CHECKUP_SITES`, `checkupCors`) with an email; a cross-origin request never reads Rift's session.
+- Each request is a private `Feedback` row (`source: "checkup"`, `site` = the sending site, `consentPublic: false`, no
+  rating), so no review or rating surface reads it, and is emailed to the inbox through `notifyOwnerBounded`
+  (kind `checkup`). `/admin/checkups` (admin session only) lists them with counts by site and founder ticks.
+- No site makes an AI API call. Up to 40 check-ups are written by the team from our own prices.
+- **Read 3 Dec 2026.** Go (build the weekly AI note into Collector Premium, then ask the owner for an API ceiling) if
+  60+ requests AND 25+ founder ticks; stop under 20. `tests/checkup.test.ts`.
+
 ## 2026-11-19: eBay and TCGplayer as two buttons under the phone's Buy (top-pair A/B)
 
 Owner (2026-11-19): Amazon clicks rose about tenfold once its row sat in the top three, "now we want to get more eBay clicks and …

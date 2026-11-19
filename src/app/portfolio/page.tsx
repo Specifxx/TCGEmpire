@@ -20,6 +20,8 @@ import { HoldingsGrid } from "@/components/HoldingsGrid";
 import { PortfolioReplacementCost } from "@/components/PortfolioReplacementCost";
 import { PortfolioQuickAdd } from "@/components/PortfolioQuickAdd";
 import { NavIcon } from "@/components/NavIcon";
+import { CheckupOffer } from "@/components/CheckupOffer";
+import { CHECKUP_MIN_ITEMS } from "@/lib/checkup";
 
 export const dynamic = "force-dynamic";
 
@@ -292,6 +294,19 @@ export default async function PortfolioPage() {
                 </p>
               )}
             </section>
+          )}
+
+          {/* Free binder check-up (lib/checkup.ts, 2026-11-19 test): members with 10+ cards. */}
+          {portfolio.holdings.length >= CHECKUP_MIN_ITEMS && (
+            <CheckupOffer
+              market={info.code}
+              items={portfolio.holdings.map(
+                (h) =>
+                  `${h.quantity}x ${h.name} (${h.setCode} ${h.collectorNumber}${h.isFoil ? ", foil" : ""}, ${h.condition})` +
+                  (h.unitCents != null ? ` ${formatMoney(h.unitCents, info.currency)} each` : "") +
+                  (h.costBasisCents != null ? `, paid ${formatMoney(h.costBasisCents, info.currency)}` : ""),
+              )}
+            />
           )}
 
           {/* Your cards — a visual showcase, dearest first. */}
