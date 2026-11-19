@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { OAUTH_PROVIDERS } from "../src/lib/oauth";
 import { METHODOLOGY_BREAKS } from "../src/lib/methodology-breaks";
@@ -72,8 +72,20 @@ test("no request-time AI call exists, and the policy says so", () => {
   for (const p of ["src/app/api/trade-roast/route.ts", "src/lib/ai-insight.ts", "src/app/api/card/[id]/insight/route.ts"]) {
     assert.ok(!existsSync(join(process.cwd(), p)), `${p} should be gone`);
   }
-  const pkg = JSON.parse(read("package.json"));
-  assert.ok(!pkg.dependencies["@anthropic-ai/sdk"], "no AI SDK left to bill");
+  // The one model call since 2026-11-19 is the card scanner's READ of a photo (lib/scan/read.ts): it writes no
+  // prose, the policy says so, and the privacy page names Anthropic as its processor. Nothing else may import the SDK.
+  assert.match(policy, /The card scanner reads, it does not write/);
+  assert.match(text("src/app/privacy/page.tsx"), /Anthropic<\/strong> — only when you use the card scanner/);
+  const users: string[] = [];
+  const walk = (d: string) => {
+    for (const f of readdirSync(join(process.cwd(), d), { withFileTypes: true })) {
+      const p = join(d, f.name);
+      if (f.isDirectory()) walk(p);
+      else if (/\.(ts|tsx)$/.test(f.name) && /@anthropic-ai\/sdk/.test(read(p))) users.push(p);
+    }
+  };
+  walk("src");
+  assert.deepEqual(users.sort(), ["src/app/api/scan/identify/route.ts", "src/lib/scan/read.ts"], "only the card scanner calls a model");
 });
 
 // ── /about ────────────────────────────────────────────────────────────────────
