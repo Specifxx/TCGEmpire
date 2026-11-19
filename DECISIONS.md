@@ -24707,6 +24707,29 @@ eBay link wearing the filled site button (`a[data-ebay].btn-primary`; `OutboundL
 `ebay_btn`. Read 3 Dec with the top-pair test: eBay clicks per arm (the split is even, so totals compare; total buy clicks per arm
 check the split). Keep: `ebayBtn()` returns "b"; drop: "a".
 
+## 2026-11-19: Scan a card leads the binder; Collection and Scan in the desktop header
+
+Owner, 19 Nov: "the scan a card should be within the collection page on mobile and on pc it should be visible somewhere as well
+in the navigation". The navigation, by device:
+
+- Phone: the bottom bar's Collection tab opens `/portfolio`, whose first button is now **Scan a card** (`/scan`). The scanner is not
+  a sixth tab: the bar stays five.
+- Computer: the header carries **Collection** (from xl) and **Scan** (from lg; the search is the row's one flexible element and
+  gives the room), beside Sealed, plus Pricing and the account control as before (`HeaderCollectionLinks.tsx`).
+
+Scan shows only when the scanner is open to the viewer: `/api/me`'s `scan` flag and the binder's `canScan` both come from
+`lib/scan/caps.ts` (`scanAccess`, or public), so the links follow the scanner's own switch and never point at a page that refuses.
+
+## 2026-11-19: eBay's button is eBay blue again
+
+Owner (2026-11-19): "our eBay clicks have still stagnated. We're nowhere near our all-time high … I really need to increase it."
+Vercel buy clicks: eBay about 240 a day across the network before 12 Nov, about 170 since; 5-11 Nov vs 12-18 Nov DexCompare 706 to
+489, RiftCompare 298 to 165, OP Compare 153 to 61. The fall starts on 12 Nov, when the calm palette made eBay's button ink;
+TCGplayer, which kept its own blue button, rose (DexCompare 545 to 779, MTG Compare 160 to 363). So eBay's buttons wear eBay's own
+blue again (#3665f3, white ink, fixed in both themes) on every site; nothing else about the rows changes (no outline, tint, order or
+label), and the cheapest row keeps its mark. RiftCompare and OP Compare had started a 50/50 the same morning; it ended for
+everyone. Read: eBay buy clicks per 100 visitors, the week after release vs 12-18 Nov.
+
 ## 2026-11-19: The Android app matches the phone site (sign-in, Premium, ads, links)
 
 Owner (2026-11-19): make the RiftCompare app "a lot better and mobile optimised just like the web app". The app (Play closed test,

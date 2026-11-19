@@ -13,6 +13,7 @@ import { HeaderWatchButton } from "./HeaderWatchButton";
 import { CartHeaderLink } from "./cart/CartHeaderLink";
 import { HeaderMegaMenu } from "./HeaderMegaMenu";
 import { HEADER_MENUS } from "./nav-groups";
+import { HeaderCollectionLinks } from "./HeaderCollectionLinks";
 
 // THE SITE'S ONE NAVIGATION (owner, 2026-11-13: "we're making things too
 // complicated … before it was simplicity that was driving it"). Until then a
@@ -92,6 +93,8 @@ export function Navbar() {
             <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 min-[1440px]:hidden [@media(pointer:coarse)]:py-3.5">
               Sealed
             </Link>
+            {/* Collection, and Scan once the scanner is open to this viewer (owner, 2026-11-19), from lg. */}
+            <HeaderCollectionLinks />
             <GetPremiumLink
               surface="nav:navbar"
               className="hidden shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-semibold lg:inline-flex xl:px-2.5 xl:text-sm xl:font-bold [@media(pointer:coarse)]:py-2.5"
