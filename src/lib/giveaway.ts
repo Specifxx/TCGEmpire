@@ -127,3 +127,49 @@ export function weightedPick<T extends { weight: number }>(items: T[], rand: (n:
 export function sydneyDay(d: Date): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Conversion (owner, 20 Nov 2026, Reddit feedback report: "measure this giveaway as a customer acquisition campaign,
+// not just a social media competition"). Pure, so the admin page's numbers are pinned by tests/giveaway.test.ts.
+// The team is left out before this is called. "Came back" means the account was active on a later Sydney day than
+// the one it entered on (User.lastActiveAt, written at most once a day); "still active after the close" means
+// active after closesAt, so it reads 0 until the giveaway ends.
+
+export interface FunnelRow {
+  enteredAt: Date;
+  /** The account was created inside the giveaway window. */
+  newAccount: boolean;
+  /** User.signupSource is "giveaway": the account was made from /giveaway's own sign-in. */
+  fromGiveawayPage: boolean;
+  /** Price alerts and sealed watches the account holds now. */
+  watches: number;
+  /** Confirmed friends who joined through the account's invite link. */
+  referrals: number;
+  lastActiveAt: Date | null;
+}
+
+export interface Funnel {
+  entrants: number;
+  newAccounts: number;
+  fromGiveawayPage: number;
+  watching: number;
+  cameBack: number;
+  referrers: number;
+  confirmedReferrals: number;
+  activeAfterClose: number;
+}
+
+export function giveawayFunnel(rows: FunnelRow[], g: Pick<Giveaway, "closesAt">): Funnel {
+  const close = Date.parse(g.closesAt);
+  const f: Funnel = { entrants: rows.length, newAccounts: 0, fromGiveawayPage: 0, watching: 0, cameBack: 0, referrers: 0, confirmedReferrals: 0, activeAfterClose: 0 };
+  for (const r of rows) {
+    if (r.newAccount) f.newAccounts++;
+    if (r.fromGiveawayPage) f.fromGiveawayPage++;
+    if (r.watches > 0) f.watching++;
+    if (r.lastActiveAt && sydneyDay(r.lastActiveAt) > sydneyDay(r.enteredAt)) f.cameBack++;
+    if (r.referrals > 0) f.referrers++;
+    f.confirmedReferrals += r.referrals;
+    if (r.lastActiveAt && r.lastActiveAt.getTime() > close) f.activeAfterClose++;
+  }
+  return f;
+}
