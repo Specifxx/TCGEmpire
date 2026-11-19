@@ -1977,3 +1977,13 @@ html[data-ebaybtn="b"] a[data-ebay].btn-primary:hover {
 }
 
 
+
+/* The card scanner's "reading" sweep across the frame (components/scan/Viewfinder.tsx, DECISIONS.md 2026-11-19). */
+@keyframes scan-sweep {
+  from { transform: translateY(-4rem); }
+  to { transform: translateY(calc(100% + 40rem)); }
+}
+.scan-sweep { top: 0; animation: scan-sweep 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .scan-sweep { animation: none; top: 45%; }
+}

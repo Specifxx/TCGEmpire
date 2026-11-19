@@ -24706,3 +24706,26 @@ eBay link wearing the filled site button (`a[data-ebay].btn-primary`; `OutboundL
 #0064d2 with white ink; arm "a" keeps the orange. Colour only: no outline, tint, position or label changes. `buy_click` carries
 `ebay_btn`. Read 3 Dec with the top-pair test: eBay clicks per arm (the split is even, so totals compare; total buy clicks per arm
 check the split). Keep: `ebayBtn()` returns "b"; drop: "a".
+
+## Card scanner v2: live viewfinder, and open to everyone signed in (2026-11-19)
+
+The owner tested the beta on his phone the same evening ("the scanner works") and asked for three things: a camera
+view that frames the card with guides and captures on its own, a page that looks like a product rather than two
+buttons, and the scanner open to everyone for a Reddit launch ("100% free for 5 scans a day").
+
+- **Live viewfinder** (`components/scan/Viewfinder.tsx`, `lib/scan/frame.ts`). The camera opens only when the visitor
+  taps Start, and stops when the tab hides or the page is left. `next.config.js` lets `/scan` alone ask for it
+  (`camera=(self)`, the last matching rule wins); every other page still sends `camera=()`. About eight times a second
+  a 180 px grey copy of the picture is judged in the browser: each side of the card-shaped frame lights when a strong
+  edge sits on it, and auto-capture fires after half a second of three lit sides, a sharp print (variance of the
+  Laplacian) and a still phone (mean frame change). Three sides, not four, because a thumb or a sleeve hides one. Only
+  the captured frame (the guide plus 8%, at most 1,024 px) leaves the phone, exactly as a photo did; the video is never
+  recorded or sent. After a capture, auto waits until the card leaves the frame or is swapped, so one card never spends
+  two free scans; the shutter always takes another. The photo inputs stay under it for browsers without a camera.
+- **Measured** with Chromium's fake camera playing two real card images sliding onto a table: each card captured once
+  (5.2 s and 10.8 s into the clip), cropped to the card, and the quick view opened. Thresholds (`FRAME_LIMITS`) come
+  from synthetic frames in `tests/scan-frame.test.ts`; real phones may move them.
+- **Open** (`lib/scan/caps.ts`): public unless `SCAN_PUBLIC=0`, sign-in required, 5 a day free, 100 Premium, admins
+  unlimited. The site cap rises to 1,000 a day for the launch: at the measured US$0.0003 a scan that is at most about
+  US$0.30 a day. A scan that fails on our side is given back. The response carries `remaining`, shown under the shutter.
+- The page stays noindex and out of the sitemap: it is an app screen, linked from the collection and the header.

@@ -578,6 +578,12 @@ const nextConfig = {
       // Everything else keeps the clickjacking-protective defaults (negative
       // lookahead so this rule never double-sets headers on /embed/*).
       { source: "/((?!embed/).*)", headers: securityHeaders },
+      // The card scanner's live viewfinder (DECISIONS.md 2026-11-19 "Card scanner v2") is the one page that may ask for
+      // the camera, and only for this origin. Next applies the last matching rule for a header key, so this overrides
+      // the camera=() above on /scan alone; every other page still denies it. Written as a pattern (it matches exactly
+      // "/scan") so tests/watchlist.test.ts's redirect-shadow check, which reads every static source, does not take it
+      // for a redirect.
+      { source: "/:page(scan)", headers: [{ key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" }] },
 
       // /llm/* — the markdown mirrors of card, blog, guide and market pages for
       // AI agents (llms.txt, and each page's rel=alternate). Search Console had

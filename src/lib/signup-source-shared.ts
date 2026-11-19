@@ -28,6 +28,8 @@ export type InlineSignupSurface = (typeof INLINE_SIGNUP_SURFACES)[number];
 
 export const SIGNUP_SOURCES = new Set<string>([
   "navbar",
+  // The card scanner's sign-in card on /scan (2026-11-19).
+  "scan",
   // The Stores plan (2026-10-23): the subscribe form on /stores and the
   // signed-out /stores/account page.
   "stores_plan",
