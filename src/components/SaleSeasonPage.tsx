@@ -13,7 +13,7 @@ import { ebayLabel, ebaySealedQuery, ebaySearchUrl } from "@/lib/affiliate";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { sealedDeals, UNDER_MEDIAN_PCT, UNDER_MSRP_PCT } from "@/lib/black-friday";
-import { listRegions, saleDates, saleHeading, saleIntro, saleYear, SALE_SEASONS, type SaleSlug } from "@/lib/sale-seasons";
+import { listRegions, saleDates, saleHeading, saleIntro, saleYear, SALE_SEASONS, type SaleSlug, saleIndexable } from "@/lib/sale-seasons";
 
 // The seasonal sale pages: /boxing-day, /january-sales and /lunar-new-year (2026-11-02,
 // DECISIONS.md "Seasonal sale pages"). One URL each, kept every year like /black-friday, and
@@ -69,6 +69,7 @@ export function saleMetadata(slug: SaleSlug): Metadata {
       description: "Sealed Riftbound products under the other stores or the MSRP, checked daily.",
       url: path,
     }),
+    ...(saleIndexable(slug, new Date().toISOString().slice(0, 10)) ? {} : { robots: { index: false, follow: true } }),
   };
 }
 

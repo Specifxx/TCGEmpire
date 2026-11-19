@@ -46,3 +46,17 @@ test("the wording names every region, never one country", () => {
   for (const s of ["boxing-day", "january-sales", "lunar-new-year", "valentines-day"] as const)
     assert.doesNotMatch(saleIntro(s, 2027, "x"), /\bwas\b|ends soon|limited time/i);
 });
+
+test("sale pages are indexed only in season; Lunar New Year and Valentine's Day never (2026-11-19)", async () => {
+  const { saleIndexable, withoutOffSeasonSales } = await import("../src/lib/sale-seasons");
+  assert.equal(saleIndexable("lunar-new-year", "2027-02-01"), false);
+  assert.equal(saleIndexable("valentines-day", "2027-02-10"), false);
+  assert.equal(saleIndexable("boxing-day", "2026-11-19"), true); // 25 + 21 days ahead of 26 Dec starts 10 Nov
+  assert.equal(saleIndexable("boxing-day", "2026-11-05"), false);
+  assert.equal(saleIndexable("boxing-day", "2027-01-02"), true);
+  assert.equal(saleIndexable("boxing-day", "2027-01-03"), false);
+  assert.equal(saleIndexable("january-sales", "2026-11-19"), false);
+  assert.equal(saleIndexable("january-sales", "2026-12-01"), true);
+  assert.equal(saleIndexable("january-sales", "2027-02-08"), false);
+  assert.deepEqual(withoutOffSeasonSales(["/a", "/boxing-day", "/au/january-sales", "/lunar-new-year"], "2026-11-19"), ["/a", "/boxing-day"]);
+});
