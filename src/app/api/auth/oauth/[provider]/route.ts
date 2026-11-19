@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri } from "@/lib/oauth";
 import { sanitizeNextPath } from "@/lib/next-param";
 import { PREMIUM_START_PATH } from "@/lib/premium-start";
+import { sisterOAuthCookie } from "@/lib/sister-oauth";
 
 // Kick off the OAuth flow: set a CSRF state cookie and redirect to the provider.
 export async function GET(req: Request, { params }: { params: { provider: string } }) {
@@ -21,6 +22,8 @@ export async function GET(req: Request, { params }: { params: { provider: string
     return NextResponse.redirect(dest);
   }
   const cfg = providerConfig(provider);
+  // A sister site's abandoned round trip (lib/sister-oauth.ts) must not send THIS Rift sign-in to that site.
+  cookies().set(sisterOAuthCookie(provider), "", { path: "/", maxAge: 0 });
   const state = randomBytes(16).toString("hex");
   cookies().set(`oauth_state_${provider}`, state, {
     httpOnly: true,
