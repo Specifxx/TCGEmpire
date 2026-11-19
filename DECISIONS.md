@@ -24823,3 +24823,9 @@ deals and everything". ScentCompare goes first, then KaeYoung.
   both sit on the other side of the network from RiftCompare.
 - `quiet: true`: their emails' footers say "our shared alert service", never RiftCompare (`senderOf`). The From address stays the shared
   verified sender with the site's own name.
+
+## 2026-11-19 — Lorcana Compare and Cyberpunk Compare join the shared sign-in and Premium
+
+The same rollout as ScentCompare and KaeYoung (owner, 2026-11-19: accounts on every compare site). Both were already on the shared
+alert service; adding them to `SISTER_PREMIUM_SITES` gives them the sign-in (Google, Discord, emailed link), the watch list and Stripe
+Premium. Their emails keep naming RiftCompare's service as before (same side of the network, not `quiet`).

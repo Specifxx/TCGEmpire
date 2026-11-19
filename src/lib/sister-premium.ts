@@ -40,6 +40,9 @@ export const SISTER_PREMIUM_SITES: PremiumSite[] = [
   // Premium. Their emails never name RiftCompare (`quiet` in lib/sister-alerts/sites.ts).
   { key: "scent", name: "ScentCompare", url: "https://scentcompare.app" },
   { key: "kaeyoung", name: "KaeYoung", url: "https://kaeyoung.com" },
+  // Lorcana Compare and Cyberpunk Compare (2026-11-19, the same rollout): sign-in, watch list, collection behind sign-in and Premium.
+  { key: "lorcana", name: "Lorcana Compare", url: "https://lorcanacompare.com" },
+  { key: "cyberpunk", name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com" },
 ];
 
 export const PREMIUM_SESSION_DAYS = 60;
