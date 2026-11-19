@@ -10,15 +10,14 @@
 export const EBAY_BTN_KEY = "ebay-btn";
 
 export function ebayBtn(): "a" | "b" {
+  // Ended 2026-11-19, the same day (owner: "our eBay clicks have still stagnated … I really need to increase it"): every visitor gets
+  // arm "b", eBay's own blue, as every other site's eBay button now does. The key is still written so `ebay_btn` keeps its meaning.
   try {
-    const v = localStorage.getItem(EBAY_BTN_KEY);
-    if (v === "a" || v === "b") return v;
-    const n = Math.random() < 0.5 ? "b" : "a";
-    localStorage.setItem(EBAY_BTN_KEY, n);
-    return n;
+    localStorage.setItem(EBAY_BTN_KEY, "b");
   } catch {
-    return "a";
+    /* storage refused: still b */
   }
+  return "b";
 }
 
 /** Sets `<html data-ebaybtn>` (browser only). */
