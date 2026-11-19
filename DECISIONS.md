@@ -24729,3 +24729,11 @@ TCGplayer, which kept its own blue button, rose (DexCompare 545 to 779, MTG Comp
 blue again (#3665f3, white ink, fixed in both themes) on every site; nothing else about the rows changes (no outline, tint, order or
 label), and the cheapest row keeps its mark. RiftCompare and OP Compare had started a 50/50 the same morning; it ended for
 everyone. Read: eBay buy clicks per 100 visitors, the week after release vs 12-18 Nov.
+
+## 2026-11-19 — A graded-slab variant never prices the raw card
+
+A store can sell a raw single and its slabs as variants of ONE Shopify product ("Near Mint" A$344 beside "Graded -
+Beckett 9.5" US$115, found on OP Compare). `conditionRank` reads a slab label as an unstated condition (Near Mint), so
+the cheaper slab priced the raw card. The Shopify store pass and `bestVariantPrice` (the verify pass) now drop any
+variant `isGradedVariant` (lib/condition.ts) reads as a slab before choosing; a slab-only product gives no row. Slabs
+stay where they belong, in the eBay graded panel. `tests/graded-variant.test.ts`.
