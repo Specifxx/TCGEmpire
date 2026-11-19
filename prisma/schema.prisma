@@ -1678,9 +1678,29 @@ model GiveawayEntry {
   giveaway  String
   userId    String
   createdAt DateTime @default(now())
+  // Entries this account counts as in the draw (lib/giveaway.ts entryWeight): 3 for Premium or for a free
+  // account that watches a price, else 1. Raised when the account presses the button again; the admin page and the
+  // draw also recompute it, so the higher of the two counts.
+  weight    Int      @default(1)
+  // The public leaderboard on /giveaway shows a short form of the account's name unless the entrant hides it.
+  showName  Boolean  @default(true)
 
   @@unique([giveaway, userId])
   @@index([giveaway])
+}
+
+// A friend who joined through an entrant's invite link while a giveaway was open (lib/referral.ts). Each new
+// account counts once per giveaway; it earns the inviter a bonus entry only once the friend's email is confirmed
+// (lib/giveaway-server.ts), capped at MAX_REFERRAL_ENTRIES. Private.
+model GiveawayReferral {
+  id         String   @id @default(cuid())
+  giveaway   String
+  referrerId String
+  referredId String
+  createdAt  DateTime @default(now())
+
+  @@unique([giveaway, referredId])
+  @@index([giveaway, referrerId])
 }
 
 model Counter {
