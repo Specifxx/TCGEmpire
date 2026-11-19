@@ -43,6 +43,7 @@ import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED, ADSENSE_SERVING } from "@/lib/ad
 import NextTopLoader from "nextjs-toploader";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
 import { AdRouteGate } from "@/components/AdRouteGate";
+import { EbayBtnArm } from "@/components/EbayBtnArm";
 
 // Not needed for the initial paint or SEO: the alert modal only opens in
 // response to a PriceWatchButton click. ssr:false + dynamic import keeps it out
@@ -424,6 +425,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <AdRouteGate><PhoneDockAds /></AdRouteGate>
                 {/* The phone bottom nav (BottomNav.tsx; owner, 2026-11-18): browser-only, phones only, behind BOTTOM_NAV in lib/site.ts. */}
                 {BOTTOM_NAV !== "off" && <BottomNav mode={BOTTOM_NAV} />}
+                {/* The eBay-button A/B (lib/ebay-btn.ts, 2026-11-19): sets <html data-ebaybtn> in the browser. */}
+                <EbayBtnArm />
                 {/* No announcement ribbon here any more — the homepage's Vendetta
                     block (right under the hero) carries the "it's here" message
                     with real prices instead of a repeating marquee claim. */}
