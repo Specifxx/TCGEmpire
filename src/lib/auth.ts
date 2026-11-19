@@ -49,7 +49,7 @@ export interface SessionUser {
 
 // One-time tokens: email verification, password reset (retired) and, since
 // 2026-11-06, the emailed sign-in link ("login", lib/email-sign-in.ts).
-export type AuthTokenPurpose = "verify" | "reset" | "login";
+export type AuthTokenPurpose = "verify" | "reset" | "login" | "app"; // "app": lib/app-auth.ts writes its own rows
 export async function createAuthToken(
   userId: string,
   purpose: AuthTokenPurpose,

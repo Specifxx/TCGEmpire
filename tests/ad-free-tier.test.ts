@@ -117,14 +117,11 @@ test("the ad placements that leaked to paying members now read adFree", () => {
   assert.match(carousel.slice(fallbackAt, fallbackAt + 400), /<EbayBuyCta /, "…the non-ad EbayBuyCta, as EbayPicksLive does");
   assert.doesNotMatch(read("src/components/EbayBuyCta.tsx"), /Ad ·/, "the fallback CTA itself carries no 'Ad' label");
 
-  // The native app's AdMob banner was shown unconditionally.
+  // The native app's AdMob banner (test ids, shown to paying members too) is gone since 2026-11-19: the app shows the phone
+  // site's ad strip, which reads adFree like the web, and takes down any banner an older page left up.
   const shell = code("src/components/NativeShell.tsx");
-  const meAt = shell.indexOf("await fetchMe()");
-  const showAt = shell.indexOf("AdMob.showBanner(");
-  assert.ok(meAt > 0 && showAt > meAt, "the session must be read before the banner is shown");
-  assert.match(shell.slice(meAt, showAt), /if \(me\.adFree\) \{[\s\S]*?return;/, "an ad-free viewer never gets the banner");
-  assert.match(shell, /AdMob\.hideBanner\(\)/, "a banner left from before sign-in is taken down");
-  assert.match(shell, /ME_INVALIDATED_EVENT/, "and it comes down when the session changes in place (a purchase activating)");
+  assert.doesNotMatch(shell, /showBanner\(/, "the app never shows a native banner");
+  assert.match(shell, /removeBanner\?\.\(\)/, "a banner left from before is taken down");
   assert.match(code("src/lib/use-me.ts"), /window\.dispatchEvent\(new Event\(ME_INVALIDATED_EVENT\)\)/);
 });
 

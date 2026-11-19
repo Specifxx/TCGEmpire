@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 import { plusConfigured, tierFromPriceId, priceIdFor, introDiscountsForPriceChange } from "@/lib/premium";
+import { APP_NO_PURCHASE, isAppUserAgent } from "@/lib/app-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,10 @@ export const dynamic = "force-dynamic";
 // The reverse move is api/premium/downgrade. Keep plan switching OFF in the
 // Stripe portal: a portal switch skips introDiscountsForPriceChange, and on
 // this API version a portal switch mid-trial ends the trial and charges.
-export async function POST() {
+export async function POST(req: Request) {
+  // Google Play does not allow a digital subscription to be sold in the Android app outside Play billing (owner, 2026-11-19:
+  // "hide buying in the app for now"). Members keep everything they have there.
+  if (isAppUserAgent(req.headers.get("user-agent"))) return NextResponse.json({ error: APP_NO_PURCHASE }, { status: 403 });
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
   // plusConfigured, not premiumPlusEnabled: Plus is off sale since 2026-10-23
