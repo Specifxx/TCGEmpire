@@ -24643,3 +24643,10 @@ bundles. The old title-derived pages are not left to 404 (URL freeze): `/sealed/
 holding "giftoftherift" to the one page with a permanent redirect (`setLessSlugRedirect`). Add a product to the list
 only with real store titles in `tests/sealed-set-less-groups.test.ts`. Champion Decks that name no champion have the
 same problem and are not on the list: a title without the champion cannot say which deck it is.
+
+## 2026-11-19: Deck Coach test withdrawn
+
+The owner stopped the Deck Coach test the same day (19 Nov): the money in trading cards comes from collectors, not
+players, so a deck-review subscription aims at the wrong buyer. `/coach`, `/api/coach`, `/admin/coach` and
+`lib/coach.ts` are removed before a release shipped them, and the Reddit post is cancelled. Any AI subscription idea
+starts from collectors.
