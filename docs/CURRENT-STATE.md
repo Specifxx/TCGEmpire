@@ -32,7 +32,7 @@ longer lands on its entry.
 - **At most one production build every 12 hours, and production only (owner, 2026-11-02):**
   Vercel spend is capped at $5–6 a day; 1 November cost $11.82 after 14 `[deploy]` builds here. The
   ignore script skips a `[deploy]` commit within 12 hours of the last production deployment
-  (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject overrides, only on the owner's word.
+  (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject shortens the wait to 8 hours, only on the owner's word ([2026-11-19](../DECISIONS.md#2026-11-19-urgent-needs-eight-hours-too-a-network-ceiling-of-57-builds-a-day)).
   `vercel.json` sets `"**": false` with `"main": true`, so no branch or pull request builds a
   preview, `[preview]` included. [2026-11-02](../DECISIONS.md#L21685)
 - **The after-deploy check reads the public site (2026-11-13):** `seo-preview-gate.yml` checks a
