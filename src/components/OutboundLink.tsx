@@ -181,6 +181,7 @@ export function OutboundLink({
     | "ebay_panel"
     | "ebay_search"
     | "ebay_fallback"
+    | "tcg_fallback"
     | "ebay_cta"
     | "ebay_banner"
     | "ebay_picks"

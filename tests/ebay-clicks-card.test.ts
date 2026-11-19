@@ -63,7 +63,7 @@ test("the colour is the only thing that changed: both tables still rank by price
 // TCGplayer lead every price list".
 test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when there is one, else the search and the market price", () => {
   const src = read(SECTION);
-  const lead = src.indexOf('{(pin.ebay || ebay || pin.tcgplayer || tcg) && (');
+  const lead = src.indexOf('{(pin.ebay || ebay || pin.tcgplayer || tcg || tcgSearchHref) && (');
   const ranked = src.indexOf("{[...rest.map((p) => ({ price: p.priceCents, node: renderRow(p, false) })), ...fetchItems]");
   assert.ok(lead > 0 && ranked > lead, "the pinned rows render before the ranked rest");
   const block = codeOnly(src.slice(lead, ranked));
@@ -74,6 +74,7 @@ test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when ther
   assert.match(block, /\{pin\.tcgFirst\s*\?\s*null\s*:\s*pin\.tcgplayer/, "never drawn twice");
   assert.match(block, /retailer="ebay_no_listing"/);
   assert.match(block, /surface="ebay_fallback"/);
+  assert.match(block, /surface="tcg_fallback"/, "TCGplayer's tagged search when the market has no TCGplayer row (2026-11-19)");
   assert.doesNotMatch(block, /TCGplayer may not ship|approximate rate|Check on TCGplayer/, "no reference or approximate wording on the TCGplayer row (owner, 2026-11-12)");
   assert.doesNotMatch(block, /cheaper|guarantee|buyer protection/i);
   // Nothing else moved: the gate, and Cardmarket stays a reference outside the list.

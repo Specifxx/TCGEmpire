@@ -24838,3 +24838,13 @@ color change … make it stand out even more". Every visitor keeps eBay's blue b
 row that holds an eBay button eBay blue with a blue edge. Shape and colour only: no new words, no new claim (eBay is called the cheapest
 only when it is), no position change, no extra eBay API call, white on #0064d2 passes contrast. Run on Rift, Dex, MTG and OP. Read
 3 Dec: eBay buy clicks per arm, total buy clicks per arm as the check; keep the winner and roll it out to the other card sites.
+
+## 2026-11-19 — Paid rows always there, and a tag lint that stops the build
+
+From the 19 Nov boardroom review, on the four money sites: a row that is always there beats a perfect row that is often missing. The
+card page's pinned block is now always drawn: eBay's tagged search already stood in when a market had no eBay listing, and now
+TCGplayer's tagged search (`tcgSearchHref`, surface `tcg_fallback`) stands in when a market has no TCGplayer row or reference. eBay's
+search row wears the filled button, so it is eBay blue like the others. And `scripts/tag-lint.ts` runs first in `npm run build`
+(`src/lib/tag-lint.ts`, `tests/tag-lint.test.ts`): every eBay builder in every market must carry campaign 5339155912 and a customid,
+every TCGplayer link must go through Impact (/out/tcgplayer), checked with `classifyLink`, and no component may hard-code a bare eBay
+or TCGplayer href. A failure stops the release: a paid link going out untagged costs more than a late one.
