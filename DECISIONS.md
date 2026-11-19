@@ -24643,3 +24643,15 @@ bundles. The old title-derived pages are not left to 404 (URL freeze): `/sealed/
 holding "giftoftherift" to the one page with a permanent redirect (`setLessSlugRedirect`). Add a product to the list
 only with real store titles in `tests/sealed-set-less-groups.test.ts`. Champion Decks that name no champion have the
 same problem and are not on the list: a title without the champion cannot say which deck it is.
+## 2026-11-19: eBay and TCGplayer as two buttons under the phone's Buy (top-pair A/B)
+
+Owner (2026-11-19): Amazon clicks rose about tenfold once its row sat in the top three, "now we want to get more eBay clicks and …
+more TCGplayer clicks. And positioning is really important", with leave to ship placement improvements without asking. The card
+table already leads with eBay then TCGplayer; what a phone sees first is `CardTopBuy`, one Buy button for the cheapest listing, which
+is usually a store that pays nothing, with the paid alternative as one muted text line (2026-10-27). Test, 50/50 in the browser
+(`lib/top-pair.ts`, localStorage `top-arm`): arm "pair" draws eBay's and TCGplayer's own cheapest rows within 20% (the line's band,
+same finish) as two real buttons with their real prices and "+N%" under an "Also on · Paid link" label; arm "line" keeps the line.
+The cheapest keeps "Best price" and its own Buy button, the comparison is untouched, the server HTML is arm "line". `buy_click`
+carries `top_arm`, surface `card_top_pair`; `top_seen` fires once a visit where either arm had a paid row to show. Read on 3 Dec:
+paid top clicks (`card_top_alt` + `card_top_pair`) per `top_seen` visitor, and eBay + TCGplayer clicks per visitor overall, so the
+pair is not just taking clicks from the table. Keep it by making `topArm()` return "pair", drop it with "line".
