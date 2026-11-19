@@ -24584,6 +24584,24 @@ content "spread across a large network of sites" and re-dating pages to look fre
 
 Black Friday and Cyber Monday pages are unchanged (in season). Judge the effect on 1 to 8 Dec against 3 to 9 Nov.
 
+## 2026-11-19: Deck Coach test
+
+The owner wants an AI subscription of our own (thread "Pick an AI subscription app to build"); the shortlist's top pick
+is Deck Coach: a player pastes a Riftbound deck, a budget and an event, and gets back the upgrades worth buying priced at
+the cheapest store, the matchups that beat it and a cheaper version. Riftbound and MTG players already pay US$7.99 a
+month for deck apps with no coaching in them (Runes, Untapped). Before anything is built, a two-week concierge test
+(go given 19 Nov):
+
+- `/coach` is hidden: `robots: noindex, nofollow`, out of the sitemap, linked from no menu, static (no request or
+  database read). It collects a deck, legend, format, budget, event, an optional goal, an email for signed-out visitors
+  and a "save me the founder price (US$5.99 instead of US$7.99), no charge" tick. The 23 Nov ban list is on the page as
+  the timely reason to send a deck in.
+- `/api/coach` saves one `Feedback` row with `source: "coach"`, `consentPublic: false` and no rating, so no review,
+  rating or public surface ever reads it, and emails the inbox through `notifyOwnerBounded` (kind `coach`).
+  `/admin/coach` (admin session only) lists the requests and counts the founder taps.
+- The site makes **no AI API call**: up to 40 reports are written by the team and sent from the site's inbox.
+- **Read 3 Dec 2026.** Go (build the real tool, then ask the owner for an API ceiling) if 100+ decks AND 30+ founder
+  taps; stop under 40 decks. `tests/coach.test.ts` pins the hidden page and the private rows.
 ## 2026-11-19: The phone bar's Menu tab becomes Collection
 
 Owner, 19 Nov: "instead of the menu on the navbar, it should be like my collection, and you need to be able to sign in to see
