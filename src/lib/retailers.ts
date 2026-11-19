@@ -1731,6 +1731,27 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "AU",
     platform: "bigcommerce",
   },
+  // Forge and Fire Gaming, Maryland Heights MO (2462 Schuetz Rd; on the official
+  // Flesh and Blood store locator; 1,355 TCGplayer sales over two years). Its
+  // staff asked to be listed on Reddit (2026-11-20). BigCommerce, read in the
+  // browser 2026-11-20 with this file's parser: /riftbound-1/ holds all 23 of its
+  // Riftbound sealed products (boxes, champion decks, vault bundles, playmats),
+  // every price in US$. Sealed only: it lists no Riftbound singles. Ships to the
+  // 48 contiguous states only. Postage measured 2026-11-20 from its own checkout
+  // (BigCommerce storefront API, carts of US$14.95 and US$474.85, New York, San
+  // Francisco, Dallas, Chicago): "Flat Rate" US$6 every time, tracked (UPS/USPS).
+  forgeandfire: {
+    key: "forgeandfire",
+    name: "Forge and Fire Gaming",
+    base: "https://forgeandfiregaming.com",
+    collections: [],
+    sealedCollections: ["/riftbound-1/"],
+    shippingFlatCents: 600,
+    freeOverCents: 0,
+    shippingNote: "$6.00 flat",
+    country: "US",
+    platform: "bigcommerce",
+  },
 
   // ---- SG leads checked and NOT added ----------------------------------------
   //   - cardscentral.com, duellerspoint.com, cardconnectsg.com, metagamestcg.com
