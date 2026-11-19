@@ -1,7 +1,7 @@
 import React from "react";
 import { formatMoney } from "@/lib/format";
 import { cardImageForOg } from "@/lib/card-image-url";
-import { hotListName, weekMove, type RisingSnapshotPick } from "@/lib/rising-snapshot";
+import { hotListName, weekMove, type RisingSnapshotDrop, type RisingSnapshotPick } from "@/lib/rising-snapshot";
 
 // The Hot 40 share image's composition, as a pure function of the frozen data.
 //
@@ -66,11 +66,77 @@ function Runner({ p, rank }: { p: RisingSnapshotPick; rank: number }) {
 }
 
 
+/** One row of the split layout: art, name, the week's move and the price. */
+function SplitRow({ name, art, move, price, rank }: { name: string; art: string | null; move: number | null; price: string | null; rank: number }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "8px 14px 8px 8px", borderRadius: 14, background: "rgba(148,163,184,0.08)", height: 128 }}>
+      <div style={{ display: "flex", width: 26, justifyContent: "center", fontSize: 24, fontWeight: 800, color: "#64748b" }}>{String(rank)}</div>
+      {art ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={art} alt="" aria-hidden="true" width={80} height={112} style={{ width: 80, height: 112, borderRadius: 7, objectFit: "cover" }} />
+      ) : (
+        <div style={{ display: "flex", width: 80, height: 112, borderRadius: 7, background: "rgba(148,163,184,0.12)" }} />
+      )}
+      <div style={{ display: "flex", flexDirection: "column", width: 330, gap: 6 }}>
+        <div style={{ display: "flex", width: 330, fontSize: 25, fontWeight: 700, color: "#f1f5f9", lineHeight: 1.12 }}>{clip(name, 44)}</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+          <div style={{ display: "flex", fontSize: 32, fontWeight: 800, color: moveColor(move) }}>{move == null ? "—" : delta(move)}</div>
+          {price && <div style={{ display: "flex", fontSize: 22, fontWeight: 600, color: "#cbd5e1" }}>{price}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Half rises, half drops (owner, 2026-11-20, from a Reddit reply to a Hot 40 post: "show me the biggest drops"): the
+ * Hot 40's top three on the left with their week-on-week moves, the week's three biggest price drops on the right, both
+ * frozen in the payload. Drawn only for a snapshot that carries drops; older ones keep the layout below.
+ */
+function SplitImage({ picks, drops, dateLabel }: { picks: RisingSnapshotPick[]; drops: RisingSnapshotDrop[]; dateLabel: string | null }) {
+  const name = picks.length > 0 ? hotListName(picks.length) : "RiftCompare Hot 40";
+  const column = (title: string, color: string, rows: React.ReactNode) => (
+    <div style={{ display: "flex", flexDirection: "column", width: 528, gap: 10 }}>
+      <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color }}>{title}</div>
+      {rows}
+    </div>
+  );
+  return (
+    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", padding: "32px 56px 28px", background: "linear-gradient(135deg, #04131c 0%, #062436 55%, #013951 100%)", fontFamily: "sans-serif" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", fontSize: 40, fontWeight: 800, color: "#ffffff", letterSpacing: -0.5 }}>Riftbound: rises &amp; drops</div>
+        <div style={{ display: "flex", fontSize: 22, fontWeight: 700, color: BRAND }}>{dateLabel ? `${dateLabel} · riftcompare.com` : "riftcompare.com"}</div>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18 }}>
+        {column(
+          `${name} · top 3`,
+          GREEN,
+          picks.slice(0, 3).map((p, i) => (
+            <SplitRow key={p.id} rank={i + 1} name={p.displayName} art={artOf(p)} move={weekMove(p)} price={p.priceCents != null ? formatMoney(p.priceCents, p.currency) : null} />
+          )),
+        )}
+        {column(
+          "Biggest drops · 7 days",
+          ROSE,
+          drops.slice(0, 3).map((d, i) => (
+            <SplitRow key={d.id} rank={i + 1} name={d.displayName} art={cardImageForOg({ imageThumbUrl: d.imageThumbUrl })} move={d.pct} price={formatMoney(d.nowCents, d.currency)} />
+          )),
+        )}
+      </div>
+      <div style={{ display: "flex", marginTop: "auto", fontSize: 19, color: "#94a3b8" }}>
+        Left: the Hot 40 by demand and price timing, move vs last week. Right: cheapest price now vs 7 days ago, cards $3+.
+      </div>
+    </div>
+  );
+}
+
 /**
  * The whole 1200x630 frame. `picks` is the frozen snapshot's list (may be
- * empty), `dateLabel` the already-formatted freeze date (null when unknown).
+ * empty), `dateLabel` the already-formatted freeze date (null when unknown),
+ * `drops` the frozen week's biggest drops (absent on older snapshots).
  */
-export function Hot40Image({ picks, dateLabel }: { picks: RisingSnapshotPick[]; dateLabel: string | null }) {
+export function Hot40Image({ picks, dateLabel, drops }: { picks: RisingSnapshotPick[]; dateLabel: string | null; drops?: RisingSnapshotDrop[] }) {
+  if (picks.length > 0 && drops && drops.length > 0) return <SplitImage picks={picks} drops={drops} dateLabel={dateLabel} />;
   const top = picks[0];
   const runners = picks.slice(1, 3);
   const name = picks.length > 0 ? hotListName(picks.length) : "RiftCompare Hot 40";

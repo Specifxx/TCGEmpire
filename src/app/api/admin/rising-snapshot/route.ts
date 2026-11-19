@@ -5,9 +5,10 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { SITE_URL } from "@/lib/site";
 import { getCachedRisingCards, getRisingWeekAgo, type RisePick, type RiseScope } from "@/lib/rise-predictor";
-import { generateRisingTitle, toSnapshotData, type SnapshotEbayDeal } from "@/lib/rising-snapshot";
+import { generateRisingTitle, toSnapshotData, toSnapshotDrops, type SnapshotEbayDeal } from "@/lib/rising-snapshot";
+import { getPriceMovers } from "@/lib/price-history";
 import { getCheapestOnEbayFor } from "@/lib/arbitrage";
-import { COUNTRIES, currencyOf, type Country } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY, currencyOf, type Country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -111,8 +112,19 @@ export async function POST(req: Request) {
   // this one (lib/rising-movement.ts). NEVER a reason not to mint:
   // getRisingWeekAgo returns null when it can't be rebuilt, and the snapshot is
   // minted without movement. It depends on no earlier snapshot.
-  const [weekAgo, ebay] = await Promise.all([getRisingWeekAgo(scope), cheapestOnEbayByPick(analysis.picks)]);
-  const data = toSnapshotData(analysis, scope, now, weekAgo, ebay);
+  //
+  // The week's biggest DROPS (owner, 2026-11-20: every snapshot thumbnail is half rises, half drops), frozen beside the
+  // picks: /movers' own plummeting list in the scope's market (GLOBAL: the default market), read through
+  // getPriceMovers, which caches itself and is called directly, never wrapped. Its failure is an empty list, never a
+  // reason not to mint.
+  const dropsMarket: Country = scope === "GLOBAL" ? DEFAULT_COUNTRY : (scope as Country);
+  const [weekAgo, ebay, movers] = await Promise.all([
+    getRisingWeekAgo(scope),
+    cheapestOnEbayByPick(analysis.picks),
+    getPriceMovers(dropsMarket, 5).catch(() => null),
+  ]);
+  const drops = { market: dropsMarket, rows: toSnapshotDrops(movers?.plummeting ?? [], currencyOf(dropsMarket)) };
+  const data = toSnapshotData(analysis, scope, now, weekAgo, ebay, drops);
 
   // An empty run is still mintable, deliberately. A market with no searched,
   // priced cards legitimately has nothing to rank, and a link that says so
@@ -134,6 +146,7 @@ export async function POST(req: Request) {
     picks: data.picks.length,
     comparedWith: weekAgo ? { asOf: weekAgo.asOf } : null,
     cheapestOnEbay: ebay.size,
+    drops: drops.rows.length,
   });
 }
 

@@ -24921,3 +24921,13 @@ own server (the Dex #pokemon-deals feed, the Sealed Sniper channel) had one memb
   price table on sealed pages. Never above a price, never a pop-up.
 - Card sites only: wargame, sports, figure, scent and K-beauty subscribers never see the hub (the two-sides rule).
   `tests/discord-invite.test.ts`.
+
+## 2026-11-20: A Hot 40 snapshot freezes the week's biggest drops, and its card is half rises, half drops
+
+**Owner, 2026-11-20**, after a Reddit reply to a Hot 40 post: "show me the biggest drops. I just want to rip and play".
+Every snapshot thumbnail is now roughly half rises, half drops. Minting (`/api/admin/rising-snapshot`) also freezes up to
+five of the week's biggest price drops into the payload (`drops`, `dropsMarket`): `/movers`' own plummeting list
+(`getPriceMovers` in the scope's market, GLOBAL the default market; it caches itself and is called directly, never wrapped;
+its failure is an empty list, never a reason not to mint). The share image (`lib/hot40-og.tsx`) draws the Hot 40's top three
+on the left and the three biggest drops on the right; a snapshot minted before this has no `drops` and keeps the old layout.
+The public page lists the drops under the table. Nothing is recomputed after minting. `tests/rising-snapshot.test.ts`.
