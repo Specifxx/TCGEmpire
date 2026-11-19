@@ -8,7 +8,7 @@ import { claimAlertsForUser } from "@/lib/alerts";
 import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
 import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
 import { PREMIUM_START_PATH } from "@/lib/premium-start";
-import { SISTER_OAUTH_COOKIE, SISTER_OAUTH_NEXT_COOKIE, sisterFailUrl, sisterForCookie, sisterReturnUrl } from "@/lib/sister-oauth";
+import { sisterFailUrl, sisterForCookie, sisterOAuthCookie, sisterOAuthNextCookie, sisterReturnUrl } from "@/lib/sister-oauth";
 
 // Where a failed sign-in lands. /login by default — it renders AuthForm, which
 // turns ?error= into a readable message and offers the buttons again.
@@ -27,20 +27,20 @@ function errorBase(req: Request, provider: string): string {
   return next && (next === PREMIUM_START_PATH || next.startsWith(`${PREMIUM_START_PATH}?`)) ? next : "/login";
 }
 
-/** A Discord sign-in started on a sister site (lib/sister-oauth.ts), or null. Only Discord: Google runs on the sister itself. */
+/** A sign-in started on a sister site (lib/sister-oauth.ts), or null. */
 function sisterOf(provider: string) {
-  return provider === "discord" ? sisterForCookie(cookies().get(SISTER_OAUTH_COOKIE)?.value) : null;
+  return provider ? sisterForCookie(cookies().get(sisterOAuthCookie(provider))?.value) : null;
 }
 
-function clearSister() {
-  cookies().set(SISTER_OAUTH_COOKIE, "", { path: "/", maxAge: 0 });
-  cookies().set(SISTER_OAUTH_NEXT_COOKIE, "", { path: "/", maxAge: 0 });
+function clearSister(provider: string) {
+  cookies().set(sisterOAuthCookie(provider), "", { path: "/", maxAge: 0 });
+  cookies().set(sisterOAuthNextCookie(provider), "", { path: "/", maxAge: 0 });
 }
 
 function fail(req: Request, code: string, provider = "") {
   const sister = sisterOf(provider);
   if (sister) {
-    clearSister();
+    clearSister(provider);
     return NextResponse.redirect(sisterFailUrl(sister, code));
   }
   const dest = new URL(errorBase(req, provider), req.url);
@@ -138,8 +138,8 @@ export async function GET(req: Request, { params }: { params: { provider: string
     // From a sister site: back there with the emailed link's own code, no RiftCompare session (lib/sister-oauth.ts).
     const sister = sisterOf(provider);
     if (sister) {
-      const back = await sisterReturnUrl(sister, user.email, cookies().get(SISTER_OAUTH_NEXT_COOKIE)?.value);
-      clearSister();
+      const back = await sisterReturnUrl(sister, user.email, cookies().get(sisterOAuthNextCookie(provider))?.value);
+      clearSister(provider);
       void claimAlertsForUser(user.id, user.email).catch(() => {});
       void prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
       return NextResponse.redirect(back);

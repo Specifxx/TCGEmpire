@@ -1,7 +1,7 @@
 import { emailLinkUrl, premiumSite, signEmailLinkCode, type PremiumSite } from "./sister-premium";
 import { sanitizeNextPath } from "./next-param";
 
-// "Continue with Discord" ON a sister site (owner, 2026-11-19: "Google OAuth and Discord OAuth … we want to have those login methods
+// "Continue with Discord" (and Google) ON a sister site (owner, 2026-11-19: "Google OAuth and Discord OAuth … we want to have those login methods
 // on basically all of our sites … user accounts are really important for retention"). The sister has no server and no Discord app of
 // its own, so the round trip runs through RiftCompare's EXISTING Discord app and its already-registered redirect URI
 // (/api/auth/oauth/discord/callback): no new app, no new secret, nothing for the owner to set up.
@@ -13,8 +13,12 @@ import { sanitizeNextPath } from "./next-param";
 //
 // It never starts a RiftCompare session: the sister gets the same signed code its emailed link carries, and trades it for its own
 // token there. A click that names Discord opens Discord and comes back: not a surprise redirect.
-export const SISTER_OAUTH_COOKIE = "oauth_sister_discord";
-export const SISTER_OAUTH_NEXT_COOKIE = "oauth_sister_next_discord";
+//
+// Google too (same day): a sister with no Google client of its own (MTG Compare, TCG Prices, Gundam, YGO) gets "Continue with Google"
+// the same way, through Rift's existing Google app and its registered redirect URI. A sister WITH its own client (DexCompare) keeps
+// Google's in-page button.
+export const sisterOAuthCookie = (provider: string) => `oauth_sister_${provider}`;
+export const sisterOAuthNextCookie = (provider: string) => `oauth_sister_next_${provider}`;
 
 export function sisterForCookie(v: string | undefined): PremiumSite | null {
   return v ? premiumSite(v) : null;
