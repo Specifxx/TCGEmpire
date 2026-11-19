@@ -24905,3 +24905,19 @@ creator codes) are unchanged; this is the paid lane beside them.
 - **No ops-monitor check.** Money leaves only when the owner pays a hand-entered amount, which the panel shows against the cap the
   same day; there is no automatic spend to go wrong unwatched.
 - Two deals may never share a marker (`tests/creator-deals.test.ts`); a rate over A$0.10 a click needs the owner.
+
+## 2026-11-20: One Discord hub, linked with a reason to join
+
+The owner asked why the Discord had 9 members after five months. The sites linked `discord.gg/NypdmfAMTa`, a server
+called "RiftCompare" that the owner does not run (another member owns it; the owner's account cannot edit it), with two
+empty text channels, no feeds and no reason given to join, reachable only from RiftCompare's menu and footer. The owner's
+own server (the Dex #pokemon-deals feed, the Sealed Sniper channel) had one member and no link anywhere.
+
+- **One hub:** the owner's server, renamed "TCG Deals & Restocks": the deal feeds on top, a channel per game, chat below.
+- **Every site has its own never-expiring invite code** to the hub (RiftCompare `5pdA3QVPBS`, landing in #riftbound;
+  each card site's alert emails their own, `lib/sister-alerts/discord.ts`; RiftCompare's alert emails `cdJEpmuTW2`). The
+  server's Invites list then counts members per source, with no tracking of ours.
+- **A reason, not a logo:** `DiscordCta` ("Restock and price-drop alerts, free on Discord") in the footer and under the
+  price table on sealed pages. Never above a price, never a pop-up.
+- Card sites only: wargame, sports, figure, scent and K-beauty subscribers never see the hub (the two-sides rule).
+  `tests/discord-invite.test.ts`.
