@@ -90,3 +90,66 @@ test("the viewfinder only asks for the camera on /scan and still never calls eBa
     assert.doesNotMatch(src, /api\.ebay|lib\/ebay|EBAY_/i, f);
   }
 });
+
+// ── detection: the card anywhere in the picture (owner, 2026-11-19: "auto frame and detect a card") ──
+import { detectCard, judgeDetection, rectShift } from "../src/lib/scan/frame";
+import sharp from "sharp";
+
+const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol;
+
+test("detectCard finds a card off-centre, at different sizes, and nothing on an empty table", () => {
+  for (const [cx, cy, ch] of [[90, 120, 180], [60, 100, 120], [120, 140, 150], [90, 120, 205]] as const) {
+    const cw = ch * CARD_ASPECT;
+    const card = { x: cx - cw / 2, y: cy - ch / 2, w: cw, h: ch };
+    const d = detectCard(frame(card, { noise: 8 }), W, H);
+    assert.ok(d, `card at ${cx},${cy} h${ch}`);
+    assert.ok(near(d.rect.y, card.y, 4) && near(d.rect.h, card.h, 6) && near(d.rect.x, card.x, 4) && near(d.rect.w, card.w, 6), JSON.stringify({ d: d.rect, card }));
+  }
+  assert.equal(detectCard(frame(null, { noise: 8 }), W, H), null);
+});
+
+async function realFrame(file: string, card: Rect, opts: { blur?: number } = {}): Promise<Float32Array> {
+  // a wood-ish table with grain, the real card image composited at `card` (analysis pixels, scaled up 4x)
+  const k = 4, TW = W * k, TH = H * k;
+  const raw = Buffer.alloc(TW * TH * 3);
+  let s = 3;
+  const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < TW * TH; i++) {
+    const n = (rnd() - 0.5) * 22 + Math.sin((i % TW) / 11 + Math.floor(i / TW) / 50) * 8;
+    raw[i * 3] = 112 + n; raw[i * 3 + 1] = 84 + n; raw[i * 3 + 2] = 62 + n;
+  }
+  const art = await sharp(file).resize(Math.round(card.w * k), Math.round(card.h * k)).toBuffer();
+  let img = sharp(await sharp(raw, { raw: { width: TW, height: TH, channels: 3 } }).composite([{ input: art, left: Math.round(card.x * k), top: Math.round(card.y * k) }]).png().toBuffer()).resize(W, H);
+  if (opts.blur) img = img.blur(opts.blur);
+  const { data } = await img.ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  return toGray(data, W, H);
+}
+
+test("detectCard frames real Riftbound card images on a grainy table", async () => {
+  const dir = join(process.cwd(), "public/card-art");
+  const files = ["ogn-007-298-868b5cd63536371d-480w.webp", "ogn-001-298-8de89b4b8fb3186d-480w.webp", "ogn-004-298-e3bced44dfd99515-480w.webp"];
+  for (const [i, f] of files.entries()) {
+    const ch = [170, 140, 200][i];
+    const cw = ch * CARD_ASPECT;
+    const card = { x: [20, 70, 45][i], y: [30, 60, 20][i], w: cw, h: ch };
+    const g = await realFrame(join(dir, f), card);
+    const d = detectCard(g, W, H);
+    assert.ok(d, f);
+    assert.ok(rectShift(d.rect, card) < 0.04, `${f}: ${JSON.stringify(d.rect)} vs ${JSON.stringify(card)}`);
+    const v = judgeDetection(d, H, sharpness(g, W, H, d.rect), 0, 0);
+    assert.equal(v.hint, "ready", f);
+    const blurred = await realFrame(join(dir, f), card, { blur: 4 });
+    const db = detectCard(blurred, W, H);
+    if (db) assert.equal(judgeDetection(db, H, sharpness(blurred, W, H, db.rect), 0, 0).hint, "focus", `${f} blurred`);
+  }
+});
+
+test("judgeDetection: too small asks to come closer, moving asks to hold steady", () => {
+  const det = { rect: { x: 10, y: 10, w: 40, h: 56 }, sides: { top: true, right: true, bottom: true, left: true }, strength: 50 };
+  assert.equal(judgeDetection(det, 240, 500, 0, 0).hint, "closer");
+  const big = { ...det, rect: { x: 10, y: 10, w: 120, h: 168 } };
+  assert.equal(judgeDetection(big, 240, 500, 20, 0).hint, "steady");
+  assert.equal(judgeDetection(big, 240, 500, 0, 0.1).hint, "steady");
+  assert.equal(judgeDetection(big, 240, 500, 0, 0).hint, "ready");
+  assert.equal(judgeDetection(null, 240, 500, 0, 0).hint, "find");
+});

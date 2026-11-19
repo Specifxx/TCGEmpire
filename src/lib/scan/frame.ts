@@ -3,10 +3,11 @@
 // millisecond and are tested in Node. Nothing here sends anything anywhere: only the frame the scanner finally captures
 // goes to /api/scan/identify, exactly as a photo did before.
 //
-// "Aligned" is read from the card's own border: a card held inside the on-screen frame has a strong edge (card against
-// table, hand or binder) just inside each side of the guide. Each side lights up on its own, so the visitor sees which
-// way to move. Auto-capture needs three sides of four (a thumb or a sleeve's edge can hide one), the picture sharp and
-// the phone steady for a moment.
+// detectCard finds the card anywhere in the picture (owner, 2026-11-19: "it should still be able to auto frame and detect
+// a card"): a card's border is a strong straight edge against the table, hand or binder, so the rows and columns with the
+// most edge make peaks, and the best card-shaped rectangle on those peaks (63:88, at least a quarter of the frame tall,
+// three or four sides on a real edge) is the card. The viewfinder outlines it as it moves and captures it once it holds
+// still and sharp. A card turned more than about 10 degrees is not found; the shutter button still takes it.
 
 export interface Rect { x: number; y: number; w: number; h: number }
 
@@ -140,6 +141,110 @@ export const READY_FRAMES = 4;
 export const HINT_COPY: Record<Hint, string> = {
   find: "Fit the card inside the frame",
   closer: "Line up the edges with the frame",
+  steady: "Hold steady…",
+  focus: "Hold still, focusing…",
+  ready: "Got it",
+};
+
+export interface Detection {
+  rect: Rect;
+  sides: { top: boolean; right: boolean; bottom: boolean; left: boolean };
+  /** Mean edge strength over the lit sides. */
+  strength: number;
+}
+
+function peaks(profile: Float32Array, n: number, gap: number): number[] {
+  const idx: number[] = [];
+  for (let i = 1; i < profile.length - 1; i++) if (profile[i] >= profile[i - 1] && profile[i] >= profile[i + 1] && profile[i] > 0) idx.push(i);
+  idx.sort((a, b) => profile[b] - profile[a]);
+  const out: number[] = [];
+  for (const i of idx) {
+    if (out.every((j) => Math.abs(j - i) >= gap)) out.push(i);
+    if (out.length >= n) break;
+  }
+  return out;
+}
+
+/**
+ * The card in a grey frame, or null. Axis-aligned rectangles only (a card turned a little still sits on its peaks).
+ * `minHeight` is the smallest card worth finding, as a share of the frame's height.
+ */
+export function detectCard(g: Float32Array, w: number, h: number, opts: { edge?: number; minHeight?: number; aspectTol?: number } = {}): Detection | null {
+  const edge = opts.edge ?? FRAME_LIMITS.edge;
+  const minH = (opts.minHeight ?? 0.28) * h;
+  const tol = opts.aspectTol ?? 0.16;
+  const rows = new Float32Array(h);
+  const cols = new Float32Array(w);
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      const gy = Math.abs(g[i + w] - g[i - w]);
+      const gx = Math.abs(g[i + 1] - g[i - 1]);
+      // only steps that clear the edge threshold count, so table grain does not build peaks
+      if (gy >= edge) rows[y] += gy;
+      if (gx >= edge) cols[x] += gx;
+    }
+  }
+  const gap = Math.max(3, Math.round(h * 0.03));
+  const ys = peaks(rows, 12, gap).sort((a, b) => a - b);
+  const xs = peaks(cols, 12, gap).sort((a, b) => a - b);
+  const found: { det: Detection; score: number; area: number }[] = [];
+  for (let a = 0; a < ys.length; a++) {
+    for (let b = a + 1; b < ys.length; b++) {
+      const rh = ys[b] - ys[a];
+      if (rh < minH) continue;
+      const want = rh * CARD_ASPECT;
+      for (let c = 0; c < xs.length; c++) {
+        for (let d = c + 1; d < xs.length; d++) {
+          const rw = xs[d] - xs[c];
+          if (Math.abs(rw - want) > want * tol) continue;
+          const rect = { x: xs[c], y: ys[a], w: rw, h: rh };
+          const e = sideEdges(g, w, h, rect, 1);
+          const sides = { top: e.top >= edge, right: e.right >= edge, bottom: e.bottom >= edge, left: e.left >= edge };
+          const litVals = [e.top, e.right, e.bottom, e.left].filter((v) => v >= edge);
+          if (litVals.length < 3) continue;
+          // a rectangle is only as real as its faintest lit edge
+          const score = Math.min(...litVals);
+          found.push({ det: { rect, sides, strength: litVals.reduce((s2, v) => s2 + v, 0) / litVals.length }, score, area: rw * rh });
+        }
+      }
+    }
+  }
+  if (!found.length) return null;
+  // The frame printed inside a card is often a sharper line than the card's own border, so among the rectangles that
+  // are nearly as convincing as the best one, the LARGEST is the card.
+  const top = Math.max(...found.map((f) => f.score));
+  const best = found.filter((f) => f.score >= top * 0.45).sort((p, q) => q.area - p.area)[0];
+  return best.det;
+}
+
+/** How far a rectangle moved between frames, as a share of its height (0 = not at all). */
+export function rectShift(a: Rect | null, b: Rect | null): number {
+  if (!a || !b) return 1;
+  return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.x + a.w - b.x - b.w) + Math.abs(a.y + a.h - b.y - b.h)) / 4 / Math.max(1, b.h);
+}
+
+export type DetectHint = "find" | "closer" | "steady" | "focus" | "ready";
+
+/** The verdict on one frame with detection: the hint, and whether this frame counts towards auto-capture. */
+export function judgeDetection(
+  det: Detection | null,
+  frameH: number,
+  sharpVar: number,
+  moved: number,
+  shift: number,
+  limits = FRAME_LIMITS,
+): { hint: DetectHint; ready: boolean } {
+  if (!det) return { hint: "find", ready: false };
+  if (det.rect.h < frameH * 0.4) return { hint: "closer", ready: false };
+  if (moved > limits.still || shift > 0.04) return { hint: "steady", ready: false };
+  if (sharpVar < limits.sharp) return { hint: "focus", ready: false };
+  return { hint: "ready", ready: true };
+}
+
+export const DETECT_COPY: Record<DetectHint, string> = {
+  find: "Point the camera at a card",
+  closer: "Move a little closer",
   steady: "Hold steady…",
   focus: "Hold still, focusing…",
   ready: "Got it",

@@ -1416,7 +1416,7 @@ longer lands on its entry.
 ## Removed, declined, kept
 
 - **Card scanner (2026-11-19):** `/scan`, open to everyone signed in (5 a day free, 100 Premium, admins unlimited;
-  `SCAN_PUBLIC=0` closes it); a live viewfinder that captures on its own (`camera=(self)` on `/scan` only); one Haiku 5.5
+  `SCAN_PUBLIC=0` closes it); a live viewfinder that finds, outlines and captures the card on its own (`camera=(self)` on `/scan` only); one Haiku 5.5
   read of name + set + number, our pure matcher picks the printing, the quick view shows prices; never eBay, photo never
   stored, `SCAN_DAILY_CAP` 1,000 a day. [2026-11-19](../DECISIONS.md#L24530), [2026-11-19 v2](../DECISIONS.md#L24710)
 - **Meta decks:** never from a hand copy; rebuild a meta/tier list only from

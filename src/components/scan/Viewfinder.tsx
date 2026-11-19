@@ -2,17 +2,17 @@
 
 // The scanner's live viewfinder (DECISIONS.md 2026-11-19 "Card scanner v2: live viewfinder"). The camera opens only
 // when the visitor taps Start (never on page load), only on /scan (next.config.js lets this one page ask for it), and
-// stops when the page is hidden or left. About eight times a second a 180 px grey copy of the picture is checked by
-// lib/scan/frame.ts: each side of the frame lights when the card's edge sits on it, and once three sides are lit, the
-// print is sharp and the phone is still for half a second, the frame inside the guide is captured. Only that capture
+// stops when the page is hidden or left. About eight times a second a 180 px grey copy of the picture goes through
+// lib/scan/frame.ts detectCard: the card is found wherever it is in view and outlined as it moves, with no lining up;
+// once it holds still and sharp for half a second it is cropped (plus a little table) and captured. Only that capture
 // leaves the phone (to /api/scan/identify, as before); the video itself is never recorded or sent.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FRAME_LIMITS, HINT_COPY, READY_FRAMES, guideInVideo, guideRect, judgeFrame, motion, sharpness, sideEdges, toGray, type FrameVerdict, type Rect } from "@/lib/scan/frame";
+import { DETECT_COPY, READY_FRAMES, detectCard, guideInVideo, guideRect, judgeDetection, motion, rectShift, scaleRect, sharpness, toGray, type DetectHint, type Rect } from "@/lib/scan/frame";
 
 const ANALYSE_W = 180;
 const TICK_MS = 120;
 const OUT_MAX = 1024;
-/** The capture keeps a little table around the card, so a card a few pixels outside the guide is still whole. */
+/** The capture keeps a little table around the card, so a card found a few pixels small is still whole. */
 const CAPTURE_PAD = 0.08;
 
 type CamState = "idle" | "starting" | "live" | "denied" | "unsupported";
@@ -36,7 +36,11 @@ export function Viewfinder({ busy, onCapture, footnote }: Props) {
   const armedRef = useRef(true);
   const lastShotRef = useRef(0);
   const [cam, setCam] = useState<CamState>("idle");
-  const [verdict, setVerdict] = useState<FrameVerdict | null>(null);
+  const [hintKey, setHintKey] = useState<DetectHint | null>(null);
+  // the card found in the last frame, in the box's CSS pixels; smoothed so the outline glides rather than jumps
+  const [found, setFound] = useState<Rect | null>(null);
+  const foundRef = useRef<Rect | null>(null);
+  const missRef = useRef(0);
   const [progress, setProgress] = useState(0);
   const [auto, setAuto] = useState(true);
   const [flash, setFlash] = useState(false);
@@ -48,6 +52,8 @@ export function Viewfinder({ busy, onCapture, footnote }: Props) {
     streamRef.current = null;
     prevRef.current = null;
     readyRef.current = 0;
+    foundRef.current = null;
+    setFound(null);
     setTorch(null);
     setCam((c) => (c === "live" || c === "starting" ? "idle" : c));
   }, []);
@@ -108,7 +114,8 @@ export function Viewfinder({ busy, onCapture, footnote }: Props) {
   const capture = useCallback(() => {
     const v = videoRef.current;
     if (!v || !v.videoWidth || !box.w) return;
-    const g = guideRect(box);
+    // the card that was found, or (shutter pressed with nothing found) the guide in the middle
+    const g = foundRef.current ?? guideRect(box);
     const pad = { x: g.x - g.w * CAPTURE_PAD, y: g.y - g.h * CAPTURE_PAD, w: g.w * (1 + 2 * CAPTURE_PAD), h: g.h * (1 + 2 * CAPTURE_PAD) };
     const src = guideInVideo({ w: v.videoWidth, h: v.videoHeight }, box, pad);
     const sx = Math.max(0, src.x), sy = Math.max(0, src.y);
@@ -137,7 +144,8 @@ export function Viewfinder({ busy, onCapture, footnote }: Props) {
     canvas.width = aw;
     canvas.height = ah;
     const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-    const guide: Rect = guideRect({ w: aw, h: ah });
+    const toBox = box.w / aw;
+    let lastDet: Rect | null = null;
     const id = window.setInterval(() => {
       const v = videoRef.current;
       if (!v || !v.videoWidth || v.readyState < 2) return;
@@ -146,10 +154,26 @@ export function Viewfinder({ busy, onCapture, footnote }: Props) {
       const g = toGray(ctx.getImageData(0, 0, aw, ah).data, aw, ah);
       const moved = motion(prevRef.current, g);
       prevRef.current = g;
-      const vd = judgeFrame(sideEdges(g, aw, ah, guide), sharpness(g, aw, ah, guide), moved, FRAME_LIMITS);
-      setVerdict(vd);
-      if (!armedRef.current && Date.now() - lastShotRef.current > 700 && (vd.aligned < 2 || moved > 25)) armedRef.current = true;
-      if (vd.hint === "ready" && armedRef.current) readyRef.current += 1;
+      const det = detectCard(g, aw, ah);
+      const shift = rectShift(lastDet, det?.rect ?? null);
+      lastDet = det?.rect ?? null;
+      const vd = judgeDetection(det, ah, det ? sharpness(g, aw, ah, det.rect) : 0, moved, shift);
+      if (det) {
+        missRef.current = 0;
+        const r = scaleRect(det.rect, toBox);
+        const p = foundRef.current;
+        // glide: move most of the way each frame, snap when the card jumps
+        const next = p && rectShift(p, r) < 0.15 ? { x: p.x + (r.x - p.x) * 0.6, y: p.y + (r.y - p.y) * 0.6, w: p.w + (r.w - p.w) * 0.6, h: p.h + (r.h - p.h) * 0.6 } : r;
+        foundRef.current = next;
+        setFound(next);
+      } else if (++missRef.current > 3) {
+        // keep the outline through a frame or two of glare, then let it go
+        foundRef.current = null;
+        setFound(null);
+      }
+      setHintKey(vd.hint);
+      if (!armedRef.current && Date.now() - lastShotRef.current > 700 && (!det || moved > 25)) armedRef.current = true;
+      if (vd.ready && armedRef.current) readyRef.current += 1;
       else readyRef.current = 0;
       setProgress(Math.min(1, readyRef.current / READY_FRAMES));
       if (auto && !busy && armedRef.current && readyRef.current >= READY_FRAMES) capture();
@@ -157,29 +181,35 @@ export function Viewfinder({ busy, onCapture, footnote }: Props) {
     return () => window.clearInterval(id);
   }, [cam, box, auto, busy, capture]);
 
-  const g = box.w ? guideRect(box) : null;
-  const sides = verdict?.sides;
-  const lit = (on: boolean | undefined) => (on ? "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]" : "bg-white/35");
-  const hint = busy ? "Reading the card…" : cam !== "live" ? null : verdict ? (verdict.hint === "ready" && !armedRef.current ? "Next card" : HINT_COPY[verdict.hint]) : "Starting…";
+  const guide = box.w ? guideRect(box) : null;
+  // live: the outline follows the card that was found; nothing found yet: a faint guide shows where a card goes
+  const outline = cam === "live" ? found : guide;
+  const ready = hintKey === "ready";
+  const hint = busy ? "Reading the card…" : cam !== "live" ? null : hintKey ? (ready && !armedRef.current ? "Next card" : DETECT_COPY[hintKey]) : "Starting…";
 
   return (
     <div ref={wrapRef} className="scroll-mb-24">
       <div ref={boxRef} className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-ink-950 ring-1 ring-white/10">
         <video ref={videoRef} playsInline muted autoPlay className={`absolute inset-0 h-full w-full object-cover ${cam === "live" ? "" : "opacity-0"}`} />
 
-        {g && (
+        {cam === "live" && !found && guide && (
+          <div aria-hidden="true" className="pointer-events-none absolute rounded-[14px] border-2 border-dashed border-white/30" style={{ left: guide.x, top: guide.y, width: guide.w, height: guide.h }} />
+        )}
+        {outline && (
           <>
-            {/* the dimmed surround with a card-shaped window */}
+            {/* the dimmed surround with a card-shaped window that follows the card */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute rounded-[14px] transition-shadow"
-              style={{ left: g.x, top: g.y, width: g.w, height: g.h, boxShadow: `0 0 0 9999px rgba(4,19,28,${cam === "live" ? 0.55 : 0.85})` }}
+              className="pointer-events-none absolute rounded-[12px] transition-all duration-100 ease-out"
+              style={{
+                left: outline.x, top: outline.y, width: outline.w, height: outline.h,
+                boxShadow: `0 0 0 9999px rgba(4,19,28,${cam === "live" ? 0.45 : 0.85}), 0 0 0 2px ${ready ? "rgba(52,211,153,0.9)" : "rgba(242,151,51,0.55)"}${ready ? ", 0 0 24px rgba(52,211,153,0.6)" : ""}`,
+              }}
             />
             {/* corner brackets */}
-            <svg aria-hidden="true" className="pointer-events-none absolute" style={{ left: g.x - 6, top: g.y - 6, width: g.w + 12, height: g.h + 12 }} viewBox={`0 0 ${g.w + 12} ${g.h + 12}`}>
+            <svg aria-hidden="true" className="pointer-events-none absolute transition-all duration-100 ease-out" style={{ left: outline.x - 6, top: outline.y - 6, width: outline.w + 12, height: outline.h + 12 }} viewBox={`0 0 ${outline.w + 12} ${outline.h + 12}`}>
               {(() => {
-                const W = g.w + 12, H = g.h + 12, L = Math.min(W, H) * 0.14, r = 14;
-                const ready = verdict?.hint === "ready";
+                const W = outline.w + 12, H = outline.h + 12, L = Math.min(W, H) * 0.16, r = 12;
                 const stroke = ready ? "#34d399" : "#f29733";
                 const d = [
                   `M3 ${L} V${r} Q3 3 ${r} 3 H${L}`,
@@ -187,20 +217,11 @@ export function Viewfinder({ busy, onCapture, footnote }: Props) {
                   `M${W - 3} ${H - L} V${H - r} Q${W - 3} ${H - 3} ${W - r} ${H - 3} H${W - L}`,
                   `M${L} ${H - 3} H${r} Q3 ${H - 3} 3 ${H - r} V${H - L}`,
                 ];
-                return d.map((p, i) => <path key={i} d={p} fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round" className="transition-[stroke] duration-200" />);
+                return d.map((p, i) => <path key={i} d={p} fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round" />);
               })()}
             </svg>
-            {/* one guide bar per side: lit when the card's edge sits on it */}
-            {cam === "live" && (
-              <>
-                <span aria-hidden="true" className={`absolute h-1 rounded-full transition-colors ${lit(sides?.top)}`} style={{ left: g.x + g.w * 0.3, top: g.y - 2, width: g.w * 0.4 }} />
-                <span aria-hidden="true" className={`absolute h-1 rounded-full transition-colors ${lit(sides?.bottom)}`} style={{ left: g.x + g.w * 0.3, top: g.y + g.h - 2, width: g.w * 0.4 }} />
-                <span aria-hidden="true" className={`absolute w-1 rounded-full transition-colors ${lit(sides?.left)}`} style={{ left: g.x - 2, top: g.y + g.h * 0.3, height: g.h * 0.4 }} />
-                <span aria-hidden="true" className={`absolute w-1 rounded-full transition-colors ${lit(sides?.right)}`} style={{ left: g.x + g.w - 2, top: g.y + g.h * 0.3, height: g.h * 0.4 }} />
-              </>
-            )}
             {busy && (
-              <div aria-hidden="true" className="pointer-events-none absolute overflow-hidden rounded-[14px]" style={{ left: g.x, top: g.y, width: g.w, height: g.h }}>
+              <div aria-hidden="true" className="pointer-events-none absolute overflow-hidden rounded-[12px]" style={{ left: outline.x, top: outline.y, width: outline.w, height: outline.h }}>
                 <div className="scan-sweep absolute inset-x-0 h-16 bg-gradient-to-b from-transparent via-brand-400/40 to-transparent" />
               </div>
             )}
