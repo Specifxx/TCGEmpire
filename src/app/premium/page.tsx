@@ -63,6 +63,7 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ldJson } from "@/lib/jsonld";
 import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
+import { AppPremiumNotice } from "@/components/AppPremiumNotice";
 
 export const dynamic = "force-dynamic";
 
@@ -191,6 +192,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   return (
     <div className={`mx-auto ${landing ? "max-w-5xl" : "max-w-4xl"}`}>
       <PremiumRecoveryBeacon />
+      <AppPremiumNotice />
       <Breadcrumbs trail={[{ name: "Premium", href: "/premium" }]} />
       <script
         type="application/ld+json"
