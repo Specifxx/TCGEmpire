@@ -16,6 +16,7 @@ import {
   runningTotal,
   seriesFor,
   tagBreakdown,
+  toDisplay,
   totalFor,
   type EarningsSourceKey,
   type RangeKey,
@@ -25,6 +26,15 @@ import { EARNINGS_SINCE, loadEarnings } from "@/lib/earnings/sources";
 import { loadCosts } from "@/lib/earnings/costs";
 import { siteLedger } from "@/lib/earnings/sites";
 import { AD_STATS_KEY, ATTRIBUTION_DAYS, adTestRows, type AdStats } from "@/lib/earnings/ad-tests";
+import {
+  CREATOR_STATS_KEY,
+  KEEP_ROI,
+  PROGRAMME_MONTHLY_CAP_CENTS,
+  TRIAL_DAYS,
+  creatorDealRows,
+  programmeSpentThisMonth,
+  type CreatorStats,
+} from "@/lib/earnings/creator-deals";
 import { readStored } from "@/lib/earnings/stored";
 import { ManualEarningsForm } from "@/components/admin/ManualEarningsForm";
 import { loadAmazonClicks } from "@/lib/earnings/amazon-clicks";
@@ -127,6 +137,17 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
     sources.filter((s) => s.tags).map((s) => s.tags!),
     display,
   );
+  // Paid creator deals (2026-11-20, owner): paid = "Creators" cost entries, earned = sales whose tag carries the creator's marker.
+  const costEntries = costs.flatMap((c) => (c.entry ? [c.entry] : []));
+  const creatorStats = (await readStored<Record<string, CreatorStats>>([CREATOR_STATS_KEY])).get(CREATOR_STATS_KEY) ?? null;
+  const creatorRows = creatorDealRows(
+    creatorStats,
+    sources.filter((s) => s.tags).map((s) => s.tags!),
+    costEntries,
+    today,
+    display,
+  );
+  const creatorMonthSpent = programmeSpentThisMonth(costEntries, today, display);
   const oldest = Math.min(...sources.map((s) => s.fetchedAt));
   // eBay by tracking tag (2026-10-25, owner): one EPN account, every site's links.
   // TCGplayer by tag (2026-10-26): Impact's sharedid, broken down the same way.
@@ -423,6 +444,67 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
             </tbody>
           </table>
         </div>
+      </section>
+      {/* Paid creator deals (2026-11-20): did each creator earn back 1.5x what they were paid? lib/earnings/creator-deals.ts */}
+      <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-creator-deals>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-extrabold text-white">
+            Paid creators: {money(creatorMonthSpent)} of {money(toDisplay(PROGRAMME_MONTHLY_CAP_CENTS, "AUD", display))} this month
+          </h2>
+          <span className="text-xs text-slate-400">
+            Paid per tracked buy click. Paid = Costs entries in &ldquo;Creators&rdquo; with the deal&apos;s [id] in the label. Earned = real sales whose tag carries the creator&apos;s marker. Under {KEEP_ROI}x on day {TRIAL_DAYS}: cut.
+          </span>
+        </div>
+        {creatorRows.length ? (
+          <div className="mt-3 overflow-x-auto rounded-xl border border-ink-700">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs text-slate-400">
+                <tr>
+                  <th className="px-3 py-2 font-semibold">Creator</th>
+                  <th className="px-3 py-2 text-right font-semibold">Visitors</th>
+                  <th className="px-3 py-2 text-right font-semibold">Buy clicks</th>
+                  <th className="px-3 py-2 text-right font-semibold">Paid / owed</th>
+                  <th className="px-3 py-2 text-right font-semibold">Sales</th>
+                  <th className="px-3 py-2 text-right font-semibold">Earned</th>
+                  <th className="px-3 py-2 text-right font-semibold">Back per $1</th>
+                  <th className="px-3 py-2 font-semibold">Verdict</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-800">
+                {creatorRows.map((r) => (
+                  <tr key={r.deal.id} data-creator-deal={r.deal.id} data-creator-verdict={r.verdict.key}>
+                    <td className="px-3 py-2 text-white">
+                      {r.deal.handle}
+                      <span className="block text-xs text-slate-500">
+                        [{r.deal.id}] · {r.deal.platform} · {r.deal.sites.join(", ")} · tag {r.mark} · from {r.deal.start}
+                        {r.stats ? ` · read ${r.stats.asOf.slice(0, 16).replace("T", " ")} UTC` : ""}
+                      </span>
+                    </td>
+                    <td className="num px-3 py-2 text-right text-slate-200">{r.stats?.visitors ?? "—"}</td>
+                    <td className="num px-3 py-2 text-right text-slate-200">{r.stats?.buyClicks ?? "—"}</td>
+                    <td className="num px-3 py-2 text-right text-slate-200">
+                      {money(r.paid)}
+                      {r.owed ? <span className="block text-xs text-slate-500">{money(r.owed)} owed</span> : null}
+                    </td>
+                    <td className="num px-3 py-2 text-right text-slate-200">{r.earned.sales}</td>
+                    <td className="num px-3 py-2 text-right text-white">
+                      {money(r.earned.cents)}
+                      {r.earned.pendingCents ? <span className="block text-xs text-slate-500">{money(r.earned.pendingCents)} pending</span> : null}
+                    </td>
+                    <td className={`num px-3 py-2 text-right font-bold ${r.verdict.roi != null && r.verdict.roi < KEEP_ROI ? "text-rose-400" : "text-white"}`}>
+                      {r.verdict.roi == null ? "—" : money(Math.round(r.verdict.roi * 100))}
+                    </td>
+                    <td className={`px-3 py-2 text-xs font-bold ${r.verdict.key === "cut" || r.verdict.key === "behind" ? "text-rose-400" : r.verdict.key === "keep" || r.verdict.key === "on-track" ? "text-emerald-400" : "text-slate-300"}`}>
+                      {r.verdict.label}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-slate-500">No paid creator has signed yet.</p>
+        )}
       </section>
       <section className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-site-ledger>
         <div className="flex flex-wrap items-baseline justify-between gap-2">

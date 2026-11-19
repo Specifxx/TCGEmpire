@@ -24879,3 +24879,29 @@ against the $6 cap: every build rewrites the ISR cache and burns build CPU. `scr
 So one site builds at most three times a day, and the 19 production projects at most 57 a day (normally about 25).
 Batch urgent changes into one release instead of one per merge. Pinned by `tests/deploy-gap.test.ts`. The same change
 went to every Compare site's gate.
+
+## 2026-11-20: Pay-per-click creators: paid per tracked buy click, cut at day 21 under 1.5x
+
+The owner approved the boardroom's move N6 ("Let's do it", 2026-11-20): up to A$300 a month for creators, paid only per tracked
+click or code, and any creator who has not returned 1.5x within 21 days is cut. Free creator partnerships (the /creators page,
+creator codes) are unchanged; this is the paid lane beside them.
+
+- **What a "tracked click" is.** A buy click (a store, eBay, TCGplayer or Amazon link opened) by a visitor who landed on the
+  creator's own link (`?utm_source=<platform>&utm_medium=creator&utm_campaign=<handle>`). Not a visit: a buy click is what earns,
+  and bots and accidental taps rarely make one. The default offer is A$0.04 a buy click (A$40 per 1,000), A$25 at most in the
+  21-day trial (`DEFAULT_RATE_CENTS`, `DEFAULT_TRIAL_CAP_CENTS`). Our measured value is roughly A$0.04 a visitor and a
+  quarter of visitors click, so about A$0.10-0.15 a buy click; A$0.04 leaves room for the 1.5x rule. A Premium creator code
+  (20% commission) also counts as a code deal and keeps its own ledger.
+- **Creator visits tag their sales** (`lib/paid-visit.ts`, the same file in Dex): `utm_medium=creator` stores the marker `cr` +
+  the first six letters or digits of the campaign (`pokechamp__` → `crpokech`) and adds it to every affiliate sub-id the visitor
+  opens, exactly like the ad tests' `fbad`. A paid ad landing still wins. Free creators' links get tagged too, which is only more
+  information.
+- **"Paid creators" panel** (`lib/earnings/creator-deals.ts`, `CREATOR_DEALS`, one line per signed creator, added only after a
+  written yes): visitors and buy clicks (posted by the daily check to `/api/admin/earnings/creator-stats` from Vercel/GA4 by
+  utm_campaign), paid (the Costs entries in category "Creators" whose label names the deal's `[id]`, so every payment is a receipt
+  and the profit line agrees), owed (clicks x rate, capped in the trial, minus paid), earned (real sales carrying the marker, from
+  the deal's start, any site), back per $1, and the verdict (`verdictForDeal`): on day 21, under 1.5x is "cut". The heading shows
+  this month's creator spend against A$300.
+- **No ops-monitor check.** Money leaves only when the owner pays a hand-entered amount, which the panel shows against the cap the
+  same day; there is no automatic spend to go wrong unwatched.
+- Two deals may never share a marker (`tests/creator-deals.test.ts`); a rate over A$0.10 a click needs the owner.
