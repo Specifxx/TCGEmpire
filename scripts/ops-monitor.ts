@@ -44,6 +44,7 @@ import { ownerEmail } from "../src/lib/ops/owner";
 import { decide, digestDue, markDelivered, parseState, planIsEmpty, planIsUrgent, type OpsState } from "../src/lib/ops/state";
 import { countBy, emptyInbox, type OpsReport } from "../src/lib/ops/types";
 import { collectSisters } from "../src/lib/hq/collect";
+import { ebayQuotaChecks } from "../src/lib/hq/ebay-quota";
 import { hqChecks, type HqSnapshot, type SiteHealth } from "../src/lib/hq/status";
 import { HQ_SNAPSHOT_KEY } from "../src/lib/hq/load";
 
@@ -136,6 +137,12 @@ async function main() {
     results.push(...hqChecks(sisters, now));
   } catch (e) {
     console.warn(`(Empire HQ: sister sites not collected: ${e instanceof Error ? e.message : e})`);
+  }
+  // The eBay quota board: every keyset's calls, from what each site publishes (owner, 2026-11-19: never exhaust it).
+  try {
+    results.push(...(await ebayQuotaChecks((u, i) => fetch(u, i), now)));
+  } catch (e) {
+    console.warn(`(eBay quota board not collected: ${e instanceof Error ? e.message : e})`);
   }
   const inbox = await deps.db!.inbox().catch(() => emptyInbox());
   const report: OpsReport = { version: 1, generatedAt: now.toISOString(), results, inbox };

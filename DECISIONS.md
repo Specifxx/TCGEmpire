@@ -24468,6 +24468,65 @@ above the content of every page is the first thing it sees.
 Kept: the phone dock (after a scroll, dismissible, never on a product page), the in-page "Rate us" strip and the
 engaged-only corner rating card.
 
+## 2026-11-19: The dock A/B ends: the phone ad strip sits above the bottom nav for everyone (owner)
+
+The owner, 2026-11-19: "I want it for all the sites, so people have like an ad on their phone right there." The dock A/B of
+2026-11-18 (`lib/dock-arm.ts`) ends early with its "on" arm for every visitor: the eBay (and, where the site has it, TCGplayer) dock is
+stacked just above the phone bottom nav whenever it shows, instead of taking turns with the nav. Its own rules are unchanged: after a
+scroll, labelled "Ad", ✕ for the visit, never Amazon. `dock_arm` on buy_click now always reads "on".
+
+## eBay calls go to sealed first, the most popular first; cards get what is left (2026-11-19, owner)
+
+The owner, once singles were live on several sites: "we cannot go past the eBay quota … everything goes to sealed
+products first, or at least the most in-demand sealed products, and not the least popular ones … they have TCGplayer
+prices, and they also have their own store prices … we cannot kill the eBay quota." A card page already shows
+TCGplayer's market price and the stores'; a sealed product's eBay price is the one shoppers compare against. So every
+eBay plan now searches every due sealed product, ordered by demand, before any single, and a single gets a call only
+from what sealed leaves. Measured 17-18 Nov before the change: no keyset ran out, but several shared ones ended the
+day at 88-96% of 5,000, and on RiftCompare the singles pass (2,081 calls on 18 Nov) ran before the sealed pass with
+no ceiling of its own.
+
+RiftCompare: the singles passes (catalogue and chase) prime the budget with `hold: SEALED_EBAY_HOLD` (500, env
+`EBAY_SEALED_HOLD`), so they stop 500 calls above the 600 reserve and the sealed pass after them in
+`refresh-prices.yml` always has its calls; the sealed pass primes with no hold and now logs `eBay sealed: spent N`.
+The live-remaining reserve stays the hard stop. If the workflow ever runs sealed before singles, drop the hold
+(`tests/ebay-sealed-first.test.ts` checks the order).
+
+The eBay quota board (`src/lib/hq/ebay-quota.ts`, run by the ops monitor every three hours): every keyset's
+calls on its latest day, from what each site already publishes (`data/state/ebay-usage.json`, `meta.json` `ebay`,
+`data/ebay.json`, `ebay-status.json`, OP's watchdog status, whose "eBay showed R of 5000 left" also gives DexCompare's
+spend). Red (emailed like any red check) when a keyset reaches 5,000, a site spends over its own cap, or a site was
+429'd; amber within 3% of the limit. Not 80%: the agreed caps add up to 88-100% of each keyset by design, so 80%
+would be amber every day and mean nothing. A missing or stale number is unknown, never ok. RiftCompare's own keyset
+keeps its live "eBay daily call allowance" check; MTG Compare, SportsCardCompare and CamCompare publish no usage file
+yet (listed as "not published"). `tests/hq-ebay-quota.test.ts` also pins that each keyset's caps add up to 5,000 or less.
+
+## Giveaway: bonus entries, a public leaderboard, the admin list, monthly (2026-11-19)
+
+Owner, 2026-11-19: "if you are a premium user, you get triple the amount of entries", "increase your entries by
+referring a friend", "a leaderboard ... the top 100", "an admin page so I can see who's entered", "mention we're going
+to do monthly giveaways".
+
+- **Entries** (`entryWeight`, `lib/giveaway.ts`): 1 each; 3 for Premium, and the SAME 3 for a free account that
+  watches any price, so the rules' "no purchase necessary" stays true (paying never buys more than a free account can
+  have: a weighted draw that only payers can climb is a lottery in most places). +1 per friend who joins through the
+  entrant's invite link while the giveaway is open and confirms their email (`GiveawayReferral`, written by
+  `applyReferral`, one row per new account), capped at 10. All counted by the site, never self-reported.
+- **No "follow us on Instagram" entries**: a follow can't be checked automatically, and many subreddits forbid
+  follow-to-enter giveaways.
+- **Leaderboard**: `/api/giveaway/leaderboard`, top 100 by entries, CDN-held six hours, first name and last initial only
+  (`publicName`), an opt-out (`GiveawayEntry.showName`) that shows "Anonymous entrant", the team left out.
+- **Admin**: `/admin/giveaway` lists every entrant (email, country, entries and why, per-day counts), a CSV from
+  `GET /api/admin/giveaway`, and a draw weighted by entries (`weightedPick`, `crypto.randomInt`) that leaves the team out.
+- `/giveaway` says a giveaway is planned every month (a plan, no prize promised), and has its own share image drawn from
+  the prize's art (`assets/og/giveaway-mf-captain.jpg`).
+
+## 2026-11-19: No ads on Premium, account, collection, watches, sign-in or giveaway pages
+
+A production check on a sister site found /premium opening on phones under ad blocks. Premium promises no ads, and these are
+conversion and utility pages, so the layout's ad units (PhoneDockAds) stand down on them (`lib/ad-free-paths.ts`,
+`AdRouteGate.tsx`, `tests/ad-free-paths.test.ts`).
+
 ## Card scanner beta: the model reads the card, our code picks the printing (2026-11-19)
 
 Owner, 2026-11-19: "use AI to scan your card … add it to your collection … determine the value … this feature needs to

@@ -112,6 +112,7 @@ longer lands on its entry.
   [2026-09-18](../DECISIONS.md#L8523), [2026-09-22](../DECISIONS.md#L10455)
 
 - **Home lists rank by demand × value (owner, 2026-11-18):** `src/lib/home-rank.ts` (same file in every repo) orders each home list by product page views and buy clicks (`data/demand.json`, from `/api/demand/<site>`, `src/lib/analytics/item-demand.ts`) times stock, paid rows, price and recency; one exploration slot in eight; `NEXT_PUBLIC_HOME_RANK=off` turns it off. [2026-11-18](../DECISIONS.md#2026-11-18-home-pages-rank-items-by-demand-owner-the-most-popular-items-should-be-on-the-homepage-in-that-order)
+- **eBay calls go to sealed first (owner, 2026-11-19):** the singles passes prime with `hold: SEALED_EBAY_HOLD` (500) so the sealed pass after them always has its calls; the 600 live-remaining reserve is the hard stop. Cards get eBay only from what sealed leaves. [2026-11-19](../DECISIONS.md#ebay-calls-go-to-sealed-first-the-most-popular-first-cards-get-what-is-left-2026-11-19-owner)
 
 ## Databases
 

@@ -15,7 +15,7 @@ import { withLiveStock } from "./preorder-live-stock";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { fetchHtmlStoreProducts } from "./storefront-html";
 import { isShopify, withShopifyVariant } from "./checkout-link";
-import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents, ebaySpentThisRun } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { COUNTRY_LIST, DEFAULT_COUNTRY, currencyOf, isoCountry, type Country } from "./country";
@@ -849,6 +849,8 @@ export async function importSealed(): Promise<number> {
         if (isEbayRateLimited()) break;
         count += await refreshEbaySealedMarket(mkt, marketRefs);
       }
+      // The ops monitor and the eBay quota board read this line (sealed first, owner 2026-11-19).
+      console.log(`eBay sealed: spent ${ebaySpentThisRun()} Browse calls this run.`);
     } else {
       console.log("eBay sealed: skipped (refreshed within the last 20h).");
     }
