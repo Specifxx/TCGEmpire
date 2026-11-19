@@ -13,10 +13,11 @@ test("sister Discord sign-in: only a listed sister, back to its own canonical UR
 });
 
 test("the start route takes the site from SISTER_PREMIUM_SITES and reuses Rift's registered Discord redirect URI", () => {
-  const src = read("src/app/api/sister-premium/discord/route.ts");
+  const src = read("src/app/api/sister-premium/oauth/[provider]/route.ts");
   assert.match(src, /premiumSite\(q\.get\("site"\)\)/);
-  assert.match(src, /redirectUri\("discord"\)/);
-  assert.match(src, /oauth_state_discord/);
+  assert.match(src, /isOAuthProvider\(provider\)/, "google or discord only");
+  assert.match(src, /redirectUri\(provider\)/);
+  assert.match(src, /oauth_state_\$\{provider\}/);
 });
 
 test("the callback: same state and verified-address checks, no Rift session for a sister, the emailed link's code back", () => {
