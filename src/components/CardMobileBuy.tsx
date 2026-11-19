@@ -10,6 +10,8 @@ import { paidAlternative, paidAlternativeName } from "@/lib/paid-alternative";
 import { PaidLinkTag } from "./AffiliateDisclosure";
 import { isPaidLink } from "@/lib/affiliate";
 import { bestTreatment } from "@/lib/best-price";
+import { trackEvent } from "@/lib/analytics";
+import { paidPair, pctMore, topArm, type TopArm } from "@/lib/top-pair";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The card page's phone buy path (2026-09-26). At 390px the price comparison
@@ -40,6 +42,22 @@ function shortStore(name: string): string {
 export function CardTopBuy({ rows, displayName }: { rows: MarketRow[]; displayName: string }) {
   const { country, fmt, best, prices } = useCheapest(rows);
   const alt = useMemo(() => paidAlternative(prices), [prices]);
+  const pair = useMemo(() => paidPair(prices), [prices]);
+  // The top-pair A/B (lib/top-pair.ts): the arm is read after hydration, so the server HTML is arm "line" for everyone.
+  const [arm, setArm] = useState<TopArm>("line");
+  useEffect(() => setArm(topArm()), []);
+  const showPair = arm === "pair" && !!pair;
+  const seen = !!(alt || pair);
+  useEffect(() => {
+    if (!seen) return;
+    try {
+      if (sessionStorage.getItem("top-seen")) return;
+      sessionStorage.setItem("top-seen", "1");
+    } catch {
+      return;
+    }
+    trackEvent("top_seen", { top_arm: topArm(), country });
+  }, [seen, country]);
   if (!best) return null;
   // Owner, 2026-11-18: a plain store's cheapest price is drawn neutrally (the paid alternative line below is its hint).
   const plain = bestTreatment(true, { ebay: best.retailer.startsWith("ebay"), source: best.retailer, paid: isPaidLink(best.buyHref) }) === "plain";
@@ -75,7 +93,43 @@ export function CardTopBuy({ rows, displayName }: { rows: MarketRow[]; displayNa
       {/* The cheapest paid marketplace within 20% when the cheapest row is a
           store that pays nothing (lib/paid-alternative.ts): a real row of the
           comparison below, its real price and how much more it is. */}
-      {alt && (
+      {showPair && pair && (
+        // Arm "pair": eBay's and TCGplayer's own cheapest rows as two real buttons, their real prices, each within 20%.
+        <div className="mt-2 border-t border-ink-700/60 pt-2" data-top-pair="">
+          <div className="mb-1.5 flex items-center justify-between text-[11px] text-slate-400">
+            <span>Also on</span>
+            <PaidLinkTag />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[pair.ebay, pair.tcg].map((row) =>
+              row ? (
+                <OutboundLink
+                  key={row.retailer}
+                  href={row.buyHref}
+                  retailer={row.retailer}
+                  country={country}
+                  cardName={displayName}
+                  price={row.priceCents / 100}
+                  positionInList={prices.indexOf(row) + 1}
+                  cheapestPrice={best.priceCents / 100}
+                  pageType="card_detail"
+                  inStock
+                  variant={row.isFoil ? "foil" : "nonfoil"}
+                  condition={row.condition}
+                  surface="card_top_pair"
+                  className={`${buyButtonClass(row.retailer)} min-w-0 justify-center px-2 text-sm`}
+                >
+                  <span className="truncate">
+                    {paidAlternativeName(row.retailer, row.retailerName)} <span className="num">{fmt(row.priceCents)}</span>
+                    {pctMore(row.priceCents, best.priceCents) && <span className="ml-1 text-[11px] opacity-80">{pctMore(row.priceCents, best.priceCents)}</span>}
+                  </span>
+                </OutboundLink>
+              ) : null,
+            )}
+          </div>
+        </div>
+      )}
+      {alt && !showPair && (
         <div className="mt-2 flex items-center gap-2 border-t border-ink-700/60 pt-1 text-xs text-slate-400">
           <OutboundLink
             href={alt.row.buyHref}
