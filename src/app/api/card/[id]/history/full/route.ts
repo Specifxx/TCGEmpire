@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
-import { getPriceHistory } from "@/lib/price-history";
+import { getPriceHistory, getTcgMarketHistory } from "@/lib/price-history";
 import { COUNTRIES, type Country } from "@/lib/country";
 
 // A card's WHOLE price history for one market, for Plus and Premium
@@ -18,5 +18,5 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const card = await prisma.card.findFirst({ where: { OR: [{ slug: params.id }, { id: params.id }] }, select: { id: true } });
   if (!card) return NextResponse.json({ points: [] }, { status: 404 });
   const points = await getPriceHistory(card.id, country);
-  return NextResponse.json({ points, country, full: true }, { headers: { "Cache-Control": "private, no-store" } });
+  return NextResponse.json({ points, market: getTcgMarketHistory(card.id, country), country, full: true }, { headers: { "Cache-Control": "private, no-store" } });
 }

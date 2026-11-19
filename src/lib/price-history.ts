@@ -13,7 +13,7 @@
 import { unstable_cache } from "next/cache";
 import { staticGenerationAsyncStorage } from "next/dist/client/components/static-generation-async-storage.external";
 import { prisma } from "./db";
-import { cardHistoryRows, cardHistoryVersion } from "./price-history-store";
+import { cardHistoryRows, cardHistoryVersion, tcgMarketHistory } from "./price-history-store";
 import { cardTileSelect, withStoreCounts } from "./cards";
 import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
 import { convertCents } from "./fx";
@@ -335,6 +335,19 @@ async function computePriceHistory(cardId: string, country: Country, take: numbe
 // `take` 400 is over a year of daily points (the game is about a year old), and
 // at ~25 bytes a point still a small entry for the most-requested history read
 // on the site, one per card page. The weekly era's `take` was 60.
+/**
+ * TCGplayer's US market price for one card per Sydney day, in `country`'s currency at the same reference rate as the
+ * card's own series (historySource): the dashed gold line of the card page's and the quick view's chart (owner,
+ * 2026-11-19). Read from the bundled files (data/price-history/tcg-market), no database. Display only: never a price
+ * row, a best price, a deal, an alert, a sort or structured data.
+ */
+export function getTcgMarketHistory(cardId: string, country: Country = DEFAULT_COUNTRY, take = 400): PricePoint[] {
+  const { convert } = historySource(country);
+  return tcgMarketHistory(cardId)
+    .slice(-take)
+    .map((p) => ({ t: p.t, v: convert(p.usdCents) }));
+}
+
 export function getPriceHistory(cardId: string, country: Country = DEFAULT_COUNTRY, take = 400): Promise<PricePoint[]> {
   return cachedOrDirect(
     () => computePriceHistory(cardId, country, take),

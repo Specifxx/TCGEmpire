@@ -24729,3 +24729,20 @@ TCGplayer, which kept its own blue button, rose (DexCompare 545 to 779, MTG Comp
 blue again (#3665f3, white ink, fixed in both themes) on every site; nothing else about the rows changes (no outline, tint, order or
 label), and the cheapest row keeps its mark. RiftCompare and OP Compare had started a 50/50 the same morning; it ended for
 everyone. Read: eBay buy clicks per 100 visitors, the week after release vs 12-18 Nov.
+
+## 2026-11-19: TCGplayer's market price on the price history chart
+
+Owner: "I really really like opcompare's price history where you have the tcgplayer market price as well as the cheapest price
+locally. Can we pls copy it across all our tcg websites?" The card page's chart (`LocalizedPriceHistory` → `PriceChart`) and the
+quick view's now draw a second, dashed gold line under the cheapest-price line: TCGplayer's US market price per day, converted to
+the visitor's market at the same reference rate as the card's own series (`historySource`), labelled "TCGplayer market
+(converted)" outside the US, in the tooltip and a legend. The stats header (Now / Low / High / change) stays the cheapest price's.
+
+- The data is new: `scripts/record-tcg-market.ts`, a step of `refresh-prices.yml` right after the import, writes
+  `data/price-history/tcg-market/<Sydney day>.json` (US cents per card, same shape as `cards/`) from ONE query of the US TCGplayer
+  market rows the import just wrote, never a derived row, market rows preferred over the legacy row (`preferMarketRows`). Never
+  fatal. The publish step commits it with the day's other history; no new eBay or TCGplayer request, no new page database read
+  (the routes read the bundled files).
+- It is a separate script on purpose: a change to `price-import.ts` re-runs the whole import on push.
+- The free 90-day window and Plus's full history apply to it exactly as to the main line. Display only: never a price row, a
+  best price, a deal, an alert, a sort or structured data. It starts with the next import; until then the chart is unchanged.

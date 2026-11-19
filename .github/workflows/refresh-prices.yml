@@ -250,6 +250,16 @@ jobs:
           if [ "$code" = "202" ]; then echo "Skipped: files mode, the pages change only with a release."; exit 0; fi
           [ "$code" = "200" ] || echo "Non-200/failed (pages still refresh on their 24h TTL); not failing the run."
 
+      - name: Record TCGplayer's market price history
+        # data/price-history/tcg-market/<Sydney day>.json: the dashed gold line of the card page's price history
+        # (scripts/record-tcg-market.ts, owner 2026-11-19). One small query of the rows the import just wrote; never fatal.
+        if: ${{ !cancelled() && steps.import.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+        run: npx tsx scripts/record-tcg-market.ts
+
       - name: Publish the day's price-history files
         # The import wrote today's card file and the sealed import today's sealed
         # file under data/price-history (src/lib/price-history-store.ts). Commit
