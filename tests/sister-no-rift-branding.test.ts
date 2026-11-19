@@ -21,7 +21,7 @@ test("the confirm and manage pages carry no RiftCompare footer", () => {
 });
 
 test("mail links stay on the service until a site's rewrite is listed", () => {
-  const site = { key: "scent", url: "https://scentcompare.app" };
+  const site = { key: "scent", url: "https://scentcompare.app" } as const;
   assert.match(serviceUrl("manage", "t", site), /^https:\/\/[^/]+\/api\/sister-alerts\/manage\?t=t$/);
 });
 
