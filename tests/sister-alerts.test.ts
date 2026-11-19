@@ -94,7 +94,7 @@ test("the confirmation email carries no text from the form, and alerts carry uns
   const feeds = new Map<string, AlertFeed>([["dex", { ...parseFeed({ ...rawFeed, site: "dex" }, { key: "dex" }) }]]);
   const deal = pickDeal(sisterSite("mtg")!, "US", feeds, now);
   assert.equal(deal?.site.key, "dex");
-  assert.equal(pickDeal(sisterSite("wargame")!, "US", feeds, now), null, "deals only come from the same group");
+  assert.equal(pickDeal(sisterSite("wax")!, "US", feeds, now), null, "deals only come from the same group");
   const m = buildAlertEmail("mtg", [{ id: "x1", site: "mtg", name: "Foundations <b>Box</b>", path: "/us/sealed/f", region: "US", priceCents: 8000, targetCents: 8500 }], "tok123", deal);
   assert.match(m.subject, /Foundations <b>Box<\/b> is now US\$80\.00/);
   assert.ok(!m.html.includes("<b>Box</b>"), "names are escaped");
@@ -211,9 +211,9 @@ test("the routes keep their safety rails", () => {
   assert.equal(allowedOrigin("https://compareempire.com"), null, "Compare Empire has its own alerts");
 });
 
-test("quiet sites (ScentCompare, KaeYoung) never name RiftCompare in their emails and get no other site's deal", async () => {
+test("quiet sites (ScentCompare, KaeYoung, SportsCardCompare, FigureCompare) never name RiftCompare in their emails and get no other site's deal", async () => {
   const { buildConfirmEmail, buildWeeklyConfirmEmail } = await import("../src/lib/sister-alerts/email");
-  for (const key of ["scent", "kaeyoung"]) {
+  for (const key of ["scent", "kaeyoung", "wax", "figure"]) {
     const site = sisterSite(key)!;
     assert.equal(site.quiet, true);
     assert.equal(SISTER_ALERT_SITES.filter((s) => s.group === site.group).length, 1, `${key} is alone in its group`);
