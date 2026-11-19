@@ -23,7 +23,8 @@ test("only the sister sites' own origins may call the signup API", () => {
   assert.equal(allowedOrigin("https://mtgcompare.app.evil.com"), null);
   assert.equal(allowedOrigin("https://evil-mtgcompare.app"), null);
   assert.equal(allowedOrigin("https://riftcompare.com"), null, "RiftCompare has its own alerts");
-  assert.equal(allowedOrigin("https://kaeyoung.com"), null, "KaeYoung is left out (owner, 2026-11-02)");
+  assert.equal(allowedOrigin("https://kaeyoung.com")?.key, "kaeyoung", "KaeYoung joined 2026-11-19 (owner: accounts on every site)");
+  assert.equal(allowedOrigin("https://scentcompare.app")?.key, "scent");
   assert.equal(allowedOrigin("https://opcompare.app"), null, "OP Compare has its own alerts");
   assert.equal(allowedOrigin(null), null);
   assert.equal(corsHeaders("https://evil.com")["Access-Control-Allow-Origin"], undefined);
@@ -204,8 +205,21 @@ test("the routes keep their safety rails", () => {
     const get = src.slice(src.indexOf("export async function GET"), src.indexOf("export async function POST"));
     assert.ok(!/\.(update|delete|deleteMany|create)\(/.test(get), `${p}: a GET never changes anything`);
   }
-  assert.equal(SISTER_ALERT_SITES.length, 11);
+  assert.equal(SISTER_ALERT_SITES.length, 13);
   assert.equal(allowedOrigin("https://bandaicompare.com")?.key, "bandai");
   assert.equal(allowedOrigin("https://tcgprices.app")?.key, "tcgprices");
   assert.equal(allowedOrigin("https://compareempire.com"), null, "Compare Empire has its own alerts");
+});
+
+test("quiet sites (ScentCompare, KaeYoung) never name RiftCompare in their emails and get no other site's deal", async () => {
+  const { buildConfirmEmail, buildWeeklyConfirmEmail } = await import("../src/lib/sister-alerts/email");
+  for (const key of ["scent", "kaeyoung"]) {
+    const site = sisterSite(key)!;
+    assert.equal(site.quiet, true);
+    assert.equal(SISTER_ALERT_SITES.filter((s) => s.group === site.group).length, 1, `${key} is alone in its group`);
+    for (const m of [buildConfirmEmail(key, "tok", 4999, "US"), buildWeeklyConfirmEmail(key, "tok", "US")]) {
+      assert.ok(!/riftcompare\.com\)|RiftCompare's/.test(m.html), `${key} email names RiftCompare`);
+    }
+  }
+  assert.ok(/RiftCompare's alert service/.test(buildConfirmEmail("mtg", "tok", 4999, "US").html));
 });

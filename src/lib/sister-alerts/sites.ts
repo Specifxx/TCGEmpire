@@ -7,11 +7,12 @@
 //
 // TCG Prices (tcgprices.app) joined on 2026-11-16 (owner: urgent, so its alerts need no wait).
 // Not here, on purpose: RiftCompare itself and OP Compare (their own account
-// alerts), CamCompare and Compare Empire (their own alert tables), KaeYoung (left out, owner
-// 2026-11-02, unless the owner asks).
+// alerts), CamCompare and Compare Empire (their own alert tables). KaeYoung, left out on
+// 2026-11-02, joined with ScentCompare on 2026-11-19 when the owner asked for accounts everywhere.
 
-export type SisterAlertSiteKey = "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "bandai" | "tcgprices" | "wax" | "wargame" | "figure";
-export type SisterGroup = "cards" | "hobby";
+export type SisterAlertSiteKey = "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "bandai" | "tcgprices" | "wax" | "wargame" | "figure" | "scent" | "kaeyoung";
+/** "scent" and "kbeauty" are groups of one: their emails never end with another site's deal (KaeYoung carries no sister links). */
+export type SisterGroup = "cards" | "hobby" | "scent" | "kbeauty";
 
 export interface SisterAlertSite {
   key: SisterAlertSiteKey;
@@ -24,6 +25,8 @@ export interface SisterAlertSite {
   color: string;
   /** Hosts the site answered on before (a form already open there still posts from them); allowed as origins, never linked. */
   oldHosts?: string[];
+  /** Emails never name RiftCompare (the beauty sites, owner 2026-11-19: no Compare branding on KaeYoung, other side of the network for both). */
+  quiet?: boolean;
 }
 
 export const SISTER_ALERT_SITES: SisterAlertSite[] = [
@@ -38,6 +41,9 @@ export const SISTER_ALERT_SITES: SisterAlertSite[] = [
   { key: "wax", name: "SportsCardCompare", url: "https://sportscardcompare.com", group: "cards", color: "#1d4ed8" },
   { key: "wargame", name: "WargameCompare", url: "https://wargamecompare.com", group: "hobby", color: "#b91c1c" },
   { key: "figure", name: "FigureCompare", url: "https://figurecompare.com", group: "hobby", color: "#dc2626" },
+  // ScentCompare and KaeYoung (2026-11-19, owner: "accounts for every single one of our compare sites", Premium with deals and alerts).
+  { key: "scent", name: "ScentCompare", url: "https://scentcompare.app", group: "scent", color: "#1d4ed8", quiet: true },
+  { key: "kaeyoung", name: "KaeYoung", url: "https://kaeyoung.com", group: "kbeauty", color: "#e11d6b", quiet: true },
 ];
 
 export const SISTER_ALERT_KEYS = SISTER_ALERT_SITES.map((s) => s.key) as [SisterAlertSiteKey, ...SisterAlertSiteKey[]];

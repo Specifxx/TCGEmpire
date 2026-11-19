@@ -74,7 +74,7 @@ export function buildConfirmEmail(siteKey: string, token: string, targetCents: n
     <tr><td style="padding:8px 28px 6px;font-size:14px;line-height:1.6;color:#374151">Someone, hopefully you, asked ${escapeHtml(site.name)} to email this address ${escapeHtml(what)}${weekly ? `, and to send its biggest price drops once a week` : ""}. Confirm and we'll start checking prices every day.</td></tr>
     <tr><td style="padding:10px 28px 18px">${button(site, url, "Confirm my price alert")}</td></tr>
     <tr><td style="padding:0 28px 18px;font-size:13px;line-height:1.6;color:#6b7280">You only confirm once: alerts you add later on any of our sites start straight away. If you didn't ask for this, ignore this email and nothing will be sent.</td></tr>`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">${escapeHtml(site.name)} price alerts are sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">${escapeHtml(site.name)} price alerts are sent by ${senderOf(site)}.</td></tr>`;
   const text = `${subject}\n\nSomeone, hopefully you, asked ${site.name} to email this address ${what}${weekly ? ", and to send its biggest price drops once a week" : ""}.\n\nConfirm: ${url}\n\nIf you didn't ask for this, ignore this email and nothing will be sent.`;
   return { subject, html: shell(site, "Confirm your price alert", inner, footer, `One click and we'll watch the price for you.`), text };
 }
@@ -88,7 +88,7 @@ export function buildWeeklyConfirmEmail(siteKey: string, token: string, region: 
     <tr><td style="padding:8px 28px 6px;font-size:14px;line-height:1.6;color:#374151">Someone, hopefully you, asked ${escapeHtml(site.name)} to email this address its biggest price drops at ${REGION_LABEL[region]} stores, once a week. Confirm and the next edition comes to you.</td></tr>
     <tr><td style="padding:10px 28px 18px">${button(site, url, "Confirm my weekly email")}</td></tr>
     <tr><td style="padding:0 28px 18px;font-size:13px;line-height:1.6;color:#6b7280">One email a week, real store prices only, and every email has a link to stop it. If you didn't ask for this, ignore this email and nothing will be sent.</td></tr>`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">${escapeHtml(site.name)} emails are sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">${escapeHtml(site.name)} emails are sent by ${senderOf(site)}.</td></tr>`;
   const text = `${subject}\n\nSomeone, hopefully you, asked ${site.name} to email this address its biggest price drops at ${REGION_LABEL[region]} stores, once a week.\n\nConfirm: ${url}\n\nOne email a week, and every email has a link to stop it. If you didn't ask for this, ignore this email and nothing will be sent.`;
   return { subject, html: shell(site, "Confirm your weekly email", inner, footer, `One click and the weekly price drops come to you.`), text };
 }
@@ -151,7 +151,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
         </div></td></tr>`
     : "";
   const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Prices are the lowest in-stock store price we saw today, before postage. Stores change prices quickly, so check before you buy.<br/>${feedbackAsk(site, "sister-alert")}</td></tr>`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>Sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>Sent by ${senderOf(site)}.</td></tr>`;
   const text = [
     subject,
     "",
@@ -171,6 +171,11 @@ export function listUnsubscribeHeaders(token: string): Record<string, string> {
     "List-Unsubscribe": `<${serviceUrl("unsubscribe", token)}>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
   };
+}
+
+/** Who the footer says sent it: RiftCompare's service, or, for a quiet site, just "our shared alert service". */
+export function senderOf(site: SisterAlertSite): string {
+  return site.quiet ? "our shared alert service" : "our sister site RiftCompare's alert service (riftcompare.com)";
 }
 
 /** "MTG Compare alerts <noreply@riftcompare.com>": the sister's name on RiftCompare's verified sender. */
