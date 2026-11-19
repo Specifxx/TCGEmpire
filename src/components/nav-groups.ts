@@ -360,6 +360,8 @@ export const HEADER_MENUS: HeaderMenu[] = [
     columns: [
       { title: "Market", links: pick("/market", "/movers", "/auctions") },
       { title: "Deals", links: pick("/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand") },
+      // The prize draw (owner, 2026-11-19): visible in the header while one runs, not only in the launcher.
+      { title: "Win", links: pick("/giveaway") },
     ],
   },
 ];
