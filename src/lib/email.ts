@@ -677,6 +677,10 @@ export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro:
   };
 }
 
+// The hub Discord's own invite for email (lands in #welcome; owner, 2026-11-20), a separate code from the site's
+// so the server's Invites list shows how many members the alert emails bring.
+const DISCORD_EMAIL_INVITE = "https://discord.gg/cdJEpmuTW2";
+
 // Footer for every alert email: why it came, how often, and the two separate
 // choices — pause (keeps the watchlist) and delete.
 function alertFooter(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): string {
@@ -685,6 +689,7 @@ function alertFooter(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): str
     Target, below-market and restock alerts on a paid plan can arrive after each price update.<br/>
     <a href="${escapeHtml(links.pause)}" style="color:#9aa4b2;text-decoration:underline">Pause alert emails (your watchlist is kept)</a>
     &nbsp;·&nbsp; <a href="${escapeHtml(links.deleteAll)}" style="color:#9aa4b2;text-decoration:underline">Delete all my watches</a><br/>
+    Want restocks sooner? <a href="${escapeHtml(DISCORD_EMAIL_INVITE)}" style="color:#9aa4b2;text-decoration:underline">Our Discord posts sealed restocks and price drops twice a day</a>.<br/>
     RiftCompare · Riftbound card price comparison.
   </td></tr>`;
 }
@@ -693,6 +698,7 @@ function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">):
     "You're getting this because you asked RiftCompare to watch these cards for price changes. Free alerts come at most once a week; Target, below-market and restock alerts on a paid plan can arrive after each price update.",
     `Pause alert emails (your watchlist is kept): ${links.pause}`,
     `Delete all my watches: ${links.deleteAll}`,
+    `Restocks sooner, free on our Discord: ${DISCORD_EMAIL_INVITE}`,
     MAILING_ADDRESS,
   ].join("\n");
 }

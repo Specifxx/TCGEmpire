@@ -8,6 +8,7 @@ import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SealedProductView } from "@/components/SealedProductView";
 import { InlineAds } from "@/components/InlineAds";
+import { DiscordCta } from "@/components/DiscordCta";
 
 // A sealed product's own page (2026-11-03, owner: Amazon "up there with eBay and TCGplayer" on RiftCompare too, which
 // had no sealed page to put it on; DECISIONS.md "Sealed products get their own pages"). The /sealed tiles and the quick
@@ -69,6 +70,8 @@ export default async function SealedProductPage({ params }: { params: { slug: st
       </header>
 
       <SealedProductView byMarket={byMarket} />
+
+      <DiscordCta className="mt-6" />
 
       <nav className="mt-8 flex flex-wrap gap-2 text-sm" aria-label="More sealed">
         {g.setCode && (

@@ -673,6 +673,32 @@ export async function discordBot(d: OpsDeps): Promise<CheckResult> {
   }
 }
 
+// The Discord hub's size (DECISIONS.md, "One Discord hub", 2026-11-20). Status only, never an
+// alert: the Monday report shows members against the 150-by-14-Dec target. Read from the public
+// invite endpoint (no key); members per site are the uses per invite in Server Settings > Invites.
+export const DISCORD_HUB_INVITE = "cdJEpmuTW2";
+export const DISCORD_HUB_TARGET = 150;
+export async function discordMembers(d: OpsDeps): Promise<CheckResult> {
+  const id = "discord:members";
+  const title = "Discord hub members";
+  try {
+    const r = await retry(d, () => d.fetch(`https://discord.com/api/v10/invites/${DISCORD_HUB_INVITE}?with_counts=true`), 2, 10_000);
+    if (!r.ok) return unknown(d, id, "site", title, `Discord answered ${r.status}.`);
+    const j = (await r.json()) as { approximate_member_count?: number; approximate_presence_count?: number };
+    const n = j.approximate_member_count;
+    if (typeof n !== "number") return unknown(d, id, "site", title, "Discord gave no member count.");
+    return result(d, {
+      id,
+      area: "site",
+      title,
+      severity: "ok",
+      summary: `${n} members (${j.approximate_presence_count ?? 0} online); target ${DISCORD_HUB_TARGET} by 14 Dec.`,
+    });
+  } catch (e) {
+    return unknown(d, id, "site", title, `Could not reach Discord (${msg(e)}).`);
+  }
+}
+
 export async function dexcompareIndex(d: OpsDeps): Promise<CheckResult> {
   const id = "partner:dexcompare";
   const title = "DexCompare store prices (Pokémon)";
@@ -1249,6 +1275,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("site:live", "site", "Live site", () => siteProbe(d));
   await add("site:store-votes", "site", "Store thumbs up / down (every site)", () => storeVotes(d));
   await add("discord:bot", "site", "Discord price bot", () => discordBot(d));
+  await add("discord:members", "site", "Discord hub members", () => discordMembers(d));
   await add("partner:dexcompare", "data", "DexCompare store prices (Pokémon)", () => dexcompareIndex(d));
   await add("data:family-feeds", "data", "Sister-site deal feeds", () => familyFeedsCheck(d));
 

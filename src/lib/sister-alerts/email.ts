@@ -4,6 +4,7 @@
 // in the footer. Every product name, path and deal comes from the site's own
 // feed; the confirmation carries nothing a form typed but the numbers.
 import { MAILING_ADDRESS, mailingAddressRow } from "../mailing-address";
+import { discordInvite } from "./discord";
 import { escapeHtml } from "../email";
 import { SITE_URL } from "../site";
 import { REGION_CURRENCY, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
@@ -161,7 +162,8 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
         </div></td></tr>`
     : "";
   const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Prices are the lowest in-stock store price we saw today, before postage. Stores change prices quickly, so check before you buy.<br/>${feedbackAsk(site, "sister-alert")}</td></tr>`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token, site) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token, site) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>Sent by ${senderOf(site)}.</td></tr>`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token, site) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token, site) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>${discordLine(site.key)}Sent by ${senderOf(site)}.</td></tr>`;
+  const invite = discordInvite(site.key);
   const text = [
     subject,
     "",
@@ -169,6 +171,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
     deal ? `\nA deal on ${deal.site.name}: ${deal.deal.n}, ${money(deal.deal.p, deal.deal.r)}\n${siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`, deal.deal.r)}` : "",
     `\nWhat would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "sister-alert")}`,
     `\nManage or stop your alerts: ${serviceUrl("manage", token, site)}`,
+    invite ? `\nRestocks and price drops twice a day, free on our Discord: ${invite}` : "",
     `\n${MAILING_ADDRESS}`,
   ].join("\n");
   const heading = allRestock ? (rows.length === 1 ? "It's back in stock" : `${rows.length} products are back in stock`) : rows.length === 1 ? "Your price alert hit its target" : rows.some((a) => a.restock) ? `${rows.length} alerts fired` : `${rows.length} price alerts hit their target`;
@@ -194,4 +197,10 @@ export function fromFor(site: SisterAlertSite, env: Record<string, string | unde
   const raw = env.EMAIL_FROM ?? "noreply@riftcompare.com";
   const addr = /<([^>]+)>/.exec(raw)?.[1] ?? raw.trim();
   return `${site.name} alerts <${addr}>`;
+}
+
+/** One footer line inviting a card site's subscribers to the Discord hub; empty for the other sites. */
+export function discordLine(siteKey: string): string {
+  const invite = discordInvite(siteKey);
+  return invite ? `<a href="${escapeHtml(invite)}" style="color:#4b5563">Restocks and price drops twice a day, free on our Discord</a><br/>` : "";
 }
