@@ -24501,6 +24501,26 @@ would be amber every day and mean nothing. A missing or stale number is unknown,
 keeps its live "eBay daily call allowance" check; MTG Compare, SportsCardCompare and CamCompare publish no usage file
 yet (listed as "not published"). `tests/hq-ebay-quota.test.ts` also pins that each keyset's caps add up to 5,000 or less.
 
+## Giveaway: bonus entries, a public leaderboard, the admin list, monthly (2026-11-19)
+
+Owner, 2026-11-19: "if you are a premium user, you get triple the amount of entries", "increase your entries by
+referring a friend", "a leaderboard ... the top 100", "an admin page so I can see who's entered", "mention we're going
+to do monthly giveaways".
+
+- **Entries** (`entryWeight`, `lib/giveaway.ts`): 1 each; 3 for Premium, and the SAME 3 for a free account that
+  watches any price, so the rules' "no purchase necessary" stays true (paying never buys more than a free account can
+  have: a weighted draw that only payers can climb is a lottery in most places). +1 per friend who joins through the
+  entrant's invite link while the giveaway is open and confirms their email (`GiveawayReferral`, written by
+  `applyReferral`, one row per new account), capped at 10. All counted by the site, never self-reported.
+- **No "follow us on Instagram" entries**: a follow can't be checked automatically, and many subreddits forbid
+  follow-to-enter giveaways.
+- **Leaderboard**: `/api/giveaway/leaderboard`, top 100 by entries, CDN-held six hours, first name and last initial only
+  (`publicName`), an opt-out (`GiveawayEntry.showName`) that shows "Anonymous entrant", the team left out.
+- **Admin**: `/admin/giveaway` lists every entrant (email, country, entries and why, per-day counts), a CSV from
+  `GET /api/admin/giveaway`, and a draw weighted by entries (`weightedPick`, `crypto.randomInt`) that leaves the team out.
+- `/giveaway` says a giveaway is planned every month (a plan, no prize promised), and has its own share image drawn from
+  the prize's art (`assets/og/giveaway-mf-captain.jpg`).
+
 ## 2026-11-19: No ads on Premium, account, collection, watches, sign-in or giveaway pages
 
 A production check on a sister site found /premium opening on phones under ad blocks. Premium promises no ads, and these are

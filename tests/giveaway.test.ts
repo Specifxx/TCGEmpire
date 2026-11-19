@@ -34,3 +34,45 @@ test("the public page reads no session or database", () => {
   assert.match(page, /No purchase necessary/);
   assert.match(page, /void/);
 });
+
+import { entryWeight, weightedPick, publicName, BONUS_ENTRIES, MAX_REFERRAL_ENTRIES } from "../src/lib/giveaway";
+
+test("Premium never beats a free account: a price watch earns the same entries", () => {
+  assert.equal(entryWeight({ premium: false, watches: 0 }).weight, 1);
+  assert.equal(entryWeight({ premium: true, watches: 0 }).weight, BONUS_ENTRIES);
+  assert.equal(entryWeight({ premium: false, watches: 1 }).weight, BONUS_ENTRIES);
+  assert.equal(entryWeight({ premium: true, watches: 5 }).weight, BONUS_ENTRIES);
+});
+
+test("confirmed referrals add one entry each, capped", () => {
+  assert.equal(entryWeight({ premium: false, watches: 0, referrals: 2 }).weight, 3);
+  assert.equal(entryWeight({ premium: false, watches: 1, referrals: 99 }).weight, BONUS_ENTRIES + MAX_REFERRAL_ENTRIES);
+  assert.equal(entryWeight({ premium: false, watches: 0, referrals: -4 }).weight, 1);
+});
+
+test("the draw is weighted by entries", () => {
+  const items = [{ id: "a", weight: 1 }, { id: "b", weight: 3 }, { id: "c", weight: 0 }];
+  const hits: Record<string, number> = {};
+  for (let t = 0; t < 4; t++) {
+    const w = weightedPick(items, () => t)!;
+    hits[w.id] = (hits[w.id] ?? 0) + 1;
+  }
+  assert.deepEqual(hits, { a: 1, b: 3 });
+  assert.equal(weightedPick([], () => 0), null);
+});
+
+test("the leaderboard never shows an email or a full surname", () => {
+  assert.equal(publicName("Bill Yang", true), "Bill Y.");
+  assert.equal(publicName("bill.jyang101", true), "bil***");
+  assert.equal(publicName("someone@example.com", true), "Anonymous entrant");
+  assert.equal(publicName("Bill Yang", false), "Anonymous entrant");
+  const route = readFileSync("src/app/api/giveaway/leaderboard/route.ts", "utf8");
+  assert.doesNotMatch(route, /email:|\.email\b(?!s)/);
+  assert.doesNotMatch(route, /cookies\(|getCurrentUser/);
+});
+
+test("the admin page and CSV are admin-only", () => {
+  for (const f of ["src/app/admin/giveaway/page.tsx", "src/app/api/admin/giveaway/route.ts"]) {
+    assert.match(readFileSync(f, "utf8"), /isAdmin/);
+  }
+});
