@@ -24838,6 +24838,25 @@ RiftCompare (owner, 2026-11-17), so `wax` is now `quiet` (its emails say "our sh
 `sports`, instead of `cards`: a Sports card alert no longer ends with a DexCompare deal, nor a card alert with a Sports card deal.
 The same rule moved WargameCompare from `hobby` to `cards` (it is on the cards side) and left FigureCompare alone in `hobby`, now
 quiet too.
+## 2026-11-19 — eBay stand-out row, 50/50
+
+The owner, the same evening eBay's blue came back: the colour change moved eBay clicks, so "we can do something even more than just a
+color change … make it stand out even more". Every visitor keeps eBay's blue button; a new 50/50 (localStorage `ebay-pop`, arm on
+`<html data-ebaypop>`, `ebay_pop` on buy_click) gives arm "pop" a bolder, larger eBay button with a soft blue halo and tints the list
+row that holds an eBay button eBay blue with a blue edge. Shape and colour only: no new words, no new claim (eBay is called the cheapest
+only when it is), no position change, no extra eBay API call, white on #0064d2 passes contrast. Run on Rift, Dex, MTG and OP. Read
+3 Dec: eBay buy clicks per arm, total buy clicks per arm as the check; keep the winner and roll it out to the other card sites.
+
+## 2026-11-19 — Paid rows always there, and a tag lint that stops the build
+
+From the 19 Nov boardroom review, on the four money sites: a row that is always there beats a perfect row that is often missing. The
+card page's pinned block is now always drawn: eBay's tagged search already stood in when a market had no eBay listing, and now
+TCGplayer's tagged search (`tcgSearchHref`, surface `tcg_fallback`) stands in when a market has no TCGplayer row or reference. eBay's
+search row wears the filled button, so it is eBay blue like the others. And `scripts/tag-lint.ts` runs first in `npm run build`
+(`src/lib/tag-lint.ts`, `tests/tag-lint.test.ts`): every eBay builder in every market must carry campaign 5339155912 and a customid,
+every TCGplayer link must go through Impact (/out/tcgplayer), checked with `classifyLink`, and no component may hard-code a bare eBay
+or TCGplayer href. A failure stops the release: a paid link going out untagged costs more than a late one.
+
 
 ## 2026-11-19: [urgent] needs eight hours too: a network ceiling of 57 builds a day
 

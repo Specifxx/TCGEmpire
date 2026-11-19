@@ -15,7 +15,7 @@ import { StoreCodeChip } from "./StoreCodeChip";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
 import { normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
-import { isPaidLink } from "@/lib/affiliate";
+import { affiliateUrl, isPaidLink } from "@/lib/affiliate";
 import { bestTreatment } from "@/lib/best-price";
 import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
 import { playedDiscounts, playedDiscountText } from "@/lib/played-discount";
@@ -384,6 +384,8 @@ export function CardPriceComparison({
     return [...byRetailer.values()];
   }, [prices, outOfStock]);
   const ebay = m.hasEbay ? null : ebaySearch[country] ?? null;
+  // TCGplayer's tagged search for this card: the pinned TCGplayer row when the market has no TCGplayer row or reference (2026-11-19).
+  const tcgSearchHref = affiliateUrl(`https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?q=${encodeURIComponent(displayName)}`, "tcgplayer", "/card");
   const pin = useMemo(() => pinMarketplaces(prices), [prices]);
   const rest = pin.rest;
   // "LP · 22% under the cheapest NM here" on each played in-stock row that has
@@ -689,7 +691,9 @@ export function CardPriceComparison({
             on top (tcgFirst): the cheapest listing of each when this market has one, else eBay's search and,
             outside the US, TCGplayer's US market price as a labelled reference.
             Stores follow below, ranked by price. */}
-        {(pin.ebay || ebay || pin.tcgplayer || tcg) && (
+        {/* Always drawn (2026-11-19, "a row that is always there beats a perfect row that is often missing"): with no TCGplayer row
+            or reference for this market, a tagged TCGplayer search (tcgSearchHref) stands in, as eBay's search does for eBay. */}
+        {(pin.ebay || ebay || pin.tcgplayer || tcg || tcgSearchHref) && (
           <ul className="divide-y divide-ink-800 border-b border-ink-800">
             {pin.tcgFirst && pin.tcgplayer && renderRow(pin.tcgplayer, true)}
             {pin.ebay
@@ -729,7 +733,7 @@ export function CardPriceComparison({
                       cardName={displayName}
                       pageType="card_detail"
                       surface="ebay_fallback"
-                      className="btn-buy flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]"
+                      className="btn-primary flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]"
                     >
                       Search {ebay.label} →
                     </OutboundLink>
@@ -740,7 +744,44 @@ export function CardPriceComparison({
               ? null
               : pin.tcgplayer
               ? renderRow(pin.tcgplayer, true)
-              : tcg && (
+              : !tcg?.href ? (
+                  <li className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4">
+                    <div className="w-5 shrink-0 sm:w-6" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="min-w-0 truncate font-semibold text-white">TCGplayer</span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        No TCGplayer price on file for this card. Search TCGplayer&apos;s listings. <PaidLinkTag />
+                      </p>
+                    </div>
+                    <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
+                    <CartAddButton
+                      href={tcgSearchHref}
+                      productUrl={tcgSearchHref}
+                      storeName="TCGplayer"
+                      title={displayName}
+                      detail="Search results"
+                      priceCents={0}
+                      currency={COUNTRIES[country].currency}
+                      image={image}
+                      className="text-slate-300"
+                    />
+                    <OutboundLink
+                      href={tcgSearchHref}
+                      retailer="tcgplayer"
+                      country={country}
+                      cardId={cardId}
+                      cardName={displayName}
+                      pageType="card_detail"
+                      surface="tcg_fallback"
+                      className="btn-tcg flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]"
+                    >
+                      Search TCGplayer →
+                    </OutboundLink>
+                    </div>
+                  </li>
+                ) : (
                   <li className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4">
                     <div className="w-5 shrink-0 sm:w-6" />
                     <div className="min-w-0 flex-1">
