@@ -24610,6 +24610,23 @@ your collection." The bottom nav's last tab is now Collection, a link to `/portf
 about it changes; a signed-out visitor is sent to `/login?next=/portfolio` by the page itself). The menu is still one tap away on
 the header's menu button, which stays the one opener (`tests/single-menu-entry.test.ts`). Members keep Watching in place of
 Deals. Same tab as DexCompare, MTG Compare and YGO Compare.
+
+## 2026-11-19: "Continue with Discord" on the sister sites, through Rift's own Discord app
+
+Owner, 19 Nov: "Google OAuth and Discord OAuth … these are basically our only login methods. And we want to have those login
+methods on basically all of our sites now, because … user accounts [are] really important for retention." The sisters (Dex, MTG,
+TCG Prices, Gundam, YGO) had Google (their own client, checked here) and the emailed link, no Discord. A sister has no server, so
+`/api/sister-premium/oauth/discord?site=<key>&next=<path>` runs the round trip through RiftCompare's EXISTING Discord app and its
+already-registered redirect URI: no new Discord app, no new secret, nothing for the owner to set up. The callback applies every
+check a Rift sign-in gets (state, a Discord-verified address only, linked by Discord id then by address, so one person is one
+account everywhere), starts NO Rift session, and sends the visitor to the sister's own `/account/verify#c=<code>&n=<path>`: the same
+20-minute signed code the emailed link carries (`lib/sister-oauth.ts`). The site comes only from `SISTER_PREMIUM_SITES` and the
+return address is its canonical URL. A click on "Continue with Discord" opens Discord and comes back: not a surprise redirect.
+
+Same day, Google too: `/api/sister-premium/oauth/google` does the same through Rift's existing Google app, for the sisters with no
+Google client of their own (MTG Compare had Google before its engine swap and lost it; TCG Prices, Gundam, YGO). DexCompare keeps
+its in-page Google button (its own client). Google's consent screen names RiftCompare: it is one account across our card sites.
+
 ## 2026-11-19: One group for Gift of the Rift
 
 The Gift of the Rift Bundle (4 Dec 2026) has no set code, so every listing was grouped by its own title cut to 40 letters:
