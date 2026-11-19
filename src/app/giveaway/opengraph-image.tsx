@@ -98,8 +98,8 @@ export default function OgImage() {
               transform: "rotate(4deg)",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-            <img src={art} width={340} height={475} style={{ borderRadius: 17 }} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={art} alt="Miss Fortune, Captain, Origins 162a/298 alternate art" width={340} height={475} style={{ borderRadius: 17 }} />
           </div>
         </div>
       </div>
