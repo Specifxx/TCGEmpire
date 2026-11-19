@@ -1968,6 +1968,25 @@ html[data-ebaybtn="b"] a[data-ebay].btn-primary {
 html[data-ebaybtn="b"] a[data-ebay].btn-primary:hover {
   background-color: #0079e6;
 }
+/* The eBay stand-out A/B (lib/ebay-pop.ts, 2026-11-19): in arm "pop" an eBay button is bolder and larger with a soft blue halo, and
+   the list row holding one is tinted eBay blue with a blue edge. Shape and colour only: no words, no claim, no position. */
+html[data-ebaypop="pop"] a[data-ebay]:is(.btn-primary, .btn-buy, .btn-ad) {
+  background-color: #0064d2;
+  border-color: #0064d2;
+  color: #ffffff;
+  font-weight: 800;
+  min-height: 2.75rem;
+  padding-left: 1.1rem;
+  padding-right: 1.1rem;
+  box-shadow: 0 0 0 3px rgba(0, 100, 210, 0.28), 0 4px 14px -4px rgba(0, 100, 210, 0.55);
+}
+html[data-ebaypop="pop"] a[data-ebay]:is(.btn-primary, .btn-buy, .btn-ad):hover {
+  background-color: #0079e6;
+}
+html[data-ebaypop="pop"] li:has(a[data-ebay]:is(.btn-primary, .btn-buy, .btn-ad)) {
+  background-color: rgba(0, 100, 210, 0.09);
+  box-shadow: inset 3px 0 0 #0064d2;
+}
 
 
 @media (prefers-reduced-motion: reduce) {
