@@ -13,6 +13,7 @@ import { dockArmNow } from "@/lib/dock-arm";
 import { adLookNow } from "@/lib/ad-look";
 import { topArmNow } from "@/lib/top-pair";
 import { ebayBtnNow } from "@/lib/ebay-btn";
+import { ebayPopNow } from "@/lib/ebay-pop";
 import { isNativeApp, openExternal } from "@/lib/native";
 
 // An outbound "buy" link. It fires a click beacon to /api/click, which adds one
@@ -219,7 +220,7 @@ export function OutboundLink({
     // Straight-to-checkout test (lib/checkout-link.ts): did this click open the
     // store's checkout with the item in it, or its product page?
     const checkout = isCheckoutLink(href);
-    trackEvent("buy_click", { dock_arm: dockArmNow(), ad_look: adLookNow(), cart_arm: cartArmNow(), top_arm: topArmNow(), ebay_btn: ebayBtnNow(),
+    trackEvent("buy_click", { dock_arm: dockArmNow(), ad_look: adLookNow(), cart_arm: cartArmNow(), top_arm: topArmNow(), ebay_btn: ebayBtnNow(), ebay_pop: ebayPopNow(),
       link_type: checkout ? "checkout" : "product",
       retailer,
       country,
