@@ -24475,6 +24475,32 @@ The owner, 2026-11-19: "I want it for all the sites, so people have like an ad o
 stacked just above the phone bottom nav whenever it shows, instead of taking turns with the nav. Its own rules are unchanged: after a
 scroll, labelled "Ad", ✕ for the visit, never Amazon. `dock_arm` on buy_click now always reads "on".
 
+## eBay calls go to sealed first, the most popular first; cards get what is left (2026-11-19, owner)
+
+The owner, once singles were live on several sites: "we cannot go past the eBay quota … everything goes to sealed
+products first, or at least the most in-demand sealed products, and not the least popular ones … they have TCGplayer
+prices, and they also have their own store prices … we cannot kill the eBay quota." A card page already shows
+TCGplayer's market price and the stores'; a sealed product's eBay price is the one shoppers compare against. So every
+eBay plan now searches every due sealed product, ordered by demand, before any single, and a single gets a call only
+from what sealed leaves. Measured 17-18 Nov before the change: no keyset ran out, but several shared ones ended the
+day at 88-96% of 5,000, and on RiftCompare the singles pass (2,081 calls on 18 Nov) ran before the sealed pass with
+no ceiling of its own.
+
+RiftCompare: the singles passes (catalogue and chase) prime the budget with `hold: SEALED_EBAY_HOLD` (500, env
+`EBAY_SEALED_HOLD`), so they stop 500 calls above the 600 reserve and the sealed pass after them in
+`refresh-prices.yml` always has its calls; the sealed pass primes with no hold and now logs `eBay sealed: spent N`.
+The live-remaining reserve stays the hard stop. If the workflow ever runs sealed before singles, drop the hold
+(`tests/ebay-sealed-first.test.ts` checks the order).
+
+The eBay quota board (`src/lib/hq/ebay-quota.ts`, run by the ops monitor every three hours): every keyset's
+calls on its latest day, from what each site already publishes (`data/state/ebay-usage.json`, `meta.json` `ebay`,
+`data/ebay.json`, `ebay-status.json`, OP's watchdog status, whose "eBay showed R of 5000 left" also gives DexCompare's
+spend). Red (emailed like any red check) when a keyset reaches 5,000, a site spends over its own cap, or a site was
+429'd; amber within 3% of the limit. Not 80%: the agreed caps add up to 88-100% of each keyset by design, so 80%
+would be amber every day and mean nothing. A missing or stale number is unknown, never ok. RiftCompare's own keyset
+keeps its live "eBay daily call allowance" check; MTG Compare, SportsCardCompare and CamCompare publish no usage file
+yet (listed as "not published"). `tests/hq-ebay-quota.test.ts` also pins that each keyset's caps add up to 5,000 or less.
+
 ## 2026-11-19: No ads on Premium, account, collection, watches, sign-in or giveaway pages
 
 A production check on a sister site found /premium opening on phones under ad blocks. Premium promises no ads, and these are

@@ -149,17 +149,29 @@ async function fetchRemaining(): Promise<number | null> {
 // down to the full reserve by design, and a sweep held to the same line found
 // a budget of 0 and stored nothing (2026-10-31, DECISIONS.md "The auction sweep
 // spends from the reserve").
+//
+// `hold` (SEALED FIRST, owner 2026-11-19: "everything goes to sealed products first … singles have TCGplayer and
+// store prices") is a further number of calls the SINGLES passes leave untouched for the sealed pass that runs after
+// them in the same workflow, so a growing card catalogue can never spend the calls sealed needs. It is only the
+// singles' cut: the sealed pass primes with no hold and spends it.
+export const SEALED_EBAY_HOLD = Math.max(0, Number(process.env.EBAY_SEALED_HOLD ?? 500) || 0);
+/** The spendable calls for a pass: live remaining minus the reserve and any hold; the fallback budget when unknown. */
+export function budgetFromRemaining(remaining: number | null, reserve: number, hold = 0, fallback = FALLBACK_BUDGET): number {
+  if (remaining == null) return Math.max(0, fallback - hold);
+  return Math.max(0, remaining - reserve - hold);
+}
 export async function primeEbayBudget(
-  opts: { reserve?: number } = {},
+  opts: { reserve?: number; hold?: number } = {},
 ): Promise<{ remaining: number | null; budget: number }> {
   rateLimited = false;
   spentThisRun = 0;
   const reserve = opts.reserve ?? QUOTA_RESERVE;
+  const hold = Math.max(0, opts.hold ?? 0);
   const remaining = await fetchRemaining();
-  spendable = remaining == null ? FALLBACK_BUDGET : Math.max(0, remaining - reserve);
+  spendable = budgetFromRemaining(remaining, reserve, hold);
   if (spendable <= 0) rateLimited = true;
   console.log(
-    `eBay quota: ${remaining ?? "unknown"}/5000 remaining today → budget ${spendable} calls this run (reserve ${reserve}).`
+    `eBay quota: ${remaining ?? "unknown"}/5000 remaining today → budget ${spendable} calls this run (reserve ${reserve}${hold ? `, ${hold} held for sealed` : ""}).`
   );
   return { remaining, budget: spendable };
 }
