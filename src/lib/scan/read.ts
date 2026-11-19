@@ -3,8 +3,8 @@
 // DECISIONS.md, 2026-11-19 "Card scanner beta".
 //
 // Cost: Claude Haiku 5.5 at US$0.10 / US$0.50 per million tokens. The browser sends a JPEG at most 1024 px on the
-// long side (~1,100 image tokens), the prompt is ~350 tokens and the answer ~60, so a scan is about US$0.00018
-// (5,500 scans per US dollar). SCAN_DAILY_CAP (lib/scan/caps.ts) bounds the day.
+// long side. Measured (scan-eval run 3, 588 images): US$0.0003 a scan on average including the picture check that
+// about one scan in six needs, so about 3,300 scans per US dollar. SCAN_DAILY_CAP (lib/scan/caps.ts) bounds the day.
 import Anthropic from "@anthropic-ai/sdk";
 import type { ScanReading } from "./match";
 

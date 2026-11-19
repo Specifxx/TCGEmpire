@@ -2,7 +2,7 @@
 //
 // - Off unless ANTHROPIC_API_KEY is set (Vercel Production only; never a client prop).
 // - Private beta: only admins scan until SCAN_PUBLIC=1 (the owner's call, after the accuracy report).
-// - SCAN_DAILY_CAP scans a UTC day across the whole site (default 300, about US$0.06 a day at Haiku 5.5 prices),
+// - SCAN_DAILY_CAP scans a UTC day across the whole site (default 300, about US$0.09 a day at the measured US$0.0003 a scan),
 //   counted in the Counter row scan:day:<date>; past it the page says "try again tomorrow".
 // - Public later: SCAN_FREE_PER_DAY a signed-in free account (default 5), Premium SCAN_PREMIUM_PER_DAY (default 100).
 // - A scan never calls eBay, never spends eBay quota and never writes a price: the price shown is the card's own

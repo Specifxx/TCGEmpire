@@ -24487,12 +24487,27 @@ photos: a hash of a tilted, glared, foil photo is not the hash of a flat scan, a
   at once. A scan never calls eBay and spends no eBay quota (owner, 2026-11-19: eBay quota goes to popular sealed first).
 - **Who and how much.** Off without `ANTHROPIC_API_KEY` (Vercel Production). Admins only until `SCAN_PUBLIC=1`; then
   signed-in only, `SCAN_FREE_PER_DAY` (5) free and `SCAN_PREMIUM_PER_DAY` (100) for Premium. `SCAN_DAILY_CAP` (300) a UTC
-  day site-wide. About US$0.0002 a scan, so the cap costs at most about US$0.06 a day. Counter rows `scan:day:*`,
+  day site-wide. Measured US$0.0003 a scan, so the cap costs at most about US$0.09 a day. Counter rows `scan:day:*`,
   `scan:u:*` and the beta tally `scan:fb:<confidence>:<verdict>` (counts only).
 - **Measured before release.** `scripts/scan-eval/run.ts` (`scan-eval.yml`, Actions only) sends ~600 phone-photo
   versions of 100 seeded catalogue cards (tilted, glare, dim, foil sheen, far away; base, alt art, overnumbered, promo,
   battlefield, rune) through the same code and commits `scripts/scan-eval/results/summary.md`. The number that gates a
   public release is "wrong card marked Match"; the owner's own phone tally (`/api/scan/feedback`) is the real-photo check.
+- **Look-alike printings** (same set and number, different picture): a second Haiku call shows the model the photo
+  and up to four official images and asks which (`pickTwin`). It never overrules a letter or star the model read, and a
+  booster card whose promo has the same number skips it: the page asks "Which one is yours?" with both shown.
+- **Measured, 19 Nov** (`scripts/scan-eval/results/`, 588 phone-style images of 98 cards; synthetic photos made from
+  the official images, so the owner's real-photo tally is still the release gate):
+
+  | run | right printing | right card | in the picker | wrong card marked "Match" |
+  |---|---:|---:|---:|---:|
+  | 1, read + match only | 87.8% | 99.5% | 99.8% | 8.2% |
+  | 2, + picture check | 89.1% | 99.5% | 99.8% | 3.6% |
+  | 3, read letter/star kept, promo twins asked | 89.3% | 99.5% | 100% | 0.5% |
+
+  In run 3, 77% of scans said "Match" and 99.3% of those were the right printing; median 1.3 s, US$0.0003 a scan.
+  Sonnet 5.5 on the 120 hardest images (run 2) was 99.2% right vs Haiku's 96.7% at about 20 times the price: not worth
+  it for a free feature. Promo printings are the weak spot (44% picked right; always in the picker).
 - **Other games later.** The read is game-agnostic; only the catalogue and the matcher's number format are Riftbound's.
   MTG, One Piece and Yu-Gi-Oh print set + number the same way and fit the same two steps; Pokémon prints number/total
   without a set code, so its matcher will lean on name + number + the set symbol the model names.
