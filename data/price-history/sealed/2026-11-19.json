@@ -115,12 +115,12 @@
       "EU": 6497,
       "SG": 33000,
       "UK": 13303,
-      "US": 16994
+      "US": 16992
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 109599
+      "US": 106599
     },
     "OGN|Booster Pack": {
       "CA": 1370,
@@ -199,8 +199,8 @@
       "EU": 7999
     },
     "OGS|Proving Grounds": {
-      "AU": 9995,
-      "CA": 1105,
+      "AU": 1200,
+      "CA": 1090,
       "EU": 895,
       "SG": 4636,
       "UK": 1100,
@@ -216,7 +216,7 @@
       "EU": 9399,
       "SG": 15000,
       "UK": 8799,
-      "US": 9599
+      "US": 8585
     },
     "RAD|Booster Case": {
       "AU": 130000,
@@ -275,7 +275,7 @@
     },
     "RAD|Sleeved Booster": {
       "EU": 500,
-      "US": 750
+      "US": 650
     },
     "RAD|Sleeved Booster (Art Set)": {
       "US": 3277
@@ -314,7 +314,7 @@
       "EU": 9407,
       "SG": 8404,
       "UK": 11499,
-      "US": 15699
+      "US": 15698
     },
     "SFD|Booster Case": {
       "AU": 180000,
@@ -404,6 +404,9 @@
     "SFD|Starter Set": {
       "SG": 11235
     },
+    "T1S|T1 Player Bundle": {
+      "EU": 24999
+    },
     "T1S|T1 Signature Edition": {
       "EU": 115000
     },
@@ -415,7 +418,7 @@
       "US": 350000
     },
     "UNL|Booster Box": {
-      "AU": 23999,
+      "AU": 20999,
       "CA": 21995,
       "EU": 9200,
       "SG": 25000,
@@ -425,7 +428,7 @@
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 55500,
-      "US": 99500
+      "US": 99499
     },
     "UNL|Booster Pack": {
       "AU": 1100,
@@ -597,13 +600,16 @@
       "CA": 51999
     },
     "arcaneimmersivemusicexperiencebooster": {
-      "EU": 6500
+      "EU": 6499
     },
     "championdeckleesinriftboundleagueoflegen": {
       "CA": 4500
     },
     "giftoftheriftbundle": {
-      "US": 25652
+      "AU": 44900,
+      "CA": 34999,
+      "EU": 15499,
+      "US": 20000
     },
     "jinxchampiondeckriftboundleagueoflegends": {
       "EU": 6399
@@ -628,7 +634,7 @@
       "EU": 11950
     },
     "legacyvault": {
-      "EU": 3849
+      "EU": 3399
     },
     "orginsboosterboxriftboundleagueoflegends": {
       "CA": 39999
@@ -679,11 +685,7 @@
       "AU": 2190
     },
     "riftboundgiftoftheriftbundle": {
-      "CA": 34999,
-      "EU": 15499
-    },
-    "riftboundgiftoftheriftbundleenpreorder": {
-      "CA": 39999
+      "CA": 34999
     },
     "riftboundleagueoflegendsarcaneboxset": {
       "CA": 97000,
@@ -701,10 +703,6 @@
     "riftboundleagueoflegendschampiondeckvikt": {
       "CA": 1499
     },
-    "riftboundleagueoflegendsgiftoftheriftbun": {
-      "CA": 34999,
-      "US": 20000
-    },
     "riftboundleagueoflegendsriftboundrumblec": {
       "AU": 3300
     },
@@ -719,8 +717,7 @@
     },
     "riftboundleagueoflegendstcggiftoftherift": {
       "AU": 38000,
-      "EU": 24000,
-      "US": 25999
+      "US": 29999
     },
     "riftboundleagueoflegendstcgsetonejinxcha": {
       "AU": 3300
@@ -798,7 +795,7 @@
       "US": 50000
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 26794
+      "US": 25000
     },
     "riftboundxt12025worldschampionsignaturee": {
       "EU": 499900
@@ -831,7 +828,7 @@
       "EU": 32000
     },
     "worldsbundle2026": {
-      "EU": 19900
+      "EU": 12900
     },
     "xinzhaovigilantv1showcaset12025worldscha": {
       "EU": 39000
