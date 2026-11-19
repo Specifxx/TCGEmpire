@@ -243,10 +243,10 @@ async function importFeedStores(): Promise<number> {
     const rows = new Map<string, Prisma.SealedListingCreateManyInput>();
     for (const it of items) {
       if (!isTrackableSealedTitle(it.title)) continue;
-      const setCode = detectSet(it.title);
+      const setCode = setLessGroupKey(it.title) ? null : detectSet(it.title);
       const type = classifySealed(it.title);
       if (it.priceCents < sealedFloorCents(type)) continue;
-      const groupKey = setCode ? `${setCode}|${type}` : it.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+      const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(it.title);
       const prev = rows.get(groupKey);
       if (prev && (prev.inStock || !it.inStock) && prev.priceCents <= it.priceCents) continue;
       rows.set(groupKey, {
@@ -296,10 +296,10 @@ async function importProductPageStores(): Promise<number> {
         continue;
       }
       if (!isRiftboundSealed(page.title) && !/riftbound/i.test(url)) continue;
-      const setCode = detectSet(page.title) ?? detectSet(url.replace(/[-/]/g, " "));
+      const setCode = setLessGroupKey(page.title) ? null : detectSet(page.title) ?? detectSet(url.replace(/[-/]/g, " "));
       const type = classifySealed(page.title);
       if (page.priceCents < sealedFloorCents(type)) continue;
-      const groupKey = setCode ? `${setCode}|${type}` : page.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+      const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(page.title);
       rows.set(groupKey, {
         groupKey,
         title: page.title,
@@ -461,6 +461,40 @@ export { typeLabel };
 /** The set a sealed title names, or null. Exported for tests (Legacy's word guard). */
 export function detectSet(title: string): string | null {
   return SET_FROM_TITLE.find(([re]) => re.test(title))?.[1] ?? null;
+}
+
+// Set-less products every store names differently (2026-11-19, DECISIONS.md "One group for Gift of the Rift"). A
+// product with no set code is grouped by its title, cut to 40 letters, so "Riftbound: League of Legends TCG - Gift
+// of the Rift Bundle (Pre-Order)" and "Riftbound Gift of the Rift Bundle" became two pages, each with a store or
+// two, and TCG Prices (which takes a group by the TCGplayer id of its own TCGplayer row) got none of the ~20 store
+// rows. A title on this list keeps ONE fixed key: the one TCGplayer's own row already had, so that page's URL
+// stays. Checked before the set: the bundle's packs come from five sets, and a title naming one ("… Vendetta
+// promos") must not file it under that set. The title must say "bundle" (a promo card sold alone is not the
+// product), and a case, a lot or several bundles is never the single bundle.
+export const SET_LESS_GROUPS: readonly { re: RegExp; word: string; groupKey: string }[] = [
+  { re: /^(?=.*\bgift\s+of\s+the\s+rift\b)(?=.*\bbundle\b)/i, word: "giftoftherift", groupKey: "giftoftheriftbundle" },
+];
+const SEVERAL = /\bcase\b|\blots?\b|\bset\s+of\s+\d|\b\d+\s*x\b|\bx\s*\d+\b|\(\s*\d+\s*(?:bundles|boxes)\s*\)/i;
+
+/** The fixed group of a set-less product a title names (SET_LESS_GROUPS), or null. */
+export function setLessGroupKey(title: string): string | null {
+  if (SEVERAL.test(title)) return null;
+  return SET_LESS_GROUPS.find((g) => g.re.test(title))?.groupKey ?? null;
+}
+
+/** A title-derived group key: a SET_LESS_GROUPS key when one fits, else the title's first 40 letters and digits. */
+export function titleGroupKey(title: string): string {
+  return setLessGroupKey(title) ?? title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+}
+
+/** Where an old /sealed slug of a SET_LESS_GROUPS product goes now (its title-derived keys made many: a key is letters
+ *  and digits only, so its slug has no hyphen), or null. Never the page itself, a case or a lot. */
+export function setLessSlugRedirect(slug: string): string | null {
+  if (!/^[a-z0-9]+$/.test(slug) || /case|lots?$|setof\d|\d+x|x\d+/.test(slug)) return null;
+  const g = SET_LESS_GROUPS.find((x) => slug.includes(x.word));
+  if (!g) return null;
+  const target = sealedSlug(g.groupKey);
+  return slug === target ? null : target;
 }
 
 // Classify a sealed product into a specific type. Shared by store scraping and the
@@ -709,7 +743,7 @@ export async function importSealed(): Promise<number> {
         const avail = priced.filter((v) => v.available);
         const inStock = avail.length > 0;
         const pool = inStock ? avail : priced;
-        const setCode = detectSet(title);
+        const setCode = setLessGroupKey(title) ? null : detectSet(title);
         const type = classifySealed(title);
         // Price-sanity: ignore variants priced implausibly low for the product type —
         // a $1 "deposit"/sample/add-on variant on a real Booster Case, or an outright
@@ -721,7 +755,7 @@ export async function importSealed(): Promise<number> {
         if (!inFloor.length) continue;
         const cheapestVar = inFloor.reduce((a, b) => (parseFloat(b.price) < parseFloat(a.price) ? b : a));
         const priceCents = Math.round(parseFloat(cheapestVar.price) * 100);
-        const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+        const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(title);
         const key = `${groupKey}|${store.key}`;
         const prev = rows.get(key);
         if (prev && (prev.inStock || !inStock) && prev.priceCents <= priceCents) continue;
@@ -1185,10 +1219,10 @@ export async function refreshTcgplayerSealed(): Promise<number> {
     if (!title || price == null) continue;
     // Pokémon's Astral Radiance, not Riftbound's Radiance — see FOREIGN_RADIANCE.
     if (FOREIGN_RADIANCE.test(title)) continue;
-    const setCode = setCodeFromSetName(p.setName ?? "");
+    const setCode = setLessGroupKey(title) ? null : setCodeFromSetName(p.setName ?? "");
     const type = classifySealed(title);
     if (!setCode) noteUnknownSet(unknownSets, p.setName, title, type);
-    const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+    const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(title);
     rows.push({
       groupKey,
       title,
