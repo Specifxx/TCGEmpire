@@ -24706,3 +24706,32 @@ eBay link wearing the filled site button (`a[data-ebay].btn-primary`; `OutboundL
 #0064d2 with white ink; arm "a" keeps the orange. Colour only: no outline, tint, position or label changes. `buy_click` carries
 `ebay_btn`. Read 3 Dec with the top-pair test: eBay clicks per arm (the split is even, so totals compare; total buy clicks per arm
 check the split). Keep: `ebayBtn()` returns "b"; drop: "a".
+
+## 2026-11-19: The Android app matches the phone site (sign-in, Premium, ads, links)
+
+Owner (2026-11-19): make the RiftCompare app "a lot better and mobile optimised just like the web app". The app (Play closed test,
+build 1.0.0 from branch `claude/riftcompare-android-app-pone02`: Capacitor 8, App Links on riftcompare.com, the
+`com.riftcompare.app://` scheme, `RiftCompareApp` in its User-Agent) is a WebView of this site, but the website half of that
+branch never merged, so `main`'s old NativeShell ran against it. Audit: the bottom nav and the phone ad strip were switched OFF in
+the app (both treated `.capacitor-native` as "hide": they made room for a native AdMob banner), and that banner ran on Google's
+TEST unit ids (no `NEXT_PUBLIC_ADMOB_*` set), so it earned nothing; Google sign-in fails (Google refuses OAuth in a WebView) and an
+emailed link opened in Chrome, signing in the wrong cookie jar; Premium was sold through Stripe inside the app, which Google Play's
+payments policy forbids for a digital subscription; the cart's "open every store" opened nothing in a WebView. All fixed on the
+website, so the testers' build gets it with the next release and no new upload is needed:
+
+- **Sign-in** (`lib/app-auth.ts`, `lib/native.ts`): in the app a provider link opens the provider in a Custom Tab with a signed
+  state carrying a PKCE-style challenge (the verifier stays in the WebView's localStorage); the callback mints a five-minute,
+  single-use `AuthToken` (purpose "app", token `<challenge>.<code>`) and sends Chrome to `com.riftcompare.app://auth?code=`; the
+  app opens `/login/app`, which trades code + verifier at `/api/auth/app-exchange` for a session in its own jar. A leaked or
+  planted code is useless without the verifier. The web flow is untouched (its hex state still needs the cookie).
+- **App Links**: `public/.well-known/assetlinks.json` names Play's app signing key (Play Console's own snippet), so an emailed
+  sign-in link or any riftcompare.com link opens in the app; `/api/*` and `/go/*` are excluded (Android 15 dynamic rules) so a
+  web sign-in in Chrome is never pulled into the app mid-flow.
+- **Ads**: the AdMob banner is gone (an older one is taken down); the app shows the phone site's bottom nav and ad strip.
+- **Premium** (owner's choice on the card, "hide buying in the app for now"): checkout, upgrade and switch-to-annual refuse the
+  app's User-Agent; `PremiumCta` and `GuestCheckoutButton` render nothing in the app; links to `/premium` and `/premium/start`
+  are hidden and those pages are covered by `AppPremiumNotice`, which names no other way to pay (Play forbids that too). A member
+  keeps every Premium feature after signing in. Play Billing is the later option if the app earns it.
+- **Links**: stores open in a Custom Tab; the cart opens one store per tap in the app; launcher shortcuts and App Links route to
+  their page; the app's own "Android app" promo is hidden in it. Plugins come from the app's injected runtime, never from npm
+  (`tests/app-auth.test.ts`), so the website and the build cannot drift apart again.
