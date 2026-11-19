@@ -24830,6 +24830,14 @@ The same rollout as ScentCompare and KaeYoung (owner, 2026-11-19: accounts on ev
 alert service; adding them to `SISTER_PREMIUM_SITES` gives them the sign-in (Google, Discord, emailed link), the watch list and Stripe
 Premium. Their emails keep naming RiftCompare's service as before (same side of the network, not `quiet`).
 
+## SportsCardCompare joins accounts; alert groups follow the two sides (2026-11-19)
+
+Owner, 2026-11-19: accounts and Premium on every compare site. SportsCardCompare (`wax`) joins `SISTER_PREMIUM_SITES` with the same
+sign-in, watch list, back-in-stock and Premium as ScentCompare and KaeYoung. Sports cards sit on the other side of the network from
+RiftCompare (owner, 2026-11-17), so `wax` is now `quiet` (its emails say "our shared alert service") and alone in a new group,
+`sports`, instead of `cards`: a Sports card alert no longer ends with a DexCompare deal, nor a card alert with a Sports card deal.
+The same rule moved WargameCompare from `hobby` to `cards` (it is on the cards side) and left FigureCompare alone in `hobby`, now
+quiet too.
 ## 2026-11-19 — eBay stand-out row, 50/50
 
 The owner, the same evening eBay's blue came back: the colour change moved eBay clicks, so "we can do something even more than just a

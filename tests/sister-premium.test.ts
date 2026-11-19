@@ -18,7 +18,7 @@ test("only DexCompare's exact https origin may ask", () => {
   }
   assert.equal(premiumCors("https://evil.com")["Access-Control-Allow-Origin"], undefined);
   assert.equal(premiumCors("https://dexcompare.io")["Access-Control-Allow-Origin"], "https://dexcompare.io");
-  assert.deepEqual(SISTER_PREMIUM_SITES.map((s) => s.key), ["dex", "mtg", "tcgprices", "gundam", "ygo", "scent", "kaeyoung", "lorcana", "cyberpunk"]);
+  assert.deepEqual(SISTER_PREMIUM_SITES.map((s) => s.key), ["dex", "mtg", "tcgprices", "gundam", "ygo", "scent", "kaeyoung", "lorcana", "cyberpunk", "wax"]);
   assert.equal(premiumSiteForOrigin("https://www.gundamcompare.com")?.key, "gundam");
   assert.equal(premiumSiteForOrigin("https://tcgprices.app")?.key, "tcgprices");
   assert.equal(premiumSiteForOrigin("https://mtgcompare.app")?.key, "mtg");
