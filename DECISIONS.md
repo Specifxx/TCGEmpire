@@ -24468,6 +24468,13 @@ above the content of every page is the first thing it sees.
 Kept: the phone dock (after a scroll, dismissible, never on a product page), the in-page "Rate us" strip and the
 engaged-only corner rating card.
 
+## 2026-11-19: The dock A/B ends: the phone ad strip sits above the bottom nav for everyone (owner)
+
+The owner, 2026-11-19: "I want it for all the sites, so people have like an ad on their phone right there." The dock A/B of
+2026-11-18 (`lib/dock-arm.ts`) ends early with its "on" arm for every visitor: the eBay (and, where the site has it, TCGplayer) dock is
+stacked just above the phone bottom nav whenever it shows, instead of taking turns with the nav. Its own rules are unchanged: after a
+scroll, labelled "Ad", ✕ for the visit, never Amazon. `dock_arm` on buy_click now always reads "on".
+
 ## eBay calls go to sealed first, the most popular first; cards get what is left (2026-11-19, owner)
 
 The owner, once singles were live on several sites: "we cannot go past the eBay quota … everything goes to sealed
