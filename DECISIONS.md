@@ -24602,3 +24602,11 @@ month for deck apps with no coaching in them (Runes, Untapped). Before anything 
 - The site makes **no AI API call**: up to 40 reports are written by the team and sent from the site's inbox.
 - **Read 3 Dec 2026.** Go (build the real tool, then ask the owner for an API ceiling) if 100+ decks AND 30+ founder
   taps; stop under 40 decks. `tests/coach.test.ts` pins the hidden page and the private rows.
+## 2026-11-19: The phone bar's Menu tab becomes Collection
+
+Owner, 19 Nov: "instead of the menu on the navbar, it should be like my collection, and you need to be able to sign in to see
+your collection … Rift Compare kind of already has a collection, so we don't want to lose that. It's just another way to view
+your collection." The bottom nav's last tab is now Collection, a link to `/portfolio`, the collection Rift already has (nothing
+about it changes; a signed-out visitor is sent to `/login?next=/portfolio` by the page itself). The menu is still one tap away on
+the header's menu button, which stays the one opener (`tests/single-menu-entry.test.ts`). Members keep Watching in place of
+Deals. Same tab as DexCompare, MTG Compare and YGO Compare.
