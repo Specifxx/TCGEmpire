@@ -8,7 +8,7 @@ import { sydneyDay, cachedOrDirect } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { deniedKeys, loadDenylist } from "./denylist";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
-import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, FEED_STORES, parseProductPage, parseSealedFeed, isPurchaseLocked } from "./sealed-stores";
+import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, FEED_STORES, parseProductPage, productPageReplaceScope, parseSealedFeed, isPurchaseLocked } from "./sealed-stores";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
 import { withLiveStock } from "./preorder-live-stock";
@@ -273,6 +273,7 @@ async function importFeedStores(): Promise<number> {
 
 async function importProductPageStores(): Promise<number> {
   let count = 0;
+  const categoryKeys = new Set<string>([...RETAILER_LIST, ...SEALED_ONLY_SHOPIFY].map((s) => s.key));
   for (const store of PRODUCT_PAGE_STORES) {
     const allowed = await robotsAllows(store.base);
     const rows = new Map<string, Prisma.SealedListingCreateManyInput>();
@@ -316,7 +317,8 @@ async function importProductPageStores(): Promise<number> {
       });
     }
     if (failed || !rows.size) continue;
-    await prisma.sealedListing.deleteMany({ where: { retailer: store.key } });
+    // A store whose category is read too keeps those rows (productPageReplaceScope).
+    await prisma.sealedListing.deleteMany({ where: productPageReplaceScope(store.key, [...rows.keys()], categoryKeys) });
     await prisma.sealedListing.createMany({ data: Array.from(rows.values()) });
     count += rows.size;
     console.log(`Sealed: ${store.key} — ${rows.size} product page(s) read.`);

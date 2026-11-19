@@ -24684,3 +24684,14 @@ The cheapest keeps "Best price" and its own Buy button, the comparison is untouc
 carries `top_arm`, surface `card_top_pair`; `top_seen` fires once a visit where either arm had a paid row to show. Read on 3 Dec:
 paid top clicks (`card_top_alt` + `card_top_pair`) per `top_seen` visitor, and eBay + TCGplayer clicks per visitor overall, so the
 pair is not just taking clicks from the table. Keep it by making `topArm()` return "pair", drop it with "line".
+
+## 2026-11-19: A store read by category and by product page keeps both
+
+Miniature Market is read twice by the sealed import: its whole Riftbound category (Shopware, `SEALED_ONLY_SHOPIFY`, about 24
+products on 2026-11-04) and then one product page (`PRODUCT_PAGE_STORES`). The product-page pass deleted every row of the store
+before writing its own, so each run wiped the category read: the 18 Nov public snapshot had one Miniature Market row (the Radiance
+box) and none of its Legacy pre-orders, at a time only 4 US stores listed any Legacy product. Now a store that also has a category
+read only replaces the groups its pages read (`productPageReplaceScope`, `tests/sealed-product-page-scope.test.ts`); a pages-only
+store (Game Nerdz) still replaces all its rows, so a page it stops listing drops out. Miniature Market's Legacy booster box, pack
+and Vault Bundle pages (UVSRB06…) were added to its product pages, so the boxes buyers search for are read even on a day the
+category read fails. Game Nerdz has no Legacy page yet.
