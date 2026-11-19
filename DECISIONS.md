@@ -24526,3 +24526,47 @@ to do monthly giveaways".
 A production check on a sister site found /premium opening on phones under ad blocks. Premium promises no ads, and these are
 conversion and utility pages, so the layout's ad units (PhoneDockAds) stand down on them (`lib/ad-free-paths.ts`,
 `AdRouteGate.tsx`, `tests/ad-free-paths.test.ts`).
+
+## Card scanner beta: the model reads the card, our code picks the printing (2026-11-19)
+
+Owner, 2026-11-19: "use AI to scan your card … add it to your collection … determine the value … this feature needs to
+be heavily tested before we release it to production, and I need a way to be able to test it myself." The June
+scanner (perceptual hash of the photo, then browser OCR of the number; removed 2026-06-09) failed on real phone
+photos: a hash of a tilted, glared, foil photo is not the hash of a flat scan, and browser OCR misreads small print.
+
+- **How it reads.** `/scan` (a static, noindex shell, linked from nowhere) lets the phone's own camera app take one photo
+  (`<input capture>`: no getUserMedia, so `camera=()` in the Permissions-Policy stays). The browser shrinks it to 1,024 px
+  and posts it to `/api/scan/identify`, which makes ONE Claude Haiku 5.5 call (`lib/scan/read.ts`, structured output,
+  thinking off) that only READS: name, set code, collector number, a promo stamp, the game. The photo is never stored.
+- **How it matches.** `lib/scan/match.ts`, pure: the printed number (with its letter or star) is the key, the name must
+  agree with it, a promo stamp picks the promo twin. Disagreement or a missing number is never "high" confidence; the
+  other printings come back for "Wrong card?". The model never picks a card id, so a hallucinated id cannot happen.
+- **What it shows.** The matched card's ordinary tile and quick view (stored store, TCGplayer and eBay rows, Add to
+  collection through `POST /api/collection`, free limits as everywhere). A high-confidence match opens the quick view
+  at once. A scan never calls eBay and spends no eBay quota (owner, 2026-11-19: eBay quota goes to popular sealed first).
+- **Who and how much.** Off without `ANTHROPIC_API_KEY` (Vercel Production). Admins only until `SCAN_PUBLIC=1`; then
+  signed-in only, `SCAN_FREE_PER_DAY` (5) free and `SCAN_PREMIUM_PER_DAY` (100) for Premium. `SCAN_DAILY_CAP` (300) a UTC
+  day site-wide. Measured US$0.0003 a scan, so the cap costs at most about US$0.09 a day. Counter rows `scan:day:*`,
+  `scan:u:*` and the beta tally `scan:fb:<confidence>:<verdict>` (counts only).
+- **Measured before release.** `scripts/scan-eval/run.ts` (`scan-eval.yml`, Actions only) sends ~600 phone-photo
+  versions of 100 seeded catalogue cards (tilted, glare, dim, foil sheen, far away; base, alt art, overnumbered, promo,
+  battlefield, rune) through the same code and commits `scripts/scan-eval/results/summary.md`. The number that gates a
+  public release is "wrong card marked Match"; the owner's own phone tally (`/api/scan/feedback`) is the real-photo check.
+- **Look-alike printings** (same set and number, different picture): a second Haiku call shows the model the photo
+  and up to four official images and asks which (`pickTwin`). It never overrules a letter or star the model read, and a
+  booster card whose promo has the same number skips it: the page asks "Which one is yours?" with both shown.
+- **Measured, 19 Nov** (`scripts/scan-eval/results/`, 588 phone-style images of 98 cards; synthetic photos made from
+  the official images, so the owner's real-photo tally is still the release gate):
+
+  | run | right printing | right card | in the picker | wrong card marked "Match" |
+  |---|---:|---:|---:|---:|
+  | 1, read + match only | 87.8% | 99.5% | 99.8% | 8.2% |
+  | 2, + picture check | 89.1% | 99.5% | 99.8% | 3.6% |
+  | 3, read letter/star kept, promo twins asked | 89.3% | 99.5% | 100% | 0.5% |
+
+  In run 3, 77% of scans said "Match" and 99.3% of those were the right printing; median 1.3 s, US$0.0003 a scan.
+  Sonnet 5.5 on the 120 hardest images (run 2) was 99.2% right vs Haiku's 96.7% at about 20 times the price: not worth
+  it for a free feature. Promo printings are the weak spot (44% picked right; always in the picker).
+- **Other games later.** The read is game-agnostic; only the catalogue and the matcher's number format are Riftbound's.
+  MTG, One Piece and Yu-Gi-Oh print set + number the same way and fit the same two steps; Pokémon prints number/total
+  without a set code, so its matcher will lean on name + number + the set symbol the model names.

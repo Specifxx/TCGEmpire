@@ -1415,6 +1415,9 @@ longer lands on its entry.
 
 ## Removed, declined, kept
 
+- **Card scanner (private beta, 2026-11-19):** `/scan`, admins only until `SCAN_PUBLIC=1`; one Haiku 5.5 read of
+  name + set + number, our pure matcher picks the printing, the quick view shows prices; never eBay, photo never stored,
+  `SCAN_DAILY_CAP` 300 a day. Accuracy from `scan-eval.yml` before any public release. [2026-11-19](../DECISIONS.md#L24471)
 - **Meta decks:** never from a hand copy; rebuild a meta/tier list only from
   a licensed source. `/decks` is live again (2026-09-26) as the PLAYER-published
   library only — signed-in publishes and owner imports, nothing seeded, no

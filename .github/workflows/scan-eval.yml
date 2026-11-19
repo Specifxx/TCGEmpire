@@ -1,0 +1,41 @@
+# Card scanner accuracy eval (scripts/scan-eval/run.ts; DECISIONS.md 2026-11-19 "Card scanner beta").
+# Runs on a claude/** branch when the eval or the scanner changes, or by hand. Makes about 700 small vision calls
+# (Haiku 5.5, plus Sonnet 5.5 on 120 hard images): roughly US$0.40-0.60 a run. Commits results back to the branch.
+name: Scan eval
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: ["scripts/scan-eval/run.ts", "scripts/scan-eval/trigger.txt", ".github/workflows/scan-eval.yml"]
+permissions:
+  contents: write
+concurrency:
+  group: scan-eval-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund --ignore-scripts
+      - run: npm rebuild sharp
+      - run: npx tsx scripts/scan-eval/run.ts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.SCAM_AI_KEY }}
+          EVAL_CARDS: "100"
+          EVAL_COMPARE: "0" # Sonnet 5.5 measured in run 2 (results-v2): 99.2% vs Haiku 96.7% on hard images, ~20x the price
+      - run: cat scripts/scan-eval/results/summary.md >> "$GITHUB_STEP_SUMMARY"
+        if: always()
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "scan-eval"
+          git config user.email "scan-eval@users.noreply.github.com"
+          git add scripts/scan-eval/results
+          git commit -m "Scan eval results" || exit 0
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
