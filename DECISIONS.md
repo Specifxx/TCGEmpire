@@ -24484,3 +24484,12 @@ RiftCompare: the singles passes (catalogue and chase) prime the budget with `hol
 `refresh-prices.yml` always has its calls; the sealed pass primes with no hold and now logs `eBay sealed: spent N`.
 The live-remaining reserve stays the hard stop. If the workflow ever runs sealed before singles, drop the hold
 (`tests/ebay-sealed-first.test.ts` checks the order).
+
+The eBay quota board (`src/lib/hq/ebay-quota.ts`, run by the ops monitor every three hours): every keyset's
+calls on its latest day, from what each site already publishes (`data/state/ebay-usage.json`, `meta.json` `ebay`,
+`data/ebay.json`, `ebay-status.json`, OP's watchdog status, whose "eBay showed R of 5000 left" also gives DexCompare's
+spend). Red (emailed like any red check) when a keyset reaches 5,000, a site spends over its own cap, or a site was
+429'd; amber within 3% of the limit. Not 80%: the agreed caps add up to 88-100% of each keyset by design, so 80%
+would be amber every day and mean nothing. A missing or stale number is unknown, never ok. RiftCompare's own keyset
+keeps its live "eBay daily call allowance" check; MTG Compare, SportsCardCompare and CamCompare publish no usage file
+yet (listed as "not published"). `tests/hq-ebay-quota.test.ts` also pins that each keyset's caps add up to 5,000 or less.
