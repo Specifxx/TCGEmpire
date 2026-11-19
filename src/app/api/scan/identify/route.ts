@@ -36,12 +36,14 @@ export async function POST(req: Request) {
   if (site.value > cfg.dailyCap) {
     return NextResponse.json({ error: "The scanner has had a busy day. Try again tomorrow, or search for the card by name." }, { status: 429, headers: NO_STORE });
   }
-  if (access.perUserLimit !== null && user) {
-    const userKey = `scan:u:${user.id}:${day}`;
+  let remaining: number | null = null;
+  const userKey = user ? `scan:u:${user.id}:${day}` : null;
+  if (access.perUserLimit !== null && userKey) {
     const mine = await prisma.counter.upsert({ where: { key: userKey }, create: { key: userKey, value: 1 }, update: { value: { increment: 1 } } });
     if (mine.value > access.perUserLimit) {
-      return NextResponse.json({ error: `That's your ${access.perUserLimit} scans for today.`, limited: true, limit: access.perUserLimit }, { status: 429, headers: NO_STORE });
+      return NextResponse.json({ error: `That's your ${access.perUserLimit} free scans for today. They come back tomorrow.`, limited: true, limit: access.perUserLimit, remaining: 0 }, { status: 429, headers: NO_STORE });
     }
+    remaining = access.perUserLimit - mine.value;
   }
 
   const catalog = await getScanCatalog();
@@ -49,6 +51,9 @@ export async function POST(req: Request) {
   try {
     m = await identifyCard(new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 1, timeout: 20_000 }), image, catalog);
   } catch (e) {
+    // Our failure, not the visitor's: the scan is given back (site and personal counts).
+    await prisma.counter.update({ where: { key: siteKey }, data: { value: { decrement: 1 } } }).catch(() => {});
+    if (access.perUserLimit !== null && userKey) await prisma.counter.update({ where: { key: userKey }, data: { value: { decrement: 1 } } }).catch(() => {});
     if (e instanceof Anthropic.RateLimitError) return NextResponse.json({ error: "Too many scans at once. Try again in a moment." }, { status: 429, headers: NO_STORE });
     return NextResponse.json({ error: "We couldn't read that photo right now. Try again." }, { status: 502, headers: NO_STORE });
   }
@@ -70,6 +75,7 @@ export async function POST(req: Request) {
       model: SCAN_MODEL,
       twinCheck: m.twinCheck,
       costUsd: Number(m.costUsd.toFixed(6)),
+      remaining,
     },
     { headers: NO_STORE },
   );

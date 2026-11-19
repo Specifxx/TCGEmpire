@@ -24781,3 +24781,32 @@ the visitor's market at the same reference rate as the card's own series (`histo
 - It is a separate script on purpose: a change to `price-import.ts` re-runs the whole import on push.
 - The free 90-day window and Plus's full history apply to it exactly as to the main line. Display only: never a price row, a
   best price, a deal, an alert, a sort or structured data. It starts with the next import; until then the chart is unchanged.
+
+
+## Card scanner v2: live viewfinder, and open to everyone signed in (2026-11-19)
+
+The owner tested the beta on his phone the same evening ("the scanner works") and asked for three things: a camera
+view that frames the card with guides and captures on its own, a page that looks like a product rather than two
+buttons, and the scanner open to everyone for a Reddit launch ("100% free for 5 scans a day").
+
+- **Live viewfinder that finds the card itself** (`components/scan/Viewfinder.tsx`, `lib/scan/frame.ts`). The camera
+  opens only when the visitor taps Start, and stops when the tab hides or the page is left. `next.config.js` lets
+  `/scan` alone ask for it (`camera=(self)` on `/:page(scan)`, the last matching rule wins); every other page still
+  sends `camera=()`. About eight times a second a 180 px grey copy of the picture goes through `detectCard`: the rows
+  and columns with the most strong edge make peaks, and the card is the LARGEST 63:88 rectangle on those peaks with at
+  least three sides on a real edge and nearly the best faintest-side strength (the frame printed inside a card is often
+  a sharper line than the card's own border, which is why the largest wins). The owner asked for this over a fixed
+  guide ("it should still be able to auto frame and detect a card ... otherwise it's not as good as other ones"). The
+  outline follows the card; auto-capture fires after half a second of the card big enough (40% of the frame tall),
+  steady (the outline moved under 4% and the picture under 6 grey levels) and sharp (variance of the Laplacian). A card
+  turned more than about 10 degrees is not found; the shutter still takes the middle of the view. Only the capture
+  (the found card plus 8%, at most 1,024 px) leaves the phone, exactly as a photo did; the video is never recorded or sent. After a capture, auto waits until the card leaves the frame or is swapped, so one card never spends
+  two free scans; the shutter always takes another. The photo inputs stay under it for browsers without a camera.
+- **Measured** with Chromium's fake camera playing two real card images sliding onto a grainy table off-centre (one
+  turned 3 degrees): each card found, outlined, captured once and cropped to the card, and the quick view opened.
+  `tests/scan-frame.test.ts` finds three real card images on a grainy table within 4% of their true outline. Thresholds (`FRAME_LIMITS`) come
+  from synthetic frames in `tests/scan-frame.test.ts`; real phones may move them.
+- **Open** (`lib/scan/caps.ts`): public unless `SCAN_PUBLIC=0`, sign-in required, 5 a day free, 100 Premium, admins
+  unlimited. The site cap rises to 1,000 a day for the launch: at the measured US$0.0003 a scan that is at most about
+  US$0.30 a day. A scan that fails on our side is given back. The response carries `remaining`, shown under the shutter.
+- The page stays noindex and out of the sitemap: it is an app screen, linked from the collection and the header.

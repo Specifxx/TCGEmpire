@@ -76,22 +76,22 @@ test("another game, a non-card or an unknown name match nothing", () => {
   assert.equal(matchScan(R({ name: "Completely Unknown Card Name" }), catalog).bestId, null);
 });
 
-test("access: off without a key, admins only until SCAN_PUBLIC=1, then signed-in with daily limits", () => {
+test("access: off without a key; open to everyone signed in (5 free, 100 Premium) unless SCAN_PUBLIC=0", () => {
   const off = scanConfig({});
   assert.equal(scanAccess(off, { isAdmin: true, premium: true }).ok, false);
-  const beta = scanConfig({ ANTHROPIC_API_KEY: "x" });
-  assert.deepEqual(scanAccess(beta, { isAdmin: true, premium: true }), { ok: true, perUserLimit: null });
-  assert.equal(scanAccess(beta, { isAdmin: false, premium: true }).ok, false);
-  assert.equal(scanAccess(beta, null).ok, false);
-  const pub = scanConfig({ ANTHROPIC_API_KEY: "x", SCAN_PUBLIC: "1" });
+  const pub = scanConfig({ ANTHROPIC_API_KEY: "x" });
+  assert.deepEqual(scanAccess(pub, { isAdmin: true, premium: true }), { ok: true, perUserLimit: null });
   assert.deepEqual(scanAccess(pub, { isAdmin: false, premium: false }), { ok: true, perUserLimit: 5 });
   assert.deepEqual(scanAccess(pub, { isAdmin: false, premium: true }), { ok: true, perUserLimit: 100 });
-  assert.equal(scanAccess(pub, null).ok, false);
-  assert.equal(beta.dailyCap, 300);
+  assert.deepEqual(scanAccess(pub, null), { ok: false, status: 401, error: "Sign in to scan cards: it's free." });
+  assert.equal(pub.dailyCap, 1000);
+  const closed = scanConfig({ ANTHROPIC_API_KEY: "x", SCAN_PUBLIC: "0" });
+  assert.deepEqual(scanAccess(closed, { isAdmin: true, premium: false }), { ok: true, perUserLimit: null });
+  assert.equal(scanAccess(closed, { isAdmin: false, premium: true }).ok, false);
 });
 
 test("a scan never reaches eBay and the page stays a static, unindexed shell", () => {
-  const files = ["src/lib/scan/read.ts", "src/lib/scan/match.ts", "src/lib/scan/caps.ts", "src/lib/scan/catalog.ts", "src/app/api/scan/identify/route.ts", "src/components/scan/CardScanner.tsx"];
+  const files = ["src/lib/scan/read.ts", "src/lib/scan/match.ts", "src/lib/scan/caps.ts", "src/lib/scan/catalog.ts", "src/app/api/scan/identify/route.ts", "src/components/scan/CardScanner.tsx", "src/components/scan/Viewfinder.tsx", "src/lib/scan/frame.ts"];
   for (const f of files) assert.doesNotMatch(readFileSync(join(ROOT, f), "utf8"), /ebay[-_/]?(api|browse)|lib\/ebay/i, f);
   const page = readFileSync(join(ROOT, "src/app/scan/page.tsx"), "utf8");
   assert.match(page, /index: false/);
