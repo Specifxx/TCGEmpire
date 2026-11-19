@@ -25,7 +25,17 @@ export function money(cents: number, region: SisterRegion): string {
   return s;
 }
 
-export const serviceUrl = (path: string, token: string) => `${SITE_URL}/api/sister-alerts/${path}?t=${encodeURIComponent(token)}`;
+/**
+ * Sites whose next.config.js rewrites /account-service/alerts/<confirm|manage|unsubscribe> to this service (owner, 2026-11-19: the
+ * visitor never lands on another site's address). Their mail links use the site's own address; add a key only once that site's
+ * rewrite is live in production.
+ */
+export const ON_SITE_ALERT_LINKS: ReadonlySet<string> = new Set<string>([]);
+
+export const serviceUrl = (path: string, token: string, site?: Pick<SisterAlertSite, "key" | "url">) =>
+  site && ON_SITE_ALERT_LINKS.has(site.key)
+    ? `${site.url}/account-service/alerts/${path}?t=${encodeURIComponent(token)}`
+    : `${SITE_URL}/api/sister-alerts/${path}?t=${encodeURIComponent(token)}`;
 
 /** A site link with the alert's attribution. */
 export function siteLink(site: SisterAlertSite, path: string, campaign: string, region = "us"): string {
@@ -65,7 +75,7 @@ export interface BuiltMail {
 
 export function buildConfirmEmail(siteKey: string, token: string, targetCents: number, region: SisterRegion, weekly = false): BuiltMail {
   const site = sisterSite(siteKey)!;
-  const url = serviceUrl("confirm", token);
+  const url = serviceUrl("confirm", token, site);
   const restock = targetCents >= RESTOCK_TARGET_CENTS;
   const target = money(targetCents, region);
   const what = restock ? `when a sold-out product is back in stock at ${REGION_LABEL[region]} stores` : `when a product drops to ${target} or less at ${REGION_LABEL[region]} stores`;
@@ -82,7 +92,7 @@ export function buildConfirmEmail(siteKey: string, token: string, targetCents: n
 /** The confirmation for a weekly-drops sign-up that came with no price alert (the sites' "weekly price drops" box, 2026-11-12). */
 export function buildWeeklyConfirmEmail(siteKey: string, token: string, region: SisterRegion): BuiltMail {
   const site = sisterSite(siteKey)!;
-  const url = serviceUrl("confirm", token);
+  const url = serviceUrl("confirm", token, site);
   const subject = `Confirm your ${site.name} weekly price drops`;
   const inner = `
     <tr><td style="padding:8px 28px 6px;font-size:14px;line-height:1.6;color:#374151">Someone, hopefully you, asked ${escapeHtml(site.name)} to email this address its biggest price drops at ${REGION_LABEL[region]} stores, once a week. Confirm and the next edition comes to you.</td></tr>
@@ -138,7 +148,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
           <div style="font-size:15px;font-weight:700;color:#111827">${escapeHtml(a.name)}</div>
           <div style="margin-top:4px;font-size:14px;color:#374151">${a.restock ? `Back in stock at ${REGION_LABEL[a.region]} stores from <strong style="color:#047857">${escapeHtml(money(a.priceCents, a.region))}</strong>` : `Now <strong style="color:#047857">${escapeHtml(money(a.priceCents, a.region))}</strong> at ${REGION_LABEL[a.region]} stores · your alert: ${escapeHtml(money(a.targetCents, a.region))} or less`}</div>
           <div style="margin-top:10px">${button(site, link, "Compare store prices")}</div>
-          <div style="margin-top:8px;font-size:12px"><a href="${escapeHtml(friendLink(site, a))}" style="color:#4b5563">Send this to a friend</a> · <a href="${escapeHtml(serviceUrl("manage", token) + `&stop=${encodeURIComponent(a.id)}`)}" style="color:#4b5563">Stop this alert</a></div>
+          <div style="margin-top:8px;font-size:12px"><a href="${escapeHtml(friendLink(site, a))}" style="color:#4b5563">Send this to a friend</a> · <a href="${escapeHtml(serviceUrl("manage", token, site) + `&stop=${encodeURIComponent(a.id)}`)}" style="color:#4b5563">Stop this alert</a></div>
         </div></td></tr>`;
     })
     .join("");
@@ -151,14 +161,14 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
         </div></td></tr>`
     : "";
   const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Prices are the lowest in-stock store price we saw today, before postage. Stores change prices quickly, so check before you buy.<br/>${feedbackAsk(site, "sister-alert")}</td></tr>`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>Sent by ${senderOf(site)}.</td></tr>`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token, site) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token, site) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>Sent by ${senderOf(site)}.</td></tr>`;
   const text = [
     subject,
     "",
     ...rows.map((a) => `${a.name}: ${a.restock ? `back in stock from ${money(a.priceCents, a.region)}` : `now ${money(a.priceCents, a.region)} (your alert: ${money(a.targetCents, a.region)} or less)`}\n${siteLink(site, a.path, "sister-alert", a.region)}`),
     deal ? `\nA deal on ${deal.site.name}: ${deal.deal.n}, ${money(deal.deal.p, deal.deal.r)}\n${siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`, deal.deal.r)}` : "",
     `\nWhat would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "sister-alert")}`,
-    `\nManage or stop your alerts: ${serviceUrl("manage", token)}`,
+    `\nManage or stop your alerts: ${serviceUrl("manage", token, site)}`,
     `\n${MAILING_ADDRESS}`,
   ].join("\n");
   const heading = allRestock ? (rows.length === 1 ? "It's back in stock" : `${rows.length} products are back in stock`) : rows.length === 1 ? "Your price alert hit its target" : rows.some((a) => a.restock) ? `${rows.length} alerts fired` : `${rows.length} price alerts hit their target`;
@@ -173,9 +183,10 @@ export function listUnsubscribeHeaders(token: string): Record<string, string> {
   };
 }
 
-/** Who the footer says sent it: RiftCompare's service, or, for a quiet site, just "our shared alert service". */
-export function senderOf(site: SisterAlertSite): string {
-  return site.quiet ? "our shared alert service" : "our sister site RiftCompare's alert service (riftcompare.com)";
+/** Who the footer says sent it. Never RiftCompare (owner, 2026-11-19: no RiftCompare name or logo anywhere in another site's sign-up,
+ * sign-in or alert mail), so every site, quiet or not, reads "our shared alert service". */
+export function senderOf(_site: SisterAlertSite): string {
+  return "our shared alert service";
 }
 
 /** "MTG Compare alerts <noreply@riftcompare.com>": the sister's name on RiftCompare's verified sender. */
