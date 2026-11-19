@@ -24474,3 +24474,9 @@ The owner, 2026-11-19: "I want it for all the sites, so people have like an ad o
 2026-11-18 (`lib/dock-arm.ts`) ends early with its "on" arm for every visitor: the eBay (and, where the site has it, TCGplayer) dock is
 stacked just above the phone bottom nav whenever it shows, instead of taking turns with the nav. Its own rules are unchanged: after a
 scroll, labelled "Ad", ✕ for the visit, never Amazon. `dock_arm` on buy_click now always reads "on".
+
+## 2026-11-19: No ads on Premium, account, collection, watches, sign-in or giveaway pages
+
+A production check on a sister site found /premium opening on phones under ad blocks. Premium promises no ads, and these are
+conversion and utility pages, so the layout's ad units (PhoneDockAds) stand down on them (`lib/ad-free-paths.ts`,
+`AdRouteGate.tsx`, `tests/ad-free-paths.test.ts`).
