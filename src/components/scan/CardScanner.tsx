@@ -5,13 +5,15 @@
 // gallery still works below it. The capture is shrunk to 1,024 px, sent once to /api/scan/identify, and never stored.
 // The result opens the ordinary quick view (stored prices, eBay and TCGplayer rows, Add to collection); a scan itself
 // never calls eBay.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { Viewfinder } from "@/components/scan/Viewfinder";
 import { useMe } from "@/lib/use-me";
 import { CardTile, type CardTileData } from "@/components/CardTile";
 import { useQuickView } from "@/components/QuickView";
 import { useCountry } from "@/components/CountryProvider";
 import { trackEvent } from "@/lib/analytics";
+import { CART_ADDED_EVENT } from "@/lib/cart-list";
+import { CompleteSet } from "@/components/scan/CompleteSet";
 
 type Confidence = "high" | "medium" | "low" | "none";
 interface ScanResult {
@@ -71,6 +73,45 @@ export function CardScanner() {
   const { user, loaded } = useMe();
   const { open } = useQuickView();
   const { price, fmt } = useCountry();
+  // The funnel (DECISIONS.md 2026-11-19 "Complete my set after a scan"): a visit's first successful scan is a scan
+  // session; its first click to another site, first basket and first cart add are each counted once.
+  const sessionCounted = useRef(false);
+  const sent = useRef(new Set<string>());
+  const [gapRefresh, setGapRefresh] = useState(0);
+  const funnel = useCallback((kind: "out" | "basket" | "cart") => {
+    if (!sessionCounted.current || sent.current.has(kind)) return;
+    sent.current.add(kind);
+    trackEvent("scan_funnel", { step: kind });
+    try {
+      if (!navigator.sendBeacon?.(`/api/scan/out?k=${kind}`)) fetch(`/api/scan/out?k=${kind}`, { method: "POST", keepalive: true }).catch(() => {});
+    } catch {
+      /* best effort */
+    }
+  }, []);
+
+  useEffect(() => {
+    // Any link to another site from this page (the quick view's buy rows, the set panel's eBay, TCGplayer and store
+    // links), or through our own /out/ redirect, is a click-out.
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!a) return;
+      try {
+        const u = new URL(a.href, location.href);
+        if (u.host !== location.host || u.pathname.startsWith("/out/")) funnel("out");
+      } catch {
+        /* not a URL */
+      }
+    };
+    const onCart = () => funnel("cart");
+    document.addEventListener("click", onClick, true);
+    document.addEventListener("auxclick", onClick, true);
+    window.addEventListener(CART_ADDED_EVENT, onCart);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      document.removeEventListener("auxclick", onClick, true);
+      window.removeEventListener(CART_ADDED_EVENT, onCart);
+    };
+  }, [funnel]);
 
   useEffect(() => {
     fetch("/api/scan/feedback").then((r) => (r.ok ? r.json() : null)).then((d) => d && setTally(d.tally)).catch(() => {});
@@ -83,7 +124,7 @@ export function CardScanner() {
     setBusy(true);
     setItems((xs) => [{ key, photo, result: null, error: null, chosen: null, feedback: null, added: false }, ...xs]);
     try {
-      const res = await fetch("/api/scan/identify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image: photo.split(",")[1] }) });
+      const res = await fetch("/api/scan/identify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image: photo.split(",")[1], first: !sessionCounted.current }) });
       const data = await res.json().catch(() => ({}));
       if (typeof data.remaining === "number") setRemaining(data.remaining);
       if (!res.ok) {
@@ -91,6 +132,7 @@ export function CardScanner() {
         return;
       }
       const result = data as ScanResult;
+      sessionCounted.current = true;
       update(key, { result, chosen: result.card });
       trackEvent("card_scan", { confidence: result.confidence, card_id: result.card?.id ?? "" });
       if (result.card && result.confidence === "high") open(result.card);
@@ -121,9 +163,15 @@ export function CardScanner() {
     if (!item.chosen) return;
     sendFeedback(item, item.chosen.id === item.result?.card?.id ? "right" : "picked-other");
     const res = await fetch("/api/collection", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cardId: item.chosen.id }) });
-    if (res.ok) update(item.key, { added: true });
+    if (res.ok) {
+      update(item.key, { added: true });
+      setGapRefresh((n) => n + 1);
+    }
     else open(item.chosen); // the quick view explains a sign-in or the free limit
   }
+
+  const gapSet = items.find((x) => x.chosen)?.chosen?.setCode ?? null;
+  const gapAfter = items.findIndex((x) => x.chosen);
 
   const total = items.reduce((s, x) => {
     const p = x.chosen ? price(x.chosen) : null;
@@ -164,8 +212,9 @@ export function CardScanner() {
       )}
 
       <ul className="mt-4 space-y-4">
-        {items.map((it) => (
-          <li key={it.key} className="card-surface rounded-2xl p-3">
+        {items.map((it, idx) => (
+          <Fragment key={it.key}>
+          <li className="card-surface rounded-2xl p-3">
             <div className="flex gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={it.photo} alt="Your photo" className="h-28 w-20 flex-none rounded-lg object-cover ring-1 ring-white/10" />
@@ -234,6 +283,12 @@ export function CardScanner() {
               </details>
             )}
           </li>
+          {idx === gapAfter && gapSet && (
+            <li className="list-none">
+              <CompleteSet setCode={gapSet} refresh={gapRefresh} onBasket={() => funnel("basket")} />
+            </li>
+          )}
+          </Fragment>
         ))}
       </ul>
 

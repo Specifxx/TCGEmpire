@@ -29,5 +29,12 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user?.isAdmin) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const rows = await prisma.counter.findMany({ where: { key: { startsWith: "scan:fb:" } }, take: 20 });
-  return NextResponse.json({ tally: Object.fromEntries(rows.map((r) => [r.key.slice(8), r.value])) }, { headers: { "Cache-Control": "private, no-store" } });
+  // The click-out funnel, by UTC day (DECISIONS.md 2026-11-19 "Complete my set after a scan"): scan sessions, and how
+  // many of them clicked out, priced a basket or added to the cart.
+  const days = Array.from({ length: 21 }, (_, i) => new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10));
+  const fkeys = days.flatMap((d) => ["sess", "out", "basket", "cart"].map((k) => `scan:${k}:${d}`));
+  const frows = await prisma.counter.findMany({ where: { key: { in: fkeys } }, select: { key: true, value: true } });
+  const fv = new Map(frows.map((r) => [r.key, r.value]));
+  const funnel = days.map((d) => ({ day: d, sessions: fv.get(`scan:sess:${d}`) ?? 0, out: fv.get(`scan:out:${d}`) ?? 0, basket: fv.get(`scan:basket:${d}`) ?? 0, cart: fv.get(`scan:cart:${d}`) ?? 0 }));
+  return NextResponse.json({ tally: Object.fromEntries(rows.map((r) => [r.key.slice(8), r.value])), funnel }, { headers: { "Cache-Control": "private, no-store" } });
 }

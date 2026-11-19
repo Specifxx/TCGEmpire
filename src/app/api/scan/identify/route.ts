@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const access = scanAccess(cfg, user ? { isAdmin: user.isAdmin, premium: isPremium(user) } : null);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status, headers: NO_STORE });
 
-  const body = (await req.json().catch(() => null)) as { image?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { image?: unknown; first?: unknown } | null;
   const image = typeof body?.image === "string" ? body.image.replace(/^data:image\/\w+;base64,/, "") : "";
   if (!image || image.length > SCAN_MAX_IMAGE_BYTES || !/^[A-Za-z0-9+/=]+$/.test(image.slice(0, 200))) {
     return NextResponse.json({ error: "That photo didn't come through. Try again." }, { status: 400, headers: NO_STORE });
@@ -56,6 +56,12 @@ export async function POST(req: Request) {
     if (access.perUserLimit !== null && userKey) await prisma.counter.update({ where: { key: userKey }, data: { value: { decrement: 1 } } }).catch(() => {});
     if (e instanceof Anthropic.RateLimitError) return NextResponse.json({ error: "Too many scans at once. Try again in a moment." }, { status: 429, headers: NO_STORE });
     return NextResponse.json({ error: "We couldn't read that photo right now. Try again." }, { status: 502, headers: NO_STORE });
+  }
+
+  // The funnel's denominator: a visit's first successful scan (the page sends `first` once). DECISIONS.md 2026-11-19.
+  if (body?.first === true) {
+    const sessKey = `scan:sess:${day}`;
+    await prisma.counter.upsert({ where: { key: sessKey }, create: { key: sessKey, value: 1 }, update: { value: { increment: 1 } } }).catch(() => {});
   }
 
   const ids = m.bestId ? [m.bestId, ...m.alternateIds] : [];

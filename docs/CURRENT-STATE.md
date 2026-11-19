@@ -1419,6 +1419,7 @@ longer lands on its entry.
   `SCAN_PUBLIC=0` closes it); a live viewfinder that finds, outlines and captures the card on its own (`camera=(self)` on `/scan` only); one Haiku 5.5
   read of name + set + number, our pure matcher picks the printing, the quick view shows prices; never eBay, photo never
   stored, `SCAN_DAILY_CAP` 1,000 a day. [2026-11-19](../DECISIONS.md#L24530), [2026-11-19 v2](../DECISIONS.md#L24786)
+- **Complete my set after a scan (2026-11-19):** under a scan, the set's missing base-set cards cheapest first with eBay search, TCGplayer and cheapest-store links, add to cart and one Best Basket link; the scan funnel (sessions, click-outs) is counted per day. [2026-11-19](../DECISIONS.md#L24842)
 - **Meta decks:** never from a hand copy; rebuild a meta/tier list only from
   a licensed source. `/decks` is live again (2026-09-26) as the PLAYER-published
   library only — signed-in publishes and owner imports, nothing seeded, no

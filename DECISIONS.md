@@ -24838,3 +24838,23 @@ RiftCompare (owner, 2026-11-17), so `wax` is now `quiet` (its emails say "our sh
 `sports`, instead of `cards`: a Sports card alert no longer ends with a DexCompare deal, nor a card alert with a Sports card deal.
 The same rule moved WargameCompare from `hobby` to `cards` (it is on the cards side) and left FigureCompare alone in `hobby`, now
 quiet too.
+
+## Complete my set after a scan (2026-11-19)
+
+Owner's boardroom plan (2026-11-19, move N8): after a scan, show the member what they are missing from that card's set with the
+cheapest buy links, and a basket. Pass mark: 8% of scan sessions click out by 4 Dec.
+
+- Under the latest scanned card, `components/scan/CompleteSet.tsx` reads `/api/scan/set-gap?set=<code>` (signed in, no-store): the set's
+  base-set cards the member does not own, cheapest first, six at a time. "Missing" and "cheapest" are the set tracker's own
+  (`getSetChecklist`, `ownedBySet`, `missingIn`): a price is the cheapest in-stock listing at a REAL store in the reader's market, and a
+  card no store has is counted apart, never priced.
+- Each row follows the site's row order: eBay (a tagged SEARCH link, `ebaySearchUrl`, so zero eBay API calls and no quota spent),
+  TCGplayer (its own row's link through `/out/tcgplayer`), then the cheapest real store with its price and "Add to cart" (the cart A/B
+  still decides who sees it). Under the list, "Price all N in one basket" opens Best Basket's existing Finish this set
+  (`/tools/best-basket?source=set&set=<slug>`), and a link opens the full checklist.
+- The reads are the cached checklist, the one-set owned map and two reads scoped to the six cards shown (`lib/scan/set-gap.ts` is the pure
+  half, `tests/scan-set-gap.test.ts`).
+- The funnel is counted, not guessed: a visit's first successful scan adds one to `scan:sess:<day>` (the page sends `first` once), and
+  its first click to another site (any buy link on the page, the quick view's included), first basket and first cart add each add one
+  to `scan:out|basket|cart:<day>` (`/api/scan/out`). Counts only, no card, no user. The admin-only `GET /api/scan/feedback` returns 21
+  days of it. Read on 4 Dec: out ÷ sessions against 8%.

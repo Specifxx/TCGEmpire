@@ -167,7 +167,8 @@ export function OutboundLink({
    *  - `amazon_also`: the unpriced "Check on Amazon" last row of the sealed
    *    page's price list (2026-11-16), shown only when the row has no live price;
    *  - `amazon_live`: the same row with Amazon's own price from the Creators
-   *    API and a link to its item page (lib/amazon-live.ts, 2026-11-05). */
+   *    API and a link to its item page (lib/amazon-live.ts, 2026-11-05);
+   *  - `scan_set`: the scanner's "Complete your set" rows (components/scan/CompleteSet.tsx, 2026-11-19). */
   surface?:
     | "deck_cart"
     | "amazon_live"
@@ -205,7 +206,8 @@ export function OutboundLink({
     | "sealed_row"
     | "ebay_pinned"
     | "amazon_search"
-    | "amazon_also";
+    | "amazon_also"
+    | "scan_set";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
   // the signup popup (removed 2026-09-30) could stay off the buy path; kept as
