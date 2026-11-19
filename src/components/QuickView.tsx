@@ -191,6 +191,7 @@ function QuickViewModal({
   const [graded, setGraded] = useState<GradedRow[]>([]);
   const [ebayCheckedAt, setEbayCheckedAt] = useState<string | null>(null);
   const [history, setHistory] = useState<PricePoint[] | null>(null);
+  const [marketHistory, setMarketHistory] = useState<PricePoint[]>([]);
   // The history series' newest recorded day for the market it was fetched for
   // (the history route's `lastKnown`), so a late response for another market is
   // never shown under this one. Display-only: see lib/last-known-price.ts.
@@ -260,13 +261,14 @@ function QuickViewModal({
       .then((d) => {
         if (!alive) return;
         setHistory(d.points ?? []);
+        setMarketHistory(Array.isArray(d.market) ? d.market : []);
         const lk = d.lastKnown;
         setRecorded({
           country,
           price: lk && typeof lk.cents === "number" && typeof lk.day === "string" ? { cents: lk.cents, day: lk.day } : null,
         });
       })
-      .catch(() => { if (alive) setHistory([]); });
+      .catch(() => { if (alive) { setHistory([]); setMarketHistory([]); } });
     return () => {
       alive = false;
     };
@@ -942,7 +944,15 @@ function QuickViewModal({
                     cheapest price" fix as the full card page — history is a
                     daily import snapshot, inStock[0] is this modal's own
                     live cheapest row, already sorted price-ascending above. */}
-                <PriceChart points={history} currency={currency} compact nowOverrideCents={inStock[0]?.priceCents ?? null} rawCardHistory />
+                <PriceChart
+                  points={history}
+                  reference={marketHistory}
+                  referenceLabel={country === "US" ? "TCGplayer market" : "TCGplayer market (converted)"}
+                  currency={currency}
+                  compact
+                  nowOverrideCents={inStock[0]?.priceCents ?? null}
+                  rawCardHistory
+                />
               </div>
             )}
 

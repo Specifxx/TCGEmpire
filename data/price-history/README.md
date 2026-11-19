@@ -19,6 +19,11 @@ day; the site reads these files directly (`src/lib/price-history-store.ts`).
 Daily from 2026-10-03; earlier days are whatever the database held when it was
 exported (daily until late August 2026, then about weekly).
 
+## `tcg-market/YYYY-MM-DD.json`
+
+The same shape as `cards/`: `prices` maps a card's id to TCGplayer's US market price that day (recent sales, its own
+TCGplayer product), in US cents. Daily from 2026-11-19; the dashed line on each card's price history chart.
+
 ## `sealed/YYYY-MM-DD.json`
 
 ```json
