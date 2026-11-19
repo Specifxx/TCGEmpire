@@ -24583,3 +24583,12 @@ content "spread across a large network of sites" and re-dating pages to look fre
   noindex, follow and out of the sitemap (`withoutOffSeasonSales`). The URLs stay live all year (URL freeze).
 
 Black Friday and Cyber Monday pages are unchanged (in season). Judge the effect on 1 to 8 Dec against 3 to 9 Nov.
+
+## 2026-11-19: The phone bar's Menu tab becomes Collection
+
+Owner, 19 Nov: "instead of the menu on the navbar, it should be like my collection, and you need to be able to sign in to see
+your collection … Rift Compare kind of already has a collection, so we don't want to lose that. It's just another way to view
+your collection." The bottom nav's last tab is now Collection, a link to `/portfolio`, the collection Rift already has (nothing
+about it changes; a signed-out visitor is sent to `/login?next=/portfolio` by the page itself). The menu is still one tap away on
+the header's menu button, which stays the one opener (`tests/single-menu-entry.test.ts`). Members keep Watching in place of
+Deals. Same tab as DexCompare, MTG Compare and YGO Compare.

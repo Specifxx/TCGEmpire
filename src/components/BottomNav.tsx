@@ -45,7 +45,10 @@ const tabs = (member = false): Tab[] => [
     ? { key: "watching", label: "Watching", href: "/watching", also: ["/portfolio", "/alerts"], icon: <NavIcon name="heart" className="h-[22px] w-[22px]" /> }
     : { key: "deals", label: "Deals", href: "/tools/deal-finder", also: ["/movers", "/rising"], icon: <NavIcon name="deals" className="h-[22px] w-[22px]" /> },
   { key: "cart", label: "Cart", icon: <CartIcon size={22} /> },
-  { key: "menu", label: "Menu", icon: <NavIcon name="menu" className="h-[22px] w-[22px]" /> },
+  // My collection (owner, 2026-11-19: "instead of the menu on the navbar, it should be like my collection, and you need to be able to
+  // sign in to see your collection"): the SAME Rift collection as always (/portfolio, which sends a signed-out visitor to /login first),
+  // just one more way in. The menu stays one tap away on the header's menu button, the one opener.
+  { key: "collection", label: "Collection", href: "/portfolio", also: ["/profile", "/dashboard"], icon: <NavIcon name="collection" className="h-[22px] w-[22px]" /> },
 ];
 
 
@@ -243,8 +246,6 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
 
   const click = (key: string) => {
     if (key === "cart") window.dispatchEvent(new CustomEvent(CART_OPEN_EVENT));
-    // The header's menu button stays the ONE opener of the menu (tests/single-menu-entry.test.ts): this tab presses it.
-    if (key === "menu") document.querySelector<HTMLButtonElement>("button[data-menu-button]")?.click();
   };
 
   return (

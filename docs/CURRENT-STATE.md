@@ -951,7 +951,7 @@ longer lands on its entry.
 - **The phone bottom nav is back, without position arithmetic** (owner, 2026-11-18: `BottomNav.tsx`, `BOTTOM_NAV` in
   `lib/site.ts` is the rollback, `?bn=0`/`?bn=1` per visitor): `fixed; bottom: 0`, transform only, hides on scroll down, zoom,
   keyboard, any dialog, the buy bar and over an Add to cart. Never compute where the browser's chrome is (the 2026-09-18 bar
-  died of that). Its Menu tab presses `HeaderMenuButton`, the one opener. [2026-11-18](../DECISIONS.md#L24186)
+  died of that). Its last tab is Collection (`/portfolio`, owner 2026-11-19), not Menu; `HeaderMenuButton` stays the one menu opener. [2026-11-18](../DECISIONS.md#L24186)
 - **No notification bell** (build a `/notifications` page rather than
   restore it). One control opens `CinematicNavMenu` below lg.
   The one fixed-bottom exception is the card page's owner-requested sticky
