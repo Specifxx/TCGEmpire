@@ -221,5 +221,5 @@ test("quiet sites (ScentCompare, KaeYoung, SportsCardCompare, FigureCompare) nev
       assert.ok(!/riftcompare\.com\)|RiftCompare's/.test(m.html), `${key} email names RiftCompare`);
     }
   }
-  assert.ok(/RiftCompare's alert service/.test(buildConfirmEmail("mtg", "tok", 4999, "US").html));
+  assert.ok(!/RiftCompare's alert service/.test(buildConfirmEmail("mtg", "tok", 4999, "US").html), "since 2026-11-19 no site names RiftCompare");
 });
