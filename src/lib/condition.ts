@@ -17,6 +17,16 @@
 //     alert this exists to stop (DECISIONS.md, "Price alerts fire on the price
 //     you would pay", 2026-09-25).
 
+// A store variant that is a graded slab, not the raw card ("Graded - Beckett
+// 9.5", "PSA 10"). A store can sell the raw card and its slabs as variants of ONE
+// product; ranked as an unstated condition (= NM), the cheaper slab priced the
+// raw card (OP Compare, 2026-11-19). The importer never prices from one.
+export const GRADED_VARIANT =
+  /\b(psa|bgs|cgc|beckett|sgc|graded|slab(bed)?|gem\s*mint|ace\s*grading|black\s*label)\b|\b(?:tag|ags)\s?(?:10|[1-9](?:\.5)?)\b/i;
+export function isGradedVariant(title: string | null | undefined): boolean {
+  return !!title && GRADED_VARIANT.test(title);
+}
+
 /** Importer ordering: 0 = NM/unstated … 4 = damaged. Lower wins. */
 export function conditionRank(variantTitle: string): number {
   const t = (variantTitle || "").toLowerCase();

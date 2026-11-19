@@ -24758,3 +24758,10 @@ website, so the testers' build gets it with the next release and no new upload i
 - **Links**: stores open in a Custom Tab; the cart opens one store per tap in the app; launcher shortcuts and App Links route to
   their page; the app's own "Android app" promo is hidden in it. Plugins come from the app's injected runtime, never from npm
   (`tests/app-auth.test.ts`), so the website and the build cannot drift apart again.
+## 2026-11-19 — A graded-slab variant never prices the raw card
+
+A store can sell a raw single and its slabs as variants of ONE Shopify product ("Near Mint" A$344 beside "Graded -
+Beckett 9.5" US$115, found on OP Compare). `conditionRank` reads a slab label as an unstated condition (Near Mint), so
+the cheaper slab priced the raw card. The Shopify store pass and `bestVariantPrice` (the verify pass) now drop any
+variant `isGradedVariant` (lib/condition.ts) reads as a slab before choosing; a slab-only product gives no row. Slabs
+stay where they belong, in the eBay graded panel. `tests/graded-variant.test.ts`.
