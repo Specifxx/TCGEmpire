@@ -36,6 +36,10 @@ export const SISTER_PREMIUM_SITES: PremiumSite[] = [
   // Gundam Compare and YGO Compare (2026-11-18): the same sign-in, watch list and Premium, no back-in-stock button yet.
   { key: "gundam", name: "Gundam Compare", url: "https://gundamcompare.com" },
   { key: "ygo", name: "YGO Compare", url: "https://ygocompare.com" },
+  // ScentCompare and KaeYoung (2026-11-19, owner: accounts and Premium on every compare site): sign-in, watch list, back-in-stock and
+  // Premium. Their emails never name RiftCompare (`quiet` in lib/sister-alerts/sites.ts).
+  { key: "scent", name: "ScentCompare", url: "https://scentcompare.app" },
+  { key: "kaeyoung", name: "KaeYoung", url: "https://kaeyoung.com" },
 ];
 
 export const PREMIUM_SESSION_DAYS = 60;

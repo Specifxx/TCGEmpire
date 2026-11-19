@@ -24810,3 +24810,16 @@ buttons, and the scanner open to everyone for a Reddit launch ("100% free for 5 
   unlimited. The site cap rises to 1,000 a day for the launch: at the measured US$0.0003 a scan that is at most about
   US$0.30 a day. A scan that fails on our side is given back. The response carries `remaining`, shown under the shutter.
 - The page stays noindex and out of the sitemap: it is an app screen, linked from the collection and the header.
+
+## 2026-11-19 — ScentCompare and KaeYoung join the shared sign-in, Premium and alerts
+
+**Owner (2026-11-19):** "we want accounts for every single one of our compare sites now", with a Premium "like Rift Compare … with the
+deals and everything". ScentCompare goes first, then KaeYoung.
+
+- Both are added to `SISTER_PREMIUM_SITES` (sign-in by Google, Discord or emailed link, watch list, Stripe Premium) and to
+  `SISTER_ALERT_SITES` (price-drop and back-in-stock alerts, weekly biggest drops), reading each site's own static `/alert-feed.json`.
+  KaeYoung was left out of alerts on 2026-11-02 "unless the owner asks"; this is the ask.
+- Each is a group of one (`scent`, `kbeauty`): an alert email never ends with another site's deal. KaeYoung carries no sister links, and
+  both sit on the other side of the network from RiftCompare.
+- `quiet: true`: their emails' footers say "our shared alert service", never RiftCompare (`senderOf`). The From address stays the shared
+  verified sender with the site's own name.
