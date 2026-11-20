@@ -15,6 +15,7 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { blackFriday, cyberMonday, sealedDeals, UNDER_MEDIAN_PCT, UNDER_MSRP_PCT } from "@/lib/black-friday";
 import { FamilyDeals } from "@/components/FamilyDeals";
 import { SalePriceWatch } from "@/components/SalePriceWatch";
+import { RealDrops, realDropRows } from "@/components/RealDrops";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The Black Friday and Cyber Monday pages, /black-friday and /cyber-monday.
@@ -119,6 +120,7 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
   const checked = await withLiveStock(candidates).catch(() => candidates);
   const deals = sealedDeals(checked);
   const shown = deals.slice(0, SHOWN);
+  const drops = realDropRows(groups, country);
   const ebay = ebayLabel(country);
   const qa = faqs(bf, cm, event);
 
@@ -168,6 +170,8 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
           </ul>
         )}
       </header>
+
+      <RealDrops rows={drops} country={country} currency={currency} page={PATH} />
 
       {shown.length > 0 ? (
         <div className="mt-6">

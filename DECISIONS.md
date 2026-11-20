@@ -25071,3 +25071,15 @@ and nothing errors in the browser.
   The chase-tab removal stands, since the owner asked for it.
 - **Rule:** no Vercel custom event may carry more than 16 properties. Add a new A/B arm to buy_click only after
   checking the count, or fold it into an existing key.
+emblem is a token: rarity T, or a letter number such as E1. Only those are left out now; a card with a plain number stays.
+
+## 2026-11-20 — Black Friday pages: products furthest under their own 30-day price, with a buy button on every line
+
+Code red plan (20 Nov), Cyber Week buy sprint: the season's pages lead with a list a shopper can act on. `lib/real-drops.ts`: a product
+is listed only when its cheapest in-stock price today is 10% or more under the median of its OWN recorded daily prices over the
+last 30 days (today left out), with 14+ recorded days, wrong-listing days (under half the median) left out, no claim when the
+records swing more than 2x, no placeholder prices (9999.99), and a typical price of 20.00 or more. Each line carries the
+cheapest store's buy button (its own link, `offerLink`) and a tagged eBay search, surface `bf_drops`. It replaces the
+"Under their own 30-day typical price" list on the same pages (same idea, no buy button, fewer guards). Copy says "under its
+30-day typical" and "lowest since <date>", never "was", "dropped" or "ever" (BANNED_COPY). Read 3 Dec: `bf-drops` buy clicks
+28 Nov to 1 Dec against the 4 days before. Rift reads its sealed history files (`sealedHistoryRows`), whose weeks of wrong-product rows the 2x guard refuses; never an eBay row as the store. The same file ships on Dex, MTG and OP.
