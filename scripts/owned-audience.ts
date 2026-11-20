@@ -2,7 +2,7 @@
  * Owned audience count, read-only (code red, 2026-11-20: "contacts gained per week"). Job logs are public, so this
  * prints counts only: never an address, a name or an id.
  *
- * A reachable contact is an email address we may write to (an account, a price/restock/release alert, a newsletter
+ * A reachable contact is an email address we may write to (a Rift or sister-site account, a price/restock/release alert, a newsletter
  * subscriber, a CONFIRMED sister-site alert or weekly-email address), counted once, in the week it was FIRST seen in
  * any of those tables, under the source it first came through. Plus the Discord hub's member count now (Discord's
  * public invite endpoint, no login). Weeks are UTC, Monday to Sunday; the current week is partial and says so.
@@ -64,6 +64,11 @@ async function main() {
   await read("newsletter", async () => {
     const rows = await prisma.newsletterSubscriber.findMany({ select: { email: true, createdAt: true } });
     for (const r of rows) see(r.email, r.createdAt, "rift:newsletter");
+  });
+  await read("sisterMember", async () => {
+    // A sister-site account (signed in through RiftCompare's shared sign-in): reachable by account mail.
+    const rows = await prisma.sisterMember.findMany({ select: { email: true, site: true, firstLinkedAt: true } });
+    for (const r of rows) see(r.email, r.firstLinkedAt, `${r.site}:account`);
   });
   await read("sister", async () => {
     // Only confirmed addresses are reachable; each is credited to the site (and kind) of its earliest row.
