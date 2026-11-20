@@ -18,7 +18,7 @@ export const HOT40_SIZE = { width: 1200, height: 630 };
 const GREEN = "#34d17e";
 // The brand mark and name (2026-10-16 rebrand, lib/brand.ts ORANGE_LIGHT).
 // GREEN above stays: it is a price move, not the brand.
-const BRAND = "#f29733";
+const BRAND = "#34d17e";
 const ROSE = "#fb7185";
 const SLATE = "#94a3b8";
 

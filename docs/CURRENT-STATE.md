@@ -1488,21 +1488,20 @@ longer lands on its entry.
 - **Theme:** dark by default, no `prefers-color-scheme`. Light is a `theme`
   cookie stamped before paint; the root layout never reads cookies.
   [2026-09-12](../DECISIONS.md#L5530)
-- **Brand (2026-10-16):** Riftbound's palette, read from playriftbound.com:
-  teal-navy ink, orange `#ef7d00` as the one accent (`brand-*`; `#f29733` as
-  text on dark), Cinzel headings (the Beaufort stand-in), Inter body. The logo
-  is the R mark (`public/brand/r-mark.svg`, a CSS mask over the `--rc-flame`
-  gold-to-orange gradient) beside "Rift" + "Compare" as live mixed-case text,
-  "Compare" in the same gradient (owner: not all caps). The gradient is
-  decoration only (the logo, the H1's "Riftbound"). Purchases keep the
-  pre-rebrand green, `buy` / `.btn-buy`: every store's buy button, Premium's
-  checkout, the Cheapest and savings chips. eBay stays blue, the header's
-  Premium link gold, and a green that means something (gains, in stock) green.
-  The homepage hero moves (RiftEmbers, `.rb-vortex`, `.rb-flame-live`,
-  `.rb-search-aura`), stilled by reduced motion. Mask classes live in
-  `@layer components`, or they beat `hidden`. `lib/brand.ts` holds the hexes
-  for OG images and email.
-  [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713)
+- **Brand (2026-10-16, green again 2026-11-20):** Riftbound's teal-navy ink,
+  Cinzel headings (the Beaufort stand-in), Inter body, and RiftCompare GREEN as
+  the one accent (`brand-*`, `#1ea65c`; `#34d17e` as text on dark, `#157a45` in
+  light): the owner disliked the rebrand's orange logo and text. The logo is the
+  R mark (`public/brand/r-mark.svg`, a CSS mask over the `--rc-flame` green
+  gradient) beside "Rift" + "Compare" as live mixed-case text, "Compare" in the
+  same gradient (owner: not all caps). The gradient is decoration only (the
+  logo, the H1's "Riftbound"). Purchases use `buy` / `.btn-buy` (the same
+  green): every store's buy button, Premium's checkout, the Cheapest and
+  savings chips. eBay stays blue, the header's Premium link gold. The homepage
+  hero moves (RiftEmbers, `.rb-vortex`, `.rb-flame-live`, `.rb-search-aura`),
+  stilled by reduced motion. Mask classes live in `@layer components`, or they
+  beat `hidden`. `lib/brand.ts` holds the hexes for OG images and email.
+  [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713), [2026-11-20](../DECISIONS.md#L24935)
 - **Seasons and scroll motion (2026-10-16):** a season is a local-date window
   (`lib/season.ts`; Halloween 16-31 Oct, Christmas 1 Nov to 26 Dec) stamped
   as `data-season` on `<html>` before paint, so it starts and ends with no
@@ -1513,9 +1512,11 @@ longer lands on its entry.
   so a season comes out by deleting them. Christmas is a few tasteful accents
   in the site's own colours (a gift-guide banner, a 3px cranberry/pine
   hairline, the two colours as tokens on the gifts pill and sale strip; one off
-  switch, `CHRISTMAS_FESTIVE_LAYER`): no snow, lights, art, hats, stripes or
-  palette swap, on any sister site; the theme must match the domain
-  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420)).
+  switch, `CHRISTMAS_FESTIVE_LAYER`), plus, since the owner asked on 2026-11-20,
+  a Santa hat on the header's logo and a string of lights under the header
+  (the `xmas-logo` block, CSS only): no snow, art, stripes or palette swap, on
+  any sister site; the theme must match the domain
+  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420), [2026-11-20](../DECISIONS.md#L24952)).
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired

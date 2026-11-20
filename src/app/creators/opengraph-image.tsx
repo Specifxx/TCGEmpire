@@ -18,7 +18,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const PINK = "#f0abfc";
-const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
+const BRAND = "#34d17e"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 const CARDS = [
   "seraphine-starry-eyed-songstress.jpg",
   "ekko-boy-who-shattered-time.jpg",

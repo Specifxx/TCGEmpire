@@ -12,7 +12,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "RiftCompare — Riftbound set card list & prices";
 
-const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
+const BRAND = "#34d17e"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 
 export default async function Image({ params }: { params: { set: string } }) {
   const set = setBySlug(params.set);

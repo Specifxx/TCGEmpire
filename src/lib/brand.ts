@@ -3,31 +3,31 @@
 // scripts. The site's own UI reads the same values through tailwind.config.ts /
 // globals.css (`brand-*`, `ink-*`, `--rc-flame`); keep the two in step.
 //
-// Taken from the official Riftbound site (playriftbound.com, 2026-10-16
-// rebrand, DECISIONS.md "The Riftbound rebrand"): its theme object defines
-// primary #EF7D00, dark1 #013951, dark2 #1E3043; the buttons hover to #F29733;
-// the RIFTBOUND wordmark is a vertical gradient from #D7A63E gold at the top to
-// #EF7D00 by ~58% of the letter height, solid orange below it.
+// GREEN again since 2026-11-20 (owner: "bring back the green theme for Rift
+// Compare … I don't like the orange kind of logo and orange text"). The brand
+// is the pre-rebrand RiftCompare green (#1EA65C, text #34D17E on dark), and the
+// logo gradient is the RC mark's own (#6AF0A6 at the top to #1EA65C). The
+// Riftbound teal ink from the 2026-10-16 rebrand stays. DECISIONS.md,
+// "Rift Compare is green again", 2026-11-20.
 
 /** Primary action fill: buttons, active states. Takes dark ink (`NAVY`). */
-export const ORANGE = "#EF7D00";
-/** Hover fill, and the orange used as TEXT on dark surfaces (7:1+). */
-export const ORANGE_LIGHT = "#F29733";
-/** The wordmark gradient's top colour. Decoration only: gold as a UI colour
- *  still means Premium (`gold`, #caa85a). */
-export const FLAME_GOLD = "#D7A63E";
+export const GREEN = "#1EA65C";
+/** Hover fill, and the green used as TEXT on dark surfaces. */
+export const GREEN_LIGHT = "#34D17E";
+/** The wordmark gradient's top colour. Decoration only. */
+export const FLAME_TOP = "#6AF0A6";
 /** Riftbound's section teal: hero bands and share-image backgrounds. */
 export const TEAL = "#013951";
-/** Ink on an orange fill, as the official buttons set it. */
+/** Ink on a green fill. */
 export const NAVY = "#1E3043";
 /** The page colour of the dark theme (globals.css --page-bg). */
 export const PAGE_DARK = "#05161f";
 
 /** The wordmark gradient as [offset 0-1, colour] stops, top to bottom. */
 export const FLAME_STOPS: readonly (readonly [number, string])[] = [
-  [0, FLAME_GOLD],
-  [0.58, ORANGE],
-  [1, ORANGE],
+  [0, FLAME_TOP],
+  [0.58, GREEN],
+  [1, GREEN],
 ];
 /** The same gradient as CSS, for inline styles (OG images, email). */
-export const FLAME_CSS = `linear-gradient(180deg, ${FLAME_GOLD} 0%, ${ORANGE} 58%, ${ORANGE} 100%)`;
+export const FLAME_CSS = `linear-gradient(180deg, ${FLAME_TOP} 0%, ${GREEN} 58%, ${GREEN} 100%)`;

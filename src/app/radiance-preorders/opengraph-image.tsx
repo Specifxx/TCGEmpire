@@ -17,7 +17,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const GOLD = "#f5c451";
-const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
+const BRAND = "#34d17e"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 const CARDS = [
   "heartsteel-ksante-courageous.jpg",
   "ekko-boy-who-shattered-time.jpg",

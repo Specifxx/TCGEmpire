@@ -9,7 +9,7 @@ export const contentType = "image/png";
 
 const HIT = "#34d17e";
 // The brand tile and URL (2026-10-16 rebrand); HIT stays green, it is a solved square.
-const BRAND = "#f29733";
+const BRAND = "#34d17e";
 const MISS = "#232a36";
 const ROWS: number[][] = [
   // 1 = green, 0 = dark — an "almost solved" board for flavour.

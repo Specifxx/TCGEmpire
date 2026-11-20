@@ -33,17 +33,17 @@ const config: Config = {
           700: v("ink-700"), // dark #1d3c4e
           600: v("ink-600"), // dark #2f566a
         },
-        // The single sharp accent — Riftbound orange (lib/brand.ts), used
-        // sparingly for primary actions + active states. It replaced the
-        // RiftCompare green on 2026-10-16. Gold still means Premium.
+        // The single sharp accent — RiftCompare green (lib/brand.ts), used
+        // sparingly for primary actions + active states. Orange replaced the
+        // green on 2026-10-16 and gave it back on 2026-11-20 (owner). Gold still means Premium.
         brand: {
-          DEFAULT: "#ef7d00",
-          // 400 is the LINK shade (text-brand-400, ~300 usages). #f29733 is fine
+          DEFAULT: "#1ea65c",
+          // 400 is the LINK shade (text-brand-400, ~300 usages). #34d17e is fine
           // on dark ink and unreadable on white, so it alone is themed; 500/600
           // are fills and borders and stay fixed.
-          400: v("brand-400"), // dark #f29733
-          500: "#ef7d00",
-          600: "#c86400",
+          400: v("brand-400"), // dark #34d17e
+          500: "#1ea65c",
+          600: "#188a4c",
         },
         // The BUY green (owner, 2026-10-16: "TCGplayer and eBay and things that
         // we highlight … shouldn't change … the premium button"): the

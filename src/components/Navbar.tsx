@@ -58,7 +58,7 @@ export function Navbar() {
           {/* min-w-0 (not shrink-0): on a very narrow phone the worst case is a truncated label, never a sideways-scrolling page. */}
           <div className="flex min-w-0 items-center gap-0.5 sm:gap-3 lg:flex-1">
             <Link href="/" prefetch={false} className="tap-link min-w-11 shrink-0 gap-2" aria-label="RiftCompare home">
-              <BrandLogo />
+              <BrandLogo cap />
               <span className="hidden text-lg font-extrabold tracking-tight text-white xl:block">
                 Rift<span className="rb-flame-text">Compare</span>
               </span>
