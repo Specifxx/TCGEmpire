@@ -24965,3 +24965,20 @@ deliberately extends the 2026-11-12 "tasteful accents" layer, which had ruled ou
 - **Off switch:** the same as the festive layer, `CHRISTMAS_FESTIVE_LAYER` in `lib/season.ts` (`data-xmas-layer`), and
   the season window ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
 - Sports Card Compare keeps its own hat and lights (it never took the tone-down).
+
+## 2026-11-20 — Card scanner for TCG Singles DB: Rift reads, the sister matches
+
+**Decision (owner's brief, scanner thread).** TCG Singles DB gets the card scanner for Pokémon, Yu-Gi-Oh! and One Piece. It has
+no accounts, no database and no model key, and the owner wants no new keys or spend, so Rift makes the read and the sister
+does everything else:
+
+- `POST /api/scan/read` (`lib/scan/sister.ts`): cross-origin from the exact origin `https://tcgsinglesdb.com` only, never a
+  session or cookie. ONE Haiku 5.5 call (`readAnyCard` in `lib/scan/read.ts`, a game-aware prompt that also reads the
+  1st Edition stamp); it returns only what was read. TCG Singles DB matches the reading to its own catalogue by TCGplayer
+  product id; Rift never holds that catalogue.
+- Caps: 5 reads a visitor a UTC day (`SISTER_SCAN_FREE_PER_DAY`), keyed by a salted hash of the IP in a Counter row (no raw
+  IP stored; per visitor, not per account, because the sister has no accounts), and 500 a day per sister
+  (`SISTER_SCAN_DAILY_CAP`, about US$0.15 at the measured US$0.0003 a read), separate from Rift's own 1,000. A failed
+  model call gives the read back. `SISTER_SCAN=0` switches it off; it is off without `ANTHROPIC_API_KEY`.
+- No second "which printing" call: on TCG Singles DB look-alike printings are shown with their pictures and the visitor picks.
+- The photo is never stored and no eBay call is made. `tests/scan-sister.test.ts`.
