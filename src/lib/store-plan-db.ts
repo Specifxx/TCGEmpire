@@ -119,8 +119,8 @@ export function buildStoreReportEmail(storeName: string, reportUrl: string): { s
   const subject = `Your RiftCompare store report is ready: ${storeName}`.slice(0, 120);
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:15px;line-height:1.6;color:#b8c0cc">We've confirmed which tracked store is <strong style="color:#fff">${escapeHtml(storeName)}</strong>. Your private repricing report is live and updates with every price import.</td></tr>
-    <tr><td style="padding:14px 32px 6px"><a href="${escapeHtml(reportUrl)}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open your report →</a></td></tr>
-    <tr><td style="padding:10px 32px 4px;font-size:13px;line-height:1.6;color:#8b95a5">The link is the password: anyone who has it can open the report, so share it only with your team. Add your store's description and promo, and manage billing, at <a href="${account}" style="color:#ef7d00">${account}</a>.</td></tr>
+    <tr><td style="padding:14px 32px 6px"><a href="${escapeHtml(reportUrl)}" style="display:inline-block;background:#1ea65c;color:#1e3043;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open your report →</a></td></tr>
+    <tr><td style="padding:10px 32px 4px;font-size:13px;line-height:1.6;color:#8b95a5">The link is the password: anyone who has it can open the report, so share it only with your team. Add your store's description and promo, and manage billing, at <a href="${account}" style="color:#1ea65c">${account}</a>.</td></tr>
     <tr><td style="padding:6px 32px 8px;font-size:13px;line-height:1.6;color:#8b95a5">Paying for the plan never changes your place in any price comparison on RiftCompare.</td></tr>`;
   const footer = `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">You're getting this because you subscribed to the RiftCompare Stores plan. Reply to this email with any question.</td></tr>`;
   const text = [

@@ -8,7 +8,7 @@ import { ogMarketsFooter, type OgPriceLine } from "@/lib/og-price";
 // at without a database (scripts/render-card-og.tsx). The route is the data hop.
 export const CARD_OG_SIZE = { width: 1200, height: 630 };
 
-const accent = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
+const accent = "#34d17e"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 
 export function CardOgImage({
   name,

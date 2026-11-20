@@ -411,7 +411,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             2px, no spinner (the fade in template.tsx is the rest of the
             feedback). zIndex 200 matches the skip link's own z-[200] above —
             it must win over every overlay's backdrop, including a modal. */}
-        <NextTopLoader color="#ef7d00" height={2} showSpinner={false} shadow={false} zIndex={200} />
+        <NextTopLoader color="#1ea65c" height={2} showSpinner={false} shadow={false} zIndex={200} />
         <PremiumProvider>
         <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>

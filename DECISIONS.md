@@ -24931,3 +24931,37 @@ five of the week's biggest price drops into the payload (`drops`, `dropsMarket`)
 its failure is an empty list, never a reason not to mint). The share image (`lib/hot40-og.tsx`) draws the Hot 40's top three
 on the left and the three biggest drops on the right; a snapshot minted before this has no `drops` and keeps the old layout.
 The public page lists the drops under the table. Nothing is recomputed after minting. `tests/rising-snapshot.test.ts`.
+
+## 2026-11-20: Rift Compare is green again
+
+**Owner, 2026-11-20:** "Can we bring back the green theme for Rift Compare? … I like the green theme for Rift Compare better.
+I don't like the orange kind of logo and orange text. Maybe we should bring back the green text."
+
+- **The brand is the pre-rebrand RiftCompare green** (the values the 2026-10-16 rebrand replaced, commit `e5eedca81`):
+  `brand-500` `#1ea65c`, `600` `#188a4c`, `brand-400` (text) `#34d17e` on dark and `#157a45` in the light theme. The logo
+  gradient `--rc-flame` runs `#6af0a6` to `#1ea65c` (light: `#1ea65c` to `#188a4c`), so the R mark and "Compare" are green.
+- **Every orange that was the brand is green:** the hero's embers, vortex and search ring, the top loader, the divider,
+  share images, emails and the store badge (`lib/brand.ts`, renamed `GREEN` / `GREEN_LIGHT` / `FLAME_TOP`). The favicon,
+  `icon.png`, `apple-icon.png` and `icon-512.*` are the green R files from before the rebrand (unchanged since then).
+- **Not changed:** the Riftbound teal ink and Cinzel headings stay (the owner's ask was the orange logo and text). eBay's
+  buttons stay eBay blue, Amazon's amber, TCGplayer's blue, Premium gold; `buy` / `.btn-buy` was already this green, and
+  the one-green-mark cheapest rule is unchanged. Gains, stock and savings were green already.
+- **Not regenerated:** the 197 blog hero images and the app store icon still carry whatever they baked in.
+- `tests/theme.test.ts` and `tests/price-report.test.ts` pin the new hexes.
+
+## 2026-11-20: A Santa hat on the logo and lights under the header (every Compare site)
+
+**Owner, 2026-11-20:** "change the logo for all of our websites so that it's Christmas themed now. Put a Santa hat on top
+of the logos … and add some decorations here and there, like some Christmas lights … and yeah, Santa Claus." This
+deliberately extends the 2026-11-12 "tasteful accents" layer, which had ruled out hats and lights after the owner's
+2026-11-08 "a bit too much": the owner asked for these two by name, so they come back, kept to the header.
+
+- **What:** the header's R mark wears a Santa hat (`BrandLogo cap`, class `xmas-cap`), a string of lights hangs under
+  the header (`xmas-garland` on `NavbarShell`'s `<header>`), and the home page's gift-guide line gets a small Santa
+  (`.xmas-banner::before`). The `xmas-logo` block in `globals.css` (the same block on every Compare site).
+- **Cost:** CSS only. Three inline SVG data URIs (~2.5 KB in the stylesheet), no request, no script, no animation, no
+  image in the HTML. Every piece is `position: absolute` and `pointer-events: none`, so nothing moves and no tap is
+  caught. Favicons and share images are unchanged (a hat is unreadable at 16 px, and share images are cached a day).
+- **Off switch:** the same as the festive layer, `CHRISTMAS_FESTIVE_LAYER` in `lib/season.ts` (`data-xmas-layer`), and
+  the season window ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
+- Sports Card Compare keeps its own hat and lights (it never took the tone-down).

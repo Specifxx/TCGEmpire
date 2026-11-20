@@ -18,7 +18,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "A shared Riftbound collection on RiftCompare";
 
-const accent = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
+const accent = "#34d17e"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 
 export default async function Image({ params }: { params: { token: string } }) {
   const shared = await getSharedCollection(params.token, DEFAULT_COUNTRY).catch(() => null);

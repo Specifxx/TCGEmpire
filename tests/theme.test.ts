@@ -55,14 +55,14 @@ test("tailwind's themed tokens are all CSS variables, and both palettes define e
 });
 
 // Re-pinned for the Riftbound rebrand (2026-10-16, DECISIONS.md "The Riftbound
-// rebrand"): teal-navy ink, the official orange as the link shade, slate-600
+// rebrand"): teal-navy ink, the RiftCompare green as the link shade (green again 2026-11-20), slate-600
 // lifted for the teal surfaces. The rest are the values the config used to
 // hard-code.
 test("the dark palette is the Riftbound palette, and everything else is pixel-identical", () => {
   const rgb = (hex: string) => hex.match(/[0-9a-f]{2}/gi)!.map((h) => parseInt(h, 16)).join(" ");
   const expected: Record<string, string> = {
     "c-ink-950": "#04131c", "c-ink-900": "#071a25", "c-ink-850": "#0b2230", "c-ink-800": "#102b3b", "c-ink-700": "#1d3c4e", "c-ink-600": "#2f566a",
-    "c-brand-400": "#f29733", "c-slate-500": "#8593a6", "c-slate-600": "#80909c",
+    "c-brand-400": "#34d17e", "c-slate-500": "#8593a6", "c-slate-600": "#80909c",
     "c-slate-400": "#94a3b8", "c-slate-300": "#cbd5e1", "c-slate-200": "#e2e8f0", // Tailwind stock
     "c-accent": "#eef1f5", "c-gold": "#caa85a", "c-up": "#3fb950", "c-down": "#f0506e", "c-white": "#ffffff",
     // Tailwind stock: the chromatic text shades
@@ -110,11 +110,11 @@ test("the light palette keeps the accessibility guarantees the dark one makes (4
   }
   // Dark ink on bright fills stays dark in the light theme (text-ink-950 would
   // otherwise invert to near-white on the green button and gold badges), the
-  // fills themselves stay bright, and the button's hover stays a light orange.
+  // fills themselves stay bright, and the button's hover stays a light green.
   assert.match(CSS, /:root\[data-theme="light"\] \.btn-primary,\s*\n\s*:root\[data-theme="light"\] \.btn-buy,\s*\n\s*:root\[data-theme="light"\] \.bg-brand-500\.text-ink-950,\s*\n\s*:root\[data-theme="light"\] \.bg-gold\.text-ink-950,[\s\S]*?\{\s*color: #0a0c10;/);
   assert.match(CSS, /:root\[data-theme="light"\] \.bg-gold \{\s*background-color: #caa85a;/);
-  assert.match(CSS, /:root\[data-theme="light"\] \.bg-brand-400 \{\s*background-color: #f29733;/);
-  assert.match(CSS, /:root\[data-theme="light"\] \.btn-primary:hover \{\s*background-color: #f29733;/);
+  assert.match(CSS, /:root\[data-theme="light"\] \.bg-brand-400 \{\s*background-color: #34d17e;/);
+  assert.match(CSS, /:root\[data-theme="light"\] \.btn-primary:hover \{\s*background-color: #34d17e;/);
   // The buy green (every store's buy button, Premium's checkout) is the
   // pre-rebrand primary, light hover included (owner, 2026-10-16).
   assert.match(CSS, /:root\[data-theme="light"\] \.btn-buy:hover \{\s*background-color: #27b868;/);

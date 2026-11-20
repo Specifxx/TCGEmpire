@@ -203,14 +203,14 @@ export function Viewfinder({ busy, onCapture, footnote }: Props) {
               className="pointer-events-none absolute rounded-[12px] transition-all duration-100 ease-out"
               style={{
                 left: outline.x, top: outline.y, width: outline.w, height: outline.h,
-                boxShadow: `0 0 0 9999px rgba(4,19,28,${cam === "live" ? 0.45 : 0.85}), 0 0 0 2px ${ready ? "rgba(52,211,153,0.9)" : "rgba(242,151,51,0.55)"}${ready ? ", 0 0 24px rgba(52,211,153,0.6)" : ""}`,
+                boxShadow: `0 0 0 9999px rgba(4,19,28,${cam === "live" ? 0.45 : 0.85}), 0 0 0 2px ${ready ? "rgba(52,211,153,0.9)" : "rgba(52,209,126,0.55)"}${ready ? ", 0 0 24px rgba(52,211,153,0.6)" : ""}`,
               }}
             />
             {/* corner brackets */}
             <svg aria-hidden="true" className="pointer-events-none absolute transition-all duration-100 ease-out" style={{ left: outline.x - 6, top: outline.y - 6, width: outline.w + 12, height: outline.h + 12 }} viewBox={`0 0 ${outline.w + 12} ${outline.h + 12}`}>
               {(() => {
                 const W = outline.w + 12, H = outline.h + 12, L = Math.min(W, H) * 0.16, r = 12;
-                const stroke = ready ? "#34d399" : "#f29733";
+                const stroke = ready ? "#34d399" : "#34d17e";
                 const d = [
                   `M3 ${L} V${r} Q3 3 ${r} 3 H${L}`,
                   `M${W - L} 3 H${W - r} Q${W - 3} 3 ${W - 3} ${r} V${L}`,

@@ -13,7 +13,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const GOLD = "#f5c451";
-const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
+const BRAND = "#34d17e"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 
 function font(): ArrayBuffer {
   const buf = readFileSync(join(process.cwd(), "assets", "fonts", "Inter-ExtraBold.ttf"));

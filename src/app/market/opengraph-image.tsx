@@ -34,7 +34,7 @@ export default async function Image() {
   // The "·" and "—" used in the other OG routes are fine: both are in the
   // standard Latin set the embedded font covers.
   const deltaText = d7 == null ? "" : `${up ? "+" : d7 < 0 ? "-" : ""}${Math.abs(d7)}% (7d)`;
-  const accent = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
+  const accent = "#34d17e"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 
   return new ImageResponse(
     (

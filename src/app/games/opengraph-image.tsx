@@ -8,7 +8,7 @@ export const alt = "Riftbound Games on RiftCompare — four free mini-games";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
+const BRAND = "#34d17e"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 const TILES = [
   { name: "Riftle", sub: "Daily card puzzle", c: "#34d17e" },
   { name: "Higher or Lower", sub: "Price streak game", c: "#f5a524" },
