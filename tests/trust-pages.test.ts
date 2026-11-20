@@ -77,6 +77,9 @@ test("no request-time AI call exists, and the policy says so", () => {
   // /api/scan/read (2026-11-20) is the same read made for TCG Singles DB's scanner (DECISIONS.md 2026-11-20).
   assert.match(policy, /The card scanner reads, it does not write/);
   assert.match(text("src/app/privacy/page.tsx"), /Anthropic<\/strong> — only when you use the card scanner/);
+  // Since 2026-11-20 the same read also serves TCG Singles DB's scanner (api/scan/read): the pages say so.
+  assert.match(text("src/app/privacy/page.tsx"), /serves the scanner on our sister site TCG Singles DB/);
+  assert.match(policy, /the photo is not kept/);
   const users: string[] = [];
   const walk = (d: string) => {
     for (const f of readdirSync(join(process.cwd(), d), { withFileTypes: true })) {
