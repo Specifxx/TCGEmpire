@@ -36,7 +36,6 @@ async function gallery(): Promise<Record<string, unknown>[]> {
     const o = n as Record<string, any>;
     if (typeof o.id === "string" && typeof o.name === "string" && typeof o.cardImage?.url === "string" && !seen.has(o.id)) {
       seen.add(o.id);
-      if (seen.size <= 2) console.log("RAW " + JSON.stringify(o).slice(0, 2500));
       out.push({
         id: o.id,
         name: o.name,
@@ -70,7 +69,8 @@ async function discover() {
   const products = await fetchTcgplayerProducts();
   const unmatched: TcgProduct[] = [];
   await buildTcgplayerRows(undefined, products, { cards, unmatched, matchedIds: new Set() });
-  const singles = unmatched.filter((p) => /\d/.test(p.customAttributes?.number ?? "") && !/^T\d/i.test(p.customAttributes?.number ?? ""));
+  // A token's number is "T02" or "T07 // T05"; the T1 collection's is "T1S 001/005".
+  const singles = unmatched.filter((p) => /\d/.test(p.customAttributes?.number ?? "") && !/^T\d+(\s|$)/i.test(p.customAttributes?.number ?? ""));
   console.log(`tcgplayer: ${products.length} products, ${unmatched.length} unmatched, ${singles.length} numbered singles`);
   for (const p of singles) {
     console.log(
@@ -86,6 +86,11 @@ async function discover() {
           url: p.productUrlName,
         })
     );
+  }
+  // Every product of the collector groups, sealed included, matched or not.
+  for (const p of products) {
+    if (!/T1|K\/DA|Worlds|Secret Garden|Gift of the Rift|Arcane|Judge/i.test(p.setName ?? "")) continue;
+    console.log("GRP " + JSON.stringify({ id: p.productId, name: p.productName, num: p.customAttributes?.number ?? null, rarity: p.customAttributes?.rarityDbName ?? null, set: p.setName, market: p.marketPrice, low: p.lowestPrice, sealed: p.sealed }));
   }
   // Our cards' TCGplayer pins that already exist, so the T1S collection's printings
   // (made by hand, never linked) can be pinned in PROMO_PRODUCT_OVERRIDES.
