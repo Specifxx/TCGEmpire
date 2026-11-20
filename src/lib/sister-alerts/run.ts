@@ -11,7 +11,7 @@ import { recentlyEmailedAddresses, type AlertBudgetDb } from "../alert-budget";
 import { ALERT_BUDGET_WINDOW_MS, alertDailyBudget } from "../price-alerts";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
 import { evaluateAlert, isRestockTarget, UNCONFIRMED_TTL_MS } from "./evaluate";
-import { buildAlertEmail, fromFor, listUnsubscribeHeaders, type DealPick, type FiredAlert } from "./email";
+import { buildAlertEmail, buildConfirmEmail, buildWeeklyConfirmEmail, fromFor, listUnsubscribeHeaders, type DealPick, type FiredAlert } from "./email";
 import { SISTER_ALERT_SITES, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
 import { claimMailSlot } from "./mail-cap";
 
@@ -34,6 +34,8 @@ export interface RunSummary {
   failed: number;
   expired: number;
   unconfirmedRemoved: number;
+  /** Confirmation emails sent now because the sign-up's own send never left (the day's cap was spent, or the send failed). */
+  confirmRetried: number;
   lastError?: string | null;
   dryRun: boolean;
 }
@@ -58,11 +60,18 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
   const fetchFeed = deps.fetchFeed ?? ((s: SisterAlertSite) => realFetchFeed(s));
   const send = deps.send ?? ((to, subject, html, extras, siteKey) => sendSisterMail(siteKey, to, subject, html, extras));
   const dryRun = !!deps.dryRun;
-  const summary: RunSummary = { alerts: 0, sites: {}, fired: 0, emailed: 0, deferred: 0, failed: 0, expired: 0, unconfirmedRemoved: 0, dryRun };
+  const summary: RunSummary = { alerts: 0, sites: {}, fired: 0, emailed: 0, deferred: 0, failed: 0, expired: 0, unconfirmedRemoved: 0, confirmRetried: 0, dryRun };
 
-  // 1. Unconfirmed addresses older than a week go, with their alerts.
+  // 1. Unconfirmed addresses older than a week go, with their alerts. One whose confirmation never left gets a second week:
+  //    step 1b sends it, and the person needs time to click it.
   const stale = await db.sisterAlertAddress.findMany({
-    where: { confirmedAt: null, createdAt: { lt: new Date(now.getTime() - UNCONFIRMED_TTL_MS) } },
+    where: {
+      confirmedAt: null,
+      OR: [
+        { confirmSentAt: { not: null }, createdAt: { lt: new Date(now.getTime() - UNCONFIRMED_TTL_MS) } },
+        { createdAt: { lt: new Date(now.getTime() - 2 * UNCONFIRMED_TTL_MS) } },
+      ],
+    },
     select: { email: true },
     take: 2000,
   });
@@ -73,6 +82,11 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
     await db.sisterAlertAddress.deleteMany({ where: { email: { in: emails }, confirmedAt: null } });
   }
   summary.unconfirmedRemoved = stale.length;
+
+  // 1b. Confirmations that never left (owned audience, 2026-11-20): the sign-up sends one confirmation only when the day's
+  //     mail cap has room and the send works, and nothing tried again, so those addresses were deleted a week later without
+  //     ever getting an email. Send them now, oldest first, under the same cap, before any alert spends it.
+  summary.confirmRetried = await retryUnsentConfirmations(db, now, send, dryRun);
 
   // 2. Confirmed addresses and their alerts (bounded reads, only the columns used).
   const addresses = await db.sisterAlertAddress.findMany({ where: { confirmedAt: { not: null } }, select: { email: true, token: true }, take: 20000 });
@@ -187,6 +201,40 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
     if (expired.length) await db.sisterAlert.deleteMany({ where: { id: { in: expired } } });
   }
   return summary;
+}
+
+/** At most this many retried confirmations a run, so a backlog never takes the whole day's cap from alerts. */
+export const CONFIRM_RETRY_PER_RUN = 10;
+
+async function retryUnsentConfirmations(db: Db, now: Date, send: NonNullable<RunDeps["send"]>, dryRun: boolean): Promise<number> {
+  const pending = await db.sisterAlertAddress.findMany({
+    where: { confirmedAt: null, confirmSentAt: null, createdAt: { gte: new Date(now.getTime() - 2 * UNCONFIRMED_TTL_MS) } },
+    select: { email: true, token: true },
+    orderBy: { createdAt: "asc" },
+    take: CONFIRM_RETRY_PER_RUN,
+  });
+  let sent = 0;
+  for (const a of pending) {
+    const alert = await db.sisterAlert.findFirst({ where: { email: a.email }, orderBy: { createdAt: "asc" }, select: { site: true, region: true, targetCents: true } });
+    const digest = await db.sisterDigest.findFirst({ where: { email: a.email }, orderBy: { createdAt: "asc" }, select: { site: true, region: true } });
+    const siteKey = alert?.site ?? digest?.site;
+    const site = siteKey ? sisterSite(siteKey) : undefined;
+    if (!siteKey || !site) continue; // nothing to confirm: step 1 removes it in time
+    if (dryRun) {
+      sent += 1;
+      continue;
+    }
+    if (!(await claimMailSlot(db, now, undefined, siteKey))) continue;
+    const mail = alert
+      ? buildConfirmEmail(siteKey, a.token, alert.targetCents, alert.region as SisterRegion, !!digest && digest.site === alert.site)
+      : buildWeeklyConfirmEmail(siteKey, a.token, digest!.region as SisterRegion);
+    const ok = await send(a.email, mail.subject, mail.html, { text: mail.text, headers: {}, from: fromFor(site) }, siteKey);
+    if (ok) {
+      await db.sisterAlertAddress.update({ where: { email: a.email }, data: { confirmSentAt: now } });
+      sent += 1;
+    }
+  }
+  return sent;
 }
 
 /** True when a site that HAS alerts could not be checked: the run should fail so the monitor sees it. */

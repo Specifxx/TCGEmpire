@@ -116,17 +116,35 @@ test("the confirmation email carries no text from the form, and alerts carry uns
 });
 
 // A small in-memory stand-in for the four Prisma tables the run touches.
-function fakeDb(alerts: Record<string, unknown>[], addresses: Record<string, unknown>[]) {
+function fakeDb(alerts: Record<string, unknown>[], addresses: Record<string, unknown>[], digests: Record<string, unknown>[] = []) {
   const counters = new Map<string, number>();
   const updates: { id: string; data: Record<string, unknown> }[] = [];
   const deleted: string[] = [];
+  const stamped: string[] = [];
+  const unconfirmed = (a: Record<string, unknown>) => a.confirmedAt == null;
   const db = {
     sisterAlertAddress: {
-      findMany: async ({ where }: { where: { confirmedAt: unknown } }) =>
-        addresses.filter((a) => (where.confirmedAt === null ? a.confirmedAt == null && (a.createdAt as Date) < new Date(now.getTime() - 7 * DAY) : a.confirmedAt != null)),
+      findMany: async ({ where }: { where: { confirmedAt: unknown; confirmSentAt?: unknown; OR?: unknown } }) => {
+        if (where.confirmedAt !== null) return addresses.filter((a) => a.confirmedAt != null);
+        // step 1b: never sent, within two weeks
+        if (where.confirmSentAt === null) return addresses.filter((a) => unconfirmed(a) && a.confirmSentAt == null && (a.createdAt as Date) >= new Date(now.getTime() - 14 * DAY));
+        // step 1: sent and a week old, or two weeks old
+        return addresses.filter(
+          (a) => unconfirmed(a) && ((a.confirmSentAt != null && (a.createdAt as Date) < new Date(now.getTime() - 7 * DAY)) || (a.createdAt as Date) < new Date(now.getTime() - 14 * DAY)),
+        );
+      },
+      update: async ({ where, data }: { where: { email: string }; data: Record<string, unknown> }) => {
+        if (data.confirmSentAt) stamped.push(where.email);
+        return {};
+      },
+      deleteMany: async () => ({ count: 0 }),
+    },
+    sisterDigest: {
+      findFirst: async ({ where }: { where: { email: string } }) => digests.find((d) => d.email === where.email) ?? null,
       deleteMany: async () => ({ count: 0 }),
     },
     sisterAlert: {
+      findFirst: async ({ where }: { where: { email: string } }) => alerts.find((a) => a.email === where.email) ?? null,
       findMany: async () => alerts,
       update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         updates.push({ id: where.id, data });
@@ -149,7 +167,7 @@ function fakeDb(alerts: Record<string, unknown>[], addresses: Record<string, unk
       },
     },
   };
-  return { db, updates, deleted };
+  return { db, updates, deleted, stamped };
 }
 
 test("the run sends one email per address and site, stamps only what was sent, and fails loudly on a broken feed", async () => {
@@ -191,6 +209,33 @@ test("the run sends one email per address and site, stamps only what was sent, a
   const s2 = await runSisterAlerts({ db: broken.db as never, now, fetchFeed: async () => { throw new Error("HTTP 500"); }, send: async () => true });
   assert.ok(runHasSiteFailure(s2));
   assert.equal(broken.updates.length, 0, "a failed feed leaves the alert untouched");
+});
+
+test("a confirmation that never left is sent by the daily run, once, and its address is not deleted before it can be clicked", async () => {
+  const day = (n: number) => new Date(now.getTime() - n * DAY);
+  const alerts = [
+    { id: "n1", email: "never@example.com", site: "mtg", productId: "a1", region: "US", targetCents: 9500, createdAt: day(9) },
+    { id: "s1", email: "sent@example.com", site: "mtg", productId: "a1", region: "US", targetCents: 9500, createdAt: day(2) },
+  ];
+  const addresses = [
+    { email: "never@example.com", token: "t1", confirmedAt: null, confirmSentAt: null, createdAt: day(9) },
+    { email: "weekly@example.com", token: "t2", confirmedAt: null, confirmSentAt: null, createdAt: day(1) },
+    { email: "sent@example.com", token: "t3", confirmedAt: null, confirmSentAt: day(2), createdAt: day(2) },
+  ];
+  const { db, stamped } = fakeDb(alerts, addresses, [{ email: "weekly@example.com", site: "dex", region: "UK" }]);
+  const sent: { to: string; subject: string }[] = [];
+  const s = await runSisterAlerts({ db: db as never, now, fetchFeed: async () => { throw new Error("unused"); }, send: async (to, subject) => (sent.push({ to, subject }), true) });
+  assert.equal(s.confirmRetried, 2);
+  assert.equal(s.unconfirmedRemoved, 0, "nine days old but never emailed: kept for its second week");
+  assert.deepEqual(sent.map((m) => m.to).sort(), ["never@example.com", "weekly@example.com"]);
+  assert.match(sent.find((m) => m.to === "never@example.com")!.subject, /Confirm your MTG Compare price alert/);
+  assert.match(sent.find((m) => m.to === "weekly@example.com")!.subject, /weekly price drops/);
+  assert.deepEqual(stamped.sort(), ["never@example.com", "weekly@example.com"], "only a sent confirmation is stamped");
+
+  const failing = fakeDb(alerts, addresses);
+  const s2 = await runSisterAlerts({ db: failing.db as never, now, fetchFeed: async () => { throw new Error("unused"); }, send: async () => false });
+  assert.equal(s2.confirmRetried, 0);
+  assert.equal(failing.stamped.length, 0, "a failed send stays unstamped and is tried again tomorrow");
 });
 
 test("the routes keep their safety rails", () => {
