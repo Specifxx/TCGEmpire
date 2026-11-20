@@ -1,0 +1,110 @@
+{
+ "at": "2026-11-20T03:56:39.665Z",
+ "model": "claude-haiku-5-5",
+ "passFound": 0.95,
+ "passWrong": 0.01,
+ "games": {
+  "pokemon": {
+   "pass": false,
+   "images": 750,
+   "cards": 150,
+   "skippedNoImage": 1,
+   "errors": 0,
+   "found": 0.876,
+   "wrongMatch": 0.0013,
+   "top": 0.704,
+   "matchShare": 0.5267,
+   "pickMedian": 9,
+   "medianMs": 1325,
+   "costUsd": 0.1924,
+   "coverage": {
+    "cards": 28875,
+    "priced": 17069,
+    "withNumber": 28272,
+    "usd1": {
+     "checked": 700,
+     "real": 689,
+     "placeholder": 0,
+     "missing": 11,
+     "share": 0.9842857142857143
+    },
+    "any": {
+     "checked": 300,
+     "real": 297,
+     "placeholder": 0,
+     "missing": 3,
+     "share": 0.99
+    },
+    "placeholders": 0
+   }
+  },
+  "yugioh": {
+   "pass": false,
+   "images": 750,
+   "cards": 150,
+   "skippedNoImage": 1,
+   "errors": 0,
+   "found": 0.9173,
+   "wrongMatch": 0,
+   "top": 0.4693,
+   "matchShare": 0.1893,
+   "pickMedian": 7,
+   "medianMs": 1364,
+   "costUsd": 0.1948,
+   "coverage": {
+    "cards": 46701,
+    "priced": 13967,
+    "withNumber": 46685,
+    "usd1": {
+     "checked": 700,
+     "real": 690,
+     "placeholder": 0,
+     "missing": 10,
+     "share": 0.9857142857142858
+    },
+    "any": {
+     "checked": 300,
+     "real": 299,
+     "placeholder": 0,
+     "missing": 1,
+     "share": 0.9966666666666667
+    },
+    "placeholders": 0
+   }
+  },
+  "one-piece": {
+   "pass": true,
+   "images": 755,
+   "cards": 151,
+   "skippedNoImage": 0,
+   "errors": 0,
+   "found": 0.9709,
+   "wrongMatch": 0,
+   "top": 0.5801,
+   "matchShare": 0.4278,
+   "pickMedian": 4,
+   "medianMs": 1313,
+   "costUsd": 0.1947,
+   "coverage": {
+    "cards": 7519,
+    "priced": 3290,
+    "withNumber": 7278,
+    "usd1": {
+     "checked": 700,
+     "real": 686,
+     "placeholder": 1,
+     "missing": 13,
+     "share": 0.98
+    },
+    "any": {
+     "checked": 300,
+     "real": 288,
+     "placeholder": 2,
+     "missing": 10,
+     "share": 0.96
+    },
+    "placeholders": 1
+   }
+  }
+ }
+}

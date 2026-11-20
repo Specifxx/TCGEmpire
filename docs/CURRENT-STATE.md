@@ -1426,6 +1426,8 @@ longer lands on its entry.
   `SCAN_PUBLIC=0` closes it); a live viewfinder that finds, outlines and captures the card on its own (`camera=(self)` on `/scan` only); one Haiku 5.5
   read of name + set + number, our pure matcher picks the printing, the quick view shows prices; never eBay, photo never
   stored, `SCAN_DAILY_CAP` 1,000 a day. [2026-11-19](../DECISIONS.md#L24530), [2026-11-19 v2](../DECISIONS.md#L24786)
+- **Sister scanner read (2026-11-20):** `POST /api/scan/read` serves TCG Singles DB only (exact origin), one Haiku read, 5 a
+  visitor a day by salted IP hash, 500 a day per sister; the sister matches. [2026-11-20](../DECISIONS.md#L25037)
 - **Meta decks:** never from a hand copy; rebuild a meta/tier list only from
   a licensed source. `/decks` is live again (2026-09-26) as the PLAYER-published
   library only — signed-in publishes and owner imports, nothing seeded, no

@@ -1,0 +1,54 @@
+# TCG Singles DB card scanner: image coverage and accuracy (scripts/scan-eval/singles.ts; DECISIONS.md 2026-11-20).
+# About 2,250 small Haiku 5.5 reads (150 cards x 5 photo conditions x 3 games): roughly US$0.70 a run. Commits results back.
+name: Singles scan eval
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: ["scripts/scan-eval/singles.ts", "scripts/scan-eval/singles-trigger.txt", ".github/workflows/singles-scan-eval.yml"]
+permissions:
+  contents: write
+concurrency:
+  group: singles-scan-eval-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Specifxx/tcgsinglesdb
+          ref: claude/project-thread-vu08t7
+          path: tcgsinglesdb
+          sparse-checkout: |
+            src/lib/scan
+            data/cards/pokemon/search.json
+            data/cards/pokemon/sets.json
+            data/cards/yugioh/search.json
+            data/cards/yugioh/sets.json
+            data/cards/one-piece/search.json
+            data/cards/one-piece/sets.json
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund --ignore-scripts
+      - run: npm rebuild sharp
+      - run: npx tsx scripts/scan-eval/singles.ts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.SCAM_AI_KEY }}
+          SINGLES_DIR: tcgsinglesdb
+          EVAL_CARDS: "150"
+      - run: cat scripts/scan-eval/results-singles/summary.md >> "$GITHUB_STEP_SUMMARY"
+        if: always()
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "scan-eval"
+          git config user.email "scan-eval@users.noreply.github.com"
+          git add scripts/scan-eval/results-singles
+          git commit -m "Singles scan eval results" || exit 0
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
