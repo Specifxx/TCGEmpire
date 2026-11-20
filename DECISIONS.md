@@ -24965,3 +24965,17 @@ deliberately extends the 2026-11-12 "tasteful accents" layer, which had ruled ou
 - **Off switch:** the same as the festive layer, `CHRISTMAS_FESTIVE_LAYER` in `lib/season.ts` (`data-xmas-layer`), and
   the season window ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
 - Sports Card Compare keeps its own hat and lights (it never took the tone-down).
+
+## 2026-11-20: Most popular leads every home; the chase cards leave
+
+**Owner, 2026-11-20:** "Maybe the Radiance chase cards, like we can get rid of that section now ... maybe it could be like
+the most popular ... just have the most popular as the first, as what shows on the homepage, and this should be across
+all sites as well." The views were up but buy clicks were not; a busy front page was the owner's guess.
+
+- **What:** `PopularCardsCarousel` has no chase tab, and `/` and the five region homes no longer query
+  `getSetChaseTiles`. The strip's first tab is "Most popular" (the most-searched 24, ordered by `rankItems` over
+  `HOME_DEMAND`, the first 12 shown), then Biggest movers and Recently updated. The ItemList is unchanged.
+- **Kept:** the chase cards on `/sets/radiance` and its gallery (`ChaseWatchCta`), `featuredSet()` for eBay Picks, the
+  hero, Top Deals and the ad block's place below the content.
+- The same change went to every active Compare site's home (most popular first). Read buy clicks per home visit from
+  ~22 Nov against 12 to 18 Nov.
