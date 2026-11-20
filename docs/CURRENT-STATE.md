@@ -699,9 +699,8 @@ longer lands on its entry.
   carries the pulls, no database row. The owner's outreach list is
   `docs/GROWTH-PLAYBOOK-2026-10.md`. [2026-10-16](../DECISIONS.md#L18158)
 - **Radiance leads (2026-10-17):** `featuredSet()` (upcoming set from its
-  `newFrom`, else newest released) drives eBay Picks and the homepage strip's
-  first tab, "<set> chase cards" (`getSetChaseTiles`, art only); "Most popular"
-  is second. `singlesLive()` (released, or past `newFrom`) gates every card-price
+  `newFrom`, else newest released) drives eBay Picks (the homepage strip's chase tab went
+  2026-11-20: "Most popular" leads). `singlesLive()` (released, or past `newFrom`) gates every card-price
   surface on `/sets/<slug>` and its gallery; sealed copy keeps
   `isPreorderSetCode()`. Signatures (`*`) are in no official feed: add them to
   `prisma/manual-cards.json` with their own `externalId`.
@@ -985,7 +984,7 @@ longer lands on its entry.
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
   [2026-09-28](../DECISIONS.md#L14549)
 - **Homepage order (all six homes, owner 2026-11-13):** the hero (words, the search, the market switch, six ways in, one
-  line of numbers; no products, chips, creators badge or Premium link), Today's Top Deals, the tabbed chase-cards shelf (it
+  line of numbers; no products, chips, creators badge or Premium link), Today's Top Deals, the tabbed popular-cards shelf, Most popular first since 2026-11-20 (it
   carries the ItemList on `/`), the one ad block, the set grid with the next set's one-line countdown, the guides and news
   card (`EditorialHub`), then the reference text and FAQ folded in `<details>`. Off the homes since 2026-11-13: the
   Pokémon line, the return-visit cards (Riftle, pack simulator, watch a card), the free-account strip, the partners
@@ -1136,6 +1135,9 @@ longer lands on its entry.
   60% of the body (`tests/reddit-landing-conversion.test.ts`). Links posted
   to Reddit should carry `?utm_source=reddit`: the apps often send no
   referrer. [2026-09-26](../DECISIONS.md#L13640)
+- **Snapshot pages and /movers sell:** a "Shop the top risers" strip (top three, today's cheapest in the visitor's
+  market, Buy into the quick view) in the first screen, and a Buy link or pill on every row; nothing new read, caches
+  unchanged. [2026-11-20](../DECISIONS.md#L25011)
 - **RiftboundStocks per-page links:** card, champion and set pages link to
   the same page on RiftboundStocks.com through the map it publishes
   (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes
@@ -1425,7 +1427,7 @@ longer lands on its entry.
   read of name + set + number, our pure matcher picks the printing, the quick view shows prices; never eBay, photo never
   stored, `SCAN_DAILY_CAP` 1,000 a day. [2026-11-19](../DECISIONS.md#L24530), [2026-11-19 v2](../DECISIONS.md#L24786)
 - **Sister scanner read (2026-11-20):** `POST /api/scan/read` serves TCG Singles DB only (exact origin), one Haiku read, 5 a
-  visitor a day by salted IP hash, 500 a day per sister; the sister matches. [2026-11-20](../DECISIONS.md#L24969)
+  visitor a day by salted IP hash, 500 a day per sister; the sister matches. [2026-11-20](../DECISIONS.md#L25037)
 - **Meta decks:** never from a hand copy; rebuild a meta/tier list only from
   a licensed source. `/decks` is live again (2026-09-26) as the PLAYER-published
   library only — signed-in publishes and owner imports, nothing seeded, no

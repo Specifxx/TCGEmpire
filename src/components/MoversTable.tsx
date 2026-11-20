@@ -113,7 +113,7 @@ export function MoversTable({ movers, currency }: { movers: PriceMovers; currenc
         {rows.length ? (
           <ul className="divide-y divide-ink-800">
             {rows.map((m) => (
-              <MoverRow key={m.card.id} m={m} up={m.pct > 0} currency={currency} spark={false} />
+              <MoverRow key={m.card.id} m={m} up={m.pct > 0} currency={currency} spark={false} buy />
             ))}
           </ul>
         ) : (

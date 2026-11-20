@@ -202,7 +202,22 @@ type Rule = {
 // threshold: it decides which of two guides to show, not anything a reader relies on.
 const EXPENSIVE_CENTS = 4000;
 
+// The collector-collection hubs (2026-11-20): a card from a drawing-only box links
+// the guide that shows every printing of its collection in one gallery.
+const COLLECTION_GUIDES: Record<string, GuideRef> = {
+  T1S: { slug: "riftbound-t1-cards", reason: "Every T1 printing in one gallery: Signature Edition, serial numbered and Player Bundle, with prices" },
+  T1A: { slug: "riftbound-t1-cards", reason: "Every T1 printing in one gallery: Signature Edition, serial numbered and Player Bundle, with prices" },
+  KDC: { slug: "riftbound-kda-collection", reason: "Every K/DA card in one gallery: the Couture Collection and Radiance's SP cards, with prices" },
+};
+
 const RULES: Rule[] = [
+  {
+    when: (c) => c.setCode in COLLECTION_GUIDES,
+    prefer: (c) => [COLLECTION_GUIDES[c.setCode].slug],
+    match: [],
+    preferOnly: true,
+    reason: (c) => COLLECTION_GUIDES[c.setCode].reason,
+  },
   // FIRST, and unconditional for the sets it covers. A drawing-only collector
   // printing has exactly one thing a reader wants to read next, and the generic
   // rules could not find it: the needles are the card's set NAME and CODE, and

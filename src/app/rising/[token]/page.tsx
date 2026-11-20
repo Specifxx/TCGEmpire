@@ -16,6 +16,7 @@ import {
   type RisingSnapshotPick,
 } from "@/lib/rising-snapshot";
 import { MoveBadge } from "@/components/MoveBadge";
+import { RisersShop } from "@/components/RisersShop";
 import { weekAgoLabel } from "@/lib/rising-movement";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure, PaidLinkTag } from "@/components/AffiliateDisclosure";
@@ -170,6 +171,11 @@ function Row({ p, rank, legacy, showMove, newTitle }: { p: RisingSnapshotPick; r
       <td className="num px-3 py-2 text-right text-white">
         {p.priceCents != null ? formatMoney(p.priceCents, p.currency) : "—"}
         <EbayCheapest p={p} rank={rank} />
+        {/* Buy (boardroom 2026-11-20): a plain card link, which the site-wide handler turns into the quick view with
+            today's prices, eBay and TCGplayer first. The price beside it stays the frozen one. */}
+        <Link href={cardHref(p)} data-snapshot-buy="" className="btn-buy mt-1 inline-flex min-h-8 px-3 py-1 text-xs">
+          Buy
+        </Link>
       </td>
       <td className="num px-3 py-2 text-right"><Pct v={weekMove(p)} /></td>
       {legacy && <td className="num px-3 py-2 text-right"><Pct v={p.trend30} /></td>}
@@ -216,6 +222,20 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
         <span aria-hidden>📌</span>
         Frozen on {snapshotDateLabel(taken)} — prices have moved since
       </p>
+
+      {data.picks.length > 0 && (
+        <div className="mt-5">
+          <RisersShop
+            seeds={data.picks.slice(0, 3).map((p) => ({
+              slug: p.slug ?? p.id,
+              name: p.displayName,
+              image: p.imageThumbUrl,
+              setCode: p.setCode,
+              collectorNumber: p.collectorNumber,
+            }))}
+          />
+        </div>
+      )}
 
       {data.picks.length === 0 ? (
         <div className="card-surface mt-6 grid place-items-center p-12 text-center text-sm text-slate-400">

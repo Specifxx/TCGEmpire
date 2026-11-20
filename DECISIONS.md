@@ -24966,6 +24966,74 @@ deliberately extends the 2026-11-12 "tasteful accents" layer, which had ruled ou
   the season window ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
 - Sports Card Compare keeps its own hat and lights (it never took the tone-down).
 
+## 2026-11-20: Most popular leads the home strip, and "See full page" is a secondary button again
+
+**Owner, 2026-11-20 (boardroom on buy clicks):** "Maybe like the Radiance chase cards, like we can get rid of that section
+now … just have the most popular as the first, as like what shows on the homepage."
+
+- **The chase-card tab is gone from every home** (`/` and the five region homes). The popular-cards strip opens on "Most
+  popular" (demand-ranked, `lib/home-rank.ts`), then Biggest movers and Recently updated. The homes no longer call
+  `getSetChaseTiles` (one cached read fewer per render). Chase printings stay on `/sets/<slug>` and in eBay Picks;
+  `featuredSet()` is unchanged.
+- **"See full page: price history and details" is `btn-ghost`, not `btn-primary`,** in the card, sealed and Pokémon quick
+  views. Same words, same place, same full width and 44 px height; only the colour. The measurement (Vercel buy_click,
+  surface `modal`): quick-view buy clickers were ~41 visitors a day on 15–17 Nov and ~10 a day on 18–19 Nov, while quick
+  view opens ROSE (~100 to ~210 visitors a day, "quick view from every card link", #484). The button turned primary on
+  18 Nov (#505), and on a phone it sits under the card image, above every price row, so it was the first loud button in
+  the dialog. Site-wide Rift buy clickers went from ~70 a day (8–17 Nov) to 47 and 36. The buy rows are the only primary
+  actions again.
+- **Recheck 23 Nov:** modal buy clickers back at 30+ a day means this was it. If not, the cause is elsewhere (the cart
+  A/B, #506, is the next suspect) and the button colour can go back on the owner's word.
+- `tests/radiance-featured.test.ts` and `tests/amazon-button.test.ts` pin both.
+## 2026-11-20: The missing collector printings, and one gallery page per collection
+
+**Owner, 2026-11-20:** "a lot of these alternate arts … we just haven't been updating the website with these cards … these
+cards are out there and they need to be in our database", with pages "similar to … the Crystal Rose ones" for the Worlds,
+K/DA and T1 cards.
+
+- **Found by data, not by memory.** `scripts/collab-cards.ts` (`collab-cards.yml`, dispatched on a session branch: the cloud
+  sessions cannot reach TCGplayer) runs the importer's own matcher over `data/public/cards.json` and lists every numbered
+  TCGplayer single no card of ours lands on, plus every product of the collector groups.
+- **25 cards added** to `prisma/manual-cards.json`, each `tcg-<productId>` (so the importer prices it directly), `isPromo`,
+  game data copied from the base printing: K/DA Couture (set `KDC`, 001–005/005), the T1 Player Bundle (`T1A`, 001–005/005),
+  the serial-numbered T1S Ambessa and Miss Fortune (`001*`, `004*`), Secret Garden's Lillia and Ivern, the Worlds Bundle 2025
+  oversized Battlefields (custom `-oversized-promo` slugs, since they share the standard printings' numbers) and eight
+  Champion / Top 8 prizes. The Couture cards are numbered WITHOUT TCGplayer's star: a star makes a card a Signature
+  (`isSignature`), and Riot does not say they are signed.
+- **Images are cropped from TCGplayer's product photo** (sharp trim, 744 px, `public/collab-cards/`). Five products have no
+  photo on TCGplayer (a 403); those reuse their sibling printing's art, as earlier promos did, until one exists.
+- **131 existing promos pinned** in `PROMO_PRODUCT_OVERRIDES`: 102 by the product image their `imageUrl` already carried,
+  the rest by hand. Both Jinx, Rebel 202/298 products and Teemo, Swift Scout 662886 stay unpinned (two products, one card).
+- **Three guides** (`lib/content/collection-articles.ts`): `/guides/riftbound-worlds-cards`, `/guides/riftbound-kda-collection`,
+  `/guides/riftbound-t1-cards`. Each is live galleries of every printing plus dated TCGplayer prices; over 1,500 words.
+  `related-guides.ts` sends T1S, T1A and KDC card pages to them first. The Worlds 2026 Edition's cards are not on TCGplayer
+  yet; they get added when listed.
+## 2026-11-20: Snapshot pages and /movers sell, not just rank (buy-clicks boardroom, move 2)
+
+**Why:** Reddit link posts land on `/rising/<token>` snapshots and `/movers`, and those visitors almost never clicked buy:
+2 buy clickers in 997 snapshot visitors (13–19 Nov), Rift's Reddit visitors 0.7% against 12% from Google. The boardroom
+decided (no owner question needed) to make every snapshot and Hot 100 page buyable. Target 8%+; read 27 Nov and 4 Dec.
+
+- **"Shop the top risers"** (`RisersShop.tsx`) in the first screen of both pages: the top three risers, each with its
+  cheapest price now in the visitor's market (`useCountry().price`, the figure every tile shows) and a Buy button into
+  the quick view (eBay and TCGplayer first). On `/movers` the cards come from `getPriceMovers`, already loaded. A snapshot
+  is frozen and holds no live price, so it passes slugs and the strip reads those three cards from `/api/card/<slug>` in
+  the browser: the quick view's own request, CDN-cached six hours. The page's cache and its frozen numbers are unchanged.
+- **Every snapshot row** gets a Buy link under its frozen price: a plain card link the site-wide handler turns into the
+  quick view, so the buyer sees today's prices there. **Every `/movers` row** (the panels and the table) gets a Buy pill
+  under its move, inside the row's existing quick-view link (`MoverRow buy`): under the price, never beside it, because a
+  button beside every row squeezed names to ~44px at 390px (2026-09-27). The homepage's Price Watch is unchanged.
+- No database read, no new loader, no `revalidate` change, no deploy marker: it rides the daily release.
+## 2026-11-19 — Events sent on mount were dropped: trackEvent queues them
+
+`top_seen` (the top-pair A/B's exposure event, lib/top-pair.ts) read 0 in Vercel on its first day while buy_click carried `top_arm`.
+`@vercel/analytics` `track()` calls `window.va?.(…)`, and `window.va` exists only once `<Analytics />` injects its script, which
+`ConsentGatedAnalytics` renders after the consent check, after the page's own mount effects. So any event sent on mount was silently
+dropped (and top_seen's once-a-visit guard then never sent it again); clicks, which come later, were fine. `trackEvent` now sets up the
+library's own queue first (`vaQueue()` in lib/analytics.ts, the same `window.vaq` its `inject()` makes and its script drains); without
+consent the script never loads and nothing is sent. `tests/va-queue.test.ts`. The 3 Dec read of the top-pair test counts top_seen only
+from the release that carries this; before it, compare clicks per arm.
+
 ## 2026-11-20 — Card scanner for TCG Singles DB: Rift reads, the sister matches
 
 **Decision (owner's brief, scanner thread).** TCG Singles DB gets the card scanner for Pokémon, Yu-Gi-Oh! and One Piece. It has
