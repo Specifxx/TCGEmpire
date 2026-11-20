@@ -139,6 +139,7 @@ async function auditSite(origin: string, joined: string[]): Promise<SiteTally> {
         if (dest) addLink(t, dest, joined);
       }
     }
+    for (const [url, body] of pages) console.log(`    ${url}: ${body.length} bytes, ${hrefs(body, url).length} links`);
     console.log(`  ${t.site}: ${goLinks} /go links in ${pages.length} pages, ${goSeen} asked; misses ${JSON.stringify(goMiss[t.site] ?? {})}`);
   } catch (e) {
     t.error = e instanceof Error ? e.message : String(e);
