@@ -312,6 +312,146 @@ export function isPromoProduct(p: TcgProduct): boolean {
 // see how it feeds into byExternal below.
 const PROMO_PRODUCT_OVERRIDES: Record<string, number> = {
   "promo-ogn-263-teemo-swift-scout-altart": 670598, // riftbound-promotional-cards, alternate art
+  // 2026-11-20 (owner: "a lot of these cards ... we just haven't been updating"):
+  // every promo card of ours that no TCGplayer product landed on, pinned to its
+  // own product. 102 by the product image the card already shows (its imageUrl
+  // IS that product's tcgplayer-cdn picture, so the pairing was made when the
+  // card was created and only the link was missing); the rest by hand, each the
+  // ONE plain promo product carrying that card's own number (the Champion and
+  // Top 8 prize copies are separate printings in manual-cards.json, not pins).
+  // Listed by scripts/collab-cards.ts. Two Jinx, Rebel 202/298 products and a
+  // second Teemo, Swift Scout one stay unpinned: which is ours is not certain.
+  "unl-087-p": 702632, // Judge Promotional Cards: Blue Sentinel 087/219
+  "ogn-111-p": 668439, // Judge Promotional Cards: Heimerdinger, Inventor 111/298
+  "sfd-059-p": 692372, // Judge Promotional Cards: Svellsongur 059/221
+  "ogn-255-p": 662891, // Organized Play Promotional Cards: Ahri, Nine-Tailed Fox 255/298
+  "ogs-017-p": 680247, // Organized Play Promotional Cards: Annie, Dark Child 017/024
+  "ogs-001-p": 680296, // Organized Play Promotional Cards: Annie, Fiery 001/024
+  "ogs-010-p": 680416, // Organized Play Promotional Cards: Annie, Stubborn 010/024
+  "unl-001-p": 694605, // Organized Play Promotional Cards: Arena Kingpin 001/219
+  "unl-169-p": 692931, // Organized Play Promotional Cards: Ashe, Focused 169/219
+  "ven-002-p": 709727, // Organized Play Promotional Cards: Blade Twirler 002/166
+  "sfd-013-p": 680282, // Organized Play Promotional Cards: Blast Corps Cadet 013/221
+  "ogn-001-p": 662914, // Organized Play Promotional Cards: Blazing Scorcher 001/298
+  "ogn-067-p": 668450, // Organized Play Promotional Cards: Blitzcrank, Impassive 067/298
+  "sfd-118a-p": 682465, // Organized Play Promotional Cards: Boneshiver 118a/221
+  "ogn-128-p": 662910, // Organized Play Promotional Cards: Challenge 128/298
+  "sfd-064-p": 680343, // Organized Play Promotional Cards: Cloth Armor 064/221
+  "ven-048-p": 709733, // Organized Play Promotional Cards: Cloud Drake 048/166
+  "ogn-083-p": 662911, // Organized Play Promotional Cards: Consult the Past 083/298
+  "ogn-210-p": 662917, // Organized Play Promotional Cards: Daring Poro 210/298
+  "ogn-253-p": 662895, // Organized Play Promotional Cards: Darius, Hand of Noxus 253/298
+  "ogs-024-p": 680270, // Organized Play Promotional Cards: Decisive Strike 024/024
+  "ogn-058-p": 662921, // Organized Play Promotional Cards: Discipline 058/298
+  "sfd-095-p": 680380, // Organized Play Promotional Cards: Doran's Blade 095/221
+  "sfd-124-p": 680423, // Organized Play Promotional Cards: Doran's Ring 124/221
+  "sfd-033-p": 680326, // Organized Play Promotional Cards: Doran's Shield 033/221
+  "unl-061-p": 694608, // Organized Play Promotional Cards: Downstage Dramatics 061/219
+  "unl-093-p": 694617, // Organized Play Promotional Cards: Dragonsoul Sage 093/219
+  "ven-004-p": 709728, // Organized Play Promotional Cards: Dune Surfer 004/166
+  "sfd-153-p": 680443, // Organized Play Promotional Cards: Eye of the Herald 153/221
+  "sfd-101-p": 680367, // Organized Play Promotional Cards: Fae Dragon 101/221
+  "ven-026-p": 709730, // Organized Play Promotional Cards: Field Musicians 026/166
+  "ogs-022-p": 680263, // Organized Play Promotional Cards: Final Spark 022/024
+  "ogs-011-p": 692371, // Organized Play Promotional Cards: Flash 011/024
+  "ven-071-p": 709736, // Organized Play Promotional Cards: Fretful Feline 071/166
+  "sfd-067-p": 680334, // Organized Play Promotional Cards: Frostcoat Cub 067/221
+  "ogs-013-p": 680441, // Organized Play Promotional Cards: Garen, Commander 013/024
+  "ogs-023-p": 680266, // Organized Play Promotional Cards: Garen, Might of Demacia 023/024
+  "ogs-007-p": 680360, // Organized Play Promotional Cards: Garen, Rugged 007/024
+  "sfd-007-p": 680286, // Organized Play Promotional Cards: Gem Jammer 007/221
+  "ven-050-p": 709734, // Organized Play Promotional Cards: Grumpy Rockbear 050/166
+  "ven-101-p": 709741, // Organized Play Promotional Cards: Gust Monk 101/166
+  "unl-075-p": 694610, // Organized Play Promotional Cards: Gustwalker 075/219
+  "sfd-137-p": 680411, // Organized Play Promotional Cards: Harpoon Squad 137/221
+  "ogs-020-p": 680260, // Organized Play Promotional Cards: Highlander 020/024
+  "ven-118-p": 709742, // Organized Play Promotional Cards: Horns of the Dragon 118/166
+  "ven-125-p": 709744, // Organized Play Promotional Cards: Hungry Wolf 125/166
+  "unl-065-p": 694609, // Organized Play Promotional Cards: Icevale Archer 065/219
+  "sfd-084-p": 704486, // Organized Play Promotional Cards: Jayce, Man of Progress 084/221
+  "ogn-251-p": 662894, // Organized Play Promotional Cards: Jinx, Loose Cannon 251/298
+  "ogn-247-p": 662896, // Organized Play Promotional Cards: Kai'Sa, Daughter of the Void 247/298
+  "sfd-156-p": 680437, // Organized Play Promotional Cards: Laurent Duelist 156/221
+  "ogn-078-p": 662884, // Organized Play Promotional Cards: Lee Sin, Ascetic 078/298
+  "ogn-257-p": 662892, // Organized Play Promotional Cards: Lee Sin, Blind Monk 257/298
+  "ogn-261-p": 662889, // Organized Play Promotional Cards: Leona, Radiant Dawn 261/298
+  "unl-058-p": 705530, // Organized Play Promotional Cards: Lillia, Protector of Dreams 058/219
+  "sfd-022-p": 685264, // Organized Play Promotional Cards: Long Sword (Top 8) 022/221
+  "unl-156-p": 694620, // Organized Play Promotional Cards: Loyal Poro 156/219
+  "unl-125-p": 694611, // Organized Play Promotional Cards: Lunar Boon 125/219
+  "ogs-014-p": 680439, // Organized Play Promotional Cards: Lux, Crownguard 014/024
+  "ogs-006-p": 680339, // Organized Play Promotional Cards: Lux, Illuminated 006/024
+  "ogs-021-p": 680262, // Organized Play Promotional Cards: Lux, Lady of Luminosity 021/024
+  "ogs-009-p": 680376, // Organized Play Promotional Cards: Master Yi, Honed 009/024
+  "ogs-004-p": 680323, // Organized Play Promotional Cards: Master Yi, Meditative 004/024
+  "ogs-019-p": 680257, // Organized Play Promotional Cards: Master Yi, Wuju Bladesman 019/024
+  "manual-ven-069b166-promo": 709987, // Organized Play Promotional Cards: Mel, Newly Awakened 069b/166
+  "ogn-267-p": 662887, // Organized Play Promotional Cards: Miss Fortune, Bounty Hunter 267/298
+  "ogn-193-p": 668440, // Organized Play Promotional Cards: Miss Fortune, Buccaneer 193/298
+  "unl-127-p": 694612, // Organized Play Promotional Cards: Mister Root 127/219
+  "unl-047-p": 694616, // Organized Play Promotional Cards: Mosstomper 047/219
+  "unl-036-p": 694615, // Organized Play Promotional Cards: Mutated Mouser 036/219
+  "ogn-171-p": 662920, // Organized Play Promotional Cards: Mystic Poro 171/298
+  "sfd-037-p": 680311, // Organized Play Promotional Cards: Navori Scout 037/221
+  "ven-029-p": 709731, // Organized Play Promotional Cards: Ol' Poro 029/166
+  "ogn-135-p": 662913, // Organized Play Promotional Cards: Pakaa Cub 135/298
+  "ven-058-p": 709735, // Organized Play Promotional Cards: Patched Porobot 058/166
+  "unl-178a-p": 709101, // Organized Play Promotional Cards: Poppy, Defender of the Meek (Alternate Art) 178a/219
+  "unl-178-p": 696702, // Organized Play Promotional Cards: Poppy, Defender of the Meek 178/219
+  "ogn-013-p": 662908, // Organized Play Promotional Cards: Pouty Poro 013/298
+  "sfd-076-p": 680336, // Organized Play Promotional Cards: Production Surge 076/221
+  "ven-082-p": 709738, // Organized Play Promotional Cards: Profiteer 082/166
+  "ogn-103-p": 662923, // Organized Play Promotional Cards: Ravenbloom Student 103/298
+  "unl-120-p": 696823, // Organized Play Promotional Cards: Rengar, Trophy Hunter 120/219
+  "ven-076-p": 709737, // Organized Play Promotional Cards: Repair Specialist 076/166
+  "ogn-092-p": 662916, // Organized Play Promotional Cards: Riptide Rex 092/298
+  "ven-041-p": 708201, // Organized Play Promotional Cards: Riven, Shattered 041/166
+  "unl-016-p": 694607, // Organized Play Promotional Cards: Scorchclaw 016/219
+  "sfd-098-p": 680354, // Organized Play Promotional Cards: Sea Monkey 098/221
+  "sfd-009-p": 680301, // Organized Play Promotional Cards: Serrated Dirk 009/221
+  "ogn-269-p": 662885, // Organized Play Promotional Cards: Sett, The Boss 269/298
+  "ven-013-p": 709729, // Organized Play Promotional Cards: Shadow Assassin 013/166
+  "unl-137-p": 694613, // Organized Play Promotional Cards: Sinister Poro 137/219
+  "unl-039-p": 694614, // Organized Play Promotional Cards: Soul Sword 039/219
+  "ven-123-p": 709743, // Organized Play Promotional Cards: Soulspinner 123/166
+  "ven-097-p": 709739, // Organized Play Promotional Cards: Spiderling 097/166
+  "ogn-183-p": 662906, // Organized Play Promotional Cards: Stacked Deck 183/298
+  "ogn-052-p": 662907, // Organized Play Promotional Cards: Stalwart Poro 052/298
+  "unl-107-p": 694619, // Organized Play Promotional Cards: Stare Down 107/219
+  "ogn-177-p": 662918, // Organized Play Promotional Cards: Stealthy Pursuer 177/298
+  "sfd-048-p": 680319, // Organized Play Promotional Cards: Stellacorn Herder 048/221
+  "ogn-137-p": 662915, // Organized Play Promotional Cards: Stormclaw Ursine 137/298
+  "ogs-018-p": 680254, // Organized Play Promotional Cards: Tibbers 018/024
+  "ven-037-p": 709732, // Organized Play Promotional Cards: Tomb-Raider Barbara 037/166
+  "ven-099-p": 709740, // Organized Play Promotional Cards: Tornado Warrior 099/166
+  "sfd-130-p": 680406, // Organized Play Promotional Cards: Treasure Hunter 130/221
+  "ogn-034-p": 668441, // Organized Play Promotional Cards: Tryndamere, Barbarian 034/298
+  "unl-160-p": 694621, // Organized Play Promotional Cards: Ultrasoft Poro 160/219
+  "unl-168-p": 694622, // Organized Play Promotional Cards: Undying Loyalty 168/219
+  "sfd-167-p": 680434, // Organized Play Promotional Cards: Unsung Hero 167/221
+  "unl-009-p": 694606, // Organized Play Promotional Cards: Upstage Comedy 009/219
+  "ogn-218-p": 662912, // Organized Play Promotional Cards: Vanguard Captain 218/298
+  "ogn-229-p": 662909, // Organized Play Promotional Cards: Vengeance 229/298
+  "ogn-265-p": 662888, // Organized Play Promotional Cards: Viktor, Herald of the Arcane 265/298
+  "ogn-246-p": 662881, // Organized Play Promotional Cards: Viktor, Leader 246/298
+  "ogn-024-p": 662922, // Organized Play Promotional Cards: Void Seeker 024/298
+  "ogn-249-p": 662897, // Organized Play Promotional Cards: Volibear, Relentless Storm 249/298
+  "unl-100-p": 694618, // Organized Play Promotional Cards: Voracious Gromp 100/219
+  "ogn-055-p": 662919, // Organized Play Promotional Cards: Wielder of Water 055/298
+  "sfd-086-p": 685265, // Organized Play Promotional Cards: World Atlas 086/221
+  "ogn-259-p": 662890, // Organized Play Promotional Cards: Yasuo, Unforgiven 259/298
+  "unl-056-p": 696822, // Organized Play Promotional Cards: Yuumi, Magical Cat 056/219
+  "unl-086-p": 705529, // Organized Play Promotional Cards: Zilean, Time Mage 086/219
+  "ogn-066-p": 659765, // Promotional Cards: Ahri, Alluring (Launch Exclusive) 066/298
+  "promo-rad-110a-lulu-nexus-night": 726827, // Promotional Cards: Lulu, Whimsical 110a/167
+  "ven-041a-p": 710699, // Promotional Cards: Riven, Shattered 041a/166
+  "ogn-197-p": 659766, // Promotional Cards: Teemo, Scout 197/298
+  "manual-t1s-001-ambessa": 716012, // T1 2025 Worlds Champion Bundles: Ambessa, The Wolf (T1 Worlds Champion Signature Edition Bundle) T1S 001/005
+  "manual-t1s-003s-galio-signature": 716022, // T1 2025 Worlds Champion Bundles: Galio, Indefatigable (T1 Worlds Champion Signature Edition Bundle) (Serial Numbered) T1S 003/005
+  "manual-t1s-003-galio": 716021, // T1 2025 Worlds Champion Bundles: Galio, Indefatigable (T1 Worlds Champion Signature Edition Bundle) T1S 003/005
+  "manual-t1s-004-miss-fortune": 716026, // T1 2025 Worlds Champion Bundles: Miss Fortune, Buccaneer (T1 Worlds Champion Signature Edition Bundle) T1S 004/005
+  "manual-t1s-005-seraphine": 716035, // T1 2025 Worlds Champion Bundles: Seraphine, Not Alone (T1 Worlds Champion Signature Edition Bundle) T1S 005/005
+  "manual-t1s-002-xin-zhao": 716016, // T1 2025 Worlds Champion Bundles: Xin Zhao, Vigilant (T1 Worlds Champion Signature Edition Bundle) T1S 002/005
 };
 
 function searchBody(from: number, productTypeName?: string[]) {

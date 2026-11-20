@@ -159,6 +159,8 @@ ${W26.contents.map((c) => `- ${c}`).join("\n")}
 
 The 13–16 November window is shared with the **T1 2025 Worlds Champion Player Bundle**, the US$70 play-focused half of the T1 collection: the five T1 champions (Ambessa, Xin Zhao, Galio, Miss Fortune and Seraphine, Not Alone) in alternate art, with a deck box, a binder, sleeves and a D12 die that has a chance of being a rare gold variant. It is also sold at Fan Fest in New York, and ships from mid-December. Everything about it is in [our T1 collection explainer](/blog/riftbound-t1-worlds-champion-collection); it is mentioned here because a fan registering for the Worlds 2026 Edition will be registering in the same drawing window, and can enter both.
 
+Every card from these boxes, and the Worlds Bundle 2025 and T1 printings before them, is gathered in our collection guides: [K/DA cards](/guides/riftbound-kda-collection), [Worlds cards](/guides/riftbound-worlds-cards) and [T1 cards](/guides/riftbound-t1-cards).
+
 ## How the Riot drawing works
 
 The mechanism is the one Riot has used for every limited Riftbound product since the T1 Signature Edition, and it is worth being exact about, because it is not a pre-order and not a queue.

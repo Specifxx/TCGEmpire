@@ -1137,7 +1137,7 @@ longer lands on its entry.
   referrer. [2026-09-26](../DECISIONS.md#L13640)
 - **Snapshot pages and /movers sell:** a "Shop the top risers" strip (top three, today's cheapest in the visitor's
   market, Buy into the quick view) in the first screen, and a Buy link or pill on every row; nothing new read, caches
-  unchanged. [2026-11-20](../DECISIONS.md#L24988)
+  unchanged. [2026-11-20](../DECISIONS.md#L25011)
 - **RiftboundStocks per-page links:** card, champion and set pages link to
   the same page on RiftboundStocks.com through the map it publishes
   (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes

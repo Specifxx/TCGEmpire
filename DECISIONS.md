@@ -24985,6 +24985,29 @@ now … just have the most popular as the first, as like what shows on the homep
 - **Recheck 23 Nov:** modal buy clickers back at 30+ a day means this was it. If not, the cause is elsewhere (the cart
   A/B, #506, is the next suspect) and the button colour can go back on the owner's word.
 - `tests/radiance-featured.test.ts` and `tests/amazon-button.test.ts` pin both.
+## 2026-11-20: The missing collector printings, and one gallery page per collection
+
+**Owner, 2026-11-20:** "a lot of these alternate arts … we just haven't been updating the website with these cards … these
+cards are out there and they need to be in our database", with pages "similar to … the Crystal Rose ones" for the Worlds,
+K/DA and T1 cards.
+
+- **Found by data, not by memory.** `scripts/collab-cards.ts` (`collab-cards.yml`, dispatched on a session branch: the cloud
+  sessions cannot reach TCGplayer) runs the importer's own matcher over `data/public/cards.json` and lists every numbered
+  TCGplayer single no card of ours lands on, plus every product of the collector groups.
+- **25 cards added** to `prisma/manual-cards.json`, each `tcg-<productId>` (so the importer prices it directly), `isPromo`,
+  game data copied from the base printing: K/DA Couture (set `KDC`, 001–005/005), the T1 Player Bundle (`T1A`, 001–005/005),
+  the serial-numbered T1S Ambessa and Miss Fortune (`001*`, `004*`), Secret Garden's Lillia and Ivern, the Worlds Bundle 2025
+  oversized Battlefields (custom `-oversized-promo` slugs, since they share the standard printings' numbers) and eight
+  Champion / Top 8 prizes. The Couture cards are numbered WITHOUT TCGplayer's star: a star makes a card a Signature
+  (`isSignature`), and Riot does not say they are signed.
+- **Images are cropped from TCGplayer's product photo** (sharp trim, 744 px, `public/collab-cards/`). Five products have no
+  photo on TCGplayer (a 403); those reuse their sibling printing's art, as earlier promos did, until one exists.
+- **131 existing promos pinned** in `PROMO_PRODUCT_OVERRIDES`: 102 by the product image their `imageUrl` already carried,
+  the rest by hand. Both Jinx, Rebel 202/298 products and Teemo, Swift Scout 662886 stay unpinned (two products, one card).
+- **Three guides** (`lib/content/collection-articles.ts`): `/guides/riftbound-worlds-cards`, `/guides/riftbound-kda-collection`,
+  `/guides/riftbound-t1-cards`. Each is live galleries of every printing plus dated TCGplayer prices; over 1,500 words.
+  `related-guides.ts` sends T1S, T1A and KDC card pages to them first. The Worlds 2026 Edition's cards are not on TCGplayer
+  yet; they get added when listed.
 ## 2026-11-20: Snapshot pages and /movers sell, not just rank (buy-clicks boardroom, move 2)
 
 **Why:** Reddit link posts land on `/rising/<token>` snapshots and `/movers`, and those visitors almost never clicked buy:
