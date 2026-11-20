@@ -116,12 +116,12 @@
       "EU": 6497,
       "SG": 33000,
       "UK": 13303,
-      "US": 15701
+      "US": 15799
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 98999
+      "US": 97412
     },
     "OGN|Booster Pack": {
       "CA": 1299,
@@ -216,7 +216,7 @@
       "EU": 9270,
       "SG": 15000,
       "UK": 8799,
-      "US": 9570
+      "US": 9064
     },
     "RAD|Booster Case": {
       "AU": 130000,
@@ -237,7 +237,7 @@
       "EU": 2750,
       "SG": 4710,
       "UK": 2750,
-      "US": 2675
+      "US": 2370
     },
     "RAD|Bundle Case": {
       "US": 39900
@@ -255,7 +255,7 @@
       "CA": 4121,
       "EU": 3199,
       "UK": 2700,
-      "US": 1960
+      "US": 2350
     },
     "RAD|Sealed": {
       "EU": 319
@@ -266,7 +266,7 @@
       "EU": 1290,
       "SG": 3356,
       "UK": 1999,
-      "US": 1799
+      "US": 1498
     },
     "RAD|Showdown Decks Display": {
       "AU": 5200,
@@ -314,7 +314,7 @@
       "EU": 9407,
       "SG": 8411,
       "UK": 11499,
-      "US": 15100
+      "US": 15099
     },
     "SFD|Booster Case": {
       "AU": 180000,
@@ -327,7 +327,7 @@
       "AU": 1400,
       "CA": 999,
       "UK": 499,
-      "US": 610
+      "US": 607
     },
     "SFD|Bulk Runes": {
       "US": 1495
@@ -429,17 +429,17 @@
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 55500,
-      "US": 99469
+      "US": 99465
     },
     "UNL|Booster Pack": {
       "AU": 1100,
-      "CA": 999,
+      "CA": 899,
       "US": 599
     },
     "UNL|Bundle": {
       "EU": 6999,
       "SG": 9092,
-      "US": 6500
+      "US": 6000
     },
     "UNL|Champion Deck": {
       "CA": 2339,
@@ -447,7 +447,7 @@
       "US": 1399
     },
     "UNL|Champion Deck (Vex)": {
-      "AU": 3295,
+      "AU": 2900,
       "CA": 3995,
       "EU": 1590,
       "SG": 3300,
@@ -517,7 +517,7 @@
       "CA": 96999,
       "EU": 60000,
       "UK": 59500,
-      "US": 66900
+      "US": 66895
     },
     "VEN|Booster Pack": {
       "AU": 1000,
@@ -800,7 +800,7 @@
       "US": 17900
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 26799
+      "US": 26900
     },
     "riftboundxworlds2026edition": {
       "EU": 60000
