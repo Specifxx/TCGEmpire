@@ -1136,6 +1136,9 @@ longer lands on its entry.
   60% of the body (`tests/reddit-landing-conversion.test.ts`). Links posted
   to Reddit should carry `?utm_source=reddit`: the apps often send no
   referrer. [2026-09-26](../DECISIONS.md#L13640)
+- **Snapshot pages and /movers sell:** a "Shop the top risers" strip (top three, today's cheapest in the visitor's
+  market, Buy into the quick view) in the first screen, and a Buy link or pill on every row; nothing new read, caches
+  unchanged. [2026-11-20](../DECISIONS.md#L24969)
 - **RiftboundStocks per-page links:** card, champion and set pages link to
   the same page on RiftboundStocks.com through the map it publishes
   (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes

@@ -24965,3 +24965,20 @@ deliberately extends the 2026-11-12 "tasteful accents" layer, which had ruled ou
 - **Off switch:** the same as the festive layer, `CHRISTMAS_FESTIVE_LAYER` in `lib/season.ts` (`data-xmas-layer`), and
   the season window ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
 - Sports Card Compare keeps its own hat and lights (it never took the tone-down).
+
+## 2026-11-20: Snapshot pages and /movers sell, not just rank (buy-clicks boardroom, move 2)
+
+**Why:** Reddit link posts land on `/rising/<token>` snapshots and `/movers`, and those visitors almost never clicked buy:
+2 buy clickers in 997 snapshot visitors (13–19 Nov), Rift's Reddit visitors 0.7% against 12% from Google. The boardroom
+decided (no owner question needed) to make every snapshot and Hot 100 page buyable. Target 8%+; read 27 Nov and 4 Dec.
+
+- **"Shop the top risers"** (`RisersShop.tsx`) in the first screen of both pages: the top three risers, each with its
+  cheapest price now in the visitor's market (`useCountry().price`, the figure every tile shows) and a Buy button into
+  the quick view (eBay and TCGplayer first). On `/movers` the cards come from `getPriceMovers`, already loaded. A snapshot
+  is frozen and holds no live price, so it passes slugs and the strip reads those three cards from `/api/card/<slug>` in
+  the browser: the quick view's own request, CDN-cached six hours. The page's cache and its frozen numbers are unchanged.
+- **Every snapshot row** gets a Buy link under its frozen price: a plain card link the site-wide handler turns into the
+  quick view, so the buyer sees today's prices there. **Every `/movers` row** (the panels and the table) gets a Buy pill
+  under its move, inside the row's existing quick-view link (`MoverRow buy`): under the price, never beside it, because a
+  button beside every row squeezed names to ~44px at 390px (2026-09-27). The homepage's Price Watch is unchanged.
+- No database read, no new loader, no `revalidate` change, no deploy marker: it rides the daily release.
