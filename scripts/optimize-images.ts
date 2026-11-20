@@ -57,6 +57,9 @@ const LIMITS: { match: RegExp; maxWidth: number }[] = [
   // article column or a card tile. One cap covers the folder because the widest asset
   // in it is the 1600px composite.
   { match: /^t1-worlds-cards\//, maxWidth: 1536 },
+  // Collector printings re-hosted from TCGplayer's product image, cropped to the
+  // card by scripts/collab-cards.ts (744px wide, like the T1 fronts).
+  { match: /^collab-cards\//, maxWidth: 900 },
   // Sealed product tiles render at ~200px in a grid, ~400px in the quick view.
   { match: /^sealed\//, maxWidth: 800 },
   // Full-bleed article/marketing illustrations inside a max-w-3xl (768px) column.
