@@ -16,6 +16,7 @@ export const FAMILY_HOSTS = [
   "lorcanacompare.com", "ygocompare.com", "cyberpunkcompare.com", "bandaicompare.com",
   "camcompare.app", "compareempire.com", "wargamecompare.com", "figurecompare.com", "kaeyoung.com",
   "scentcompare.app", "sportscardcompare.com", "motorcompare.app", "billyang.site",
+  "tcgprices.app", "tcgsinglesdb.com",
 ];
 
 /** Links that are never a shop: social, docs, licences, review sites we cite. */
