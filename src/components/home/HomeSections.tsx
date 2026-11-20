@@ -35,10 +35,6 @@ export interface HomeSectionsProps {
   storeCount: number;
   storeWord: string;
   popularCards: CardTileData[];
-  /** The featured set's chase cards (lib/cheapest-cards.ts getSetChaseTiles):
-   *  the popular-cards strip's first tab when there are any. */
-  chaseCards?: CardTileData[];
-  chaseSet?: { name: string; slug: string } | null;
   /** Emit the "Most popular Riftbound cards" ItemList JSON-LD. False where the
    *  page's "Riftbound card prices today" table already lists these cards and
    *  owns that markup (2026-09-24); the carousel came back on 2026-09-26 as a
@@ -77,8 +73,6 @@ export function HomeSections({
   storeCount,
   storeWord,
   popularCards,
-  chaseCards = [],
-  chaseSet = null,
   popularItemList = true,
   showTopDeals = true,
   showEbayPicks = true,
@@ -152,7 +146,7 @@ export function HomeSections({
           test file. Hidden entirely if no market has data. */}
 
       {/* THE 2026-11-13 ORDER (owner: "we're making things too complicated, and before it was simplicity that was
-          driving it"; DECISIONS.md "Minimal redesign"): Top Deals, the chase cards, the one ad block, the sets. Nothing
+          driving it"; DECISIONS.md "Minimal redesign"): Top Deals, the chase cards, the one ad block, the sets (2026-11-20: Most popular replaces the chase cards). Nothing
           else. The next-set countdown is one line under the set grid now; the Pokémon line, the three return-visit
           cards (pack simulator, Riftle, watch a card), the free-account strip and the partners strip left the home
           pages, and each is still one click away in the menu and the footer. */}
@@ -181,7 +175,6 @@ export function HomeSections({
           behind the two commercial units, and is still the section that sends
           the most visitors into card pages. */}
       <PopularCardsCarousel
-        chase={chaseSet ? { cards: chaseCards, setName: chaseSet.name, setSlug: chaseSet.slug } : null}
         allTime={popularCards}
         movers={biggestMovers}
         recentlyUpdated={recentlyUpdatedCards}
@@ -189,7 +182,7 @@ export function HomeSections({
         storeWord={storeWord}
       />
 
-      {/* Today's Top Deals sit BELOW the chase cards on every home (owner, 2026-11-16). */}
+      {/* Today's Top Deals sit BELOW the Most popular shelf on every home (owner, 2026-11-16; chase cards → Most popular 2026-11-20). */}
       {showTopDeals && anyDeals && (
         <Reveal>
           <TodaysTopDeals dealsByCountry={Object.fromEntries(Object.entries(topDealsByCountry).map(([c, d]) => [c, topDealsForGrid(d)])) as Record<Country, TopDeals>} />

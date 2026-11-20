@@ -96,7 +96,7 @@ test("the homepage's commercial-vs-playable order is the owner's, and is asserte
   // homepage (tests/homepage-declutter.test.ts).
   assert.ok(!code.includes("<RecentlyViewedRail"), "Recently viewed is off the homepage (owner, 2026-09-28)");
   assert.ok(ebay > deals, "Today's Top Deals come first and the ad banners follow, below the content (owner, 2026-11-19)");
-  assert.ok(code.indexOf("<PopularCardsCarousel") < deals, "Top Deals sit below the chase cards (owner, 2026-11-16)");
+  assert.ok(code.indexOf("<PopularCardsCarousel") < deals, "Top Deals sit below the Most popular shelf (owner, 2026-11-16; 2026-11-20)");
 
   // AMENDED 2026-11-13 (owner: "we're making things too complicated … cull the features that we show"; DECISIONS.md
   // "Minimal redesign"). The three return-visit cards (pack simulator, Riftle, watch a card) used to be pinned

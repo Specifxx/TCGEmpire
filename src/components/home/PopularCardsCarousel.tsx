@@ -55,15 +55,19 @@ type Tab = {
 // set's popularity but its chase printings (Signatures, overnumbered, alternate
 // art), and the set is chosen by date, not named here (featuredSet() in
 // lib/constants.ts), so it moves to the next set by itself.
+//
+// MOST POPULAR LEADS (owner, 2026-11-20: "maybe the Radiance chase cards, we can
+// get rid of that section now … just have the most popular as the first, as what
+// shows on the homepage, and this should be across all sites"). The chase tab is
+// gone from every home; a set's chase printings live on its set page. The first
+// tab is the demand-ranked Most popular list (lib/home-rank.ts, HOME_DEMAND).
 export function PopularCardsCarousel({
-  chase,
   allTime,
   movers,
   recentlyUpdated,
   storeCount,
   storeWord,
 }: {
-  chase?: { cards: CardTileData[]; setName: string; setSlug: string } | null;
   allTime: CardTileData[];
   movers: CardWithDelta[];
   recentlyUpdated: CardWithDelta[];
@@ -71,19 +75,6 @@ export function PopularCardsCarousel({
   storeWord: string;
 }) {
   const tabs: Tab[] = [
-    ...(chase && chase.cards.length > 0
-      ? [
-          {
-            key: "chase",
-            label: `${chase.setName} chase cards`,
-            heading: `${chase.setName} chase cards`,
-            description: `The most valuable ${chase.setName} printings right now: Signatures, overnumbered and alternate-art cards, with the cheapest price across ${storeCount} ${storeWord}.`,
-            allHref: `/sets/${chase.setSlug}`,
-            allLabel: `All ${chase.setName} cards →`,
-            cards: chase.cards,
-          },
-        ]
-      : []),
     // Back on every homepage (2026-09-26, the owner's call: "I kind of like
     // the previous one better with the most popular cards"). It was dropped on
     // 2026-09-24 when the "Riftbound card prices today" table took the same
