@@ -9,6 +9,9 @@ import { isDemandSite } from "@/lib/analytics/item-demand";
 // public API and token as /api/demand: no visitor, no path, no query string, nothing private.
 
 export const AUDIT_DIMS = ["referrer", "country", "deviceType", "osName", "browserName"] as const;
+/** The API's name for the referrer dimension is not documented; "referrer" was refused (2026-11-19 run), so these are tried in
+ *  order and the first that answers is kept. A refusal's message lists the allowed values, so errors keep 400 characters. */
+export const REFERRER_NAMES = ["referrerHostname", "referrer_hostname", "referrerHost", "referrerUrl", "referrer"] as const;
 type Dim = (typeof AUDIT_DIMS)[number];
 
 export interface TrafficAudit {
@@ -70,7 +73,7 @@ export async function loadTrafficAudit(site: string): Promise<TrafficAudit> {
       try {
         return await get(path, { teamId: cred.team, until: to, limit: "100", ...q }, cred.token);
       } catch (e) {
-        errors.push(`${q.by ?? "total"}${q.filter ? " " + q.filter : ""}: ${e instanceof Error ? scrubSecrets(e.message).slice(0, 120) : "failed"}`);
+        errors.push(`${q.by ?? "total"}${q.filter ? " " + q.filter : ""}: ${e instanceof Error ? scrubSecrets(e.message).slice(0, 400) : "failed"}`);
         return null;
       }
     };
@@ -78,12 +81,19 @@ export async function loadTrafficAudit(site: string): Promise<TrafficAudit> {
     const out = { ...base };
     for (const [key, since] of [["d28", base.from28], ["d7", base.from7]] as const) {
       for (const p of projects) {
-        out.total[key] = add(out.total[key], auditTotal(await ask(VISITS, { projectId: p.id, since })));
-        out.buyClicks[key] = add(out.buyClicks[key], auditTotal(await ask(EVENTS, { projectId: p.id, since, filter: "eventName eq 'buy_click'" })));
+        // Every query needs a `by` (2026-11-19 run: "missing required property `by`"). Visitors are counted once each by
+        // deviceType (summing days would count a visitor once per day), so the total is that dimension's sum; buy_click by day.
+        out.buyClicks[key] = add(out.buyClicks[key], auditTotal(await ask(EVENTS, { projectId: p.id, since, by: "day", filter: "eventName eq 'buy_click'" })));
         for (const dim of AUDIT_DIMS) {
-          const rows = auditRows(await ask(VISITS, { projectId: p.id, since, by: dim }), dim);
+          let json: unknown = null;
+          for (const name of dim === "referrer" ? REFERRER_NAMES : [dim]) {
+            json = await ask(VISITS, { projectId: p.id, since, by: name });
+            if (json) { json = { data: ((json as { data?: Record<string, unknown>[] }).data ?? []).map((r) => ({ ...r, [dim]: r[name] ?? r[dim] })) }; break; }
+          }
+          const rows = auditRows(json, dim);
           const slot = (out.by[dim] ??= { d28: {}, d7: {} })[key];
           for (const [k, v] of Object.entries(rows)) slot[k] = add(slot[k] ?? [0, 0], v);
+          if (dim === "deviceType") out.total[key] = add(out.total[key], Object.values(rows).reduce<[number, number]>((a, v) => add(a, v), [0, 0]));
         }
       }
     }
