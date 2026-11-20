@@ -35,6 +35,9 @@ const ALL = [
   "https://scentcompare.app",
   "https://sportscardcompare.com",
   "https://motorcompare.app",
+  // The two newest card sites (click integrity, 2026-11-20): TCG Prices is the flagship and was never read.
+  "https://tcgprices.app",
+  "https://tcgsinglesdb.com",
 ];
 const pick = (process.env.SITES ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const SITES = pick.length ? ALL.filter((o) => pick.some((p) => o.includes(p))) : ALL;
@@ -43,6 +46,8 @@ const GO_LIMIT = Number(process.env.GO_LIMIT ?? 60);
 const UA = "Mozilla/5.0 (compatible; CompareEmpireAffiliateAudit/1.0; +https://compareempire.com)";
 const PRODUCT = /^\/(?:[a-z]{2}\/)?(card|sealed|product|p|figure|camera|cameras|lens|lenses|phones|laptops|tvs)\/[^/]+\/?$/;
 const FALLBACK = /^\/(?:[a-z]{2}\/)?[a-z-]+\/[a-z0-9-]{14,}\/?$/;
+/** TCG Singles DB's card pages: /<game>/<set>/<card>. */
+const DEEP = /^\/[a-z0-9-]+\/[a-z0-9-]+\/[a-z0-9-]{6,}\/?$/;
 const GO = /^\/(go|out|api\/go|api\/out)(\/|$)/;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -95,6 +100,7 @@ async function auditSite(origin: string, joined: string[]): Promise<SiteTally> {
     const internal = hrefs(home, origin).filter((u) => u.hostname === base.hostname || u.hostname === `www.${base.hostname}` || `www.${u.hostname}` === base.hostname);
     let products = [...new Set(internal.filter((u) => PRODUCT.test(u.pathname)).map((u) => u.pathname))];
     if (products.length < 3) products = [...new Set([...products, ...internal.filter((u) => FALLBACK.test(u.pathname)).map((u) => u.pathname)])];
+    if (products.length < 3) products = [...new Set([...products, ...internal.filter((u) => DEEP.test(u.pathname)).map((u) => u.pathname)])];
     const pages: Array<[string, string]> = [[origin, home]];
     for (const p of products.slice(0, PAGES)) {
       await sleep(500);
