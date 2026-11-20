@@ -10,6 +10,7 @@ import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
 import { LEGACY_SEASON_ARTICLES } from "./content/legacy-season-articles";
 import { RADIANCE_PRICE_ARTICLES } from "./content/radiance-price-articles";
 import { RIOT_DRAWINGS_ARTICLES } from "./content/riot-drawings-articles";
+import { COLLECTION_ARTICLES } from "./content/collection-articles";
 import { TREND_ARTICLES } from "./content/trend-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
@@ -2367,6 +2368,8 @@ The specials are only one corner of the K/DA story in Radiance. Each member has 
 
 For a collector chasing the group, that makes Seraphine the deepest K/DA member in Radiance by a distance: nine printings of her own counting the special, before her signature spell.
 
+For every K/DA printing in one live gallery, the Couture Collection's five cards included, see [our K/DA card guide](/guides/riftbound-kda-collection).
+
 ## What to expect on price
 
 The closest thing Riftbound has had to a K/DA tier is Vendetta's Crystal Rose run, and its prices are a warning. Using our daily price history, the median Crystal Rose special cost **$130 four days before Vendetta's release, $44 in launch week, $38 a month later and $22 by 6 October**. Today the dearest two, Kai'Sa and Ahri, are around $70; the other four are around $11 to $20. The full breakdown is in **[Radiance chase cards: what Vendetta's prices say to expect](/blog/riftbound-radiance-chase-cards)**.
@@ -2539,6 +2542,8 @@ Riot asks everyone to do two things before registration opens:
 ## When it ships
 
 Riot's FAQ says two things about fulfilment. It expects to "begin fulfilling orders within 1-3 business days after they're placed", where fulfilment means processing, packing and shipping, not a delivery date. Separately, it says drawn items "will begin fulfillment the day of the product's wide release". Riot hasn't published a wide release date for the Couture Collection, so if you're drawn, expect the shipping email around the time the product goes wide rather than a fixed date.
+
+All five Couture cards now have their own pages and prices, gathered with Radiance's SP cards in [our K/DA card guide](/guides/riftbound-kda-collection).
 
 ## Are the cards worth anything?
 
@@ -3253,6 +3258,14 @@ For the running list of everything Riot has genuinely shown — kept strictly se
         a: "The promos are alternate-art printings of existing cards, so they play as those cards. Nothing in the box is a new mechanic or a card you cannot otherwise obtain — the value proposition is the art and the object, not the deck.",
       },
     ],
+    embeds: [
+      {
+        title: "The Secret Garden Bundle's three cards",
+        note: "Lillia, Ivern and the Ultrasoft Poro, numbered 001 to 003 of 003, priced live.",
+        slugs: ["lillia-bashful-bloom-unl-001-003-promo", "ivern-green-father-unl-002-003-promo", "ultrasoft-poro-unl-003-003-promo"],
+        ebaySearch: true,
+      },
+    ],
     body: `Riot published its remaining 2026 event schedule for the **Secret Garden Bundle** on 11 September, and for the first time the full distribution plan for this product is public. Read by region rather than by date, that list explains something the price data has been showing for weeks and nobody had a reason for: why the same US$70 box costs roughly twice as much in Europe as it does in the United States.
 
 ## What the Secret Garden Bundle actually is
@@ -3308,6 +3321,8 @@ Two things would prove me wrong, and they are worth stating because they are the
 **Booth allocations could be small.** "Available at an event" is not a quantity. One report from PAX West describes the bundle selling out each day under a two-per-person limit. If European booths receive a few hundred boxes each against 190,000 attendees, four events barely move the needle and the premium holds.
 
 **Demand could arrive with the supply.** An event puts the product in front of people who did not know it existed. Four European shows in 18 days is also four marketing events, and it is genuinely possible that European demand grows faster than European supply.
+
+[[embed:0]]
 
 ## What makes it scarce, and what does not
 
@@ -8234,7 +8249,7 @@ Every card was personally chosen by the corresponding member of T1's championshi
 
 [[embed:0]]
 
-All six printings — the five cards plus Faker's serialised Galio, numbered T1S 001/005 through 005/005 — are now catalogued on RiftCompare, so each has a real page ready for the moment secondary-market listings appear.
+All six printings — the five cards plus Faker's serialised Galio, numbered T1S 001/005 through 005/005 — are now catalogued on RiftCompare, so each has a real page ready for the moment secondary-market listings appear. Every T1 printing, the Player Bundle's own T1A art and the other serial-numbered Signatures included, is in [our T1 card guide](/guides/riftbound-t1-cards).
 
 **One caveat on Seraphine.** Seraphine, Not Alone comes from **Radiance**, Riftbound's fifth set, which does not release until 23 October 2026 (see [the set roadmap](/blog/riftbound-2027-set-roadmap)). Until then it is not legal for sanctioned play, so a Player Bundle bought to actually play with arrives with one card you cannot yet use.
 
@@ -10096,6 +10111,8 @@ Regional Qualifiers are also where a lot of early Vendetta singles and promos ch
 Unlike Vendetta's other alt-art printings (which carry a lettered variant of a normal collector number, e.g. "021a"), the six Crystal Rose cards are numbered **SP1 through SP6** — their own dedicated range, separate from the set's regular 1–166 checklist. Riot's own reasoning: the "Overnumber" treatment is reserved for art created specifically for Riftbound, and Crystal Rose art is ported from Wild Rift, so it gets its own numbering instead.
 
 Despite the different numbering, they pull at the **same rate as any other alt-art card** in [Vendetta boosters](/sealed?q=vendetta) — there's no separate box or bundle required to chase them. Any booster you open has a shot at one.
+
+The SP range came back for K/DA in Radiance: [every K/DA card](/guides/riftbound-kda-collection) is gathered in one gallery, and the [Worlds cards](/guides/riftbound-worlds-cards) do the same for the Worlds Bundle promos.
 
 ## Why Kai'Sa and Ezreal stand out
 
@@ -13090,6 +13107,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
   ...LEGACY_SEASON_ARTICLES,
   ...RADIANCE_PRICE_ARTICLES,
   ...RIOT_DRAWINGS_ARTICLES,
+  ...COLLECTION_ARTICLES,
   ...TREND_ARTICLES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",

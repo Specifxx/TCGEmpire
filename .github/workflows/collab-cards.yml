@@ -1,17 +1,11 @@
 # Collector printings missing from the catalogue (scripts/collab-cards.ts, owner
-# 2026-11-20). Session branches only: a push that touches the script or its list
-# reports what TCGplayer and Riot's gallery have that we lack (discover), and, when
-# data/collab-cards/images.json exists, fetches and crops those card images and
-# commits them to the same branch, so they ship through the normal PR.
+# 2026-11-20). Dispatch it on a session branch: it reports what TCGplayer and Riot's
+# gallery have that we lack (discover), and, when data/collab-cards/images.json
+# exists, fetches and crops those card images and commits them to the same branch,
+# so they ship through the normal PR. Never on main: it pushes to the branch it runs on.
 name: Collab cards
 on:
   workflow_dispatch: {}
-  push:
-    branches: ["claude/**"]
-    paths:
-      - scripts/collab-cards.ts
-      - data/collab-cards/**
-      - .github/workflows/collab-cards.yml
 permissions:
   contents: write
 concurrency:
