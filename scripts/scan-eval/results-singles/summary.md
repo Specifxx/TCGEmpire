@@ -6,163 +6,163 @@ Model claude-haiku-5-5 (one read a photo) + TCG Singles DB's matcher. Pass: foun
 
 Image coverage: 98.4% of 700 sampled US$1+ cards and 99.0% of 300 sampled cards of any price have a real picture (placeholders 0, missing 14). 28272 of 28875 cards carry a printed number.
 
-750 images of 150 cards (1 sampled cards had no picture). Errors 0. Median model time 1.40 s. Picker median 4 printings.
+750 images of 150 cards (1 sampled cards had no picture). Errors 0. Median model time 1.32 s. Picker median 9 printings.
 
 #### All
 
 | | images | found (match or in picker) | right card first | wrong card as THE match | none |
 |---|---:|---:|---:|---:|---:|
-| all | 750 | 83.5% | 70.5% | 1.1% | 13.7% |
+| all | 750 | 87.6% | 70.4% | 0.1% | 0.7% |
 
 #### By condition
 
 | | images | found (match or in picker) | right card first | wrong card as THE match | none |
 |---|---:|---:|---:|---:|---:|
-| glare | 150 | 82.7% | 73.3% | 2.7% | 12.0% |
-| foil sheen | 150 | 86.7% | 74.0% | 0.7% | 10.7% |
-| tilted on a table | 150 | 89.3% | 78.0% | 0.7% | 8.7% |
-| far and small | 150 | 76.0% | 58.0% | 0.7% | 22.0% |
-| dim light | 150 | 82.7% | 69.3% | 0.7% | 15.3% |
+| tilted on a table | 150 | 90.7% | 77.3% | 0.0% | 0.7% |
+| far and small | 150 | 79.3% | 48.7% | 0.0% | 0.7% |
+| glare | 150 | 91.3% | 78.7% | 0.0% | 0.7% |
+| dim light | 150 | 86.7% | 70.7% | 0.7% | 0.7% |
+| foil sheen | 150 | 90.0% | 76.7% | 0.0% | 0.7% |
 
 #### By kind of card
 
 | | images | found (match or in picker) | right card first | wrong card as THE match | none |
 |---|---:|---:|---:|---:|---:|
-| US$1+ | 340 | 82.6% | 78.5% | 0.0% | 14.4% |
-| look-alike | 295 | 81.4% | 62.7% | 2.7% | 14.9% |
-| any | 115 | 91.3% | 67.0% | 0.0% | 8.7% |
+| US$1+ | 340 | 87.1% | 81.2% | 0.3% | 0.0% |
+| look-alike | 295 | 85.8% | 59.3% | 0.0% | 1.7% |
+| any | 115 | 93.9% | 67.0% | 0.0% | 0.0% |
 
 #### Misses (up to 20)
 
 | truth | number | condition | result | read |
 |---|---|---|---|---|
-| Leafeon | BW87 | tilted on a table | none | {"isTradingCard":true,"game":"pokemon","name":"Leafeon","setCode":"BW","collectorNumber":"BW07","promoStamp":true,"language":"en","firstEdition":false} |
-| Leafeon | BW87 | glare | none | {"isTradingCard":true,"game":"pokemon","name":"Leafeon","setCode":"BW","collectorNumber":null,"promoStamp":true,"language":"en","firstEdition":false} |
-| Leafeon | BW87 | dim light | none | {"isTradingCard":true,"game":"pokemon","name":"Leafeon","setCode":"BW","collectorNumber":null,"promoStamp":true,"language":"en","firstEdition":false} |
-| Leafeon | BW87 | foil sheen | none | {"isTradingCard":true,"game":"pokemon","name":"Leafeon","setCode":"BW","collectorNumber":"BW07","promoStamp":true,"language":"en","firstEdition":false} |
-| Leafeon | BW87 | far and small | none | {"isTradingCard":true,"game":"pokemon","name":"Leafeon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Mewtwo (Movie Promo) | 03/53 | tilted on a table | none | {"isTradingCard":true,"game":"pokemon","name":"Mewtwo","setCode":null,"collectorNumber":"3","promoStamp":true,"language":"en","firstEdition":false} |
-| Mewtwo (Movie Promo) | 03/53 | glare | none | {"isTradingCard":true,"game":"pokemon","name":"Mewtwo","setCode":null,"collectorNumber":"3","promoStamp":true,"language":"en","firstEdition":false} |
-| Mewtwo (Movie Promo) | 03/53 | dim light | none | {"isTradingCard":true,"game":"pokemon","name":"Mewtwo","setCode":null,"collectorNumber":"150","promoStamp":false,"language":"en","firstEdition":false} |
-| Mewtwo (Movie Promo) | 03/53 | foil sheen | none | {"isTradingCard":true,"game":"pokemon","name":"Mewtwo","setCode":null,"collectorNumber":"3","promoStamp":true,"language":"en","firstEdition":false} |
-| Mewtwo (Movie Promo) | 03/53 | far and small | none | {"isTradingCard":true,"game":"pokemon","name":"Mewtwo","setCode":null,"collectorNumber":"8/130","promoStamp":true,"language":"en","firstEdition":false} |
-| Deoxys EX (Team Plasma) | BW82 | tilted on a table | none | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Deoxys EX (Team Plasma) | BW82 | dim light | none | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Deoxys EX (Team Plasma) | BW82 | foil sheen | none | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Deoxys EX (Team Plasma) | BW82 | far and small | none | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Deoxys EX (Team Plasma) | BW82 | glare | none | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Garbodor (119 Secret Rare) | 119/116 | far and small | none | {"isTradingCard":true,"game":"pokemon","name":"Garbodor","setCode":null,"collectorNumber":"118/116","promoStamp":false,"language":"en","firstEdition":false} |
-| Flareon | BW88 | tilted on a table | none | {"isTradingCard":true,"game":"pokemon","name":"Flareon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Flareon | BW88 | glare | none | {"isTradingCard":true,"game":"pokemon","name":"Flareon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Flareon | BW88 | foil sheen | none | {"isTradingCard":true,"game":"pokemon","name":"Flareon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Flareon | BW88 | dim light | none | {"isTradingCard":true,"game":"pokemon","name":"Flareon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Leafeon | BW87 | dim light | pick | {"isTradingCard":true,"game":"pokemon","name":"Leafeon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Leafeon | BW87 | far and small | pick | {"isTradingCard":true,"game":"pokemon","name":"Leafeon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Mewtwo (Movie Promo) | 03/53 | far and small | pick | {"isTradingCard":true,"game":"pokemon","name":"Mewtwo","setCode":null,"collectorNumber":null,"promoStamp":true,"language":"en","firstEdition":false} |
+| Mewtwo (Movie Promo) | 03/53 | dim light | match WRONG | {"isTradingCard":true,"game":"pokemon","name":"Mewtwo","setCode":null,"collectorNumber":"150","promoStamp":false,"language":"en","firstEdition":false} |
+| Deoxys EX (Team Plasma) | BW82 | glare | pick | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Deoxys EX (Team Plasma) | BW82 | tilted on a table | pick | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Deoxys EX (Team Plasma) | BW82 | dim light | pick | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Deoxys EX (Team Plasma) | BW82 | far and small | pick | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Deoxys EX (Team Plasma) | BW82 | foil sheen | pick | {"isTradingCard":true,"game":"pokemon","name":"Deoxys EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Flareon | BW88 | tilted on a table | pick | {"isTradingCard":true,"game":"pokemon","name":"Flareon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Flareon | BW88 | glare | pick | {"isTradingCard":true,"game":"pokemon","name":"Flareon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Flareon | BW88 | dim light | pick | {"isTradingCard":true,"game":"pokemon","name":"Flareon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Flareon | BW88 | foil sheen | pick | {"isTradingCard":true,"game":"pokemon","name":"Flareon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Flareon | BW88 | far and small | pick | {"isTradingCard":true,"game":"pokemon","name":"Flareon","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Lillipup | BW52 | tilted on a table | pick | {"isTradingCard":true,"game":"pokemon","name":"Lillipup","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Lillipup | BW52 | dim light | pick | {"isTradingCard":true,"game":"pokemon","name":"Lillipup","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Lillipup | BW52 | far and small | pick | {"isTradingCard":true,"game":"pokemon","name":"Lillipup","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Lillipup | BW52 | foil sheen | pick | {"isTradingCard":true,"game":"pokemon","name":"Lillipup","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Thundurus EX (Team Plasma) | BW81 | dim light | pick | {"isTradingCard":true,"game":"pokemon","name":"Thundurus EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Thundurus EX (Team Plasma) | BW81 | far and small | pick | {"isTradingCard":true,"game":"pokemon","name":"Thundurus EX","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
 
 ## yugioh: NOT YET
 
 Image coverage: 98.6% of 700 sampled US$1+ cards and 99.7% of 300 sampled cards of any price have a real picture (placeholders 0, missing 11). 46685 of 46701 cards carry a printed number.
 
-750 images of 150 cards (1 sampled cards had no picture). Errors 0. Median model time 1.43 s. Picker median 6 printings.
+750 images of 150 cards (1 sampled cards had no picture). Errors 0. Median model time 1.36 s. Picker median 7 printings.
 
 #### All
 
 | | images | found (match or in picker) | right card first | wrong card as THE match | none |
 |---|---:|---:|---:|---:|---:|
-| all | 750 | 83.1% | 42.9% | 0.0% | 12.9% |
+| all | 750 | 91.7% | 46.9% | 0.0% | 2.0% |
 
 #### By condition
 
 | | images | found (match or in picker) | right card first | wrong card as THE match | none |
 |---|---:|---:|---:|---:|---:|
-| dim light | 150 | 81.3% | 40.0% | 0.0% | 14.7% |
-| foil sheen | 150 | 86.0% | 48.0% | 0.0% | 10.0% |
-| far and small | 150 | 79.3% | 36.0% | 0.0% | 15.3% |
-| tilted on a table | 150 | 84.7% | 45.3% | 0.0% | 12.0% |
-| glare | 150 | 84.0% | 45.3% | 0.0% | 12.7% |
+| glare | 150 | 92.7% | 49.3% | 0.0% | 2.7% |
+| tilted on a table | 150 | 92.0% | 50.0% | 0.0% | 2.0% |
+| foil sheen | 150 | 93.3% | 53.3% | 0.0% | 0.7% |
+| far and small | 150 | 89.3% | 39.3% | 0.0% | 3.3% |
+| dim light | 150 | 91.3% | 42.7% | 0.0% | 1.3% |
 
 #### By kind of card
 
 | | images | found (match or in picker) | right card first | wrong card as THE match | none |
 |---|---:|---:|---:|---:|---:|
-| US$1+ | 340 | 76.8% | 52.4% | 0.0% | 21.2% |
-| look-alike | 295 | 85.8% | 27.5% | 0.0% | 8.5% |
-| any | 115 | 94.8% | 54.8% | 0.0% | 0.0% |
+| US$1+ | 340 | 92.6% | 59.4% | 0.0% | 2.1% |
+| look-alike | 295 | 88.5% | 27.8% | 0.0% | 2.7% |
+| any | 115 | 97.4% | 59.1% | 0.0% | 0.0% |
 
 #### Misses (up to 20)
 
 | truth | number | condition | result | read |
 |---|---|---|---|---|
-| The Winged Dragon of Ra | JUMP-EN045 | dim light | none | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| The Winged Dragon of Ra | JUMP-EN045 | foil sheen | none | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| The Winged Dragon of Ra | JUMP-EN045 | far and small | none | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":true} |
-| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | tilted on a table | none | {"isTradingCard":true,"game":"yugioh","name":"Number 39: Utopia Ray V","setCode":"PGL3","collectorNumber":"PGL3-EN008","promoStamp":false,"language":"en","firstEdition":true} |
-| The Winged Dragon of Ra | JUMP-EN045 | glare | none | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| The Winged Dragon of Ra | JUMP-EN045 | tilted on a table | none | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | glare | none | {"isTradingCard":true,"game":"yugioh","name":"Number 39: Utopia Ray Victory","setCode":"PGL3","collectorNumber":"PGL3-EN008","promoStamp":false,"language":"en","firstEdition":true} |
-| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | dim light | none | {"isTradingCard":true,"game":"yugioh","name":"Number 39: Utopia the Lightning","setCode":"PGL3","collectorNumber":"PGL3-EN006","promoStamp":false,"language":"en","firstEdition":tru |
-| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | foil sheen | pick | {"isTradingCard":true,"game":"yugioh","name":"Number 39: Utopia Ray Dragon Titan Galaxy","setCode":"PGL3","collectorNumber":"PGL3-EN008","promoStamp":false,"language":"en","firstEd |
-| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | far and small | pick | {"isTradingCard":true,"game":"yugioh","name":"Number 86: Heroic Champion - Rhongomiant","setCode":"PGL","collectorNumber":"PGL3-EN008","promoStamp":false,"language":"en","firstEdit |
-| Armed Dragon LV7 | DR3-EN015 | tilted on a table | none | {"isTradingCard":true,"game":"yugioh","name":"Armed Dragon LV7","setCode":null,"collectorNumber":"DRL3-EN011","promoStamp":false,"language":"en","firstEdition":false} |
-| Armed Dragon LV7 | DR3-EN015 | glare | none | {"isTradingCard":true,"game":"yugioh","name":"Armed Dragon LV7","setCode":"DR3","collectorNumber":"DR3-EN011","promoStamp":false,"language":"en","firstEdition":false} |
-| Armed Dragon LV7 | DR3-EN015 | dim light | none | {"isTradingCard":true,"game":"yugioh","name":"Armed Dragon LV7","setCode":"GLAS","collectorNumber":"GLAS-EN015","promoStamp":false,"language":"en","firstEdition":false} |
-| Armed Dragon LV7 | DR3-EN015 | foil sheen | none | {"isTradingCard":true,"game":"yugioh","name":"Armed Dragon LV7","setCode":"DR3","collectorNumber":"DR3-EN011","promoStamp":false,"language":"en","firstEdition":false} |
-| Heavy Storm | DLG1-EN049 | tilted on a table | none | {"isTradingCard":true,"game":"yugioh","name":"Heavy Storm","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Armed Dragon LV7 | DR3-EN015 | far and small | none | {"isTradingCard":true,"game":"yugioh","name":"Armed Dragon LV7","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Heavy Storm | DLG1-EN049 | dim light | none | {"isTradingCard":true,"game":"yugioh","name":"Heavy Storm","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Heavy Storm | DLG1-EN049 | glare | none | {"isTradingCard":true,"game":"yugioh","name":"Heavy Storm","setCode":null,"collectorNumber":"LOB-EN056","promoStamp":false,"language":"en","firstEdition":false} |
-| Heavy Storm | DLG1-EN049 | foil sheen | none | {"isTradingCard":true,"game":"yugioh","name":"Heavy Storm","setCode":"LOB","collectorNumber":"LOB-EN001","promoStamp":false,"language":"en","firstEdition":false} |
-| Heavy Storm | DLG1-EN049 | far and small | none | {"isTradingCard":true,"game":"yugioh","name":"Heavy Storm","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| The Winged Dragon of Ra | JUMP-EN045 | glare | pick | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| The Winged Dragon of Ra | JUMP-EN045 | tilted on a table | pick | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| The Winged Dragon of Ra | JUMP-EN045 | foil sheen | pick | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| The Winged Dragon of Ra | JUMP-EN045 | far and small | pick | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| The Winged Dragon of Ra | JUMP-EN045 | dim light | pick | {"isTradingCard":true,"game":"yugioh","name":"The Winged Dragon of Ra","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | tilted on a table | none | {"isTradingCard":true,"game":"yugioh","name":"Number 36: Shadow Sword Dragon, Titanic Galaxy","setCode":"PGL3","collectorNumber":null,"promoStamp":false,"language":"en","firstEditi |
+| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | glare | pick | {"isTradingCard":true,"game":"yugioh","name":"Number 39: Utopia Ray Victory","setCode":"PGL3","collectorNumber":"PGL3-EN008","promoStamp":false,"language":"en","firstEdition":true} |
+| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | foil sheen | pick | {"isTradingCard":true,"game":"yugioh","name":"Number 39: Utopia Ray","setCode":"PGL3","collectorNumber":"PGL3-EN008","promoStamp":false,"language":"en","firstEdition":true} |
+| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | dim light | pick | {"isTradingCard":true,"game":"yugioh","name":"Number 39: Utopia Ray Lancer","setCode":"PGL3","collectorNumber":"PGL3-EN008","promoStamp":false,"language":"en","firstEdition":true} |
+| Number 38: Hope Harbinger Dragon Titanic Galaxy | PGL3-EN008 | far and small | none | {"isTradingCard":true,"game":"yugioh","name":"Number 94: Ghost Rabbit Dragon Titanic Galaxy","setCode":"PGL3","collectorNumber":null,"promoStamp":false,"language":"en","firstEditio |
+| R - Righteous Justice | RYMP-EN025 | tilted on a table | none | {"isTradingCard":true,"game":"yugioh","name":"R - Righteous Justice","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":true} |
+| R - Righteous Justice | RYMP-EN025 | glare | none | {"isTradingCard":true,"game":"yugioh","name":"R - Righteous Justice","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":true} |
+| R - Righteous Justice | RYMP-EN025 | dim light | none | {"isTradingCard":true,"game":"yugioh","name":"R - Righteous Justice","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| R - Righteous Justice | RYMP-EN025 | foil sheen | none | {"isTradingCard":true,"game":"yugioh","name":"R - Righteous Justice","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":true} |
+| R - Righteous Justice | RYMP-EN025 | far and small | none | {"isTradingCard":true,"game":"yugioh","name":"R - Righteous Justice","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":true} |
+| Blackwing - Sirocco the Dawn | GLD3-EN023 | tilted on a table | pick | {"isTradingCard":true,"game":"yugioh","name":"Blackwing - Sirocco the Dawn","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Blackwing - Sirocco the Dawn | GLD3-EN023 | glare | pick | {"isTradingCard":true,"game":"yugioh","name":"Blackwing - Sirocco the Dawn","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Blackwing - Sirocco the Dawn | GLD3-EN023 | dim light | pick | {"isTradingCard":true,"game":"yugioh","name":"Blackwing - Sirocco the Dawn","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Blackwing - Sirocco the Dawn | GLD3-EN023 | foil sheen | pick | {"isTradingCard":true,"game":"yugioh","name":"Blackwing - Sirocco the Dawn","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Blackwing - Sirocco the Dawn | GLD3-EN023 | far and small | pick | {"isTradingCard":true,"game":"yugioh","name":"Blackwing - Sirocco the Dawn","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
 
-## one-piece: NOT YET
+## one-piece: PASS
 
 Image coverage: 98.0% of 700 sampled US$1+ cards and 96.0% of 300 sampled cards of any price have a real picture (placeholders 3, missing 23). 7278 of 7519 cards carry a printed number.
 
-755 images of 151 cards (0 sampled cards had no picture). Errors 0. Median model time 1.43 s. Picker median 3 printings.
+755 images of 151 cards (0 sampled cards had no picture). Errors 0. Median model time 1.31 s. Picker median 4 printings.
 
 #### All
 
 | | images | found (match or in picker) | right card first | wrong card as THE match | none |
 |---|---:|---:|---:|---:|---:|
-| all | 755 | 77.5% | 57.1% | 16.3% | 6.1% |
+| all | 755 | 97.1% | 58.0% | 0.0% | 0.5% |
 
 #### By condition
 
 | | images | found (match or in picker) | right card first | wrong card as THE match | none |
 |---|---:|---:|---:|---:|---:|
-| glare | 151 | 82.1% | 60.3% | 17.2% | 0.7% |
-| dim light | 151 | 76.2% | 57.6% | 17.2% | 6.6% |
-| foil sheen | 151 | 80.1% | 59.6% | 17.9% | 2.0% |
-| tilted on a table | 151 | 80.1% | 59.6% | 18.5% | 1.3% |
-| far and small | 151 | 68.9% | 48.3% | 10.6% | 19.9% |
+| foil sheen | 151 | 99.3% | 59.6% | 0.0% | 0.7% |
+| tilted on a table | 151 | 99.3% | 59.6% | 0.0% | 0.7% |
+| glare | 151 | 100.0% | 59.6% | 0.0% | 0.0% |
+| dim light | 151 | 98.0% | 58.3% | 0.0% | 0.7% |
+| far and small | 151 | 88.7% | 53.0% | 0.0% | 0.7% |
 
 #### By kind of card
 
 | | images | found (match or in picker) | right card first | wrong card as THE match | none |
 |---|---:|---:|---:|---:|---:|
-| US$1+ | 340 | 96.8% | 95.6% | 0.0% | 3.2% |
-| look-alike | 300 | 50.0% | 9.0% | 39.3% | 10.3% |
-| any | 115 | 92.2% | 68.7% | 4.3% | 3.5% |
+| US$1+ | 340 | 97.6% | 96.8% | 0.0% | 1.2% |
+| look-alike | 300 | 96.3% | 9.3% | 0.0% | 0.0% |
+| any | 115 | 97.4% | 70.4% | 0.0% | 0.0% |
 
 #### Misses (up to 20)
 
 | truth | number | condition | result | read |
 |---|---|---|---|---|
-| Yamato (001) | ST09-001 | far and small | none | {"isTradingCard":true,"game":"one piece","name":"Yamato","setCode":"ST09","collectorNumber":"ST09-011","promoStamp":false,"language":"en","firstEdition":false} |
-| Boa Hancock (Sealed Battle 2024 Vol. 2) | P-066 | far and small | none | {"isTradingCard":true,"game":"one piece","name":"Boa Hancock","setCode":null,"collectorNumber":"P-090","promoStamp":true,"language":"en","firstEdition":false} |
-| Trafalgar Law (Illustration Box Vol.6) | P-093 | far and small | none | {"isTradingCard":true,"game":"one piece","name":"Trafalgar Law","setCode":null,"collectorNumber":"P-082","promoStamp":true,"language":"en","firstEdition":false} |
+| Trafalgar Law (Illustration Box Vol.6) | P-093 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Trafalgar Law","setCode":null,"collectorNumber":"P-082","promoStamp":true,"language":"en","firstEdition":false} |
 | Monkey.D.Luffy (Certificate of our crew) (Oversized) | 1/1000 | tilted on a table | none | {"isTradingCard":true,"game":"one piece","name":null,"setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Monkey.D.Luffy (Certificate of our crew) (Oversized) | 1/1000 | dim light | none | {"isTradingCard":true,"game":"one piece","name":null,"setCode":null,"collectorNumber":null,"promoStamp":false,"language":null,"firstEdition":false} |
-| Monkey.D.Luffy (Certificate of our crew) (Oversized) | 1/1000 | foil sheen | none | {"isTradingCard":true,"game":"one piece","name":null,"setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
-| Monkey.D.Luffy (Pirates Party Vol. 3) | P-035 | far and small | none | {"isTradingCard":true,"game":"one piece","name":"Monkey.D.Luffy","setCode":null,"collectorNumber":"P-032","promoStamp":true,"language":"en","firstEdition":false} |
-| Portgas.D.Ace (Premium Card Collection -Flame-Flame Fruit Coliseum Edition-) | P-153 | far and small | none | {"isTradingCard":true,"game":"one piece","name":"Portgas.D.Ace","setCode":null,"collectorNumber":"P-100","promoStamp":true,"language":"en","firstEdition":false} |
-| Monkey.D.Luffy (001) | ST08-001 | dim light | none | {"isTradingCard":true,"game":"one piece","name":"Monkey.D.Luffy","setCode":"ST06","collectorNumber":"ST06-001","promoStamp":false,"language":"en","firstEdition":false} |
-| Monkey.D.Luffy (Premium Card Collection -Flame-Flame Fruit Coliseum Edition-) | P-154 | far and small | none | {"isTradingCard":true,"game":"one piece","name":"Monkey.D.Luffy","setCode":null,"collectorNumber":"P-054","promoStamp":true,"language":"en","firstEdition":false} |
-| Monkey.D.Luffy (Pirates Party 2026 Vol. 3) | P-157 | far and small | none | {"isTradingCard":true,"game":"one piece","name":"Monkey.D.Luffy","setCode":"P","collectorNumber":"P-197","promoStamp":true,"language":"en","firstEdition":false} |
-| Yosaku & Johnny | OP03-053 | tilted on a table | match WRONG | {"isTradingCard":true,"game":"one piece","name":"Yosaku & Johnny","setCode":"OP03","collectorNumber":"OP03-053","promoStamp":true,"language":"en","firstEdition":false} |
-| Yosaku & Johnny | OP03-053 | glare | match WRONG | {"isTradingCard":true,"game":"one piece","name":"Yosaku & Johnny","setCode":"OP03","collectorNumber":"OP03-053","promoStamp":true,"language":"en","firstEdition":false} |
-| Yosaku & Johnny | OP03-053 | dim light | match WRONG | {"isTradingCard":true,"game":"one piece","name":"Yosaku & Johnny","setCode":"OP03","collectorNumber":"OP03-053","promoStamp":true,"language":"en","firstEdition":false} |
-| Yosaku & Johnny | OP03-053 | foil sheen | match WRONG | {"isTradingCard":true,"game":"one piece","name":"Yosaku & Johnny","setCode":"OP03","collectorNumber":"OP03-053","promoStamp":true,"language":"en","firstEdition":false} |
-| Yosaku & Johnny | OP03-053 | far and small | match WRONG | {"isTradingCard":true,"game":"one piece","name":"Yosaku & Johnny","setCode":"OP03","collectorNumber":"OP03-053","promoStamp":true,"language":"en","firstEdition":false} |
-| Shirahoshi (October Championship 2024 Online Regional) | OP03-116 | tilted on a table | match WRONG | {"isTradingCard":true,"game":"one piece","name":"Shirahoshi","setCode":"OP03","collectorNumber":"OP03-116","promoStamp":true,"language":"en","firstEdition":false} |
-| Shirahoshi (October Championship 2024 Online Regional) | OP03-116 | glare | none | {"isTradingCard":true,"game":"one piece","name":"Shirahoshi","setCode":"OP03","collectorNumber":"OP03-118","promoStamp":true,"language":"en","firstEdition":false} |
-| Shirahoshi (October Championship 2024 Online Regional) | OP03-116 | foil sheen | none | {"isTradingCard":true,"game":"one piece","name":"Shirahoshi","setCode":"OP03","collectorNumber":"OP03-115","promoStamp":true,"language":"en","firstEdition":false} |
-| Shirahoshi (October Championship 2024 Online Regional) | OP03-116 | dim light | none | {"isTradingCard":true,"game":"one piece","name":"Shirahoshi","setCode":"OP03","collectorNumber":"OP03-119","promoStamp":true,"language":"en","firstEdition":false} |
+| Monkey.D.Luffy (Certificate of our crew) (Oversized) | 1/1000 | dim light | none | {"isTradingCard":true,"game":"one piece","name":null,"setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Monkey.D.Luffy (Certificate of our crew) (Oversized) | 1/1000 | foil sheen | none | {"isTradingCard":true,"game":"one piece","name":null,"setCode":null,"collectorNumber":null,"promoStamp":true,"language":"en","firstEdition":false} |
+| Monkey.D.Luffy (Certificate of our crew) (Oversized) | 1/1000 | far and small | none | {"isTradingCard":true,"game":"one piece","name":null,"setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Monkey.D.Luffy (Pirates Party Vol. 3) | P-035 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Monkey.D.Luffy","setCode":"P","collectorNumber":null,"promoStamp":true,"language":"en","firstEdition":false} |
+| Portgas.D.Ace (Premium Card Collection -Flame-Flame Fruit Coliseum Edition-) | P-153 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Portgas.D.Ace","setCode":null,"collectorNumber":"P-100","promoStamp":true,"language":"en","firstEdition":false} |
+| Monkey.D.Luffy (Premium Card Collection -Flame-Flame Fruit Coliseum Edition-) | P-154 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Monkey.D.Luffy","setCode":"P","collectorNumber":null,"promoStamp":true,"language":"en","firstEdition":false} |
+| Kouzuki Momonosuke (Premium Card Collection -Best Selection Vol. 4-) | OP10-028 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Kouzuki Momonosuke","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Sabo (Japanese Version 3rd Anniversary Set) | OP07-118 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Sabo","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Roronoa Zoro (One Piece Day Dallas 2025) | OP07-113 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Roronoa Zoro","setCode":"OP07","collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Sabo (Sealed Battle 2023 Vol. 1) | OP04-083 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Sabo","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Nami (Parallel) | ST21-009 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Nami","setCode":"ST21","collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Brook (035) | OP10-035 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Brook","setCode":"OP10","collectorNumber":"OP10-020","promoStamp":true,"language":"en","firstEdition":false} |
+| Sanji (Round 1 Promo) | OP15-047 | dim light | pick | {"isTradingCard":true,"game":"one piece","name":"Sanji","setCode":null,"collectorNumber":null,"promoStamp":true,"language":"en","firstEdition":false} |
+| Sanji (Round 1 Promo) | OP15-047 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Sanji","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Usopp (Alternate Art) | EB02-022 | dim light | pick | {"isTradingCard":true,"game":"one piece","name":"Usopp","setCode":"ERC2","collectorNumber":"ERC2-022","promoStamp":false,"language":"en","firstEdition":false} |
+| Sanji (Event Pack Vol. 2) | P-034 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Sanji","setCode":null,"collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Crocodile (Winner Pack Vol. 5) | ST03-003 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Crocodile","setCode":"ST10","collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
+| Portgas.D.Ace (001) (Alternate Art) | OP16-001 | far and small | pick | {"isTradingCard":true,"game":"one piece","name":"Portgas.D.Ace","setCode":"OP01","collectorNumber":null,"promoStamp":false,"language":"en","firstEdition":false} |
