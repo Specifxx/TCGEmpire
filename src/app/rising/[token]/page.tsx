@@ -17,6 +17,7 @@ import {
 } from "@/lib/rising-snapshot";
 import { MoveBadge } from "@/components/MoveBadge";
 import { RisersShop } from "@/components/RisersShop";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { weekAgoLabel } from "@/lib/rising-movement";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure, PaidLinkTag } from "@/components/AffiliateDisclosure";
@@ -325,6 +326,15 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
           </p>
         </div>
       )}
+
+      {/* Owned audience (2026-11-20): Reddit lands here and rarely buys; a free account's watchlist emails them when a card
+          drops, a way back that is not Reddit. Signed-out only, a client island after the chart, never above it. */}
+      <InlineSignupPrompt
+        className="mt-8"
+        surface="inline_rising"
+        title="Get an email when a card on this chart gets cheaper"
+        body="With a free account you can watch any card here, and we email you when its price drops. Alerts only, and every email has a stop link."
+      />
 
       {data.drops && data.drops.length > 0 && (
         <section className="mt-8" aria-labelledby="drops">
