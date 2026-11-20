@@ -116,12 +116,12 @@
       "EU": 6497,
       "SG": 33000,
       "UK": 13303,
-      "US": 15899
+      "US": 15701
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 101000
+      "US": 98999
     },
     "OGN|Booster Pack": {
       "CA": 1299,
@@ -171,7 +171,7 @@
       "CA": 5997,
       "EU": 799,
       "SG": 7075,
-      "US": 6353
+      "US": 6484
     },
     "OGN|Champion Deck (Viktor) Display": {
       "US": 27296
@@ -184,7 +184,7 @@
       "US": 2649
     },
     "OGN|Sealed": {
-      "EU": 485
+      "EU": 499
     },
     "OGN|Sleeved Booster": {
       "CA": 1895,
@@ -213,7 +213,7 @@
     "RAD|Booster Box": {
       "AU": 19000,
       "CA": 14500,
-      "EU": 9399,
+      "EU": 9270,
       "SG": 15000,
       "UK": 8799,
       "US": 9570
@@ -221,9 +221,9 @@
     "RAD|Booster Case": {
       "AU": 130000,
       "CA": 129999,
-      "EU": 58000,
+      "EU": 50200,
       "UK": 53499,
-      "US": 53400
+      "US": 53399
     },
     "RAD|Booster Pack": {
       "AU": 1000,
@@ -247,7 +247,7 @@
     },
     "RAD|Pre-Rift Event Kit": {
       "CA": 4995,
-      "EU": 2130,
+      "EU": 3379,
       "US": 4000
     },
     "RAD|Pre-Rift Kit": {
@@ -258,12 +258,12 @@
       "US": 1960
     },
     "RAD|Sealed": {
-      "EU": 349
+      "EU": 319
     },
     "RAD|Showdown Decks": {
       "AU": 4499,
       "CA": 2499,
-      "EU": 1499,
+      "EU": 1290,
       "SG": 3356,
       "UK": 1999,
       "US": 1799
@@ -314,14 +314,14 @@
       "EU": 9407,
       "SG": 8411,
       "UK": 11499,
-      "US": 15147
+      "US": 15100
     },
     "SFD|Booster Case": {
       "AU": 180000,
       "CA": 150000,
       "EU": 59990,
       "UK": 73999,
-      "US": 98990
+      "US": 98900
     },
     "SFD|Booster Pack": {
       "AU": 1400,
@@ -393,7 +393,7 @@
       "US": 7500
     },
     "SFD|Sealed": {
-      "EU": 300
+      "EU": 399
     },
     "SFD|Sleeved Booster": {
       "EU": 999,
@@ -409,7 +409,7 @@
       "EU": 24999
     },
     "T1S|T1 Signature Edition": {
-      "EU": 115000
+      "EU": 100000
     },
     "T1S|T1 Signature Edition|EN": {
       "AU": 971070,
@@ -437,7 +437,7 @@
       "US": 599
     },
     "UNL|Bundle": {
-      "EU": 5999,
+      "EU": 6999,
       "SG": 9092,
       "US": 6500
     },
@@ -449,7 +449,7 @@
     "UNL|Champion Deck (Vex)": {
       "AU": 3295,
       "CA": 3995,
-      "EU": 1550,
+      "EU": 1590,
       "SG": 3300,
       "UK": 1699,
       "US": 2498
@@ -488,7 +488,7 @@
       "US": 1299
     },
     "UNL|Sealed": {
-      "EU": 410
+      "EU": 400
     },
     "UNL|Showdown Decks": {
       "US": 1499
@@ -507,7 +507,7 @@
     "VEN|Booster Box": {
       "AU": 19000,
       "CA": 15954,
-      "EU": 9200,
+      "EU": 9750,
       "SG": 15500,
       "UK": 9199,
       "US": 10999
@@ -517,7 +517,7 @@
       "CA": 96999,
       "EU": 60000,
       "UK": 59500,
-      "US": 66999
+      "US": 66900
     },
     "VEN|Booster Pack": {
       "AU": 1000,
@@ -567,7 +567,7 @@
       "EU": 1995,
       "SG": 2616,
       "UK": 1699,
-      "US": 1156
+      "US": 1199
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -596,7 +596,7 @@
       "EU": 35000
     },
     "arcaneboxset": {
-      "EU": 39000
+      "EU": 35000
     },
     "arcaneboxsetriftbound": {
       "CA": 94999
@@ -617,7 +617,7 @@
       "EU": 6399
     },
     "kdacouturecollectionbox": {
-      "EU": 20100
+      "EU": 20001
     },
     "leagueoflegendsbundle24popvinyls": {
       "AU": 8396
@@ -645,7 +645,7 @@
       "EU": 1000
     },
     "replacementcardbooster": {
-      "EU": 3000
+      "EU": 4000
     },
     "riftboundarcaneboxset": {
       "UK": 10000
@@ -740,6 +740,9 @@
     "riftboundleesinchampiondeckleagueoflegen": {
       "EU": 3149
     },
+    "riftboundoriginboosterbox": {
+      "CA": 28999
+    },
     "riftboundoriginjinxchampiondeck": {
       "AU": 3300
     },
@@ -797,7 +800,7 @@
       "US": 17900
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 27299
+      "US": 26799
     },
     "riftboundxworlds2026edition": {
       "EU": 60000
