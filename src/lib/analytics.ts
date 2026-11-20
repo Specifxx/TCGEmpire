@@ -84,7 +84,10 @@ export function trackEvent(name: string, params?: Record<string, string | number
   const cleaned = params
     ? (Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string | number | boolean>)
     : undefined;
-  if (!GA4_ONLY_EVENTS.has(name)) vercelTrack(name, cleaned);
+  if (!GA4_ONLY_EVENTS.has(name)) {
+    vaQueue();
+    vercelTrack(name, cleaned);
+  }
   if (typeof window !== "undefined") window.gtag?.("event", name, cleaned);
   // A buy click by a visitor a creator sent counts toward that creator's revenue
   // share (lib/creator-payout.ts). Only those visitors carry the cookie.
@@ -124,4 +127,20 @@ export function firePremiumClickBeacon(source: string): void {
   } catch {
     /* never let the beacon break the click it's attached to */
   }
+}
+
+/**
+ * Vercel's track() drops an event when `window.va` does not exist yet (it calls `window.va?.(…)`), and `window.va` only exists once
+ * <Analytics /> has injected its script, which ConsentGatedAnalytics renders after the consent check, i.e. after the page's own
+ * mount effects. So an event sent on mount (top_seen, 2026-11-19: 0 in Vercel while buy_click carried its arm) was lost every time.
+ * This sets up the same queue the library's own inject() makes (`window.vaq`, drained by the script when it loads); without consent
+ * the script never loads and nothing is sent.
+ */
+export function vaQueue(): void {
+  if (typeof window === "undefined") return;
+  const w = window as unknown as { va?: (...a: unknown[]) => void; vaq?: unknown[][] };
+  if (w.va) return;
+  w.va = (...params: unknown[]) => {
+    (w.vaq = w.vaq || []).push(params);
+  };
 }
