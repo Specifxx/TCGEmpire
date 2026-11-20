@@ -40,7 +40,7 @@
     },
     "LGC|Booster Case": {
       "EU": 72000,
-      "US": 69386
+      "US": 66887
     },
     "LGC|Booster Pack": {
       "CA": 2400,
@@ -124,7 +124,7 @@
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 96980
+      "US": 95680
     },
     "OGN|Booster Pack": {
       "AU": 1800,
@@ -245,7 +245,7 @@
       "US": 2675
     },
     "RAD|Bundle Case": {
-      "US": 41886
+      "US": 39386
     },
     "RAD|Nexus Night Pack": {
       "US": 874
@@ -326,7 +326,7 @@
       "CA": 150000,
       "EU": 59990,
       "UK": 73999,
-      "US": 98899
+      "US": 98898
     },
     "SFD|Booster Pack": {
       "AU": 1400,
@@ -427,7 +427,7 @@
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 55500,
-      "US": 99460
+      "US": 99459
     },
     "UNL|Booster Pack": {
       "AU": 1100,
@@ -515,7 +515,7 @@
       "CA": 96999,
       "EU": 60000,
       "UK": 59500,
-      "US": 66880
+      "US": 64381
     },
     "VEN|Booster Pack": {
       "AU": 1000,
@@ -686,7 +686,7 @@
     },
     "riftboundleagueoflegendsarcaneboxset": {
       "CA": 97000,
-      "US": 14900
+      "US": 36949
     },
     "riftboundleagueoflegendsarcaneboxseteng": {
       "EU": 54499
@@ -756,24 +756,6 @@
     "riftboundshowdowndeckzedvsshen": {
       "CA": 2155
     },
-    "riftboundslabcaitlyn068aarcaneboxsetcgcp": {
-      "CA": 29999
-    },
-    "riftboundslabheimerdinger111aarcaneboxse": {
-      "CA": 34999
-    },
-    "riftboundslabjinx202barcaneboxsetcgc10ge": {
-      "CA": 34999
-    },
-    "riftboundslabvi036aarcaneboxsetcgc9mint2": {
-      "CA": 12999
-    },
-    "riftboundslabviktor247barcaneboxsetcgcpr": {
-      "CA": 19999
-    },
-    "riftboundslabwarwick159aarcaneboxsetcgcp": {
-      "CA": 24999
-    },
     "riftboundtcgfiorachampiondeck": {
       "CA": 6000
     },
@@ -810,7 +792,7 @@
       "CA": 2155
     },
     "secretgardenbox": {
-      "US": 20000
+      "US": 22400
     },
     "secretgardenboxset": {
       "EU": 6999
