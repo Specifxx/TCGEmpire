@@ -1,41 +1,109 @@
 {
- "at": "2026-11-20T03:07:12.223Z",
+ "at": "2026-11-20T03:24:25.047Z",
  "model": "claude-haiku-5-5",
  "passFound": 0.95,
  "passWrong": 0.01,
  "games": {
+  "pokemon": {
+   "pass": false,
+   "images": 750,
+   "cards": 150,
+   "skippedNoImage": 1,
+   "errors": 0,
+   "found": 0.8347,
+   "wrongMatch": 0.0107,
+   "top": 0.7053,
+   "matchShare": 0.5387,
+   "pickMedian": 4,
+   "medianMs": 1400,
+   "costUsd": 0.183,
+   "coverage": {
+    "cards": 28875,
+    "priced": 17069,
+    "withNumber": 28272,
+    "usd1": {
+     "checked": 700,
+     "real": 689,
+     "placeholder": 0,
+     "missing": 11,
+     "share": 0.9842857142857143
+    },
+    "any": {
+     "checked": 300,
+     "real": 297,
+     "placeholder": 0,
+     "missing": 3,
+     "share": 0.99
+    },
+    "placeholders": 0
+   }
+  },
+  "yugioh": {
+   "pass": false,
+   "images": 750,
+   "cards": 150,
+   "skippedNoImage": 1,
+   "errors": 0,
+   "found": 0.8307,
+   "wrongMatch": 0,
+   "top": 0.4293,
+   "matchShare": 0.252,
+   "pickMedian": 6,
+   "medianMs": 1428,
+   "costUsd": 0.1858,
+   "coverage": {
+    "cards": 46701,
+    "priced": 13967,
+    "withNumber": 46685,
+    "usd1": {
+     "checked": 700,
+     "real": 690,
+     "placeholder": 0,
+     "missing": 10,
+     "share": 0.9857142857142858
+    },
+    "any": {
+     "checked": 300,
+     "real": 299,
+     "placeholder": 0,
+     "missing": 1,
+     "share": 0.9966666666666667
+    },
+    "placeholders": 0
+   }
+  },
   "one-piece": {
    "pass": false,
-   "images": 0,
-   "cards": 0,
-   "skippedNoImage": 2,
+   "images": 755,
+   "cards": 151,
+   "skippedNoImage": 0,
    "errors": 0,
-   "found": 0,
-   "wrongMatch": 0,
-   "top": 0,
-   "matchShare": 0,
-   "pickMedian": 0,
-   "medianMs": 0,
-   "costUsd": 0,
+   "found": 0.7748,
+   "wrongMatch": 0.1629,
+   "top": 0.5709,
+   "matchShare": 0.6026,
+   "pickMedian": 3,
+   "medianMs": 1425,
+   "costUsd": 0.1852,
    "coverage": {
     "cards": 7519,
     "priced": 3290,
     "withNumber": 7278,
     "usd1": {
-     "checked": 3,
-     "real": 0,
-     "placeholder": 0,
-     "missing": 3,
-     "share": 0
+     "checked": 700,
+     "real": 686,
+     "placeholder": 1,
+     "missing": 13,
+     "share": 0.98
     },
     "any": {
-     "checked": 1,
-     "real": 0,
-     "placeholder": 0,
-     "missing": 1,
-     "share": 0
+     "checked": 300,
+     "real": 288,
+     "placeholder": 2,
+     "missing": 10,
+     "share": 0.96
     },
-    "placeholders": 0
+    "placeholders": 1
    }
   }
  }
