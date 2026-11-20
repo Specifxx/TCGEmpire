@@ -1,0 +1,42 @@
+# Collector printings missing from the catalogue (scripts/collab-cards.ts, owner
+# 2026-11-20). Dispatch it on a session branch: it reports what TCGplayer and Riot's
+# gallery have that we lack (discover), and, when data/collab-cards/images.json
+# exists, fetches and crops those card images and commits them to the same branch,
+# so they ship through the normal PR. Never on main: it pushes to the branch it runs on.
+name: Collab cards
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: collab-cards-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - name: Discover
+        run: npx tsx scripts/collab-cards.ts
+        env:
+          MODE: discover
+      - name: Images
+        if: hashFiles('data/collab-cards/images.json') != ''
+        env:
+          MODE: images
+        run: |
+          npx tsx scripts/collab-cards.ts
+          npx tsx scripts/optimize-images.ts || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add public/collab-cards public/image-manifest.json
+          if git diff --cached --quiet; then echo "no new images"; exit 0; fi
+          git commit -m "Collab cards: cropped card images (collab-cards.yml)"
+          git push origin HEAD:${GITHUB_REF_NAME}
