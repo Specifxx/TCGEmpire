@@ -29,7 +29,7 @@
     },
     "LGC|Booster Box": {
       "AU": 34000,
-      "CA": 15999,
+      "CA": 16999,
       "EU": 12500,
       "SG": 20000,
       "UK": 10799,
@@ -37,7 +37,7 @@
     },
     "LGC|Booster Case": {
       "EU": 72000,
-      "US": 69489
+      "US": 69398
     },
     "LGC|Booster Pack": {
       "CA": 2400,
@@ -116,15 +116,15 @@
       "EU": 6497,
       "SG": 33000,
       "UK": 13303,
-      "US": 16385
+      "US": 15899
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 102899
+      "US": 101000
     },
     "OGN|Booster Pack": {
-      "CA": 1395,
+      "CA": 1299,
       "UK": 700,
       "US": 500
     },
@@ -171,7 +171,7 @@
       "CA": 5997,
       "EU": 799,
       "SG": 7075,
-      "US": 6484
+      "US": 6353
     },
     "OGN|Champion Deck (Viktor) Display": {
       "US": 27296
@@ -199,7 +199,7 @@
       "EU": 7999
     },
     "OGS|Proving Grounds": {
-      "AU": 2500,
+      "AU": 9995,
       "CA": 1090,
       "EU": 895,
       "SG": 3513,
@@ -216,14 +216,14 @@
       "EU": 9399,
       "SG": 15000,
       "UK": 8799,
-      "US": 9599
+      "US": 9570
     },
     "RAD|Booster Case": {
       "AU": 130000,
       "CA": 129999,
       "EU": 58000,
       "UK": 53499,
-      "US": 50000
+      "US": 53400
     },
     "RAD|Booster Pack": {
       "AU": 1000,
@@ -252,10 +252,10 @@
     },
     "RAD|Pre-Rift Kit": {
       "AU": 4500,
-      "CA": 3995,
+      "CA": 4121,
       "EU": 3199,
       "UK": 2700,
-      "US": 2495
+      "US": 1960
     },
     "RAD|Sealed": {
       "EU": 349
@@ -314,14 +314,14 @@
       "EU": 9407,
       "SG": 8411,
       "UK": 11499,
-      "US": 14700
+      "US": 15147
     },
     "SFD|Booster Case": {
       "AU": 180000,
       "CA": 150000,
       "EU": 59990,
       "UK": 73999,
-      "US": 99000
+      "US": 98990
     },
     "SFD|Booster Pack": {
       "AU": 1400,
@@ -362,7 +362,7 @@
     },
     "SFD|Champion Deck (Rumble)": {
       "AU": 1999,
-      "CA": 1999,
+      "CA": 2294,
       "EU": 1100,
       "SG": 2500,
       "UK": 1685,
@@ -397,7 +397,7 @@
     },
     "SFD|Sleeved Booster": {
       "EU": 999,
-      "US": 1144
+      "US": 1143
     },
     "SFD|Sleeved Booster (Art Set)": {
       "US": 3200
@@ -429,11 +429,11 @@
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 55500,
-      "US": 99479
+      "US": 99469
     },
     "UNL|Booster Pack": {
       "AU": 1100,
-      "CA": 899,
+      "CA": 999,
       "US": 599
     },
     "UNL|Bundle": {
@@ -495,7 +495,7 @@
     },
     "UNL|Sleeved Booster": {
       "EU": 999,
-      "US": 900
+      "US": 932
     },
     "UNL|Sleeved Booster (Art Set)": {
       "US": 2999
@@ -510,22 +510,21 @@
       "EU": 9200,
       "SG": 15500,
       "UK": 9199,
-      "US": 10649
+      "US": 10999
     },
     "VEN|Booster Case": {
       "AU": 125870,
       "CA": 96999,
       "EU": 60000,
       "UK": 59500,
-      "US": 67989
+      "US": 66999
     },
     "VEN|Booster Pack": {
       "AU": 1000,
       "CA": 695,
-      "EU": 795,
       "SG": 800,
       "UK": 499,
-      "US": 491
+      "US": 489
     },
     "VEN|Bundle": {
       "AU": 6499,
@@ -536,7 +535,7 @@
       "US": 2499
     },
     "VEN|Bundle Case": {
-      "US": 50100
+      "US": 50141
     },
     "VEN|Champion Deck": {
       "CA": 5395
@@ -565,10 +564,10 @@
     "VEN|Showdown Decks": {
       "AU": 3500,
       "CA": 1995,
-      "EU": 1999,
+      "EU": 1995,
       "SG": 2616,
       "UK": 1699,
-      "US": 1153
+      "US": 1156
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -798,7 +797,7 @@
       "US": 17900
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 26999
+      "US": 27299
     },
     "riftboundxworlds2026edition": {
       "EU": 60000
