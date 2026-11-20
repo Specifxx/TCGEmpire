@@ -70,14 +70,25 @@ function hrefs(page: string, base: string): URL[] {
   return out;
 }
 
+/** Why /go links did not resolve, per site (click integrity, 2026-11-20: YGO, Lorcana and Cyberpunk read 0 links). */
+const goMiss: Record<string, Record<string, number>> = {};
+function miss(site: string, why: string) {
+  const m = (goMiss[site] ??= {});
+  m[why] = (m[why] ?? 0) + 1;
+}
+
 /** Where a site's own /go link sends a visitor: one hop, never followed off the site. */
 async function resolveGo(u: URL): Promise<string | null> {
+  const site = u.hostname.replace(/^www\./, "");
   try {
     // A person's click: /go sends a request without these untagged, as a bot's (src/lib/bot-click.ts on the sister sites).
     const r = await fetch(u, { redirect: "manual", headers: { "user-agent": UA, "accept-language": "en-US", "sec-fetch-mode": "navigate" }, signal: AbortSignal.timeout(15_000) });
     const loc = r.headers.get("location");
+    if (!loc) miss(site, `status ${r.status}, no location`);
+    else if (new URL(loc, u).hostname.replace(/^www\./, "") === site) miss(site, `sent back to our own site (${new URL(loc, u).pathname})`);
     return loc ? new URL(loc, u).toString() : null;
-  } catch {
+  } catch (e) {
+    miss(site, e instanceof Error ? e.name : "error");
     return null;
   }
 }
@@ -98,7 +109,11 @@ async function auditSite(origin: string, joined: string[]): Promise<SiteTally> {
     const home = await html(origin);
     const base = new URL(origin);
     const internal = hrefs(home, origin).filter((u) => u.hostname === base.hostname || u.hostname === `www.${base.hostname}` || `www.${u.hostname}` === base.hostname);
-    let products = [...new Set(internal.filter((u) => PRODUCT.test(u.pathname)).map((u) => u.pathname))];
+    // /card/<slug> first: on YGO, Lorcana, Cyberpunk and TCG Prices the header's /sealed/<type> hubs (lists, no buy links)
+    // also match PRODUCT and came first in page order, so every page read was a hub (click integrity, 2026-11-20).
+    let products = [...new Set(internal.filter((u) => PRODUCT.test(u.pathname)).map((u) => u.pathname))].sort(
+      (a, b) => Number(!/\/card\//.test(a)) - Number(!/\/card\//.test(b)),
+    );
     if (products.length < 3) products = [...new Set([...products, ...internal.filter((u) => FALLBACK.test(u.pathname)).map((u) => u.pathname)])];
     if (products.length < 3) products = [...new Set([...products, ...internal.filter((u) => DEEP.test(u.pathname)).map((u) => u.pathname)])];
     const pages: Array<[string, string]> = [[origin, home]];
@@ -112,6 +127,7 @@ async function auditSite(origin: string, joined: string[]): Promise<SiteTally> {
     }
     t.pages = pages.length;
     let goSeen = 0;
+    let goLinks = 0;
     for (const [url, body] of pages) {
       for (const u of hrefs(body, url)) {
         const local = u.hostname.replace(/^www\./, "") === base.hostname.replace(/^www\./, "");
@@ -119,6 +135,7 @@ async function auditSite(origin: string, joined: string[]): Promise<SiteTally> {
           addLink(t, u.toString(), joined);
           continue;
         }
+        if (GO.test(u.pathname)) goLinks++;
         if (!GO.test(u.pathname) || goSeen >= GO_LIMIT) continue;
         goSeen++;
         await sleep(150);
@@ -126,6 +143,8 @@ async function auditSite(origin: string, joined: string[]): Promise<SiteTally> {
         if (dest) addLink(t, dest, joined);
       }
     }
+    for (const [url, body] of pages) console.log(`    ${url}: ${body.length} bytes, ${hrefs(body, url).length} links`);
+    console.log(`  ${t.site}: ${goLinks} /go links in ${pages.length} pages, ${goSeen} asked; misses ${JSON.stringify(goMiss[t.site] ?? {})}`);
   } catch (e) {
     t.error = e instanceof Error ? e.message : String(e);
   }
