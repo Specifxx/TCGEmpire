@@ -109,7 +109,11 @@ async function auditSite(origin: string, joined: string[]): Promise<SiteTally> {
     const home = await html(origin);
     const base = new URL(origin);
     const internal = hrefs(home, origin).filter((u) => u.hostname === base.hostname || u.hostname === `www.${base.hostname}` || `www.${u.hostname}` === base.hostname);
-    let products = [...new Set(internal.filter((u) => PRODUCT.test(u.pathname)).map((u) => u.pathname))];
+    // /card/<slug> first: on YGO, Lorcana, Cyberpunk and TCG Prices the header's /sealed/<type> hubs (lists, no buy links)
+    // also match PRODUCT and came first in page order, so every page read was a hub (click integrity, 2026-11-20).
+    let products = [...new Set(internal.filter((u) => PRODUCT.test(u.pathname)).map((u) => u.pathname))].sort(
+      (a, b) => Number(!/\/card\//.test(a)) - Number(!/\/card\//.test(b)),
+    );
     if (products.length < 3) products = [...new Set([...products, ...internal.filter((u) => FALLBACK.test(u.pathname)).map((u) => u.pathname)])];
     if (products.length < 3) products = [...new Set([...products, ...internal.filter((u) => DEEP.test(u.pathname)).map((u) => u.pathname)])];
     const pages: Array<[string, string]> = [[origin, home]];
