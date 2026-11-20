@@ -17,7 +17,7 @@ test("trackEvent() mirrors to both Vercel Analytics and GA4, stripping undefined
   // entries, filtered into `cleaned` before either destination is called, so
   // neither a Vercel Analytics type error nor a literal-undefined GA4
   // dimension can happen. See DECISIONS.md's merge-reconciliation section.
-  assert.match(src, /vercelTrack\(name, cleaned\)/);
+  assert.match(src, /vercelTrack\(name, forVercel\(cleaned\)\)/);
   assert.match(src, /window\.gtag\?\.\("event", name, cleaned\)/);
   assert.match(src, /typeof window !== "undefined"/, "must guard the window access for any non-browser caller");
   assert.match(src, /filter\(\(\[, v\]\) => v !== undefined\)/, "undefined params must be stripped before either destination sees them");

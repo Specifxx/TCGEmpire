@@ -21,12 +21,10 @@ test("the priced and the unpriced Amazon rows use .btn-amazon", () => {
   assert.match(live, /retailer="amazon_sealed"/);
 });
 
-// It is a full-width SECONDARY button since 2026-11-20 (boardroom): as the first btn-primary on a phone it drew taps off the
-// price rows, and Rift's quick-view buy clicks fell from ~41 to ~10 visitors a day on 18 Nov, the day it went primary.
-test("every quick view has a full-width secondary See full page button, never the primary colour", () => {
+test("every quick view has a prominent See full page button", () => {
   for (const f of ["src/components/QuickView.tsx", "src/components/SealedQuickView.tsx", "src/components/pokemon/PokemonQuickView.tsx"]) {
     const src = read(f);
-    assert.match(src, /data-quickview-fullpage className="btn-ghost[^"]*min-h-11[^"]*w-full/, f);
+    assert.match(src, /data-quickview-fullpage className="btn-primary[^"]*min-h-11[^"]*w-full/, f);
     assert.match(src, /See full page: price history and details/, f);
   }
 });

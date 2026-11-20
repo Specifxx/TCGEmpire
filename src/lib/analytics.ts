@@ -80,12 +80,29 @@ const GA4_ONLY_EVENTS = new Set([
   "creator_apply",
 ]);
 
+// VERCEL DROPS AN EVENT WITH MORE THAN 16 PROPERTIES, silently and whole (measured 2026-11-20 with probe events: 16
+// arrived, 17, 18 and 19 never did). From 18 Nov the A/B arms on buy_click pushed card-row clicks to 19-21 properties,
+// so every quick-view and card-table buy click vanished from Vercel while sealed rows (fewer properties) still counted.
+// Vercel gets at most VERCEL_MAX_PROPS: the keys in VERCEL_DROP_FIRST go first, then any key past the limit. GA4 still
+// gets every key. tests/analytics-props.test.ts pins it.
+export const VERCEL_MAX_PROPS = 16;
+const VERCEL_DROP_FIRST = ["transport_type", "card_id", "condition", "variant", "dock_arm", "ebay_btn", "in_stock", "campaign"];
+export function forVercel(data: Record<string, string | number | boolean> | undefined): Record<string, string | number | boolean> | undefined {
+  if (!data) return data;
+  const keys = Object.keys(data);
+  if (keys.length <= VERCEL_MAX_PROPS) return data;
+  const drop = new Set<string>();
+  for (const k of VERCEL_DROP_FIRST) if (keys.length - drop.size > VERCEL_MAX_PROPS && k in data) drop.add(k);
+  const kept = keys.filter((k) => !drop.has(k)).slice(0, VERCEL_MAX_PROPS);
+  return Object.fromEntries(kept.map((k) => [k, data[k]]));
+}
+
 export function trackEvent(name: string, params?: Record<string, string | number | boolean | undefined>): void {
   const cleaned = params
     ? (Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string | number | boolean>)
     : undefined;
   vaQueue();
-  if (!GA4_ONLY_EVENTS.has(name)) vercelTrack(name, cleaned);
+  if (!GA4_ONLY_EVENTS.has(name)) vercelTrack(name, forVercel(cleaned));
   if (typeof window !== "undefined") window.gtag?.("event", name, cleaned);
   // A buy click by a visitor a creator sent counts toward that creator's revenue
   // share (lib/creator-payout.ts). Only those visitors carry the cookie.

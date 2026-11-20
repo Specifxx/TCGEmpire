@@ -163,7 +163,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
 
           {/* "See full page" (owner, 2026-11-18): a real button right under the header, visible without scrolling on a phone. */}
           <div className="border-b border-ink-800 px-4 pb-4 pt-0 sm:px-5">
-            <Link href={sealedPath(group.groupKey)} prefetch={false} onClick={onClose} data-quickview-fullpage className="btn-ghost min-h-11 w-full text-sm">
+            <Link href={sealedPath(group.groupKey)} prefetch={false} onClick={onClose} data-quickview-fullpage className="btn-primary min-h-11 w-full text-sm">
               See full page: price history and details →
             </Link>
           </div>

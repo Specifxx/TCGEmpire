@@ -25050,3 +25050,24 @@ does everything else:
   model call gives the read back. `SISTER_SCAN=0` switches it off; it is off without `ANTHROPIC_API_KEY`.
 - No second "which printing" call: on TCG Singles DB look-alike printings are shown with their pictures and the visitor picks.
 - The photo is never stored and no eBay call is made. `tests/scan-sister.test.ts`.
+
+## 2026-11-20: Vercel drops any event with more than 16 properties; buy_click is trimmed to 16 for Vercel
+
+**Found by the buy-clicks boardroom, 2026-11-20.** Probe events sent from riftcompare.com showed the limit. Events with 8 to 16 properties
+arrived in Vercel Web Analytics. Events with 17, 18 and 19 properties never arrived: Vercel drops them silently and whole,
+and nothing errors in the browser.
+
+- **What it broke:** from 18 Nov the A/B arms (`cart_arm` #506, `dock_arm` #516, `ad_look` #525, `top_arm` #539,
+  `ebay_btn` #544, `ebay_pop` #555) were prepended to every `buy_click`. A card row's click carries `card_id`,
+  `card_name`, `variant`, `condition` and `in_stock` too, which comes to 19 to 21 properties, so every quick-view (`modal`)
+  and card-table buy click vanished from Vercel. Sealed rows have fewer properties and kept counting. The clicks still
+  reached the stores. Only the count was lost. Vercel showed Rift's buy clickers falling from ~70 to 36 a day, and
+  every Rift A/B read that relies on card rows is short from 18 Nov until this ships.
+- **The fix:** `trackEvent` sends Vercel `forVercel(data)`, at most `VERCEL_MAX_PROPS` (16). It drops `transport_type`,
+  `card_id`, `condition`, `variant`, `dock_arm`, `ebay_btn`, `in_stock` and `campaign` first, in that order, then anything
+  past 16. GA4 still gets every key. `tests/analytics-props.test.ts` pins it.
+- **Correction to the entry above:** the "See full page" restyle in #571 rested on this artefact. Card-row
+  clicks were not falling; they were not being counted. The button goes back to `btn-primary`, as the owner asked on 18 Nov.
+  The chase-tab removal stands, since the owner asked for it.
+- **Rule:** no Vercel custom event may carry more than 16 properties. Add a new A/B arm to buy_click only after
+  checking the count, or fold it into an existing key.
