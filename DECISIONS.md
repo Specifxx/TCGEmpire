@@ -25024,3 +25024,12 @@ decided (no owner question needed) to make every snapshot and Hot 100 page buyab
   under its move, inside the row's existing quick-view link (`MoverRow buy`): under the price, never beside it, because a
   button beside every row squeezed names to ~44px at 390px (2026-09-27). The homepage's Price Watch is unchanged.
 - No database read, no new loader, no `revalidate` change, no deploy marker: it rides the daily release.
+## 2026-11-19 — Events sent on mount were dropped: trackEvent queues them
+
+`top_seen` (the top-pair A/B's exposure event, lib/top-pair.ts) read 0 in Vercel on its first day while buy_click carried `top_arm`.
+`@vercel/analytics` `track()` calls `window.va?.(…)`, and `window.va` exists only once `<Analytics />` injects its script, which
+`ConsentGatedAnalytics` renders after the consent check, after the page's own mount effects. So any event sent on mount was silently
+dropped (and top_seen's once-a-visit guard then never sent it again); clicks, which come later, were fine. `trackEvent` now sets up the
+library's own queue first (`vaQueue()` in lib/analytics.ts, the same `window.vaq` its `inject()` makes and its script drains); without
+consent the script never loads and nothing is sent. `tests/va-queue.test.ts`. The 3 Dec read of the top-pair test counts top_seen only
+from the release that carries this; before it, compare clicks per arm.
