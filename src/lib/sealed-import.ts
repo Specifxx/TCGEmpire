@@ -15,7 +15,7 @@ import { withLiveStock } from "./preorder-live-stock";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { fetchHtmlStoreProducts } from "./storefront-html";
 import { isShopify, withShopifyVariant } from "./checkout-link";
-import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents, ebaySpentThisRun } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents, ebaySpentThisRun, isGradedListing } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { COUNTRY_LIST, DEFAULT_COUNTRY, currencyOf, isoCountry, type Country } from "./country";
@@ -173,7 +173,15 @@ function looksSealed(title: string): boolean {
 }
 
 function looksSealedAnyLanguage(title: string): boolean {
-  return (SEALED_TITLE.test(title) || T1_COLLECTION.test(title) || RIOT_DRAWING_TITLE(title)) && !SEALED_EXCLUDE.test(title) && !EVENT_ENTRY.test(title);
+  return (
+    (SEALED_TITLE.test(title) || T1_COLLECTION.test(title) || RIOT_DRAWING_TITLE(title)) &&
+    !SEALED_EXCLUDE.test(title) &&
+    !EVENT_ENTRY.test(title) &&
+    // A graded slab (PSA/BGS/CGC/SGC) is one card in a case, never sealed product: "Riftbound Slab Caitlyn 068a Arcane
+    // Box Set CGC Pristine 10" from a store's sealed collection made its own sealed page (2026-11-20). Every store path
+    // and cleanupStaleSealed run through here, so stored slab rows go on the next sealed refresh.
+    !isGradedListing(title)
+  );
 }
 
 // The T1 Signature Edition's Chinese and Korean groups ("…|CN", "…|KR") are
