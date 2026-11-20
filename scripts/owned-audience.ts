@@ -87,6 +87,15 @@ async function main() {
     for (const [k, v] of site) see(k, new Date(v.at), v.source);
   });
 
+  // Sister addresses still waiting on their one click: was a confirmation ever sent? (2026-11-20: the sign-up skipped it when
+  // the day's mail cap was spent, and nothing retried.)
+  let pending = "unreadable";
+  await read("pending", async () => {
+    const never = await prisma.sisterAlertAddress.count({ where: { confirmedAt: null, confirmSentAt: null } });
+    const sent = await prisma.sisterAlertAddress.count({ where: { confirmedAt: null, confirmSentAt: { not: null } } });
+    pending = `${never + sent} unconfirmed (${never} never emailed, ${sent} emailed, not clicked)`;
+  });
+
   let discord: string = "unreadable";
   try {
     const r = await fetch(`https://discord.com/api/v10/invites/${DISCORD_INVITE_CODE}?with_counts=true`, { headers: { "User-Agent": "riftcompare-owned-audience (counts only)" } });
@@ -118,7 +127,7 @@ async function main() {
   const lines = [
     `## Owned audience: new reachable contacts per week (UTC weeks from Monday)`,
     "",
-    `Reachable addresses all time: ${first.size}. Discord hub now: ${discord}.`,
+    `Reachable addresses all time: ${first.size}. Discord hub now: ${discord}. Sister addresses waiting on confirmation: ${pending}.`,
     "",
     head,
     sep,

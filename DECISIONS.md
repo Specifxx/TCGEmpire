@@ -25083,3 +25083,13 @@ cheapest store's buy button (its own link, `offerLink`) and a tagged eBay search
 "Under their own 30-day typical price" list on the same pages (same idea, no buy button, fewer guards). Copy says "under its
 30-day typical" and "lowest since <date>", never "was", "dropped" or "ever" (BANNED_COPY). Read 3 Dec: `bf-drops` buy clicks
 28 Nov to 1 Dec against the 4 days before. Rift reads its sealed history files (`sealedHistoryRows`), whose weeks of wrong-product rows the 2x guard refuses; never an eBay row as the store. The same file ships on Dex, MTG and OP.
+
+## 2026-11-20: A sister confirmation that never left is sent by the daily run (owned audience)
+
+Half the sister-site addresses (6 of 12) never confirmed. The sign-up sends its one confirmation only when the day's mail cap
+(`claimMailSlot`, 30 a day for the non-Dex sites) has room and the send works; when it had none, nothing tried again, and the
+daily run deleted the address a week later without it ever getting an email. Now `runSisterAlerts` step 1b sends up to
+`CONFIRM_RETRY_PER_RUN` (10) never-sent confirmations a run, oldest first, under the same cap and before any alert spends it,
+stamping `confirmSentAt` only on a real send; and an address never emailed is kept for two weeks instead of one, so the person
+has time to click. Still one confirmation per address (no reminders), still double opt-in. `scripts/owned-audience.ts` prints how
+many unconfirmed addresses were never emailed against emailed but not clicked. `tests/sister-alerts.test.ts` pins it.
