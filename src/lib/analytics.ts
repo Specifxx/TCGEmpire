@@ -84,10 +84,8 @@ export function trackEvent(name: string, params?: Record<string, string | number
   const cleaned = params
     ? (Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string | number | boolean>)
     : undefined;
-  if (!GA4_ONLY_EVENTS.has(name)) {
-    vaQueue();
-    vercelTrack(name, cleaned);
-  }
+  vaQueue();
+  if (!GA4_ONLY_EVENTS.has(name)) vercelTrack(name, cleaned);
   if (typeof window !== "undefined") window.gtag?.("event", name, cleaned);
   // A buy click by a visitor a creator sent counts toward that creator's revenue
   // share (lib/creator-payout.ts). Only those visitors carry the cookie.
