@@ -415,7 +415,7 @@ function QuickViewModal({
             <CardImage card={card} full sizes="(max-width: 640px) 190px, 320px" className="mx-auto aspect-[5/7] w-full max-w-[190px] sm:max-w-none" />
             {/* Plain anchor = a real navigation to the full page (the URL is already
                 /card/slug via history, so this loads the full server-rendered page). */}
-            <a href={href} data-quickview-fullpage className="btn-primary mt-3 flex min-h-11 w-full justify-center text-sm">
+            <a href={href} data-quickview-fullpage className="btn-ghost mt-3 flex min-h-11 w-full justify-center text-sm">
               See full page: price history and details →
             </a>
           </div>

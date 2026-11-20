@@ -37,8 +37,6 @@ export interface HomeSectionsProps {
   popularCards: CardTileData[];
   /** The featured set's chase cards (lib/cheapest-cards.ts getSetChaseTiles):
    *  the popular-cards strip's first tab when there are any. */
-  chaseCards?: CardTileData[];
-  chaseSet?: { name: string; slug: string } | null;
   /** Emit the "Most popular Riftbound cards" ItemList JSON-LD. False where the
    *  page's "Riftbound card prices today" table already lists these cards and
    *  owns that markup (2026-09-24); the carousel came back on 2026-09-26 as a
@@ -77,8 +75,6 @@ export function HomeSections({
   storeCount,
   storeWord,
   popularCards,
-  chaseCards = [],
-  chaseSet = null,
   popularItemList = true,
   showTopDeals = true,
   showEbayPicks = true,
@@ -181,7 +177,6 @@ export function HomeSections({
           behind the two commercial units, and is still the section that sends
           the most visitors into card pages. */}
       <PopularCardsCarousel
-        chase={chaseSet ? { cards: chaseCards, setName: chaseSet.name, setSlug: chaseSet.slug } : null}
         allTime={popularCards}
         movers={biggestMovers}
         recentlyUpdated={recentlyUpdatedCards}
@@ -189,7 +184,7 @@ export function HomeSections({
         storeWord={storeWord}
       />
 
-      {/* Today's Top Deals sit BELOW the chase cards on every home (owner, 2026-11-16). */}
+      {/* Today's Top Deals sit BELOW the popular-cards strip on every home (owner, 2026-11-16; the chase tab left it 2026-11-20). */}
       {showTopDeals && anyDeals && (
         <Reveal>
           <TodaysTopDeals dealsByCountry={Object.fromEntries(Object.entries(topDealsByCountry).map(([c, d]) => [c, topDealsForGrid(d)])) as Record<Country, TopDeals>} />
