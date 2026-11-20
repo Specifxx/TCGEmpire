@@ -366,7 +366,8 @@ export default function PrivacyPage() {
             <li><strong className="text-white">Resend and Brevo</strong> — sending email.</li>
             <li>
               <strong className="text-white">Anthropic</strong> — only when you use the card scanner: your photo is sent to
-              Anthropic&rsquo;s Claude model to read the card&rsquo;s name and number. We do not keep the photo.
+              Anthropic&rsquo;s Claude model at the moment you scan, to read the card&rsquo;s name and number. The same read
+              serves the scanner on our sister site TCG Singles DB, sent from your browser there. We do not keep the photo.
             </li>
           </ul>
         </section>

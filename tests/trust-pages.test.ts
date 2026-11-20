@@ -76,6 +76,9 @@ test("no request-time AI call exists, and the policy says so", () => {
   // prose, the policy says so, and the privacy page names Anthropic as its processor. Nothing else may import the SDK.
   assert.match(policy, /The card scanner reads, it does not write/);
   assert.match(text("src/app/privacy/page.tsx"), /Anthropic<\/strong> — only when you use the card scanner/);
+  // Since 2026-11-20 the same read also serves TCG Singles DB's scanner (api/scan/read): the pages say so.
+  assert.match(text("src/app/privacy/page.tsx"), /serves the scanner on our sister site TCG Singles DB/);
+  assert.match(policy, /the photo is not kept/);
   const users: string[] = [];
   const walk = (d: string) => {
     for (const f of readdirSync(join(process.cwd(), d), { withFileTypes: true })) {
@@ -85,7 +88,7 @@ test("no request-time AI call exists, and the policy says so", () => {
     }
   };
   walk("src");
-  assert.deepEqual(users.sort(), ["src/app/api/scan/identify/route.ts", "src/lib/scan/identify.ts", "src/lib/scan/read.ts"], "only the card scanner calls a model");
+  assert.deepEqual(users.sort(), ["src/app/api/scan/identify/route.ts", "src/app/api/scan/read/route.ts", "src/lib/scan/identify.ts", "src/lib/scan/read.ts"], "only the card scanner calls a model");
 });
 
 // ── /about ────────────────────────────────────────────────────────────────────
