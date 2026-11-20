@@ -38,16 +38,13 @@ test("every Radiance overnumbered Legend and HEARTSTEEL card has its Signature (
   }
 });
 
-test("the homepage strip leads with the featured set's chase cards, and Most popular is one tap away", () => {
+test("the homepage strip leads with Most popular; the chase-card tab is gone (owner, 2026-11-20)", () => {
   const carousel = read("src/components/home/PopularCardsCarousel.tsx");
-  const chase = carousel.indexOf('key: "chase"');
-  const popular = carousel.indexOf('key: "alltime"');
-  assert.ok(chase > 0 && popular > chase, "the chase tab is first");
-  assert.match(carousel, /label: `\$\{chase\.setName\} chase cards`/);
+  assert.ok(carousel.indexOf('key: "alltime"') > 0, "Most popular is a tab");
+  assert.equal(carousel.indexOf('key: "chase"'), -1, "no chase tab");
+  assert.ok(carousel.indexOf('key: "alltime"') < carousel.indexOf('key: "movers"'), "Most popular is first");
   for (const f of ["src/app/page.tsx", "src/components/home/RegionHome.tsx"]) {
-    const src = read(f);
-    assert.match(src, /const chaseSet = featuredSet\(\);/, f);
-    assert.match(src, /getSetChaseTiles\(chaseSet\.code, 16,/, f);
+    assert.doesNotMatch(read(f), /getSetChaseTiles\(/, `${f}: the home no longer reads the chase tiles`);
   }
   const loader = read("src/lib/cheapest-cards.ts");
   assert.match(loader, /imageThumbUrl: \{ not: null \}/, "no tile without card art");
