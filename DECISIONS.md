@@ -24966,6 +24966,25 @@ deliberately extends the 2026-11-12 "tasteful accents" layer, which had ruled ou
   the season window ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
 - Sports Card Compare keeps its own hat and lights (it never took the tone-down).
 
+## 2026-11-20: Most popular leads the home strip, and "See full page" is a secondary button again
+
+**Owner, 2026-11-20 (boardroom on buy clicks):** "Maybe like the Radiance chase cards, like we can get rid of that section
+now … just have the most popular as the first, as like what shows on the homepage."
+
+- **The chase-card tab is gone from every home** (`/` and the five region homes). The popular-cards strip opens on "Most
+  popular" (demand-ranked, `lib/home-rank.ts`), then Biggest movers and Recently updated. The homes no longer call
+  `getSetChaseTiles` (one cached read fewer per render). Chase printings stay on `/sets/<slug>` and in eBay Picks;
+  `featuredSet()` is unchanged.
+- **"See full page: price history and details" is `btn-ghost`, not `btn-primary`,** in the card, sealed and Pokémon quick
+  views. Same words, same place, same full width and 44 px height; only the colour. The measurement (Vercel buy_click,
+  surface `modal`): quick-view buy clickers were ~41 visitors a day on 15–17 Nov and ~10 a day on 18–19 Nov, while quick
+  view opens ROSE (~100 to ~210 visitors a day, "quick view from every card link", #484). The button turned primary on
+  18 Nov (#505), and on a phone it sits under the card image, above every price row, so it was the first loud button in
+  the dialog. Site-wide Rift buy clickers went from ~70 a day (8–17 Nov) to 47 and 36. The buy rows are the only primary
+  actions again.
+- **Recheck 23 Nov:** modal buy clickers back at 30+ a day means this was it. If not, the cause is elsewhere (the cart
+  A/B, #506, is the next suspect) and the button colour can go back on the owner's word.
+- `tests/radiance-featured.test.ts` and `tests/amazon-button.test.ts` pin both.
 ## 2026-11-20: Snapshot pages and /movers sell, not just rank (buy-clicks boardroom, move 2)
 
 **Why:** Reddit link posts land on `/rising/<token>` snapshots and `/movers`, and those visitors almost never clicked buy:

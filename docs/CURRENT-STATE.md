@@ -699,9 +699,8 @@ longer lands on its entry.
   carries the pulls, no database row. The owner's outreach list is
   `docs/GROWTH-PLAYBOOK-2026-10.md`. [2026-10-16](../DECISIONS.md#L18158)
 - **Radiance leads (2026-10-17):** `featuredSet()` (upcoming set from its
-  `newFrom`, else newest released) drives eBay Picks and the homepage strip's
-  first tab, "<set> chase cards" (`getSetChaseTiles`, art only); "Most popular"
-  is second. `singlesLive()` (released, or past `newFrom`) gates every card-price
+  `newFrom`, else newest released) drives eBay Picks (the homepage strip's chase tab went
+  2026-11-20: "Most popular" leads). `singlesLive()` (released, or past `newFrom`) gates every card-price
   surface on `/sets/<slug>` and its gallery; sealed copy keeps
   `isPreorderSetCode()`. Signatures (`*`) are in no official feed: add them to
   `prisma/manual-cards.json` with their own `externalId`.
@@ -985,7 +984,7 @@ longer lands on its entry.
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
   [2026-09-28](../DECISIONS.md#L14549)
 - **Homepage order (all six homes, owner 2026-11-13):** the hero (words, the search, the market switch, six ways in, one
-  line of numbers; no products, chips, creators badge or Premium link), Today's Top Deals, the tabbed chase-cards shelf (it
+  line of numbers; no products, chips, creators badge or Premium link), Today's Top Deals, the tabbed popular-cards shelf, Most popular first since 2026-11-20 (it
   carries the ItemList on `/`), the one ad block, the set grid with the next set's one-line countdown, the guides and news
   card (`EditorialHub`), then the reference text and FAQ folded in `<details>`. Off the homes since 2026-11-13: the
   Pokémon line, the return-visit cards (Riftle, pack simulator, watch a card), the free-account strip, the partners
@@ -1138,7 +1137,7 @@ longer lands on its entry.
   referrer. [2026-09-26](../DECISIONS.md#L13640)
 - **Snapshot pages and /movers sell:** a "Shop the top risers" strip (top three, today's cheapest in the visitor's
   market, Buy into the quick view) in the first screen, and a Buy link or pill on every row; nothing new read, caches
-  unchanged. [2026-11-20](../DECISIONS.md#L24969)
+  unchanged. [2026-11-20](../DECISIONS.md#L24988)
 - **RiftboundStocks per-page links:** card, champion and set pages link to
   the same page on RiftboundStocks.com through the map it publishes
   (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes
