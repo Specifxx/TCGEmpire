@@ -1,0 +1,42 @@
+{
+ "at": "2026-11-20T03:07:12.223Z",
+ "model": "claude-haiku-5-5",
+ "passFound": 0.95,
+ "passWrong": 0.01,
+ "games": {
+  "one-piece": {
+   "pass": false,
+   "images": 0,
+   "cards": 0,
+   "skippedNoImage": 2,
+   "errors": 0,
+   "found": 0,
+   "wrongMatch": 0,
+   "top": 0,
+   "matchShare": 0,
+   "pickMedian": 0,
+   "medianMs": 0,
+   "costUsd": 0,
+   "coverage": {
+    "cards": 7519,
+    "priced": 3290,
+    "withNumber": 7278,
+    "usd1": {
+     "checked": 3,
+     "real": 0,
+     "placeholder": 0,
+     "missing": 3,
+     "share": 0
+    },
+    "any": {
+     "checked": 1,
+     "real": 0,
+     "placeholder": 0,
+     "missing": 1,
+     "share": 0
+    },
+    "placeholders": 0
+   }
+  }
+ }
+}
