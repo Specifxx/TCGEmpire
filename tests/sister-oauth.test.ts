@@ -31,3 +31,15 @@ test("the callback: same state and verified-address checks, no Rift session for 
   assert.match(lib, /emailLinkUrl\(site, await signEmailLinkCode\(site, email\)\)/);
   assert.match(lib, /sanitizeNextPath\(next\)/);
 });
+
+test("on-site sign-in (2026-11-21): only a listed provider via the sister's own rewrite uses the sister's callback, and the code exchange matches", async () => {
+  const { ON_SITE_OAUTH, sisterRedirectUri } = await import("../src/lib/oauth");
+  assert.deepEqual([...ON_SITE_OAUTH], ["discord"], "Google joins only once its redirect URIs are registered in Google Cloud");
+  assert.equal(sisterRedirectUri(sisterForCookie("mtg")!.url, "discord"), "https://mtgcompare.app/account-service/oauth/discord/callback");
+  const start = read("src/app/api/sister-premium/oauth/[provider]/route.ts");
+  assert.match(start, /q\.get\("via"\) === "site" && ON_SITE_OAUTH\.includes\(provider\)/);
+  assert.match(start, /onSite \? sisterRedirectUri\(site\.url, provider\) : redirectUri\(provider\)/, "the site's canonical URL, never the request's host");
+  const cb = read("src/app/api/auth/oauth/[provider]/callback/route.ts");
+  assert.match(cb, /identify\(provider, code, webRedirectUri\(provider\)\)/, "the token exchange sends the redirect URI the sign-in started with");
+  assert.match(cb, /ON_SITE_OAUTH\.includes\(provider\) && cookies\(\)\.get\(sisterOAuthViaCookie\(provider\)\)\?\.value === "1"/);
+});
