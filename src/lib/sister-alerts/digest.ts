@@ -21,7 +21,7 @@ import { sendSisterMail } from "./send";
 import { discordInvite } from "./discord";
 import { MAILING_ADDRESS } from "../mailing-address";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
-import { button, discordLine, feedbackAsk, fromFor, money, REGION_LABEL, serviceUrl, shell, senderOf, siteLink, type BuiltMail } from "./email";
+import { button, discordLine, discordText, feedbackAsk, fromFor, money, REGION_LABEL, serviceUrl, shell, senderOf, siteLink, type BuiltMail } from "./email";
 import { SISTER_ALERT_SITES, SISTER_REGIONS, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
 import { claimMailSlot, mailLane, SISTER_DAILY_MAIL_CAP } from "./mail-cap";
 
@@ -180,7 +180,7 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
     `Lowest in-stock price at ${REGION_LABEL[region]} stores, this week against last week, before postage.`,
     `What would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "weekly-drops", region)}`,
     `Stop the weekly email: ${stop}`,
-    ...(discordInvite(site.key) ? [`Restocks and price drops twice a day, free on our Discord: ${discordInvite(site.key)}`] : []),
+    ...(discordInvite(site.key) ? [discordText(site.key)!] : []),
     "",
     MAILING_ADDRESS,
   ].join("\n");

@@ -215,3 +215,13 @@ test("Cyber Weekend 2026: editions land on Black Friday and Cyber Monday morning
   assert.match(buildDigestEmail("mtg", "US", drops, "t", "Black Friday").subject, /^Black Friday: the real price drops on MTG Compare, Box −20%$/);
   assert.match(buildDigestEmail("mtg", "US", drops, "t").subject, /^This week's biggest price drops/);
 });
+
+test("the alert and weekly emails say: get these first on Discord or Telegram (card sites only)", async () => {
+  const { discordLine, discordText } = await import("../src/lib/sister-alerts/email");
+  assert.match(discordLine("mtg"), /Get these first on <a href="https:\/\/discord\.gg\/6pTeNX8Y5k"[^>]*>Discord<\/a> or <a href="https:\/\/t\.me\/tcgdealsrestocks"[^>]*>Telegram<\/a>/);
+  assert.match(discordText("dex")!, /discord\.gg\/n6nc7EQH2D\nor Telegram: https:\/\/t\.me\/tcgdealsrestocks/);
+  assert.equal(discordLine("scent"), "", "the other side of the network never sees the card hub");
+  assert.equal(discordText("figure"), null);
+  const drops = [{ id: "a", n: "Box", u: "/p/box", was: 10000, now: 8000 }];
+  assert.match(buildDigestEmail("mtg", "US", drops, "t").text, /t\.me\/tcgdealsrestocks/);
+});

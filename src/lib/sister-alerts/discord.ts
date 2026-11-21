@@ -13,6 +13,14 @@ const INVITES: Partial<Record<string, string>> = {
   bandai: "https://discord.gg/cdJEpmuTW2",
 };
 
+/** The family's Telegram channel (Riley, 2026-11-21): the same checked drops as the hub, card sites only, like the invites. */
+export const TELEGRAM_CHANNEL = "https://t.me/tcgdealsrestocks";
+
+/** The Telegram channel for a site whose emails carry the hub (the same two-sides rule), or null. */
+export function telegramChannel(siteKey: string): string | null {
+  return INVITES[siteKey] ? TELEGRAM_CHANNEL : null;
+}
+
 export function discordInvite(siteKey: string): string | null {
   return INVITES[siteKey] ?? null;
 }

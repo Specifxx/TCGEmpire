@@ -25160,3 +25160,10 @@ start route sets `oauth_sister_via_<provider>` and the callback exchanges the co
 **Why.** The visitor never sees riftcompare.com in the address bar during a sister sign-in. Google waits: its redirect URIs can only be
 added once the Google account that owns Rift's Cloud project has 2-step verification on; then add `"google"` to `ON_SITE_OAUTH` and
 flip the sisters' Google button too.
+
+## 2026-11-21: "Get these first on Discord or Telegram" in the alert and weekly emails
+
+Riley (Discord) opened a Telegram channel beside the hub, t.me/tcgdealsrestocks, posting the same checked drops. The footer line
+of every sister alert and weekly email now reads "Get these first on Discord or Telegram": the site's OWN hub invite (so the
+Invites list still counts members per site) and the channel, in the HTML and the text part (`discordLine`, `discordText`,
+`telegramChannel` in `lib/sister-alerts`). Card sites only, like the invites (the two-sides rule). A footer line, never a send of its own.
