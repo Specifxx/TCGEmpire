@@ -208,7 +208,9 @@ export function OutboundLink({
     | "ebay_pinned"
     | "amazon_search"
     | "amazon_also"
-    | "bf_drops";
+    | "bf_drops"
+    | "bf_strip"
+    | "bf_page";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
   // the signup popup (removed 2026-09-30) could stay off the buy path; kept as

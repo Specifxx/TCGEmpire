@@ -25094,6 +25094,28 @@ stamping `confirmSentAt` only on a real send; and an address never emailed is ke
 has time to click. Still one confirmation per address (no reminders), still double opt-in. `scripts/owned-audience.ts` prints how
 many unconfirmed addresses were never emailed against emailed but not clicked. `tests/sister-alerts.test.ts` pins it.
 
+## 2026-11-19 — Black Friday strip on sealed pages
+
+The owner's board (19 Nov): ride Black Friday on the pages we already have, no new URLs. `/sealed/<slug>` shows one short card
+above the product's price and board, through 1 Dec (`lib/bf-strip.ts`, `lib/bf-strip-sealed.ts`, `BlackFridayStrip.tsx`, labelled
+by `saleStrip`: Black Friday, then Cyber Monday), in the visitor's market: the cheapest open price today and where, "Free shipping"
+only when that store's MEASURED checkout (`shippingFor`, shipping-rates.json) posts the order free (the probe measured card-sized
+carts, so a paid rate is never quoted for a box), when that price was read, the pre-order date, and where today's price sits
+against the product's own sealed history (data/price-history/sealed). The cue needs 14 priced days in the last 90; it says "Lowest
+price in 90 days" only when the history reaches back 90 days, otherwise "Lowest price since <first day>"; a price that never moved
+says "Same price since <first day>"; above the low it gives the window's real low and its day. A day under half the window's median
+is a wrong listing and never the low, and a window whose prices (or today's against them) differ by more than 2x gets no cue: the
+sealed series holds weeks of wrong-product rows (Origins booster box at US$60 from 29 Sep to 6 Nov), and the strip must not repeat
+them. Built per market on the server and picked in SealedProductView, so the one CDN copy still reads no cookie. No new read, no eBay
+call; the quick view and the phone strip ad are untouched. Same strip on DexCompare, MTG Compare and OP Compare. Judge on buy clicks
+per sealed-page view, 24 Nov to 1 Dec against 10 to 17 Nov.
+
+Amended 2026-11-21 (partner terms): TCGplayer's commission rises with a calendar month's sales, so Cyber Weekend sales through us
+also lift the month's rate. The strip gains ONE link, on its own line under the facts: an "Ad"-labelled, tagged TCGplayer search
+for the product ("See Black Friday prices on TCGplayer", `surface="bf_strip"`). It claims no price and no deal, ranks nothing, and
+never takes the cheapest badge; the board below stays sorted by price. Counted in the 3 Dec Cyber Week read. When TCGplayer's own
+Cyber Weekend landing page is available it replaces the search.
+
 ## 2026-11-21: Which site sends people to the Discord hub
 
 People started joining "TCG Deals & Restocks" on 21 Nov. Each card site links its own never-expiring invite, so the per-invite
