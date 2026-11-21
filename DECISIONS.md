@@ -25205,3 +25205,20 @@ six-box case (EUR 600-900), so the page's cheapest price was a pack, and the EU 
 also held four different Trial Decks and a EUR 2,250 promo booster under one name. Checked by running the old and new
 `classifySealed` over every title of the export: only the 24 catch-all titles and one eBay "Nexus Night Booster Pack" change type.
 Titles are in `tests/sealed-catch-all.test.ts`.
+
+## 2026-11-21: One Premium email page: the showcase email with a live Deal Finder snippet, newest members first
+
+**What.** `/admin/premium-offer` is now the one "Premium email" page (owner: "one page where I can send a premium ad to
+people where it includes a snippet of the deal finder or scanner or something and lists the feature and is a very nicely
+formatted email … newest members first"). The campaign is `premium-showcase-2026-11` (`PREMIUM_OFFER_SINCE`
+2026-11-21 22:00 UTC), so everyone the feedback email reached can get this one, once. The email
+(`buildPremiumOfferEmail`) leads with today's top three US Deal Finder rows (`loadEmailDeals`: the tool's own
+`getArbitrageVsTcgplayer` ranking, store rows only, read once per batch; a failed read sends without the snippet, never a
+made-up one), then six Premium features with their own links (the scanner's 100 scans a day against 5 free, from
+`lib/scan/caps.ts`), then Premium at its `lib/site.ts` prices. The star rating is gone; a plain /feedback link stays, no
+reward named. `loadUsers` reads accounts newest first, so each 90-account batch goes to the newest members not yet
+emailed. The page draws the email as it sends in a preview frame, and carries the win-back link console below it (the
+admin home has one tile; `/admin/premium-winback` still works).
+
+**Why.** Every link is still riftcompare.com (card pages, tools, checkout); TCGplayer is named as the market reference,
+never linked, and no eBay listing is named, because eBay Partner Network does not allow its links in email.

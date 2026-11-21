@@ -147,7 +147,7 @@ export function PremiumOfferConsole({
       ? `the ${ids.length} selected account${ids.length === 1 ? "" : "s"}`
       : `the next ${Math.min(batch, pendingTotal)} of ${pendingTotal} accounts not yet emailed`;
     const extra = resend ? ` ${selectedAlreadySent} of them already received it and will get it AGAIN.` : "";
-    if (!window.confirm(`Send the 14-days-free email (via ${via}) to ${who}?${extra}`)) return;
+    if (!window.confirm(`Send the Premium email (via ${via}) to ${who}?${extra}`)) return;
     setBusy("send");
     setNotice(null);
     try {
@@ -177,7 +177,7 @@ export function PremiumOfferConsole({
     <div className="mt-6 space-y-5">
       {/* ── Campaign controls ─────────────────────────────────────────── */}
       <div className="card-surface p-4">
-        <h2 className="text-sm font-extrabold text-white">Send the trial promo email</h2>
+        <h2 className="text-sm font-extrabold text-white">Send the Premium email</h2>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <label className="text-xs text-slate-400">
             Send via
@@ -203,7 +203,7 @@ export function PremiumOfferConsole({
           </p>
         )}
         <p className="mt-2 text-xs text-slate-500">
-          Tick rows below to narrow the send; with nothing ticked it goes to everyone not yet emailed. Sends are batched
+          Tick rows below to narrow the send; with nothing ticked it goes to the newest accounts not yet emailed. Sends are batched
           ({batch} at a time, under the provider&apos;s daily cap) and resume where they left off — if <em>remaining</em> is above zero, press
           send again tomorrow.
         </p>

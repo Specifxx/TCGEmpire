@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { listPremiumOfferAudience, runPremiumOfferBlast, DEFAULT_BATCH, type PremiumOfferResult } from "@/lib/premium-offer";
-import { premiumOfferSubject } from "@/lib/email";
+import { listPremiumOfferAudience, loadEmailDeals, runPremiumOfferBlast, DEFAULT_BATCH, type PremiumOfferResult } from "@/lib/premium-offer";
+import { buildPremiumOfferEmail, premiumOfferSubject, type PremiumEmailDeal } from "@/lib/email";
+import { listPremiumWinbackAudience, WINBACK_TRIAL_DAYS } from "@/lib/premium-winback";
+import { PremiumWinbackConsole, type WinbackConsoleRow } from "@/components/admin/PremiumWinbackConsole";
 import { PREMIUM_ANNUAL_AMOUNT, PREMIUM_PRICE_AMOUNT } from "@/lib/site";
 import { PremiumOfferConsole, type ConsoleRow } from "@/components/admin/PremiumOfferConsole";
 
@@ -11,11 +13,16 @@ export const dynamic = "force-dynamic";
 
 // Admin-only — self-noindex (robots.ts doesn't block /admin) + gated below.
 export const metadata: Metadata = {
-  title: "Feedback and Premium email",
+  title: "Premium email",
   robots: { index: false, follow: false },
 };
 
-// The owner's console for the feedback + Premium email (2026-10-27; the free-trial
+// The owner's ONE page for Premium email (2026-11-21, owner: "one page where I can
+// send a premium ad … newest members first"): the Premium showcase email with its
+// live Deal Finder snippet, drawn here exactly as it sends, and below it the
+// free-days win-back link email (lib/premium-winback.ts), which used to be its own
+// page (/admin/premium-winback still works). Before that this was the feedback +
+// Premium email (2026-10-27; the free-trial
 // promotion of 2026-10-12 and the price-drop announcement of 2026-09-27 before it):
 // the reach before anything is sent (a dry run on every page load: audience,
 // already sent, remaining, opted out), a test send to one inbox, and the
@@ -32,6 +39,26 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
   let rows: ConsoleRow[] = [];
   let summary: PremiumOfferResult | null = null;
   let error = false;
+  let deals: PremiumEmailDeal[] = [];
+  let winbackRows: WinbackConsoleRow[] = [];
+  let winbackError = false;
+  const winbackAfter = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+  const [dealsRead, winbackRead] = await Promise.all([
+    loadEmailDeals(),
+    listPremiumWinbackAudience({ registeredAfter: winbackAfter }).catch(() => null),
+  ]);
+  deals = dealsRead;
+  if (winbackRead) {
+    winbackRows = winbackRead.map((r) => ({
+      ...r,
+      createdAt: r.createdAt.toISOString(),
+      premiumUntil: r.premiumUntil?.toISOString() ?? null,
+      sentAt: r.sentAt?.toISOString() ?? null,
+      claimedAt: r.claimedAt?.toISOString() ?? null,
+    }));
+  } else winbackError = true;
+  // The email exactly as it sends (a dummy unsubscribe link), for the preview frame.
+  const previewHtml = buildPremiumOfferEmail({ displayName: me?.displayName ?? "Bill", unsubUrl: "#", deals }).html;
   try {
     // The dry run reads every account (not just the table's 1,000 newest) with
     // the exact rule the send applies, so these counts are the real reach.
@@ -53,22 +80,30 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
       <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
         <Link href={`/admin${keySuffix}`} className="hover:text-slate-300">Admin</Link>
         <span>/</span>
-        <span className="text-slate-300">Feedback and Premium email</span>
+        <span className="text-slate-300">Premium email</span>
       </nav>
-      <h1 className="text-2xl font-bold text-white">Feedback and Premium email</h1>
+      <h1 className="text-2xl font-bold text-white">Premium email</h1>
       <p className="mt-1 max-w-3xl text-sm text-slate-400">
-        One email to every account that is not paying. Subject: <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It asks
-        for a one-tap star rating (each star opens /feedback with that rating picked) and then offers Premium at{" "}
-        {PREMIUM_PRICE_AMOUNT}/month or {PREMIUM_ANNUAL_AMOUNT}/year, each button opening checkout for that plan. No trial
-        and no affiliate links. Never emailed, whatever is ticked: paying accounts, admins, seed accounts and anyone who
-        opted out of announcements. Accounts that got an earlier campaign can get this one.
+        The Premium showcase email to every account that is not paying, <strong className="text-slate-200">newest members first</strong>.
+        Subject: <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It shows today&apos;s top Deal Finder rows (real US store prices
+        below TCGplayer market, read when the batch sends), lists what Premium includes, and offers it at {PREMIUM_PRICE_AMOUNT}/month
+        or {PREMIUM_ANNUAL_AMOUNT}/year, each button opening checkout for that plan. No trial and no affiliate links. Never emailed,
+        whatever is ticked: paying accounts, admins, seed accounts and anyone who opted out of announcements. Accounts that got an
+        earlier campaign can get this one, once.
       </p>
       <p className="mt-2 max-w-3xl text-sm text-slate-400">
         How to run it: <strong className="text-slate-200">send yourself a test</strong>, check it in your inbox, then{" "}
-        <strong className="text-slate-200">send to all pending</strong>. Each send goes out in a batch of {DEFAULT_BATCH}{" "}
-        (under Brevo&apos;s 300-a-day free cap); press send again the next day until <em>remaining</em> is 0. Nobody is
+        <strong className="text-slate-200">send next batch</strong>. Each batch is the {DEFAULT_BATCH} newest accounts not yet emailed
+        (under Brevo&apos;s 300-a-day free cap); press it again (up to three times a day) until <em>remaining</em> is 0. Nobody is
         emailed twice.
       </p>
+
+      <details className="mt-5 card-surface p-4" open>
+        <summary className="cursor-pointer text-sm font-extrabold text-white">
+          What it looks like {deals.length ? `(with today's ${deals.length} deals)` : "(no deals read right now: it sends without the snippet)"}
+        </summary>
+        <iframe title="Premium email preview" srcDoc={previewHtml} sandbox="" className="mt-3 h-[900px] w-full rounded-lg border border-ink-700 bg-[#0b0e14]" />
+      </details>
 
       {error || !summary ? (
         <div className="mt-6 rounded-xl border border-ink-700 bg-ink-850 p-8 text-center text-sm text-slate-400">
@@ -99,6 +134,26 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
           />
         </>
       )}
+
+      <section className="mt-12 border-t border-ink-800 pt-8">
+        <h2 className="text-lg font-bold text-white">Win-back link email (free Premium days)</h2>
+        <p className="mt-1 max-w-3xl text-sm text-slate-400">
+          A separate one-off email to recently registered free accounts: a single-use link that grants {WINBACK_TRIAL_DAYS} days of
+          Premium the moment they click, no card. Same exclusions as above. Use one or the other for an account, not both on one day.
+        </p>
+        {winbackError ? (
+          <div className="mt-6 rounded-xl border border-ink-700 bg-ink-850 p-8 text-center text-sm text-slate-400">
+            Couldn&apos;t load the win-back audience right now.
+          </div>
+        ) : (
+          <PremiumWinbackConsole
+            rows={winbackRows}
+            adminKey={keyOk && !me?.isAdmin ? token : undefined}
+            adminEmail={me?.email ?? ""}
+            trialDays={WINBACK_TRIAL_DAYS}
+          />
+        )}
+      </section>
     </div>
   );
 }

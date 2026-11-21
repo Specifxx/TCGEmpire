@@ -26,6 +26,7 @@ import { issueNoun } from "./price-report";
 import { RADIANCE_RELEASE_DATE } from "./sets/radiance";
 import type { AlertActionLinks } from "./alert-actions";
 import { DROP_MIN_CENTS, DROP_MIN_PCT } from "./alert-thresholds";
+import { DEFAULT_SCAN_FREE_PER_DAY, DEFAULT_SCAN_PREMIUM_PER_DAY } from "./scan/caps";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -1517,7 +1518,7 @@ export function escapeHtml(s: string): string {
 // checkout surface (lib/premium-surface.ts) that /admin/premium and
 // scripts/funnel-report.ts group by; the utm_* trio is for GA4.
 export const PRICE_DROP_SRC = "price-drop-email" as const;
-export const PRICE_DROP_CAMPAIGN = "feedback-pro-2026-10";
+export const PRICE_DROP_CAMPAIGN = "premium-showcase-2026-11";
 const PRICE_DROP_UTM = `utm_source=email&utm_medium=email&utm_campaign=${PRICE_DROP_CAMPAIGN}`;
 
 /** The four subscribe links, each opening checkout for exactly that tier and plan. */
@@ -1541,29 +1542,64 @@ export interface PremiumOfferEmailOpts {
   unsubUrl: string;
   oneClickUrl?: string;
   via?: "brevo" | "resend";
+  // Today's Deal Finder rows for the snippet (loadEmailDeals); none means no snippet.
+  deals?: PremiumEmailDeal[];
 }
 
-// 2026-10-27: the campaign is the FEEDBACK + PRO email to registered accounts
-// (owner: "send an email to those accounts as well to ask them for feedback,
-// like, are you enjoying the site … consider joining the pro plan"). The
-// function names stay (the admin console, its API route and the audience code
-// all read them). It leads with a one-tap star rating — each star opens
-// /feedback with that rating picked — and then states Premium at its own prices.
-// It never mentions the /feedback page's Premium-for-feedback reward: a review
-// asked for with a reward is an incentivised review, which consumer law (FTC
-// 2024 rule, ACCC) does not allow us to solicit and then show unlabelled. There is no trial (PREMIUM_TRIAL_DAYS 0 since 2026-10-26), so
-// the email promises none. No eBay or other affiliate link: every link is our
-// own page (eBay Partner Network does not allow its links in email without
-// approval).
+// 2026-11-21: the campaign is the PREMIUM SHOWCASE email (owner: "one page where I
+// can send a premium ad to people where it includes a snippet of the deal finder
+// or scanner or something and lists the feature and is a very nicely formatted
+// email"). It replaced the feedback + Premium email of 2026-10-27, whose star
+// rating is gone; a plain link to /feedback stays, with no reward named (an
+// incentivised review must not be solicited unlabelled). The function names stay
+// (the admin console, its API route and the audience code all read them).
+//
+// THE SNIPPET is real: today's top Deal Finder rows in the US, read ONCE per send
+// run by loadEmailDeals() in lib/premium-offer.ts from the same ranking the tool
+// shows (store rows only, never an eBay listing). When the read fails or finds
+// nothing, the email goes out without the snippet rather than with a made-up one.
+// Each row links to the card's own page on riftcompare.com; the only other host is
+// the card image. There is no trial (PREMIUM_TRIAL_DAYS 0 since 2026-10-26), so the
+// email promises none. No eBay or other affiliate link: eBay Partner Network does
+// not allow its links in email without approval.
 export const FEEDBACK_EMAIL_SRC = "feedback-email" as const;
 
+/** One row of the Deal Finder snippet: every figure is pre-formatted from real data. */
+export interface PremiumEmailDeal {
+  name: string;
+  setName: string;
+  href: string; // absolute riftcompare.com card URL
+  imageUrl: string | null;
+  price: string; // formatMoney of the store price
+  store: string;
+  market: string; // TCGplayer market, same currency
+  belowPct: number;
+}
+
 export function premiumOfferSubject(): string {
-  return `How's ${SITE_NAME} working for you?`;
+  return `Riftbound cards under market today, and what ${TIER_NAMES.premium} unlocks`;
 }
 
 /** One star link per rating, 1–5, each opening /feedback with that rating picked. */
 export function feedbackStarLinks(): string[] {
   return [1, 2, 3, 4, 5].map((n) => `${SITE_URL}/feedback?rating=${n}&src=${FEEDBACK_EMAIL_SRC}&${PRICE_DROP_UTM}`);
+}
+
+/** The plain feedback link the showcase email carries (no rating picked, no reward named). */
+export function premiumEmailFeedbackUrl(): string {
+  return `${SITE_URL}/feedback?src=${FEEDBACK_EMAIL_SRC}&${PRICE_DROP_UTM}`;
+}
+
+/** Where the snippet's "see every deal" and the feature rows point. */
+export function premiumEmailToolLinks(): { dealFinder: string; scan: string; alerts: string; basket: string; demand: string } {
+  const q = `src=${PRICE_DROP_SRC}&${PRICE_DROP_UTM}`;
+  return {
+    dealFinder: `${SITE_URL}/tools/deal-finder?${q}`,
+    scan: `${SITE_URL}/scan?${q}`,
+    alerts: `${SITE_URL}/alerts?${q}`,
+    basket: `${SITE_URL}/tools/best-basket?${q}`,
+    demand: `${SITE_URL}/tools/demand?${q}`,
+  };
 }
 
 // One tier's price line: "$6.99/month, or $3.99/mo billed yearly ($47.88 a year)".
@@ -1582,6 +1618,49 @@ export const PRICE_DROP_PREMIUM_INCLUDES = PLUS_ON_SALE
   ? `Everything in Plus, plus unlimited target-price alerts and sealed watches, a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), Best Basket's store-by-store plan and Buy this list for your deck or watchlist, and Demand Finder: the cards players search for and open most.`
   : `No ads on any page, every deal in Deal Finder (including "only my cards"), the full Rising Cards list, unlimited target-price alerts and sealed watches (back in stock, at RRP, or at your price), a deck price watch (up to ${DECK_WATCH_LIMIT} saved lists re-priced delivered after every price update, emailed at your price), Best Basket's store-by-store plan and Buy this list for your deck or watchlist, and Demand Finder: the cards players search for and open most.`;
 
+// The feature list, one row each: title, one line, link. Facts only, each one a
+// Premium feature as /premium states it.
+function premiumEmailFeatures(): { icon: string; title: string; line: string; url: string }[] {
+  const t = premiumEmailToolLinks();
+  return [
+    { icon: "🔎", title: "Every deal in Deal Finder", line: `Cards selling below TCGplayer market right now, the whole list, including "only my cards".`, url: t.dealFinder },
+    { icon: "📷", title: `${DEFAULT_SCAN_PREMIUM_PER_DAY} card scans a day`, line: `Point your phone at a card and see its price in every store (free accounts get ${DEFAULT_SCAN_FREE_PER_DAY}).`, url: t.scan },
+    { icon: "🔔", title: "Unlimited price alerts and sealed watches", line: "An email when a card hits your price, or sealed is back in stock or at RRP.", url: t.alerts },
+    { icon: "🧺", title: "Best Basket and deck price watch", line: `The cheapest store-by-store plan for your deck, and up to ${DECK_WATCH_LIMIT} saved lists re-priced after every update.`, url: t.basket },
+    { icon: "📈", title: "Demand Finder and the full Rising Cards list", line: "The cards players search for and open most, before the price moves.", url: t.demand },
+    { icon: "🚫", title: "No ads on any page", line: "The whole site, clean.", url: priceDropLinks().compare },
+  ];
+}
+
+function dealSnippetHtml(deals: PremiumEmailDeal[], seeAll: string): string {
+  const rows = deals
+    .map((d) => {
+      const img = d.imageUrl
+        ? `<img src="${escapeHtml(d.imageUrl)}" width="44" alt="" style="display:block;width:44px;height:auto;border-radius:4px;border:0">`
+        : `<div style="width:44px;height:61px;border-radius:4px;background:#1b2536"></div>`;
+      return `<tr>
+        <td width="56" style="padding:8px 0 8px 12px;vertical-align:middle"><a href="${d.href}">${img}</a></td>
+        <td style="padding:8px 8px;vertical-align:middle">
+          <a href="${d.href}" style="color:#fff;font-size:14px;font-weight:700;text-decoration:none">${escapeHtml(d.name)}</a>
+          <div style="font-size:12px;color:#9aa4b2;margin-top:2px">${escapeHtml(d.setName)} · ${escapeHtml(d.store)}</div>
+          <div style="font-size:12px;color:#9aa4b2;margin-top:2px">TCGplayer market ${escapeHtml(d.market)}</div>
+        </td>
+        <td align="right" style="padding:8px 12px 8px 4px;vertical-align:middle;white-space:nowrap">
+          <div style="font-size:16px;font-weight:800;color:#fff">${escapeHtml(d.price)}</div>
+          <div style="display:inline-block;margin-top:4px;background:#11331f;color:#34d17e;font-size:12px;font-weight:700;padding:2px 7px;border-radius:999px">${d.belowPct.toFixed(0)}% below</div>
+        </td>
+      </tr>`;
+    })
+    .join(`<tr><td colspan="3" style="border-top:1px solid #233047;font-size:0;line-height:0">&nbsp;</td></tr>`);
+  return `<tr><td style="padding:12px 32px 4px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#34d17e">Live from Deal Finder</div>
+      <div style="margin-top:4px;font-size:16px;font-weight:800;color:#fff">Today's biggest gaps below market (US)</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;background:#0f1520;border:1px solid #233047;border-radius:12px">${rows}</table>
+      <div style="margin-top:8px;font-size:12px;line-height:1.5;color:#6b7585">Store prices from our last update; they move. Free accounts see the top 3, ${TIER_NAMES.premium} shows every one.
+        <a href="${seeAll}" style="color:#34d17e;text-decoration:underline">See every deal</a></div>
+    </td></tr>`;
+}
+
 export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail {
   // A display name that is really just an email address reads oddly after
   // "Hi" — fall back to a plain greeting rather than "Hi bill.j@…".
@@ -1589,69 +1668,83 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
   const greeting = first ? `Hi ${escapeHtml(first)},` : "Hi there,";
   const greetingText = first ? `Hi ${first},` : "Hi there,";
   const links = priceDropLinks();
-  const stars = feedbackStarLinks();
+  const tools = premiumEmailToolLinks();
+  const feedback = premiumEmailFeedbackUrl();
   const subject = premiumOfferSubject();
-  const heading = subject;
+  const heading = `Pay less for every Riftbound card with ${TIER_NAMES.premium}`;
   const premiumLine = priceDropTierLine("premium");
   const hasAnnual = !!premiumEffectiveMonthly("premium");
+  const deals = (opts.deals ?? []).slice(0, 3);
+  const features = premiumEmailFeatures();
 
   const btn = (url: string, label: string, primary: boolean) =>
     primary
-      ? `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;background:#1ea65c;color:#1e3043;font-weight:700;font-size:13px;text-decoration:none;padding:10px 16px;border-radius:10px">${label}</a>`
-      : `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;border:1px solid #1ea65c;color:#34d17e;font-weight:700;font-size:13px;text-decoration:none;padding:9px 15px;border-radius:10px">${label}</a>`;
-  const starRow = stars
+      ? `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;background:#1ea65c;color:#0b1a10;font-weight:800;font-size:14px;text-decoration:none;padding:12px 20px;border-radius:10px">${label}</a>`
+      : `<a href="${url}" style="display:inline-block;margin:4px 6px 4px 0;border:1px solid #1ea65c;color:#34d17e;font-weight:700;font-size:14px;text-decoration:none;padding:11px 19px;border-radius:10px">${label}</a>`;
+  const featureRows = features
     .map(
-      (url, i) =>
-        `<a href="${url}" title="${i + 1} star${i ? "s" : ""}" style="display:inline-block;margin:0 4px 0 0;padding:6px 9px;border:1px solid #233047;border-radius:8px;color:#f5b301;font-size:20px;line-height:1;text-decoration:none">${"★".repeat(i + 1)}</a>`,
+      (f) => `<tr>
+        <td width="34" style="padding:9px 0 9px 0;vertical-align:top;font-size:18px;line-height:1">${f.icon}</td>
+        <td style="padding:8px 0;vertical-align:top">
+          <a href="${f.url}" style="color:#fff;font-size:14px;font-weight:700;text-decoration:none">${escapeHtml(f.title)}</a>
+          <div style="font-size:13px;line-height:1.5;color:#b8c0cc;margin-top:2px">${escapeHtml(f.line)}</div>
+        </td>
+      </tr>`,
     )
     .join("");
 
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${greeting}</td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You made a ${SITE_NAME} account, so you're one of the people we build it for. We'd love to know how it's going:
-      is it helping you find cheaper Riftbound cards, and what's missing or annoying?
+      ${SITE_NAME} compares Riftbound card prices across stores every day. ${TIER_NAMES.premium} is the part that does the hunting for you:
+      the deals below market, alerts at your price, and a scanner in your pocket.
     </td></tr>
-    <tr><td style="padding:10px 32px 4px">
-      <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px">How would you rate ${SITE_NAME}?</div>
-      ${starRow}
+    ${deals.length ? dealSnippetHtml(deals, tools.dealFinder) : ""}
+    <tr><td style="padding:14px 32px 4px">
+      <div style="font-size:16px;font-weight:800;color:#fff">What you get with ${TIER_NAMES.premium}</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px">${featureRows}</table>
     </td></tr>
-    <tr><td style="padding:6px 32px 8px;font-size:13px;line-height:1.6;color:#9aa4b2">
-      Tap a star, then add a line about what to fix or build next if you like. We read every one.
-    </td></tr>
-    <tr><td style="padding:8px 32px 8px">
-      <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px">
-        <div style="font-size:16px;font-weight:800;color:#fff">Want more from it? Try ${TIER_NAMES.premium}</div>
+    <tr><td style="padding:10px 32px 8px">
+      <div style="background:#0f1520;border:1px solid #1ea65c;border-radius:12px;padding:16px 18px">
+        <div style="font-size:16px;font-weight:800;color:#fff">${TIER_NAMES.premium}</div>
         <div style="margin-top:4px;font-size:14px;line-height:1.6;color:#e6ebf2">${premiumLine}</div>
-        <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#b8c0cc">${escapeHtml(PRICE_DROP_PREMIUM_INCLUDES)}</div>
         <div style="margin-top:10px">
           ${btn(links.premiumMonthly, `Get ${TIER_NAMES.premium} monthly`, true)}
           ${hasAnnual ? btn(links.premiumAnnual, `Get ${TIER_NAMES.premium} yearly (${tierAnnualAmount("premium")})`, false) : ""}
         </div>
+        <div style="margin-top:8px;font-size:12px;line-height:1.6;color:#9aa4b2">${escapeHtml(PRICE_DROP_PREMIUM_INCLUDES)}</div>
       </div>
     </td></tr>
     <tr><td style="padding:8px 32px 16px;font-size:13px;line-height:1.6;color:#9aa4b2">
       Cancel from your account page any time. Price comparison, your watchlist and your portfolio stay free either way.
       <a href="${links.compare}" style="color:#34d17e;text-decoration:underline">See everything ${TIER_NAMES.premium} includes</a>.
+      Something missing or annoying? <a href="${feedback}" style="color:#34d17e;text-decoration:underline">Tell us</a>, we read every note.
     </td></tr>`;
 
   const text = [
     greetingText,
     "",
-    `You made a ${SITE_NAME} account, so you're one of the people we build it for. We'd love to know how it's going: is it helping you find cheaper Riftbound cards, and what's missing or annoying?`,
+    `${SITE_NAME} compares Riftbound card prices across stores every day. ${TIER_NAMES.premium} is the part that does the hunting for you: the deals below market, alerts at your price, and a scanner in your pocket.`,
     "",
-    `How would you rate ${SITE_NAME}? Pick a star:`,
-    ...stars.map((url, i) => `${i + 1} star${i ? "s" : ""}: ${url}`),
+    ...(deals.length
+      ? [
+          "LIVE FROM DEAL FINDER: TODAY'S BIGGEST GAPS BELOW MARKET (US)",
+          ...deals.map((d) => `- ${d.name} (${d.setName}): ${d.price} at ${d.store}, ${d.belowPct.toFixed(0)}% below TCGplayer market ${d.market}. ${d.href}`),
+          `Store prices from our last update; they move. Free accounts see the top 3, ${TIER_NAMES.premium} shows every one: ${tools.dealFinder}`,
+          "",
+        ]
+      : []),
+    `WHAT YOU GET WITH ${TIER_NAMES.premium.toUpperCase()}`,
+    ...features.map((f) => `- ${f.title}: ${f.line} ${f.url}`),
     "",
-    "Add a line about what to fix or build next if you like. We read every one.",
-    "",
-    `WANT MORE FROM IT? TRY ${TIER_NAMES.premium.toUpperCase()}: ${premiumLine}`,
+    `${TIER_NAMES.premium.toUpperCase()}: ${premiumLine}`,
     PRICE_DROP_PREMIUM_INCLUDES,
     `Get ${TIER_NAMES.premium} monthly: ${links.premiumMonthly}`,
     ...(hasAnnual ? [`Get ${TIER_NAMES.premium} yearly (${tierAnnualAmount("premium")}): ${links.premiumAnnual}`] : []),
     "",
     "Cancel from your account page any time. Price comparison, your watchlist and your portfolio stay free either way.",
     `See everything ${TIER_NAMES.premium} includes: ${links.compare}`,
+    `Something missing or annoying? Tell us: ${feedback}`,
     "",
     "—",
     `You're getting this because you have a ${SITE_NAME} account. This is a one-off product announcement, not a subscription.`,
@@ -1664,7 +1757,9 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
     "List-Unsubscribe": `<${oneClick}>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
   };
-  const preheader = `Rate us in one tap, and a look at ${TIER_NAMES.premium}: ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}, cancel any time`;
+  const preheader = deals.length
+    ? `${deals[0].name} is ${deals[0].belowPct.toFixed(0)}% below market right now. Here's what ${TIER_NAMES.premium} finds for you.`
+    : `Deal Finder, the card scanner and price alerts: what ${TIER_NAMES.premium} finds for you, ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}.`;
   return { subject, heading, preheader, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl), preheader), text, headers };
 }
 
