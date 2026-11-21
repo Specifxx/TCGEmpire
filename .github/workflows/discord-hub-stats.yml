@@ -1,0 +1,26 @@
+name: Discord hub stats
+
+# The Discord hub's member count and each site's invite uses (scripts/discord-hub-stats.ts, DECISIONS.md 2026-11-21), for the
+# Discord agent's Monday self-review. Counts only; never fails.
+
+on:
+  schedule:
+    - cron: "13 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Hub stats
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: npx -y tsx scripts/discord-hub-stats.ts

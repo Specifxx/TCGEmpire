@@ -75,6 +75,7 @@ on:
           - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
           - audit-users      # read-only user/Premium census (no PII printed)
           - retention-census # read-only: accounts, return activity, watches, alerts, subscribers and sister members/alerts per site. Aggregate counts only.
+          - owned-audience   # read-only: new reachable contacts per week by first source (accounts, alerts, newsletter, confirmed sister sign-ups) and the Discord hub's member count. Counts only, to the job summary.
           - apply-intro-to-trialists  # report unless apply=true: attaches the half-price intro to renewing, never-paid monthly trials that began before 2026-09-25 (owner-approved for the one 14-day trialist).
           - ensure-intro-coupons  # WRITES to Stripe (idempotent): creates the "first 3 months half price" coupon for each monthly price if missing, and prints what it will charge.
           - payment-failures-report # read-only: every Stripe charge in the last 30 days with WHO refused it (Radar block vs bank decline), Radar reason/rule/risk, CVC/postcode checks, card brand/funding/country, 3DS. Customers anonymised as #1, #2.
@@ -5921,6 +5922,15 @@ jobs:
           DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
           DB_SOURCE_NAME: RM12
         run: npx tsx scripts/retention-census.ts
+
+      - name: Owned audience count (read-only)
+        # Code red 2026-11-20: contacts gained per week, the owned-audience lead's number. Counts only (public logs).
+        if: inputs.task == 'owned-audience'
+        env:
+          RM12: ${{ secrets.RM12 || vars.RM12 }}
+          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          DB_SOURCE_NAME: RM12
+        run: npx tsx scripts/owned-audience.ts
 
       - name: Weekly premium funnel report (read-only)
         # The answer to "why did we have more premium users signing up before?"

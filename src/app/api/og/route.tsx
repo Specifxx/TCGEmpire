@@ -20,7 +20,7 @@ export function GET(req: Request) {
   const stat = clip(searchParams.get("s"), 16); // big highlighted figure
   const label = clip(searchParams.get("l"), 40); // small line under the stat
   const sub = clip(searchParams.get("b"), 90) || "Riftbound prices, games & tools";
-  const accent = HEX.test(searchParams.get("c") ?? "") ? searchParams.get("c")! : "#f29733";
+  const accent = HEX.test(searchParams.get("c") ?? "") ? searchParams.get("c")! : "#34d17e";
 
   return new ImageResponse(
     (

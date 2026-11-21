@@ -24921,3 +24921,182 @@ own server (the Dex #pokemon-deals feed, the Sealed Sniper channel) had one memb
   price table on sealed pages. Never above a price, never a pop-up.
 - Card sites only: wargame, sports, figure, scent and K-beauty subscribers never see the hub (the two-sides rule).
   `tests/discord-invite.test.ts`.
+
+## 2026-11-20: A Hot 40 snapshot freezes the week's biggest drops, and its card is half rises, half drops
+
+**Owner, 2026-11-20**, after a Reddit reply to a Hot 40 post: "show me the biggest drops. I just want to rip and play".
+Every snapshot thumbnail is now roughly half rises, half drops. Minting (`/api/admin/rising-snapshot`) also freezes up to
+five of the week's biggest price drops into the payload (`drops`, `dropsMarket`): `/movers`' own plummeting list
+(`getPriceMovers` in the scope's market, GLOBAL the default market; it caches itself and is called directly, never wrapped;
+its failure is an empty list, never a reason not to mint). The share image (`lib/hot40-og.tsx`) draws the Hot 40's top three
+on the left and the three biggest drops on the right; a snapshot minted before this has no `drops` and keeps the old layout.
+The public page lists the drops under the table. Nothing is recomputed after minting. `tests/rising-snapshot.test.ts`.
+
+## 2026-11-20: Rift Compare is green again
+
+**Owner, 2026-11-20:** "Can we bring back the green theme for Rift Compare? … I like the green theme for Rift Compare better.
+I don't like the orange kind of logo and orange text. Maybe we should bring back the green text."
+
+- **The brand is the pre-rebrand RiftCompare green** (the values the 2026-10-16 rebrand replaced, commit `e5eedca81`):
+  `brand-500` `#1ea65c`, `600` `#188a4c`, `brand-400` (text) `#34d17e` on dark and `#157a45` in the light theme. The logo
+  gradient `--rc-flame` runs `#6af0a6` to `#1ea65c` (light: `#1ea65c` to `#188a4c`), so the R mark and "Compare" are green.
+- **Every orange that was the brand is green:** the hero's embers, vortex and search ring, the top loader, the divider,
+  share images, emails and the store badge (`lib/brand.ts`, renamed `GREEN` / `GREEN_LIGHT` / `FLAME_TOP`). The favicon,
+  `icon.png`, `apple-icon.png` and `icon-512.*` are the green R files from before the rebrand (unchanged since then).
+- **Not changed:** the Riftbound teal ink and Cinzel headings stay (the owner's ask was the orange logo and text). eBay's
+  buttons stay eBay blue, Amazon's amber, TCGplayer's blue, Premium gold; `buy` / `.btn-buy` was already this green, and
+  the one-green-mark cheapest rule is unchanged. Gains, stock and savings were green already.
+- **Not regenerated:** the 197 blog hero images and the app store icon still carry whatever they baked in.
+- `tests/theme.test.ts` and `tests/price-report.test.ts` pin the new hexes.
+
+## 2026-11-20: A Santa hat on the logo and lights under the header (every Compare site)
+
+**Owner, 2026-11-20:** "change the logo for all of our websites so that it's Christmas themed now. Put a Santa hat on top
+of the logos … and add some decorations here and there, like some Christmas lights … and yeah, Santa Claus." This
+deliberately extends the 2026-11-12 "tasteful accents" layer, which had ruled out hats and lights after the owner's
+2026-11-08 "a bit too much": the owner asked for these two by name, so they come back, kept to the header.
+
+- **What:** the header's R mark wears a Santa hat (`BrandLogo cap`, class `xmas-cap`), a string of lights hangs under
+  the header (`xmas-garland` on `NavbarShell`'s `<header>`), and the home page's gift-guide line gets a small Santa
+  (`.xmas-banner::before`). The `xmas-logo` block in `globals.css` (the same block on every Compare site).
+- **Cost:** CSS only. Three inline SVG data URIs (~2.5 KB in the stylesheet), no request, no script, no animation, no
+  image in the HTML. Every piece is `position: absolute` and `pointer-events: none`, so nothing moves and no tap is
+  caught. Favicons and share images are unchanged (a hat is unreadable at 16 px, and share images are cached a day).
+- **Off switch:** the same as the festive layer, `CHRISTMAS_FESTIVE_LAYER` in `lib/season.ts` (`data-xmas-layer`), and
+  the season window ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
+- Sports Card Compare keeps its own hat and lights (it never took the tone-down).
+
+## 2026-11-20: Most popular leads the home strip, and "See full page" is a secondary button again
+
+**Owner, 2026-11-20 (boardroom on buy clicks):** "Maybe like the Radiance chase cards, like we can get rid of that section
+now … just have the most popular as the first, as like what shows on the homepage."
+
+- **The chase-card tab is gone from every home** (`/` and the five region homes). The popular-cards strip opens on "Most
+  popular" (demand-ranked, `lib/home-rank.ts`), then Biggest movers and Recently updated. The homes no longer call
+  `getSetChaseTiles` (one cached read fewer per render). Chase printings stay on `/sets/<slug>` and in eBay Picks;
+  `featuredSet()` is unchanged.
+- **"See full page: price history and details" is `btn-ghost`, not `btn-primary`,** in the card, sealed and Pokémon quick
+  views. Same words, same place, same full width and 44 px height; only the colour. The measurement (Vercel buy_click,
+  surface `modal`): quick-view buy clickers were ~41 visitors a day on 15–17 Nov and ~10 a day on 18–19 Nov, while quick
+  view opens ROSE (~100 to ~210 visitors a day, "quick view from every card link", #484). The button turned primary on
+  18 Nov (#505), and on a phone it sits under the card image, above every price row, so it was the first loud button in
+  the dialog. Site-wide Rift buy clickers went from ~70 a day (8–17 Nov) to 47 and 36. The buy rows are the only primary
+  actions again.
+- **Recheck 23 Nov:** modal buy clickers back at 30+ a day means this was it. If not, the cause is elsewhere (the cart
+  A/B, #506, is the next suspect) and the button colour can go back on the owner's word.
+- `tests/radiance-featured.test.ts` and `tests/amazon-button.test.ts` pin both.
+## 2026-11-20: The missing collector printings, and one gallery page per collection
+
+**Owner, 2026-11-20:** "a lot of these alternate arts … we just haven't been updating the website with these cards … these
+cards are out there and they need to be in our database", with pages "similar to … the Crystal Rose ones" for the Worlds,
+K/DA and T1 cards.
+
+- **Found by data, not by memory.** `scripts/collab-cards.ts` (`collab-cards.yml`, dispatched on a session branch: the cloud
+  sessions cannot reach TCGplayer) runs the importer's own matcher over `data/public/cards.json` and lists every numbered
+  TCGplayer single no card of ours lands on, plus every product of the collector groups.
+- **25 cards added** to `prisma/manual-cards.json`, each `tcg-<productId>` (so the importer prices it directly), `isPromo`,
+  game data copied from the base printing: K/DA Couture (set `KDC`, 001–005/005), the T1 Player Bundle (`T1A`, 001–005/005),
+  the serial-numbered T1S Ambessa and Miss Fortune (`001*`, `004*`), Secret Garden's Lillia and Ivern, the Worlds Bundle 2025
+  oversized Battlefields (custom `-oversized-promo` slugs, since they share the standard printings' numbers) and eight
+  Champion / Top 8 prizes. The Couture cards are numbered WITHOUT TCGplayer's star: a star makes a card a Signature
+  (`isSignature`), and Riot does not say they are signed.
+- **Images are cropped from TCGplayer's product photo** (sharp trim, 744 px, `public/collab-cards/`). Five products have no
+  photo on TCGplayer (a 403); those reuse their sibling printing's art, as earlier promos did, until one exists.
+- **131 existing promos pinned** in `PROMO_PRODUCT_OVERRIDES`: 102 by the product image their `imageUrl` already carried,
+  the rest by hand. Both Jinx, Rebel 202/298 products and Teemo, Swift Scout 662886 stay unpinned (two products, one card).
+- **Three guides** (`lib/content/collection-articles.ts`): `/guides/riftbound-worlds-cards`, `/guides/riftbound-kda-collection`,
+  `/guides/riftbound-t1-cards`. Each is live galleries of every printing plus dated TCGplayer prices; over 1,500 words.
+  `related-guides.ts` sends T1S, T1A and KDC card pages to them first. The Worlds 2026 Edition's cards are not on TCGplayer
+  yet; they get added when listed.
+## 2026-11-20: Snapshot pages and /movers sell, not just rank (buy-clicks boardroom, move 2)
+
+**Why:** Reddit link posts land on `/rising/<token>` snapshots and `/movers`, and those visitors almost never clicked buy:
+2 buy clickers in 997 snapshot visitors (13–19 Nov), Rift's Reddit visitors 0.7% against 12% from Google. The boardroom
+decided (no owner question needed) to make every snapshot and Hot 100 page buyable. Target 8%+; read 27 Nov and 4 Dec.
+
+- **"Shop the top risers"** (`RisersShop.tsx`) in the first screen of both pages: the top three risers, each with its
+  cheapest price now in the visitor's market (`useCountry().price`, the figure every tile shows) and a Buy button into
+  the quick view (eBay and TCGplayer first). On `/movers` the cards come from `getPriceMovers`, already loaded. A snapshot
+  is frozen and holds no live price, so it passes slugs and the strip reads those three cards from `/api/card/<slug>` in
+  the browser: the quick view's own request, CDN-cached six hours. The page's cache and its frozen numbers are unchanged.
+- **Every snapshot row** gets a Buy link under its frozen price: a plain card link the site-wide handler turns into the
+  quick view, so the buyer sees today's prices there. **Every `/movers` row** (the panels and the table) gets a Buy pill
+  under its move, inside the row's existing quick-view link (`MoverRow buy`): under the price, never beside it, because a
+  button beside every row squeezed names to ~44px at 390px (2026-09-27). The homepage's Price Watch is unchanged.
+- No database read, no new loader, no `revalidate` change, no deploy marker: it rides the daily release.
+## 2026-11-19 — Events sent on mount were dropped: trackEvent queues them
+
+`top_seen` (the top-pair A/B's exposure event, lib/top-pair.ts) read 0 in Vercel on its first day while buy_click carried `top_arm`.
+`@vercel/analytics` `track()` calls `window.va?.(…)`, and `window.va` exists only once `<Analytics />` injects its script, which
+`ConsentGatedAnalytics` renders after the consent check, after the page's own mount effects. So any event sent on mount was silently
+dropped (and top_seen's once-a-visit guard then never sent it again); clicks, which come later, were fine. `trackEvent` now sets up the
+library's own queue first (`vaQueue()` in lib/analytics.ts, the same `window.vaq` its `inject()` makes and its script drains); without
+consent the script never loads and nothing is sent. `tests/va-queue.test.ts`. The 3 Dec read of the top-pair test counts top_seen only
+from the release that carries this; before it, compare clicks per arm.
+
+## 2026-11-20 — Card scanner for TCG Singles DB: Rift reads, the sister matches
+
+**Decision (owner's brief, scanner thread).** TCG Singles DB gets the card scanner for Pokémon, Yu-Gi-Oh! and One Piece. It has
+no accounts, no database and no model key, and the owner wants no new keys or spend, so Rift makes the read and the sister
+does everything else:
+
+- `POST /api/scan/read` (`lib/scan/sister.ts`): cross-origin from the exact origin `https://tcgsinglesdb.com` only, never a
+  session or cookie. ONE Haiku 5.5 call (`readAnyCard` in `lib/scan/read.ts`, a game-aware prompt that also reads the
+  1st Edition stamp); it returns only what was read. TCG Singles DB matches the reading to its own catalogue by TCGplayer
+  product id; Rift never holds that catalogue.
+- Caps: 5 reads a visitor a UTC day (`SISTER_SCAN_FREE_PER_DAY`), keyed by a salted hash of the IP in a Counter row (no raw
+  IP stored; per visitor, not per account, because the sister has no accounts), and 500 a day per sister
+  (`SISTER_SCAN_DAILY_CAP`, about US$0.15 at the measured US$0.0003 a read), separate from Rift's own 1,000. A failed
+  model call gives the read back. `SISTER_SCAN=0` switches it off; it is off without `ANTHROPIC_API_KEY`.
+- No second "which printing" call: on TCG Singles DB look-alike printings are shown with their pictures and the visitor picks.
+- The photo is never stored and no eBay call is made. `tests/scan-sister.test.ts`.
+
+## 2026-11-20: Vercel drops any event with more than 16 properties; buy_click is trimmed to 16 for Vercel
+
+**Found by the buy-clicks boardroom, 2026-11-20.** Probe events sent from riftcompare.com showed the limit. Events with 8 to 16 properties
+arrived in Vercel Web Analytics. Events with 17, 18 and 19 properties never arrived: Vercel drops them silently and whole,
+and nothing errors in the browser.
+
+- **What it broke:** from 18 Nov the A/B arms (`cart_arm` #506, `dock_arm` #516, `ad_look` #525, `top_arm` #539,
+  `ebay_btn` #544, `ebay_pop` #555) were prepended to every `buy_click`. A card row's click carries `card_id`,
+  `card_name`, `variant`, `condition` and `in_stock` too, which comes to 19 to 21 properties, so every quick-view (`modal`)
+  and card-table buy click vanished from Vercel. Sealed rows have fewer properties and kept counting. The clicks still
+  reached the stores. Only the count was lost. Vercel showed Rift's buy clickers falling from ~70 to 36 a day, and
+  every Rift A/B read that relies on card rows is short from 18 Nov until this ships.
+- **The fix:** `trackEvent` sends Vercel `forVercel(data)`, at most `VERCEL_MAX_PROPS` (16). It drops `transport_type`,
+  `card_id`, `condition`, `variant`, `dock_arm`, `ebay_btn`, `in_stock` and `campaign` first, in that order, then anything
+  past 16. GA4 still gets every key. `tests/analytics-props.test.ts` pins it.
+- **Correction to the entry above:** the "See full page" restyle in #571 rested on this artefact. Card-row
+  clicks were not falling; they were not being counted. The button goes back to `btn-primary`, as the owner asked on 18 Nov.
+  The chase-tab removal stands, since the owner asked for it.
+- **Rule:** no Vercel custom event may carry more than 16 properties. Add a new A/B arm to buy_click only after
+  checking the count, or fold it into an existing key.
+emblem is a token: rarity T, or a letter number such as E1. Only those are left out now; a card with a plain number stays.
+
+## 2026-11-20 — Black Friday pages: products furthest under their own 30-day price, with a buy button on every line
+
+Code red plan (20 Nov), Cyber Week buy sprint: the season's pages lead with a list a shopper can act on. `lib/real-drops.ts`: a product
+is listed only when its cheapest in-stock price today is 10% or more under the median of its OWN recorded daily prices over the
+last 30 days (today left out), with 14+ recorded days, wrong-listing days (under half the median) left out, no claim when the
+records swing more than 2x, no placeholder prices (9999.99), and a typical price of 20.00 or more. Each line carries the
+cheapest store's buy button (its own link, `offerLink`) and a tagged eBay search, surface `bf_drops`. It replaces the
+"Under their own 30-day typical price" list on the same pages (same idea, no buy button, fewer guards). Copy says "under its
+30-day typical" and "lowest since <date>", never "was", "dropped" or "ever" (BANNED_COPY). Read 3 Dec: `bf-drops` buy clicks
+28 Nov to 1 Dec against the 4 days before. Rift reads its sealed history files (`sealedHistoryRows`), whose weeks of wrong-product rows the 2x guard refuses; never an eBay row as the store. The same file ships on Dex, MTG and OP.
+
+## 2026-11-20: A sister confirmation that never left is sent by the daily run (owned audience)
+
+Half the sister-site addresses (6 of 12) never confirmed. The sign-up sends its one confirmation only when the day's mail cap
+(`claimMailSlot`, 30 a day for the non-Dex sites) has room and the send works; when it had none, nothing tried again, and the
+daily run deleted the address a week later without it ever getting an email. Now `runSisterAlerts` step 1b sends up to
+`CONFIRM_RETRY_PER_RUN` (10) never-sent confirmations a run, oldest first, under the same cap and before any alert spends it,
+stamping `confirmSentAt` only on a real send; and an address never emailed is kept for two weeks instead of one, so the person
+has time to click. Still one confirmation per address (no reminders), still double opt-in. `scripts/owned-audience.ts` prints how
+many unconfirmed addresses were never emailed against emailed but not clicked. `tests/sister-alerts.test.ts` pins it.
+
+## 2026-11-21: Which site sends people to the Discord hub
+
+People started joining "TCG Deals & Restocks" on 21 Nov. Each card site links its own never-expiring invite, so the per-invite
+use count says which site works. `scripts/discord-hub-stats.ts` (`discord-hub-stats.yml`, daily and on demand) prints the hub's
+member count from the public invite and, with the price bot's token, each invite's uses (it needs Manage Server in the hub; it says
+so instead of failing). Counts only; the Discord agent reads it for its Monday self-review and leans into the site that converts.

@@ -9,6 +9,7 @@ import {
   hotListName,
   snapshotDateLabel,
   toSnapshotData,
+  toSnapshotDrops,
   weekMove,
   rankedFromCount,
   type RisingSnapshotData,
@@ -217,6 +218,36 @@ test("the social card draws a dash, not a green +0.0%, when there is no week mov
   const legacy = texts(Hot40Image({ picks: [pick({ trend7: 18.4, trend30: 26.1 })], dateLabel: null })).join(" | ");
   assert.match(legacy, /\+18\.4% vs last week/);
   assert.match(legacy, /\+26\.1% 30 days/);
+});
+
+test("a snapshot freezes the week's biggest drops, and its card is half Hot 40, half drops (owner, 2026-11-20)", () => {
+  const texts = (node: unknown): string[] => {
+    if (node == null || typeof node === "boolean") return [];
+    if (typeof node === "string" || typeof node === "number") return [String(node)];
+    if (Array.isArray(node)) return node.flatMap(texts);
+    const el = node as { type?: unknown; props?: { children?: unknown } };
+    if (typeof el.type === "function") return texts((el.type as (p: unknown) => unknown)(el.props));
+    return texts(el.props?.children);
+  };
+  const mover = (id: string, pct: number, now: number) => ({
+    card: { id, slug: id, name: `Card ${id}`, setCode: "OGN", collectorNumber: "001/298", imageThumbUrl: null } as never,
+    points: [],
+    nowCents: now,
+    refCents: Math.round(now / (1 + pct / 100)),
+    pct,
+  });
+  const drops = toSnapshotDrops([mover("a", -31.1, 4200), mover("b", -12, 900), mover("up", 4, 500)], "AUD");
+  assert.deepEqual(drops.map((d) => [d.id, d.pct, d.currency]), [["a", -31.1, "AUD"], ["b", -12, "AUD"]], "only falls, in order");
+  const d = toSnapshotData(analysis([risePick({ vsLastWeekPct: 8.2, trend7: 8.2 })]), "AU", AT, null, new Map(), { market: "AU", rows: drops });
+  assert.equal(d.dropsMarket, "AU");
+  assert.equal(d.drops?.length, 2);
+  const card = texts(Hot40Image({ picks: d.picks, drops: d.drops, dateLabel: null })).join(" | ");
+  assert.match(card, /Biggest drops · 7 days/);
+  assert.match(card, /−31\.1%/);
+  assert.match(card, /\+8\.2%/);
+  // An older snapshot (no drops) keeps its own layout.
+  assert.doesNotMatch(texts(Hot40Image({ picks: d.picks, dateLabel: null })).join(" | "), /Biggest drops/);
+  assert.equal(toSnapshotData(analysis([risePick()]), "US", AT).drops, undefined);
 });
 
 test("the public page reads both payload shapes, and sells the plan that unlocks the list (ENTRY_TIER_NAME)", () => {

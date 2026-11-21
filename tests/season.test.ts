@@ -178,7 +178,13 @@ test("Christmas is one quiet line, not a costume (owner, 2026-11-08: the theme m
   }
   assert.ok(!existsSync(join(process.cwd(), "src/components/home/ChristmasDecor.tsx")));
   assert.doesNotMatch(read("src/components/home/RiftEmbers.tsx"), /"christmas"|flake/, "the embers stay embers");
-  assert.doesNotMatch(read("src/components/BrandLogo.tsx"), /rb-hat|Santa/);
+  // The Santa hat and lights came back on the owner's ask (2026-11-20), as CSS only: the xmas-logo block, gated by the
+  // festive layer's switch, three inline SVGs, no image file, no motion, nothing in the flow.
+  const logo = css.slice(css.indexOf("xmas-logo:start"), css.indexOf("xmas-logo:end")).replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.match(logo, /:root\[data-season="christmas"\]\[data-xmas-layer\] \.xmas-cap::before \{[^}]*position: absolute;[^}]*pointer-events: none;/);
+  assert.match(logo, /:root\[data-season="christmas"\]\[data-xmas-layer\] \.xmas-garland::after \{[^}]*position: absolute;[^}]*pointer-events: none;/);
+  for (const gone of ["@keyframes", "animation:", "url(/", "--c-ink-", "--c-brand-"]) assert.ok(!logo.includes(gone), `${gone} stays out of the logo CSS`);
+  assert.match(read("src/components/Navbar.tsx"), /<BrandLogo cap \/>/);
   // The one touch: the gifts line, gated by the season.
   assert.match(css, /:root\[data-season="christmas"\] \.rb-gifts-row \{\s*display: flex;/);
   assert.match(read("src/components/home/ChristmasGifts.tsx"), /if \(!seasonMarkupLive\("christmas"\)\) return null;/);

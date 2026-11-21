@@ -1313,6 +1313,9 @@ export async function searchEbaySealed(
     // language search (proxy/sleeve/empty/accessory/…) — only the language-word
     // branch is dropped, since that's exactly what CN/KR are searching for.
     .filter((it) => !(language ? SEALED_EXCLUDE_EBAY_BASE : SEALED_EXCLUDE_EBAY).test(sealedExclusionText(it.title ?? "")))
+    // A graded slab is a single card in a case, never the sealed product (2026-11-20: a PSA 9 Teemo at US$1,264.95 on
+    // the Origins Nexus Night Pack page, a PSA 10 Poro on the Secret Garden Box's). A language search drops it too.
+    .filter((it) => !isGradedListing(it.title ?? ""))
     .filter((it) => (language ? LANGUAGE_SIGNAL[language].test(it.title ?? "") : !isForeignListing(it)))
     // Price-sanity: drop anything below the per-type / reference floor (the $22
     // "booster box" accessory class).
