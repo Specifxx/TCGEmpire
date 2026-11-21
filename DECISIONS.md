@@ -25115,3 +25115,10 @@ also lift the month's rate. The strip gains ONE link, on its own line under the 
 for the product ("See Black Friday prices on TCGplayer", `surface="bf_strip"`). It claims no price and no deal, ranks nothing, and
 never takes the cheapest badge; the board below stays sorted by price. Counted in the 3 Dec Cyber Week read. When TCGplayer's own
 Cyber Weekend landing page is available it replaces the search.
+
+## 2026-11-21: Which site sends people to the Discord hub
+
+People started joining "TCG Deals & Restocks" on 21 Nov. Each card site links its own never-expiring invite, so the per-invite
+use count says which site works. `scripts/discord-hub-stats.ts` (`discord-hub-stats.yml`, daily and on demand) prints the hub's
+member count from the public invite and, with the price bot's token, each invite's uses (it needs Manage Server in the hub; it says
+so instead of failing). Counts only; the Discord agent reads it for its Monday self-review and leans into the site that converts.
