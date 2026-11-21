@@ -25093,3 +25093,14 @@ daily run deleted the address a week later without it ever getting an email. Now
 stamping `confirmSentAt` only on a real send; and an address never emailed is kept for two weeks instead of one, so the person
 has time to click. Still one confirmation per address (no reminders), still double opt-in. `scripts/owned-audience.ts` prints how
 many unconfirmed addresses were never emailed against emailed but not clicked. `tests/sister-alerts.test.ts` pins it.
+
+## 2026-11-21: Cyber Weekend editions of the weekly drops email (owner: "capitalise on cyber weekend")
+
+The sister sites' weekly biggest-drops email lands on Black Friday (27 Nov) and Cyber Monday (30 Nov) mornings: the daily run is
+14:20 UTC, 9:20 in New York. `PINNED_EDITIONS` in `lib/sister-alerts/digest.ts`: on a pinned UTC day every site with subscribers
+builds a fresh edition unless it already built one that day; in the three days before one, a regular edition waits, so the Black
+Friday email compares with the week before rather than with a day. The subject names the occasion ("Black Friday: the real
+price drops on …"). Nothing else changes: drops are still the site's own feed prices, MIN_DROPS still holds (a quiet site sends
+nothing), the digest's share of the mail cap is the same, and there is no promotional blast. Subscribers get two editions that
+week, three days apart, then the weekly rhythm resumes from Cyber Monday. Price alerts already run daily at the same hour, so a
+real Black Friday drop reaches its watcher that morning without a change. `tests/sister-digest.test.ts` pins the dates.

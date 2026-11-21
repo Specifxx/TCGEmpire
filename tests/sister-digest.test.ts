@@ -8,6 +8,7 @@ import {
   digestHasSiteFailure,
   digestUnsubscribeHeaders,
   editionDue,
+  editionOccasion,
   readDrops,
   readSnapshot,
   runSisterDigest,
@@ -194,4 +195,23 @@ test("the routes keep the digest opt-in and its stop links", () => {
   assert.match(unsub, /sisterDigest\.deleteMany/);
   const cron = read("src/app/api/cron/sister-alerts/route.ts");
   assert.ok(cron.indexOf("runSisterAlerts({") < cron.indexOf("runSisterDigest({"), "alerts get the day's mail first");
+});
+
+test("Cyber Weekend 2026: editions land on Black Friday and Cyber Monday mornings, and wait for them", () => {
+  const at = (iso: string) => new Date(iso);
+  // An ordinary edition due on 25 Nov waits for Black Friday…
+  assert.ok(!editionDue(at("2026-11-17T14:20:00Z"), at("2026-11-25T14:20:00Z")));
+  // …which builds even though the last edition is only two days old…
+  assert.ok(editionDue(at("2026-11-25T14:20:00Z"), at("2026-11-27T14:20:00Z")));
+  assert.ok(!editionDue(at("2026-11-27T14:20:00Z"), at("2026-11-27T20:00:00Z")), "once a day");
+  // …then Cyber Monday, three days later; then the weekly rhythm again from Monday.
+  assert.ok(editionDue(at("2026-11-27T14:20:00Z"), at("2026-11-30T14:20:00Z")));
+  assert.ok(!editionDue(at("2026-11-30T14:20:00Z"), at("2026-12-04T14:20:00Z")));
+  assert.ok(editionDue(at("2026-11-30T14:20:00Z"), at("2026-12-07T14:20:00Z")));
+  assert.equal(editionOccasion(at("2026-11-27T14:20:00Z")), "Black Friday");
+  assert.equal(editionOccasion(at("2026-11-30T14:20:00Z")), "Cyber Monday");
+  assert.equal(editionOccasion(at("2026-12-07T14:20:00Z")), null);
+  const drops = [{ id: "a", n: "Box", u: "/p/box", was: 10000, now: 8000 }];
+  assert.match(buildDigestEmail("mtg", "US", drops, "t", "Black Friday").subject, /^Black Friday: the real price drops on MTG Compare, Box −20%$/);
+  assert.match(buildDigestEmail("mtg", "US", drops, "t").subject, /^This week's biggest price drops/);
 });
