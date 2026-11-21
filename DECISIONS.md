@@ -25122,3 +25122,10 @@ People started joining "TCG Deals & Restocks" on 21 Nov. Each card site links it
 use count says which site works. `scripts/discord-hub-stats.ts` (`discord-hub-stats.yml`, daily and on demand) prints the hub's
 member count from the public invite and, with the price bot's token, each invite's uses (it needs Manage Server in the hub; it says
 so instead of failing). Counts only; the Discord agent reads it for its Monday self-review and leans into the site that converts.
+
+## 2026-11-21: Alert emails link to each site's own address
+
+The eleven sister sites with the `/account-service/*` rewrite (DECISIONS, 2026-11-19, "the sign-in flow never names another
+site") were each checked live on 2026-11-21: `https://<site>/account-service/alerts/manage?t=x` returned this service's own
+"That link has expired" page. All eleven are now in `ON_SITE_ALERT_LINKS` (`lib/sister-alerts/email.ts`), so their confirm,
+manage and stop links use the site's own address. BandaiCompare and FigureCompare (idle, no rewrite) keep the service's links.

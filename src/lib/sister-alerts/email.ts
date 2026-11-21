@@ -29,9 +29,21 @@ export function money(cents: number, region: SisterRegion): string {
 /**
  * Sites whose next.config.js rewrites /account-service/alerts/<confirm|manage|unsubscribe> to this service (owner, 2026-11-19: the
  * visitor never lands on another site's address). Their mail links use the site's own address; add a key only once that site's
- * rewrite is live in production.
+ * rewrite is live in production. All eleven checked live on 2026-11-21 (each returned this service's "That link has expired" page).
  */
-export const ON_SITE_ALERT_LINKS: ReadonlySet<string> = new Set<string>([]);
+export const ON_SITE_ALERT_LINKS: ReadonlySet<string> = new Set<string>([
+  "dex",
+  "mtg",
+  "tcgprices",
+  "gundam",
+  "ygo",
+  "lorcana",
+  "cyberpunk",
+  "wargame",
+  "wax",
+  "scent",
+  "kaeyoung",
+]);
 
 export const serviceUrl = (path: string, token: string, site?: Pick<SisterAlertSite, "key" | "url">) =>
   site && ON_SITE_ALERT_LINKS.has(site.key)

@@ -89,7 +89,7 @@ test("missing products and old alerts expire", () => {
 test("the confirmation email carries no text from the form, and alerts carry unsubscribe, share and one sister deal", () => {
   const c = buildConfirmEmail("mtg", "tok123", 12500, "US");
   assert.match(c.subject, /MTG Compare/);
-  assert.match(c.html, /api\/sister-alerts\/confirm\?t=tok123/);
+  assert.match(c.html, /https:\/\/mtgcompare\.app\/account-service\/alerts\/confirm\?t=tok123/);
   assert.match(c.html, /US\$125\.00/);
   const feeds = new Map<string, AlertFeed>([["dex", { ...parseFeed({ ...rawFeed, site: "dex" }, { key: "dex" }) }]]);
   const deal = pickDeal(sisterSite("mtg")!, "US", feeds, now);
