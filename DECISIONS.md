@@ -25191,3 +25191,17 @@ sits in another group (`misfiledSetLess`), and Cardmarket files such a product u
 Grounds page in the UK and EU, 16 foil singles from two stores each had a "sealed" page, eBay playsets (US$24.99) sat in the Vendetta
 Bundle group, Cardmarket's Gift of the Rift Bundle (EUR 167) sat in VEN|Bundle, and two eBay rows kept a pre-#541 Gift of the Rift group
 alive because the eBay pass searches every group that exists. Rules only refuse; every title is in `tests/sealed-single-cards.test.ts`.
+
+## 2026-11-21: A set's booster and its case no longer share the bare "Sealed" page
+
+**Decision.** `classifySealed` types four title shapes that fell to the bare "Sealed" catch-all: a title ending in "booster" is a
+Booster Pack (Cardmarket's "Radiance Booster"; a "promos booster" stays out), "… Nexus Night Promo Booster" is the Nexus Night Pack,
+a set's name right before "case" is that set's Booster Case (spellnexus's "Riftbound Radiance Case English"), and "<Champion> Trial
+Deck" is its own `Trial Deck (<Champion>)`. A `/sealed/<set>-sealed` slug with no group left 301s to `/sets/<set slug>`
+(`setCatchAllRedirect`), never a 404.
+
+**Why.** In the 21 Nov 16:26 UTC export each set's "<SET>|Sealed" page held Cardmarket's single booster (EUR 3-5) beside that set's
+six-box case (EUR 600-900), so the page's cheapest price was a pack, and the EU case and pack pages missed one row each. OGN|Sealed
+also held four different Trial Decks and a EUR 2,250 promo booster under one name. Checked by running the old and new
+`classifySealed` over every title of the export: only the 24 catch-all titles and one eBay "Nexus Night Booster Pack" change type.
+Titles are in `tests/sealed-catch-all.test.ts`.

@@ -515,6 +515,16 @@ export function titleGroupKey(title: string): string {
   return setLessGroupKey(title) ?? title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
 }
 
+/** Where a set's old catch-all page ("<SET>|Sealed", slug "rad-sealed") goes once it is empty, or null. Until
+ *  2026-11-21 Cardmarket's "Radiance Booster" (EUR 3.50) and spellnexus's "Riftbound Radiance Case English" (EUR 600)
+ *  both fell to the bare "Sealed" type and shared that page; classifySealed now types them, so the page empties and
+ *  its URL goes to the set's own hub (/sets/<slug>), never a 404. Only called when the slug has no group. */
+export function setCatchAllRedirect(slug: string): string | null {
+  const code = slug.match(/^([a-z]{3})-sealed$/)?.[1]?.toUpperCase();
+  const set = code ? SETS.find((s) => s.code === code) : undefined;
+  return set ? `/sets/${set.slug}` : null;
+}
+
 /** Where an old /sealed slug of a SET_LESS_GROUPS product goes now (its title-derived keys made many: a key is letters
  *  and digits only, so its slug has no hyphen), or null. Never the page itself, a case or a lot. */
 export function setLessSlugRedirect(slug: string): string | null {
@@ -544,6 +554,8 @@ const CHAMPIONS = /\b(Lee\s*Sin|Tryndamere|Viktor|Rumble|Fiora|Garen|Annie|Ashe|
 // what makes this list exactly these four. See the check's own comment.
 const SELF_TYPED = new Set(["Booster Box", "Booster Case", "Booster Pack", "Sleeved Booster"]);
 
+const SET_NAME_CASE = /\b(?:origins|spirit\s*forged|unleashed|vendetta|radiance|legacy|reckoning)\s+case\b/;
+
 export function classifySealed(title: string): string {
   const t = title.toLowerCase();
   const rawChamp = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim() || title.match(CHAMPIONS)?.[1];
@@ -555,7 +567,14 @@ export function classifySealed(title: string): string {
   // four-deck bundle, never one deck (whose group it shared) and never a
   // Showdown Decks pair (Legacy has none).
   if (/(?:champion|showdown)\s*decks?/.test(t) && /set\s*of\s*(?:4|four)|\b4\s*decks\b|all\s*four/.test(t)) return "Champion Deck Set (4)";
-  if (/nexus\s*night\s*(?:\d+\s*)?(?:promo\s*)?pack/.test(t)) return "Nexus Night Pack";
+  // Cardmarket calls the pack a "… Nexus Night Promo Booster" (2026-11-21): it fell to the bare "Sealed" catch-all.
+  if (/nexus\s*night\s*(?:\d+\s*)?(?:promo\s*)?(?:pack|booster)/.test(t)) return "Nexus Night Pack";
+  // Origins' Trial Decks (Cardmarket: "Jinx Trial Deck", "Yasuo Trial Deck"): four products, one per champion, each its
+  // own group. They shared OGN|Sealed with a EUR 4.99 booster and a EUR 2,250 promo booster until 2026-11-21.
+  if (/\btrial\s*deck\b/.test(t)) {
+    const who = title.match(/\b([A-Za-z']+)\s+trial\s*deck\b/i)?.[1];
+    return who ? `Trial Deck (${who[0].toUpperCase()}${who.slice(1).toLowerCase()})` : "Trial Deck";
+  }
   // The Radiance Showdown Decks are also sold as "Champion Deck: Evelynn Vs.
   // Seraphine" (Alt F4, 2026-09-24) — a head-to-head pair is the Showdown Decks
   // product, never a single Champion Deck, so "<a> vs <b>" wins first. It had
@@ -595,6 +614,10 @@ export function classifySealed(title: string): string {
   // keep typing as a Booster Box — that listing is the whole reason this rule is
   // careful.
   if (/booster\s*case|(?:display|booster\s*box|sealed)\s*case|booster\s*display\s*case|case\s*[([]?\s*(?:of\s*)?\d+\s*x?\s*[)\]]?\s*booster\s*box/.test(t)) return "Booster Case";
+  // "Riftbound Radiance Case English" (spellnexus, 2026-11-21): a set's own name, then "case", is that set's booster
+  // case (EUR 600-900, six boxes); it fell to the bare "Sealed" catch-all beside the set's EUR 3 Cardmarket booster.
+  // Only the set name right before "case", so a Vault Bundle Case (above) or "… from a case" never reads as one.
+  if (SET_NAME_CASE.test(t)) return "Booster Case";
   if (/booster\s*box|booster\s*display|display\s*box|\bdisplay\b/.test(t)) return "Booster Box";
   if (/pre-?rift\s*event\s*kit/.test(t)) return "Pre-Rift Event Kit";
   if (/pre-?rift|event\s*kit|pre-?release\s*kit/.test(t)) return "Pre-Rift Kit";
@@ -626,6 +649,10 @@ export function classifySealed(title: string): string {
   if (/two[-\s]?player|starter|precon/.test(t)) return "Starter Set";
   if (/\btin\b/.test(t)) return "Tin";
   if (/promo\s*pack/.test(t)) return "Promo Pack";
+  // Cardmarket's own name for a booster pack is "<Set> Booster" ("Radiance Booster", EUR 3.50), so every set's pack sat
+  // in "<SET>|Sealed" with that set's EUR 600+ case (2026-11-21). A title ENDING in "booster" names one pack; a
+  // promos booster ("Project K Promos Booster", EUR 2,250) is not the set's pack and stays out.
+  if (/\bbooster\s*$/.test(t) && !/\bpromos?\s+booster\s*$/.test(t)) return "Booster Pack";
   if (/booster\s*pack|\bblister\b|\bpack\b/.test(t)) return "Booster Pack";
   return "Sealed";
 }
@@ -1740,7 +1767,7 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
   ];
   // Champion Decks slot between bundles and packs (display boxes before singles).
   const rank = (t: string) => {
-    if (/champion deck/i.test(t)) return /display/i.test(t) ? 8.4 : 8.6;
+    if (/champion deck|trial deck/i.test(t)) return /display/i.test(t) ? 8.4 : 8.6;
     if (/showdown decks/i.test(t)) return /display/i.test(t) ? 8.3 : 8.5;
     const i = order.indexOf(t);
     return i < 0 ? 99 : i;
