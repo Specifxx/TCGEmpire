@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-11-20T14:00:54.039Z",
-  "finishedAt": "2026-11-20T14:00:54.573Z",
+  "startedAt": "2026-11-21T02:52:36.748Z",
+  "finishedAt": "2026-11-21T02:52:38.281Z",
   "ok": true,
   "summary": {
     "groups": {
@@ -10,16 +10,16 @@
     },
     "catalog": {
       "sets": 43,
-      "products": 1040,
+      "products": 1041,
       "deactivated": 0,
       "skipped": {
-        "out-of-scope kind": 557,
-        "before scope": 340
+        "out-of-scope kind": 558,
+        "before scope": 341
       }
     },
     "tcgplayer": {
-      "listings": 949,
-      "market": 916
+      "listings": 958,
+      "market": 921
     },
     "cardmarket": {
       "enabled": false,
@@ -27,8 +27,8 @@
       "written": 0
     },
     "ebay": {
-      "enabled": false,
-      "remaining": null,
+      "enabled": true,
+      "remaining": 730,
       "budget": 0,
       "searched": 0,
       "matched": 0
