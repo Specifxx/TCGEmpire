@@ -16,6 +16,7 @@ import { blackFriday, cyberMonday, sealedDeals, UNDER_MEDIAN_PCT, UNDER_MSRP_PCT
 import { FamilyDeals } from "@/components/FamilyDeals";
 import { SalePriceWatch } from "@/components/SalePriceWatch";
 import { RealDrops, realDropRows } from "@/components/RealDrops";
+import { TcgplayerSaleBlock } from "@/components/TcgplayerSaleBlock";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The Black Friday and Cyber Monday pages, /black-friday and /cyber-monday.
@@ -204,6 +205,8 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
 
       {/* The price watch (2026-11-06): sealed boxes, price drops, graded slabs and chase auctions, each ending in a live eBay listing. */}
       <SalePriceWatch country={country} currency={currency} pageType={event.replace(/-/g, "_")} source={source} />
+
+      <TcgplayerSaleBlock name={event === "black-friday" ? "Black Friday" : "Cyber Monday"} country={country} pageType={event.replace(/-/g, "_")} path={PATH} />
 
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>
