@@ -1,3 +1,4 @@
+import { DiscordCta } from "@/components/DiscordCta";
 import Link from "next/link";
 import { OutboundLink } from "@/components/OutboundLink";
 import { affiliateUrl, ebaySealedQuery, ebaySearchUrl } from "@/lib/affiliate";
@@ -101,6 +102,8 @@ export function RealDrops({ rows, country, currency, page }: { rows: DropRow[]; 
         at least; a day far under the rest is left out as a wrong listing, and a product whose records swing more than twofold is not listed). It says what stores
         asked on those days, not what they will charge next. Prices exclude postage. The eBay button is a paid link.
       </p>
+      {/* Cyber Weekend (2026-11-21): the Discord hub posts these drops as they happen. */}
+      <DiscordCta className="mt-4" />
     </section>
   );
 }
