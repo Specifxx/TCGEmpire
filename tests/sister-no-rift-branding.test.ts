@@ -21,8 +21,17 @@ test("the confirm and manage pages carry no RiftCompare footer", () => {
 });
 
 test("mail links stay on the service until a site's rewrite is listed", () => {
-  const site = { key: "scent", url: "https://scentcompare.app" } as const;
+  const site = { key: "figure", url: "https://figurecompare.com" } as const;
   assert.match(serviceUrl("manage", "t", site), /^https:\/\/[^/]+\/api\/sister-alerts\/manage\?t=t$/);
+});
+
+test("a listed site's mail links use its own address (rewrites checked live 2026-11-21)", () => {
+  const site = { key: "scent", url: "https://scentcompare.app" } as const;
+  assert.equal(serviceUrl("manage", "t t", site), "https://scentcompare.app/account-service/alerts/manage?t=t%20t");
+  for (const s of SISTER_ALERT_SITES) {
+    if (["bandai", "figure"].includes(s.key)) continue;
+    assert.ok(serviceUrl("confirm", "t", s).startsWith(`${s.url}/account-service/alerts/confirm`), s.key);
+  }
 });
 
 test("the unsubscribe redirect is relative, so a sister's rewrite keeps the visitor on its address", () => {

@@ -8,6 +8,7 @@ import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SealedProductView } from "@/components/SealedProductView";
 import { InlineAds } from "@/components/InlineAds";
+import { bfStripByMarket } from "@/lib/bf-strip-sealed";
 import { DiscordCta } from "@/components/DiscordCta";
 
 // A sealed product's own page (2026-11-03, owner: Amazon "up there with eBay and TCGplayer" on RiftCompare too, which
@@ -69,7 +70,7 @@ export default async function SealedProductPage({ params }: { params: { slug: st
         </p>
       </header>
 
-      <SealedProductView byMarket={byMarket} />
+      <SealedProductView byMarket={byMarket} bf={bfStripByMarket(byMarket, g.setCode)} />
 
       <DiscordCta className="mt-6" />
 

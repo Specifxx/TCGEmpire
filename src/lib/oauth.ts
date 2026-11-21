@@ -58,3 +58,15 @@ export function enabledProviders(): OAuthProvider[] {
 export function redirectUri(provider: OAuthProvider): string {
   return `${SITE_URL}/api/auth/oauth/${provider}/callback`;
 }
+
+/**
+ * Providers whose app has every sister's own callback registered (owner, 2026-11-21: Discord's 11
+ * `https://<site>/account-service/oauth/discord/callback` addresses added in the developer portal). A sister sign-in for one of
+ * these that came through the sister's own /account-service/oauth rewrite (`?via=site`) uses the sister's callback, so the
+ * visitor never sees riftcompare.com. Google joins once its redirect URIs are added in Google Cloud.
+ */
+export const ON_SITE_OAUTH: readonly OAuthProvider[] = ["discord"];
+
+export function sisterRedirectUri(siteUrl: string, provider: OAuthProvider): string {
+  return `${siteUrl}/account-service/oauth/${provider}/callback`;
+}

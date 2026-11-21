@@ -62,8 +62,8 @@ test("the two lanes never spend each other's day, and each stops at its own cap"
 test("the weekly-only confirmation names the site, the region and one confirm link", () => {
   const m = buildWeeklyConfirmEmail("dex", "tok_1", "UK");
   assert.match(m.subject, /^Confirm your DexCompare weekly price drops$/);
-  assert.match(m.html, /sister-alerts\/confirm\?t=tok_1/);
-  assert.match(m.text, /sister-alerts\/confirm\?t=tok_1/);
+  assert.match(m.html, /https:\/\/dexcompare\.io\/account-service\/alerts\/confirm\?t=tok_1/);
+  assert.match(m.text, /https:\/\/dexcompare\.io\/account-service\/alerts\/confirm\?t=tok_1/);
   assert.match(m.text, /ignore this email and nothing will be sent/);
   assert.ok(!/price alert/i.test(m.text), "it promises no alert");
 });

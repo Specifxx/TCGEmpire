@@ -25112,3 +25112,51 @@ The Black Friday and Cyber Monday pages carry one sign-up directly under the rea
 placement `black-friday`, email only because the Discord box sits lower on the page) on the sister-alert sites, a free-account
 prompt on the account sites. The weekly email has its own Black Friday (27 Nov) and Cyber Monday (30 Nov) editions on RiftCompare's
 service (TCGEmpire DECISIONS, same day), so a sign-up before 26 Nov gets the Black Friday one. Inline, never a pop-up; real drops only.
+## 2026-11-19 — Black Friday strip on sealed pages
+
+The owner's board (19 Nov): ride Black Friday on the pages we already have, no new URLs. `/sealed/<slug>` shows one short card
+above the product's price and board, through 1 Dec (`lib/bf-strip.ts`, `lib/bf-strip-sealed.ts`, `BlackFridayStrip.tsx`, labelled
+by `saleStrip`: Black Friday, then Cyber Monday), in the visitor's market: the cheapest open price today and where, "Free shipping"
+only when that store's MEASURED checkout (`shippingFor`, shipping-rates.json) posts the order free (the probe measured card-sized
+carts, so a paid rate is never quoted for a box), when that price was read, the pre-order date, and where today's price sits
+against the product's own sealed history (data/price-history/sealed). The cue needs 14 priced days in the last 90; it says "Lowest
+price in 90 days" only when the history reaches back 90 days, otherwise "Lowest price since <first day>"; a price that never moved
+says "Same price since <first day>"; above the low it gives the window's real low and its day. A day under half the window's median
+is a wrong listing and never the low, and a window whose prices (or today's against them) differ by more than 2x gets no cue: the
+sealed series holds weeks of wrong-product rows (Origins booster box at US$60 from 29 Sep to 6 Nov), and the strip must not repeat
+them. Built per market on the server and picked in SealedProductView, so the one CDN copy still reads no cookie. No new read, no eBay
+call; the quick view and the phone strip ad are untouched. Same strip on DexCompare, MTG Compare and OP Compare. Judge on buy clicks
+per sealed-page view, 24 Nov to 1 Dec against 10 to 17 Nov.
+
+Amended 2026-11-21 (partner terms): TCGplayer's commission rises with a calendar month's sales, so Cyber Weekend sales through us
+also lift the month's rate. The strip gains ONE link, on its own line under the facts: an "Ad"-labelled, tagged TCGplayer search
+for the product ("See Black Friday prices on TCGplayer", `surface="bf_strip"`). It claims no price and no deal, ranks nothing, and
+never takes the cheapest badge; the board below stays sorted by price. Counted in the 3 Dec Cyber Week read. When TCGplayer's own
+Cyber Weekend landing page is available it replaces the search.
+
+## 2026-11-21: Which site sends people to the Discord hub
+
+People started joining "TCG Deals & Restocks" on 21 Nov. Each card site links its own never-expiring invite, so the per-invite
+use count says which site works. `scripts/discord-hub-stats.ts` (`discord-hub-stats.yml`, daily and on demand) prints the hub's
+member count from the public invite and, with the price bot's token, each invite's uses (it needs Manage Server in the hub; it says
+so instead of failing). Counts only; the Discord agent reads it for its Monday self-review and leans into the site that converts.
+
+## 2026-11-21: Alert emails link to each site's own address
+
+The eleven sister sites with the `/account-service/*` rewrite (DECISIONS, 2026-11-19, "the sign-in flow never names another
+site") were each checked live on 2026-11-21: `https://<site>/account-service/alerts/manage?t=x` returned this service's own
+"That link has expired" page. All eleven are now in `ON_SITE_ALERT_LINKS` (`lib/sister-alerts/email.ts`), so their confirm,
+manage and stop links use the site's own address. BandaiCompare and FigureCompare (idle, no rewrite) keep the service's links.
+
+## 2026-11-21: Discord sign-in stays on each sister's own address
+
+**Decision.** A sister's "Continue with Discord" now starts at its own `/account-service/oauth/discord?via=site` (the rewrite to
+Rift's `/api/sister-premium/oauth/discord` each sister already has) and Discord returns to `https://<site>/account-service/oauth/discord/callback`,
+rewritten to Rift's callback. The owner asked for it (accounts/signin-settings.md); the 11 sister callbacks were added to the Discord
+app on 2026-11-21 and the app renamed "Compare Empire". `ON_SITE_OAUTH` in `lib/oauth.ts` lists the providers this applies to; the
+start route sets `oauth_sister_via_<provider>` and the callback exchanges the code with the same redirect URI. Without `via=site`
+(an old sister build, or Google) nothing changes.
+
+**Why.** The visitor never sees riftcompare.com in the address bar during a sister sign-in. Google waits: its redirect URIs can only be
+added once the Google account that owns Rift's Cloud project has 2-step verification on; then add `"google"` to `ON_SITE_OAUTH` and
+flip the sisters' Google button too.

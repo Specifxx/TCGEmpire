@@ -8,13 +8,21 @@ import { useCountry } from "./CountryProvider";
 import { CheckedAgo } from "./CheckedAgo";
 import { SealedOffers } from "./SealedQuickView";
 import { SealedWatchButton } from "./SealedWatchButton";
+import { BlackFridayStrip, type BlackFridayStripData } from "./BlackFridayStrip";
 
 // The market-dependent half of a sealed product's page, /sealed/<slug> (2026-11-03). The page is one CDN copy for every
 // visitor (no cookie or header read on the server, like /card/[id]), so it hands this island the product's group in
 // EVERY market and the island picks the visitor's (CountryProvider: the US baseline on the server, their market after
 // hydration). A market that does not list the product shows the US board, in US$, and says so. The board is the quick
 // view's (SealedOffers) plus Amazon as the third pinned row, after eBay and TCGplayer (owner, 2026-11-03).
-export function SealedProductView({ byMarket }: { byMarket: Partial<Record<Country, SealedGroup>> }) {
+export function SealedProductView({
+  byMarket,
+  bf = {},
+}: {
+  byMarket: Partial<Record<Country, SealedGroup>>;
+  /** The Black Friday strip per market (lib/bf-strip-sealed.ts), through 1 Dec 2026; {} after. */
+  bf?: Partial<Record<Country, BlackFridayStripData>>;
+}) {
   const { country } = useCountry();
   const own = byMarket[country] ?? null;
   const shownMarket: Country | null = own ? country : byMarket[DEFAULT_COUNTRY] ? DEFAULT_COUNTRY : ((Object.keys(byMarket)[0] as Country | undefined) ?? null);
@@ -28,6 +36,7 @@ export function SealedProductView({ byMarket }: { byMarket: Partial<Record<Count
 
   return (
     <>
+    {bf[shownMarket] && <BlackFridayStrip {...bf[shownMarket]!} />}
     <div className="grid gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
       {/* flex-wrap, and the alert form on a row of its own (2026-11-14): beside the 112px photo on a phone the form had
           a 190px column, its label ran to four lines and its field read "you@e". From lg the card is one column as before. */}
