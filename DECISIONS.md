@@ -25122,3 +25122,23 @@ People started joining "TCG Deals & Restocks" on 21 Nov. Each card site links it
 use count says which site works. `scripts/discord-hub-stats.ts` (`discord-hub-stats.yml`, daily and on demand) prints the hub's
 member count from the public invite and, with the price bot's token, each invite's uses (it needs Manage Server in the hub; it says
 so instead of failing). Counts only; the Discord agent reads it for its Monday self-review and leans into the site that converts.
+
+## 2026-11-21: Alert emails link to each site's own address
+
+The eleven sister sites with the `/account-service/*` rewrite (DECISIONS, 2026-11-19, "the sign-in flow never names another
+site") were each checked live on 2026-11-21: `https://<site>/account-service/alerts/manage?t=x` returned this service's own
+"That link has expired" page. All eleven are now in `ON_SITE_ALERT_LINKS` (`lib/sister-alerts/email.ts`), so their confirm,
+manage and stop links use the site's own address. BandaiCompare and FigureCompare (idle, no rewrite) keep the service's links.
+
+## 2026-11-21: Discord sign-in stays on each sister's own address
+
+**Decision.** A sister's "Continue with Discord" now starts at its own `/account-service/oauth/discord?via=site` (the rewrite to
+Rift's `/api/sister-premium/oauth/discord` each sister already has) and Discord returns to `https://<site>/account-service/oauth/discord/callback`,
+rewritten to Rift's callback. The owner asked for it (accounts/signin-settings.md); the 11 sister callbacks were added to the Discord
+app on 2026-11-21 and the app renamed "Compare Empire". `ON_SITE_OAUTH` in `lib/oauth.ts` lists the providers this applies to; the
+start route sets `oauth_sister_via_<provider>` and the callback exchanges the code with the same redirect URI. Without `via=site`
+(an old sister build, or Google) nothing changes.
+
+**Why.** The visitor never sees riftcompare.com in the address bar during a sister sign-in. Google waits: its redirect URIs can only be
+added once the Google account that owns Rift's Cloud project has 2-step verification on; then add `"google"` to `ON_SITE_OAUTH` and
+flip the sisters' Google button too.

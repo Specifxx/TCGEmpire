@@ -3,13 +3,13 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { applyReferral } from "@/lib/referral";
-import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
+import { ON_SITE_OAUTH, providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, sisterRedirectUri, type OAuthProvider } from "@/lib/oauth";
 import { claimAlertsForUser } from "@/lib/alerts";
 import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
 import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
 import { PREMIUM_START_PATH } from "@/lib/premium-start";
 import { appReturnUrl, appFailUrl, isAppUserAgent, mintAppCode, readAppState } from "@/lib/app-auth";
-import { sisterFailUrl, sisterForCookie, sisterOAuthCookie, sisterOAuthNextCookie, sisterReturnUrl } from "@/lib/sister-oauth";
+import { sisterFailUrl, sisterForCookie, sisterOAuthCookie, sisterOAuthNextCookie, sisterOAuthViaCookie, sisterReturnUrl } from "@/lib/sister-oauth";
 
 // Where a failed sign-in lands. /login by default — it renders AuthForm, which
 // turns ?error= into a readable message and offers the buttons again.
@@ -36,6 +36,15 @@ function sisterOf(provider: string) {
 function clearSister(provider: string) {
   cookies().set(sisterOAuthCookie(provider), "", { path: "/", maxAge: 0 });
   cookies().set(sisterOAuthNextCookie(provider), "", { path: "/", maxAge: 0 });
+  cookies().set(sisterOAuthViaCookie(provider), "", { path: "/", maxAge: 0 });
+}
+
+/** The redirect URI the sign-in started with: the sister's own callback when it ran through the sister's address, else Rift's. */
+function webRedirectUri(provider: OAuthProvider): string {
+  const sister = sisterOf(provider);
+  return sister && ON_SITE_OAUTH.includes(provider) && cookies().get(sisterOAuthViaCookie(provider))?.value === "1"
+    ? sisterRedirectUri(sister.url, provider)
+    : redirectUri(provider);
 }
 
 function fail(req: Request, code: string, provider = "") {
@@ -65,7 +74,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
   if (!code || !state || (!app && (!saved || state !== saved))) return fail(req, "oauth_state", provider);
   if (app) return finishAppSignIn(req, provider, code, app.challenge, app.next, inApp);
 
-  const who = await identify(provider, code);
+  const who = await identify(provider, code, webRedirectUri(provider));
   if (typeof who === "string") return fail(req, who, provider);
   const { providerId, email, emailVerified, name, avatar } = who;
 
@@ -155,7 +164,7 @@ interface Identity {
 
 // Steps 1-3 of a sign-in, shared by the web and the app flows: the provider's code → its profile → our fields. A string is the
 // error code to show.
-async function identify(provider: OAuthProvider, code: string): Promise<Identity | string> {
+async function identify(provider: OAuthProvider, code: string, redirect = redirectUri(provider)): Promise<Identity | string> {
   const cfg = providerConfig(provider);
 
   // 1) Exchange the code for an access token.
@@ -169,7 +178,7 @@ async function identify(provider: OAuthProvider, code: string): Promise<Identity
         client_secret: cfg.clientSecret!,
         grant_type: "authorization_code",
         code,
-        redirect_uri: redirectUri(provider),
+        redirect_uri: redirect,
       }),
     });
     if (!res.ok) return "oauth_token";
