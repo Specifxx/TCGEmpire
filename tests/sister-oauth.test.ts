@@ -33,13 +33,15 @@ test("the callback: same state and verified-address checks, no Rift session for 
 });
 
 test("on-site sign-in (2026-11-21): only a listed provider via the sister's own rewrite uses the sister's callback, and the code exchange matches", async () => {
-  const { ON_SITE_OAUTH, sisterRedirectUri } = await import("../src/lib/oauth");
-  assert.deepEqual([...ON_SITE_OAUTH], ["discord"], "Google joins only once its redirect URIs are registered in Google Cloud");
+  const { onSiteOAuth, sisterRedirectUri } = await import("../src/lib/oauth");
+  for (const k of ["dex", "mtg", "tcgprices", "gundam", "ygo", "lorcana", "cyberpunk", "scent", "kaeyoung", "wax"]) assert.ok(onSiteOAuth("discord", k), k);
+  for (const k of ["mtg", "tcgprices", "gundam", "ygo", "lorcana", "cyberpunk", "scent", "kaeyoung"]) assert.ok(onSiteOAuth("google", k), k);
+  assert.ok(!onSiteOAuth("google", "wax") && !onSiteOAuth("google", "dex"), "not registered in Google Cloud (10-domain limit; Dex has its own client)");
   assert.equal(sisterRedirectUri(sisterForCookie("mtg")!.url, "discord"), "https://mtgcompare.app/account-service/oauth/discord/callback");
   const start = read("src/app/api/sister-premium/oauth/[provider]/route.ts");
-  assert.match(start, /q\.get\("via"\) === "site" && ON_SITE_OAUTH\.includes\(provider\)/);
+  assert.match(start, /q\.get\("via"\) === "site" && onSiteOAuth\(provider, site\.key\)/);
   assert.match(start, /onSite \? sisterRedirectUri\(site\.url, provider\) : redirectUri\(provider\)/, "the site's canonical URL, never the request's host");
   const cb = read("src/app/api/auth/oauth/[provider]/callback/route.ts");
   assert.match(cb, /identify\(provider, code, webRedirectUri\(provider\)\)/, "the token exchange sends the redirect URI the sign-in started with");
-  assert.match(cb, /ON_SITE_OAUTH\.includes\(provider\) && cookies\(\)\.get\(sisterOAuthViaCookie\(provider\)\)\?\.value === "1"/);
+  assert.match(cb, /onSiteOAuth\(provider, sister\.key\) && cookies\(\)\.get\(sisterOAuthViaCookie\(provider\)\)\?\.value === "1"/);
 });

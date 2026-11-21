@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { applyReferral } from "@/lib/referral";
-import { ON_SITE_OAUTH, providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, sisterRedirectUri, type OAuthProvider } from "@/lib/oauth";
+import { onSiteOAuth, providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, sisterRedirectUri, type OAuthProvider } from "@/lib/oauth";
 import { claimAlertsForUser } from "@/lib/alerts";
 import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
 import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
@@ -42,7 +42,7 @@ function clearSister(provider: string) {
 /** The redirect URI the sign-in started with: the sister's own callback when it ran through the sister's address, else Rift's. */
 function webRedirectUri(provider: OAuthProvider): string {
   const sister = sisterOf(provider);
-  return sister && ON_SITE_OAUTH.includes(provider) && cookies().get(sisterOAuthViaCookie(provider))?.value === "1"
+  return sister && onSiteOAuth(provider, sister.key) && cookies().get(sisterOAuthViaCookie(provider))?.value === "1"
     ? sisterRedirectUri(sister.url, provider)
     : redirectUri(provider);
 }
