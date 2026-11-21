@@ -4,7 +4,7 @@
 // in the footer. Every product name, path and deal comes from the site's own
 // feed; the confirmation carries nothing a form typed but the numbers.
 import { MAILING_ADDRESS, mailingAddressRow } from "../mailing-address";
-import { discordInvite } from "./discord";
+import { discordInvite, telegramChannel } from "./discord";
 import { escapeHtml } from "../email";
 import { SITE_URL } from "../site";
 import { REGION_CURRENCY, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
@@ -183,7 +183,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
     deal ? `\nA deal on ${deal.site.name}: ${deal.deal.n}, ${money(deal.deal.p, deal.deal.r)}\n${siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`, deal.deal.r)}` : "",
     `\nWhat would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "sister-alert")}`,
     `\nManage or stop your alerts: ${serviceUrl("manage", token, site)}`,
-    invite ? `\nRestocks and price drops twice a day, free on our Discord: ${invite}` : "",
+    invite ? `\n${discordText(site.key)}` : "",
     `\n${MAILING_ADDRESS}`,
   ].join("\n");
   const heading = allRestock ? (rows.length === 1 ? "It's back in stock" : `${rows.length} products are back in stock`) : rows.length === 1 ? "Your price alert hit its target" : rows.some((a) => a.restock) ? `${rows.length} alerts fired` : `${rows.length} price alerts hit their target`;
@@ -212,7 +212,19 @@ export function fromFor(site: SisterAlertSite, env: Record<string, string | unde
 }
 
 /** One footer line inviting a card site's subscribers to the Discord hub; empty for the other sites. */
+/** "Get these first on Discord or Telegram" (2026-11-21): the site's own hub invite (its uses count per site) and the channel. */
 export function discordLine(siteKey: string): string {
   const invite = discordInvite(siteKey);
-  return invite ? `<a href="${escapeHtml(invite)}" style="color:#4b5563">Restocks and price drops twice a day, free on our Discord</a><br/>` : "";
+  const tg = telegramChannel(siteKey);
+  if (!invite) return "";
+  const a = (href: string, label: string) => `<a href="${escapeHtml(href)}" style="color:#4b5563">${label}</a>`;
+  return `Get these first on ${a(invite, "Discord")}${tg ? ` or ${a(tg, "Telegram")}` : ""}<br/>`;
+}
+
+/** The same line for the plain-text part, or null. */
+export function discordText(siteKey: string): string | null {
+  const invite = discordInvite(siteKey);
+  if (!invite) return null;
+  const tg = telegramChannel(siteKey);
+  return `Get these first on Discord: ${invite}${tg ? `\nor Telegram: ${tg}` : ""}`;
 }

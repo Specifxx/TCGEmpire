@@ -13,7 +13,7 @@ test("card sites get their own invite; other sides get none", () => {
     assert.equal(discordInvite(k), null, k);
     assert.equal(discordLine(k), "", k);
   }
-  assert.match(discordLine("dex"), /free on our Discord/);
+  assert.match(discordLine("dex"), /Get these first on <a href="https:\/\/discord\.gg\/n6nc7EQH2D"[^>]*>Discord<\/a> or <a href="https:\/\/t\.me\/tcgdealsrestocks"/);
 });
 
 test("RiftCompare points at the hub with its own invite, and shows a reason to join", () => {

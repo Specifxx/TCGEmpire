@@ -25094,6 +25094,24 @@ stamping `confirmSentAt` only on a real send; and an address never emailed is ke
 has time to click. Still one confirmation per address (no reminders), still double opt-in. `scripts/owned-audience.ts` prints how
 many unconfirmed addresses were never emailed against emailed but not clicked. `tests/sister-alerts.test.ts` pins it.
 
+## 2026-11-21: Cyber Weekend editions of the weekly drops email (owner: "capitalise on cyber weekend")
+
+The sister sites' weekly biggest-drops email lands on Black Friday (27 Nov) and Cyber Monday (30 Nov) mornings: the daily run is
+14:20 UTC, 9:20 in New York. `PINNED_EDITIONS` in `lib/sister-alerts/digest.ts`: on a pinned UTC day every site with subscribers
+builds a fresh edition unless it already built one that day; in the three days before one, a regular edition waits, so the Black
+Friday email compares with the week before rather than with a day. The subject names the occasion ("Black Friday: the real
+price drops on …"). Nothing else changes: drops are still the site's own feed prices, MIN_DROPS still holds (a quiet site sends
+nothing), the digest's share of the mail cap is the same, and there is no promotional blast. Subscribers get two editions that
+week, three days apart, then the weekly rhythm resumes from Cyber Monday. Price alerts already run daily at the same hour, so a
+real Black Friday drop reaches its watcher that morning without a change. `tests/sister-digest.test.ts` pins the dates.
+
+
+## 2026-11-21: A Cyber Weekend sign-up under the real drops (owned audience)
+
+The Black Friday and Cyber Monday pages carry one sign-up directly under the real-drops block: the weekly drops email (KeepUpStrip,
+placement `black-friday`, email only because the Discord box sits lower on the page) on the sister-alert sites, a free-account
+prompt on the account sites. The weekly email has its own Black Friday (27 Nov) and Cyber Monday (30 Nov) editions on RiftCompare's
+service (TCGEmpire DECISIONS, same day), so a sign-up before 26 Nov gets the Black Friday one. Inline, never a pop-up; real drops only.
 ## 2026-11-19 — Black Friday strip on sealed pages
 
 The owner's board (19 Nov): ride Black Friday on the pages we already have, no new URLs. `/sealed/<slug>` shows one short card
@@ -25142,3 +25160,10 @@ start route sets `oauth_sister_via_<provider>` and the callback exchanges the co
 **Why.** The visitor never sees riftcompare.com in the address bar during a sister sign-in. Google waits: its redirect URIs can only be
 added once the Google account that owns Rift's Cloud project has 2-step verification on; then add `"google"` to `ON_SITE_OAUTH` and
 flip the sisters' Google button too.
+
+## 2026-11-21: "Get these first on Discord or Telegram" in the alert and weekly emails
+
+Riley (Discord) opened a Telegram channel beside the hub, t.me/tcgdealsrestocks, posting the same checked drops. The footer line
+of every sister alert and weekly email now reads "Get these first on Discord or Telegram": the site's OWN hub invite (so the
+Invites list still counts members per site) and the channel, in the HTML and the text part (`discordLine`, `discordText`,
+`telegramChannel` in `lib/sister-alerts`). Card sites only, like the invites (the two-sides rule). A footer line, never a send of its own.
