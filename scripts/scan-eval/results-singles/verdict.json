@@ -1,73 +1,73 @@
 {
- "at": "2026-11-21T00:33:18.757Z",
+ "at": "2026-11-20T03:56:39.665Z",
  "model": "claude-haiku-5-5",
  "passFound": 0.95,
  "passWrong": 0.01,
  "games": {
   "pokemon": {
    "pass": false,
-   "images": 730,
-   "cards": 146,
-   "skippedNoImage": 5,
+   "images": 750,
+   "cards": 150,
+   "skippedNoImage": 1,
    "errors": 0,
-   "found": 0.8973,
-   "wrongMatch": 0,
-   "top": 0.6151,
-   "matchShare": 0.4699,
-   "pickMedian": 5,
+   "found": 0.876,
+   "wrongMatch": 0.0013,
+   "top": 0.704,
+   "matchShare": 0.5267,
+   "pickMedian": 9,
    "medianMs": 1325,
-   "costUsd": 0.1872,
+   "costUsd": 0.1924,
    "coverage": {
-    "cards": 28876,
-    "priced": 17079,
-    "withNumber": 28273,
+    "cards": 28875,
+    "priced": 17069,
+    "withNumber": 28272,
     "usd1": {
      "checked": 700,
-     "real": 691,
+     "real": 689,
      "placeholder": 0,
-     "missing": 9,
-     "share": 0.9871428571428571
+     "missing": 11,
+     "share": 0.9842857142857143
     },
     "any": {
      "checked": 300,
-     "real": 293,
+     "real": 297,
      "placeholder": 0,
-     "missing": 7,
-     "share": 0.9766666666666667
+     "missing": 3,
+     "share": 0.99
     },
     "placeholders": 0
    }
   },
   "yugioh": {
-   "pass": true,
-   "images": 740,
-   "cards": 148,
-   "skippedNoImage": 3,
+   "pass": false,
+   "images": 750,
+   "cards": 150,
+   "skippedNoImage": 1,
    "errors": 0,
-   "found": 0.9581,
+   "found": 0.9173,
    "wrongMatch": 0,
-   "top": 0.5824,
-   "matchShare": 0.2662,
-   "pickMedian": 5,
-   "medianMs": 1360,
-   "costUsd": 0.1923,
+   "top": 0.4693,
+   "matchShare": 0.1893,
+   "pickMedian": 7,
+   "medianMs": 1364,
+   "costUsd": 0.1948,
    "coverage": {
     "cards": 46701,
     "priced": 13967,
     "withNumber": 46685,
     "usd1": {
      "checked": 700,
-     "real": 685,
+     "real": 690,
      "placeholder": 0,
-     "missing": 15,
-     "share": 0.9785714285714285
+     "missing": 10,
+     "share": 0.9857142857142858
     },
     "any": {
      "checked": 300,
-     "real": 298,
+     "real": 299,
      "placeholder": 0,
-     "missing": 2,
-     "share": 0.9933333333333333
+     "missing": 1,
+     "share": 0.9966666666666667
     },
     "placeholders": 0
    }
@@ -78,32 +78,32 @@
    "cards": 151,
    "skippedNoImage": 0,
    "errors": 0,
-   "found": 0.9722,
+   "found": 0.9709,
    "wrongMatch": 0,
-   "top": 0.6013,
-   "matchShare": 0.4185,
-   "pickMedian": 3,
-   "medianMs": 1338,
-   "costUsd": 0.1949,
+   "top": 0.5801,
+   "matchShare": 0.4278,
+   "pickMedian": 4,
+   "medianMs": 1313,
+   "costUsd": 0.1947,
    "coverage": {
     "cards": 7519,
-    "priced": 3294,
+    "priced": 3290,
     "withNumber": 7278,
     "usd1": {
      "checked": 700,
      "real": 686,
-     "placeholder": 0,
-     "missing": 14,
+     "placeholder": 1,
+     "missing": 13,
      "share": 0.98
     },
     "any": {
      "checked": 300,
-     "real": 295,
-     "placeholder": 0,
-     "missing": 5,
-     "share": 0.9833333333333333
+     "real": 288,
+     "placeholder": 2,
+     "missing": 10,
+     "share": 0.96
     },
-    "placeholders": 0
+    "placeholders": 1
    }
   }
  }
