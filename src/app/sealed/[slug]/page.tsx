@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { getSealedProductBySlug, setLessSlugRedirect } from "@/lib/sealed-import";
+import { getSealedProductBySlug, setLessSlugRedirect, setCatchAllRedirect } from "@/lib/sealed-import";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { isPreorderSetCode, SETS } from "@/lib/constants";
 import { pageAlternates } from "@/lib/seo";
@@ -43,6 +43,8 @@ export default async function SealedProductPage({ params }: { params: { slug: st
     // A set-less product's old title-derived slugs (SET_LESS_GROUPS): one 301 to its one page, never a 404.
     const moved = setLessSlugRedirect(params.slug);
     if (moved) permanentRedirect(`/sealed/${moved}`);
+    const setHub = setCatchAllRedirect(params.slug);
+    if (setHub) permanentRedirect(setHub);
     notFound();
   }
   const set = g.setCode ? SETS.find((s) => s.code === g.setCode) ?? null : null;
