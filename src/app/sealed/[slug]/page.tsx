@@ -10,6 +10,8 @@ import { SealedProductView } from "@/components/SealedProductView";
 import { InlineAds } from "@/components/InlineAds";
 import { bfStripByMarket } from "@/lib/bf-strip-sealed";
 import { DiscordCta } from "@/components/DiscordCta";
+import { TcgplayerCyberBanner } from "@/components/TcgplayerCyberBanner";
+import { affiliateUrl } from "@/lib/affiliate";
 
 // A sealed product's own page (2026-11-03, owner: Amazon "up there with eBay and TCGplayer" on RiftCompare too, which
 // had no sealed page to put it on; DECISIONS.md "Sealed products get their own pages"). The /sealed tiles and the quick
@@ -74,6 +76,18 @@ export default async function SealedProductPage({ params }: { params: { slug: st
 
       <SealedProductView byMarket={byMarket} bf={bfStripByMarket(byMarket, g.setCode)} />
 
+      {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the price table, 24 Nov to 1 Dec, labelled Ad. */}
+      <TcgplayerCyberBanner
+        href={affiliateUrl(
+          `https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?q=${encodeURIComponent(g.name)}&ProductTypeName=Sealed+Products`,
+          "tcgplayer",
+          `/sealed/${params.slug}`,
+        )}
+        at={Date.now()}
+        pageType="sealed_page"
+        name={g.name}
+        className="mt-6"
+      />
       <DiscordCta className="mt-6" />
 
       <nav className="mt-8 flex flex-wrap gap-2 text-sm" aria-label="More sealed">

@@ -10,7 +10,7 @@ import { HubFaq } from "@/components/HubFaq";
 import { PreorderPriceTable } from "@/components/PreorderPriceTable";
 import { EbaySearchPanel } from "@/components/EbaySearchPanel";
 import { formatMoney } from "@/lib/format";
-import { ebayLabel, ebaySealedQuery, ebaySearchUrl } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySealedQuery, ebaySearchUrl } from "@/lib/affiliate";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { blackFriday, cyberMonday, sealedDeals, UNDER_MEDIAN_PCT, UNDER_MSRP_PCT } from "@/lib/black-friday";
@@ -18,6 +18,7 @@ import { FamilyDeals } from "@/components/FamilyDeals";
 import { SalePriceWatch } from "@/components/SalePriceWatch";
 import { RealDrops, realDropRows } from "@/components/RealDrops";
 import { TcgplayerSaleBlock } from "@/components/TcgplayerSaleBlock";
+import { TcgplayerCyberBanner } from "@/components/TcgplayerCyberBanner";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The Black Friday and Cyber Monday pages, /black-friday and /cyber-monday.
@@ -215,6 +216,12 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
       {/* The price watch (2026-11-06): sealed boxes, price drops, graded slabs and chase auctions, each ending in a live eBay listing. */}
       <SalePriceWatch country={country} currency={currency} pageType={event.replace(/-/g, "_")} source={source} />
 
+      <TcgplayerCyberBanner
+        href={affiliateUrl("https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?ProductTypeName=Sealed+Products", "tcgplayer", PATH)}
+        at={Date.now()}
+        pageType={event.replace(/-/g, "_")}
+        className="mt-8"
+      />
       <TcgplayerSaleBlock name={event === "black-friday" ? "Black Friday" : "Cyber Monday"} country={country} pageType={event.replace(/-/g, "_")} path={PATH} />
 
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
