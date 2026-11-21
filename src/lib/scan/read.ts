@@ -88,6 +88,85 @@ export async function readCard(client: Anthropic, imageBase64: string, opts: { m
   };
 }
 
+// ── Any game (sister sites: TCG Singles DB; lib/scan/sister.ts) ─────────────────────────────────────────────────
+// Same single call and price; the prompt names how each game prints its name and number, and asks for the
+// 1st Edition stamp (Pokémon and Yu-Gi-Oh! price it as its own printing). The sister site does the matching.
+const ANY_SYSTEM = [
+  "You read trading cards from phone photos for a price guide.",
+  "Report only text you can actually see on the card. Never guess a number or a name you cannot read: use null.",
+  "The collector number and set code are small: if you cannot read every character, set collectorNumber to null rather than",
+  "writing a typical or likely code. A wrong number is worse than none.",
+  'Pokémon cards print the name at the top and a collector number at the bottom, e.g. "058/107", "TG05/TG30", "SWSH123" or "SVP 045";',
+  'newer cards also print a small set code like "SVI" or "PAL" beside it. Black Star promos print only a promo number such as',
+  '"BW87", "XY121", "SM23", "SWSH110" or "SVP 045" (no total): give it whole, letters included. Give the name without the HP.',
+  'Yu-Gi-Oh! cards print the name at the top and a set number just under the bottom-right corner of the artwork, e.g. "GLD3-EN023",',
+  '"DL1-001" or "RA01-EN054": put that whole code in collectorNumber.',
+  'One Piece cards print the name in the bottom panel and a number like "OP01-120", "ST10-005", "EB01-012" or "P-041";',
+  "put that code in collectorNumber.",
+  "Other games: the name as printed and the collector number as printed.",
+  "firstEdition is true only if a 1st Edition stamp or the words 1st Edition are visible.",
+  "promoStamp is true only if you can see a promo, event, prerelease or staff stamp or the word PROMO.",
+  "If the photo shows the back of a card, several cards, or no card, set isTradingCard accordingly and leave the rest null.",
+].join("\n");
+
+const ANY_SCHEMA = {
+  ...SCHEMA,
+  required: [...SCHEMA.required, "firstEdition"],
+  properties: { ...SCHEMA.properties, firstEdition: { type: "boolean" } },
+} as const;
+
+export interface AnyReadResult {
+  reading: ReadResult["reading"] & { firstEdition: boolean };
+  usage: ReadResult["usage"];
+  ms: number;
+}
+
+/** gameHint: the game the visitor picked on the sister's page (a slug, e.g. "pokemon"), or null. */
+export async function readAnyCard(client: Anthropic, imageBase64: string, gameHint: string | null, opts: { model?: string } = {}): Promise<AnyReadResult> {
+  const t0 = Date.now();
+  const model = opts.model ?? SCAN_MODEL;
+  const res = await client.messages.create({
+    model,
+    max_tokens: 400,
+    thinking: thinkingOff(model),
+    output_config: { effort: "low", format: { type: "json_schema", schema: ANY_SCHEMA as unknown as Record<string, unknown> } },
+    system: ANY_SYSTEM,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: imageBase64 } },
+          { type: "text", text: gameHint ? `Read this card. The visitor says it is a ${gameHint.replace(/-/g, " ")} card.` : "Read this card." },
+        ],
+      },
+    ],
+  });
+  const usage = { inputTokens: res.usage.input_tokens, outputTokens: res.usage.output_tokens };
+  const empty = { isTradingCard: false, game: null, name: null, setCode: null, collectorNumber: null, promoStamp: false, language: null, firstEdition: false };
+  if (res.stop_reason === "refusal") return { reading: empty, usage, ms: Date.now() - t0 };
+  let parsed: Record<string, unknown> = {};
+  try {
+    parsed = JSON.parse(res.content.map((b) => (b.type === "text" ? b.text : "")).join(""));
+  } catch {
+    return { reading: empty, usage, ms: Date.now() - t0 };
+  }
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 120) : null);
+  return {
+    reading: {
+      isTradingCard: parsed.isTradingCard === true,
+      game: str(parsed.game)?.toLowerCase() ?? null,
+      name: str(parsed.name),
+      setCode: str(parsed.setCode),
+      collectorNumber: str(parsed.collectorNumber),
+      promoStamp: parsed.promoStamp === true,
+      language: str(parsed.language),
+      firstEdition: parsed.firstEdition === true,
+    },
+    usage,
+    ms: Date.now() - t0,
+  };
+}
+
 /** "Thinking off" is spelled differently per model: Sonnet 5.5 refuses `disabled` and takes `between_tools`. */
 export function thinkingOff(model: string): Anthropic.ThinkingConfigParam {
   return (model.startsWith("claude-sonnet-5-5") ? { type: "between_tools" } : { type: "disabled" }) as Anthropic.ThinkingConfigParam;

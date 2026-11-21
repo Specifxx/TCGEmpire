@@ -76,3 +76,20 @@ test("the admin page and CSV are admin-only", () => {
     assert.match(readFileSync(f, "utf8"), /isAdmin/);
   }
 });
+
+test("conversion funnel counts accounts, watches, returns, referrals and after-close activity", async () => {
+  const { giveawayFunnel } = await import("../src/lib/giveaway");
+  const g = { closesAt: "2026-12-14T12:59:59Z" };
+  const entered = new Date("2026-11-20T02:00:00Z"); // 20 Nov, 1 pm Sydney
+  const row = { enteredAt: entered, newAccount: false, fromGiveawayPage: false, watches: 0, referrals: 0, lastActiveAt: null as Date | null };
+  const f = giveawayFunnel(
+    [
+      { ...row, newAccount: true, fromGiveawayPage: true, watches: 2, lastActiveAt: new Date("2026-11-20T10:00:00Z") }, // same Sydney day (9 pm)
+      { ...row, newAccount: true, referrals: 3, lastActiveAt: new Date("2026-11-20T14:00:00Z") }, // 21 Nov 1 am Sydney: came back
+      { ...row, watches: 1, lastActiveAt: new Date("2026-12-20T00:00:00Z") }, // after the close
+      row,
+    ],
+    g,
+  );
+  assert.deepEqual(f, { entrants: 4, newAccounts: 2, fromGiveawayPage: 1, watching: 2, cameBack: 2, referrers: 1, confirmedReferrals: 3, activeAfterClose: 1 });
+});

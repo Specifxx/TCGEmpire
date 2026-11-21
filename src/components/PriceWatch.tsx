@@ -93,7 +93,7 @@ function Panel({ title, subtitle, accent, movers, kind, currency, empty, ebaySea
       ) : (
         <ul className="divide-y divide-ink-800">
           {movers.map((m) => (
-            <MoverRow key={m.card.id} m={m} up={kind === "up"} currency={currency} />
+            <MoverRow key={m.card.id} m={m} up={kind === "up"} currency={currency} buy={ebaySearch} />
           ))}
         </ul>
       )}
@@ -106,7 +106,10 @@ function Panel({ title, subtitle, accent, movers, kind, currency, empty, ebaySea
   );
 }
 
-export function MoverRow({ m, up, currency, spark = true }: { m: Mover; up: boolean; currency: string; spark?: boolean }) {
+// `buy` (the /movers page, boardroom 2026-11-20): a "Buy" pill under the move, inside the row's own link, so a tap
+// opens the same quick view (eBay and TCGplayer first). Under the price, not beside it: a button beside every row
+// squeezed names to ~44px at 390px (2026-09-27), and the price column is already wide enough for the pill.
+export function MoverRow({ m, up, currency, spark = true, buy = false }: { m: Mover; up: boolean; currency: string; spark?: boolean; buy?: boolean }) {
   const { open } = useQuickView();
   const c = m.card;
   const pos = m.pct > 0;
@@ -154,6 +157,11 @@ export function MoverRow({ m, up, currency, spark = true }: { m: Mover; up: bool
           <div className={`num text-[11px] font-semibold ${pos ? "text-up" : "text-down"}`}>
             {pos ? "+" : "−"}{Math.abs(m.pct)}%
           </div>
+          {buy && (
+            <span data-movers-buy="" className="btn-buy mt-1 inline-flex min-h-0 px-3 py-0.5 text-[11px]">
+              Buy
+            </span>
+          )}
         </div>
       </Link>
     </li>

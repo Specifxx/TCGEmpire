@@ -28,5 +28,7 @@ export function GET(req: Request) {
   const u = new URL(req.url);
   const digest = (u.searchParams.get("digest") ?? "").slice(0, 32);
   const stop = digest ? `digest:${digest}` : "all";
-  return NextResponse.redirect(new URL(`/api/sister-alerts/manage?t=${encodeURIComponent(u.searchParams.get("t") ?? "")}&stop=${encodeURIComponent(stop)}`, u.origin), 303);
+  // A RELATIVE Location: reached through a sister's own /account-service/alerts/unsubscribe rewrite, the visitor stays on that
+  // site's address (owner, 2026-11-19: sign-up and alert pages never send the visitor to another site).
+  return new Response(null, { status: 303, headers: { Location: `manage?t=${encodeURIComponent(u.searchParams.get("t") ?? "")}&stop=${encodeURIComponent(stop)}`, "Cache-Control": "no-store" } });
 }

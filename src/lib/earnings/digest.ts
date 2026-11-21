@@ -77,7 +77,7 @@ export function earningsDigest(sources: readonly SourceResult[], costs: readonly
     html += `</table></td></tr>`;
   }
   if (off.length) html += `<tr><td style="padding:6px 32px 2px;font-size:12px;color:#6b7585">Not connected: ${esc(off.join(", "))}.</td></tr>`;
-  html += `<tr><td style="padding:6px 32px 4px;font-size:12px;color:#6b7585">In AUD at the site's reference rates; eBay and TCGplayer include pending. <a href="${esc(adminUrl)}" style="color:#f29733">Open earnings</a></td></tr>`;
+  html += `<tr><td style="padding:6px 32px 4px;font-size:12px;color:#6b7585">In AUD at the site's reference rates; eBay and TCGplayer include pending. <a href="${esc(adminUrl)}" style="color:#34d17e">Open earnings</a></td></tr>`;
 
   const text = [
     "MONEY",

@@ -364,7 +364,7 @@ test("OutboundLink fires a GA4 buy_click event (enriched with optional card/pric
     assert.ok(src.includes(field), `expected OutboundLink's buy_click call to include ${field}`);
   }
   const helper = read("src/lib/analytics.ts");
-  assert.match(helper, /vercelTrack\(name, cleaned\)/, "the existing Vercel Analytics event must still fire too");
+  assert.match(helper, /vercelTrack\(name, forVercel\(cleaned\)\)/, "the existing Vercel Analytics event must still fire too");
   assert.match(helper, /window\.gtag\?\.\("event", name, cleaned\)/, "and the GA4 mirror");
 });
 

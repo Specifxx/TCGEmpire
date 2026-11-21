@@ -12,7 +12,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const GOLD = "#f5c451";
-const BRAND = "#f29733";
+const BRAND = "#34d17e";
 
 function file(...p: string[]): Buffer {
   return readFileSync(join(process.cwd(), ...p));

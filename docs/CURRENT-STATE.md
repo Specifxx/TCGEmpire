@@ -32,7 +32,7 @@ longer lands on its entry.
 - **At most one production build every 12 hours, and production only (owner, 2026-11-02):**
   Vercel spend is capped at $5–6 a day; 1 November cost $11.82 after 14 `[deploy]` builds here. The
   ignore script skips a `[deploy]` commit within 12 hours of the last production deployment
-  (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject overrides, only on the owner's word.
+  (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject shortens the wait to 8 hours, only on the owner's word ([2026-11-19](../DECISIONS.md#2026-11-19-urgent-needs-eight-hours-too-a-network-ceiling-of-57-builds-a-day)).
   `vercel.json` sets `"**": false` with `"main": true`, so no branch or pull request builds a
   preview, `[preview]` included. [2026-11-02](../DECISIONS.md#L21685)
 - **The after-deploy check reads the public site (2026-11-13):** `seo-preview-gate.yml` checks a
@@ -293,6 +293,11 @@ longer lands on its entry.
   after entitlement and never fatal. The intro coupon, when on, keeps the one
   discount slot. Paid out by hand ("Mark paid"). All four tables private.
   [2026-10-16](../DECISIONS.md#L17655)
+- **Pay-per-click creators (2026-11-20, owner):** paid only per tracked buy click (default
+  A$0.04, A$25 trial cap) or a creator code, A$300 a month in all; a creator's link
+  (`utm_medium=creator`) tags their visitors' sub-ids `cr<handle6>`, and the "Paid creators"
+  panel on /admin/earnings sets paid ("Creators" costs naming `[id]`) against real tagged sales;
+  under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24883)
 - **RiftCompare Premium at $4.99/mo or $39.99/yr with a free 14-day trial again (owner,
   2026-11-05: "use something that we used early on which had the best
   retention"; August's setup, 7 of 7 trials paid):** the
@@ -694,9 +699,8 @@ longer lands on its entry.
   carries the pulls, no database row. The owner's outreach list is
   `docs/GROWTH-PLAYBOOK-2026-10.md`. [2026-10-16](../DECISIONS.md#L18158)
 - **Radiance leads (2026-10-17):** `featuredSet()` (upcoming set from its
-  `newFrom`, else newest released) drives eBay Picks and the homepage strip's
-  first tab, "<set> chase cards" (`getSetChaseTiles`, art only); "Most popular"
-  is second. `singlesLive()` (released, or past `newFrom`) gates every card-price
+  `newFrom`, else newest released) drives eBay Picks (the homepage strip's chase tab went
+  2026-11-20: "Most popular" leads). `singlesLive()` (released, or past `newFrom`) gates every card-price
   surface on `/sets/<slug>` and its gallery; sealed copy keeps
   `isPreorderSetCode()`. Signatures (`*`) are in no official feed: add them to
   `prisma/manual-cards.json` with their own `externalId`.
@@ -980,7 +984,7 @@ longer lands on its entry.
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
   [2026-09-28](../DECISIONS.md#L14549)
 - **Homepage order (all six homes, owner 2026-11-13):** the hero (words, the search, the market switch, six ways in, one
-  line of numbers; no products, chips, creators badge or Premium link), Today's Top Deals, the tabbed chase-cards shelf (it
+  line of numbers; no products, chips, creators badge or Premium link), Today's Top Deals, the tabbed popular-cards shelf, Most popular first since 2026-11-20 (it
   carries the ItemList on `/`), the one ad block, the set grid with the next set's one-line countdown, the guides and news
   card (`EditorialHub`), then the reference text and FAQ folded in `<details>`. Off the homes since 2026-11-13: the
   Pokémon line, the return-visit cards (Riftle, pack simulator, watch a card), the free-account strip, the partners
@@ -1131,6 +1135,9 @@ longer lands on its entry.
   60% of the body (`tests/reddit-landing-conversion.test.ts`). Links posted
   to Reddit should carry `?utm_source=reddit`: the apps often send no
   referrer. [2026-09-26](../DECISIONS.md#L13640)
+- **Snapshot pages and /movers sell:** a "Shop the top risers" strip (top three, today's cheapest in the visitor's
+  market, Buy into the quick view) in the first screen, and a Buy link or pill on every row; nothing new read, caches
+  unchanged. [2026-11-20](../DECISIONS.md#L25011)
 - **RiftboundStocks per-page links:** card, champion and set pages link to
   the same page on RiftboundStocks.com through the map it publishes
   (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes
@@ -1419,6 +1426,8 @@ longer lands on its entry.
   `SCAN_PUBLIC=0` closes it); a live viewfinder that finds, outlines and captures the card on its own (`camera=(self)` on `/scan` only); one Haiku 5.5
   read of name + set + number, our pure matcher picks the printing, the quick view shows prices; never eBay, photo never
   stored, `SCAN_DAILY_CAP` 1,000 a day. [2026-11-19](../DECISIONS.md#L24530), [2026-11-19 v2](../DECISIONS.md#L24786)
+- **Sister scanner read (2026-11-20):** `POST /api/scan/read` serves TCG Singles DB only (exact origin), one Haiku read, 5 a
+  visitor a day by salted IP hash, 500 a day per sister; the sister matches. [2026-11-20](../DECISIONS.md#L25037)
 - **Meta decks:** never from a hand copy; rebuild a meta/tier list only from
   a licensed source. `/decks` is live again (2026-09-26) as the PLAYER-published
   library only — signed-in publishes and owner imports, nothing seeded, no
@@ -1483,21 +1492,20 @@ longer lands on its entry.
 - **Theme:** dark by default, no `prefers-color-scheme`. Light is a `theme`
   cookie stamped before paint; the root layout never reads cookies.
   [2026-09-12](../DECISIONS.md#L5530)
-- **Brand (2026-10-16):** Riftbound's palette, read from playriftbound.com:
-  teal-navy ink, orange `#ef7d00` as the one accent (`brand-*`; `#f29733` as
-  text on dark), Cinzel headings (the Beaufort stand-in), Inter body. The logo
-  is the R mark (`public/brand/r-mark.svg`, a CSS mask over the `--rc-flame`
-  gold-to-orange gradient) beside "Rift" + "Compare" as live mixed-case text,
-  "Compare" in the same gradient (owner: not all caps). The gradient is
-  decoration only (the logo, the H1's "Riftbound"). Purchases keep the
-  pre-rebrand green, `buy` / `.btn-buy`: every store's buy button, Premium's
-  checkout, the Cheapest and savings chips. eBay stays blue, the header's
-  Premium link gold, and a green that means something (gains, in stock) green.
-  The homepage hero moves (RiftEmbers, `.rb-vortex`, `.rb-flame-live`,
-  `.rb-search-aura`), stilled by reduced motion. Mask classes live in
-  `@layer components`, or they beat `hidden`. `lib/brand.ts` holds the hexes
-  for OG images and email.
-  [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713)
+- **Brand (2026-10-16, green again 2026-11-20):** Riftbound's teal-navy ink,
+  Cinzel headings (the Beaufort stand-in), Inter body, and RiftCompare GREEN as
+  the one accent (`brand-*`, `#1ea65c`; `#34d17e` as text on dark, `#157a45` in
+  light): the owner disliked the rebrand's orange logo and text. The logo is the
+  R mark (`public/brand/r-mark.svg`, a CSS mask over the `--rc-flame` green
+  gradient) beside "Rift" + "Compare" as live mixed-case text, "Compare" in the
+  same gradient (owner: not all caps). The gradient is decoration only (the
+  logo, the H1's "Riftbound"). Purchases use `buy` / `.btn-buy` (the same
+  green): every store's buy button, Premium's checkout, the Cheapest and
+  savings chips. eBay stays blue, the header's Premium link gold. The homepage
+  hero moves (RiftEmbers, `.rb-vortex`, `.rb-flame-live`, `.rb-search-aura`),
+  stilled by reduced motion. Mask classes live in `@layer components`, or they
+  beat `hidden`. `lib/brand.ts` holds the hexes for OG images and email.
+  [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713), [2026-11-20](../DECISIONS.md#L24935)
 - **Seasons and scroll motion (2026-10-16):** a season is a local-date window
   (`lib/season.ts`; Halloween 16-31 Oct, Christmas 1 Nov to 26 Dec) stamped
   as `data-season` on `<html>` before paint, so it starts and ends with no
@@ -1508,9 +1516,11 @@ longer lands on its entry.
   so a season comes out by deleting them. Christmas is a few tasteful accents
   in the site's own colours (a gift-guide banner, a 3px cranberry/pine
   hairline, the two colours as tokens on the gifts pill and sale strip; one off
-  switch, `CHRISTMAS_FESTIVE_LAYER`): no snow, lights, art, hats, stripes or
-  palette swap, on any sister site; the theme must match the domain
-  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420)).
+  switch, `CHRISTMAS_FESTIVE_LAYER`), plus, since the owner asked on 2026-11-20,
+  a Santa hat on the header's logo and a string of lights under the header
+  (the `xmas-logo` block, CSS only): no snow, art, stripes or palette swap, on
+  any sister site; the theme must match the domain
+  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420), [2026-11-20](../DECISIONS.md#L24952)).
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired

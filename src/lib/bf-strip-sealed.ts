@@ -11,6 +11,7 @@ import { sealedHistoryRows } from "./price-history-store";
 import type { SealedGroup } from "./sealed-import";
 import { headlineOffer } from "./sealed-offers";
 import { shippingFor } from "./shipping";
+import { affiliateUrl } from "./affiliate";
 
 export function bfStripByMarket(
   byMarket: Partial<Record<Country, SealedGroup>>,
@@ -51,6 +52,13 @@ export function bfStripByMarket(
       checked: best?.lastSeen ?? null,
       preorder,
       cue: cue ? { text: lowCueText(cue, fmt, today), lowest: cue.kind === "lowest" } : null,
+      tcgplayerHref: affiliateUrl(
+        `https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?q=${encodeURIComponent(g.name)}&ProductTypeName=Sealed+Products`,
+        "tcgplayer",
+        "/sealed",
+      ),
+      country,
+      name: g.name,
     };
   }
   return out;

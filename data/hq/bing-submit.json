@@ -1,47 +1,47 @@
 {
-  "generatedAt": "2026-11-18T15:48:38.123Z",
+  "generatedAt": "2026-11-20T15:36:06.670Z",
   "status": "ok",
   "sites": [
     {
       "host": "kaeyoung.com",
-      "indexed": 25,
+      "indexed": 41,
       "verified": true,
       "quotaDaily": -1,
       "quotaMonthly": -1,
       "candidates": 0,
       "source": "-",
       "submitted": 0,
-      "status": "skipped: graduated (25 indexed)"
+      "status": "skipped: graduated (41 indexed)"
     },
     {
       "host": "scentcompare.app",
       "indexed": 5,
       "verified": true,
       "quotaDaily": 100,
-      "quotaMonthly": 1300,
+      "quotaMonthly": 1100,
       "candidates": 566,
       "source": "search demand",
-      "submitted": 8,
+      "submitted": 3,
       "status": "submitted"
     },
     {
       "host": "bandaicompare.com",
-      "indexed": 4,
+      "indexed": 5,
       "verified": true,
       "quotaDaily": 100,
-      "quotaMonthly": 1300,
-      "candidates": 375,
+      "quotaMonthly": 1100,
+      "candidates": 403,
       "source": "search demand",
-      "submitted": 0,
-      "status": "skipped: every sitemap URL sent in the last 30 days"
+      "submitted": 28,
+      "status": "submitted"
     },
     {
       "host": "sportscardcompare.com",
       "indexed": 6,
       "verified": true,
       "quotaDaily": 100,
-      "quotaMonthly": 1300,
-      "candidates": 2864,
+      "quotaMonthly": 1100,
+      "candidates": 2876,
       "source": "sitemap order",
       "submitted": 100,
       "status": "submitted"
@@ -51,77 +51,77 @@
       "indexed": 2,
       "verified": true,
       "quotaDaily": 100,
-      "quotaMonthly": 1300,
-      "candidates": 224,
+      "quotaMonthly": 1100,
+      "candidates": 213,
       "source": "sitemap order",
       "submitted": 0,
       "status": "skipped: every sitemap URL sent in the last 30 days"
     },
     {
       "host": "figurecompare.com",
-      "indexed": 35,
+      "indexed": 44,
       "verified": true,
       "quotaDaily": -1,
       "quotaMonthly": -1,
       "candidates": 0,
       "source": "-",
       "submitted": 0,
-      "status": "skipped: graduated (35 indexed)"
+      "status": "skipped: graduated (44 indexed)"
     },
     {
       "host": "wargamecompare.com",
-      "indexed": 62,
+      "indexed": 65,
       "verified": true,
       "quotaDaily": -1,
       "quotaMonthly": -1,
       "candidates": 0,
       "source": "-",
       "submitted": 0,
-      "status": "skipped: graduated (62 indexed)"
+      "status": "skipped: graduated (65 indexed)"
     },
     {
       "host": "gundamcompare.com",
-      "indexed": 297,
+      "indexed": 370,
       "verified": true,
       "quotaDaily": -1,
       "quotaMonthly": -1,
       "candidates": 0,
       "source": "-",
       "submitted": 0,
-      "status": "skipped: graduated (297 indexed)"
+      "status": "skipped: graduated (370 indexed)"
     },
     {
       "host": "lorcanacompare.com",
-      "indexed": 315,
+      "indexed": 373,
       "verified": true,
       "quotaDaily": -1,
       "quotaMonthly": -1,
       "candidates": 0,
       "source": "-",
       "submitted": 0,
-      "status": "skipped: graduated (315 indexed)"
+      "status": "skipped: graduated (373 indexed)"
     },
     {
       "host": "ygocompare.com",
-      "indexed": 21,
+      "indexed": 23,
       "verified": true,
       "quotaDaily": 100,
-      "quotaMonthly": 1300,
-      "candidates": 1570,
+      "quotaMonthly": 1100,
+      "candidates": 902,
       "source": "search demand",
       "submitted": 100,
       "status": "submitted"
     },
     {
       "host": "cyberpunkcompare.com",
-      "indexed": 53,
+      "indexed": 55,
       "verified": true,
       "quotaDaily": -1,
       "quotaMonthly": -1,
       "candidates": 0,
       "source": "-",
       "submitted": 0,
-      "status": "skipped: graduated (53 indexed)"
+      "status": "skipped: graduated (55 indexed)"
     }
   ],
   "history": [
@@ -717,6 +717,138 @@
       "date": "2026-11-18",
       "host": "cyberpunkcompare.com",
       "indexed": 53,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-19",
+      "host": "kaeyoung.com",
+      "indexed": 41,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-19",
+      "host": "scentcompare.app",
+      "indexed": 5,
+      "submitted": 3
+    },
+    {
+      "date": "2026-11-19",
+      "host": "bandaicompare.com",
+      "indexed": 5,
+      "submitted": 2
+    },
+    {
+      "date": "2026-11-19",
+      "host": "sportscardcompare.com",
+      "indexed": 6,
+      "submitted": 100
+    },
+    {
+      "date": "2026-11-19",
+      "host": "motorcompare.app",
+      "indexed": 2,
+      "submitted": 4
+    },
+    {
+      "date": "2026-11-19",
+      "host": "figurecompare.com",
+      "indexed": 44,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-19",
+      "host": "wargamecompare.com",
+      "indexed": 65,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-19",
+      "host": "gundamcompare.com",
+      "indexed": 370,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-19",
+      "host": "lorcanacompare.com",
+      "indexed": 373,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-19",
+      "host": "ygocompare.com",
+      "indexed": 23,
+      "submitted": 100
+    },
+    {
+      "date": "2026-11-19",
+      "host": "cyberpunkcompare.com",
+      "indexed": 55,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-20",
+      "host": "kaeyoung.com",
+      "indexed": 41,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-20",
+      "host": "scentcompare.app",
+      "indexed": 5,
+      "submitted": 3
+    },
+    {
+      "date": "2026-11-20",
+      "host": "bandaicompare.com",
+      "indexed": 5,
+      "submitted": 28
+    },
+    {
+      "date": "2026-11-20",
+      "host": "sportscardcompare.com",
+      "indexed": 6,
+      "submitted": 100
+    },
+    {
+      "date": "2026-11-20",
+      "host": "motorcompare.app",
+      "indexed": 2,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-20",
+      "host": "figurecompare.com",
+      "indexed": 44,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-20",
+      "host": "wargamecompare.com",
+      "indexed": 65,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-20",
+      "host": "gundamcompare.com",
+      "indexed": 370,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-20",
+      "host": "lorcanacompare.com",
+      "indexed": 373,
+      "submitted": 0
+    },
+    {
+      "date": "2026-11-20",
+      "host": "ygocompare.com",
+      "indexed": 23,
+      "submitted": 100
+    },
+    {
+      "date": "2026-11-20",
+      "host": "cyberpunkcompare.com",
+      "indexed": 55,
       "submitted": 0
     }
   ]

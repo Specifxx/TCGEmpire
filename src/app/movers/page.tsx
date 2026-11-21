@@ -5,6 +5,7 @@ import { getTopDemand, FREE_DEMAND_ROWS } from "@/lib/demand";
 import { MostSearchedStrip } from "@/components/MostSearchedStrip";
 import { PriceWatch } from "@/components/PriceWatch";
 import { MoversTable } from "@/components/MoversTable";
+import { RisersShop } from "@/components/RisersShop";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { SETS } from "@/lib/constants";
 import { AnswerBox } from "@/components/AnswerBox";
@@ -191,6 +192,14 @@ export default async function MoversPage() {
           Riftbound price movers — this week
         </h1>
         <ShareButton className="mt-3" name="Riftbound price movers this week" medium="movers" path="/movers" />
+        {/* Shop the top risers (boardroom 2026-11-20), in the first screen: Reddit visitors land here and almost never
+            clicked buy. The week's top three risers with today's cheapest price in the visitor's market and a Buy
+            button into the quick view; the cards getPriceMovers already loaded, nothing new read. */}
+        {movers.spiking.length > 0 && (
+          <div className="mt-4 max-w-2xl">
+            <RisersShop cards={movers.spiking.slice(0, 3).map((m) => m.card)} />
+          </div>
+        )}
         {/* How the lists are built and the guide behind them (2026-09-26,
             "Blog and tools, joined up"): lib/content/hub-intros.ts, in place
             of the old one-paragraph lede. The answer box below still states the

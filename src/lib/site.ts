@@ -13,8 +13,10 @@ export const SITE_NAME = "RiftCompare";
 // (?bn=0 clears it); "on": every phone visitor (?bn=0 still hides it for that visitor); "off": nobody, the rollback.
 export const BOTTOM_NAV: "off" | "optin" | "on" = "on";
 
-// Community Discord invite (permanent; opens in a new tab from the navbar icon).
-export const DISCORD_URL = "https://discord.gg/NypdmfAMTa";
+// Community Discord invite (permanent; opens in a new tab). Since 2026-11-20 the family's ONE hub server
+// ("TCG Deals & Restocks", with the restock and price-drop feeds), not the old RiftCompare server. The code is
+// RiftCompare's own (lands in #riftbound), so the server's Invites list counts the members this site brings.
+export const DISCORD_URL = "https://discord.gg/5pdA3QVPBS";
 
 // Official social profiles — shown in the footer and listed in the Organization
 // JSON-LD's sameAs (see app/layout.tsx) for entity-disambiguation SEO.

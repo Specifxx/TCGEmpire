@@ -10,6 +10,8 @@ export interface LiveWeight {
   /** Confirmed friends who joined through this account's invite link while the giveaway was open (before the cap). */
   referrals: number;
   referralEntries: number;
+  /** Price alerts (by account or email) and sealed watches the account holds now. */
+  watches: number;
   /** Admins run the site, and the rules exclude them from the draw. */
   admin: boolean;
 }
@@ -56,8 +58,9 @@ export async function liveWeights(
   for (const u of users) {
     const premium = !!u.premiumUntil && u.premiumUntil.getTime() > now;
     const referrals = refCount.get(u.id) ?? 0;
-    const w = entryWeight({ premium, watches: (watches.get(u.id) ?? 0) + (emailCount.get(u.email.toLowerCase()) ?? 0), referrals });
-    out.set(u.id, { ...w, referrals, admin: u.isAdmin || isAdminEmail(u.email) });
+    const held = (watches.get(u.id) ?? 0) + (emailCount.get(u.email.toLowerCase()) ?? 0);
+    const w = entryWeight({ premium, watches: held, referrals });
+    out.set(u.id, { ...w, referrals, watches: held, admin: u.isAdmin || isAdminEmail(u.email) });
   }
   return out;
 }
@@ -73,6 +76,11 @@ export interface Entrant {
   referrals: number;
   showName: boolean;
   admin: boolean;
+  // Conversion (lib/giveaway.ts giveawayFunnel).
+  newAccount: boolean;
+  fromGiveawayPage: boolean;
+  watches: number;
+  lastActiveAt: Date | null;
 }
 
 /** Every entry of one giveaway made inside its window, with its account and its entries (the higher of stored and live). */
@@ -88,7 +96,17 @@ export async function giveawayEntrants(
   });
   const users = await prisma.user.findMany({
     where: { id: { in: entries.map((e) => e.userId) } },
-    select: { id: true, email: true, displayName: true, preferredCountry: true, isAdmin: true, premiumUntil: true },
+    select: {
+      id: true,
+      email: true,
+      displayName: true,
+      preferredCountry: true,
+      isAdmin: true,
+      premiumUntil: true,
+      createdAt: true,
+      signupSource: true,
+      lastActiveAt: true,
+    },
   });
   const byId = new Map(users.map((u) => [u.id, u]));
   const live = await liveWeights(g.key, users, isAdminEmail);
@@ -109,6 +127,10 @@ export async function giveawayEntrants(
       referrals: l?.referrals ?? 0,
       showName: e.showName,
       admin: l?.admin ?? false,
+      newAccount: u.createdAt >= new Date(g.opensAt),
+      fromGiveawayPage: u.signupSource === "giveaway",
+      watches: l?.watches ?? 0,
+      lastActiveAt: u.lastActiveAt,
     });
   }
   return out;

@@ -22,6 +22,7 @@ import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
+import { DiscordCta } from "@/components/DiscordCta";
 import { BOTTOM_NAV, CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION, IMPACT_SITE_VERIFICATION_2 } from "@/lib/affiliate";
 import { FooterNav } from "@/components/FooterNav";
@@ -410,7 +411,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             2px, no spinner (the fade in template.tsx is the rest of the
             feedback). zIndex 200 matches the skip link's own z-[200] above —
             it must win over every overlay's backdrop, including a modal. */}
-        <NextTopLoader color="#ef7d00" height={2} showSpinner={false} shadow={false} zIndex={200} />
+        <NextTopLoader color="#1ea65c" height={2} showSpinner={false} shadow={false} zIndex={200} />
         <PremiumProvider>
         <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>
@@ -485,6 +486,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* "Was this page useful?" (owner, 2026-11-18: more feedback). One inline line, never a pop-up. */}
           <div className="mb-6 flex justify-center text-left text-sm text-slate-300"><FeedbackAsk email={CONTACT_EMAIL} /></div>
           <NewsletterSignup siteName="RiftCompare" />
+          <DiscordCta className="mx-auto mb-6 max-w-2xl" />
           {/* Site-map — surfaced here so every page links to every feature even
               now that no rail lists them (and on a phone, where none ever did). 4 columns
               on desktop, collapsible accordions on mobile — see FooterNav /
