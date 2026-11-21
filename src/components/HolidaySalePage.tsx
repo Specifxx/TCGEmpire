@@ -1,3 +1,4 @@
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSealedGroups } from "@/lib/sealed-import";
@@ -172,6 +173,14 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
       </header>
 
       <RealDrops rows={drops} country={country} currency={currency} page={PATH} />
+
+      {/* Cyber Weekend capture (owned audience, 2026-11-21): a free account's price alert emails the drop. */}
+      <InlineSignupPrompt
+        className="mt-6"
+        surface="inline_black_friday"
+        title="Get an email when a price here drops further"
+        body="A free account lets you set a price alert, and we email you when the price drops, over Black Friday and after. Alerts only, and every email has a stop link."
+      />
 
       {shown.length > 0 ? (
         <div className="mt-6">

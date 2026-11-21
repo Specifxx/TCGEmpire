@@ -23,6 +23,7 @@ export const INLINE_SIGNUP_SURFACES = [
   "inline_movers", // /movers, after the lists
   "inline_champion", // /champions/[slug], after the champion's printings
   "inline_card", // /card/[id], under the markets table (2026-10-20)
+  "inline_black_friday", // /black-friday and /cyber-monday (components/HolidaySalePage.tsx), under the real drops (Cyber Weekend, 2026-11-21)
   "inline_rising", // /rising/[token] (the Hot 40 snapshot Reddit posts link), after the chart (owned audience, 2026-11-20)
 ] as const;
 export type InlineSignupSurface = (typeof INLINE_SIGNUP_SURFACES)[number];

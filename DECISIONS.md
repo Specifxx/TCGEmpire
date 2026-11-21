@@ -25104,3 +25104,11 @@ price drops on …"). Nothing else changes: drops are still the site's own feed 
 nothing), the digest's share of the mail cap is the same, and there is no promotional blast. Subscribers get two editions that
 week, three days apart, then the weekly rhythm resumes from Cyber Monday. Price alerts already run daily at the same hour, so a
 real Black Friday drop reaches its watcher that morning without a change. `tests/sister-digest.test.ts` pins the dates.
+
+
+## 2026-11-21: A Cyber Weekend sign-up under the real drops (owned audience)
+
+The Black Friday and Cyber Monday pages carry one sign-up directly under the real-drops block: the weekly drops email (KeepUpStrip,
+placement `black-friday`, email only because the Discord box sits lower on the page) on the sister-alert sites, a free-account
+prompt on the account sites. The weekly email has its own Black Friday (27 Nov) and Cyber Monday (30 Nov) editions on RiftCompare's
+service (TCGEmpire DECISIONS, same day), so a sign-up before 26 Nov gets the Black Friday one. Inline, never a pop-up; real drops only.
