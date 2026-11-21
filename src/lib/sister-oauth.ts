@@ -19,7 +19,7 @@ import { sanitizeNextPath } from "./next-param";
 // Google's in-page button.
 export const sisterOAuthCookie = (provider: string) => `oauth_sister_${provider}`;
 export const sisterOAuthNextCookie = (provider: string) => `oauth_sister_next_${provider}`;
-/** "1" when the round trip runs through the sister's own address (its callback is the redirect URI), lib/oauth.ts ON_SITE_OAUTH. */
+/** "1" when the round trip runs through the sister's own address (its callback is the redirect URI), lib/oauth.ts onSiteOAuth. */
 export const sisterOAuthViaCookie = (provider: string) => `oauth_sister_via_${provider}`;
 
 export function sisterForCookie(v: string | undefined): PremiumSite | null {

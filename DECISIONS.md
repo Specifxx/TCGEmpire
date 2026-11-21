@@ -25167,3 +25167,14 @@ Riley (Discord) opened a Telegram channel beside the hub, t.me/tcgdealsrestocks,
 of every sister alert and weekly email now reads "Get these first on Discord or Telegram": the site's OWN hub invite (so the
 Invites list still counts members per site) and the channel, in the HTML and the text part (`discordLine`, `discordText`,
 `telegramChannel` in `lib/sister-alerts`). Card sites only, like the invites (the two-sides rule). A footer line, never a send of its own.
+
+## 2026-11-21: Google sign-in stays on each sister's own address too
+
+**Decision.** The Google consent screen is renamed "Compare Empire" (Rift's client lives in the bill.jyang101 Cloud project
+"My First Project", voltaic-talent-395302) and nine sister callbacks `https://<site>/account-service/oauth/google/callback` are
+registered. `onSiteOAuth(provider, siteKey)` in `lib/oauth.ts` replaces the Discord-only list: Discord on-site for every sister,
+Google for all but DexCompare (its own Google client, never this flow) and SportsCardCompare.
+
+**Why.** Google allows 10 unverified authorized domains per project: riftcompare.com plus nine. SportsCardCompare (idle, fewest
+sign-ins) keeps Rift's callback until its domain is verified in Search Console under the project owner; then add its callback and
+drop it from `OFF_SITE_OAUTH`.

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomBytes } from "node:crypto";
-import { ON_SITE_OAUTH, isOAuthProvider, isProviderEnabled, providerConfig, redirectUri, sisterRedirectUri } from "@/lib/oauth";
+import { onSiteOAuth, isOAuthProvider, isProviderEnabled, providerConfig, redirectUri, sisterRedirectUri } from "@/lib/oauth";
 import { premiumSite } from "@/lib/sister-premium";
 import { sanitizeNextPath } from "@/lib/next-param";
 import { sisterFailUrl, sisterOAuthCookie, sisterOAuthNextCookie, sisterOAuthViaCookie } from "@/lib/sister-oauth";
@@ -25,7 +25,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
   else cookies().set(sisterOAuthNextCookie(provider), "", { path: "/", maxAge: 0 });
   // Through the sister's own /account-service/oauth rewrite: these cookies live on the sister's host, so the provider must
   // come back there too (its registered callback). Only for a provider whose app lists every sister's callback.
-  const onSite = q.get("via") === "site" && ON_SITE_OAUTH.includes(provider);
+  const onSite = q.get("via") === "site" && onSiteOAuth(provider, site.key);
   if (onSite) cookies().set(sisterOAuthViaCookie(provider), "1", opts);
   else cookies().set(sisterOAuthViaCookie(provider), "", { path: "/", maxAge: 0 });
   // A Rift-side ?next= from an earlier, abandoned Rift sign-in must not hijack this one.
