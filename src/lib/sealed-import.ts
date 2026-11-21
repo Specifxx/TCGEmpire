@@ -180,9 +180,21 @@ function looksSealedAnyLanguage(title: string): boolean {
     // A graded slab (PSA/BGS/CGC/SGC) is one card in a case, never sealed product: "Riftbound Slab Caitlyn 068a Arcane
     // Box Set CGC Pristine 10" from a store's sealed collection made its own sealed page (2026-11-20). Every store path
     // and cleanupStaleSealed run through here, so stored slab rows go on the next sealed refresh.
-    !isGradedListing(title)
+    !isGradedListing(title) &&
+    !SINGLE_CARD_SIGNS.test(title)
   );
 }
+
+// A single card, or a seller's own lot of singles, sold from a store's sealed collection (2026-11-21). Every title is
+// from data/public/sealed-listings.json that day: "Annie, Dark Child - Proving Grounds (Rare) [OGS-017]" at EUR 8.95-
+// 13 was the cheapest row on the Origins Proving Grounds page in the UK and EU; "Ahri, Nine-Tailed Fox - Riftbound x
+// KDA Couture Collection Foil" (a store titles the printing, never the product, "… Foil"), "(001) Foil", "(Oversized)"
+// cards and "(V.1 - Showcase) … [T1X-S001]" each made a "sealed" page; eBay's "Vendetta Common & Uncommon Playset
+// Bundle" (US$24.99) and "Small Bundle Vendetta Rares" sat in the Vendetta Bundle group. A rarity in brackets, a card
+// code in square brackets, a card number before "Foil", a title ending in a bare "Foil", an oversized card, a playset
+// or a "small bundle" of rares is never the sealed product. "[Foil]" (pcatoys' Showdown Decks) is not a sign.
+const SINGLE_CARD_SIGNS =
+  /\((?:common|uncommon|rare|epic|legendary|showcase|overnumbered|signature|alternate\s+art)\)|\[[A-Z][A-Z0-9]{1,3}-[A-Z]?\d{2,3}[a-z*]?\]|\(\d{3}[a-z]?\)\s*foil\b|\bfoil\s*$|\(oversized\)|\bplaysets?\b|\bsmall\s+bundle\b|\bcommons?\s*(?:&|and)\s*uncommons?\b/i;
 
 // The T1 Signature Edition's Chinese and Korean groups ("…|CN", "…|KR") are
 // deliberately non-English (T1_SEEDS below), so the language check above must
@@ -490,6 +502,12 @@ const SEVERAL = /\bcase\b|\blots?\b|\bset\s+of\s+\d|\b\d+\s*x\b|\bx\s*\d+\b|\(\s
 export function setLessGroupKey(title: string): string | null {
   if (SEVERAL.test(title)) return null;
   return SET_LESS_GROUPS.find((g) => g.re.test(title))?.groupKey ?? null;
+}
+
+/** True when a title names a SET_LESS_GROUPS product but a row of it is stored under another group. Pure. */
+export function misfiledSetLess(title: string, groupKey: string): boolean {
+  const key = setLessGroupKey(title);
+  return key != null && key !== groupKey;
 }
 
 /** A title-derived group key: a SET_LESS_GROUPS key when one fits, else the title's first 40 letters and digits. */
@@ -1311,6 +1329,10 @@ export async function cleanupStaleSealed(): Promise<number> {
       // Title filters — TCGplayer's official catalogue is trusted, never title-filter it.
       const titleOk = LANGUAGE_GROUP.test(r.groupKey) ? looksSealedAnyLanguage(r.title) : looksSealed(r.title);
       if (r.retailer !== "tcgplayer" && (!titleOk || !isRiftboundSealed(r.title))) return true;
+      // A set-less product filed under another group (2026-11-21): Cardmarket's "Gift of the Rift Bundle" sat under
+      // VEN|Bundle (its expansion, not the product), and an eBay row kept a pre-#541 title-derived group alive because
+      // the eBay pass searches every group that exists. Its source writes it to the right group on its next read.
+      if (r.retailer !== "tcgplayer" && misfiledSetLess(r.title, r.groupKey)) return true;
       // Price-sanity (every source except TCGplayer's trusted catalogue): drop listings
       // priced implausibly below the trusted price / per-type floor — an accessory, a $1
       // deposit/sample variant, or a mis-listing that escaped the title filter.

@@ -25178,3 +25178,16 @@ Google for all but DexCompare (its own Google client, never this flow) and Sport
 **Why.** Google allows 10 unverified authorized domains per project: riftcompare.com plus nine. SportsCardCompare (idle, fewest
 sign-ins) keeps Rift's callback until its domain is verified in Search Console under the project owner; then add its callback and
 drop it from `OFF_SITE_OAUTH`.
+
+## 2026-11-21: Single cards on sealed pages, and Gift of the Rift rows in other groups
+
+**Decision.** `looksSealed` refuses a title with a sign of a single card or a seller's lot of singles (`SINGLE_CARD_SIGNS` in
+`lib/sealed-import.ts`): a rarity in brackets ("(Rare)", "(Showcase)"), a card code in square brackets ("[OGS-017]"), a card number
+before "Foil", a title ending in a bare "Foil", "(Oversized)", a playset, a "small bundle" or "Common & Uncommon". "[Foil]" is not a sign
+(pcatoys' Showdown Decks). `cleanupStaleSealed` also deletes a non-TCGplayer row whose title names a `SET_LESS_GROUPS` product but which
+sits in another group (`misfiledSetLess`), and Cardmarket files such a product under its fixed group instead of its expansion.
+
+**Why.** The 20 Nov snapshot had 23 such rows: Proving Grounds rares at EUR 8.95-13 were the cheapest row on the Origins Proving
+Grounds page in the UK and EU, 16 foil singles from two stores each had a "sealed" page, eBay playsets (US$24.99) sat in the Vendetta
+Bundle group, Cardmarket's Gift of the Rift Bundle (EUR 167) sat in VEN|Bundle, and two eBay rows kept a pre-#541 Gift of the Rift group
+alive because the eBay pass searches every group that exists. Rules only refuse; every title is in `tests/sealed-single-cards.test.ts`.
