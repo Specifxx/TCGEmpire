@@ -210,7 +210,8 @@ export function OutboundLink({
     | "amazon_also"
     | "bf_drops"
     | "bf_strip"
-    | "bf_page";
+    | "bf_page"
+    | "cyber_banner";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
   // the signup popup (removed 2026-09-30) could stay off the buy path; kept as
