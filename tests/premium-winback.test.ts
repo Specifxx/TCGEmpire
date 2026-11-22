@@ -211,7 +211,8 @@ test("the admin page is gated like the other admin pages and lists the audience 
   assert.match(page, /robots: \{ index: false, follow: false \}/);
   assert.match(page, /listPremiumWinbackAudience\(/);
   const index = read("src/app/admin/page.tsx");
-  assert.match(index, /href: "\/admin\/premium-winback"/, "must be reachable from the admin home");
+  assert.match(index, /href: "\/admin\/premium-offer"/, "reachable from the admin home through the one Premium email page");
+  assert.match(read("src/app/admin/premium-offer/page.tsx"), /<PremiumWinbackConsole/, "the win-back console lives on the Premium email page (2026-11-21)");
 });
 
 test("the console confirms before sending and never calls a grant endpoint — the claim link is the only grant path", () => {

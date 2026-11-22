@@ -358,10 +358,10 @@ longer lands on its entry.
 - **Free 14-day trial (2026-10-12; replaces the $1 first month below):**
   `PREMIUM_TRIAL_DAYS` 14 and `PREMIUM_TRIAL_FEE_CENTS` 0 by default, card
   required, prices unchanged. Leave price, trial and pitch alone until two
-  14-day cohorts have matured (late November). Since 2026-10-27 `/admin/premium-offer` sends
-  the feedback + Pro email instead (one-tap star rating, then Pro at its own
-  prices, no trial, no affiliate links) to every non-paying account.
-  [2026-10-27](../DECISIONS.md#feedback-and-pro-email-to-registered-accounts--2026-10-27) `/premium/welcome` leads with
+  14-day cohorts have matured (late November). Since 2026-11-21 `/admin/premium-offer` is the one
+  Premium email page: the showcase email (live Deal Finder snippet, feature list, Premium at its own
+  prices, no trial, no affiliate links) to every non-paying account, newest first, plus the win-back console.
+  [2026-11-21](../DECISIONS.md#2026-11-21-one-premium-email-page-the-showcase-email-with-a-live-deal-finder-snippet-newest-members-first) `/premium/welcome` leads with
   watching a card until the account has one. [2026-10-12](../DECISIONS.md#L16934)
 - **Superseded 2026-10-12, kept for its mechanics: the $1 first month, no intro (2026-09-30, owner: "Can we do $1 free trial for both
   pro and premium please? And the trial is for the first month?"):** a PAID trial on
