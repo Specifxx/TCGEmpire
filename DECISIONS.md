@@ -25391,3 +25391,10 @@ while `/sealed/ogn-champion-deck-jinx` and its siblings never showed them: US bu
 Origins decks and Trove of Collectibles' Vi. Each champion had a deck in one set only (the set-coded groups of that
 export). A later set that reprises a champion takes that champion OUT of the list, never moves it: a title with no set
 word then names nothing, as before. `tests/sealed-champion-deck-set.test.ts`.
+
+## 2026-11-23 — #sealed-sniper is a followable announcement channel
+
+Restock chats spread our finds (22 Nov: a Canadian pre-order sold 10 in 41 minutes through one), so other servers should
+get the Sniper's drops in their own channel. Discord's channel following does that with nothing to hold on their side: the
+hub's #sealed-sniper became an Announcement channel (owner's yes, 2026-11-22), and `discord-publish.yml` has the price bot
+publish each unpublished webhook drop of the last day (a webhook cannot publish). Links stay tagged utm_source=discord.
