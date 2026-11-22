@@ -222,12 +222,12 @@ jobs:
       # migrate-main-db-rm10-to-rm11 was run twice (once for the bulk copy, once
       # immediately before this flip) and verified every table matching before
       # this shipped.
-      DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+      DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
       # There is only one value now, but this stays for the same reason it did
       # under the old chain: lib/db.ts cannot work this out inside Actions
       # itself (everything collapses into one DATABASE_URL before the job
       # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -305,7 +305,7 @@ jobs:
           # 2026-09-02 running the top-up ahead of the RH11 → RH6 cutover. Must be
           # kept in lockstep with OPERATIONAL_VARS's head (RM11 as of 2026-11-06) —
           # this env var's NAME, not just its value, is what the script looks up.
-          RM12: ${{ secrets.RM12 || vars.RM12 }}
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
@@ -381,7 +381,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -585,7 +585,7 @@ jobs:
           # drift src/lib/db-chains.ts was created to stop, which is why the
           # name is pinned to the head of OPERATIONAL_VARS and
           # tests/db-chain.test.ts now checks it.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -756,7 +756,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH11 || vars.RH11 }}
           # Only for the "did RH11 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -902,7 +902,7 @@ jobs:
           # guard below, before anything destructive runs. Must track the CURRENT
           # operational project (RM12 as of 2026-09-18) — comparing against a
           # retired one would let a genuine misconfiguration through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1064,7 +1064,7 @@ jobs:
           # destructive runs. Must track the CURRENT operational project
           # (RM12 as of 2026-09-18) — comparing against a retired one would
           # let a genuine misconfiguration through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1223,7 +1223,7 @@ jobs:
           # Must track the CURRENT operational project (RM12 as of 2026-09-18) —
           # comparing against a retired one would let a genuine misconfiguration
           # through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1374,7 +1374,7 @@ jobs:
           # guard below, before anything destructive runs. Must track the CURRENT
           # operational project (RM12 as of 2026-09-18) — comparing against a
           # retired one would let a genuine misconfiguration through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1523,7 +1523,7 @@ jobs:
           # guard below, before anything destructive runs. Must track the CURRENT
           # operational project (RM12 as of 2026-09-18) — comparing against a
           # retired one would let a genuine misconfiguration through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1675,7 +1675,7 @@ jobs:
           # guard below, before anything destructive runs. Must track the CURRENT
           # operational project (RM12 as of 2026-09-18) — comparing against a
           # retired one would let a genuine misconfiguration through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1828,7 +1828,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH6 || vars.RH6 }}
           # Only for the "did RH6 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1980,7 +1980,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH10 || vars.RH10 }}
           # Only for the "did RH10 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -2137,7 +2137,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH9 || vars.RH9 }}
           # Only for the "did RH9 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -2321,7 +2321,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_4 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -5490,7 +5490,7 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
           # There is only one value now, but this stays for the same reason it did
           # under the old chain: lib/db.ts cannot work this out inside Actions
           # itself (everything collapses into one DATABASE_URL before the job
@@ -5561,7 +5561,7 @@ jobs:
       - name: Audit sealed price history (read-only)
         if: inputs.task == 'audit-sealed-history'
         env:
-          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
           DB_SOURCE_NAME: ${{ (secrets.RM4 || vars.RM4) && 'RM4' || 'UNSET' }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
@@ -5642,7 +5642,7 @@ jobs:
           # correctly, but this env block never forwarded the variable it
           # actually asked for, so the head of the chain read back as unset here even with the
           # secret genuinely configured in Actions).
-          RM12: ${{ secrets.RM12 || vars.RM12 }}
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
         run: npx tsx scripts/probe-history-dbs.ts
 
       # Dry run unless dry_run is explicitly false — the inverse of every other
@@ -5662,7 +5662,7 @@ jobs:
           # The orphan check needs the LIVE operational database to compare card
           # ids against — this script iterates OPERATIONAL_VARS from
           # src/lib/db-chains.ts directly, which is now just ["RM10"] (2026-10-25).
-          RM12: ${{ secrets.RM12 || vars.RM12 }}
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           ARGS=""
           if [ -n "${{ inputs.source }}" ] && [ "${{ inputs.source }}" != "RM4" ]; then
@@ -5680,18 +5680,18 @@ jobs:
         if: inputs.task == 'retention-census'
         env:
           # The live operational project since the 2026-11-16 cutover (the job-level RM11 is the one before it).
-          RM12: ${{ secrets.RM12 || vars.RM12 }}
-          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
-          DB_SOURCE_NAME: RM12
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          DB_SOURCE_NAME: RM9
         run: npx tsx scripts/retention-census.ts
 
       - name: Owned audience count (read-only)
         # Code red 2026-11-20: contacts gained per week, the owned-audience lead's number. Counts only (public logs).
         if: inputs.task == 'owned-audience'
         env:
-          RM12: ${{ secrets.RM12 || vars.RM12 }}
-          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
-          DB_SOURCE_NAME: RM12
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          DB_SOURCE_NAME: RM9
         run: npx tsx scripts/owned-audience.ts
 
       - name: Weekly premium funnel report (read-only)

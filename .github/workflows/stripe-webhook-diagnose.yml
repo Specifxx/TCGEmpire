@@ -30,7 +30,7 @@ jobs:
       - run: npx prisma generate
       - name: Diagnose
         env:
-          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_PLUS_PRICE_ID: ${{ secrets.STRIPE_PLUS_PRICE_ID }}
           STRIPE_PLUS_ANNUAL_PRICE_ID: ${{ secrets.STRIPE_PLUS_ANNUAL_PRICE_ID }}

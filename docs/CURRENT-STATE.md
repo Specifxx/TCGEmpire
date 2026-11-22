@@ -169,7 +169,7 @@ longer lands on its entry.
   more), links only to the site (no eBay or Amazon), inside 20 of the service's 30 daily mails. `SisterDigest`, `SisterDigestEdition`.
   [2026-11-08](../DECISIONS.md#L22993)
 - **Live names** (since 2026-11-16; `src/lib/db-chains.ts` is the source of
-  truth): operational `RM12`, one variable, never a chain, because
+  truth): operational `RM9`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
   History: `HISTORY_DATABASE_URL_4`, then `_3`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
