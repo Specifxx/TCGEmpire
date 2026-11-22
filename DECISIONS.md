@@ -25223,6 +25223,57 @@ admin home has one tile; `/admin/premium-winback` still works).
 **Why.** Every link is still riftcompare.com (card pages, tools, checkout); TCGplayer is named as the market reference,
 never linked, and no eBay listing is named, because eBay Partner Network does not allow its links in email.
 
+## 2026-11-22: Giveaway: on the home page and one corner card
+
+**Decision.** While a giveaway is open (`giveawayState`), the home page shows `GiveawayHomeBanner` straight under the hero, every
+alert email's footer carries one line to `/giveaway` (`giveawayLine` in `lib/email.ts`, UTM `giveaway-footer`), and the layout
+mounts `GiveawayPrompt`, a small corner card (never a modal) whose rules are `shouldShowGiveawayPrompt` in
+`lib/giveaway-prompt.ts`: from a visit's second page, after six quiet seconds, never on `/`, the ad-free pages (giveaway, account,
+sign-in, Premium…) or admin, at most three times two days apart, never after "Don't show again" or after this browser's account
+entered (`GiveawayEnter` marks it). It takes the visit's one interruption: it does not show after the rating card, and the rating
+card does not show after it. Everything stops by itself when the giveaway closes. GA events `giveaway_prompt_show` and
+`giveaway_prompt_click`.
+
+**Why.** Owner, 2026-11-22: "we're not actually, can't find the giveaway. We got to feature it on our homepage ... have a pop-up or
+whatever to enter our giveaway", and he will not promote it himself any more. It was only in the header menu and on /giveaway:
+56 entrants, 103 entries on 21 Nov 22:42 UTC, four days after it opened. The 2026-11-03 rule (one interruption a visit, never on
+arrival) is kept: the card is the giveaway's, the slot is still one. `tests/giveaway-prompt.test.ts`.
+
+## 2026-11-22: Giveaways on five sites, by points, drawn in public
+
+**Decision.** Entries are now points, and one engine on RiftCompare runs a giveaway for each of five sites (`GIVEAWAYS` in
+`lib/giveaway.ts`, `site` rift, dex, mtg, ygo, op), every one closing 14 Dec 2026 23:59 Sydney and drawn the 15th, then a new
+round every two months (`GIVEAWAY_EVERY_MONTHS`).
+
+- **Points** (`entryPoints`): 10 for entering, a 40-point bonus, 5 for each Sydney day the entrant checks in on the giveaway page
+  while it is open (`GiveawayCheckin`, one row a day), 25 for each friend who makes a new account with their invite link and
+  confirms their email, up to 10. Premium gets the bonus automatically (50 to start); a free account gets the same 40 by watching
+  any price or pressing "Claim the free bonus" (`GiveawayEntry.bonusClaimedAt`), so paying never buys a better chance. This
+  replaces the 2026-11-19 entries (1, or 3 with Premium or a watch, +1 a friend) and the 00:52 "Premium 3x" ask, which the owner
+  replaced two minutes later with the points.
+- **Sister sites** (Dex, MTG, YGO) have no database: their accounts are RiftCompare's sister Premium sessions, so their
+  `/giveaway` pages post the stored session token to `/api/sister-giveaway` (exact-origin CORS, `verifyPremiumSession`), and read
+  `/api/giveaway/leaderboard?site=<key>`. One person, one account, five entries. OP has its own accounts, so its page waits on a
+  sign-in bridge; its giveaway is already in the list.
+- **Prizes** (owner: "less than $20 most recent booster pack ... from Good Games or like another TCG store in Australia"): the
+  newest English booster of each game, as many packs as fit under A$20 at Australian stores' in-stock prices on 22 Nov
+  (tcgprices data): 2 Delta Reign, 2 Star Trek Play Boosters, 3 Beyond the Brave, 1 OP-18. Rift keeps the owner's own card.
+- **Draw** (`giveaway-draw.yml` every six hours → `/api/cron/giveaway-draw` → `runGiveawayDraws`, or the admin button): each
+  valid entrant's points become consecutive numbered tickets in entry order (`assignTickets`), and the winning ticket is the
+  randomness of drand's mainnet round at or just after the close, modulo the tickets, plus 1 (`winningTicket`). Nobody, us
+  included, can know it before entries close, and the trophy on the page (`GiveawayWinner`) shows the round, the randomness and
+  the arithmetic so anyone can check it. `GiveawayDraw` keeps every attempt.
+- **Winner** (owner: "I need to be notified ... grab their details ... and be able to send it to them"): the winner is emailed a
+  private link (`/giveaway/claim#t=`, an EdDSA token with `use: giveaway-claim`, expiring at the claim date, kept in the fragment
+  so no log sees it); the owner gets an email and an inbox notice (`giveaway-winner`). The form saves the address to
+  `GiveawayClaim` and emails the owner a ready-to-post packet; `/admin/giveaway` shows it with a "Mark as posted" button, and the
+  public trophy then says it was posted. Unclaimed after 14 days, the next cron redraws from the tickets left (seed
+  `sha256("randomness:attempt")`), at most two redraws.
+
+**Why.** Owner, 2026-11-22: "a point system ... Don't ask me any questions. Let's get all these sites a giveaway feature ... every 2
+months ... as nice and aesthetic and usable and user friendly as possible", and the trophy banner with "the winning raffle, the
+winning number". A public beacon makes "random" provable without a third-party raffle service. `tests/giveaway.test.ts`.
+
 ## 2026-11-22: The Premium email is the one marketing send turned back on
 
 **What.** Bill: "it says marketing email is switched off from the 9th of November. So can we please fix that and deploy
@@ -25255,3 +25306,14 @@ pasted URL or a translate proxy is "none" or "cross-site". "yandex" and "baidu" 
 builds, baiduboxapp). Now `looksLikeBot` (the one thing that untags) is only an empty User-Agent or a self-named crawler or
 script; the header checks moved to `suspectClick`, which at most leaves a click out of the server-side click log, never the tag.
 The 10-14 Nov crawler with full browser headers will reach the networks tagged again: accepted by the owner's rule.
+
+## 2026-11-22: Giveaway star friends: 100 points for a friend who takes Premium or plays
+
+**Decision.** A referred friend is worth `STAR_REFERRAL_POINTS` (100) instead of 25 once they have Premium **or** have checked in
+on `STAR_FRIEND_CHECKINS` (3) days of the same giveaway (`liveWeights` in `lib/giveaway-server.ts`, `entryPoints`'
+`starReferrals`); still ten friends at most, star friends counted first. The rules and the panel say both routes.
+
+**Why.** Owner, 2026-11-22: "if you refer someone and they sign up to premium, then you will get 100 points ... I'll let you adjust
+the amount ... we should give more incentives for premium." A Premium-only bonus would let a purchase buy chances, which breaks
+"no purchase necessary"; the free route (three daily check-ins) earns exactly the same, so the bonus still pushes Premium without
+selling entries. `tests/giveaway.test.ts`.

@@ -2,24 +2,28 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { isAdminEmail } from "@/lib/admin-emails";
-import { GIVEAWAYS, giveawayState, giveawayFunnel, sydneyDay, MAX_REFERRAL_ENTRIES } from "@/lib/giveaway";
+import { prisma } from "@/lib/db";
+import { GIVEAWAYS, GIVEAWAY_SITES, giveawayState, giveawayFunnel, sydneyDay, sitePath, MAX_REFERRALS } from "@/lib/giveaway";
 import { giveawayEntrants, type Entrant } from "@/lib/giveaway-server";
-import { GiveawayDrawButton } from "@/components/giveaway/GiveawayDrawButton";
+import { GiveawayAdminAction } from "@/components/giveaway/GiveawayAdminAction";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Giveaways", robots: { index: false, follow: false } };
 
 // /admin/giveaway (admin only; owner, 2026-11-19: "an admin page so I can see who's entered the giveaway"). Every
-// entrant with their account email, entries and why, the totals, entries per day (Sydney), a CSV of the lot and the
-// weighted draw once entries close. Uncached, per request; emails never leave this page and its CSV.
-const WHY: Record<Entrant["reason"], string> = { premium: "Premium", watch: "Price watch", base: "Entry" };
+// entrant with their account email, points and why, the totals, entries per day (Sydney), a CSV of the lot, and after the close
+// the published drand draw, the winner's claim (their postal address, to post the prize) and a "mark posted" button (owner,
+// 2026-11-22). Uncached, per request; emails and addresses never leave this page and its CSV.
+const WHY: Record<Entrant["reason"], string> = { premium: "Premium", watch: "Price watch", claim: "Free bonus", base: "Entry only" };
 const when = (d: Date) =>
   new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Sydney", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(d);
 
 function why(e: Entrant): string {
   const bits = [WHY[e.reason]];
-  if (e.referrals > 0) bits.push(`${e.referrals} friend${e.referrals === 1 ? "" : "s"}${e.referrals > MAX_REFERRAL_ENTRIES ? ` (cap ${MAX_REFERRAL_ENTRIES})` : ""}`);
+  if (e.checkins > 0) bits.push(`${e.checkins} check-in${e.checkins === 1 ? "" : "s"}`);
+  if (e.referrals > 0) bits.push(`${e.referrals} friend${e.referrals === 1 ? "" : "s"}${e.referrals > MAX_REFERRALS ? ` (cap ${MAX_REFERRALS})` : ""}`);
+  if (e.site && e.site !== "rift") bits.push(`via ${e.site}`);
   if (!e.showName) bits.push("name hidden");
   return bits.join(" · ");
 }
@@ -31,13 +35,15 @@ export default async function GiveawayAdminPage() {
   const sections = await Promise.all(
     GIVEAWAYS.map(async (g) => {
       const rows = await giveawayEntrants(g, isAdminEmail).catch(() => null);
-      return { g, state: giveawayState(g, now), rows };
+      const draws = await prisma.giveawayDraw.findMany({ where: { giveaway: g.key }, orderBy: { attempt: "asc" } }).catch(() => []);
+      const claim = await prisma.giveawayClaim.findFirst({ where: { giveaway: g.key }, orderBy: { createdAt: "desc" } }).catch(() => null);
+      return { g, state: giveawayState(g, now), rows, draws, claim };
     }),
   );
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
       <h1 className="text-2xl font-bold">Giveaways</h1>
-      {sections.map(({ g, state, rows }) => {
+      {sections.map(({ g, state, rows, draws, claim }) => {
         const valid = rows?.filter((r) => !r.admin) ?? [];
         const entries = valid.reduce((s, r) => s + r.weight, 0);
         const perDay = new Map<string, number>();
@@ -47,7 +53,9 @@ export default async function GiveawayAdminPage() {
         const pct = (n: number) => (funnel.entrants ? `${Math.round((100 * n) / funnel.entrants)}% of entrants` : "");
         return (
           <section key={g.key} className="mt-6 rounded-xl border border-white/10 p-4">
-            <h2 className="font-semibold">{g.title}</h2>
+            <h2 className="font-semibold">
+              {GIVEAWAY_SITES[g.site].name}: {g.title}
+            </h2>
             <p className="text-sm opacity-80">
               {state} · closes {when(new Date(g.closesAt))} Sydney · draw {g.drawOn}
             </p>
@@ -57,8 +65,8 @@ export default async function GiveawayAdminPage() {
               <>
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <Stat label="Entrants" value={valid.length} />
-                  <Stat label="Entries in the draw" value={entries} />
-                  <Stat label="On 3+ entries" value={valid.filter((r) => r.weight >= 3).length} />
+                  <Stat label="Points (tickets) in the draw" value={entries} />
+                  <Stat label="With the 40 bonus" value={valid.filter((r) => r.reason !== "base").length} />
                   <Stat label="Team (excluded)" value={(rows?.length ?? 0) - valid.length} />
                 </div>
 
@@ -78,7 +86,7 @@ export default async function GiveawayAdminPage() {
                   <a href={`/api/admin/giveaway?giveaway=${encodeURIComponent(g.key)}`} className="btn-primary" download>
                     Download CSV
                   </a>
-                  <a href="/giveaway" className="text-sm underline">
+                  <a href={`${GIVEAWAY_SITES[g.site].url}${sitePath(g)}`} className="text-sm underline">
                     Public page and leaderboard
                   </a>
                 </div>
@@ -100,7 +108,7 @@ export default async function GiveawayAdminPage() {
                     <li key={r.userId} className={`rounded-lg border border-white/10 p-3 text-sm ${r.admin ? "opacity-50" : ""}`}>
                       <div className="flex justify-between gap-2">
                         <strong className="truncate">{r.name}</strong>
-                        <span className="shrink-0 font-semibold">{r.weight}×</span>
+                        <span className="shrink-0 font-semibold">{r.weight} pts</span>
                       </div>
                       <div className="truncate opacity-80">{r.email}</div>
                       <div className="opacity-70">
@@ -119,7 +127,7 @@ export default async function GiveawayAdminPage() {
                         <th className="py-2 pr-3">Email</th>
                         <th className="py-2 pr-3">Entered (Sydney)</th>
                         <th className="py-2 pr-3">Country</th>
-                        <th className="py-2 pr-3">Entries</th>
+                        <th className="py-2 pr-3">Points</th>
                         <th className="py-2">Why</th>
                       </tr>
                     </thead>
@@ -141,11 +149,49 @@ export default async function GiveawayAdminPage() {
                   </table>
                 </div>
 
-                <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide opacity-70">Draw</h3>
-                {state === "closed" ? (
-                  <GiveawayDrawButton giveaway={g.key} />
+                <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide opacity-70">Draw and prize</h3>
+                {draws.length === 0 ? (
+                  state === "closed" ? (
+                    <div className="mt-2 space-y-2 text-sm">
+                      <p className="opacity-80">The draw runs by itself within six hours of the close (drand round after {when(new Date(g.closesAt))}). Or run it now:</p>
+                      <GiveawayAdminAction giveaway={g.key} action="draw" label="Run the draw now" />
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm opacity-80">
+                      Drawn automatically after entries close, from the first public drand number after the close. The winner gets an email with a claim
+                      link; you get an email and an inbox notice, then the address appears here.
+                    </p>
+                  )
                 ) : (
-                  <p className="mt-2 text-sm opacity-80">The draw button appears here once entries close. Each entrant&apos;s chance is their entries over the total.</p>
+                  <ul className="mt-2 space-y-2 text-sm">
+                    {draws.map((d) => (
+                      <li key={d.id} className="rounded-lg border border-white/10 p-3">
+                        <strong>{d.attempt === 0 ? "Draw" : `Redraw ${d.attempt}`}</strong>: ticket #{d.ticket} of {d.totalTickets} · {d.publicName}
+                        {d.country ? ` (${d.country})` : ""} · {d.status}
+                        {d.status === "pending" ? ` · claim by ${when(d.claimBy)}` : ""}
+                        {d.shippedAt ? ` · posted ${when(d.shippedAt)}` : ""}
+                        <span className="block opacity-60">drand round {d.drandRound}, drawn {when(d.drawnAt)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {claim && (
+                  <div className="mt-3 rounded-lg border border-gold/40 bg-gold/[0.06] p-3 text-sm">
+                    <p className="font-semibold">Post the prize to</p>
+                    <address className="mt-1 whitespace-pre-line not-italic">
+                      {[claim.fullName, claim.line1, claim.line2, [claim.city, claim.region, claim.postcode].filter(Boolean).join(" "), claim.country]
+                        .filter(Boolean)
+                        .join("\n")}
+                    </address>
+                    {claim.phone && <p className="mt-1">Phone: {claim.phone}</p>}
+                    {claim.note && <p className="mt-1 opacity-80">Note: {claim.note}</p>}
+                    <p className="mt-1 opacity-80">Prize: {g.prize}</p>
+                    {draws.some((d) => d.status === "claimed") && (
+                      <div className="mt-2">
+                        <GiveawayAdminAction giveaway={g.key} action="shipped" label="Mark as posted" />
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             )}

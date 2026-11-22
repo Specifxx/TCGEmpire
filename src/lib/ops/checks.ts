@@ -485,6 +485,8 @@ export const JOBS: { file: string; title: string; staleH: number; scheduledSince
   // Every two days (2026-11-18): a set's revealed cards from Riot's gallery, a no-op outside reveal season.
   { file: "set-reveals.yml", title: "New-set reveals job", staleH: 60, scheduledSince: "2026-11-19T05:37:00Z" },
   { file: "coverage-audit.yml", title: "Riftbound coverage audit (weekly)", staleH: 200, scheduledSince: "2026-11-24T09:23:00Z" },
+  // Every six hours (2026-11-22): the five sites' giveaway draws, winner emails and redraws (lib/giveaway-run.ts).
+  { file: "giveaway-draw.yml", title: "Giveaway draw job", staleH: 18, scheduledSince: "2026-11-23T00:41:00Z" },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {

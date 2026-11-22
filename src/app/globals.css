@@ -329,7 +329,7 @@ html {
   background-color: #caa85a;
 }
 :root[data-theme="light"] .bg-gold\/85 {
-  background-color: rgb(202 168 90 / 0.85);
+  background-color: rgb(var(--c-gold) / 0.85);
 }
 :root[data-theme="light"] .bg-brand-400 {
   background-color: #34d17e;
@@ -1586,8 +1586,8 @@ ins.adsbygoogle[data-ad-status="unfilled"],
   50% { filter: drop-shadow(0 0 8px rgb(243 212 136 / 0.75)); }
 }
 @keyframes premium-cta-glow-hover {
-  0%, 100% { filter: drop-shadow(0 0 6px rgb(243 212 136 / 0.8)) drop-shadow(0 0 12px rgb(202 168 90 / 0.4)); }
-  50% { filter: drop-shadow(0 0 9px rgb(255 240 190 / 0.95)) drop-shadow(0 0 18px rgb(202 168 90 / 0.55)); }
+  0%, 100% { filter: drop-shadow(0 0 6px rgb(243 212 136 / 0.8)) drop-shadow(0 0 12px rgb(var(--c-gold) / 0.4)); }
+  50% { filter: drop-shadow(0 0 9px rgb(255 240 190 / 0.95)) drop-shadow(0 0 18px rgb(var(--c-gold) / 0.55)); }
 }
 /* Light theme: the palette's text gold, and a warmer, smaller glow so the label
    keeps its 5.58:1 on the white header (the highlight dips to 3.59:1 as it
@@ -2062,4 +2062,33 @@ html[data-ebaypop="pop"] li:has(a[data-ebay]:is(.btn-primary, .btn-buy, .btn-ad)
 .scan-sweep { top: 0; animation: scan-sweep 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .scan-sweep { animation: none; top: 45%; }
+}
+
+/* Giveaways (owner, 2026-11-22: "as nice and aesthetic ... as possible"; components/giveaway/). */
+.gw-hero {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgb(var(--c-gold) / 0.16), transparent 60%),
+    radial-gradient(90% 70% at 0% 100%, rgb(var(--c-brand-400) / 0.10), transparent 60%),
+    rgb(255 255 255 / 0.03);
+}
+.gw-prize { transform: rotate(-2.5deg); transition: transform 0.3s ease; }
+.gw-prize:hover { transform: rotate(0deg) scale(1.02); }
+.gw-panel { backdrop-filter: blur(6px); }
+.gw-flash { animation: gw-flash 2.4s ease-out forwards; }
+@keyframes gw-flash {
+  0% { opacity: 0; transform: translateY(6px) scale(0.9); }
+  15% { opacity: 1; transform: translateY(0) scale(1.05); }
+  25% { transform: scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+.gw-trophy {
+  background:
+    radial-gradient(80% 120% at 50% 0%, rgb(var(--c-gold) / 0.28), transparent 65%),
+    linear-gradient(180deg, rgb(var(--c-gold) / 0.08), rgb(255 255 255 / 0.02));
+  box-shadow: 0 0 40px rgb(var(--c-gold) / 0.18) inset;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-flash { animation: none; }
+  .gw-prize, .gw-prize:hover { transform: none; transition: none; }
 }

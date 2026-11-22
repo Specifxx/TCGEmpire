@@ -71,6 +71,8 @@ const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then(
 const RateUsStrip = dynamic(() => import("@/components/RateUsStrip").then((m) => m.RateUsStrip), {
   ssr: false,
 });
+// The giveaway's one corner card while it is open (owner, 2026-11-22; lib/giveaway-prompt.ts): browser-only.
+const GiveawayPrompt = dynamic(() => import("@/components/giveaway/GiveawayPrompt").then((m) => m.GiveawayPrompt), { ssr: false });
 const RateUsPrompt = dynamic(() => import("@/components/RateUsPrompt").then((m) => m.RateUsPrompt), {
   ssr: false,
 });
@@ -467,6 +469,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {/* The one uninvited opinion ask: a corner rating card, only
                     after real engagement, at most twice (lib/rate-prompt.ts). */}
                 <RateUsPrompt />
+                {/* The giveaway card shares the rating card's one-interruption-a-visit slot (lib/giveaway-prompt.ts). */}
+                <GiveawayPrompt />
                 {/* A fixed bottom tab bar USED TO BE here (<BottomTabBar />).
                     Removed outright: three successive attempts to keep a fixed
                     bottom bar pinned on a phone all failed (see
