@@ -36,7 +36,7 @@
 // on. `via: "resend"` is available for a small audience or if Brevo is down.
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
-import { PRICE_DROP_CAMPAIGN, PRICE_DROP_SRC, getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail, type PremiumEmailDeal, type PremiumOfferEmailOpts } from "./email";
+import { PRICE_DROP_CAMPAIGN, PRICE_DROP_SRC, getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail, type PremiumEmailDeal, type PremiumOfferEmailOpts, type PremiumOfferSubjectArm } from "./email";
 import { defaultTcgBuyKeys, getArbitrageVsTcgplayer } from "./arbitrage";
 import { cardHref } from "./card-url";
 import { formatMoney } from "./format";
@@ -339,7 +339,7 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDr
     }
 
     const ok = await deps
-      .send(r.email, { displayName: r.displayName, ...announcementUnsubUrls(token), via, deals })
+      .send(r.email, { displayName: r.displayName, ...announcementUnsubUrls(token), via, deals, subjectArm: premiumOfferArm(r.id) })
       .catch(() => false);
 
     if (ok) {
@@ -361,6 +361,44 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDr
     remaining: a.pending.length - sent,
     ...(errors.size ? { errors: [...errors] } : {}),
   };
+}
+
+// Subject-line test E1 (Premium team, 2026-11-22; ops/premium/tests.md): an
+// account's arm is fixed by its id (FNV-1a, last bit), so a batch splits about
+// 50/50, a resend keeps the same subject, and the admin read can split sent,
+// clicked and paying by arm without storing anything.
+export function premiumOfferArm(userId: string): PremiumOfferSubjectArm {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < userId.length; i++) {
+    h ^= userId.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0) % 2 === 0 ? "a" : "b";
+}
+
+export interface PremiumOfferArmRead {
+  arm: PremiumOfferSubjectArm;
+  sent: number;
+  clicked: number;
+  paying: number;
+}
+
+// The E1 read: of the accounts emailed this campaign, how many followed a link
+// and how many pay now, per subject arm. Paying is "premiumUntil in the future"
+// for an emailed account, so it includes trials; judge trial-to-paid two weeks on.
+export function premiumOfferArmRead(rows: Pick<PremiumOfferAudienceRow, "id" | "sentAt" | "clickedAt" | "premiumUntil">[], now = new Date()): PremiumOfferArmRead[] {
+  const out: Record<PremiumOfferSubjectArm, PremiumOfferArmRead> = {
+    a: { arm: "a", sent: 0, clicked: 0, paying: 0 },
+    b: { arm: "b", sent: 0, clicked: 0, paying: 0 },
+  };
+  for (const r of rows) {
+    if (!r.sentAt) continue;
+    const o = out[premiumOfferArm(r.id)];
+    o.sent++;
+    if (r.clickedAt && r.clickedAt >= r.sentAt) o.clicked++;
+    if (r.premiumUntil && r.premiumUntil > now) o.paying++;
+  }
+  return [out.a, out.b];
 }
 
 // ── Admin console support ────────────────────────────────────────────────────

@@ -71,13 +71,23 @@ export interface SendEmailExtras {
   from?: string;
   /** Promotional, news or bulk mail. Refused while MARKETING_EMAIL_OFF holds (Bill, 2026-11-09). */
   marketing?: boolean;
+  /** The one marketing campaign the owner turned back on (MARKETING_ALLOWED); every other one stays refused. */
+  campaign?: MarketingCampaign;
 }
+
+// Bill, 2026-11-22: "marketing email is switched off … can we please fix that" for the Premium email
+// (/admin/premium-offer). Only that campaign is let through; the newsletter, digests, welcome, release-day,
+// win-back and checkout-recovery mail stay off (DECISIONS.md, 2026-11-22). It keeps its opt-out link,
+// List-Unsubscribe headers and the announcement opt-out list.
+export type MarketingCampaign = "premium-offer";
+export const MARKETING_ALLOWED: ReadonlySet<MarketingCampaign> = new Set(["premium-offer"]);
 
 // Bill, 2026-11-09: email is for accounts, billing and the alerts people asked for. Every promotional,
 // news or announcement send passes `marketing: true` and is refused here, whichever provider carries it.
 export const MARKETING_EMAIL_OFF = true;
 function marketingBlocked(extras: SendEmailExtras): boolean {
   if (!extras.marketing || !MARKETING_EMAIL_OFF) return false;
+  if (extras.campaign && MARKETING_ALLOWED.has(extras.campaign)) return false;
   lastEmailError = "Marketing email is switched off (DECISIONS.md, 2026-11-09)";
   return true;
 }
@@ -1542,6 +1552,8 @@ export interface PremiumOfferEmailOpts {
   unsubUrl: string;
   oneClickUrl?: string;
   via?: "brevo" | "resend";
+  // Subject-line test E1: which subject this account gets (premiumOfferArm). Default "a".
+  subjectArm?: PremiumOfferSubjectArm;
   // Today's Deal Finder rows for the snippet (loadEmailDeals); none means no snippet.
   deals?: PremiumEmailDeal[];
 }
@@ -1576,8 +1588,20 @@ export interface PremiumEmailDeal {
   belowPct: number;
 }
 
-export function premiumOfferSubject(): string {
-  return `Riftbound cards under market today, and what ${TIER_NAMES.premium} unlocks`;
+// Subject-line test E1 (Premium team, 2026-11-22; ops/premium/tests.md): every
+// account is put in arm "a" or "b" by premiumOfferArm() in lib/premium-offer.ts,
+// fixed by its id, so each batch splits about 50/50 and the read needs no stored
+// arm. A keeps the original subject. B leads with the batch's real biggest gap
+// below TCGplayer market; with no deals read it falls back to A's words (the
+// arm is still "b" in the read, so a batch without deals dilutes B, never inflates it).
+export type PremiumOfferSubjectArm = "a" | "b";
+
+export function premiumOfferSubject(arm: PremiumOfferSubjectArm = "a", deals: PremiumEmailDeal[] = []): string {
+  const a = `Riftbound cards under market today, and what ${TIER_NAMES.premium} unlocks`;
+  if (arm !== "b") return a;
+  const top = deals.reduce<PremiumEmailDeal | null>((best, d) => (!best || d.belowPct > best.belowPct ? d : best), null);
+  if (!top || !(top.belowPct >= 1)) return a;
+  return `${top.name} is ${top.belowPct.toFixed(0)}% under TCGplayer market today`;
 }
 
 /** One star link per rating, 1–5, each opening /feedback with that rating picked. */
@@ -1670,7 +1694,7 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
   const links = priceDropLinks();
   const tools = premiumEmailToolLinks();
   const feedback = premiumEmailFeedbackUrl();
-  const subject = premiumOfferSubject();
+  const subject = premiumOfferSubject(opts.subjectArm ?? "a", opts.deals ?? []);
   const heading = `Pay less for every Riftbound card with ${TIER_NAMES.premium}`;
   const premiumLine = priceDropTierLine("premium");
   const hasAnnual = !!premiumEffectiveMonthly("premium");
@@ -1765,7 +1789,8 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
 
 export async function sendPremiumOfferEmail(to: string, opts: PremiumOfferEmailOpts): Promise<boolean> {
   const { subject, html, text, headers } = buildPremiumOfferEmail(opts);
-  return opts.via === "resend" ? sendEmail(to, subject, html, { text, headers, marketing: true }) : sendEmailBrevo(to, subject, html, { text, headers, marketing: true });
+  const extras = { text, headers, marketing: true, campaign: "premium-offer" } as const;
+  return opts.via === "resend" ? sendEmail(to, subject, html, extras) : sendEmailBrevo(to, subject, html, extras);
 }
 
 // One-off "N days of Premium, free, no card" win-back email. See
