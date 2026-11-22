@@ -31,7 +31,11 @@ async function main() {
   for (const id of ids) {
     const p = await fetch(`https://discord.com/api/v10/channels/${CHANNEL}/messages/${id}/crosspost`, { method: "POST", headers: h, signal: AbortSignal.timeout(10_000) });
     if (p.ok) ok++;
-    else console.log(`publish: ${id} answered HTTP ${p.status}`);
+    else {
+      // Discord's own error code says which permission is missing (50013 Missing Permissions, 50001 Missing Access).
+      const why = await p.json().then((b: { code?: number; message?: string }) => ` (code ${b.code}: ${b.message})`).catch(() => "");
+      console.log(`publish: ${id} answered HTTP ${p.status}${why}`);
+    }
   }
   console.log(`publish: ${ok} of ${ids.length} drop(s) published to following servers.`);
 }
