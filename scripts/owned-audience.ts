@@ -46,8 +46,9 @@ async function main() {
   };
 
   await read("accounts", async () => {
-    const rows = await prisma.user.findMany({ where: { AND: [NOT_SEED_WHERE, { emailVerified: { not: null } }] }, select: { email: true, createdAt: true } });
-    for (const r of rows) see(r.email, r.createdAt, "rift:account");
+    const rows = await prisma.user.findMany({ where: { AND: [NOT_SEED_WHERE, { emailVerified: { not: null } }] }, select: { email: true, createdAt: true, signupSource: true } });
+    // An account a sister's sign-in made carries signupSource "sister:<site>[:<surface>]" (lib/sister-premium.ts, 2026-11-22).
+    for (const r of rows) see(r.email, r.createdAt, r.signupSource?.startsWith("sister:") ? `${r.signupSource.split(":")[1]}:account` : "rift:account");
   });
   await read("priceAlert", async () => {
     const rows = await prisma.priceAlert.groupBy({ by: ["email"], _min: { createdAt: true } });
