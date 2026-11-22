@@ -57,6 +57,10 @@ import { rememberPremiumSurface } from "./premium-surface";
 // sign_up do; GA4 (no per-event billing) is where high-cardinality usage
 // telemetry like this belongs.
 const GA4_ONLY_EVENTS = new Set([
+  // The card page's after-click follow-up (BuyFollowUp, 2026-11-22): GA4 only.
+  "buy_followup_shown",
+  "buy_followup_collection",
+  "buy_followup_signin",
   // /premium's per-view and per-interaction events (2026-10-23): GA4 only, like
   // the slide-in impressions; its CTA clicks and demo runs go to both.
   "premium_page_view",
