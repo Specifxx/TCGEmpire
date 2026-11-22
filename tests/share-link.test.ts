@@ -1,7 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { priceGap, shareText, shareUrl } from "../src/lib/share-link";
+import { dropText, isStoreRetailer, priceGap, shareText, shareUrl } from "../src/lib/share-link";
+
+test("dropText: the cheapest store's real price and name, pre-orders labelled, or nothing", () => {
+  const fmt = (c: number) => `C$${(c / 100).toFixed(2)}`;
+  assert.equal(dropText("Box", { priceCents: 15999, retailerName: "Shop" }, "Canada", fmt), "Box for C$159.99 at Shop, the cheapest store price we found in Canada. Every store compared on RiftCompare:");
+  assert.match(dropText("Box", { priceCents: 1, retailerName: "S" }, "Canada", fmt, true)!, /^Pre-order: /);
+  assert.equal(dropText("X", null, "Canada", fmt), null);
+  assert.deepEqual(["ebay", "tcgplayer", "amazon-us", "cherry"].map(isStoreRetailer), [false, false, false, true]);
+  assert.equal(shareUrl("https://riftcompare.com", "/sealed/x", "drop"), "https://riftcompare.com/sealed/x?utm_source=share&utm_medium=drop");
+});
 
 // Word of mouth (DECISIONS.md, "Share buttons and shared lists").
 test("every shared link carries utm_source=share and its medium, keeping the page's own query", () => {

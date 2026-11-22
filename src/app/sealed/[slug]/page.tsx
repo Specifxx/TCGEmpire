@@ -77,7 +77,7 @@ export default async function SealedProductPage({ params }: { params: { slug: st
         </p>
       </header>
 
-      <SealedProductView byMarket={byMarket} bf={bfStripByMarket(byMarket, g.setCode)} />
+      <SealedProductView byMarket={byMarket} bf={bfStripByMarket(byMarket, g.setCode)} sharePath={`/sealed/${params.slug}`} preorder={preorder} />
 
       {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the price table, 22 Nov to 1 Dec, labelled Ad. */}
       <TcgplayerCyberBanner

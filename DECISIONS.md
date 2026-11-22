@@ -25398,3 +25398,14 @@ Restock chats spread our finds (22 Nov: a Canadian pre-order sold 10 in 41 minut
 get the Sniper's drops in their own channel. Discord's channel following does that with nothing to hold on their side: the
 hub's #sealed-sniper became an Announcement channel (owner's yes, 2026-11-22), and `discord-publish.yml` has the price bot
 publish each unpublished webhook drop of the last day (a webhook cannot publish). Links stay tagged utm_source=discord.
+
+## 2026-11-23: "Share this deal with your group chat" on the product page
+
+`components/DropShare.tsx` (ported from DexCompare) sits under the sealed page's price card (`SealedProductView`, the visitor's own market only): the phone's share sheet, else one line copied with
+the cheapest in-stock STORE price in the visitor's market (`dropText` and `isStoreRetailer` in `lib/share-link.ts`: never eBay, TCGplayer or Amazon, never
+converted, "Pre-order: " when that offer is one) and this page's link tagged `utm_source=share&utm_medium=drop`. A separate component,
+so ShareButton's share-for-a-deal A/B test is untouched; event `share { medium: "drop" }`.
+
+**Why.** On 22 Nov a CA$89.99 Delta Reign ETB pre-order at Cardboard Hero took ten referral orders in 41 minutes, almost none through
+a click we tracked: the store link had been pasted into a restock chat. People share drops anyway; this makes the link they paste ours.
+Owner, 2026-11-23: "apply all these learnings to all the other sites". Read `share` medium `drop` and `share_visit` a week after release.
