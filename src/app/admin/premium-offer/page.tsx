@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { listPremiumOfferAudience, loadEmailDeals, runPremiumOfferBlast, DEFAULT_BATCH, type PremiumOfferResult } from "@/lib/premium-offer";
+import { listPremiumOfferAudience, loadEmailDeals, premiumOfferArmRead, runPremiumOfferBlast, DEFAULT_BATCH, type PremiumOfferArmRead, type PremiumOfferResult } from "@/lib/premium-offer";
 import { buildPremiumOfferEmail, premiumOfferSubject, type PremiumEmailDeal } from "@/lib/email";
 import { listPremiumWinbackAudience, WINBACK_TRIAL_DAYS } from "@/lib/premium-winback";
 import { PremiumWinbackConsole, type WinbackConsoleRow } from "@/components/admin/PremiumWinbackConsole";
@@ -59,11 +59,13 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
   } else winbackError = true;
   // The email exactly as it sends (a dummy unsubscribe link), for the preview frame.
   const previewHtml = buildPremiumOfferEmail({ displayName: me?.displayName ?? "Bill", unsubUrl: "#", deals }).html;
+  let armRead: PremiumOfferArmRead[] = [];
   try {
     // The dry run reads every account (not just the table's 1,000 newest) with
     // the exact rule the send applies, so these counts are the real reach.
     const [list, dry] = await Promise.all([listPremiumOfferAudience(), runPremiumOfferBlast({ dryRun: true })]);
     summary = dry;
+    armRead = premiumOfferArmRead(list);
     rows = list.map((r) => ({
       ...r,
       createdAt: r.createdAt.toISOString(),
@@ -85,7 +87,8 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
       <h1 className="text-2xl font-bold text-white">Premium email</h1>
       <p className="mt-1 max-w-3xl text-sm text-slate-400">
         The Premium showcase email to every account that is not paying, <strong className="text-slate-200">newest members first</strong>.
-        Subject: <em>&ldquo;{premiumOfferSubject()}&rdquo;</em>. It shows today&apos;s top Deal Finder rows (real US store prices
+        Subject test: half of each batch gets A <em>&ldquo;{premiumOfferSubject("a", deals)}&rdquo;</em>, half gets B{" "}
+        <em>&ldquo;{premiumOfferSubject("b", deals)}&rdquo;</em>. It shows today&apos;s top Deal Finder rows (real US store prices
         below TCGplayer market, read when the batch sends), lists what Premium includes, and offers it at {PREMIUM_PRICE_AMOUNT}/month
         or {PREMIUM_ANNUAL_AMOUNT}/year, each button opening checkout for that plan. No trial and no affiliate links. Never emailed,
         whatever is ticked: paying accounts, admins, seed accounts and anyone who opted out of announcements. Accounts that got an
@@ -125,6 +128,33 @@ export default async function PremiumOfferAdminPage({ searchParams }: { searchPa
               </div>
             ))}
           </dl>
+          <div className="mt-4 card-surface p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Subject test, so far</p>
+            <table className="mt-2 w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500">
+                  <th className="py-1">Subject</th>
+                  <th className="py-1">Sent</th>
+                  <th className="py-1">Clicked a link</th>
+                  <th className="py-1">Premium now</th>
+                </tr>
+              </thead>
+              <tbody>
+                {armRead.map((r) => (
+                  <tr key={r.arm} className="text-slate-200">
+                    <td className="py-1 font-bold uppercase">{r.arm}</td>
+                    <td className="num py-1">{r.sent}</td>
+                    <td className="num py-1">
+                      {r.clicked}
+                      {r.sent ? ` (${((r.clicked / r.sent) * 100).toFixed(1)}%)` : ""}
+                    </td>
+                    <td className="num py-1">{r.paying}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-2 text-xs text-slate-500">Each account&apos;s subject is fixed by its id. Read by the Premium team on Mondays.</p>
+          </div>
           <PremiumOfferConsole
             rows={rows}
             adminKey={keyOk && !me?.isAdmin ? token : undefined}
