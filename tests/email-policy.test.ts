@@ -12,7 +12,7 @@ test("marketing email is refused before any provider is called", async () => {
 
 test("every promotional sender is marked marketing, alerts and account mail are not", () => {
   const src = readFileSync("src/lib/email.ts", "utf8");
-  for (const fn of ["sendNewsletterDigestEmail", "sendReleaseDayEmail", "sendUserDigestEmail", "sendCheckoutRecoveryEmail", "sendWelcomeEmail", "sendPremiumOfferEmail", "sendPremiumWinbackEmail", "sendNewsletterWelcomeEmail"]) {
+  for (const fn of ["sendNewsletterDigestEmail", "sendReleaseDayEmail", "sendUserDigestEmail", "sendCheckoutRecoveryEmail", "sendWelcomeEmail", "sendPremiumOfferEmail", "sendPremiumWinbackEmail", "sendNewsletterWelcomeEmail", "sendWatchRecapEmail"]) {
     const at = src.indexOf(`export async function ${fn}(`);
     assert.ok(at >= 0, fn);
     const next = src.indexOf("\nexport ", at + 10);

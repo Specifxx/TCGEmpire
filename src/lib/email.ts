@@ -80,7 +80,7 @@ export interface SendEmailExtras {
 // (/admin/premium-offer). Only that campaign is let through; the newsletter, digests, welcome, release-day,
 // win-back and checkout-recovery mail stay off (DECISIONS.md, 2026-11-22). It keeps its opt-out link,
 // List-Unsubscribe headers and the announcement opt-out list.
-export type MarketingCampaign = "premium-offer";
+export type MarketingCampaign = "premium-offer" | "watch-recap";
 export const MARKETING_ALLOWED: ReadonlySet<MarketingCampaign> = new Set(["premium-offer"]);
 
 // Bill, 2026-11-09: email is for accounts, billing and the alerts people asked for. Every promotional,
@@ -1805,6 +1805,106 @@ export async function sendPremiumOfferEmail(to: string, opts: PremiumOfferEmailO
   const { subject, html, text, headers } = buildPremiumOfferEmail(opts);
   const extras = { text, headers, marketing: true, campaign: "premium-offer" } as const;
   return opts.via === "resend" ? sendEmail(to, subject, html, extras) : sendEmailBrevo(to, subject, html, extras);
+}
+
+// One-off "your watchlist" recap to dormant accounts (lib/watch-recap.ts, 2026-11-22). Every figure is
+// a real TCGplayer market price from the committed history; a card with no price RECAP_DAYS ago shows
+// today's price and no change. Marketing (campaign "watch-recap"): refused until the owner adds the
+// campaign to MARKETING_ALLOWED. Every link is riftcompare.com.
+export interface WatchRecapRow {
+  name: string;
+  setName: string;
+  href: string;
+  imageUrl: string | null;
+  now: string;
+  then: string | null;
+  changePct: number | null;
+}
+
+export interface WatchRecapEmailOpts {
+  displayName: string;
+  rows: WatchRecapRow[];
+  days: number;
+  watchlistUrl: string;
+  unsubUrl: string;
+  oneClickUrl?: string;
+}
+
+export function watchRecapSubject(rows: WatchRecapRow[]): string {
+  const moved = rows.filter((r) => r.changePct != null && Math.abs(r.changePct) >= 1).length;
+  return moved ? `${moved} of your watched cards moved this month` : "Your watched cards, priced today";
+}
+
+export function buildWatchRecapEmail(opts: WatchRecapEmailOpts): BuiltEmail {
+  const first = opts.displayName.includes("@") ? "" : (opts.displayName.trim().split(/\s+/)[0] ?? "");
+  const greeting = first ? `Hi ${escapeHtml(first)},` : "Hi there,";
+  const greetingText = first ? `Hi ${first},` : "Hi there,";
+  const subject = watchRecapSubject(opts.rows);
+  const heading = "Your watchlist, priced today";
+  const change = (r: WatchRecapRow) =>
+    r.changePct == null
+      ? { label: "new", color: "#9aa4b2", bg: "#1b2536" }
+      : r.changePct <= -1
+        ? { label: `▼ ${Math.abs(r.changePct).toFixed(0)}%`, color: "#34d17e", bg: "#11331f" }
+        : r.changePct >= 1
+          ? { label: `▲ ${r.changePct.toFixed(0)}%`, color: "#f87171", bg: "#3a1717" }
+          : { label: "steady", color: "#9aa4b2", bg: "#1b2536" };
+  const rows = opts.rows
+    .map((r) => {
+      const c = change(r);
+      const img = r.imageUrl
+        ? `<img src="${escapeHtml(r.imageUrl)}" width="40" alt="" style="display:block;width:40px;height:auto;border-radius:4px;border:0">`
+        : `<div style="width:40px;height:56px;border-radius:4px;background:#1b2536"></div>`;
+      return `<tr>
+        <td width="52" style="padding:8px 0 8px 12px;vertical-align:middle"><a href="${r.href}">${img}</a></td>
+        <td style="padding:8px;vertical-align:middle">
+          <a href="${r.href}" style="color:#fff;font-size:14px;font-weight:700;text-decoration:none">${escapeHtml(r.name)}</a>
+          <div style="font-size:12px;color:#9aa4b2;margin-top:2px">${escapeHtml(r.setName)}${r.then ? ` · ${escapeHtml(r.then)} ${opts.days} days ago` : ""}</div>
+        </td>
+        <td align="right" style="padding:8px 12px 8px 4px;vertical-align:middle;white-space:nowrap">
+          <div style="font-size:15px;font-weight:800;color:#fff">${escapeHtml(r.now)}</div>
+          <div style="display:inline-block;margin-top:4px;background:${c.bg};color:${c.color};font-size:12px;font-weight:700;padding:2px 7px;border-radius:999px">${c.label}</div>
+        </td>
+      </tr>`;
+    })
+    .join(`<tr><td colspan="3" style="border-top:1px solid #233047;font-size:0;line-height:0">&nbsp;</td></tr>`);
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${greeting}</td></tr>
+    <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      You're watching these cards on ${SITE_NAME}. Here's where their TCGplayer market price sits today, and how it moved over the last ${opts.days} days.
+    </td></tr>
+    <tr><td style="padding:10px 32px 4px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f1520;border:1px solid #233047;border-radius:12px">${rows}</table>
+      <div style="margin-top:8px;font-size:12px;line-height:1.5;color:#6b7585">TCGplayer market price in US dollars, from our daily price history. Store prices on each card page.</div>
+    </td></tr>
+    <tr><td style="padding:12px 32px 18px">
+      <a href="${opts.watchlistUrl}" style="display:inline-block;background:#1ea65c;color:#0b1a10;font-weight:800;font-size:14px;text-decoration:none;padding:12px 20px;border-radius:10px">Open your watchlist</a>
+      <div style="margin-top:10px;font-size:13px;line-height:1.6;color:#9aa4b2">Set a target price on any card and we'll email you when a store hits it.</div>
+    </td></tr>`;
+  const text = [
+    greetingText,
+    "",
+    `You're watching these cards on ${SITE_NAME}. Here's where their TCGplayer market price sits today, and how it moved over the last ${opts.days} days.`,
+    "",
+    ...opts.rows.map((r) => `- ${r.name} (${r.setName}): ${r.now}${r.then ? `, ${r.then} ${opts.days} days ago` : ""}${r.changePct != null ? ` (${r.changePct > 0 ? "+" : ""}${r.changePct.toFixed(0)}%)` : ""}. ${r.href}`),
+    "",
+    "TCGplayer market price in US dollars, from our daily price history. Store prices on each card page.",
+    `Open your watchlist: ${opts.watchlistUrl}`,
+    "Set a target price on any card and we'll email you when a store hits it.",
+    "",
+    "—",
+    `You're getting this because you have a ${SITE_NAME} account with cards on your watchlist. This is a one-off, not a subscription.`,
+    `Don't email me announcements: ${opts.unsubUrl}`,
+    `Sent by ${SITE_NAME}, ${SITE_URL}. Questions: ${SITE_URL}/contact`,
+  ].join("\n");
+  const headers = { "List-Unsubscribe": `<${opts.oneClickUrl ?? opts.unsubUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" };
+  const preheader = opts.rows[0] ? `${opts.rows[0].name} is ${opts.rows[0].now} today.` : "Your watched cards, priced today.";
+  return { subject, heading, preheader, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl), preheader), text, headers };
+}
+
+export async function sendWatchRecapEmail(to: string, opts: WatchRecapEmailOpts): Promise<boolean> {
+  const { subject, html, text, headers } = buildWatchRecapEmail(opts);
+  return sendEmailBrevo(to, subject, html, { text, headers, marketing: true, campaign: "watch-recap" });
 }
 
 // One-off "N days of Premium, free, no card" win-back email. See

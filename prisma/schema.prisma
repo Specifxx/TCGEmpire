@@ -95,6 +95,9 @@ model User {
   // because every account stamped by the "month on us" offer must still get
   // this one. Set on a successful send only. Additive + nullable, no backfill.
   priceDropEmailSentAt DateTime?
+  // The one-off "your watchlist" recap to dormant accounts (lib/watch-recap.ts, 2026-11-22).
+  // Stamped only on a successful send, so the batched run is resumable. Additive, nullable.
+  watchRecapSentAt     DateTime?
   // Set once when the early-adopter "first 100 users get Premium" comp is granted,
   // so the grant is idempotent (never re-granted / re-extended on re-runs).
   earlyPremiumGranted Boolean   @default(false)
