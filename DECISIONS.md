@@ -25374,3 +25374,20 @@ mails a one-time sign-in link (the same signed code as email sign-in, `signEmail
 capped at 3 an hour per address and 6 per IP; `{code}` verifies it, finds or makes the RiftCompare account and returns a
 premium-session token, which the OP page keeps in localStorage and posts like any sister. OP stores no address. The
 `op` entry's url is `https://opcompare.app` (it was wrongly `.com`).
+
+## 2026-11-22: A Champion Deck's champion names its set
+
+**What.** A sealed title that is one Champion Deck and names no set word ("Riftbound: Champion Deck – Jinx", "RIFTBOUND
+CHAMPION DECK VEX (LIMIT 1)", "Riftbound League of Legends Trading Card Game: Lee Sin Champion Deck") now takes its set from
+its champion (`CHAMPION_DECK_SETS`, `sealedSetCode` in `lib/sealed-import.ts`): Jinx, Lee Sin, Viktor are Origins; Fiora,
+Rumble Spiritforged; Vex, Vi Unleashed; Tryndamere, Ashe, Lux, Garen Legacy. A set word in the title still wins. Two
+champions ("Jinx & Vi"), a case or a lot ("4x Lee Sin Sealed Case") and a deck naming no champion keep their title page.
+"LeeSin" is spelled "Lee Sin" (one group). `cleanupStaleSealed` drops a set-less row whose title now names its set
+(`misfiledChampionDeck`), and an old title page whose slug names one champion beside "championdeck" 301s to the set's
+deck page (`championDeckSlugRedirect`); a slug cut before the name has nothing to redirect to and behaves as before.
+
+**Why.** The 22 Nov export held 71 such rows (US 5, CA 38, AU 20, EU 6, UK 2) on about 40 pages of one or two stores,
+while `/sealed/ogn-champion-deck-jinx` and its siblings never showed them: US buyers missed The Collection Realm's three
+Origins decks and Trove of Collectibles' Vi. Each champion had a deck in one set only (the set-coded groups of that
+export). A later set that reprises a champion takes that champion OUT of the list, never moves it: a title with no set
+word then names nothing, as before. `tests/sealed-champion-deck-set.test.ts`.

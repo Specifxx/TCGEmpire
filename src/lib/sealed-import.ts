@@ -263,8 +263,8 @@ async function importFeedStores(): Promise<number> {
     const rows = new Map<string, Prisma.SealedListingCreateManyInput>();
     for (const it of items) {
       if (!isTrackableSealedTitle(it.title)) continue;
-      const setCode = setLessGroupKey(it.title) ? null : detectSet(it.title);
       const type = classifySealed(it.title);
+      const setCode = sealedSetCode(it.title, type);
       if (it.priceCents < sealedFloorCents(type)) continue;
       const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(it.title);
       const prev = rows.get(groupKey);
@@ -317,8 +317,8 @@ async function importProductPageStores(): Promise<number> {
         continue;
       }
       if (!isRiftboundSealed(page.title) && !/riftbound/i.test(url)) continue;
-      const setCode = setLessGroupKey(page.title) ? null : detectSet(page.title) ?? detectSet(url.replace(/[-/]/g, " "));
       const type = classifySealed(page.title);
+      const setCode = setLessGroupKey(page.title) ? null : sealedSetCode(page.title, type) ?? detectSet(url.replace(/[-/]/g, " "));
       if (page.priceCents < sealedFloorCents(type)) continue;
       const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(page.title);
       rows.set(groupKey, {
@@ -510,6 +510,58 @@ export function misfiledSetLess(title: string, groupKey: string): boolean {
   return key != null && key !== groupKey;
 }
 
+// CHAMPION DECKS THAT NAME NO SET (2026-11-22, DECISIONS.md "A Champion Deck's champion names its set"). Many stores
+// title a deck "Riftbound Champion Deck - Jinx" or "RIFTBOUND CHAMPION DECK VEX (LIMIT 1)" with no set word, so each
+// fell to a title-derived page of one or two stores (79 store rows on 40 such pages in the 22 Nov export, 5 of them US)
+// while the set's own page (OGN|Champion Deck (Jinx), 82 rows) never showed them. Each champion below has a deck in
+// ONE set only (the set-coded groups of that export), so the champion alone names the set. Exactly one champion, one
+// deck: "Jinx & Vi", "4x Lee Sin Sealed Case" or a lot keep their title page. A champion a later set reprises must be
+// taken out of this list, never moved: then a title without a set word again names nothing.
+export const CHAMPION_DECK_SETS: Readonly<Record<string, string>> = {
+  jinx: "OGN", leesin: "OGN", viktor: "OGN",
+  fiora: "SFD", rumble: "SFD",
+  vex: "UNL", vi: "UNL",
+  tryndamere: "LGC", ashe: "LGC", lux: "LGC", garen: "LGC",
+};
+const ONE_DECK_TYPE = /^Champion Deck \(([^)]+)\)(?: Display)?$/;
+const flatChampion = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
+
+/** The set a Champion Deck title names only through its champion, or null. Pure. */
+export function championDeckSet(title: string, productType: string): string | null {
+  const champ = productType.match(ONE_DECK_TYPE)?.[1];
+  if (!champ || SEVERAL.test(title)) return null;
+  const named = new Set([...title.matchAll(new RegExp(SEALED_DECK_CHAMPIONS.source, "gi"))].map((m) => flatChampion(m[1])));
+  if (named.size !== 1 || !named.has(flatChampion(champ))) return null;
+  return CHAMPION_DECK_SETS[flatChampion(champ)] ?? null;
+}
+
+/** A sealed title's set: none for a SET_LESS_GROUPS product, else the set it names, else its Champion Deck's. Pure. */
+export function sealedSetCode(title: string, productType: string): string | null {
+  if (setLessGroupKey(title)) return null;
+  return detectSet(title) ?? championDeckSet(title, productType);
+}
+
+/** True when a stored set-less row's title now names a set through its champion. Pure. */
+export function misfiledChampionDeck(title: string, setCode: string | null): boolean {
+  return setCode == null && championDeckSet(title, classifySealed(title)) != null;
+}
+
+const CHAMPION_NAME: Readonly<Record<string, string>> = {
+  jinx: "Jinx", leesin: "Lee Sin", viktor: "Viktor", fiora: "Fiora", rumble: "Rumble", vex: "Vex", vi: "Vi",
+  tryndamere: "Tryndamere", ashe: "Ashe", lux: "Lux", garen: "Garen",
+};
+
+/** Where an old title-derived /sealed slug of a one-champion deck goes now (its set's deck page), or null. Pure. The
+ *  champion must sit right before "championdeck" or right after it (then the slug ends, or "limit", "display" or
+ *  "riftbound" follows), so "…championdeckviktor" is never Vi and a slug cut before the name redirects nowhere. */
+export function championDeckSlugRedirect(slug: string): string | null {
+  if (!/^[a-z0-9]+$/.test(slug) || !slug.includes("championdeck") || /case|lots?|setof\d|\d+x|x\d+/.test(slug)) return null;
+  const hits = Object.keys(CHAMPION_DECK_SETS).filter((c) => new RegExp(`championdeck${c}(?:$|limit|display|riftbound)|${c}championdeck`).test(slug));
+  if (hits.length !== 1) return null;
+  const c = hits[0];
+  return sealedSlug(`${CHAMPION_DECK_SETS[c]}|Champion Deck (${CHAMPION_NAME[c]})${/display/.test(slug) ? " Display" : ""}`);
+}
+
 /** A title-derived group key: a SET_LESS_GROUPS key when one fits, else the title's first 40 letters and digits. */
 export function titleGroupKey(title: string): string {
   return setLessGroupKey(title) ?? title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
@@ -560,7 +612,8 @@ const SET_NAME_CASE = /\b(?:origins|spirit\s*forged|unleashed|vendetta|radiance|
 export function classifySealed(title: string): string {
   const t = title.toLowerCase();
   const rawChamp = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim() || title.match(CHAMPIONS)?.[1];
-  const champ = rawChamp ? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
+  // A known champion keeps its one spelling: "Origin LeeSin champion deck" (Mayhem Collectables) is the Lee Sin deck.
+  const champ = rawChamp ? CHAMPION_NAME[flatChampion(rawChamp)] ?? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
   if (PROVING_GROUNDS_2ND.test(title)) return "Proving Grounds 2nd Edition";
   if (/proving\s*grounds/.test(t)) return /\bcase\b/.test(t) ? "Proving Grounds Case" : "Proving Grounds";
   // Legacy's four Champion Decks sold together (2026-11-01): "Legacy - Champion
@@ -799,8 +852,8 @@ export async function importSealed(): Promise<number> {
         const avail = priced.filter((v) => v.available);
         const inStock = avail.length > 0;
         const pool = inStock ? avail : priced;
-        const setCode = setLessGroupKey(title) ? null : detectSet(title);
         const type = classifySealed(title);
+        const setCode = sealedSetCode(title, type);
         // Price-sanity: ignore variants priced implausibly low for the product type —
         // a $1 "deposit"/sample/add-on variant on a real Booster Case, or an outright
         // mis-listing. Taking the raw MIN across all variants otherwise surfaces e.g. a
@@ -1342,7 +1395,7 @@ async function recordUnknownSets(acc: Map<string, UnknownSet>): Promise<void> {
 // scraping, so stale data gets cleaned even when a store didn't refresh.
 export async function cleanupStaleSealed(): Promise<number> {
   const rows = await prisma.sealedListing.findMany({
-    select: { id: true, title: true, retailer: true, productType: true, groupKey: true, country: true, priceCents: true },
+    select: { id: true, title: true, retailer: true, productType: true, groupKey: true, setCode: true, country: true, priceCents: true },
   });
   // Trusted reference per market+product: the cheapest NON-eBay (store/TCGplayer) price.
   const trusted = new Map<string, number>();
@@ -1361,6 +1414,9 @@ export async function cleanupStaleSealed(): Promise<number> {
       // VEN|Bundle (its expansion, not the product), and an eBay row kept a pre-#541 title-derived group alive because
       // the eBay pass searches every group that exists. Its source writes it to the right group on its next read.
       if (r.retailer !== "tcgplayer" && misfiledSetLess(r.title, r.groupKey)) return true;
+      // A Champion Deck naming no set word (2026-11-22): its store writes it to its set's deck page on the next read;
+      // an eBay row in the old title page goes, and the eBay pass then searches the set's page instead.
+      if (r.retailer !== "tcgplayer" && misfiledChampionDeck(r.title, r.setCode)) return true;
       // Price-sanity (every source except TCGplayer's trusted catalogue): drop listings
       // priced implausibly below the trusted price / per-type floor — an accessory, a $1
       // deposit/sample variant, or a mis-listing that escaped the title filter.
