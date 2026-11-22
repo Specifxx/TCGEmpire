@@ -69,6 +69,7 @@ const COLORS: Record<EarningsSourceKey, string> = {
   amazon: "#ff9900",
   adsense: "#fbbc04",
   mediavine: "#34d17e",
+  goaffpro: "#c2410c",
 };
 const DISPLAY = ["AUD", "USD"] as const;
 const TAG_TITLE: Partial<Record<EarningsSourceKey, string>> = { ebay: "eBay", tcgplayer: "TCGplayer", amazon: "Amazon" };

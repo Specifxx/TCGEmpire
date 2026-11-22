@@ -25409,3 +25409,16 @@ so ShareButton's share-for-a-deal A/B test is untouched; event `share { medium: 
 **Why.** On 22 Nov a CA$89.99 Delta Reign ETB pre-order at Cardboard Hero took ten referral orders in 41 minutes, almost none through
 a click we tracked: the store link had been pasted into a restock chat. People share drops anyway; this makes the link they paste ours.
 Owner, 2026-11-23: "apply all these learnings to all the other sites". Read `share` medium `drop` and `share_visit` a week after release.
+
+## 2026-11-23: Cardboard Hero (GoAffPro) on the earnings dashboard
+
+Owner, 2026-11-23: "can we add the cardboard hero earnings to our earning dashboard". `lib/earnings/sources.ts` `fetchGoaffpro`
+reads the partner portal's own API (`api.goaffpro.com/partner/sales`, 100 a page, folded by order id) with the affiliate's
+access token (`GOAFFPRO_ACCESS_TOKEN`, Vercel Production only, set by the owner's `set-goaffpro-token.ps1`; the token carries
+no expiry). It is a stored source like Impact and EPN, refreshed by the earnings cron every three hours.
+
+- A sale counts on the Sydney day of its order, in its own currency (CA$), and stays **pending until the store ships it**
+  (`goaffproState` in `lib/earnings/core.ts`): GoAffPro marks a pre-order "approved" the moment it is placed, but it can
+  still be cancelled. Rejected, cancelled and refunded orders are shown as a check and not counted.
+- **No per-site split.** One referral code (`apthvqnu`) serves every site and GoAffPro gives an affiliate no sub-id, so its
+  earnings go to the site ledger's "No tag" row. `tests/earnings-goaffpro.test.ts`.
