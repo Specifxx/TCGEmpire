@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { markGiveawayEntered } from "./GiveawayPrompt";
 
 // The entry box for /giveaway. The page is static; this island asks /api/giveaway who is looking (after mount, so
 // the page never reads a cookie), and shows the account's entries and the free ways to more (lib/giveaway.ts).
@@ -26,7 +27,11 @@ export function GiveawayEnter({ giveaway, cardHref, maxReferrals }: { giveaway: 
     let live = true;
     fetch("/api/giveaway", { cache: "no-store" })
       .then((r) => r.json())
-      .then((j: Me) => live && setMe(j))
+      .then((j: Me) => {
+        if (!live) return;
+        setMe(j);
+        if (j.entered) markGiveawayEntered(); // the corner card never asks an entrant again
+      })
       .catch(() => live && setMe({ state: "open", signedIn: false }));
     return () => {
       live = false;
@@ -46,6 +51,7 @@ export function GiveawayEnter({ giveaway, cardHref, maxReferrals }: { giveaway: 
       if (r.ok && j.entered) {
         const first = !me?.entered;
         setMe((m) => (m ? { ...m, entered: true, entries: j.entries ?? m.entries, showName: j.showName ?? m.showName } : m));
+        markGiveawayEntered();
         if (first) {
           try {
             (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "giveaway_enter", { giveaway });

@@ -25205,3 +25205,19 @@ six-box case (EUR 600-900), so the page's cheapest price was a pack, and the EU 
 also held four different Trial Decks and a EUR 2,250 promo booster under one name. Checked by running the old and new
 `classifySealed` over every title of the export: only the 24 catch-all titles and one eBay "Nexus Night Booster Pack" change type.
 Titles are in `tests/sealed-catch-all.test.ts`.
+
+## 2026-11-22: Giveaway: on the home page and one corner card
+
+**Decision.** While a giveaway is open (`giveawayState`), the home page shows `GiveawayHomeBanner` straight under the hero, every
+alert email's footer carries one line to `/giveaway` (`giveawayLine` in `lib/email.ts`, UTM `giveaway-footer`), and the layout
+mounts `GiveawayPrompt`, a small corner card (never a modal) whose rules are `shouldShowGiveawayPrompt` in
+`lib/giveaway-prompt.ts`: from a visit's second page, after six quiet seconds, never on `/`, the ad-free pages (giveaway, account,
+sign-in, Premium…) or admin, at most three times two days apart, never after "Don't show again" or after this browser's account
+entered (`GiveawayEnter` marks it). It takes the visit's one interruption: it does not show after the rating card, and the rating
+card does not show after it. Everything stops by itself when the giveaway closes. GA events `giveaway_prompt_show` and
+`giveaway_prompt_click`.
+
+**Why.** Owner, 2026-11-22: "we're not actually, can't find the giveaway. We got to feature it on our homepage ... have a pop-up or
+whatever to enter our giveaway", and he will not promote it himself any more. It was only in the header menu and on /giveaway:
+56 entrants, 103 entries on 21 Nov 22:42 UTC, four days after it opened. The 2026-11-03 rule (one interruption a visit, never on
+arrival) is kept: the card is the giveaway's, the slot is still one. `tests/giveaway-prompt.test.ts`.

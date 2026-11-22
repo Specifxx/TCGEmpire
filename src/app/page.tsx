@@ -10,6 +10,7 @@ import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { HomeFeaturedListing } from "@/components/home/HomeFeaturedListing";
+import { GiveawayHomeBanner } from "@/components/giveaway/GiveawayHomeBanner";
 import { YourCardsToday } from "@/components/home/YourCardsToday";
 import { RIOT_DRAWINGS } from "@/lib/riot-drawings";
 import { EditorialHub } from "@/components/home/EditorialHub";
@@ -340,6 +341,9 @@ export default async function HomePage() {
         freshnessAt={freshnessAt}
         rating={rating}
       />
+
+      {/* The giveaway, right under the hero while it is open (owner, 2026-11-22: "we got to feature it on our homepage"). */}
+      <GiveawayHomeBanner />
 
       {/* "Your cards today" (2026-11-18): an account's watched cards, browser-only, nothing in the server HTML or for visitors. */}
       <YourCardsToday />

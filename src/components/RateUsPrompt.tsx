@@ -6,6 +6,7 @@ import { armNudge, countSessionView } from "@/lib/nudge-runtime";
 import { BUY_CLICK_EVENT } from "@/lib/buy-intent";
 import { useEscapeLayer } from "./ui/Dialog";
 import { RatingReviewForm } from "./RatingReviewForm";
+import { GIVEAWAY_PROMPT_SESSION_KEY } from "@/lib/giveaway-prompt";
 import {
   PRICING_NUDGE_SESSION_KEY,
   RATE_SESSION_KEY,
@@ -55,7 +56,7 @@ function load(now: number): RateState {
 
 /** The Pricing callout already claimed this visit's one interruption. */
 function otherPromptShown(): boolean {
-  return sessionFlag(PRICING_NUDGE_SESSION_KEY);
+  return sessionFlag(PRICING_NUDGE_SESSION_KEY) || sessionFlag(GIVEAWAY_PROMPT_SESSION_KEY); // the giveaway card took the visit's slot
 }
 
 function sessionFlag(key: string): boolean {

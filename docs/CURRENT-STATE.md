@@ -316,6 +316,9 @@ longer lands on its entry.
   on return from a store tab from the second page of a visit, at most twice 30
   days apart, and is the one uninvited opinion ask
   ([2026-11-03](../DECISIONS.md#one-interruption-per-visit-never-on-arrival));
+  while a giveaway is open its corner card shares that one slot (from a visit's second page, at most three times two
+  days apart, never on the home page, giveaway, account or Premium pages, never after an entry), and the home page
+  carries its banner under the hero ([2026-11-22](../DECISIONS.md#2026-11-22-giveaway-on-the-home-page-and-one-corner-card));
   a tapped star counts even when the form is closed unsent ([2026-10-28](../DECISIONS.md#L20608)); one rating-and-review form everywhere (corner card,
   footer panel, a "Rate us" row at the end of every page except the home pages (2026-11-13), /feedback), reviews
   shown unless unticked, still admin-approved ([2026-10-27](../DECISIONS.md#L20240)); no floating button ([2026-10-27](../DECISIONS.md#L20201)); the homepage hero and the
@@ -673,7 +676,7 @@ longer lands on its entry.
   Basket's preview (`limit:basket`, leading with the list's own saving) and
   the tool walls — the header's Pricing callout (`PricingNudge`) and the
   monthly→annual corner card (`AnnualSwitchNudge`) are GONE since 11-03 (owner:
-  no Pro or sign-up sliders; the rating card is the only uninvited prompt)
+  no Pro or sign-up sliders; the rating card is the only uninvited prompt, beside an open giveaway's card since 11-22)
   ([2026-11-03](../DECISIONS.md#the-trial-on-the-pro-page-and-no-pro-or-sign-up-sliders-at-all-2026-11-03));
   the corner `PremiumSlideIn` is gone — and a tick on a set page (the same
   `limit:portfolio` panel, reworded for a set). The header carries the shiny

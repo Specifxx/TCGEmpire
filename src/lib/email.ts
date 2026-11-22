@@ -26,6 +26,7 @@ import { issueNoun } from "./price-report";
 import { RADIANCE_RELEASE_DATE } from "./sets/radiance";
 import type { AlertActionLinks } from "./alert-actions";
 import { DROP_MIN_CENTS, DROP_MIN_PCT } from "./alert-thresholds";
+import { CURRENT_GIVEAWAY, giveawayState } from "./giveaway";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -681,6 +682,17 @@ export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro:
 // so the server's Invites list shows how many members the alert emails bring.
 const DISCORD_EMAIL_INVITE = "https://discord.gg/cdJEpmuTW2";
 
+// The giveaway, one line in every alert email's footer while it is open (owner, 2026-11-22: "we need more people to sign
+// up to our giveaway"; lib/giveaway-prompt.ts). Gone by itself once it closes.
+function giveawayLine(now: Date = new Date()): { html: string; text: string } | null {
+  if (giveawayState(CURRENT_GIVEAWAY, now) !== "open") return null;
+  const url = `${SITE_URL}/giveaway?utm_source=email&utm_medium=email&utm_campaign=giveaway-footer`;
+  return {
+    html: `Free giveaway: <a href="${escapeHtml(url)}" style="color:#9aa4b2;text-decoration:underline">${escapeHtml(CURRENT_GIVEAWAY.title)}</a> (worldwide, closes 14 Dec).<br/>`,
+    text: `Free giveaway, ${CURRENT_GIVEAWAY.title} (worldwide, closes 14 Dec): ${url}`,
+  };
+}
+
 // Footer for every alert email: why it came, how often, and the two separate
 // choices — pause (keeps the watchlist) and delete.
 function alertFooter(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): string {
@@ -690,6 +702,7 @@ function alertFooter(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): str
     <a href="${escapeHtml(links.pause)}" style="color:#9aa4b2;text-decoration:underline">Pause alert emails (your watchlist is kept)</a>
     &nbsp;·&nbsp; <a href="${escapeHtml(links.deleteAll)}" style="color:#9aa4b2;text-decoration:underline">Delete all my watches</a><br/>
     Want restocks sooner? <a href="${escapeHtml(DISCORD_EMAIL_INVITE)}" style="color:#9aa4b2;text-decoration:underline">Our Discord posts sealed restocks and price drops twice a day</a>.<br/>
+    ${giveawayLine()?.html ?? ""}
     RiftCompare · Riftbound card price comparison.
   </td></tr>`;
 }
@@ -699,6 +712,7 @@ function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">):
     `Pause alert emails (your watchlist is kept): ${links.pause}`,
     `Delete all my watches: ${links.deleteAll}`,
     `Restocks sooner, free on our Discord: ${DISCORD_EMAIL_INVITE}`,
+    ...(giveawayLine() ? [giveawayLine()!.text] : []),
     MAILING_ADDRESS,
   ].join("\n");
 }
