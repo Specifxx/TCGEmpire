@@ -2,6 +2,8 @@
 
 import { GiveawayPanel, type Me, type PanelApi } from "./GiveawayPanel";
 import { markGiveawayEntered } from "./GiveawayPrompt";
+import { DISCORD_URL } from "@/lib/site";
+import { TELEGRAM_URL } from "@/components/DiscordCta";
 
 // RiftCompare's adapter for the portable entry panel: the static /giveaway page asks /api/giveaway who is looking after mount
 // (so the page never reads a cookie), and every action posts there (lib/giveaway-server.ts).
@@ -24,6 +26,19 @@ export function GiveawayEnter({ giveaway, cardHref, closesText }: { giveaway: st
     <GiveawayPanel
       api={api}
       closesText={closesText}
+      after={
+        <>
+          <b>While you wait:</b> get restocks and price drops first in our free{" "}
+          <a href={DISCORD_URL} className="underline" rel="noopener" target="_blank">
+            Discord
+          </a>{" "}
+          or{" "}
+          <a href={TELEGRAM_URL} className="underline" rel="noopener" target="_blank">
+            Telegram
+          </a>{" "}
+          deal hub.
+        </>
+      }
       premiumHref="/premium"
       watchHint={
         <>

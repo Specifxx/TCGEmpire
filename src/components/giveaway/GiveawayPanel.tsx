@@ -39,8 +39,11 @@ export function GiveawayPanel({
   premiumHref,
   watchHint,
   closesText,
+  after,
 }: {
   api: PanelApi;
+  /** Shown under an entrant's points: the site's next steps (its Discord and Telegram deal hub). */
+  after?: ReactNode;
   /** What a signed-out visitor sees: the site's own sign-in button. */
   signIn: ReactNode;
   premiumHref?: string;
@@ -264,6 +267,7 @@ export function GiveawayPanel({
         </label>
         <span className="opacity-70">{open ? `Closes ${closesText}` : "Entries closed"}</span>
       </div>
+      {after && <div className="mt-4 border-t border-white/10 pt-3 text-sm">{after}</div>}
       {err}
     </div>
   );
