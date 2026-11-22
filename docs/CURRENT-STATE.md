@@ -361,7 +361,9 @@ longer lands on its entry.
   14-day cohorts have matured (late November). Since 2026-11-21 `/admin/premium-offer` is the one
   Premium email page: the showcase email (live Deal Finder snippet, feature list, Premium at its own
   prices, no trial, no affiliate links) to every non-paying account, newest first, plus the win-back console.
-  [2026-11-21](../DECISIONS.md#2026-11-21-one-premium-email-page-the-showcase-email-with-a-live-deal-finder-snippet-newest-members-first) `/premium/welcome` leads with
+  [2026-11-21](../DECISIONS.md#2026-11-21-one-premium-email-page-the-showcase-email-with-a-live-deal-finder-snippet-newest-members-first)
+  It is the ONE marketing send let past `MARKETING_EMAIL_OFF` (`MARKETING_ALLOWED`); every other promotional
+  sender stays off. [2026-11-22](../DECISIONS.md#2026-11-22-the-premium-email-is-the-one-marketing-send-turned-back-on) `/premium/welcome` leads with
   watching a card until the account has one. [2026-10-12](../DECISIONS.md#L16934)
 - **Superseded 2026-10-12, kept for its mechanics: the $1 first month, no intro (2026-09-30, owner: "Can we do $1 free trial for both
   pro and premium please? And the trial is for the first month?"):** a PAID trial on
