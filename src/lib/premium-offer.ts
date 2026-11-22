@@ -36,7 +36,10 @@
 // on. `via: "resend"` is available for a small audience or if Brevo is down.
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
-import { PRICE_DROP_SRC, getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail, type PremiumOfferEmailOpts } from "./email";
+import { PRICE_DROP_CAMPAIGN, PRICE_DROP_SRC, getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail, type PremiumEmailDeal, type PremiumOfferEmailOpts } from "./email";
+import { defaultTcgBuyKeys, getArbitrageVsTcgplayer } from "./arbitrage";
+import { cardHref } from "./card-url";
+import { formatMoney } from "./format";
 import { NOT_SEED_WHERE, isPremium, isSeedEmail } from "./premium";
 import { SITE_URL } from "./site";
 
@@ -48,8 +51,15 @@ import { SITE_URL } from "./site";
 // User.priceDropEmailSentAt; a stamp from before PREMIUM_OFFER_SINCE belongs to
 // an earlier campaign and does NOT count as sent for this one, so every
 // account it reached is eligible for this one, once.
-export const PREMIUM_OFFER_CAMPAIGN = "feedback-pro-2026-10";
-export const PREMIUM_OFFER_SINCE = new Date("2026-10-27T00:00:00Z");
+//
+// 2026-11-21: the campaign is the PREMIUM SHOWCASE email (owner: "one page where
+// I can send a premium ad … a snippet of the deal finder or scanner … lists the
+// feature … newest members first"). A stamp from before PREMIUM_OFFER_SINCE
+// belongs to the feedback email, so everyone it reached can get this one, once.
+// NEWEST FIRST: loadUsers reads accounts newest first and priceDropAudience keeps
+// that order, so each batch goes to the most recent sign-ups still pending.
+export const PREMIUM_OFFER_CAMPAIGN = "premium-showcase-2026-11";
+export const PREMIUM_OFFER_SINCE = new Date("2026-11-21T22:00:00Z");
 
 export type PremiumOfferProvider = "brevo" | "resend";
 
@@ -184,12 +194,15 @@ export interface PriceDropDeps {
   providerConfigured(via: PremiumOfferProvider): boolean;
   lastError(): string | null;
   sleep(ms: number): Promise<void>;
+  /** Today's Deal Finder rows for the email's snippet; read once per run. */
+  loadDeals?(): Promise<PremiumEmailDeal[]>;
 }
 
 export const prismaPriceDropDeps: PriceDropDeps = {
   loadUsers: () =>
     prisma.user.findMany({
       where: NOT_SEED_WHERE,
+      orderBy: { createdAt: "desc" }, // newest members first (owner, 2026-11-21)
       select: {
         id: true,
         email: true,
@@ -219,7 +232,36 @@ export const prismaPriceDropDeps: PriceDropDeps = {
   providerConfigured: (via) => (via === "brevo" ? isBrevoEnabled() : isEmailEnabled()),
   lastError: () => getLastEmailError(),
   sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+  loadDeals: () => loadEmailDeals(),
 };
+
+// The email's Deal Finder snippet: the top rows of the US "vs TCGplayer" list,
+// ranked by the tool's own loader (self-cached; never wrap it in another cache),
+// store rows only (no eBay listing is named or linked in email). A failed read is
+// an empty list, and the email then goes out without the snippet.
+export async function loadEmailDeals(take = 3): Promise<PremiumEmailDeal[]> {
+  try {
+    const country = "US" as const;
+    const buy = defaultTcgBuyKeys(country).filter((k) => !k.startsWith("ebay"));
+    const page = await getArbitrageVsTcgplayer(country, { buy, sort: "saving", page: 1, pageSize: take * 2 });
+    const utm = `src=${PRICE_DROP_SRC}&utm_source=email&utm_medium=email&utm_campaign=${PRICE_DROP_CAMPAIGN}`;
+    return page.items
+      .filter((i) => !i.buyStore.startsWith("ebay") && i.belowPct > 0)
+      .slice(0, take)
+      .map((i) => ({
+        name: i.card.name,
+        setName: i.card.setName,
+        href: `${SITE_URL}${cardHref(i.card)}?${utm}`,
+        imageUrl: i.card.imageThumbUrl ?? i.card.imageUrl ?? null,
+        price: formatMoney(i.buyCents, "USD"),
+        store: i.buyStoreName,
+        market: formatMoney(i.marketCents, "USD"),
+        belowPct: i.belowPct,
+      }));
+  } catch {
+    return [];
+  }
+}
 
 export function announcementUnsubUrls(token: string): { unsubUrl: string; oneClickUrl: string } {
   const t = encodeURIComponent(token);
@@ -275,6 +317,8 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDr
   if (dryRun) return { ...base, sent: 0, failed: 0, remaining: a.pending.length };
 
   const batch = a.pending.slice(0, limit);
+  // One snippet for the whole run, so every email in a batch shows the same deals.
+  const deals = batch.length && deps.loadDeals ? await deps.loadDeals().catch(() => [] as PremiumEmailDeal[]) : [];
   let sent = 0;
   let failed = 0;
   const errors = new Set<string>();
@@ -295,7 +339,7 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts, deps: PriceDr
     }
 
     const ok = await deps
-      .send(r.email, { displayName: r.displayName, ...announcementUnsubUrls(token), via })
+      .send(r.email, { displayName: r.displayName, ...announcementUnsubUrls(token), via, deals })
       .catch(() => false);
 
     if (ok) {
@@ -394,9 +438,11 @@ export async function sendPremiumOfferTest(
   to: string,
   via: PremiumOfferProvider = "brevo",
   send: (to: string, opts: PremiumOfferEmailOpts) => Promise<boolean> = sendPremiumOfferEmail,
+  loadDeals: () => Promise<PremiumEmailDeal[]> = loadEmailDeals,
 ): Promise<{ ok: boolean; error?: string }> {
   const configured = via === "brevo" ? isBrevoEnabled() : isEmailEnabled();
   if (!configured) return { ok: false, error: `${via === "brevo" ? "BREVO_API_KEY" : "RESEND_API_KEY"} is not set` };
-  const ok = await send(to, { displayName: "Test Recipient", ...announcementUnsubUrls("test"), via }).catch(() => false);
+  const deals = await loadDeals().catch(() => [] as PremiumEmailDeal[]);
+  const ok = await send(to, { displayName: "Test Recipient", ...announcementUnsubUrls("test"), via, deals }).catch(() => false);
   return ok ? { ok: true } : { ok: false, error: getLastEmailError() ?? "the mail provider rejected the test email" };
 }
