@@ -26,6 +26,10 @@ import {
   type EarningsSourceKey,
   type SourceResult,
   type StripeTxn,
+  goaffproDays,
+  goaffproState,
+  uniqueGoaffpro,
+  type GoaffproSale,
 } from "./core";
 import { AMAZON_STORES, amazonDays, amazonTagDays } from "./amazon";
 import { STORED_OVERDUE_MS, readStored, writeStored } from "./stored";
@@ -329,6 +333,39 @@ const fetchAmazon: Fetcher = async () => {
   };
 };
 
+// ── Cardboard Hero via GoAffPro (owner, 2026-11-23) ─────────────────────────
+// The partner portal's own API (cardboardhero.goaffpro.com reads it): the
+// affiliate's access token as a Bearer, which does not expire. The token lives
+// only in Vercel (GOAFFPRO_ACCESS_TOKEN), set by the owner's script. Paged 100 at
+// a time, folded by order id, at most 20 pages.
+const fetchGoaffpro: Fetcher = async () => {
+  const token = (process.env.GOAFFPRO_ACCESS_TOKEN ?? "").trim();
+  if (!token) return notConfigured("Set GOAFFPRO_ACCESS_TOKEN (the Cardboard Hero partner portal's access token) with the owner's set-goaffpro.ps1.");
+  const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+  const all: GoaffproSale[] = [];
+  let total = 0;
+  for (let page = 0; page < 20; page++) {
+    const json = (await getJson(`https://api.goaffpro.com/partner/sales?limit=100&offset=${page * 100}`, { headers })) as { data?: GoaffproSale[]; total?: number } | null;
+    const rows = Array.isArray(json?.data) ? json!.data : [];
+    total = Number(json?.total) || total;
+    const before = uniqueGoaffpro(all).length;
+    all.push(...rows);
+    if (rows.length < 100 || uniqueGoaffpro(all).length === before || uniqueGoaffpro(all).length >= total) break;
+  }
+  const sales = uniqueGoaffpro(all).filter((s) => String(s.order_date ?? "").slice(0, 10) >= EARNINGS_SINCE);
+  const n = (st: string) => sales.filter((s) => goaffproState(s) === st).length;
+  return {
+    status: "ok",
+    days: goaffproDays(sales),
+    checks: [
+      { label: `Shipped (${n("paid")} orders)`, counted: true, days: goaffproDays(sales, "paid") },
+      { label: `Pending: not shipped yet, pre-orders included (${n("pending")} orders)`, counted: true, days: goaffproDays(sales, "pending") },
+      { label: `Rejected or cancelled (${n("rejected")} orders, not counted)`, counted: false, days: goaffproDays(sales, "rejected") },
+    ],
+    detail: `${sales.length} referral orders, 2% commission in CA$. One referral code serves every site, so there is no per-site split. Pending until the store ships the order.`,
+  };
+};
+
 const FETCHERS: Record<EarningsSourceKey, Fetcher> = {
   stripe: fetchStripe,
   tcgplayer: fetchImpact,
@@ -336,12 +373,13 @@ const FETCHERS: Record<EarningsSourceKey, Fetcher> = {
   amazon: fetchAmazon,
   adsense: fetchAdsense,
   mediavine: fetchMediavine,
+  goaffpro: fetchGoaffpro,
 };
 
 export const SOURCE_KEYS = Object.keys(FETCHERS) as EarningsSourceKey[];
 
 /** The sources read from a reporting API, whose answers are stored (lib/earnings/stored.ts). */
-export const STORED_SOURCES: readonly EarningsSourceKey[] = ["stripe", "tcgplayer", "ebay", "adsense"];
+export const STORED_SOURCES: readonly EarningsSourceKey[] = ["stripe", "tcgplayer", "ebay", "adsense", "goaffpro"];
 const isStored = (key: EarningsSourceKey) => STORED_SOURCES.includes(key);
 
 /** Ask the source itself. On failure the last good figures stay, marked as an error. */

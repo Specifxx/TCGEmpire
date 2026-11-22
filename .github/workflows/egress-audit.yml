@@ -68,8 +68,8 @@ jobs:
     # Two sequential samples of up to ~20 minutes each, plus setup.
     timeout-minutes: 55
     env:
-      DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
-      DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+      DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+      DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
       HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
       RH10: ${{ secrets.RH10 || vars.RH10 }}
       # Empty on a scheduled run (no inputs); the steps default it to 20 in the
@@ -120,7 +120,7 @@ jobs:
         run: |
           set -o pipefail
           if [ -z "${DATABASE_URL:-}" ]; then
-            echo "::error::RM12 is not set for Actions — nothing to audit."
+            echo "::error::RM9 is not set for Actions — nothing to audit."
             exit 1
           fi
           SAMPLE="${SAMPLE:-20}"
@@ -129,7 +129,7 @@ jobs:
           echo "npx tsx scripts/audit-egress.ts $ARGS"
           npx tsx scripts/audit-egress.ts $ARGS | tee operational.txt
           {
-            echo "## Operational project (RM12)"
+            echo "## Operational project (RM9)"
             echo '```'
             cat operational.txt
             echo '```'

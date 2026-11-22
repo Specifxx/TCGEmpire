@@ -25410,6 +25410,29 @@ so ShareButton's share-for-a-deal A/B test is untouched; event `share { medium: 
 a click we tracked: the store link had been pasted into a restock chat. People share drops anyway; this makes the link they paste ours.
 Owner, 2026-11-23: "apply all these learnings to all the other sites". Read `share` medium `drop` and `share_visit` a week after release.
 
+## 2026-11-23: Cardboard Hero (GoAffPro) on the earnings dashboard
+
+Owner, 2026-11-23: "can we add the cardboard hero earnings to our earning dashboard". `lib/earnings/sources.ts` `fetchGoaffpro`
+reads the partner portal's own API (`api.goaffpro.com/partner/sales`, 100 a page, folded by order id) with the affiliate's
+access token (`GOAFFPRO_ACCESS_TOKEN`, Vercel Production only, set by the owner's `set-goaffpro-token.ps1`; the token carries
+no expiry). It is a stored source like Impact and EPN, refreshed by the earnings cron every three hours.
+
+- A sale counts on the Sydney day of its order, in its own currency (CA$), and stays **pending until the store ships it**
+  (`goaffproState` in `lib/earnings/core.ts`): GoAffPro marks a pre-order "approved" the moment it is placed, but it can
+  still be cancelled. Rejected, cancelled and refunded orders are shown as a check and not counted.
+- **No per-site split.** One referral code (`apthvqnu`) serves every site and GoAffPro gives an affiliate no sub-id, so its
+  earnings go to the site ledger's "No tag" row. `tests/earnings-goaffpro.test.ts`.
+## 2026-11-22: Operational database moves RM12 -> RM9 before RM12's transfer allowance runs out
+
+Owner, 2026-11-22 (decision card: "Yes, move it now"). Ops monitor at 15:21 UTC: RM12 had used 3.03 of its 5 GB monthly
+transfer at about 0.38 GB a day, so it would run out around 27 Nov, four days before the 1 Dec reset; its compute (41 of 100
+CU-hours) would have followed by about 1 Dec. RM9 (last live 2026-10-17..10-25) had used 0.00 GB and 0.1 CU-hours this
+period by the Neon API, and probe-databases found it reachable and behind RM12 on every table. `migrate-main-db-rm12-to-rm9`
+(the RM11 -> RM12 step with the names moved along; the rm9-to-rm10 and rm8-to-rm9 legacy steps dropped to keep
+maintenance.yml under the 450 KB test) copied it with every table matching (User 756, RetailerPrice 240,703), and runs once
+more just before this commit goes live. `OPERATIONAL_VARS = ["RM9"]`; RM12 stays untouched as the rollback. It rides the
+normal daily release, not an urgent one: the deadline is days away. The burn is still the one CURRENT-STATE names.
+
 ## Giveaway corner card: ✕ hides it for a week (2026-11-22)
 
 Product & UX's clutter budget (rule 2): a dismissed prompt stays away for 7 days. `GIVEAWAY_PROMPT_GAP_MS` goes from two

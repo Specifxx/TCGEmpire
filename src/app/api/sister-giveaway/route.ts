@@ -5,6 +5,7 @@ import { escapeHtml, sendEmail } from "@/lib/email";
 import {
   EMAIL_SHAPE,
   memberFor,
+  sisterSignupSource,
   premiumSiteForOrigin,
   signEmailLinkCode,
   signPremiumSession,
@@ -104,7 +105,7 @@ export async function POST(req: Request) {
     if (site === OP_SITE && body?.code !== undefined) {
       const proved = await verifyEmailLinkCode(body.code, site);
       if (!proved) return NextResponse.json({ error: "That link has expired. Ask for a new one." }, { status: 401, headers });
-      const m = await memberFor(proved.trim().toLowerCase());
+      const m = await memberFor(proved.trim().toLowerCase(), null, sisterSignupSource(site.key, "giveaway"));
       token = await signPremiumSession(site, m.email);
     }
     const email = await verifyPremiumSession(token, site);

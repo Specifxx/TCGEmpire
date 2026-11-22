@@ -27,8 +27,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
-      DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+      DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+      DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -43,7 +43,7 @@ jobs:
           if [ -z "$slug" ]; then echo "No set is in its reveal season today: nothing to do."; else echo "Reveal season: $slug"; fi
       - if: steps.window.outputs.slug != ''
         run: |
-          if [ -z "${DATABASE_URL:-}" ]; then echo "::error::RM12 is not visible to Actions."; exit 1; fi
+          if [ -z "${DATABASE_URL:-}" ]; then echo "::error::RM9 is not visible to Actions."; exit 1; fi
           npx prisma generate
           npm i --no-save playwright
           npx playwright install --with-deps chromium
