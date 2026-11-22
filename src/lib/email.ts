@@ -81,7 +81,8 @@ export interface SendEmailExtras {
 // win-back and checkout-recovery mail stay off (DECISIONS.md, 2026-11-22). It keeps its opt-out link,
 // List-Unsubscribe headers and the announcement opt-out list.
 export type MarketingCampaign = "premium-offer" | "watch-recap";
-export const MARKETING_ALLOWED: ReadonlySet<MarketingCampaign> = new Set(["premium-offer"]);
+// Bill, 2026-11-22 (decision card): "Yes, send it" for the one-off watchlist recap to dormant accounts.
+export const MARKETING_ALLOWED: ReadonlySet<MarketingCampaign> = new Set(["premium-offer", "watch-recap"]);
 
 // Bill, 2026-11-09: email is for accounts, billing and the alerts people asked for. Every promotional,
 // news or announcement send passes `marketing: true` and is refused here, whichever provider carries it.

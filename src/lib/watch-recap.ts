@@ -13,9 +13,9 @@
 // without both points shows today's price with no change, and an account with no priced card
 // at all is skipped, never sent an empty email.
 //
-// SENDING. A marketing send (MARKETING_EMAIL_OFF): it goes out only once the owner lets the
-// "watch-recap" campaign through MARKETING_ALLOWED. Until then every send is refused and counts
-// as failed, and nothing is stamped. The test send to the owner works the same way.
+// SENDING. A marketing send (MARKETING_EMAIL_OFF): the owner let the "watch-recap" campaign
+// through MARKETING_ALLOWED on 2026-11-22. A refused or failed send counts as failed and stamps
+// nothing, so it stays pending.
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
 import { NOT_SEED_WHERE, isSeedEmail } from "./premium";
