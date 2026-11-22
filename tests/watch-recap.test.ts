@@ -70,7 +70,7 @@ test("the email: escaped, opt-out and one-click headers, only our links, and not
   assert.equal(e.headers["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
   for (const m of e.html.matchAll(/href="([^"]+)"/g)) assert.equal(new URL(m[1]).hostname, "riftcompare.com");
   assert.equal(watchRecapSubject([]), "Your watched cards, priced today");
-  assert.ok(!MARKETING_ALLOWED.has("watch-recap"), "sends only once the owner lets this campaign through");
+  assert.ok(MARKETING_ALLOWED.has("watch-recap"), "the owner let this campaign through (2026-11-22)");
   const route = readFileSync("src/app/api/cron/watch-recap/route.ts", "utf8");
   assert.match(route, /if \(!secret\) return false;/);
   assert.match(route, /const dryRun = p\.get\("dry"\) !== "0";/);

@@ -30,8 +30,8 @@ test("no marketing workflow or Vercel cron is scheduled", () => {
   assert.doesNotMatch(vj, /cron\/(newsletter|user-digest)/);
 });
 
-test("the Premium email is the one campaign let through (Bill, 2026-11-22); everything else stays refused", async () => {
-  assert.deepEqual([...MARKETING_ALLOWED], ["premium-offer"]);
+test("the Premium email and the watch recap are the only campaigns let through (Bill, 2026-11-22); everything else stays refused", async () => {
+  assert.deepEqual([...MARKETING_ALLOWED], ["premium-offer", "watch-recap"]);
   const src = readFileSync("src/lib/email.ts", "utf8");
   // Only sendPremiumOfferEmail names the campaign.
   assert.equal(src.match(/campaign: "premium-offer"/g)?.length, 1);
