@@ -25356,3 +25356,12 @@ deciding?" with the Watch button and "I bought it: add to my collection" (signed
 **Why.** A watch or a collection entry is what brings a visitor back (an alert, a value to check), and the moment just after a
 buy click is when the card matters most to them. It stays inside the no-pop-up rule because it is part of the page, and the
 card page stays one cached copy: everything is client-side (`tests/buy-followup.test.ts`).
+
+## Giveaway: OP Compare enters by email (2026-11-22)
+
+OP Compare has its own accounts, so it cannot hand us a RiftCompare session. For its giveaway only,
+`/api/sister-giveaway` accepts the exact origin `https://opcompare.app` and two extra bodies: `{method:"email", email}`
+mails a one-time sign-in link (the same signed code as email sign-in, `signEmailLinkCode`) to `opcompare.app/giveaway#c=…`,
+capped at 3 an hour per address and 6 per IP; `{code}` verifies it, finds or makes the RiftCompare account and returns a
+premium-session token, which the OP page keeps in localStorage and posts like any sister. OP stores no address. The
+`op` entry's url is `https://opcompare.app` (it was wrongly `.com`).
