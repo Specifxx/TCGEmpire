@@ -173,7 +173,7 @@
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM12"] as const;
+export const OPERATIONAL_VARS = ["RM9"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.

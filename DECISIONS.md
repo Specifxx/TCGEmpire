@@ -25422,3 +25422,13 @@ no expiry). It is a stored source like Impact and EPN, refreshed by the earnings
   still be cancelled. Rejected, cancelled and refunded orders are shown as a check and not counted.
 - **No per-site split.** One referral code (`apthvqnu`) serves every site and GoAffPro gives an affiliate no sub-id, so its
   earnings go to the site ledger's "No tag" row. `tests/earnings-goaffpro.test.ts`.
+## 2026-11-22: Operational database moves RM12 -> RM9 before RM12's transfer allowance runs out
+
+Owner, 2026-11-22 (decision card: "Yes, move it now"). Ops monitor at 15:21 UTC: RM12 had used 3.03 of its 5 GB monthly
+transfer at about 0.38 GB a day, so it would run out around 27 Nov, four days before the 1 Dec reset; its compute (41 of 100
+CU-hours) would have followed by about 1 Dec. RM9 (last live 2026-10-17..10-25) had used 0.00 GB and 0.1 CU-hours this
+period by the Neon API, and probe-databases found it reachable and behind RM12 on every table. `migrate-main-db-rm12-to-rm9`
+(the RM11 -> RM12 step with the names moved along; the rm9-to-rm10 and rm8-to-rm9 legacy steps dropped to keep
+maintenance.yml under the 450 KB test) copied it with every table matching (User 756, RetailerPrice 240,703), and runs once
+more just before this commit goes live. `OPERATIONAL_VARS = ["RM9"]`; RM12 stays untouched as the rollback. It rides the
+normal daily release, not an urgent one: the deadline is days away. The burn is still the one CURRENT-STATE names.
