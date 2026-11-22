@@ -17,7 +17,7 @@ const schema = z.object({
   email: z.string().trim().toLowerCase().email().max(200),
   // The card ids to watch (the user's wishlist). Capped to keep one request cheap.
   cardIds: z.array(z.string().min(1)).min(1).max(500),
-  market: z.enum(["AU", "US", "UK", "SG", "CA", "EU"]).default("AU"),
+  market: z.enum(["AU", "US", "UK", "SG", "CA", "EU"]).default("US"),
 });
 
 // Subscribe an email to price-drop alerts for a set of wishlisted cards. No account
