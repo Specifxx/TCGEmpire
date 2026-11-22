@@ -25356,3 +25356,12 @@ deciding?" with the Watch button and "I bought it: add to my collection" (signed
 **Why.** A watch or a collection entry is what brings a visitor back (an alert, a value to check), and the moment just after a
 buy click is when the card matters most to them. It stays inside the no-pop-up rule because it is part of the page, and the
 card page stays one cached copy: everything is client-side (`tests/buy-followup.test.ts`).
+
+## 2026-11-22: The watchlist recap is let through: the owner said yes
+
+**What.** Bill answered the decision card "Send dormant members a one-off email with their watched cards' price moves?" with
+"Yes, send it". `watch-recap` joins `premium-offer` in `MARKETING_ALLOWED`; nothing else changes. `MARKETING_EMAIL_OFF` stays
+true and every other marketing send stays refused (`tests/email-policy.test.ts` pins the two names).
+
+**How it is sent.** After the release: one test to the owner's address, then batches through `watch-recap-send.yml`, sharing
+Brevo's 300 a day with the Premium email batches. It is one-off: each account is stamped once and never sent it again.
