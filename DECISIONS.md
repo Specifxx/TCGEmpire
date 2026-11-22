@@ -25222,3 +25222,17 @@ admin home has one tile; `/admin/premium-winback` still works).
 
 **Why.** Every link is still riftcompare.com (card pages, tools, checkout); TCGplayer is named as the market reference,
 never linked, and no eBay listing is named, because eBay Partner Network does not allow its links in email.
+
+## 2026-11-22: The Premium email is the one marketing send turned back on
+
+**What.** Bill: "it says marketing email is switched off from the 9th of November. So can we please fix that and deploy
+urgently … let's send like 2 batches." `MARKETING_EMAIL_OFF` stays true; `sendEmail` / `sendEmailBrevo` now let through a
+marketing send that names a campaign in `MARKETING_ALLOWED`, and the only one is `premium-offer` (the Premium showcase
+email, `/admin/premium-offer`). The newsletter, digests, welcome, release-day, win-back and checkout-recovery mail stay
+off (`tests/email-policy.test.ts`). The email keeps its opt-out link, one-click List-Unsubscribe and the announcement
+opt-out list. `premium-offer-send.yml` (dispatch only, never scheduled) asks `/api/cron/premium-offer` for one batch, so
+an agent can run the owner's batches without the browser.
+
+**Why.** Turning the whole flag off would restart every promotional sender at once; the 2026-11-09 entry asks that each
+one be brought back by its own decision. The 90 sends that failed under the flag were never stamped, so they are still
+pending and go first.
