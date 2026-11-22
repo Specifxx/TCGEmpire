@@ -90,3 +90,10 @@ test("the Monday report's sign-up lines are counts only", () => {
   assert.match(lines[2]!, /^None yet: /);
   assert.ok(!lines.join(" ").includes("@"));
 });
+
+test("the confirm page ASKS for the weekly email with one button; it never subscribes by itself", () => {
+  const src = readFileSync("src/app/api/sister-alerts/confirm/route.ts", "utf8");
+  assert.match(src, /action="\/api\/sister-alerts\/manage"/);
+  assert.match(src, /hidden\("weekly", site\.key\)/);
+  assert.doesNotMatch(src, /sisterDigest\.(create|upsert)/, "only the manage route's POST, after the click, subscribes");
+});
