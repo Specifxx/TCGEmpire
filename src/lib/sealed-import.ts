@@ -15,7 +15,7 @@ import { withLiveStock } from "./preorder-live-stock";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { fetchHtmlStoreProducts } from "./storefront-html";
 import { isShopify, withShopifyVariant } from "./checkout-link";
-import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents, ebaySpentThisRun, isGradedListing } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents, ebaySpentThisRun, isGradedListing, SEALED_DECK_CHAMPIONS } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { COUNTRY_LIST, DEFAULT_COUNTRY, currencyOf, isoCountry, type Country } from "./country";
@@ -545,7 +545,8 @@ export function setLessSlugRedirect(slug: string): string | null {
 // Tryndamere, Ashe, Lux and Garen (Riot's rundown), and stores already list
 // them ("Riftbound Legacy Champion Deck Ashe English (PRESALE)"). Without them
 // two different decks would share one "LGC|Champion Deck" group and one price.
-const CHAMPIONS = /\b(Lee\s*Sin|Tryndamere|Viktor|Rumble|Fiora|Garen|Annie|Ashe|Lux|Master\s*Yi|Jinx|Vex|Vi)\b/i;
+// The list lives in ebay.ts since 2026-11-22: the eBay sealed search uses it to refuse another champion's deck.
+const CHAMPIONS = SEALED_DECK_CHAMPIONS;
 
 // The sealed types whose identity a listing's OWN title can be trusted to
 // state, used by the eBay pass to reject a result that belongs to a different

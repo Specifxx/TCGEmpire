@@ -25317,3 +25317,17 @@ on `STAR_FRIEND_CHECKINS` (3) days of the same giveaway (`liveWeights` in `lib/g
 the amount ... we should give more incentives for premium." A Premium-only bonus would let a purchase buy chances, which breaks
 "no purchase necessary"; the free route (three daily check-ins) earns exactly the same, so the bonus still pushes Premium without
 selling entries. `tests/giveaway.test.ts`.
+
+## 2026-11-22: An eBay sealed listing must be ONE of the product searched for
+
+**Decision.** `searchEbaySealed` refuses, through `wrongSealedEbayProduct` in `lib/ebay.ts`, a result that its own title says is
+another product: a Champion Deck naming no or another champion (only when the group's champion is a real one, so TCGplayer's
+"Champion Deck (Set 1)" keeps eBay), "BRICK ONLY", an "open pack/box", a lot of 100+ cards, a PCG slab, and for single packs,
+decks, bundles, box sets, starter sets, tins, Proving Grounds and vaults a stated "set/bundle/lot of N" (packs and decks also
+"Nx" and "N packs"). The champion list moved to `SEALED_DECK_CHAMPIONS`, shared with `classifySealed`.
+
+**Why.** The 21 Nov export filed eBay AU's Origins Jinx deck as the Lee Sin deck's cheapest, a brick-only Viktor deck in two deck
+groups, a US$95 "bundle of 10" Nexus Night packs as one pack and as the Unleashed Bundle, a 47-pack kit with an opened pack at
+US$249.95 as one pack, a set of two starter decks and a 1,000-card lot as one Starter Set, and a PCG 9.5 slab as an Arcane Box
+Set. Every rule was run over every row of the export: it refused exactly those 15 eBay rows and no other eBay row. eBay rows are
+rewritten whole per market on each sealed run, so the old rows go on the next one. `tests/ebay-sealed-one-product.test.ts`.

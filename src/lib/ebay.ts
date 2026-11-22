@@ -1228,6 +1228,61 @@ export function wrongBoosterCaseQuantity(title: string): boolean {
   return packs.length > 0 && !packs.includes(144);
 }
 
+// THE LISTING MUST BE ONE OF THE PRODUCT (2026-11-22). The 21 Nov sealed export held eBay rows that were real Riftbound
+// listings of another product, filed under the group searched for:
+//   • another champion's deck: "… Set 1 Origins Jinx Champion Deck" (eBay AU) as the Lee Sin deck's cheapest. A Champion
+//     Deck's type names its champion, and no keyword filtered it, so any "Riftbound … Champion Deck" passed;
+//   • a deck out of its box: "BRICK ONLY … Champion Deck (Viktor)";
+//   • more than one: "Nexus Night Packs bundle of 10" (eBay US, US$95) as one Nexus Night Pack and as the Unleashed Bundle,
+//     "Nexus Night Kit - 47 Sealed Packs 1 Open pack" (US$249.95) as one pack, "Set of 2 … Starter Decks" as one Starter
+//     Set, "Starter Set 1000 cartas" (a card lot);
+//   • a slab by a smaller grader: "ARCANE BOX SET JINX - REBEL PCG 9.5".
+// Each rule only refuses, and each was checked against every other title of that type in the export (none refused).
+// Champion names: longest first so "Viktor"/"Vex" win before the short "Vi". Shared with classifySealed.
+export const SEALED_DECK_CHAMPIONS = /\b(Lee\s*Sin|Tryndamere|Viktor|Rumble|Fiora|Garen|Annie|Ashe|Lux|Master\s*Yi|Jinx|Vex|Vi)\b/i;
+const flatName = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
+// One unit of these is a single pack or a single deck: a stated count of more than one is another product.
+const ONE_PACK_OR_DECK = /^(?:Booster Pack|Nexus Night Pack|Promo Pack|Sleeved Booster|Champion Deck(?: \([^)]+\))?|Trial Deck(?: \([^)]+\))?)$/;
+// One unit of these is one item, though its title may list what is inside ("Bundle (10 boosters)").
+const ONE_ITEM = /^(?:Bundle|Box Set|Starter Set|Tin|Proving Grounds(?: 2nd Edition)?|Vault)$/;
+const NUM_WORDS: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, ten: 10, twelve: 12 };
+const countOf = (s: string) => NUM_WORDS[s.toLowerCase()] ?? Number(s);
+const GROUP_OF = /\b(?:set|bundle|lot|pack|bulk|case|box)\s+of\s+(\d{1,3}|two|three|four|five|six|ten|twelve)\b/gi;
+const TIMES = /(?<![\d.])\b(\d{1,3})\s*x\b(?!\s*\d)|\bx\s*(\d{1,3})\b/gi;
+const PLURAL_UNITS = /(?<![\d.])\b(\d{1,3})\s+(?:sealed\s+)?(?:(?:booster|nexus\s+night|promo|champion)\s+)?(?:packs|boosters|decks)\b/gi;
+const SMALL_GRADER = /\bpcg\s*\d/i;
+const LOOSE_DECK = /\bbrick\s*only\b/i;
+const OPENED_PACK = /\bopen\s+(?:packs?|box)\b/i;
+const CARD_LOT = /\b\d{3,}\s*(?:cards|cartas|karten|cartes|carte)\b/i;
+
+/** Why an eBay title is not ONE of `productType`, or null when nothing in it says so. Pure; refuses only. */
+export function wrongSealedEbayProduct(title: string, productType: string): string | null {
+  const t = title ?? "";
+  if (SMALL_GRADER.test(t)) return "graded";
+  if (LOOSE_DECK.test(t)) return "brick only";
+  if (OPENED_PACK.test(t)) return "opened";
+  if (CARD_LOT.test(t)) return "card lot";
+  const champ = productType.match(/^(?:Champion|Trial) Deck \(([^)]+)\)(?: Display)?$/)?.[1];
+  // Only a real champion: TCGplayer-derived groups such as "Champion Deck (Set 1)" or "(Eng)" name none, and keep eBay.
+  if (champ && new RegExp(`^(?:${SEALED_DECK_CHAMPIONS.source})$`, "i").test(champ)) {
+    const target = flatName(champ);
+    const named = new Set([...t.matchAll(new RegExp(SEALED_DECK_CHAMPIONS.source, "gi"))].map((m) => flatName(m[1])));
+    const says = named.has(target) || new RegExp(`\\b${champ.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*")}\\b`, "i").test(t);
+    if (!says) return "another champion";
+    if ([...named].some((n) => n !== target)) return "another champion";
+  }
+  const single = ONE_PACK_OR_DECK.test(productType);
+  if (single || ONE_ITEM.test(productType)) {
+    const counts = [...t.matchAll(GROUP_OF)].map((m) => countOf(m[1]));
+    if (single) {
+      counts.push(...[...t.matchAll(TIMES)].map((m) => Number(m[1] ?? m[2])));
+      counts.push(...[...t.matchAll(PLURAL_UNITS)].map((m) => Number(m[1])));
+    }
+    if (counts.some((n) => n > 1)) return "more than one";
+  }
+  return null;
+}
+
 export async function searchEbaySealed(
   name: string,
   productType: string,
@@ -1322,6 +1377,8 @@ export async function searchEbaySealed(
     .filter((it) => Math.round(parseFloat(it.price.value) * 100) >= floor)
     // A case of another quantity (a "Case of 4", two cases, a sleeved display) is not the six-box case.
     .filter((it) => productType !== "Booster Case" || !wrongBoosterCaseQuantity(it.title ?? ""))
+    // Another champion's deck, a loose deck, a lot or a bundle of several, an opened pack, a small grader's slab.
+    .filter((it) => !wrongSealedEbayProduct(it.title ?? "", productType))
     .sort((a, b) => delivered(a) - delivered(b));
 
   // Secondary net for a low outlier that cleared the floor (e.g. a mis-listed item in
