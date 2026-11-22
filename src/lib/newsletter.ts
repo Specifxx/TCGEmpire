@@ -164,6 +164,21 @@ function glanceSection(x: DigestExtras, currency: string, market: Country): stri
   return `${heading("🧭 The market at a glance")}${bits.map((b) => para(b)).join("")}`;
 }
 
+// The free Chrome extension (TCG Prices' buying assistant, tcgcompare/extension), once, in the two editions after it went
+// live (owner, 2026-11-23: "start getting people to use them … send people emails on the extension"). One short block in
+// the email they already get, not an email of its own (owner the same day: "not flooding them"). Gone by itself after.
+export const EXTENSION_FEATURE_UNTIL = new Date("2026-12-07T00:00:00Z");
+const EXTENSION_LISTING = "https://chromewebstore.google.com/detail/fdhpgledimoadpaokiipficepklogmha";
+export function extensionSection(now: Date = new Date()): string {
+  if (now >= EXTENSION_FEATURE_UNTIL) return "";
+  const href = `${EXTENSION_LISTING}?utm_source=riftcompare&utm_medium=email&utm_campaign=extension-launch`;
+  return `${heading("🧩 New: our free Chrome extension")}
+    <tr><td style="padding:6px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Open it on any card shop's product page, TCGplayer, eBay or Amazon and it shows the cheapest store price we track for that sealed product, with one click to buy it there. Riftbound, Pokémon, Magic and many more. No account, and it tracks nothing.
+      <br/><a href="${esc(href)}" style="display:inline-block;margin-top:8px;color:#34d17e;font-weight:700;text-decoration:none">Add it to Chrome, free →</a>
+    </td></tr>`;
+}
+
 function sponsorSection(sp: DigestExtras["sponsor"]): string {
   if (!sp) return "";
   if (sp === "house") {
@@ -312,6 +327,7 @@ export function buildDigest(movers: PriceMovers, market: Country, reveals: Revea
       Your weekly read on the Riftbound market: the biggest price moves, the most valuable cards, what collectors are searching for and what's coming up — from live lowest in-stock prices compared across ${info.adjective} stores.
     </td></tr>
     ${glanceSection(extras, currency, market)}
+    ${extensionSection()}
     ${revealsSection(reveals)}
     ${section("📈 Spiking this week", movers.spiking, currency, 8, market)}
     ${sponsorSection(extras.sponsor)}

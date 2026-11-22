@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { getSealedProductBySlug, setLessSlugRedirect, setCatchAllRedirect } from "@/lib/sealed-import";
+import { getSealedProductBySlug, setLessSlugRedirect, setCatchAllRedirect, championDeckSlugRedirect } from "@/lib/sealed-import";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { isPreorderSetCode, SETS } from "@/lib/constants";
 import { pageAlternates } from "@/lib/seo";
@@ -45,6 +45,9 @@ export default async function SealedProductPage({ params }: { params: { slug: st
     // A set-less product's old title-derived slugs (SET_LESS_GROUPS): one 301 to its one page, never a 404.
     const moved = setLessSlugRedirect(params.slug);
     if (moved) permanentRedirect(`/sealed/${moved}`);
+    // A one-champion deck's old title page ("riftboundchampiondeckjinx"): its set's deck page.
+    const deck = championDeckSlugRedirect(params.slug);
+    if (deck) permanentRedirect(`/sealed/${deck}`);
     const setHub = setCatchAllRedirect(params.slug);
     if (setHub) permanentRedirect(setHub);
     notFound();
@@ -74,7 +77,7 @@ export default async function SealedProductPage({ params }: { params: { slug: st
         </p>
       </header>
 
-      <SealedProductView byMarket={byMarket} bf={bfStripByMarket(byMarket, g.setCode)} />
+      <SealedProductView byMarket={byMarket} bf={bfStripByMarket(byMarket, g.setCode)} sharePath={`/sealed/${params.slug}`} preorder={preorder} />
 
       {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the price table, 22 Nov to 1 Dec, labelled Ad. */}
       <TcgplayerCyberBanner

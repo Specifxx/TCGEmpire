@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { pabKey } from "@/lib/premium-ab";
 import { recallPremiumSurface } from "@/lib/premium-surface";
 import { PREMIUM_COPY_VERSION, type PremiumTierKey } from "@/lib/site";
 import { useIsNativeApp } from "@/lib/native";
@@ -31,7 +32,7 @@ export function GuestCheckoutButton({
   async function go() {
     setBusy(true);
     setError(null);
-    trackEvent("premium_checkout_started", { plan, tier, guest: true, source, copy: PREMIUM_COPY_VERSION });
+    trackEvent("premium_checkout_started", { plan, tier, guest: true, source, copy: PREMIUM_COPY_VERSION, pk: pabKey() });
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",

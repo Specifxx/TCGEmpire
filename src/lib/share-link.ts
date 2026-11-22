@@ -5,7 +5,7 @@
 // growth report (lib/earnings/growth-report.ts) counts both for every site.
 // DECISIONS.md, "Share buttons and shared lists".
 
-export type ShareMedium = "card" | "sealed" | "deck" | "list" | "page" | "daily" | "pulls" | "binder" | "guide" | "set" | "movers";
+export type ShareMedium = "card" | "sealed" | "deck" | "list" | "page" | "daily" | "pulls" | "binder" | "guide" | "set" | "movers" | "drop";
 
 /** `path` (an existing query string is kept) on `origin`, with the share tags. */
 export function shareUrl(origin: string, path: string, medium: ShareMedium): string {
@@ -46,6 +46,17 @@ export function shareText(name: string, gap: PriceGap | null, fmt: (cents: numbe
   if (!gap) return `${name}: every store's price on ${site}`;
   return `${name}: ${fmt(gap.low.priceCents)} at ${gap.low.retailerName}, up to ${fmt(gap.high.priceCents)} elsewhere (${gap.pct}% less). Compared on ${site}`;
 }
+
+// "Share this deal with your group chat" (owner, 2026-11-23; ported from DexCompare, components/DropShare.tsx): the cheapest open
+// STORE listing's real price and name in the visitor's market (never eBay, TCGplayer or Amazon, never converted). People paste drops
+// into restock chats anyway; this makes the link they paste ours.
+export function dropText(name: string, best: { priceCents: number; retailerName: string } | null, place: string, fmt: (cents: number) => string, preorder = false, site = "RiftCompare"): string | null {
+  if (!best) return null;
+  return `${preorder ? "Pre-order: " : ""}${name} for ${fmt(best.priceCents)} at ${best.retailerName}, the cheapest store price we found in ${place}. Every store compared on ${site}:`;
+}
+
+/** Store rows only: never eBay, TCGplayer or Amazon (dropText). */
+export const isStoreRetailer = (retailer: string) => retailer !== "ebay" && !retailer.startsWith("tcgplayer") && !retailer.startsWith("amazon");
 
 // Share-for-a-deal test (owner, 2026-11-18: "if you share … you can open Deal
 // Finder"). Half of browsers (kept in localStorage) see "Share · get a deal" and,

@@ -470,6 +470,8 @@ export const JOBS: { file: string; title: string; staleH: number; scheduledSince
   { file: "sister-alerts.yml", title: "Sister-site price alerts job", staleH: 36 },
   // Daily (2026-11-03): registers the Discord bot's commands and finishes its setup; a green no-op until its secrets exist.
   { file: "discord-commands.yml", title: "Discord bot setup job", staleH: 36, scheduledSince: "2026-11-03T00:49:00Z" },
+  // Twice a day (2026-11-23): publishes the Sealed Sniper drops to servers that follow #sealed-sniper.
+  { file: "discord-publish.yml", title: "Discord publish job", staleH: 36, scheduledSince: "2026-11-23T00:00:00Z" },
   // Weekly (2026-11-02): every site's store domains checked from outside (docs/store-vetting.md).
   { file: "store-vetting.yml", title: "Store vetting job (weekly)", staleH: 200 },
   // Weekly (2026-11-08): every site's outbound links; red when a tag is lost (lib/affiliate-gaps.ts).

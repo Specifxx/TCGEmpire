@@ -14,7 +14,7 @@ import { convertCents } from "../fx";
 // source's API response live here too, for the same reason; the fetching is in
 // lib/earnings/sources.ts.
 
-export type EarningsSourceKey = "stripe" | "tcgplayer" | "ebay" | "amazon" | "adsense" | "mediavine";
+export type EarningsSourceKey = "stripe" | "tcgplayer" | "ebay" | "amazon" | "adsense" | "mediavine" | "goaffpro";
 
 export const SOURCE_LABELS: Record<EarningsSourceKey, string> = {
   stripe: "Stripe (Premium + Stores)",
@@ -23,6 +23,7 @@ export const SOURCE_LABELS: Record<EarningsSourceKey, string> = {
   amazon: "Amazon Associates",
   adsense: "Google AdSense",
   mediavine: "Mediavine",
+  goaffpro: "Cardboard Hero (GoAffPro)",
 };
 
 /** Money one source earned on one calendar day, in one currency. */
@@ -922,4 +923,49 @@ export async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (it
   };
   await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
   return out;
+}
+
+// ── Cardboard Hero via GoAffPro (owner, 2026-11-23) ─────────────────────────
+// One referral code (apthvqnu, lib/awin.ts DIRECT_REFERRALS) serves every site and
+// GoAffPro shows affiliates no sub-id, so its sales carry no site. A sale counts on
+// the Sydney day of its order. It is PENDING until the store ships it: most of the
+// first sales are pre-orders, which can still be cancelled. Rejected, cancelled and
+// refunded sales are not counted.
+export interface GoaffproSale {
+  order_id?: number | string;
+  order_date?: string;
+  affiliate_commission?: number | string;
+  order_currency?: string;
+  status?: string;
+  fulfillment_status?: string | null;
+}
+
+export type GoaffproState = "paid" | "pending" | "rejected";
+
+export function goaffproState(s: GoaffproSale): GoaffproState {
+  const st = String(s.status ?? "").toLowerCase();
+  if (/reject|cancel|refund|declin|void/.test(st)) return "rejected";
+  if (st !== "approved" && st !== "paid") return "pending";
+  return String(s.fulfillment_status ?? "").toLowerCase() === "fulfilled" ? "paid" : "pending";
+}
+
+/** Commission per day; `only` limits it to one state (the dashboard's checks). */
+export function goaffproDays(sales: readonly GoaffproSale[], only?: GoaffproState): DayAmount[] {
+  const rows: DayAmount[] = [];
+  for (const s of sales) {
+    const t = Date.parse(String(s.order_date ?? ""));
+    const cents = toCents(s.affiliate_commission);
+    if (!Number.isFinite(t) || !cents) continue;
+    const state = goaffproState(s);
+    if (only ? state !== only : state === "rejected") continue;
+    rows.push({ day: dayIn(t), currency: String(s.order_currency || "CAD").toUpperCase(), cents, pendingCents: state === "pending" ? cents : 0 });
+  }
+  return mergeDays(rows);
+}
+
+/** One sale per order id (pages may overlap). */
+export function uniqueGoaffpro(sales: readonly GoaffproSale[]): GoaffproSale[] {
+  const m = new Map<string, GoaffproSale>();
+  for (const s of sales) m.set(String(s.order_id ?? `${s.order_date}|${s.affiliate_commission}`), s);
+  return [...m.values()];
 }

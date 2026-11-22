@@ -9,6 +9,9 @@ import { CheckedAgo } from "./CheckedAgo";
 import { SealedOffers } from "./SealedQuickView";
 import { SealedWatchButton } from "./SealedWatchButton";
 import { BlackFridayStrip, type BlackFridayStripData } from "./BlackFridayStrip";
+import { DropShare } from "./DropShare";
+import { dropText, isStoreRetailer } from "@/lib/share-link";
+import { headlineOffer } from "@/lib/sealed-offers";
 
 // The market-dependent half of a sealed product's page, /sealed/<slug> (2026-11-03). The page is one CDN copy for every
 // visitor (no cookie or header read on the server, like /card/[id]), so it hands this island the product's group in
@@ -18,8 +21,13 @@ import { BlackFridayStrip, type BlackFridayStripData } from "./BlackFridayStrip"
 export function SealedProductView({
   byMarket,
   bf = {},
+  sharePath,
+  preorder = false,
 }: {
   byMarket: Partial<Record<Country, SealedGroup>>;
+  /** This page's path, for "Share this deal" (components/DropShare.tsx); none, no button. */
+  sharePath?: string;
+  preorder?: boolean;
   /** The Black Friday strip per market (lib/bf-strip-sealed.ts), through 1 Dec 2026; {} after. */
   bf?: Partial<Record<Country, BlackFridayStripData>>;
 }) {
@@ -80,6 +88,13 @@ export function SealedProductView({
           )}
         </div>
         <SealedWatchButton groupKey={group.groupKey} name={group.name} market={shownMarket} className="w-full" />
+        {own && sharePath && (
+          <DropShare
+            path={sharePath}
+            name={group.name}
+            text={dropText(group.name, headlineOffer(group.listings.filter((l) => isStoreRetailer(l.retailer))), COUNTRIES[shownMarket].place, fmt, preorder)}
+          />
+        )}
       </div>
       <div className="card-surface min-w-0 p-4 sm:p-5">
         {!own && (

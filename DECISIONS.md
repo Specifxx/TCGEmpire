@@ -25375,6 +25375,53 @@ capped at 3 an hour per address and 6 per IP; `{code}` verifies it, finds or mak
 premium-session token, which the OP page keeps in localStorage and posts like any sister. OP stores no address. The
 `op` entry's url is `https://opcompare.app` (it was wrongly `.com`).
 
+## 2026-11-22: A Champion Deck's champion names its set
+
+**What.** A sealed title that is one Champion Deck and names no set word ("Riftbound: Champion Deck – Jinx", "RIFTBOUND
+CHAMPION DECK VEX (LIMIT 1)", "Riftbound League of Legends Trading Card Game: Lee Sin Champion Deck") now takes its set from
+its champion (`CHAMPION_DECK_SETS`, `sealedSetCode` in `lib/sealed-import.ts`): Jinx, Lee Sin, Viktor are Origins; Fiora,
+Rumble Spiritforged; Vex, Vi Unleashed; Tryndamere, Ashe, Lux, Garen Legacy. A set word in the title still wins. Two
+champions ("Jinx & Vi"), a case or a lot ("4x Lee Sin Sealed Case") and a deck naming no champion keep their title page.
+"LeeSin" is spelled "Lee Sin" (one group). `cleanupStaleSealed` drops a set-less row whose title now names its set
+(`misfiledChampionDeck`), and an old title page whose slug names one champion beside "championdeck" 301s to the set's
+deck page (`championDeckSlugRedirect`); a slug cut before the name has nothing to redirect to and behaves as before.
+
+**Why.** The 22 Nov export held 71 such rows (US 5, CA 38, AU 20, EU 6, UK 2) on about 40 pages of one or two stores,
+while `/sealed/ogn-champion-deck-jinx` and its siblings never showed them: US buyers missed The Collection Realm's three
+Origins decks and Trove of Collectibles' Vi. Each champion had a deck in one set only (the set-coded groups of that
+export). A later set that reprises a champion takes that champion OUT of the list, never moves it: a title with no set
+word then names nothing, as before. `tests/sealed-champion-deck-set.test.ts`.
+
+## 2026-11-23 — #sealed-sniper is a followable announcement channel
+
+Restock chats spread our finds (22 Nov: a Canadian pre-order sold 10 in 41 minutes through one), so other servers should
+get the Sniper's drops in their own channel. Discord's channel following does that with nothing to hold on their side: the
+hub's #sealed-sniper became an Announcement channel (owner's yes, 2026-11-22), and `discord-publish.yml` has the price bot
+publish each unpublished webhook drop of the last day (a webhook cannot publish). Links stay tagged utm_source=discord.
+
+## 2026-11-23: "Share this deal with your group chat" on the product page
+
+`components/DropShare.tsx` (ported from DexCompare) sits under the sealed page's price card (`SealedProductView`, the visitor's own market only): the phone's share sheet, else one line copied with
+the cheapest in-stock STORE price in the visitor's market (`dropText` and `isStoreRetailer` in `lib/share-link.ts`: never eBay, TCGplayer or Amazon, never
+converted, "Pre-order: " when that offer is one) and this page's link tagged `utm_source=share&utm_medium=drop`. A separate component,
+so ShareButton's share-for-a-deal A/B test is untouched; event `share { medium: "drop" }`.
+
+**Why.** On 22 Nov a CA$89.99 Delta Reign ETB pre-order at Cardboard Hero took ten referral orders in 41 minutes, almost none through
+a click we tracked: the store link had been pasted into a restock chat. People share drops anyway; this makes the link they paste ours.
+Owner, 2026-11-23: "apply all these learnings to all the other sites". Read `share` medium `drop` and `share_visit` a week after release.
+
+## 2026-11-23: Cardboard Hero (GoAffPro) on the earnings dashboard
+
+Owner, 2026-11-23: "can we add the cardboard hero earnings to our earning dashboard". `lib/earnings/sources.ts` `fetchGoaffpro`
+reads the partner portal's own API (`api.goaffpro.com/partner/sales`, 100 a page, folded by order id) with the affiliate's
+access token (`GOAFFPRO_ACCESS_TOKEN`, Vercel Production only, set by the owner's `set-goaffpro-token.ps1`; the token carries
+no expiry). It is a stored source like Impact and EPN, refreshed by the earnings cron every three hours.
+
+- A sale counts on the Sydney day of its order, in its own currency (CA$), and stays **pending until the store ships it**
+  (`goaffproState` in `lib/earnings/core.ts`): GoAffPro marks a pre-order "approved" the moment it is placed, but it can
+  still be cancelled. Rejected, cancelled and refunded orders are shown as a check and not counted.
+- **No per-site split.** One referral code (`apthvqnu`) serves every site and GoAffPro gives an affiliate no sub-id, so its
+  earnings go to the site ledger's "No tag" row. `tests/earnings-goaffpro.test.ts`.
 ## 2026-11-22: Operational database moves RM12 -> RM9 before RM12's transfer allowance runs out
 
 Owner, 2026-11-22 (decision card: "Yes, move it now"). Ops monitor at 15:21 UTC: RM12 had used 3.03 of its 5 GB monthly

@@ -101,7 +101,7 @@ export function siteForProject(project: string): string {
 }
 
 // Earnings that carry no tag but belong to one site: RiftCompare's Premium plan and Stores (Stripe), its ads.
-const SOURCE_SITE: Partial<Record<SourceResult["key"], string>> = { stripe: "rc", adsense: "rc", mediavine: "rc" };
+const SOURCE_SITE: Partial<Record<SourceResult["key"], string>> = { stripe: "rc", adsense: "rc", mediavine: "rc", goaffpro: "" };
 
 export interface SiteRow {
   key: string;
@@ -114,7 +114,7 @@ export interface SiteRow {
 
 function siteLabel(key: string): string {
   if (key === SHARED) return "Shared (Vercel plan, AI, other costs)";
-  if (key === "") return "No tag (mostly eBay app sales)";
+  if (key === "") return "No tag (eBay app sales, Cardboard Hero)";
   if (key.startsWith("project:")) return `Vercel project ${key.slice(8)}`;
   return SITES.find((s) => s.key === key)?.label ?? TAG_NAMES[key] ?? key.toUpperCase();
 }
