@@ -378,7 +378,7 @@ test("opt-out: footer link, plain-text link, and one-click List-Unsubscribe head
   assert.equal(payload.textContent, email.text);
   assert.deepEqual(payload.headers, email.headers);
   assert.deepEqual(Object.keys(brevoPayload({ sender: { name: "R", email: "r@x" }, to: [{ email: "a@b" }], subject: "s", htmlContent: "h" })).sort(), ["htmlContent", "sender", "subject", "to"], "callers passing no extras send exactly what they did");
-  assert.match(read("src/lib/email.ts"), /sendEmailBrevo\(to, subject, html, \{ text, headers, marketing: true \}\)/);
+  assert.match(read("src/lib/email.ts"), /const extras = \{ text, headers, marketing: true, campaign: "premium-offer" \} as const;\s*return opts\.via === "resend" \? sendEmail\(to, subject, html, extras\) : sendEmailBrevo\(to, subject, html, extras\);/);
 });
 
 test("an email-shaped display name falls back to a plain greeting, and names are HTML-escaped", () => {

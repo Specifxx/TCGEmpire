@@ -71,13 +71,23 @@ export interface SendEmailExtras {
   from?: string;
   /** Promotional, news or bulk mail. Refused while MARKETING_EMAIL_OFF holds (Bill, 2026-11-09). */
   marketing?: boolean;
+  /** The one marketing campaign the owner turned back on (MARKETING_ALLOWED); every other one stays refused. */
+  campaign?: MarketingCampaign;
 }
+
+// Bill, 2026-11-22: "marketing email is switched off … can we please fix that" for the Premium email
+// (/admin/premium-offer). Only that campaign is let through; the newsletter, digests, welcome, release-day,
+// win-back and checkout-recovery mail stay off (DECISIONS.md, 2026-11-22). It keeps its opt-out link,
+// List-Unsubscribe headers and the announcement opt-out list.
+export type MarketingCampaign = "premium-offer";
+export const MARKETING_ALLOWED: ReadonlySet<MarketingCampaign> = new Set(["premium-offer"]);
 
 // Bill, 2026-11-09: email is for accounts, billing and the alerts people asked for. Every promotional,
 // news or announcement send passes `marketing: true` and is refused here, whichever provider carries it.
 export const MARKETING_EMAIL_OFF = true;
 function marketingBlocked(extras: SendEmailExtras): boolean {
   if (!extras.marketing || !MARKETING_EMAIL_OFF) return false;
+  if (extras.campaign && MARKETING_ALLOWED.has(extras.campaign)) return false;
   lastEmailError = "Marketing email is switched off (DECISIONS.md, 2026-11-09)";
   return true;
 }
@@ -1765,7 +1775,8 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts): BuiltEmail 
 
 export async function sendPremiumOfferEmail(to: string, opts: PremiumOfferEmailOpts): Promise<boolean> {
   const { subject, html, text, headers } = buildPremiumOfferEmail(opts);
-  return opts.via === "resend" ? sendEmail(to, subject, html, { text, headers, marketing: true }) : sendEmailBrevo(to, subject, html, { text, headers, marketing: true });
+  const extras = { text, headers, marketing: true, campaign: "premium-offer" } as const;
+  return opts.via === "resend" ? sendEmail(to, subject, html, extras) : sendEmailBrevo(to, subject, html, extras);
 }
 
 // One-off "N days of Premium, free, no card" win-back email. See

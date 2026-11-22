@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { sendEmail, sendEmailBrevo, MARKETING_EMAIL_OFF, getLastEmailError } from "../src/lib/email";
+import { sendEmail, sendEmailBrevo, MARKETING_EMAIL_OFF, MARKETING_ALLOWED, getLastEmailError } from "../src/lib/email";
 
 test("marketing email is refused before any provider is called", async () => {
   assert.equal(MARKETING_EMAIL_OFF, true);
@@ -28,4 +28,19 @@ test("every promotional sender is marked marketing, alerts and account mail are 
 test("no marketing workflow or Vercel cron is scheduled", () => {
   const vj = readFileSync("vercel.json", "utf8");
   assert.doesNotMatch(vj, /cron\/(newsletter|user-digest)/);
+});
+
+test("the Premium email is the one campaign let through (Bill, 2026-11-22); everything else stays refused", async () => {
+  assert.deepEqual([...MARKETING_ALLOWED], ["premium-offer"]);
+  const src = readFileSync("src/lib/email.ts", "utf8");
+  // Only sendPremiumOfferEmail names the campaign.
+  assert.equal(src.match(/campaign: "premium-offer"/g)?.length, 1);
+  const at = src.indexOf("export async function sendPremiumOfferEmail(");
+  assert.match(src.slice(at, src.indexOf("\nexport ", at + 10)), /campaign: "premium-offer"/);
+  // Past the gate it reaches the provider check (no key here), not the marketing refusal.
+  delete process.env.BREVO_API_KEY;
+  await sendEmailBrevo("a@b.co", "s", "h", { marketing: true, campaign: "premium-offer" });
+  assert.doesNotMatch(getLastEmailError() ?? "", /switched off/);
+  assert.equal(await sendEmailBrevo("a@b.co", "s", "h", { marketing: true }), false);
+  assert.match(getLastEmailError() ?? "", /switched off/);
 });
