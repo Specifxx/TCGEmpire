@@ -25344,3 +25344,15 @@ one-click List-Unsubscribe through the announcement list. `watch-recap-send.yml`
 **Why held.** The 2026-11-09 entry turned off the digests, and this is close to one, so the campaign `watch-recap` is NOT in
 `MARKETING_ALLOWED`: every send is refused until the owner says yes, and then the change is that one word
 (`tests/watch-recap.test.ts` pins that it is off today).
+
+## 2026-11-22: After a buy click, the card page offers a watch or a collection add, inline
+
+**What.** Retention (Pillar 3): `OutboundLink` announces each buy click that names a card (`lib/buy-click-event.ts`), and
+`BuyFollowUp` on the card page shows, under the phone buy row, one in-flow block for that card: "Bought it, or still
+deciding?" with the Watch button and "I bought it: add to my collection" (signed out: a sign-in link, source
+`buy_followup`). Once per card per tab, dismissible, never fixed, never an overlay; GA4-only events `buy_followup_shown`,
+`_collection`, `_signin`.
+
+**Why.** A watch or a collection entry is what brings a visitor back (an alert, a value to check), and the moment just after a
+buy click is when the card matters most to them. It stays inside the no-pop-up rule because it is part of the page, and the
+card page stays one cached copy: everything is client-side (`tests/buy-followup.test.ts`).

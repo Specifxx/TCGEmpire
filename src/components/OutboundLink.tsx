@@ -15,6 +15,7 @@ import { topArmNow } from "@/lib/top-pair";
 import { ebayBtnNow } from "@/lib/ebay-btn";
 import { ebayPopNow } from "@/lib/ebay-pop";
 import { isNativeApp, openExternal } from "@/lib/native";
+import { announceBuyClick } from "@/lib/buy-click-event";
 
 // An outbound "buy" link. It fires a click beacon to /api/click, which adds one
 // to a per-day, per-network Counter row (2026-10-27, "Click counts by day" in
@@ -246,6 +247,8 @@ export function OutboundLink({
       campaign: readCampaign(),
       transport_type: "beacon",
     });
+    // Lets the card page offer a watch or a collection add after the click (BuyFollowUp, 2026-11-22).
+    announceBuyClick(cardId);
     // Our own daily click count per network for /admin/growth (lib/click-counter.ts).
     try {
       const q = new URLSearchParams({ r: retailer, c: country });

@@ -41,6 +41,8 @@ export const SIGNUP_SOURCES = new Set<string>([
   "email_link",
   // /featured's "Sign in to feature a listing" (2026-11-07, lib/featured/).
   "featured",
+  // The card page's after-click follow-up (BuyFollowUp, 2026-11-22).
+  "buy_followup",
   // The Android app's Premium page, which sells nothing there (2026-11-19, components/AppPremiumNotice.tsx).
   "app_premium",
   // RETIRED 2026-09-30 with the sign-up popup ("The sign-up slider is gone").

@@ -12,6 +12,7 @@ import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "@/components/Badge";
 import { displayRarity, isUltimate, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, isFallbackRetailer } from "@/lib/constants";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
+import { BuyFollowUp } from "@/components/BuyFollowUp";
 import { PriceDropAlertCta } from "@/components/PriceDropAlertCta";
 import { cardHref } from "@/lib/card-url";
 import { enabledProviders } from "@/lib/oauth";
@@ -1101,6 +1102,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             {/* Phones: the cheapest listing in the visitor's market and its Buy
                 button directly under the name (2026-09-26) — see CardMobileBuy. */}
             <CardTopBuy rows={rows} displayName={displayName} />
+            {/* After a buy click on this card: watch it or add it to the collection (inline, 2026-11-22). */}
+            <BuyFollowUp cardId={card.id} cardName={displayName} />
 
             {/* Market-localised metrics (SSR = AU baseline; client reconciles). */}
             <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} lastKnown={lastKnown} />
