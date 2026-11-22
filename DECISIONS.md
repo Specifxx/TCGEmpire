@@ -25306,3 +25306,14 @@ pasted URL or a translate proxy is "none" or "cross-site". "yandex" and "baidu" 
 builds, baiduboxapp). Now `looksLikeBot` (the one thing that untags) is only an empty User-Agent or a self-named crawler or
 script; the header checks moved to `suspectClick`, which at most leaves a click out of the server-side click log, never the tag.
 The 10-14 Nov crawler with full browser headers will reach the networks tagged again: accepted by the owner's rule.
+
+## 2026-11-22: Giveaway star friends: 100 points for a friend who takes Premium or plays
+
+**Decision.** A referred friend is worth `STAR_REFERRAL_POINTS` (100) instead of 25 once they have Premium **or** have checked in
+on `STAR_FRIEND_CHECKINS` (3) days of the same giveaway (`liveWeights` in `lib/giveaway-server.ts`, `entryPoints`'
+`starReferrals`); still ten friends at most, star friends counted first. The rules and the panel say both routes.
+
+**Why.** Owner, 2026-11-22: "if you refer someone and they sign up to premium, then you will get 100 points ... I'll let you adjust
+the amount ... we should give more incentives for premium." A Premium-only bonus would let a purchase buy chances, which breaks
+"no purchase necessary"; the free route (three daily check-ins) earns exactly the same, so the bonus still pushes Premium without
+selling entries. `tests/giveaway.test.ts`.

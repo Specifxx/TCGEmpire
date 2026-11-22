@@ -170,3 +170,14 @@ test("conversion funnel counts accounts, watches, returns, referrals and after-c
   );
   assert.deepEqual(f, { entrants: 4, newAccounts: 2, fromGiveawayPage: 1, watching: 2, cameBack: 2, referrers: 1, confirmedReferrals: 3, activeAfterClose: 1 });
 });
+
+test("a star friend (Premium, or the same free check-ins) is worth 100, never more by paying than by playing", async () => {
+  const { entryPoints: ep, STAR_REFERRAL_POINTS, REFERRAL_POINTS, MAX_REFERRALS } = await import("../src/lib/giveaway");
+  const base = { premium: false, watches: 0, bonusClaimed: false, checkins: 0 };
+  assert.equal(ep({ ...base, referrals: 2, starReferrals: 1 }).referral, STAR_REFERRAL_POINTS + REFERRAL_POINTS);
+  assert.equal(ep({ ...base, referrals: 1, starReferrals: 5 }).starCounted, 1, "a star is a counted friend");
+  assert.equal(ep({ ...base, referrals: 30, starReferrals: 30 }).referral, MAX_REFERRALS * STAR_REFERRAL_POINTS);
+  // The free route: lib/giveaway-server.ts counts a friend with STAR_FRIEND_CHECKINS check-ins exactly like a Premium friend.
+  const server = readFileSync("src/lib/giveaway-server.ts", "utf8");
+  assert.match(server, /premiumUntil\.getTime\(\) > nowMs\) \|\| \(friendActive\.get\(u\.id\) \?\? 0\) >= STAR_FRIEND_CHECKINS/);
+});

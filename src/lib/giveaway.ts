@@ -193,6 +193,13 @@ export const BONUS_POINTS = 40;
 export const PREMIUM_START_POINTS = ENTRY_POINTS + BONUS_POINTS;
 export const CHECKIN_POINTS = 5;
 export const REFERRAL_POINTS = 25;
+/**
+ * A "star" friend (owner, 2026-11-22: "if you refer someone and they sign up to premium, then you will get 100 points"): a referred
+ * friend who takes Premium, OR who checks in on STAR_FRIEND_CHECKINS days of the same giveaway. The free route is what keeps the
+ * draw "no purchase necessary": a friend's purchase never earns more than a friend's free activity can.
+ */
+export const STAR_REFERRAL_POINTS = 100;
+export const STAR_FRIEND_CHECKINS = 3;
 export const MAX_REFERRALS = 10;
 
 export type BonusVia = "premium" | "watch" | "claim";
@@ -209,6 +216,8 @@ export interface PointsInput {
   checkins: number;
   /** Confirmed friends who joined through the invite link while it was open. */
   referrals?: number;
+  /** Of those, friends with Premium or STAR_FRIEND_CHECKINS check-ins (worth STAR_REFERRAL_POINTS each). */
+  starReferrals?: number;
 }
 
 export interface Points {
@@ -220,6 +229,8 @@ export interface Points {
   referral: number;
   /** Friends counted (after the cap). */
   referralsCounted: number;
+  /** Of those, star friends (Premium or active). */
+  starCounted: number;
   reason: EntryReason;
 }
 
@@ -230,8 +241,10 @@ export function entryPoints(p: PointsInput): Points {
   const entry = ENTRY_POINTS;
   const bonus = bonusVia ? BONUS_POINTS : 0;
   const checkin = checkins * CHECKIN_POINTS;
-  const referral = referralsCounted * REFERRAL_POINTS;
-  return { points: entry + bonus + checkin + referral, entry, bonus, bonusVia, checkin, referral, referralsCounted, reason: bonusVia ?? "base" };
+  // Star friends count first, so the cap of ten keeps the best ones.
+  const starCounted = Math.max(0, Math.min(referralsCounted, Math.floor(p.starReferrals ?? 0)));
+  const referral = starCounted * STAR_REFERRAL_POINTS + (referralsCounted - starCounted) * REFERRAL_POINTS;
+  return { points: entry + bonus + checkin + referral, entry, bonus, bonusVia, checkin, referral, referralsCounted, starCounted, reason: bonusVia ?? "base" };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
