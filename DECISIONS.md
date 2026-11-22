@@ -25331,3 +25331,16 @@ groups, a US$95 "bundle of 10" Nexus Night packs as one pack and as the Unleashe
 US$249.95 as one pack, a set of two starter decks and a 1,000-card lot as one Starter Set, and a PCG 9.5 slab as an Arcane Box
 Set. Every rule was run over every row of the export: it refused exactly those 15 eBay rows and no other eBay row. eBay rows are
 rewritten whole per market on each sealed run, so the old rows go on the next one. `tests/ebay-sealed-one-product.test.ts`.
+
+## 2026-11-22: A one-off watchlist recap to dormant accounts, built but held behind the marketing switch
+
+**What.** Retention (Pillar 3 of the audience programme): `lib/watch-recap.ts` writes one email per dormant account (older than
+30 days, not active or signed in for 30 days) that has cards on its watchlist: each watched card's TCGplayer market price
+today and 30 days ago from the committed history, biggest moves first, up to six, and a button to the watchlist. Newest
+accounts first, 90 a batch, stamped in the new nullable `User.watchRecapSentAt` only after a successful send, opt-out and
+one-click List-Unsubscribe through the announcement list. `watch-recap-send.yml` (dispatch only) runs it through
+`/api/cron/watch-recap`: dry, a test to the owner's address, or one batch.
+
+**Why held.** The 2026-11-09 entry turned off the digests, and this is close to one, so the campaign `watch-recap` is NOT in
+`MARKETING_ALLOWED`: every send is refused until the owner says yes, and then the change is that one word
+(`tests/watch-recap.test.ts` pins that it is off today).
