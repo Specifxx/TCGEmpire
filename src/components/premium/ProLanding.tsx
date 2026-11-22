@@ -164,7 +164,7 @@ function trialOn(cta: ProCtaProps): boolean {
   return cta.trialAvailable && cta.trialDays > 0 && cta.trialFeeCents === 0;
 }
 
-export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; cta: ProCtaProps; rating: SiteRating | null }) {
+export function ProLanding({ prices, cta, rating, proof }: { prices: ProPriceFigures; cta: ProCtaProps; rating: SiteRating | null; proof?: ReactNode }) {
   return (
     <div data-pro-landing>
       {/* On a phone the plan card comes straight after the headline, before
@@ -177,6 +177,7 @@ export function ProLanding({ prices, cta, rating }: { prices: ProPriceFigures; c
             Premium plans the cheapest delivered order for any deck or list, emails you when a card or box hits your price, and keeps every
             day of price history. Comparing prices stays free.
           </p>
+          {proof}
           {trialOn(cta) && (
             <p className="mt-3 text-base font-semibold text-emerald-300">
               Try everything free for {cta.trialDays} days. Cancel before it ends and you pay nothing.

@@ -2064,6 +2064,10 @@ html[data-ebaypop="pop"] li:has(a[data-ebay]:is(.btn-primary, .btn-buy, .btn-ad)
   .scan-sweep { animation: none; top: 45%; }
 }
 
+/* /premium test P1 (lib/premium-ab.ts): the B block, shown only to arm B, set before paint. */
+html[data-pab1="b"] .pab1-b { display: block; }
+
+
 /* Giveaways (owner, 2026-11-22: "as nice and aesthetic ... as possible"; components/giveaway/). */
 .gw-hero {
   background:
@@ -2092,3 +2096,4 @@ html[data-ebaypop="pop"] li:has(a[data-ebay]:is(.btn-primary, .btn-buy, .btn-ad)
   .gw-flash { animation: none; }
   .gw-prize, .gw-prize:hover { transform: none; transition: none; }
 }
+

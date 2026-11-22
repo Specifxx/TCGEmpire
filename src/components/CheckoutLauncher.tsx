@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { lastUpgradeFeature, marketFromCookie, tierRequiredFor, trackUpgradeCta } from "@/lib/upgrade-intent";
 import { firePremiumClickBeacon, trackEvent } from "@/lib/analytics";
+import { pabKey } from "@/lib/premium-ab";
 import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/site";
 import type { StartSrc } from "@/lib/premium-start";
 import { isPremiumSurface, recallPremiumSurface } from "@/lib/premium-surface";
@@ -54,6 +55,7 @@ export function CheckoutLauncher({
       source: src,
       via: "start",
       copy: PREMIUM_COPY_VERSION,
+      pk: pabKey(),
     });
     // The dialog's signed-out path reaches checkout only through here (a new
     // account, then /premium/start), so its upgrade_cta_click fires here. The
