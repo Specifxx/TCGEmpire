@@ -40,7 +40,7 @@
     },
     "LGC|Booster Case": {
       "EU": 71400,
-      "US": 69386
+      "US": 69385
     },
     "LGC|Booster Pack": {
       "CA": 2400,
@@ -121,7 +121,7 @@
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 87996
+      "US": 90000
     },
     "OGN|Booster Pack": {
       "AU": 1800,
@@ -147,7 +147,7 @@
       "US": 1999
     },
     "OGN|Champion Deck (Jinx)": {
-      "AU": 3000,
+      "AU": 1999,
       "EU": 799,
       "SG": 2811,
       "US": 1999
@@ -162,7 +162,7 @@
       "EU": 700,
       "SG": 2500,
       "UK": 1500,
-      "US": 2399
+      "US": 2599
     },
     "OGN|Champion Deck (Lee Sin) Display": {
       "AU": 4000,
@@ -237,7 +237,7 @@
       "CA": 129999,
       "EU": 50200,
       "UK": 57000,
-      "US": 52499
+      "US": 53000
     },
     "RAD|Booster Pack": {
       "AU": 1000,
@@ -325,7 +325,7 @@
       "EU": 9407,
       "SG": 8415,
       "UK": 10995,
-      "US": 14989
+      "US": 14995
     },
     "SFD|Booster Case": {
       "AU": 185000,
@@ -400,7 +400,7 @@
       "CA": 220000,
       "EU": 7499,
       "UK": 7500,
-      "US": 5499
+      "US": 7594
     },
     "SFD|Sleeved Booster": {
       "EU": 999,
@@ -563,7 +563,7 @@
       "EU": 1995,
       "SG": 2103,
       "UK": 1655,
-      "US": 900
+      "US": 1139
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -595,17 +595,11 @@
     "arcaneimmersivemusicexperiencebooster": {
       "EU": 6500
     },
-    "championdeckleesinriftboundleagueoflegen": {
-      "CA": 4500
-    },
     "giftoftheriftbundle": {
       "AU": 38000,
       "CA": 34999,
       "EU": 15499,
       "US": 20000
-    },
-    "jinxchampiondeckriftboundleagueoflegends": {
-      "EU": 6500
     },
     "leagueoflegendsbundle24popvinyls": {
       "AU": 8396
@@ -613,9 +607,6 @@
     "leagueoflegendsriftboundstarterdecks": {
       "CA": 7499,
       "US": 2990
-    },
-    "leagueoflegendsriftboundtcgrumblechampio": {
-      "CA": 3899
     },
     "legacybooster": {
       "EU": 490
@@ -641,32 +632,8 @@
     "riftboundchampiondeckbricknopack": {
       "CA": 1000
     },
-    "riftboundchampiondeckfiora": {
-      "CA": 6000
-    },
-    "riftboundchampiondeckjinx": {
-      "AU": 1999
-    },
-    "riftboundchampiondeckleesin": {
-      "AU": 2500,
-      "CA": 4500
-    },
-    "riftboundchampiondeckrumble": {
-      "CA": 2500
-    },
-    "riftboundchampiondeckset1": {
-      "UK": 1995
-    },
     "riftboundchampiondeckset3": {
       "UK": 2000
-    },
-    "riftboundchampiondeckvex": {
-      "AU": 3295,
-      "CA": 3995
-    },
-    "riftboundchampiondeckvi": {
-      "AU": 1999,
-      "CA": 2000
     },
     "riftboundleagueoflegendsarcaneboxset": {
       "CA": 85000,
@@ -678,29 +645,11 @@
     "riftboundleagueoflegendsarcaneboxsetsixf": {
       "US": 49999
     },
-    "riftboundleagueoflegendschampiondecklees": {
-      "CA": 1499
-    },
-    "riftboundleagueoflegendschampiondeckvikt": {
-      "CA": 1499
-    },
-    "riftboundleagueoflegendsriftboundrumblec": {
-      "AU": 3300
-    },
     "riftboundleagueoflegendsshowdowndeckszed": {
       "CA": 1999
     },
-    "riftboundleagueoflegendstcgchampiondeckj": {
-      "AU": 3300
-    },
     "riftboundleagueoflegendstcgevelynnvssera": {
       "UK": 2180
-    },
-    "riftboundleagueoflegendstcgsetonejinxcha": {
-      "AU": 3300
-    },
-    "riftboundleagueoflegendstcgsetoneorigins": {
-      "AU": 4000
     },
     "riftboundleagueoflegendstcgshowdowndecks": {
       "CA": 4495
@@ -712,14 +661,8 @@
     "riftboundleagueoflegendsworldsbundle2025": {
       "US": 79999
     },
-    "riftboundleesinchampiondeckleagueoflegen": {
-      "EU": 4000
-    },
     "riftboundoriginboosterbox": {
       "CA": 28999
-    },
-    "riftboundoriginjinxchampiondeck": {
-      "AU": 3300
     },
     "riftboundshowdowndeck": {
       "US": 1788
@@ -729,15 +672,6 @@
     },
     "riftboundshowdowndeckzedvsshen": {
       "CA": 2155
-    },
-    "riftboundtcgfiorachampiondeck": {
-      "CA": 6000
-    },
-    "riftboundtcgleagueoflegendschampiondeckv": {
-      "US": 1399
-    },
-    "riftboundtcgrumblechampiondeck": {
-      "CA": 3199
     },
     "riftboundvandettashowdowndeckzedvsshenle": {
       "CA": 2999
@@ -776,9 +710,6 @@
     },
     "t1worldschampionsignatureeditionbundle": {
       "US": 550000
-    },
-    "viktorchampiondeckriftboundleagueoflegen": {
-      "EU": 8000
     },
     "worlds25commemorativebooster": {
       "EU": 850
