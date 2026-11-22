@@ -25273,3 +25273,26 @@ round every two months (`GIVEAWAY_EVERY_MONTHS`).
 **Why.** Owner, 2026-11-22: "a point system ... Don't ask me any questions. Let's get all these sites a giveaway feature ... every 2
 months ... as nice and aesthetic and usable and user friendly as possible", and the trophy banner with "the winning raffle, the
 winning number". A public beacon makes "random" provable without a third-party raffle service. `tests/giveaway.test.ts`.
+
+## 2026-11-22: The Premium email is the one marketing send turned back on
+
+**What.** Bill: "it says marketing email is switched off from the 9th of November. So can we please fix that and deploy
+urgently … let's send like 2 batches." `MARKETING_EMAIL_OFF` stays true; `sendEmail` / `sendEmailBrevo` now let through a
+marketing send that names a campaign in `MARKETING_ALLOWED`, and the only one is `premium-offer` (the Premium showcase
+email, `/admin/premium-offer`). The newsletter, digests, welcome, release-day, win-back and checkout-recovery mail stay
+off (`tests/email-policy.test.ts`). The email keeps its opt-out link, one-click List-Unsubscribe and the announcement
+opt-out list. `premium-offer-send.yml` (dispatch only, never scheduled) asks `/api/cron/premium-offer` for one batch, so
+an agent can run the owner's batches without the browser.
+
+**Why.** Turning the whole flag off would restart every promotional sender at once; the 2026-11-09 entry asks that each
+one be brought back by its own decision. The 90 sends that failed under the flag were never stamped, so they are still
+pending and go first.
+
+## 2026-11-22: The confirm page asks for the weekly email (repeat awareness, opt-in only)
+
+The audience programme asked for "a weekly drops email to every confirmed address". The weekly email stays opt-in (DECISIONS
+2026-11-08: an alert address never gets mail it did not ask for, and the shared Resend domain also carries sign-in mail, so spam
+complaints cost more than a send). Instead the moment of confirming, when the person has just said yes to us, now asks: an address
+with a price alert and no weekly email sees "Also get <site>'s biggest price drops once a week?" with one button, which posts to the
+manage route (the same subscribe path as the link in every alert email). Nothing subscribes without that click;
+`tests/sister-weekly-signup.test.ts` pins it.

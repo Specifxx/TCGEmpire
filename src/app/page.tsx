@@ -276,7 +276,7 @@ export default async function HomePage() {
   // "Australia"); CardTile re-prices to the visitor's market after hydration.
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
-  const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
+  const COUNTRY_CODES: Country[] = ["US", "AU", "UK", "SG", "CA", "EU"];
   const [
     { totalCards, statsByCountry, freshness, freshnessAt },
     popularPool,

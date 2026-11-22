@@ -8,6 +8,8 @@ import { brevoPayload, buildPremiumOfferEmail, feedbackStarLinks, premiumEmailFe
 import {
   DEFAULT_BATCH,
   announcementUnsubUrls,
+  premiumOfferArm,
+  premiumOfferArmRead,
   priceDropAudience,
   runPremiumOfferBlast,
   type PriceDropDeps,
@@ -378,7 +380,7 @@ test("opt-out: footer link, plain-text link, and one-click List-Unsubscribe head
   assert.equal(payload.textContent, email.text);
   assert.deepEqual(payload.headers, email.headers);
   assert.deepEqual(Object.keys(brevoPayload({ sender: { name: "R", email: "r@x" }, to: [{ email: "a@b" }], subject: "s", htmlContent: "h" })).sort(), ["htmlContent", "sender", "subject", "to"], "callers passing no extras send exactly what they did");
-  assert.match(read("src/lib/email.ts"), /sendEmailBrevo\(to, subject, html, \{ text, headers, marketing: true \}\)/);
+  assert.match(read("src/lib/email.ts"), /const extras = \{ text, headers, marketing: true, campaign: "premium-offer" \} as const;\s*return opts\.via === "resend" \? sendEmail\(to, subject, html, extras\) : sendEmailBrevo\(to, subject, html, extras\);/);
 });
 
 test("an email-shaped display name falls back to a plain greeting, and names are HTML-escaped", () => {
@@ -443,4 +445,44 @@ test("the test send stamps nothing and mints no opt-out row", () => {
   const body = src.slice(at, at + 1200);
   assert.doesNotMatch(body, /prisma\./);
   assert.doesNotMatch(body, /stamp|optOutToken/);
+});
+
+// ── Subject-line test E1 (Premium team, 2026-11-22) ──────────────────────────
+
+const e1Deals: PremiumEmailDeal[] = [
+  { name: "Jinx, Rebel", setName: "Origins", href: "https://riftcompare.com/card/x", imageUrl: null, price: "$10.00", store: "Shop", market: "$14.00", belowPct: 28.6 },
+  { name: "Ahri, Alluring", setName: "Origins", href: "https://riftcompare.com/card/y", imageUrl: null, price: "$20.00", store: "Shop", market: "$32.00", belowPct: 37.5 },
+];
+
+test("E1: arm B leads with the batch's real biggest gap; A and a deal-less B keep the original subject", () => {
+  const a = "Riftbound cards under market today, and what Premium unlocks";
+  assert.equal(premiumOfferSubject("a", e1Deals), a);
+  assert.equal(premiumOfferSubject("b", e1Deals), "Ahri, Alluring is 38% under TCGplayer market today");
+  assert.equal(premiumOfferSubject("b", []), a);
+  const built = buildPremiumOfferEmail({ displayName: "Bill", unsubUrl: "#", deals: e1Deals, subjectArm: "b" });
+  assert.equal(built.subject, premiumOfferSubject("b", e1Deals));
+});
+
+test("E1: an account's arm is fixed by its id and splits about 50/50", () => {
+  assert.equal(premiumOfferArm("user_1"), premiumOfferArm("user_1"));
+  let b = 0;
+  for (let i = 0; i < 2000; i++) if (premiumOfferArm(`cm${i.toString(36)}x${i * 7919}`) === "b") b++;
+  assert.ok(b > 900 && b < 1100, `B got ${b} of 2000`);
+});
+
+test("E1: the read counts only emailed accounts, and a click only after the send", () => {
+  const now = new Date("2026-11-30T00:00:00Z");
+  const sent = new Date("2026-11-23T00:00:00Z");
+  const ids = Array.from({ length: 40 }, (_, i) => `u${i}`);
+  const rows = ids.map((id, i) => ({
+    id,
+    sentAt: i < 30 ? sent : null,
+    clickedAt: i % 3 === 0 ? new Date(i % 2 ? "2026-11-24T00:00:00Z" : "2026-11-01T00:00:00Z") : null,
+    premiumUntil: i === 3 ? new Date("2026-12-07T00:00:00Z") : null,
+  }));
+  const read = premiumOfferArmRead(rows, now);
+  assert.equal(read[0]!.sent + read[1]!.sent, 30);
+  // clicks: i % 3 === 0 and odd i (after the send) among the 30 sent: 3, 9, 15, 21, 27
+  assert.equal(read[0]!.clicked + read[1]!.clicked, 5);
+  assert.equal(read[0]!.paying + read[1]!.paying, 1);
 });

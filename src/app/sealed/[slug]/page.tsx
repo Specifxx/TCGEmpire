@@ -76,7 +76,7 @@ export default async function SealedProductPage({ params }: { params: { slug: st
 
       <SealedProductView byMarket={byMarket} bf={bfStripByMarket(byMarket, g.setCode)} />
 
-      {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the price table, 24 Nov to 1 Dec, labelled Ad. */}
+      {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the price table, 22 Nov to 1 Dec, labelled Ad. */}
       <TcgplayerCyberBanner
         href={affiliateUrl(
           `https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?q=${encodeURIComponent(g.name)}&ProductTypeName=Sealed+Products`,
