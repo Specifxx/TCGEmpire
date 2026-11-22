@@ -35,7 +35,7 @@ export const GIVEAWAY_SITES: Record<GiveawaySite, GiveawaySiteInfo> = {
   dex: { name: "DexCompare", url: "https://dexcompare.io", game: "Pokémon TCG", owner: "Nintendo, Creatures, GAME FREAK and The Pokémon Company" },
   mtg: { name: "MTG Compare", url: "https://mtgcompare.app", game: "Magic: The Gathering", owner: "Wizards of the Coast" },
   ygo: { name: "YGO Compare", url: "https://ygocompare.com", game: "Yu-Gi-Oh! TCG", owner: "Konami" },
-  op: { name: "OP Compare", url: "https://opcompare.com", game: "One Piece Card Game", owner: "Bandai and Eiichiro Oda / Shueisha" },
+  op: { name: "OP Compare", url: "https://opcompare.app", game: "One Piece Card Game", owner: "Bandai and Eiichiro Oda / Shueisha" },
 };
 
 export interface Giveaway {
