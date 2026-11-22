@@ -29,7 +29,7 @@ test("giveaway card: not on the home page (its banner), the giveaway, account, P
   }
 });
 
-test("giveaway card: at most three times, two days apart, and never after Don't show again or an entry", () => {
+test("giveaway card: at most three times, a week apart, and never after Don't show again or an entry", () => {
   let s = markShown(freshPromptState(), open);
   assert.equal(shouldShowGiveawayPrompt(s, open + 3_600_000, "/sets", visit), false);
   assert.equal(shouldShowGiveawayPrompt(s, open + GIVEAWAY_PROMPT_GAP_MS, "/sets", visit), true);

@@ -25409,3 +25409,9 @@ so ShareButton's share-for-a-deal A/B test is untouched; event `share { medium: 
 **Why.** On 22 Nov a CA$89.99 Delta Reign ETB pre-order at Cardboard Hero took ten referral orders in 41 minutes, almost none through
 a click we tracked: the store link had been pasted into a restock chat. People share drops anyway; this makes the link they paste ours.
 Owner, 2026-11-23: "apply all these learnings to all the other sites". Read `share` medium `drop` and `share_visit` a week after release.
+
+## Giveaway corner card: ✕ hides it for a week (2026-11-22)
+
+Product & UX's clutter budget (rule 2): a dismissed prompt stays away for 7 days. `GIVEAWAY_PROMPT_GAP_MS` goes from two
+days to seven (`lib/giveaway-prompt.ts`); still at most three shows a giveaway, never on arrival, never after "Don't show
+again" or an entry.
