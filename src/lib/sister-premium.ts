@@ -215,7 +215,18 @@ export const EMAIL_SHAPE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
  * The RiftCompare account for an address its owner just proved (Google said so, or they opened the emailed link): linked by Google id
  * first, then by address, else created. Same rules as the OAuth callback: an address only enters the system verified.
  */
-export async function memberFor(email: string, google?: GoogleIdentity | null): Promise<{ id: string; email: string; isNew: boolean }> {
+/**
+ * User.signupSource for an account a sister site created (owner, 2026-11-22: sign-in prompts on every site): "sister:<site>", plus
+ * ":<surface>" when the sister names the prompt that sent the visitor (home, product, corner, signin, giveaway, collection…). The owned-
+ * audience count credits these accounts to the sister ("dex:account"), and /admin/accounts shows each surface. Only a known site key
+ * and a short lower-case surface pass; anything else is just "sister:<site>".
+ */
+export function sisterSignupSource(siteKey: string, surface?: unknown): string {
+  const s = typeof surface === "string" && /^[a-z][a-z_]{1,19}$/.test(surface) ? `:${surface}` : "";
+  return `sister:${siteKey}${s}`;
+}
+
+export async function memberFor(email: string, google?: GoogleIdentity | null, signupSource?: string): Promise<{ id: string; email: string; isNew: boolean }> {
   if (google) {
     const byGoogle = await prisma.user.findFirst({ where: { googleId: google.sub }, select: { id: true, email: true } });
     if (byGoogle) return { ...byGoogle, isNew: false };
@@ -238,6 +249,7 @@ export async function memberFor(email: string, google?: GoogleIdentity | null): 
       displayName: (google?.name ?? email.split("@")[0]!).slice(0, 24),
       emailVerified: new Date(),
       ...(google ? { googleId: google.sub, avatarUrl: google.picture } : {}),
+      ...(signupSource ? { signupSource } : {}),
       lastLoginAt: new Date(),
     },
     select: { id: true, email: true },

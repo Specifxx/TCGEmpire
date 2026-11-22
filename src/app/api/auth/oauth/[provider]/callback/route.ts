@@ -9,6 +9,7 @@ import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-sha
 import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
 import { PREMIUM_START_PATH } from "@/lib/premium-start";
 import { appReturnUrl, appFailUrl, isAppUserAgent, mintAppCode, readAppState } from "@/lib/app-auth";
+import { sisterSignupSource } from "@/lib/sister-premium";
 import { sisterFailUrl, sisterForCookie, sisterOAuthCookie, sisterOAuthNextCookie, sisterOAuthViaCookie, sisterReturnUrl } from "@/lib/sister-oauth";
 
 // Where a failed sign-in lands. /login by default — it renders AuthForm, which
@@ -94,6 +95,8 @@ export async function GET(req: Request, { params }: { params: { provider: string
     if (sister) {
       const back = await sisterReturnUrl(sister, user.email, cookies().get(sisterOAuthNextCookie(provider))?.value);
       clearSister(provider);
+      // A new account made from a sister's Google or Discord button is credited to that sister (lib/sister-premium.ts).
+      if (isNew) void prisma.user.update({ where: { id: user.id }, data: { signupSource: sisterSignupSource(sister.key) } }).catch(() => {});
       void claimAlertsForUser(user.id, user.email).catch(() => {});
       void prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
       return NextResponse.redirect(back);
