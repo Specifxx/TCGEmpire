@@ -116,12 +116,12 @@
       "EU": 6497,
       "SG": 33000,
       "UK": 13303,
-      "US": 13499
+      "US": 14400
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 88099
+      "US": 87999
     },
     "OGN|Booster Pack": {
       "AU": 1800,
@@ -173,7 +173,7 @@
       "CA": 5997,
       "EU": 799,
       "SG": 6985,
-      "US": 6353
+      "US": 6334
     },
     "OGN|Champion Deck (Viktor) Display": {
       "US": 27296
@@ -214,7 +214,7 @@
       "EU": 4300
     },
     "OGS|Proving Grounds": {
-      "AU": 8600,
+      "AU": 8550,
       "CA": 1105,
       "EU": 2599,
       "SG": 3514,
@@ -326,14 +326,14 @@
       "EU": 9407,
       "SG": 8415,
       "UK": 10995,
-      "US": 14200
+      "US": 15050
     },
     "SFD|Booster Case": {
       "AU": 180000,
       "CA": 150000,
       "EU": 59990,
       "UK": 73999,
-      "US": 98889
+      "US": 98880
     },
     "SFD|Booster Pack": {
       "AU": 1400,
@@ -432,7 +432,7 @@
     "UNL|Booster Case": {
       "AU": 144999,
       "EU": 55500,
-      "US": 98998
+      "US": 98500
     },
     "UNL|Booster Pack": {
       "AU": 1100,
@@ -460,6 +460,7 @@
     },
     "UNL|Champion Deck (Vex) Display": {
       "AU": 4000,
+      "CA": 7590,
       "US": 13997
     },
     "UNL|Champion Deck (Vi)": {
@@ -472,6 +473,7 @@
     },
     "UNL|Champion Deck (Vi) Display": {
       "AU": 4000,
+      "CA": 7590,
       "US": 5892
     },
     "UNL|Nexus Night Pack": {
@@ -479,7 +481,7 @@
       "EU": 249,
       "SG": 1381,
       "UK": 1080,
-      "US": 560
+      "US": 555
     },
     "UNL|Pre-Rift Event Kit": {
       "EU": 4500,
@@ -574,7 +576,6 @@
       "US": 4294
     },
     "VEN|Sleeved Booster": {
-      "CA": 995,
       "EU": 3700,
       "US": 795
     },
@@ -603,7 +604,7 @@
     },
     "giftoftheriftbundle": {
       "AU": 38000,
-      "CA": 25000,
+      "CA": 34999,
       "EU": 15499,
       "US": 20000
     },
@@ -631,9 +632,6 @@
     },
     "legacyvault": {
       "EU": 3399
-    },
-    "orginsboosterboxriftboundleagueoflegends": {
-      "CA": 26999
     },
     "originsnexusnightpromobooster": {
       "EU": 1000
@@ -769,7 +767,7 @@
       "US": 17000
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 26500
+      "US": 24501
     },
     "riftboundxt12025worldschampionsignaturee": {
       "EU": 100000
