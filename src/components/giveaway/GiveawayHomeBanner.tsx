@@ -14,7 +14,7 @@ export function GiveawayHomeBanner({ now = new Date() }: { now?: Date }) {
         <span className="min-w-0 flex-1">
           <span className="block text-xs font-semibold uppercase tracking-wide text-gold">Free giveaway · worldwide · closes 14 Dec</span>
           <span className="mt-0.5 block text-lg font-bold leading-snug sm:text-xl">{G.title}</span>
-          <span className="mt-0.5 block text-sm opacity-80">Free with a RiftCompare account. Watch any card&apos;s price for 3 entries, +1 for every friend you invite.</span>
+          <span className="mt-0.5 block text-sm opacity-80">Free with a RiftCompare account. 50 points free, +5 every day you check in, +25 for each friend you invite.</span>
         </span>
         <span className="hidden flex-none rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black sm:inline">Enter free →</span>
       </Link>

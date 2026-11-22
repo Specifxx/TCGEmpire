@@ -101,7 +101,7 @@ export function GiveawayPrompt() {
         <div className="min-w-0 pr-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-gold">Free giveaway · closes 14 Dec</p>
           <p className="mt-0.5 font-bold leading-snug">{G.title}</p>
-          <p className="mt-1 text-sm opacity-80">Free to enter, worldwide. Up to 3 entries for watching a price.</p>
+          <p className="mt-1 text-sm opacity-80">Free to enter, worldwide. 50 points free, +5 for every daily check-in.</p>
         </div>
       </div>
       <div className="mt-3 flex items-center gap-3">

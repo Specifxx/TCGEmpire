@@ -19,7 +19,7 @@ import { inboxEmail } from "./owner";
 export const MAX_PER_HOUR = 8;
 export const MAX_PER_DAY = 25;
 
-export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate" | "creator-profile" | "store-plan" | "sister-alert" | "sister-ad" | "giveaway" | "checkup";
+export type InboxKind = "contact" | "feedback" | "store-suggestion" | "price-report" | "support" | "affiliate" | "creator-profile" | "store-plan" | "sister-alert" | "sister-ad" | "giveaway" | "giveaway-winner" | "checkup";
 
 export interface InboxItem {
   kind: InboxKind;
@@ -47,13 +47,15 @@ const LABEL: Record<InboxKind, string> = {
   "sister-ad": "Paid featured listing",
   // A prize-draw entry milestone (lib/giveaway.ts): the first entry and every 50th, not each one.
   giveaway: "Giveaway entries",
+  // A draw's winner, then their postal address once they claim (lib/giveaway-run.ts, 2026-11-22).
+  "giveaway-winner": "Giveaway winner",
   // A collection check-up request (lib/checkup.ts, 2026-11-19 test): written by hand.
   checkup: "Collection check-up request",
 };
 
 /** Where the email's button goes: creator applications are reviewed in /admin/affiliates, Stores plans linked in /admin/store-partners. */
 const inboxHref = (kind: InboxKind) =>
-  `${SITE_URL}${kind === "affiliate" ? "/admin/affiliates" : kind === "creator-profile" ? "/admin/creators" : kind === "store-plan" ? "/admin/store-partners" : "/admin/messages"}`;
+  `${SITE_URL}${kind === "affiliate" ? "/admin/affiliates" : kind === "creator-profile" ? "/admin/creators" : kind === "store-plan" ? "/admin/store-partners" : kind === "giveaway-winner" ? "/admin/giveaway" : "/admin/messages"}`;
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}…` : s);
 const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();

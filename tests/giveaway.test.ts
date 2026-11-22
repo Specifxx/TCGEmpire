@@ -35,19 +35,96 @@ test("the public page reads no session or database", () => {
   assert.match(page, /void/);
 });
 
-import { entryWeight, weightedPick, publicName, BONUS_ENTRIES, MAX_REFERRAL_ENTRIES } from "../src/lib/giveaway";
+import {
+  entryPoints,
+  weightedPick,
+  publicName,
+  assignTickets,
+  ticketHolder,
+  drandRoundAt,
+  giveawayFor,
+  GIVEAWAYS,
+  ENTRY_POINTS,
+  BONUS_POINTS,
+  CHECKIN_POINTS,
+  REFERRAL_POINTS,
+  MAX_REFERRALS,
+  PREMIUM_START_POINTS,
+  DRAND_GENESIS,
+  DRAND_PERIOD,
+} from "../src/lib/giveaway";
+import { winningTicket, drawSeed } from "../src/lib/giveaway-draw";
 
-test("Premium never beats a free account: a price watch earns the same entries", () => {
-  assert.equal(entryWeight({ premium: false, watches: 0 }).weight, 1);
-  assert.equal(entryWeight({ premium: true, watches: 0 }).weight, BONUS_ENTRIES);
-  assert.equal(entryWeight({ premium: false, watches: 1 }).weight, BONUS_ENTRIES);
-  assert.equal(entryWeight({ premium: true, watches: 5 }).weight, BONUS_ENTRIES);
+const none = { premium: false, watches: 0, bonusClaimed: false, checkins: 0 };
+
+test("points: 10 to enter, 50 for Premium, and a free account reaches the same 50 (no purchase necessary)", () => {
+  assert.equal(ENTRY_POINTS, 10);
+  assert.equal(PREMIUM_START_POINTS, 50);
+  assert.equal(entryPoints(none).points, 10);
+  assert.equal(entryPoints({ ...none, premium: true }).points, 50);
+  assert.equal(entryPoints({ ...none, watches: 1 }).points, 50);
+  assert.equal(entryPoints({ ...none, bonusClaimed: true }).points, 50);
+  // Premium and a free bonus never stack.
+  assert.equal(entryPoints({ ...none, premium: true, watches: 3, bonusClaimed: true }).points, ENTRY_POINTS + BONUS_POINTS);
+  assert.equal(entryPoints({ ...none, premium: true }).bonusVia, "premium");
+  assert.equal(entryPoints({ ...none, bonusClaimed: true }).bonusVia, "claim");
 });
 
-test("confirmed referrals add one entry each, capped", () => {
-  assert.equal(entryWeight({ premium: false, watches: 0, referrals: 2 }).weight, 3);
-  assert.equal(entryWeight({ premium: false, watches: 1, referrals: 99 }).weight, BONUS_ENTRIES + MAX_REFERRAL_ENTRIES);
-  assert.equal(entryWeight({ premium: false, watches: 0, referrals: -4 }).weight, 1);
+test("points: 5 a check-in day, 25 a confirmed friend, friends capped", () => {
+  assert.equal(entryPoints({ ...none, checkins: 4 }).points, 10 + 4 * CHECKIN_POINTS);
+  assert.equal(entryPoints({ ...none, referrals: 2 }).points, 10 + 2 * REFERRAL_POINTS);
+  assert.equal(entryPoints({ ...none, referrals: 99 }).referralsCounted, MAX_REFERRALS);
+  assert.equal(entryPoints({ ...none, referrals: -4, checkins: -2 }).points, 10);
+});
+
+test("tickets run in entry order, one per point, and every ticket has one holder", () => {
+  const d = (s: string) => new Date(s);
+  const rows = [
+    { userId: "b", enteredAt: d("2026-11-20T00:00:00Z"), weight: 50 },
+    { userId: "a", enteredAt: d("2026-11-19T00:00:00Z"), weight: 10 },
+    { userId: "c", enteredAt: d("2026-11-20T00:00:00Z"), weight: 15 },
+    { userId: "z", enteredAt: d("2026-11-18T00:00:00Z"), weight: 0 },
+  ];
+  const { runs, total } = assignTickets(rows);
+  assert.equal(total, 75);
+  assert.deepEqual(runs.map((r) => [r.userId, r.from, r.to]), [["a", 1, 10], ["b", 11, 60], ["c", 61, 75]]);
+  assert.equal(ticketHolder(runs, 1)?.userId, "a");
+  assert.equal(ticketHolder(runs, 60)?.userId, "b");
+  assert.equal(ticketHolder(runs, 61)?.userId, "c");
+  assert.equal(ticketHolder(runs, 76), null);
+});
+
+test("the draw: drand's randomness mod tickets, redraws from SHA-256, always in range", () => {
+  const r = "a".repeat(64);
+  const t = winningTicket(r, 75);
+  assert.equal(t, Number(BigInt(`0x${r}`) % 75n) + 1);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const n = winningTicket(r, 7, attempt);
+    assert.ok(n >= 1 && n <= 7);
+  }
+  assert.notEqual(drawSeed(r, 1), drawSeed(r, 0));
+  assert.throws(() => winningTicket("not-hex", 5));
+  assert.throws(() => winningTicket(r, 0));
+});
+
+test("the drand round is the first one published at or after the close", () => {
+  const close = "2026-12-14T12:59:59Z";
+  const round = drandRoundAt(close);
+  const at = DRAND_GENESIS + (round - 1) * DRAND_PERIOD;
+  assert.ok(at >= Date.parse(close) / 1000);
+  assert.ok(at - DRAND_PERIOD < Date.parse(close) / 1000);
+});
+
+test("five sites, one giveaway each, every two months, prizes under the owner's A$20 for the sisters", () => {
+  const now = new Date("2026-11-25T00:00:00Z");
+  for (const site of ["rift", "dex", "mtg", "ygo", "op"] as const) {
+    const g = giveawayFor(site, now);
+    assert.ok(g, site);
+    assert.equal(g!.site, site);
+  }
+  const keys = new Set(GIVEAWAYS.map((g) => g.key));
+  assert.equal(keys.size, GIVEAWAYS.length);
+  for (const g of GIVEAWAYS.filter((x) => x.site !== "rift")) assert.match(g.approxValue, /A\$1[0-9]|A\$20\b/);
 });
 
 test("the draw is weighted by entries", () => {
