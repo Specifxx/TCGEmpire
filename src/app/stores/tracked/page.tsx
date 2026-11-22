@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   alternates: pageAlternates("/stores/tracked"),
 };
 
-const MARKETS: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
+const MARKETS: Country[] = ["US", "AU", "UK", "SG", "CA", "EU"];
 
 const FAQS = [
   {
