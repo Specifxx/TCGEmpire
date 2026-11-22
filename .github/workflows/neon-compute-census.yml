@@ -1,0 +1,71 @@
+name: Neon compute census (one-off, claude branch only)
+
+# One-off diagnosis (2026-11-22): Neon emailed that project "neon-byzantium-park" used 100% of its
+# 100 CU-hour free compute. This lists every project the key sees with its name, compute used this
+# period, endpoint settings and database names, and labels which secret points at which project.
+# It prints no connection string and no password: only endpoint ids, which are not credentials.
+on:
+  push:
+    branches: [claude/project-thread-kla08y]
+    paths: [.github/workflows/neon-compute-census.yml]
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }}
+      U_DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+      U_HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 }}
+      U_HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 }}
+      U_RM12: ${{ secrets.RM12 }}
+      U_RM11: ${{ secrets.RM11 }}
+      U_RM10: ${{ secrets.RM10 }}
+      U_NEW_MAIN_DATABASE_URL: ${{ secrets.NEW_MAIN_DATABASE_URL }}
+      U_NEW_HISTORY_DATABASE_URL: ${{ secrets.NEW_HISTORY_DATABASE_URL }}
+    steps:
+      - run: |
+          python3 - <<'PY'
+          import json, os, re, urllib.request
+          key = os.environ["NEON_API_KEY"]
+          def get(p):
+              r = urllib.request.Request("https://console.neon.tech/api/v2" + p, headers={"Authorization": f"Bearer {key}", "Accept": "application/json"})
+              return json.load(urllib.request.urlopen(r, timeout=30))
+          labels = {}
+          for k, v in os.environ.items():
+              if k.startswith("U_") and v:
+                  m = re.search(r"@(ep-[a-z0-9-]+?)(-pooler)?\.", v)
+                  if m: labels.setdefault(m.group(1), []).append(k[2:])
+          orgs = []
+          if os.environ.get("NEON_ORG_ID"): orgs.append(os.environ["NEON_ORG_ID"])
+          try:
+              for o in get("/users/me/organizations").get("organizations", []):
+                  if o["id"] not in orgs: orgs.append(o["id"])
+          except Exception as e: print("org lookup:", e)
+          if not orgs: orgs = [None]
+          seen = set()
+          for org in orgs:
+              q = "/projects?limit=100" + (f"&org_id={org}" if org else "")
+              try: projects = get(q).get("projects", [])
+              except Exception as e: print("list", org, e); continue
+              print(f"== org {org}: {len(projects)} projects")
+              for p in projects:
+                  if p["id"] in seen: continue
+                  seen.add(p["id"])
+                  try: d = get(f"/projects/{p['id']}")["project"]
+                  except Exception: d = p
+                  cu_h = (d.get("compute_time_seconds") or 0) / 3600
+                  act_h = (d.get("active_time_seconds") or 0) / 3600
+                  print(f"\n# {d.get('name')}  id={d['id']}  created={d.get('created_at','')[:10]}  region={d.get('region_id')}")
+                  print(f"  compute={cu_h:.1f} CU-h  active={act_h:.1f} h  transfer={(d.get('data_transfer_bytes') or 0)/1e9:.2f} GB  period={d.get('consumption_period_start','')[:10]}..{d.get('consumption_period_end','')[:10]}")
+                  try:
+                      for e in get(f"/projects/{p['id']}/endpoints").get("endpoints", []):
+                          print(f"  endpoint {e['id']} state={e.get('current_state')} suspend={e.get('suspend_timeout_seconds')}s cu={e.get('autoscaling_limit_min_cu')}-{e.get('autoscaling_limit_max_cu')} last_active={e.get('last_active')} disabled={e.get('disabled')} used_by={labels.get(e['id'], [])}")
+                  except Exception as ex: print("  endpoints:", ex)
+                  try:
+                      for b in get(f"/projects/{p['id']}/branches").get("branches", []):
+                          dbs = [x["name"] for x in get(f"/projects/{p['id']}/branches/{b['id']}/databases").get("databases", [])]
+                          print(f"  branch {b.get('name')} default={b.get('default')} dbs={dbs}")
+                  except Exception as ex: print("  branches:", ex)
+          PY
