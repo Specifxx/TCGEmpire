@@ -16,7 +16,7 @@ export const GIVEAWAY_PROMPT_SESSION_KEY = "rc_gw_prompt_seen";
 export const GIVEAWAY_PROMPT_AFTER_PAGES = 2;
 export const GIVEAWAY_PROMPT_DELAY_MS = 6_000;
 export const GIVEAWAY_PROMPT_MAX_SHOWS = 3;
-export const GIVEAWAY_PROMPT_GAP_MS = 2 * 86_400_000;
+export const GIVEAWAY_PROMPT_GAP_MS = 7 * 86_400_000; // ✕ hides it for a week (Product & UX clutter budget, rule 2, 2026-11-22)
 
 export interface GiveawayPromptState {
   /** The giveaway this state belongs to: a new giveaway starts fresh. */

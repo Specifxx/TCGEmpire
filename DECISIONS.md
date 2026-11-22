@@ -25432,3 +25432,9 @@ period by the Neon API, and probe-databases found it reachable and behind RM12 o
 maintenance.yml under the 450 KB test) copied it with every table matching (User 756, RetailerPrice 240,703), and runs once
 more just before this commit goes live. `OPERATIONAL_VARS = ["RM9"]`; RM12 stays untouched as the rollback. It rides the
 normal daily release, not an urgent one: the deadline is days away. The burn is still the one CURRENT-STATE names.
+
+## Giveaway corner card: ✕ hides it for a week (2026-11-22)
+
+Product & UX's clutter budget (rule 2): a dismissed prompt stays away for 7 days. `GIVEAWAY_PROMPT_GAP_MS` goes from two
+days to seven (`lib/giveaway-prompt.ts`); still at most three shows a giveaway, never on arrival, never after "Don't show
+again" or an entry.
