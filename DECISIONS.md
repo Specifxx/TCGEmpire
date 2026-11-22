@@ -25236,6 +25236,15 @@ an agent can run the owner's batches without the browser.
 **Why.** Turning the whole flag off would restart every promotional sender at once; the 2026-11-09 entry asks that each
 one be brought back by its own decision. The 90 sends that failed under the flag were never stamped, so they are still
 pending and go first.
+
+## 2026-11-22: The confirm page asks for the weekly email (repeat awareness, opt-in only)
+
+The audience programme asked for "a weekly drops email to every confirmed address". The weekly email stays opt-in (DECISIONS
+2026-11-08: an alert address never gets mail it did not ask for, and the shared Resend domain also carries sign-in mail, so spam
+complaints cost more than a send). Instead the moment of confirming, when the person has just said yes to us, now asks: an address
+with a price alert and no weekly email sees "Also get <site>'s biggest price drops once a week?" with one button, which posts to the
+manage route (the same subscribe path as the link in every alert email). Nothing subscribes without that click;
+`tests/sister-weekly-signup.test.ts` pins it.
 ## 2026-11-22: Bot rules never untag a real person
 
 The owner (22 Nov): "make sure that there are literally zero false negatives when you filter bots, and false positives are okay."
