@@ -64,6 +64,9 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ldJson } from "@/lib/jsonld";
 import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
 import { AppPremiumNotice } from "@/components/AppPremiumNotice";
+import { PremiumDealProof } from "@/components/premium/PremiumDealProof";
+import { pabActive } from "@/lib/premium-ab";
+import { loadPremiumProofDeal } from "@/lib/premium-proof";
 
 export const dynamic = "force-dynamic";
 
@@ -180,6 +183,8 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   // The Collectr-style page, for anyone who has not bought while Premium is the one plan.
   const landing = !already && !plusLive;
   const rating = landing ? await getSiteRating() : null;
+  // Test P1 (lib/premium-ab.ts): the B line's one real deal, read only while the test runs.
+  const proofDeal = landing && pabActive() ? await loadPremiumProofDeal() : null;
   const landingPrices = {
     monthly: tierMonthlyAmount("premium"),
     annual: PREMIUM_ANNUAL_AMOUNT,
@@ -279,7 +284,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
         <>
           <PremiumPageView signedIn={!!user} />
           <CtaZone location="pricing">
-            <ProLanding prices={landingPrices} cta={landingCta} rating={rating} />
+            <ProLanding prices={landingPrices} cta={landingCta} rating={rating} proof={pabActive() ? <PremiumDealProof deal={proofDeal} /> : null} />
           </CtaZone>
           <p className="mx-auto mt-6 max-w-2xl text-center text-xs font-semibold text-slate-400" data-premium-terms>
             Cancel anytime in two clicks · Secure payment by Stripe · Prices in US dollars

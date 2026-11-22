@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { lastUpgradeFeature, marketFromCookie, tierRequiredFor, trackUpgradeCta } from "@/lib/upgrade-intent";
 import { trackEvent } from "@/lib/analytics";
+import { pabKey } from "@/lib/premium-ab";
 import { markSignupSource } from "@/lib/signup-source";
 import { premiumStartHref } from "@/lib/premium-start";
 import { PREMIUM_COPY_VERSION, TIER_NAMES, trialButtonLabel, trialDisclosure, type PremiumTierKey } from "@/lib/site";
@@ -98,7 +99,7 @@ export function PremiumCta({
     // Fired BEFORE the fetch — a low-volume conversion-funnel step, so it goes
     // to both GA4 and Vercel (not added to GA4_ONLY_EVENTS), unlike the
     // high-volume impression events elsewhere in the Premium funnel.
-    trackEvent("premium_checkout_started", { plan, tier, trial_eligible: trialEligible, source: "premium-page", copy: PREMIUM_COPY_VERSION });
+    trackEvent("premium_checkout_started", { plan, tier, trial_eligible: trialEligible, source: "premium-page", copy: PREMIUM_COPY_VERSION, pk: pabKey() });
     trackUpgradeCta(premiumPageContext(true), tier, plan);
     try {
       const res = await fetch("/api/premium/checkout", {
