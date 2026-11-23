@@ -1271,6 +1271,17 @@ export function wrongSealedEbayProduct(title: string, productType: string): stri
     if (!says) return "another champion";
     if ([...named].some((n) => n !== target)) return "another champion";
   }
+  // A set's generic Champion Deck group (store titles that name no champion: "Origins Champion Deck") is searched as
+  // "Riftbound Origins Champion Deck", and eBay answered with one champion's deck ("… Origins Jinx Champion Deck",
+  // "Unleashed Champion Deck (Vi)"): 16 such rows on 5 sets' generic pages in the 22 Nov export, each a product the
+  // champion's own group already prices. A deck display ("Champion Deck Display: Zed vs.") is not one deck either.
+  if (productType === "Champion Deck") {
+    if (SEALED_DECK_CHAMPIONS.test(t)) return "a champion's own deck";
+    if (/\bdisplay\b/i.test(t)) return "a display";
+  }
+  // OGN|Box Set (Fire and Dice's "Arcane Box Set - Origins: Promos") took two eBay booster boxes (EUR 449, GBP 208.70):
+  // a title that says booster box or display and never "box set" is the set's booster box.
+  if (productType === "Box Set" && /booster\s*(?:box|display)|display\s*box/i.test(t) && !/box\s*set/i.test(t)) return "a booster box";
   const single = ONE_PACK_OR_DECK.test(productType);
   if (single || ONE_ITEM.test(productType)) {
     const counts = [...t.matchAll(GROUP_OF)].map((m) => countOf(m[1]));

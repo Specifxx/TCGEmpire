@@ -18,6 +18,14 @@ test("an eBay listing of another product is refused for the group searched", () 
     ["Set of 2 Riftbound League of Legends Spiritforged Starter Decks SEALED & IN HAND", "Starter Set"],
     ["Riftbound Starter Set 1000 cartas ES colección paquete Origins Spirit 1 Booster etc.", "Starter Set"],
     ["RIFTBOUND LEAGUE OF LEGENDS OGN-ORIGINS ARCANE BOX SET JINX - REBEL PCG 9.5", "Box Set"],
+    // 22 Nov export: one champion's deck on a set's generic Champion Deck page, a booster box on OGN|Box Set.
+    ["Riftbound League of Legends TCG Set 1 Origins Jinx Champion Deck", "Champion Deck"],
+    ["Lee Sin Champion Deck Origins Riftbound League Of Legends", "Champion Deck"],
+    ["Riftbound TCG: Unleashed Champion Deck (Vi) SEALED DECK", "Champion Deck"],
+    ["Riftbound League of Legends TCG - Legacy Champion Deck - Ashe (Presell) English", "Champion Deck"],
+    ["Riftbound - League of Legends TCG - Vendetta - Champion Deck Display: Zed vs.", "Champion Deck"],
+    ["Riftbound League of Legends Set One Origins Booster Box ENG Wave 1", "Box Set"],
+    ["Riftbound Origins League of Legends Trading Card Game Set 1 Booster Display Box", "Box Set"],
   ];
   for (const [t, type] of refused) assert.notEqual(wrongSealedEbayProduct(t, type), null, `${type}: ${t}`);
   const kept: [string, string][] = [
@@ -31,6 +39,11 @@ test("an eBay listing of another product is refused for the group searched", () 
     ["Riftbound Unleashed Bundle - 10 Booster Packs", "Bundle"],
     ["Riftbound Origins Booster Box 36 Packs Factory Sealed", "Booster Box"],
     ["Riftbound Origins Nexus Night Promo Pack x1 Sealed", "Nexus Night Pack"],
+    ["Riftbound Origins Champion Deck", "Champion Deck"],
+    ["League of Legends Riftbound TCG: Origins - Champion Decks", "Champion Deck"],
+    ["Riftbound Spiritforged Champion Deck Sealed Display Set - Fiona and Rumble", "Champion Deck Display"],
+    ["Riftbound: League of Legends TCG Arcane Box Set Sealed English New", "Box Set"],
+    ["Arcane Box Set - Origins: Promos", "Box Set"],
   ];
   for (const [t, type] of kept) assert.equal(wrongSealedEbayProduct(t, type), null, `${type}: ${t}`);
 });
