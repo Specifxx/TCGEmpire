@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { getSealedProductBySlug, setLessSlugRedirect, setCatchAllRedirect, championDeckSlugRedirect } from "@/lib/sealed-import";
+import { getSealedProductBySlug, setLessSlugRedirect, setCatchAllRedirect, championDeckSlugRedirect, showdownDeckSlugRedirect } from "@/lib/sealed-import";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { isPreorderSetCode, SETS } from "@/lib/constants";
 import { pageAlternates } from "@/lib/seo";
@@ -48,6 +48,9 @@ export default async function SealedProductPage({ params }: { params: { slug: st
     // A one-champion deck's old title page ("riftboundchampiondeckjinx"): its set's deck page.
     const deck = championDeckSlugRedirect(params.slug);
     if (deck) permanentRedirect(`/sealed/${deck}`);
+    // A Showdown pair's old title page (2026-11-23): the pair's set page, or /sealed when the slug names no pair.
+    const pair = showdownDeckSlugRedirect(params.slug);
+    if (pair) permanentRedirect(pair);
     const setHub = setCatchAllRedirect(params.slug);
     if (setHub) permanentRedirect(setHub);
     notFound();

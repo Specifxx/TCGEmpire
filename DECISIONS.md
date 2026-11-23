@@ -25482,3 +25482,22 @@ reads the invoices, in the same 44-day windows, and adds each `BONUS` line once 
 today), in the invoice's currency, pending until the line is `PAID`. It shows as its own "Performance bonus" check row and is
 not split by site (a bonus carries no tag). An invoice read that fails leaves the commissions untouched and says so in the
 source's detail. Same keys as before, so nothing for the owner to set.
+
+## 2026-11-23: A Showdown pair names its set
+
+The same gap "A Champion Deck's champion names its set" closed for Champion Decks: a Showdown Decks title that named no set
+("RIFTBOUND SHOWDOWN DECK - EVELYNN VS SERAPHINE", "RIFTBOUND League of Legends TCG Zed Vs Shen Showdown Decks", a misspelt
+"Vandetta") fell to a title page of one to four stores, and a wrong set word filed it under that set: Nerd Merchant's
+"Unleashed - Showdown Decks - Zed vs Shen" (US$14.99) made a one-store UNL|Showdown Decks page for a product Unleashed never
+had, and The Side Deck's "… VENDETTA EVELYNN VS SERAPHINE …" sat on Vendetta's page. Each pair is one product of one set
+(Evelynn vs Seraphine: Radiance; Zed vs Shen: Vendetta), so when a Showdown Decks title names both champions of exactly one
+pair, the pair decides the set, ahead of any set word (`SHOWDOWN_PAIR_SETS`, `showdownDeckSet` in `lib/sealed-import.ts`). A
+case, a lot, half a pair or no pair keeps what it had. `cleanupStaleSealed` drops a stored row its pair now files elsewhere
+(`misfiledShowdownDeck`), and its store writes it to the pair's page on the next read. Over the 22 Nov export that moves 21
+rows (CA 15, UK 4, US 2) and no other. An old title page, once empty, 301s to the pair's page, or to `/sealed` when its
+slug was cut before the pair (`showdownDeckSlugRedirect`), never a 404. A new pair goes in the list only when its set is
+certain; a pair a later set reprints must come out of it.
+
+The same change refuses Funko POP! vinyls (`SEALED_EXCLUDE`): Ozzie's "Arcane: League of Legends (TV) Bundle - 5 POP!
+Vinyls" (A$104.95) and "League of Legends Bundle 2 - 4 POP! Vinyls" passed as Riftbound Bundles and each had a sealed page.
+`tests/sealed-showdown-deck-set.test.ts`.
