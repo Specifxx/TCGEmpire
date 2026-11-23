@@ -25501,3 +25501,11 @@ certain; a pair a later set reprints must come out of it.
 The same change refuses Funko POP! vinyls (`SEALED_EXCLUDE`): Ozzie's "Arcane: League of Legends (TV) Bundle - 5 POP!
 Vinyls" (A$104.95) and "League of Legends Bundle 2 - 4 POP! Vinyls" passed as Riftbound Bundles and each had a sealed page.
 `tests/sealed-showdown-deck-set.test.ts`.
+
+## Giveaway: the sister sites' alert emails carry their own giveaway (2026-11-23)
+
+Owner, 2026-11-23: Rift gets the sign-ups and Dex does not, "is there anything we can do similar for Dex Compare and MTG Compare".
+Rift's alert emails have had a giveaway line in the footer since 22 Nov (`lib/email.ts` `giveawayLine`); the sister sites' alert
+and weekly-drops emails, which RiftCompare sends for them, had none. `sisterGiveawayLine` (`lib/sister-alerts/email.ts`) adds the
+site's own open giveaway (Dex, MTG, YGO, OP), linked to that site's `/giveaway` with `utm_campaign=giveaway-footer`. It is a
+footer line, not a prompt, so the one-prompt-a-visit budget is untouched, and it disappears by itself at the close.
