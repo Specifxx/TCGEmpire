@@ -25452,3 +25452,11 @@ naming any champion in `SEALED_DECK_CHAMPIONS` or saying "display", and for "Box
 without "box set". The champion's own group already searches for that deck, so no price is lost. Run over the whole export it
 refuses exactly those 16 rows and no other eBay row (`tests/ebay-sealed-one-product.test.ts`). A generic "Champion Deck
 Display" is left alone: a display naming two champions is the mixed display. Rules only refuse.
+
+## 2026-11-23: The phone menu's links run two to a row
+
+Owner, 2026-11-23: "our site's … navigation and stuff can be significantly improved". Measured on a 390 px phone, the menu
+(`CinematicNavMenu.tsx`) was its 69 links in one column, 3,967 px tall: nearly five screens to reach Help. Each group's
+links now sit two to a row below `sm` (2,438 px, 39% shorter); from `sm` up nothing changes. Every link is still there and
+still ungated: the 2026-09-16 call (no Popular subset, no "Show all features") stands, and `tests/nav-menu-full-grid.test.ts`
+still pins it. Labels may wrap to two lines; the 44 px tap height stays.
