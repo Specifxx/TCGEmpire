@@ -219,8 +219,10 @@ const SEALED_TITLE =
 // …but never these. Singles / accessories / bulk / break slots / non-English slip
 // through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
 // (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
+// Funko POP! vinyl figures (2026-11-23): Ozzie's "Arcane: League of Legends (TV) Bundle - 5 POP! Vinyls" (A$104.95)
+// and "League of Legends Bundle 2 - 4 POP! Vinyls" passed as Riftbound Bundles and each made a sealed page.
 const SEALED_EXCLUDE =
-  /\bsingle\b|\bKDA-\d{3}|art\s*book|concept\s*art|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|radiance|proving\s*grounds)\b[^)]*\)/i;
+  /\bsingle\b|\bKDA-\d{3}|art\s*book|concept\s*art|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|radiance|proving\s*grounds)\b[^)]*\)|\bpop!?\s*vinyls?\b|\bfunko\b/i;
 
 async function fetchText(url: string): Promise<string | null> {
   try {
@@ -535,10 +537,47 @@ export function championDeckSet(title: string, productType: string): string | nu
   return CHAMPION_DECK_SETS[flatChampion(champ)] ?? null;
 }
 
-/** A sealed title's set: none for a SET_LESS_GROUPS product, else the set it names, else its Champion Deck's. Pure. */
+/** A sealed title's set: none for a SET_LESS_GROUPS product, else its Showdown pair's, else the set it names, else its
+ *  Champion Deck's. Pure. */
 export function sealedSetCode(title: string, productType: string): string | null {
   if (setLessGroupKey(title)) return null;
-  return detectSet(title) ?? championDeckSet(title, productType);
+  return showdownDeckSet(title, productType) ?? detectSet(title) ?? championDeckSet(title, productType);
+}
+
+// SHOWDOWN DECKS THAT NAME NO SET (2026-11-23, DECISIONS.md "A Showdown pair names its set"). The same gap #613 closed
+// for Champion Decks: "RIFTBOUND SHOWDOWN DECK - EVELYNN VS SERAPHINE", "RIFTBOUND League of Legends TCG Zed Vs Shen
+// Showdown Decks" and "Riftbound Vandetta Showdown Deck…" (a misspelt set) named no set, so 21 rows of the 22 Nov
+// export sat on 9 title pages of one to four stores (CA and UK) while RAD|Showdown Decks (112 rows) and VEN|Showdown
+// Decks (144) never showed them. Each pair is ONE product of ONE set, so the pair outranks a set word too: Nerd
+// Merchant's "Unleashed - Showdown Decks - Zed vs Shen" (US$14.99) made a one-store UNL|Showdown Decks page for a
+// product Unleashed never had. Both champions of the pair must be named; a case or a lot keeps its title page.
+export const SHOWDOWN_PAIR_SETS: readonly { pair: readonly [string, string]; set: string }[] = [
+  { pair: ["evelynn", "seraphine"], set: "RAD" },
+  { pair: ["zed", "shen"], set: "VEN" },
+];
+
+/** The set a Showdown Decks title names through its pair, or null. Pure. */
+export function showdownDeckSet(title: string, productType: string): string | null {
+  if (!/^Showdown Decks(?: Display)?$/.test(productType) || SEVERAL.test(title)) return null;
+  const hits = SHOWDOWN_PAIR_SETS.filter((p) => p.pair.every((c) => new RegExp(`\\b${c}\\b`, "i").test(title)));
+  return hits.length === 1 ? hits[0].set : null;
+}
+
+/** True when a stored row's Showdown pair names another set than the one it is filed under. Pure. */
+export function misfiledShowdownDeck(title: string, setCode: string | null): boolean {
+  const set = showdownDeckSet(title, classifySealed(title));
+  return set != null && set !== setCode;
+}
+
+/** Where an old /sealed slug of a Showdown pair goes once its page is empty: the pair's set page when the slug names
+ *  one pair's champion (a title key is cut at 40 letters, so "…evelynnvssera" names only Evelynn), else /sealed. Only
+ *  called after the slug found no product, so a live page is never redirected. Pure. */
+export function showdownDeckSlugRedirect(slug: string): string | null {
+  if (!/^[a-z0-9-]+$/.test(slug) || !slug.includes("showdown") && !/evelynnvs|zedvs/.test(slug)) return null;
+  if (/case|lots?$|setof\d|\d+x|x\d+/.test(slug)) return null;
+  const hits = SHOWDOWN_PAIR_SETS.filter((p) => p.pair.some((c) => slug.includes(c)));
+  if (hits.length !== 1) return "/sealed";
+  return `/sealed/${sealedSlug(`${hits[0].set}|Showdown Decks${/display/.test(slug) ? " Display" : ""}`)}`;
 }
 
 /** True when a stored set-less row's title now names a set through its champion. Pure. */
@@ -1417,6 +1456,8 @@ export async function cleanupStaleSealed(): Promise<number> {
       // A Champion Deck naming no set word (2026-11-22): its store writes it to its set's deck page on the next read;
       // an eBay row in the old title page goes, and the eBay pass then searches the set's page instead.
       if (r.retailer !== "tcgplayer" && misfiledChampionDeck(r.title, r.setCode)) return true;
+      // A Showdown pair on another set's page or a title page (2026-11-23): its store rewrites it to the pair's set.
+      if (r.retailer !== "tcgplayer" && misfiledShowdownDeck(r.title, r.setCode)) return true;
       // Price-sanity (every source except TCGplayer's trusted catalogue): drop listings
       // priced implausibly below the trusted price / per-type floor — an accessory, a $1
       // deposit/sample variant, or a mis-listing that escaped the title filter.

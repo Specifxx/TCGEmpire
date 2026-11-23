@@ -25461,6 +25461,47 @@ links now sit two to a row below `sm` (2,438 px, 39% shorter); from `sm` up noth
 still ungated: the 2026-09-16 call (no Popular subset, no "Show all features") stands, and `tests/nav-menu-full-grid.test.ts`
 still pins it. Labels may wrap to two lines; the 44 px tap height stays.
 
+## 2026-11-23: Each Sealed Sniper drop is copied into its game's channel
+
+The owner saw the deals hub as Pokémon-only ("our tcg restocks so far only has pokemon notifications"): every game's deals landed in
+#sealed-sniper, and the only per-game feed was Dex's #pokemon-deals. The Sniper now covers 13 games (tcgcompare, same date), and
+`scripts/discord-publish.ts` copies each drop's posts, right after it publishes the drop, into the game's own channel (#pokemon,
+#one-piece, #riftbound, #magic, #lorcana, #yugioh; every other game to #more-tcgs), read from the embed footer the Sniper writes.
+A copy happens only after a successful publish, and a published drop is never picked again, so a drop is copied once. One copy per
+game channel per drop, so a member who reads one game's channel sees at most the hub's daily drops. No ping, no new key: the price
+bot's role has Embed Links and Read Message History for it.
+
+## 2026-11-23: TCGplayer's performance bonus is read from Impact invoices
+
+The owner asked whether the earnings dashboard counts TCGplayer's tier bonus (4% at US$10k a month, 4.5% at 50k). It did
+not: the Impact source summed each Action's `Payout`, and a performance bonus is not an Action. Impact works it out monthly
+once the month's actions lock and puts it on the partner invoice as a line whose `Description` is `BONUS` (partner API v16,
+`GET /Mediapartners/{SID}/Invoices`; `MEDIA_PAYOUT` lines are the commissions the Actions already count). The source now also
+reads the invoices, in the same 44-day windows, and adds each `BONUS` line once (`impactBonuses`, `impactBonusDays` in
+`lib/earnings/core.ts`, `tests/earnings-impact-bonus.test.ts`), dated to the last day of the month it rewards (never after
+today), in the invoice's currency, pending until the line is `PAID`. It shows as its own "Performance bonus" check row and is
+not split by site (a bonus carries no tag). An invoice read that fails leaves the commissions untouched and says so in the
+source's detail. Same keys as before, so nothing for the owner to set.
+
+## 2026-11-23: A Showdown pair names its set
+
+The same gap "A Champion Deck's champion names its set" closed for Champion Decks: a Showdown Decks title that named no set
+("RIFTBOUND SHOWDOWN DECK - EVELYNN VS SERAPHINE", "RIFTBOUND League of Legends TCG Zed Vs Shen Showdown Decks", a misspelt
+"Vandetta") fell to a title page of one to four stores, and a wrong set word filed it under that set: Nerd Merchant's
+"Unleashed - Showdown Decks - Zed vs Shen" (US$14.99) made a one-store UNL|Showdown Decks page for a product Unleashed never
+had, and The Side Deck's "… VENDETTA EVELYNN VS SERAPHINE …" sat on Vendetta's page. Each pair is one product of one set
+(Evelynn vs Seraphine: Radiance; Zed vs Shen: Vendetta), so when a Showdown Decks title names both champions of exactly one
+pair, the pair decides the set, ahead of any set word (`SHOWDOWN_PAIR_SETS`, `showdownDeckSet` in `lib/sealed-import.ts`). A
+case, a lot, half a pair or no pair keeps what it had. `cleanupStaleSealed` drops a stored row its pair now files elsewhere
+(`misfiledShowdownDeck`), and its store writes it to the pair's page on the next read. Over the 22 Nov export that moves 21
+rows (CA 15, UK 4, US 2) and no other. An old title page, once empty, 301s to the pair's page, or to `/sealed` when its
+slug was cut before the pair (`showdownDeckSlugRedirect`), never a 404. A new pair goes in the list only when its set is
+certain; a pair a later set reprints must come out of it.
+
+The same change refuses Funko POP! vinyls (`SEALED_EXCLUDE`): Ozzie's "Arcane: League of Legends (TV) Bundle - 5 POP!
+Vinyls" (A$104.95) and "League of Legends Bundle 2 - 4 POP! Vinyls" passed as Riftbound Bundles and each had a sealed page.
+`tests/sealed-showdown-deck-set.test.ts`.
+
 ## 2026-11-23: A header dropdown's label is a link
 
 Owner, 2026-11-23: "every time I click on the drop downs, I expect it to be a link and … take me somewhere … when I click on

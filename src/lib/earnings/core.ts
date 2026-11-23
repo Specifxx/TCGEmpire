@@ -535,6 +535,71 @@ export function impactDays(json: unknown): DayAmount[] {
   return impactActionDays(uniqueActions(impactActions(json)));
 }
 
+// ── Impact performance bonuses (owner, 2026-11-23: "are we factoring TCGplayer's
+// bonus earnings?") ─────────────────────────────────────────────────────────
+// A performance bonus (TCGplayer's tier: 4% at US$10k a month, 4.5% at 50k) is
+// NOT an Action: Impact works it out monthly once the month's actions lock and
+// puts it on the partner's invoice as a LineItem whose Description is "BONUS"
+// ("MEDIA_PAYOUT is a standard commission payout; BONUS is for meeting program
+// requirements", partner API v16, GET /Mediapartners/{SID}/Invoices). So the
+// Actions list alone never shows it. Each bonus line is dated to the last day of
+// its EventMonthYear (the month it rewards; the invoice's own day when that
+// cannot be read, never after today), in the invoice's currency, pending until
+// the line's Status is PAID.
+export interface ImpactBonus {
+  key: string;
+  day: string;
+  currency: string;
+  cents: number;
+  paid: boolean;
+  campaign: string;
+}
+
+/** The last day of the month an EventMonthYear names ("2026-11", "11/2026", "2026-11-01", "November 2026"), or null. */
+export function monthEndOf(v: unknown): string | null {
+  const s = String(v ?? "").trim();
+  const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  let y = 0;
+  let m = 0;
+  let r: RegExpMatchArray | null;
+  if ((r = s.match(/^(\d{4})[-/](\d{1,2})(?:[-/]\d{1,2})?(?:T.*)?$/))) [y, m] = [+r[1], +r[2]];
+  else if ((r = s.match(/^(\d{1,2})[-/](\d{4})$/))) [y, m] = [+r[2], +r[1]];
+  else if ((r = s.match(/^([A-Za-z]{3})[a-z]*\.?,?\s+(\d{4})$/))) [y, m] = [+r[2], MONTHS.indexOf(r[1].toLowerCase()) + 1];
+  if (!y || m < 1 || m > 12) return null;
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+}
+
+export function impactBonuses(json: unknown, today: string): ImpactBonus[] {
+  const invoices = (json as { Invoices?: unknown[] } | null)?.Invoices ?? [];
+  const out: ImpactBonus[] = [];
+  for (const inv of invoices as Record<string, unknown>[]) {
+    const lines = Array.isArray(inv.LineItems) ? (inv.LineItems as Record<string, unknown>[]) : [];
+    const created = Date.parse(String(inv.CreatedDate ?? ""));
+    lines.forEach((l, i) => {
+      if (String(l.Description ?? "").trim().toUpperCase() !== "BONUS") return;
+      const cents = toCents(l.NetItemAmount ?? l.TotalItemAmount);
+      if (!cents) return;
+      let day = monthEndOf(l.EventMonthYear) ?? (Number.isFinite(created) ? dayIn(created) : today);
+      if (day > today) day = today;
+      out.push({
+        key: `${String(inv.Id ?? inv.Uri ?? "")}|${i}|${String(l.CampaignId ?? "")}|${String(l.EventMonthYear ?? "")}`,
+        day,
+        currency: String(inv.Currency ?? "USD").toUpperCase(),
+        cents,
+        paid: String(l.Status ?? "").toUpperCase() === "PAID",
+        campaign: String(l.CampaignName ?? ""),
+      });
+    });
+  }
+  return out;
+}
+
+/** Bonus lines as earnings days, each bonus once (an invoice seen in two windows counts once). */
+export function impactBonusDays(bonuses: readonly ImpactBonus[]): DayAmount[] {
+  const once = new Map(bonuses.map((b) => [b.key, b]));
+  return mergeDays([...once.values()].map((b) => ({ day: b.day, currency: b.currency, cents: b.cents, pendingCents: b.paid ? 0 : b.cents })));
+}
+
 // ── eBay Partner Network: the Performance by Day report ─────────────────────
 // GET …/Reports/ebay_partner_perf_by_day_v2.json (EPN_DAILY_REPORT) — one row per day and checkout
 // site, with Earnings (and OtherEarnings) in that site's currency. The JSON is
