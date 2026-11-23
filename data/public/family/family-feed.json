@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "rift",
- "generatedAt": "2026-11-22T16:24:16.636Z",
+ "generatedAt": "2026-11-23T20:42:36.966Z",
  "links": {
   "US": {
    "deals": "https://riftcompare.com/black-friday",
@@ -33,6 +33,20 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "AU",
+   "title": "Riftbound Origins Champion Deck (Jinx)",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Champion%20Deck%20(Jinx)",
+   "cents": 1999,
+   "currency": "AUD",
+   "store": "Fluke & Box",
+   "image": "https://cdn.shopify.com/s/files/1/0745/6977/7468/files/RiftboundJinx.png?v=1755503843",
+   "refCents": 3999,
+   "refLabel": "median store price",
+   "savingPct": 50
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "AU",
    "title": "Riftbound Vendetta Showdown Decks Display",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks%20Display",
    "cents": 6000,
@@ -42,6 +56,34 @@
    "refCents": 10500,
    "refLabel": "median store price",
    "savingPct": 43
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "AU",
+   "title": "Riftbound Radiance Booster Box",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Booster%20Box",
+   "cents": 14000,
+   "currency": "AUD",
+   "store": "Wonderland Games",
+   "image": "https://cdn.shopify.com/s/files/1/0693/4970/3985/files/lol_riftbound-s5-render-boosterbox-front.jpg?v=1792646264",
+   "refCents": 24000,
+   "refLabel": "median store price",
+   "savingPct": 42
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "AU",
+   "title": "Riftbound Radiance Bundle",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Bundle",
+   "cents": 4000,
+   "currency": "AUD",
+   "store": "Wonderland Games",
+   "image": "https://cdn.shopify.com/s/files/1/0693/4970/3985/files/lol_riftbound-s5-render-vault-front.jpg?v=1792642364",
+   "refCents": 6500,
+   "refLabel": "median store price",
+   "savingPct": 38
   },
   {
    "kind": "deal",
@@ -70,48 +112,6 @@
    "refCents": 3995,
    "refLabel": "median store price",
    "savingPct": 32
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "AU",
-   "title": "Riftbound Origins: Proving Grounds",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%3A%20Proving%20Grounds",
-   "cents": 8550,
-   "currency": "AUD",
-   "store": "Mayhem Collectables",
-   "image": "https://cdn.shopify.com/s/files/1/0645/2209/2784/files/1786492860693_d810013f-dc64-4a9d-b9df-fd60a973a45b_1786492860693.png?v=1794968506",
-   "refCents": 12000,
-   "refLabel": "median store price",
-   "savingPct": 29
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "AU",
-   "title": "Riftbound Unleashed Champion Deck (Vex)",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Unleashed%20Champion%20Deck%20(Vex)",
-   "cents": 2900,
-   "currency": "AUD",
-   "store": "Raptor Games",
-   "image": "https://cdn.shopify.com/s/files/1/0602/7021/5324/files/lol_riftbound-s3-render-championdeck-vex-right.jpg?v=1765954713",
-   "refCents": 3948,
-   "refLabel": "median store price",
-   "savingPct": 27
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "AU",
-   "title": "Riftbound Unleashed Champion Deck (Vi)",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Unleashed%20Champion%20Deck%20(Vi)",
-   "cents": 2599,
-   "currency": "AUD",
-   "store": "Ozzie Collectables",
-   "image": "https://cdn.shopify.com/s/files/1/1425/8892/files/lol_riftbound-s3-render-championdeck-vi-right.jpg?v=1764084637",
-   "refCents": 3499,
-   "refLabel": "median store price",
-   "savingPct": 26
   },
   {
    "kind": "preorder",
@@ -147,7 +147,7 @@
    "currency": "CAD",
    "store": "401 Games",
    "image": "https://cdn.shopify.com/s/files/1/1704/1809/files/raw_475b5858-0ee8-4094-b04c-ec4b5c2e551b.png?v=1773842561",
-   "refCents": 3500,
+   "refCents": 3499,
    "refLabel": "median store price",
    "savingPct": 43
   },
@@ -175,7 +175,7 @@
    "currency": "CAD",
    "store": "Enter the Battlefield",
    "image": "https://cdn.shopify.com/s/files/1/0496/0098/7297/files/raw_c57a235e-7f6e-4697-b56d-2b98bec803a5.png?v=1746227150",
-   "refCents": 4548,
+   "refCents": 4498,
    "refLabel": "median store price",
    "savingPct": 36
   },
@@ -183,15 +183,15 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "CA",
-   "title": "Riftbound Origins Booster Box",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Booster%20Box",
-   "cents": 23999,
+   "title": "Riftbound Radiance Booster Pack",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Booster%20Pack",
+   "cents": 599,
    "currency": "CAD",
-   "store": "Crypt MTG",
-   "image": "https://cdn.shopify.com/s/files/1/0304/5520/1930/files/raw_7e22e6d9-0e59-4442-b39d-efbd83ffe5fd.png?v=1744138902",
-   "refCents": 37495,
+   "store": "Le Coin du Jeu",
+   "image": "https://cdn.shopify.com/s/files/1/0578/5511/5445/files/riftbound-radiance-booster-pack-en-league-of-legends-sealed-560.webp?v=1794858930",
+   "refCents": 899,
    "refLabel": "median store price",
-   "savingPct": 36
+   "savingPct": 33
   },
   {
    "kind": "deal",
@@ -325,7 +325,7 @@
    "currency": "EUR",
    "store": "SpellNexus",
    "image": "https://cdn.shopify.com/s/files/1/1048/0061/6789/files/RiftboundSpiritforgedBoosterBoxEnglish.png?v=1786008615",
-   "refCents": 16695,
+   "refCents": 16795,
    "refLabel": "median store price",
    "savingPct": 11
   },
@@ -391,23 +391,9 @@
    "currency": "GBP",
    "store": "Monster Card Corner",
    "image": "https://cdn.shopify.com/s/files/1/0905/8608/7768/files/01_f9d782b1-99c4-47f8-9897-7cfe592a8a34.jpg?v=1793141696",
-   "refCents": 3149,
+   "refCents": 3146,
    "refLabel": "median store price",
    "savingPct": 40
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "UK",
-   "title": "Riftbound Vendetta Showdown Decks",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks",
-   "cents": 2498,
-   "currency": "GBP",
-   "store": "eTOYSWORLD",
-   "image": "https://cdn.shopify.com/s/files/1/0937/5026/4134/files/JASRB04SU01EN_1_fdf08111-63b3-44cc-8826-8a887bbbdb0b.webp?v=1787822140",
-   "refCents": 3499,
-   "refLabel": "median store price",
-   "savingPct": 29
   },
   {
    "kind": "deal",
@@ -427,13 +413,13 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "UK",
-   "title": "Riftbound Vendetta Booster Box",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Booster%20Box",
-   "cents": 9500,
+   "title": "Riftbound Vendetta Showdown Decks",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks",
+   "cents": 2498,
    "currency": "GBP",
-   "store": "Mox in the Hole",
-   "image": "https://cdn.shopify.com/s/files/1/0550/7248/9648/files/JASRB04BP01EN_1.webp?v=1776615618",
-   "refCents": 11988,
+   "store": "eTOYSWORLD",
+   "image": "https://cdn.shopify.com/s/files/1/0937/5026/4134/files/JASRB04SU01EN_1_fdf08111-63b3-44cc-8826-8a887bbbdb0b.webp?v=1787822140",
+   "refCents": 3149,
    "refLabel": "median store price",
    "savingPct": 21
   },
@@ -441,15 +427,15 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "UK",
-   "title": "Riftbound Radiance Booster Box",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Booster%20Box",
-   "cents": 9995,
+   "title": "Riftbound Vendetta Booster Box",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Booster%20Box",
+   "cents": 9500,
    "currency": "GBP",
-   "store": "Roll N Play",
-   "image": "https://cdn.shopify.com/s/files/1/0909/8297/3773/files/lol_riftbound-s5-render-boosterbox-front.png?v=1790750195",
+   "store": "Mox in the Hole",
+   "image": "https://cdn.shopify.com/s/files/1/0550/7248/9648/files/JASRB04BP01EN_1.webp?v=1776615618",
    "refCents": 11976,
    "refLabel": "median store price",
-   "savingPct": 17
+   "savingPct": 21
   },
   {
    "kind": "deal",
@@ -466,15 +452,29 @@
    "savingPct": 16
   },
   {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "UK",
+   "title": "Riftbound Radiance Bundle",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Bundle",
+   "cents": 2995,
+   "currency": "GBP",
+   "store": "Roll N Play",
+   "image": "https://cdn.shopify.com/s/files/1/0909/8297/3773/files/144178_0_1.webp?v=1791360596",
+   "refCents": 3499,
+   "refLabel": "median store price",
+   "savingPct": 14
+  },
+  {
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
    "title": "Riftbound Legacy Booster Box",
    "url": "https://riftcompare.com/legacy-preorders",
-   "cents": 15999,
+   "cents": 12999,
    "currency": "USD",
-   "store": "Kollect Korner",
-   "image": "https://cdn.shopify.com/s/files/1/0888/7913/7052/files/IMG_3601.jpg?v=1787143670",
+   "store": "Miniature Market",
+   "image": "https://www.miniaturemarket.com/media/64/a2/c2/1792085882/UVSRB06BD01-BOX.webp?ts=1792086371",
    "releaseDate": "2027-01-29"
   },
   {
@@ -488,6 +488,34 @@
    "store": "Many Realms",
    "image": "https://cdn.shopify.com/s/files/1/0680/9947/3574/files/reckoning-small_7b2066a7-716a-4393-b521-ca1a4164a9ee.webp?v=1793896059",
    "releaseDate": "2027-04-30"
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Riftbound Origins Booster Pack",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Booster%20Pack",
+   "cents": 500,
+   "currency": "USD",
+   "store": "Trove of Collectibles",
+   "image": "https://cdn.shopify.com/s/files/1/0620/9771/9502/files/uvsrb01bd01en.jpg?v=1761695239",
+   "refCents": 999,
+   "refLabel": "median store price",
+   "savingPct": 50
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Riftbound Vendetta Showdown Decks",
+   "url": "https://riftcompare.com/sealed?q=Riftbound%20Vendetta%20Showdown%20Decks",
+   "cents": 1199,
+   "currency": "USD",
+   "store": "Triad Cards and Gaming",
+   "image": "https://cdn.shopify.com/s/files/1/0713/8007/4695/files/697971.jpg?v=1784240709",
+   "refCents": 2350,
+   "refLabel": "median store price",
+   "savingPct": 49
   },
   {
    "kind": "deal",
@@ -513,9 +541,9 @@
    "currency": "USD",
    "store": "Triad Cards and Gaming",
    "image": "https://cdn.shopify.com/s/files/1/0713/8007/4695/files/653154_in_1000x1000_aa30a575-6cf8-4a9b-8e9d-09e83a951f2b.jpg?v=1782501582",
-   "refCents": 4979,
+   "refCents": 4949,
    "refLabel": "median store price",
-   "savingPct": 40
+   "savingPct": 39
   },
   {
    "kind": "deal",
@@ -535,43 +563,15 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "Riftbound Spirit Forged Booster Pack",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Spirit%20Forged%20Booster%20Pack",
-   "cents": 608,
-   "currency": "USD",
-   "store": "Shippin Texas",
-   "image": "https://cdn.shopify.com/s/files/1/0676/9413/3386/files/661954.jpg?v=1794189046",
-   "refCents": 824,
-   "refLabel": "median store price",
-   "savingPct": 26
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
    "title": "Riftbound Origins Booster Box",
    "url": "https://riftcompare.com/sealed?q=Riftbound%20Origins%20Booster%20Box",
-   "cents": 14699,
+   "cents": 15499,
    "currency": "USD",
    "store": "Wulf Gaming",
    "image": "https://cdn.shopify.com/s/files/1/0602/6349/7898/files/635368.jpg?v=1778855132",
-   "refCents": 19995,
+   "refCents": 21497,
    "refLabel": "median store price",
-   "savingPct": 26
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Riftbound Radiance Bundle",
-   "url": "https://riftcompare.com/sealed?q=Riftbound%20Radiance%20Bundle",
-   "cents": 2999,
-   "currency": "USD",
-   "store": "Gator's Card Den",
-   "image": "https://cdn.shopify.com/s/files/1/0714/4774/0450/files/RiftboundRadianceVault.png?v=1792590181",
-   "refCents": 3995,
-   "refLabel": "median store price",
-   "savingPct": 25
+   "savingPct": 28
   }
  ]
 }
