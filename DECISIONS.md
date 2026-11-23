@@ -25460,3 +25460,13 @@ Owner, 2026-11-23: "our site's … navigation and stuff can be significantly imp
 links now sit two to a row below `sm` (2,438 px, 39% shorter); from `sm` up nothing changes. Every link is still there and
 still ungated: the 2026-09-16 call (no Popular subset, no "Show all features") stands, and `tests/nav-menu-full-grid.test.ts`
 still pins it. Labels may wrap to two lines; the 44 px tap height stays.
+
+## 2026-11-23: Each Sealed Sniper drop is copied into its game's channel
+
+The owner saw the deals hub as Pokémon-only ("our tcg restocks so far only has pokemon notifications"): every game's deals landed in
+#sealed-sniper, and the only per-game feed was Dex's #pokemon-deals. The Sniper now covers 13 games (tcgcompare, same date), and
+`scripts/discord-publish.ts` copies each drop's posts, right after it publishes the drop, into the game's own channel (#pokemon,
+#one-piece, #riftbound, #magic, #lorcana, #yugioh; every other game to #more-tcgs), read from the embed footer the Sniper writes.
+A copy happens only after a successful publish, and a published drop is never picked again, so a drop is copied once. One copy per
+game channel per drop, so a member who reads one game's channel sees at most the hub's daily drops. No ping, no new key: the price
+bot's role has Embed Links and Read Message History for it.
