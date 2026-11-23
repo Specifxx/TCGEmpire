@@ -36,7 +36,7 @@
       "EU": 11900,
       "SG": 20000,
       "UK": 10799,
-      "US": 14831
+      "US": 14827
     },
     "LGC|Booster Case": {
       "EU": 71400,
@@ -121,7 +121,7 @@
     "OGN|Booster Case": {
       "AU": 333870,
       "EU": 75000,
-      "US": 90000
+      "US": 90991
     },
     "OGN|Booster Pack": {
       "AU": 1800,
@@ -213,7 +213,7 @@
       "EU": 4300
     },
     "OGS|Proving Grounds": {
-      "AU": 8550,
+      "AU": 8300,
       "CA": 1105,
       "EU": 2599,
       "SG": 3514,
@@ -244,7 +244,7 @@
       "CA": 699,
       "EU": 350,
       "UK": 499,
-      "US": 470
+      "US": 497
     },
     "RAD|Bundle": {
       "AU": 4950,
@@ -252,7 +252,7 @@
       "EU": 2750,
       "SG": 4650,
       "UK": 2750,
-      "US": 2656
+      "US": 2999
     },
     "RAD|Bundle Case": {
       "US": 36500
@@ -268,7 +268,7 @@
     },
     "RAD|Pre-Rift Kit": {
       "AU": 4500,
-      "CA": 3893,
+      "CA": 3499,
       "EU": 3199,
       "UK": 2999,
       "US": 2440
@@ -325,7 +325,7 @@
       "EU": 9407,
       "SG": 8415,
       "UK": 10995,
-      "US": 14995
+      "US": 14999
     },
     "SFD|Booster Case": {
       "AU": 185000,
@@ -368,7 +368,7 @@
     },
     "SFD|Champion Deck (Fiora) Display": {
       "AU": 4000,
-      "US": 9884
+      "US": 9883
     },
     "SFD|Champion Deck (Rumble)": {
       "AU": 1999,
@@ -456,7 +456,7 @@
     "UNL|Champion Deck (Vex) Display": {
       "AU": 4000,
       "CA": 7590,
-      "US": 13997
+      "US": 9999
     },
     "UNL|Champion Deck (Vi)": {
       "AU": 1999,
@@ -508,7 +508,7 @@
       "EU": 9750,
       "SG": 15500,
       "UK": 9199,
-      "US": 10500
+      "US": 10599
     },
     "VEN|Booster Case": {
       "AU": 125870,
@@ -523,7 +523,7 @@
       "EU": 300,
       "SG": 800,
       "UK": 499,
-      "US": 399
+      "US": 487
     },
     "VEN|Bundle": {
       "AU": 6499,
@@ -563,7 +563,7 @@
       "EU": 1995,
       "SG": 2103,
       "UK": 1655,
-      "US": 1139
+      "US": 1199
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -637,7 +637,7 @@
     },
     "riftboundleagueoflegendsarcaneboxset": {
       "CA": 85000,
-      "US": 35000
+      "US": 36249
     },
     "riftboundleagueoflegendsarcaneboxseteng": {
       "EU": 54499
