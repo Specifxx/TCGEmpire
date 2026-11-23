@@ -27,6 +27,7 @@ test("commission lands on the Sydney day of the order, in its own currency, pend
 test("it is a stored source with no per-site split", () => {
   assert.equal(SOURCE_LABELS.goaffpro, "Cardboard Hero (GoAffPro)");
   assert.match(fs.readFileSync("src/lib/earnings/sources.ts", "utf8"), /STORED_SOURCES[^=]*= \[[^\]]*"goaffpro"/);
+  assert.match(fs.readFileSync("src/lib/earnings/sources.ts", "utf8"), /"x-shop": shop/);
   const rows = siteLedger([{ key: "goaffpro", status: "ok", fetchedAt: 0, days: [{ day: "2026-11-22", currency: "AUD", cents: 500 }] }], [], [], "2026-11-01", "2026-11-30", "AUD");
   assert.equal(rows.find((r) => r.key === "")!.earned, 500);
 });

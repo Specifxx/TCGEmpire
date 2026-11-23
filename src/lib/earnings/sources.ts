@@ -341,7 +341,10 @@ const fetchAmazon: Fetcher = async () => {
 const fetchGoaffpro: Fetcher = async () => {
   const token = (process.env.GOAFFPRO_ACCESS_TOKEN ?? "").trim();
   if (!token) return notConfigured("Set GOAFFPRO_ACCESS_TOKEN (the Cardboard Hero partner portal's access token) with the owner's set-goaffpro.ps1.");
-  const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+  // GoAffPro finds the store by the portal's host: the portal sends it as `x-shop`,
+  // and without it the API answers 422 PORTAL_NOT_FOUND (seen 2026-11-23).
+  const shop = "cardboardhero.goaffpro.com";
+  const headers = { Authorization: `Bearer ${token}`, Accept: "application/json", "x-shop": shop, Origin: `https://${shop}`, Referer: `https://${shop}/` };
   const all: GoaffproSale[] = [];
   let total = 0;
   for (let page = 0; page < 20; page++) {
