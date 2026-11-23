@@ -83,6 +83,7 @@ on:
           - gsc-coverage     # read-only INDEX COVERAGE SAMPLE for EVERY Compare site: each property's submitted sitemaps (last read, errors), then ~30 sitemap URLs per site through URL Inspection (indexed / discovered / crawled-not-indexed, robots block, noindex, fetch failure, Google's own canonical). URLs and states only.
           - gsc-cannibal     # read-only SEARCH CONSOLE CANNIBALISATION REPORT for EVERY property GSC_SA_KEY can read (Rift Compare and the sister sites): queries where two or more of a site's own pages show, and the page pairs that share the most, so the weaker page is merged, redirected or retitled. Search terms only.
           - crawl-audit-sites # read-only: every Compare site read as Google's smartphone crawler (robots, sitemaps, server HTML of a sample, a 250-page crawl from the homepage) plus Search Console sitemaps and URL Inspection. SITES input via `url` (comma list of hosts) narrows it.
+          - page-scorecard   # read-only: every Search Console property's top 300 pages by impressions over 28 settled days (clicks, impressions, position). Paths and counts only. Feeds the Monday growth review's page scorecard.
           - gsc-sites-daily  # read-only: every Search Console property's clicks/impressions per day (35d), weekly totals and pages with impressions. Counts only, no search terms. The family growth scoreboard.
           - gsc-diagnose     # read-only CLICK-DROP DIAGNOSIS: per property (url = comma list, empty = all) three settled weeks split by device, country, page type and brand, plus the queries and pages that lost or gained the most clicks.
           - gsc-identifiers  # read-only: every property's searches that name a product code (card number, barcode, ASIN, set or part code), 90 days, with the page shown. Search terms only.
@@ -5741,6 +5742,12 @@ jobs:
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
           SITES: ${{ inputs.url }}
         run: npx tsx scripts/crawl-audit-sites.ts
+
+      - name: Page scorecard input from Search Console (read-only)
+        if: inputs.task == 'page-scorecard'
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+        run: npx tsx scripts/page-scorecard.ts
 
       - name: Every site's Search Console pulse (read-only)
         if: inputs.task == 'gsc-sites-daily'

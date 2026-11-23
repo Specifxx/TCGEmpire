@@ -25501,3 +25501,12 @@ certain; a pair a later set reprints must come out of it.
 The same change refuses Funko POP! vinyls (`SEALED_EXCLUDE`): Ozzie's "Arcane: League of Legends (TV) Bundle - 5 POP!
 Vinyls" (A$104.95) and "League of Legends Bundle 2 - 4 POP! Vinyls" passed as Riftbound Bundles and each had a sealed page.
 `tests/sealed-showdown-deck-set.test.ts`.
+
+## 2026-11-23: The weekly page scorecard reads Google per page from a maintenance task
+
+Job D (strategy/agent-reassignment-2026-11-18) makes the Monday growth review rank every site's pages and name the bottom 20%
+with a fix or noindex verdict, published in the project's private files as `strategy/page-scorecard-<date>.html`. The Vercel
+analytics token lives only in Vercel, so the buy-click half comes from each site's committed `data/demand.json` (views per
+page, and buy clicks per product where the site sends `buy_product`). The Google half is the new read-only maintenance task
+`page-scorecard` (`scripts/page-scorecard.ts`): each property's 300 pages with the most impressions over 28 settled days,
+paths and counts only. No amounts, no search terms, nothing scheduled.
