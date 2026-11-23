@@ -221,7 +221,15 @@ export async function vetHost(host, banned, verified = new Set()) {
     }
   }
   out.state = page.state === "blocked" ? "blocked" : "ok";
-  if (page.state === "error") out.flags.push({ kind: "dead", red: true, detail: `home page answers ${page.detail}, again after a pause, and neither its catalogue nor robots.txt answers` });
+  if (page.state === "error") {
+    // A 404/410 is a shop that is gone. A 5xx after the pause is a shop that is down
+    // right now: big retailers have outages too (23 Nov: umart.com.au answered 504 for
+    // a few minutes). That is "down", red only when the last run found it down as well
+    // (escalateDown, from the previous Store vetting issue).
+    const fiveXX = /^HTTP 5\d\d$/.test(page.detail ?? "");
+    if (fiveXX) out.flags.push({ kind: "down", red: false, detail: `${DOWN_TEXT} ${page.detail}, again after a pause, and neither its catalogue nor robots.txt answers (red if still down next run)` });
+    else out.flags.push({ kind: "dead", red: true, detail: `home page answers ${page.detail}, again after a pause, and neither its catalogue nor robots.txt answers` });
+  }
   if (page.flags) out.flags.push(...page.flags);
   // A home page that shows no contact link may still have a contact or policy page
   // (a theme that loads its footer with script, a one-page landing). Before calling
@@ -264,6 +272,26 @@ export async function recheck(host) {
     if (r.status === 200 && r.body && r.body.length > 20) return { alive: `${path.split("?")[0]} answers 200` };
   }
   return {};
+}
+
+const DOWN_TEXT = "down today: home page answers";
+/** Hosts the previous Store vetting issue listed as down (or dead on a 5xx). */
+export function downBefore(prevBody) {
+  const out = new Set();
+  for (const line of (prevBody || "").split("\n")) {
+    const m = line.match(/^- \[[ x]\] `([^`]+)`/);
+    if (m && (line.includes(DOWN_TEXT) || /home page answers HTTP 5\d\d/.test(line))) out.add(m[1]);
+  }
+  return out;
+}
+/** A shop down two runs running is red. Mutates and returns results. */
+export function escalateDown(results, prevBody) {
+  const before = downBefore(prevBody);
+  for (const r of results) for (const f of r.flags) if (f.kind === "down" && before.has(r.host)) {
+    f.red = true;
+    f.detail = f.detail.replace("(red if still down next run)", "and it was down last run too");
+  }
+  return results;
 }
 
 const CONTACT_PATHS = ["/pages/contact", "/pages/contact-us", "/contact", "/policies/refund-policy", "/policies/contact-information"];
@@ -323,6 +351,17 @@ export function issueBody(results, siteHosts, now = new Date()) {
   ].join("\n");
 }
 
+async function previousIssueBody() {
+  if (!TOKEN) return "";
+  try {
+    const r = await gh(`/repos/${REPO}/issues?labels=store-vetting&state=all&per_page=5`);
+    const [issue] = r.ok ? await r.json() : [];
+    return issue?.body ?? "";
+  } catch {
+    return "";
+  }
+}
+
 async function upsertIssue(body, open) {
   const r = await gh(`/repos/${REPO}/issues?labels=store-vetting&state=all&per_page=5`);
   const [issue] = r.ok ? await r.json() : [];
@@ -353,7 +392,7 @@ async function main() {
   console.log(`${hosts.length} unique hosts`);
   // Stores a person checked by hand (data/store-vetting/verified.json): their domain age is not flagged again.
   const verified = new Set(JSON.parse(readFileSync(new URL("../data/store-vetting/verified.json", import.meta.url), "utf8")).map((v) => v.domain));
-  const results = await pool(hosts, 8, (h) => vetHost(h, banned, verified));
+  const results = escalateDown(await pool(hosts, 8, (h) => vetHost(h, banned, verified)), only.length ? "" : await previousIssueBody());
   const body = issueBody(results, siteHosts);
   writeFileSync("store-vetting.json", JSON.stringify({ at: new Date().toISOString(), siteHosts, results }, null, 1));
   console.log(body);
