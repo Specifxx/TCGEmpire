@@ -172,10 +172,12 @@ const EXTENSION_LISTING = "https://chromewebstore.google.com/detail/fdhpgledimoa
 export function extensionSection(now: Date = new Date()): string {
   if (now >= EXTENSION_FEATURE_UNTIL) return "";
   const href = `${EXTENSION_LISTING}?utm_source=riftcompare&utm_medium=email&utm_campaign=extension-launch`;
+  const rate = `${EXTENSION_LISTING}/reviews?utm_source=riftcompare&utm_medium=email&utm_campaign=extension-rate`;
   return `${heading("🧩 New: our free Chrome extension")}
     <tr><td style="padding:6px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
-      Open it on any card shop's product page, TCGplayer, eBay or Amazon and it shows the cheapest store price we track for that sealed product, with one click to buy it there. Riftbound, Pokémon, Magic and many more. No account, and it tracks nothing.
+      On TCGplayer it tells you what you'd save: the page's price against the cheapest card store, with the three cheapest stores one click away. Turn it on for other shops and eBay too, and press Watch price to hear when a box drops. Riftbound, Pokémon, Magic and many more. No account, and it tracks nothing.
       <br/><a href="${esc(href)}" style="display:inline-block;margin-top:8px;color:#34d17e;font-weight:700;text-decoration:none">Add it to Chrome, free →</a>
+      <br/><span style="font-size:12px;color:#8b95a5">Already using it? If it saved you money, <a href="${esc(rate)}" style="color:#8b95a5">a quick rating</a> helps other collectors find it.</span>
     </td></tr>`;
 }
 
