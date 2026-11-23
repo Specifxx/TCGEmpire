@@ -25460,3 +25460,10 @@ Owner, 2026-11-23: "our site's … navigation and stuff can be significantly imp
 links now sit two to a row below `sm` (2,438 px, 39% shorter); from `sm` up nothing changes. Every link is still there and
 still ungated: the 2026-09-16 call (no Popular subset, no "Show all features") stands, and `tests/nav-menu-full-grid.test.ts`
 still pins it. Labels may wrap to two lines; the 44 px tap height stays.
+
+## 2026-11-23: A header dropdown's label is a link
+
+Owner, 2026-11-23: "every time I click on the drop downs, I expect it to be a link and … take me somewhere … when I click on
+one of the drop downs, it doesn't do anything. It just drops it down." Each label of `HeaderMegaMenu.tsx` is now a `<Link>` to `HeaderMenu.href`: Singles to `/singles`, Sealed to `/sealed`, Deals & market to `/tools/deal-finder`. Hover still opens the panel after the same
+intent delay; the chevron beside the label is now the button that toggles it (click, tap, Enter, Space, ArrowDown), with
+`aria-expanded` and its own label. The panels stay in the server HTML. `tests/header-menus.test.ts` pins that each `href` is a NAV_GROUPS page.
