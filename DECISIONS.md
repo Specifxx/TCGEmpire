@@ -25509,3 +25509,10 @@ Rift's alert emails have had a giveaway line in the footer since 22 Nov (`lib/em
 and weekly-drops emails, which RiftCompare sends for them, had none. `sisterGiveawayLine` (`lib/sister-alerts/email.ts`) adds the
 site's own open giveaway (Dex, MTG, YGO, OP), linked to that site's `/giveaway` with `utm_campaign=giveaway-footer`. It is a
 footer line, not a prompt, so the one-prompt-a-visit budget is untouched, and it disappears by itself at the close.
+
+## 2026-11-23: A header dropdown's label is a link
+
+Owner, 2026-11-23: "every time I click on the drop downs, I expect it to be a link and … take me somewhere … when I click on
+one of the drop downs, it doesn't do anything. It just drops it down." Each label of `HeaderMegaMenu.tsx` is now a `<Link>` to `HeaderMenu.href`: Singles to `/singles`, Sealed to `/sealed`, Deals & market to `/tools/deal-finder`. Hover still opens the panel after the same
+intent delay; the chevron beside the label is now the button that toggles it (click, tap, Enter, Space, ArrowDown), with
+`aria-expanded` and its own label. The panels stay in the server HTML. `tests/header-menus.test.ts` pins that each `href` is a NAV_GROUPS page.

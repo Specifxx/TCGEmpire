@@ -12,6 +12,12 @@ test("header menus are built from NAV_GROUPS: every link is one the rail and pho
   for (const m of HEADER_MENUS) for (const c of m.columns) for (const l of c.links) assert.ok(hrefs.has(l.href), l.href);
 });
 
+test("a click on a dropdown's label goes to a page of NAV_GROUPS", () => {
+  for (const m of HEADER_MENUS) assert.ok(hrefs.has(m.href), `${m.label} -> ${m.href}`);
+  assert.match(menu, /<Link\s+href=\{m\.href\}/);
+  assert.match(menu, /aria-label=\{`\$\{m\.label\} menu`\}/);
+});
+
 test("singles dropdown has every facet a buyer browses by", () => {
   const singles = HEADER_MENUS[0].columns.flatMap((c) => c.links.map((l) => l.href));
   for (const h of ["/sets", "/domains", "/champions", "/cards"]) assert.ok(singles.includes(h), h);
