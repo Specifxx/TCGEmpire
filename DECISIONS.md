@@ -25470,3 +25470,15 @@ The owner saw the deals hub as Pokémon-only ("our tcg restocks so far only has 
 A copy happens only after a successful publish, and a published drop is never picked again, so a drop is copied once. One copy per
 game channel per drop, so a member who reads one game's channel sees at most the hub's daily drops. No ping, no new key: the price
 bot's role has Embed Links and Read Message History for it.
+
+## 2026-11-23: TCGplayer's performance bonus is read from Impact invoices
+
+The owner asked whether the earnings dashboard counts TCGplayer's tier bonus (4% at US$10k a month, 4.5% at 50k). It did
+not: the Impact source summed each Action's `Payout`, and a performance bonus is not an Action. Impact works it out monthly
+once the month's actions lock and puts it on the partner invoice as a line whose `Description` is `BONUS` (partner API v16,
+`GET /Mediapartners/{SID}/Invoices`; `MEDIA_PAYOUT` lines are the commissions the Actions already count). The source now also
+reads the invoices, in the same 44-day windows, and adds each `BONUS` line once (`impactBonuses`, `impactBonusDays` in
+`lib/earnings/core.ts`, `tests/earnings-impact-bonus.test.ts`), dated to the last day of the month it rewards (never after
+today), in the invoice's currency, pending until the line is `PAID`. It shows as its own "Performance bonus" check row and is
+not split by site (a bonus carries no tag). An invoice read that fails leaves the commissions untouched and says so in the
+source's detail. Same keys as before, so nothing for the owner to set.

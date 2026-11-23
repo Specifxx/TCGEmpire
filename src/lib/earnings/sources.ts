@@ -7,6 +7,9 @@ import {
   impactActionDays,
   impactTagDays,
   impactActions,
+  impactBonuses,
+  impactBonusDays,
+  type ImpactBonus,
   latestReportDay,
   mapLimit,
   reportRecords,
@@ -130,16 +133,34 @@ const fetchImpact: Fetcher = async () => {
   }
   actions = actions.filter((a) => a.day >= EARNINGS_SINCE);
   const count = (st: string) => actions.filter((a) => a.state === st).length;
+  // Performance bonuses live on invoices, not in Actions (core.ts, impactBonuses).
+  // A failed invoice read never sinks the commissions: it shows in the detail.
+  let bonuses: ImpactBonus[] = [];
+  let bonusNote = "";
+  try {
+    const today = dayIn(Date.now());
+    const perWindow = await mapLimit(windows(EARNINGS_SINCE, today, 44), WINDOW_CONCURRENCY, async ([from, to]) => {
+      const end = Math.min(Date.parse(`${to}T00:00:00Z`) + 86_400_000, Date.now());
+      const url = `https://api.impact.com/Mediapartners/${encodeURIComponent(sid)}/Invoices?StartDate=${isoSec(Date.parse(`${from}T00:00:00Z`) - 1000)}&EndDate=${isoSec(end)}`;
+      return impactBonuses(await getJson(url, { headers }), today);
+    });
+    bonuses = perWindow.flat().filter((b) => b.day >= EARNINGS_SINCE);
+  } catch (e) {
+    console.error("[earnings] impact invoices (bonuses) failed:", e);
+    bonusNote = " Bonus invoices could not be read this time.";
+  }
+  const bonusDays = impactBonusDays(bonuses);
   return {
     status: "ok",
-    days: impactActionDays(actions),
+    days: mergeDays([...impactActionDays(actions), ...bonusDays]),
     tags: impactTagDays(actions),
     checks: [
       { label: `Approved (${count("APPROVED")} actions)`, counted: true, days: impactActionDays(actions, ["APPROVED"]) },
       { label: `Pending (${actions.length - count("APPROVED") - count("REVERSED")} actions)`, counted: true, days: impactActionDays(actions, ["PENDING"]) },
       { label: `Reversed (${count("REVERSED")} actions, not counted)`, counted: false, days: impactActionDays(actions, ["REVERSED"]) },
+      { label: `Performance bonus (${new Set(bonuses.map((b) => b.key)).size} invoice lines)`, counted: true, days: bonusDays },
     ],
-    detail: `${actions.length} actions, fetched ${how}. Payouts in each action's own currency.`,
+    detail: `${actions.length} actions, fetched ${how}, plus performance bonuses from Impact invoices (dated to the month they reward). Payouts in each action's own currency.${bonusNote}`,
   };
 };
 
