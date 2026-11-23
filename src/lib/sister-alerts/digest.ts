@@ -21,7 +21,7 @@ import { sendSisterMail } from "./send";
 import { discordInvite } from "./discord";
 import { MAILING_ADDRESS } from "../mailing-address";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
-import { button, discordLine, discordText, feedbackAsk, fromFor, money, REGION_LABEL, serviceUrl, shell, senderOf, siteLink, type BuiltMail } from "./email";
+import { button, discordLine, discordText, sisterGiveawayLine, feedbackAsk, fromFor, money, REGION_LABEL, serviceUrl, shell, senderOf, siteLink, type BuiltMail } from "./email";
 import { SISTER_ALERT_SITES, SISTER_REGIONS, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
 import { claimMailSlot, mailLane, SISTER_DAILY_MAIL_CAP } from "./mail-cap";
 
@@ -171,7 +171,7 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
   const cta = `<tr><td style="padding:14px 28px 6px">${button(site, siteLink(site, "/", "weekly-drops", region), `Compare prices on ${site.name}`)}</td></tr>`;
   const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Each price is the lowest in-stock price at ${REGION_LABEL[region]} stores we compare, this week against last week, before postage. Stores change prices quickly, so check before you buy.<br/>${feedbackAsk(site, "weekly-drops")}</td></tr>`;
   const stop = `${serviceUrl("manage", token, site)}&stop=${encodeURIComponent(`digest:${site.key}`)}`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you asked ${escapeHtml(site.name)} for its weekly biggest price drops. <a href="${escapeHtml(stop)}" style="color:#4b5563">Stop the weekly email</a> · <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your emails</a><br/>${discordLine(site.key)}Sent by ${senderOf(site)}.</td></tr>`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you asked ${escapeHtml(site.name)} for its weekly biggest price drops. <a href="${escapeHtml(stop)}" style="color:#4b5563">Stop the weekly email</a> · <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your emails</a><br/>${sisterGiveawayLine(site.key)?.html ?? ""}${discordLine(site.key)}Sent by ${senderOf(site)}.</td></tr>`;
   const text = [
     subject,
     "",
@@ -180,6 +180,7 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
     `Lowest in-stock price at ${REGION_LABEL[region]} stores, this week against last week, before postage.`,
     `What would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "weekly-drops", region)}`,
     `Stop the weekly email: ${stop}`,
+    ...(sisterGiveawayLine(site.key) ? [sisterGiveawayLine(site.key)!.text] : []),
     ...(discordInvite(site.key) ? [discordText(site.key)!] : []),
     "",
     MAILING_ADDRESS,
