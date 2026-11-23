@@ -6,6 +6,7 @@
 import { MAILING_ADDRESS, mailingAddressRow } from "../mailing-address";
 import { discordInvite, telegramChannel } from "./discord";
 import { escapeHtml } from "../email";
+import { giveawayFor, giveawayState, sitePath, type GiveawaySite } from "../giveaway";
 import { SITE_URL } from "../site";
 import { REGION_CURRENCY, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
 import { resolvePath, type FeedDeal } from "./feed";
@@ -174,7 +175,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
         </div></td></tr>`
     : "";
   const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Prices are the lowest in-stock store price we saw today, before postage. Stores change prices quickly, so check before you buy.<br/>${feedbackAsk(site, "sister-alert")}</td></tr>`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token, site) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token, site) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>${discordLine(site.key)}Sent by ${senderOf(site)}.</td></tr>`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you set a price alert on ${escapeHtml(site.name)}. <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your alerts</a> · <a href="${escapeHtml(serviceUrl("manage", token, site) + "&stop=all")}" style="color:#4b5563">Unsubscribe from all</a><br/><a href="${escapeHtml(serviceUrl("manage", token, site) + `&weekly=${encodeURIComponent(site.key)}`)}" style="color:#4b5563">Get ${escapeHtml(site.name)}'s biggest price drops once a week</a><br/>${sisterGiveawayLine(site.key)?.html ?? ""}${discordLine(site.key)}Sent by ${senderOf(site)}.</td></tr>`;
   const invite = discordInvite(site.key);
   const text = [
     subject,
@@ -183,6 +184,7 @@ export function buildAlertEmail(siteKey: string, fired: FiredAlert[], token: str
     deal ? `\nA deal on ${deal.site.name}: ${deal.deal.n}, ${money(deal.deal.p, deal.deal.r)}\n${siteLink(deal.site, deal.deal.u, `sister-deal-from-${site.key}`, deal.deal.r)}` : "",
     `\nWhat would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "sister-alert")}`,
     `\nManage or stop your alerts: ${serviceUrl("manage", token, site)}`,
+    sisterGiveawayLine(site.key) ? `\n${sisterGiveawayLine(site.key)!.text}` : "",
     invite ? `\n${discordText(site.key)}` : "",
     `\n${MAILING_ADDRESS}`,
   ].join("\n");
@@ -213,6 +215,21 @@ export function fromFor(site: SisterAlertSite, env: Record<string, string | unde
 
 /** One footer line inviting a card site's subscribers to the Discord hub; empty for the other sites. */
 /** "Get these first on Discord or Telegram" (2026-11-21): the site's own hub invite (its uses count per site) and the channel. */
+// The site's own giveaway, one line in the footer of its alert and weekly emails while it is open (owner, 2026-11-23: "Is there
+// anything we can do similar for Dex Compare and MTG Compare as well?"). Rift's own alert emails carry the same line
+// (lib/email.ts giveawayLine). Not a prompt: it sits in the footer, and it is gone by itself once the giveaway closes.
+const GIVEAWAY_SITE_KEYS: readonly string[] = ["dex", "mtg", "ygo", "op"];
+export function sisterGiveawayLine(siteKey: string, now: Date = new Date()): { html: string; text: string } | null {
+  if (!GIVEAWAY_SITE_KEYS.includes(siteKey)) return null;
+  const g = giveawayFor(siteKey as GiveawaySite, now);
+  if (!g || giveawayState(g, now) !== "open") return null;
+  const url = `${sitePath(g)}?utm_source=email&utm_medium=email&utm_campaign=giveaway-footer`;
+  return {
+    html: `Free giveaway: <a href="${escapeHtml(url)}" style="color:#4b5563">${escapeHtml(g.title)}</a> (worldwide, closes 14 Dec)<br/>`,
+    text: `Free giveaway, ${g.title} (worldwide, closes 14 Dec): ${url}`,
+  };
+}
+
 export function discordLine(siteKey: string): string {
   const invite = discordInvite(siteKey);
   const tg = telegramChannel(siteKey);
