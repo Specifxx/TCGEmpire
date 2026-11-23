@@ -122,3 +122,18 @@ test("a contact page counts as contact, a redirect to home does not", async () =
   assert.equal(await withFetch({ "https://a.com/pages/contact": { status: 200, body: big } }, () => hasContactPage("a.com")), true);
   assert.equal(await withFetch({ "https://b.com/pages/contact": { status: 200, body: big, url: "https://b.com/" } }, () => hasContactPage("b.com")), false);
 });
+
+// 2026-11-23: umart.com.au answered 504 for a few minutes and failed the run. A 5xx is "down"
+// (a look); it is red only when the previous run's issue listed the same host down too.
+test("a shop down once is a look; down two runs running is red", async () => {
+  const { escalateDown, downBefore } = await import("../scripts/store-vetting.mjs");
+  const mk = () => [{ host: "umart.com.au", flags: [{ kind: "down", red: false, detail: "down today: home page answers HTTP 504, again after a pause, and neither its catalogue nor robots.txt answers (red if still down next run)" }] }];
+  assert.equal(escalateDown(mk(), "")[0].flags[0].red, false);
+  const prev = "### Check by hand (1)\n- [ ] `umart.com.au` (compareempire): down today: home page answers HTTP 504, again after a pause (red if still down next run)\n- [ ] `other.com` (dexcompare): domain registered 100 days ago";
+  assert.deepEqual([...downBefore(prev)], ["umart.com.au"]);
+  const r = escalateDown(mk(), prev)[0].flags[0];
+  assert.equal(r.red, true);
+  assert.match(r.detail, /down last run too/);
+  // A host down last run but fine now stays fine; another host is untouched.
+  assert.equal(escalateDown([{ host: "other.com", flags: [] }], prev)[0].flags.length, 0);
+});
