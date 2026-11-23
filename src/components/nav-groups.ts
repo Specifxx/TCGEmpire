@@ -329,6 +329,8 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
 // in NAV_GROUPS throws at import (tests/header-menus.test.ts). 7 top-level items or fewer in the header row.
 export interface HeaderMenu {
   label: string;
+  // Where a click on the label goes: the section page (owner, 2026-11-23), a NAV_GROUPS page.
+  href: string;
   columns: { title: string; links: { href: string; label: string }[] }[];
 }
 const ALL_NAV_LINKS = NAV_GROUPS.flatMap((g) => g.links);
@@ -342,6 +344,7 @@ function pick(...hrefs: string[]): { href: string; label: string }[] {
 export const HEADER_MENUS: HeaderMenu[] = [
   {
     label: "Singles",
+    href: "/singles",
     columns: [
       { title: "Browse cards by", links: pick("/sets", "/domains", "/champions", "/cards") },
       { title: "Find a card", links: pick("/browse", "/price-guide", "/cards/all", "/gallery", "/graded") },
@@ -349,6 +352,7 @@ export const HEADER_MENUS: HeaderMenu[] = [
   },
   {
     label: "Sealed",
+    href: "/sealed",
     columns: [
       { title: "Boxes & packs", links: pick("/sealed", "/singles") },
       { title: "Sets & pre-orders", links: pick("/sets/radiance", "/legacy-preorders", "/release-dates") },
@@ -357,6 +361,7 @@ export const HEADER_MENUS: HeaderMenu[] = [
   },
   {
     label: "Deals & market",
+    href: "/tools/deal-finder",
     columns: [
       { title: "Market", links: pick("/market", "/movers", "/auctions") },
       { title: "Deals", links: pick("/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand") },
