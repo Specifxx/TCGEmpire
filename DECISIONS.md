@@ -25438,3 +25438,11 @@ normal daily release, not an urgent one: the deadline is days away. The burn is 
 Product & UX's clutter budget (rule 2): a dismissed prompt stays away for 7 days. `GIVEAWAY_PROMPT_GAP_MS` goes from two
 days to seven (`lib/giveaway-prompt.ts`); still at most three shows a giveaway, never on arrival, never after "Don't show
 again" or an entry.
+
+## 2026-11-23: The phone menu's links run two to a row
+
+Owner, 2026-11-23: "our site's … navigation and stuff can be significantly improved". Measured on a 390 px phone, the menu
+(`CinematicNavMenu.tsx`) was its 69 links in one column, 3,967 px tall: nearly five screens to reach Help. Each group's
+links now sit two to a row below `sm` (2,438 px, 39% shorter); from `sm` up nothing changes. Every link is still there and
+still ungated: the 2026-09-16 call (no Popular subset, no "Show all features") stands, and `tests/nav-menu-full-grid.test.ts`
+still pins it. Labels may wrap to two lines; the 44 px tap height stays.

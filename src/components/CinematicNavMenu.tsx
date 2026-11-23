@@ -57,13 +57,13 @@ function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: stri
   if (l.external) {
     return (
       <a href={l.href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={className}>
-        <span className="font-medium">{l.label}</span>
+        <span className="font-medium leading-tight">{l.label}</span>
       </a>
     );
   }
   return (
     <Link href={l.href} onClick={onClick} aria-current={active ? "page" : undefined} className={className}>
-      <span className="font-medium">{l.label}</span>
+      <span className="font-medium leading-tight">{l.label}</span>
     </Link>
   );
 }
@@ -441,14 +441,16 @@ export function CinematicNavMenu() {
               {sections.map((sec, si) => (
                 <div
                   key={sec.title}
-                  className="cine-item relative overflow-hidden rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4"
+                  className="cine-item relative overflow-hidden rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-3 sm:p-4"
                   style={{ "--cine-delay": `${si * 70}ms` } as CSSProperties}
                 >
                   <div className="mb-2 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
                     {sec.icon && <NavIcon name={sec.icon} className="h-3.5 w-3.5 text-brand-400" />}
                     {sec.title}
                   </div>
-                  <ul className="space-y-0.5">
+                  {/* Two columns on a phone (2026-11-23): the 69 links ran as one
+                      column 3,967 px tall. Still every link, still no gate. */}
+                  <ul className="grid grid-cols-2 gap-x-1 sm:block sm:space-y-0.5">
                     {sec.links.map((l) => (
                       <li key={l.href}>
                         <FeatureLink l={l} pathname={pathname} onClick={close} />
