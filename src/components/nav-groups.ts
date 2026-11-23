@@ -329,7 +329,7 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
 // in NAV_GROUPS throws at import (tests/header-menus.test.ts). 7 top-level items or fewer in the header row.
 export interface HeaderMenu {
   label: string;
-  /** Where a click on the label goes: the section's own page (owner, 2026-11-23). A NAV_GROUPS page. */
+  // Where a click on the label goes: the section page (owner, 2026-11-23), a NAV_GROUPS page.
   href: string;
   columns: { title: string; links: { href: string; label: string }[] }[];
 }
