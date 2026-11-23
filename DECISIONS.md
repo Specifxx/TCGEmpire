@@ -25439,6 +25439,20 @@ Product & UX's clutter budget (rule 2): a dismissed prompt stays away for 7 days
 days to seven (`lib/giveaway-prompt.ts`); still at most three shows a giveaway, never on arrival, never after "Don't show
 again" or an entry.
 
+## 2026-11-23: A set's generic Champion Deck page takes no champion's deck from eBay
+
+**Context.** The 22 Nov 16:24 UTC sealed export held 16 eBay rows (US, UK, CA, AU, SG) on five sets' generic
+`<SET>|Champion Deck` pages, the group of store titles that name no champion ("Origins Champion Deck"). The search for that
+group is "Riftbound Origins Champion Deck", and eBay's cheapest match was one champion's deck ("… Origins Champion Deck -
+Jinx", "Unleashed Champion Deck (Vi)") or a deck display ("Champion Deck Display: Zed vs."). `OGN|Box Set` (Fire and Dice's
+"Arcane Box Set - Origins: Promos") took two eBay booster boxes (EUR 449, GBP 208.70).
+
+**Decision.** `wrongSealedEbayProduct` (the 2026-11-22 entry above) also refuses, for the bare type "Champion Deck", a title
+naming any champion in `SEALED_DECK_CHAMPIONS` or saying "display", and for "Box Set" a title saying booster box or display
+without "box set". The champion's own group already searches for that deck, so no price is lost. Run over the whole export it
+refuses exactly those 16 rows and no other eBay row (`tests/ebay-sealed-one-product.test.ts`). A generic "Champion Deck
+Display" is left alone: a display naming two champions is the mixed display. Rules only refuse.
+
 ## 2026-11-23: The phone menu's links run two to a row
 
 Owner, 2026-11-23: "our site's … navigation and stuff can be significantly improved". Measured on a 390 px phone, the menu
