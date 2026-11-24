@@ -31,6 +31,7 @@ export function paidMarkFor(search: string): string | null {
   if (/^(facebook|instagram|meta|fb|ig)/.test(source)) return "fbad";
   if (/^reddit/.test(source)) return "rdad";
   if (/^google/.test(source)) return "ggad";
+  if (/^(bing|microsoft|msft)/.test(source)) return "msad";
   return "paidad";
 }
 

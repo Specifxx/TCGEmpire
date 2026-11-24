@@ -25589,3 +25589,11 @@ Not done here, on purpose: delivered price by default (P1 9: most Rift stores ha
 would mix delivered and item prices; rows already show "≈ delivered" where known), one product card (P1 7) and one alert pattern
 (P1 19), both bigger than an urgent pass; set logos (P2 17: Riftbound has a handful of sets and no logo files); the card list's
 sign-up prompt after the 12th tile stays (pinned by `tests/signup-inline.test.ts`). `tests/ux-review-2026-11-24.test.ts`.
+
+## Bing search-ads test for DexCompare — 2026-11-24
+
+The owner approved one paid-traffic test (decision card, 24 Nov): A$50 at most, 7 days (2 to 8 Dec, after Cyber Monday), Microsoft
+Ads, US exact-match searches for Pokémon sealed prices, bids capped at A$0.15 a click. A Dex visitor earned about A$0.08 in the 30
+days to 24 Nov and searchers are expected to earn more; the Meta tests (14-18 Nov) earned nothing. Landings carry
+`utm_source=bing&utm_medium=cpc&utm_campaign=dex-bing-2026-12`; `paidMarkFor` now marks bing/microsoft sources `msad` (here and in
+Dex's copy), and the earnings dashboard's Ad tests panel has the row. Stop if it returns under A$1 per A$1 spent.
