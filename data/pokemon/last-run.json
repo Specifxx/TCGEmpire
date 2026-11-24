@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-11-23T15:58:10.409Z",
-  "finishedAt": "2026-11-23T15:58:10.959Z",
+  "startedAt": "2026-11-24T05:36:10.746Z",
+  "finishedAt": "2026-11-24T05:36:11.693Z",
   "ok": true,
   "summary": {
     "groups": {
@@ -18,8 +18,8 @@
       }
     },
     "tcgplayer": {
-      "listings": 961,
-      "market": 925
+      "listings": 962,
+      "market": 927
     },
     "cardmarket": {
       "enabled": false,
@@ -27,8 +27,8 @@
       "written": 0
     },
     "ebay": {
-      "enabled": false,
-      "remaining": null,
+      "enabled": true,
+      "remaining": 820,
       "budget": 0,
       "searched": 0,
       "matched": 0
