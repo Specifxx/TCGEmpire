@@ -25,7 +25,7 @@ export interface AdTest {
   /** Affiliate tag group (tagGroup key): rc, dex, cyberpunk … */
   site: string;
   siteLabel: string;
-  network: "Meta" | "Reddit" | "Google";
+  network: "Meta" | "Reddit" | "Google" | "Microsoft Ads";
   /** The sub-id marker paid-visit.ts adds for this network. */
   mark: string;
   utmCampaign: string;
