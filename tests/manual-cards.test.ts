@@ -158,3 +158,15 @@ test("both Korean promos are present, flagged, and numbered as printed", () => {
   assert.equal(jinx!.name, "Jinx, Demolitionist");
   assert.equal(yasuo!.name, "Yasuo, Remorseful");
 });
+
+// Card coverage fixer, 2026-11-24: TCGplayer's "Riftbound Organized Play Promotional Cards" Teemo, Swift Scout 263/298
+// (product 662886) had no card of ours. Our other 263/298 promos are the Worlds Bundle alt art (670598) and the two metal
+// cards, so this one is its own printing, priced by its own product, never by number.
+test("the Organized Play Teemo promo is its own card, pinned to its own TCGplayer product", () => {
+  const rows = JSON.parse(readFileSync(join(process.cwd(), "prisma/manual-cards.json"), "utf8")) as { externalId?: string; isPromo?: boolean; slug?: string; collectorNumber?: string }[];
+  const teemo = rows.find((r) => r.externalId === "tcg-662886");
+  assert.ok(teemo, "tcg-662886 is in manual-cards.json");
+  assert.equal(teemo!.isPromo, true);
+  assert.equal(teemo!.collectorNumber, "263/298");
+  assert.equal(rows.filter((r) => r.slug === teemo!.slug).length, 1, "its slug is unique");
+});
