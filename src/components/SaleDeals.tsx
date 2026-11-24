@@ -17,19 +17,22 @@ import { applyFilters, DEFAULT_FILTERS, isStale, pctOn, PRICE_BANDS, refCents, s
 const PAGE = 20;
 const ALERT_AFTER = 5;
 
-const BASIS_LABEL: Record<SaleBasis, { tab: string; ref: string; tip: string }> = {
+const BASIS_LABEL: Record<SaleBasis, { tab: string; badge: string; ref: string; tip: string }> = {
   typical: {
     tab: "Biggest price drops",
+    badge: "30-day typical",
     ref: "30-day typical",
     tip: "Against the product's own typical price: the median of its cheapest in-stock price in your market on each of the last 30 days we recorded (two weeks of records at least; a day far under the rest is left out as a wrong listing).",
   },
   median: {
     tab: "Under other stores today",
+    badge: "median",
     ref: "store median",
     tip: "Against the middle price of the stores that have it open in your market today (three or more stores, at least 10% under, never half: that is a wrong listing).",
   },
   msrp: {
     tab: "Under MSRP",
+    badge: "MSRP",
     ref: "MSRP",
     tip: "Against its MSRP in your market: at least 5% under.",
   },
@@ -182,7 +185,7 @@ function SaleRow({ row, basis, fmt, page, country, position, alertBar, discordHr
           ) : null}
         </div>
         <div className="col-span-2 flex flex-wrap items-baseline gap-x-2 sm:col-span-1 sm:block sm:text-right">
-          {pct != null && <span className="mr-1 inline-block rounded-md bg-emerald-600 px-1.5 py-0.5 text-sm font-bold text-white sm:mb-1">−{pct}%</span>}
+          {pct != null && <span title={BASIS_LABEL[basis].tip} className="mr-1 inline-block rounded-md bg-emerald-600 px-1.5 py-0.5 text-sm font-bold text-white sm:mb-1">{pct}% under {BASIS_LABEL[basis].badge}</span>}
           <b className="num text-xl font-extrabold text-gold">{fmt(row.priceCents)}</b>
           {ref != null && (
             <s className="ml-1 text-sm tabular-nums text-slate-400" title={BASIS_LABEL[basis].ref}>
