@@ -1,3 +1,4 @@
+import { saleStrip } from "@/lib/holiday-strip";
 import { DISCORD_URL } from "@/lib/site";
 import { SETS, hasSetGallery } from "@/lib/constants";
 import { pokemonSectionOn } from "@/lib/pokemon/flag";
@@ -341,6 +342,12 @@ function pick(...hrefs: string[]): { href: string; label: string }[] {
     return { href: l.href, label: l.label };
   });
 }
+// The sale page in season, if any, picked from NAV_GROUPS like every other header link. Read at module load: the header is
+// in cached HTML that the daily release refreshes, and the sale pages themselves say when their sale is over.
+function seasonalPick(today = new Date().toISOString().slice(0, 10)): { href: string; label: string }[] {
+  const s = saleStrip(today);
+  return s ? pick(s.href).map((l) => ({ ...l, label: `${l.label} ★` })) : [];
+}
 export const HEADER_MENUS: HeaderMenu[] = [
   {
     label: "Singles",
@@ -364,7 +371,10 @@ export const HEADER_MENUS: HeaderMenu[] = [
     href: "/tools/deal-finder",
     columns: [
       { title: "Market", links: pick("/market", "/movers", "/auctions") },
-      { title: "Deals", links: pick("/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand") },
+      // Fewer, clearer deal links (owner's UX review, 2026-11-24, P2 16: "reduce to four or five, with seasonal pages as one
+      // highlighted item"): the Deal Finder, Rising and the sale page in season (saleStrip, the same date rule as the line under
+      // the header). Best Basket and Demand stay in the full menu and the footer.
+      { title: "Deals", links: [...pick("/tools/deal-finder", "/tools/rising"), ...seasonalPick()] },
       // The prize draw (owner, 2026-11-19): visible in the header while one runs, not only in the launcher.
       { title: "Win", links: pick("/giveaway") },
     ],

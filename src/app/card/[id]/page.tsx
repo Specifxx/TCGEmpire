@@ -1273,6 +1273,22 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               so it never reads as one of its rows. */}
           {featured && <FeaturedListingBox listing={featured} imageUrl={cardImageSrc(card, { absolute: true })} />}
 
+          {/* Jump links (owner's UX review, 2026-11-24, P1 13: "add anchors (Prices, History, Facts, FAQ)"). Plain anchors in the
+              server HTML: no script, no cookie, and the URL never changes. */}
+          <nav aria-label="On this page" className="mt-5 hidden flex-wrap gap-x-1 gap-y-1 text-xs sm:flex">
+            {[
+              ["#price-comparison", "Prices"],
+              ["#price-history", "History"],
+              ["#about-card", "About"],
+              ["#card-faq", "FAQ"],
+              ["#card-details", "Details"],
+            ].map(([href, label]) => (
+              <a key={href} href={href} className="chip min-h-9 border border-ink-700 bg-ink-900 px-3 text-slate-300 hover:border-ink-600 hover:text-white focus-visible:ring-2 focus-visible:ring-brand-400">
+                {label}
+              </a>
+            ))}
+          </nav>
+
           <section className="mt-4 sm:mt-6">
             <h2 className="sr-only">Price history &amp; where to buy {card.name}</h2>
             {/* How the list below is ordered, and where that is explained in
@@ -1316,7 +1332,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
             {/* Price-history chart — free for everyone (AU history; the series is
                 collected on the AU baseline market). */}
-            <PriceHistoryChart cardId={card.id} rows={rows} />
+            <div id="price-history" className="scroll-mt-header">
+              <PriceHistoryChart cardId={card.id} rows={rows} />
+            </div>
 
             {/* The same card on RiftboundStocks, our sister site: US (TCGplayer)
                 price history, foil prices and daily movers — the chart above is
@@ -1353,7 +1371,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               column, so an AdSense reviewer (or a reader) hits real, original
               writing well before any affiliate content. See docs/adsense-
               remediation.md § Phase 8. */}
-          <section className="card-surface mt-6 p-5">
+          <section id="about-card" className="card-surface mt-6 scroll-mt-header p-5">
             <h2 className="font-bold text-white">About {card.name}</h2>
             {/* max-w-3xl (2026-09-23): a measure cap, left-aligned, so the
                 card-surface still fills its row. At 1920 the paragraphs ran
@@ -1412,7 +1430,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
           </section>
 
-          <section className="card-surface mt-6 p-5">
+          <section id="card-faq" className="card-surface mt-6 scroll-mt-header p-5">
             <h2 className="font-bold text-white">Frequently asked questions</h2>
             <dl className="mt-3 space-y-4">
               {faqs.map((f) => (
@@ -1469,7 +1487,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               Signature, Overnumbered, Crystal Rose, Promo) already exist in the badge
               row and the About prose above; this just gives them one crawlable,
               explicitly-headed answer for "is this printing rare/special" queries. */}
-          <section className="card-surface mt-6 p-5">
+          <section id="card-details" className="card-surface mt-6 scroll-mt-header p-5">
             <h2 className="font-bold text-white">Card details</h2>
             {/* WHAT THIS CARD IS, as data rather than as prose.
                 This list used to carry four cells — Rarity, Printing, Set and a

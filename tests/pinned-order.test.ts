@@ -25,7 +25,11 @@ test("the sealed QuickView pins eBay and TCGplayer the same way, open rows only,
   const src = readFileSync(new URL("../src/components/SealedQuickView.tsx", import.meta.url), "utf8");
   assert.match(src, /pinMarketplaces\(listings\.filter\(\(l\) => offerStock\(l\) === "open"\)\)/);
   assert.match(src, /pin\.tcgFirst \? \[pin\.tcgplayer, pin\.ebay\] : \[pin\.ebay, pin\.tcgplayer\]/);
-  assert.match(src, /\{!pin\.ebay && \(/);
+  assert.match(src, /\{!pin\.ebay && ebaySearchRow\}/);
+  // The product page (source "sealed-page") draws the stores first and the marketplaces in a labelled block under them
+  // (owner's UX review, 2026-11-24, P1 10); the quick view keeps the pinned order.
+  assert.match(src, /const below = source === "sealed-page";/);
+  assert.match(src, /\{storeRows\.map\(\(l\) => renderRow\(l, false\)\)\}\s*<li[^>]*data-marketplaces/);
   assert.doesNotMatch(src, /Shown ?First/, "no wording about the order (owner, 2026-10-30)");
   assert.match(src, /const isBest = l === best;/, "Best price stays on the real cheapest");
 });

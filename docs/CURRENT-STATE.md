@@ -828,8 +828,11 @@ longer lands on its entry.
   By-surface numbers compare only from 2026-09-26 on (the eBay-only surfaces
   from 09-27). [2026-09-26](../DECISIONS.md#L13640),
   [2026-09-26](../DECISIONS.md#L13751)
-- **eBay and TCGplayer lead every price list** (owner, 2026-10-27): the card
-  page's comparison and the QuickView draw the cheapest eBay row and the
+- **Product pages: stores first, marketplaces below** (owner's UX review, [2026-11-24](../DECISIONS.md#2026-11-24-the-owners-ux-review-on-riftcompare-p0-p1-p2)):
+  the card page and the sealed product page draw the stores in price order, then eBay, TCGplayer and Amazon under a labelled
+  "Marketplaces · Ad" block. The quick views keep the pinned order below.
+- **eBay and TCGplayer lead every price list** (owner, 2026-10-27; product pages since 2026-11-24: above): the
+  QuickView draws the cheapest eBay row and the
   cheapest TCGplayer row, eBay always on top since [2026-11-06](../DECISIONS.md#2026-11-06--ebay-and-amazon-rows-are-full-price-rows-on-top-outlined) (no
   coloured outline since [2026-11-12](../DECISIONS.md#2026-11-12--a-calmer-price-table-owner): only the cheapest row is marked, with a
   green edge; `tcgFirst` is always false; the sealed page's Amazon row second),

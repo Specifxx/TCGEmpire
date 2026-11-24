@@ -687,14 +687,59 @@ export function CardPriceComparison({
           )}
         </div>
 
-        {/* eBay and TCGplayer first (owner, 2026-10-27), the cheaper of the two
+
+        {prices.length === 0 && fetchItems.length > 0 ? (
+          <ul className="divide-y divide-ink-800">{fetchItems.map((x) => x.node)}</ul>
+        ) : prices.length === 0 && outOfStock.length === 0 && emptyState ? (
+          <div className="p-3 sm:p-4">{emptyState}</div>
+        ) : prices.length === 0 && outOfStock.length === 0 ? (
+          <div className="p-8 text-center text-sm text-slate-400">
+            <p className="font-semibold text-white">No prices found yet</p>
+            <p className="mt-1">
+              We haven&apos;t matched this card to a store listing in this market. Check back soon —
+              our price feeds refresh regularly.
+            </p>
+          </div>
+        ) : prices.length === 0 ? (
+          <div className="p-6 text-center text-sm text-slate-400">
+            <p className="font-semibold text-white">Currently sold out everywhere</p>
+            {/* Distinct retailers, matching the disclosure's own count (see the
+                note in OutOfStockDisclosure). And "expand … below" rather than
+                the old "see them below": the list underneath is a
+                closed-by-default disclosure, so there is nothing to see until
+                the reader opens it — the copy has to name the action. */}
+            <p className="mt-1">
+              {(() => {
+                const n = new Set(outOfStock.map((p) => p.retailer)).size;
+                return `${n} ${n === 1 ? "store has" : "stores have"}`;
+              })()}{" "}
+              listed this card but it&apos;s out of stock right now — expand the list below to see
+              their last known prices.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-ink-800">
+            {[...rest.map((p) => ({ price: p.priceCents, node: renderRow(p, false) })), ...fetchItems]
+              .sort((x, y) => x.price - y.price)
+              .map((x) => x.node)}
+          </ul>
+        )}
+
+        {/* MARKETPLACES BELOW THE STORES (owner's UX review, 2026-11-24, P1 10: "the product page puts eBay, TCGplayer and
+            Amazon rows above the actual cheapest store. Lead with the best-price store and move marketplaces to a labelled
+            block below"). This block led the table from 2026-10-27 to 2026-11-24. Each row keeps its price rank number, so a
+            marketplace that is the cheapest still says 1 and wears the Cheapest mark.
+            eBay and TCGplayer (owner, 2026-10-27), the cheaper of the two
             on top (tcgFirst): the cheapest listing of each when this market has one, else eBay's search and,
             outside the US, TCGplayer's US market price as a labelled reference.
             Stores follow below, ranked by price. */}
         {/* Always drawn (2026-11-19, "a row that is always there beats a perfect row that is often missing"): with no TCGplayer row
             or reference for this market, a tagged TCGplayer search (tcgSearchHref) stands in, as eBay's search does for eBay. */}
         {(pin.ebay || ebay || pin.tcgplayer || tcg || tcgSearchHref) && (
-          <ul className="divide-y divide-ink-800 border-b border-ink-800">
+          <ul className="divide-y divide-ink-800 border-t border-ink-800" aria-label="Marketplaces, paid links">
+            <li className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:px-4" data-marketplaces>
+              Marketplaces <span className="font-normal normal-case text-slate-500">· Ad, paid links</span>
+            </li>
             {pin.tcgFirst && pin.tcgplayer && renderRow(pin.tcgplayer, true)}
             {pin.ebay
               ? renderRow(pin.ebay, true)
@@ -829,43 +874,6 @@ export function CardPriceComparison({
                     )}
                   </li>
                 )}
-          </ul>
-        )}
-
-        {prices.length === 0 && fetchItems.length > 0 ? (
-          <ul className="divide-y divide-ink-800">{fetchItems.map((x) => x.node)}</ul>
-        ) : prices.length === 0 && outOfStock.length === 0 && emptyState ? (
-          <div className="p-3 sm:p-4">{emptyState}</div>
-        ) : prices.length === 0 && outOfStock.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-400">
-            <p className="font-semibold text-white">No prices found yet</p>
-            <p className="mt-1">
-              We haven&apos;t matched this card to a store listing in this market. Check back soon —
-              our price feeds refresh regularly.
-            </p>
-          </div>
-        ) : prices.length === 0 ? (
-          <div className="p-6 text-center text-sm text-slate-400">
-            <p className="font-semibold text-white">Currently sold out everywhere</p>
-            {/* Distinct retailers, matching the disclosure's own count (see the
-                note in OutOfStockDisclosure). And "expand … below" rather than
-                the old "see them below": the list underneath is a
-                closed-by-default disclosure, so there is nothing to see until
-                the reader opens it — the copy has to name the action. */}
-            <p className="mt-1">
-              {(() => {
-                const n = new Set(outOfStock.map((p) => p.retailer)).size;
-                return `${n} ${n === 1 ? "store has" : "stores have"}`;
-              })()}{" "}
-              listed this card but it&apos;s out of stock right now — expand the list below to see
-              their last known prices.
-            </p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-ink-800">
-            {[...rest.map((p) => ({ price: p.priceCents, node: renderRow(p, false) })), ...fetchItems]
-              .sort((x, y) => x.price - y.price)
-              .map((x) => x.node)}
           </ul>
         )}
 

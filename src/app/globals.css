@@ -1825,7 +1825,17 @@ html[data-ad-dock] .above-bottombar {
   [data-hub-intro]:has(> details:not([open])) > p:first-child {
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+/* Wider screens: one line plus "How it works" (owner's UX review, 2026-11-24, P1 14: "limit this to one line plus a 'How it
+   works' link"). Two lines on a phone above, one here; opening "How it works" shows everything. */
+@media (min-width: 640px) {
+  [data-hub-intro]:has(> details:not([open])) > p:first-child {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
     overflow: hidden;
   }
 }
@@ -2068,6 +2078,15 @@ html[data-ebaypop="pop"] li:has(a[data-ebay]:is(.btn-primary, .btn-buy, .btn-ad)
 html[data-pab1="b"] .pab1-b { display: block; }
 
 
+/* One primary action per price row (owner's UX review, 2026-11-24, P1 11): on a phone a store row keeps its price, its
+   "View" button and a small Save; the thumbs up/down (StoreVote, which sets its own inline display) step aside. */
+@media (max-width: 639px) {
+  [data-store-vote] {
+    display: none !important;
+  }
+}
+
+
 /* Giveaways (owner, 2026-11-22: "as nice and aesthetic ... as possible"; components/giveaway/). */
 .gw-hero {
   background:
@@ -2096,4 +2115,5 @@ html[data-pab1="b"] .pab1-b { display: block; }
   .gw-flash { animation: none; }
   .gw-prize, .gw-prize:hover { transform: none; transition: none; }
 }
+
 

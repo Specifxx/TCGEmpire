@@ -11,6 +11,7 @@ import { PhoneDockAds } from "@/components/PhoneDockAds";
 import { BottomNav } from "@/components/BottomNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
+import { IMG_FALLBACK_SCRIPT } from "@/lib/img-fallback";
 import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT, MOBILE_NO_VIGNETTE_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
@@ -383,6 +384,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Seasonal theme (Halloween until 31 October): data-season on <html>
             from the visitor's own date, before first paint. lib/season.ts. */}
         <script dangerouslySetInnerHTML={{ __html: SEASON_BOOT_SCRIPT }} />
+        {/* A broken image retries once, then shows the site mark (lib/img-fallback.ts, UX review 2026-11-24). */}
+        <script dangerouslySetInnerHTML={{ __html: IMG_FALLBACK_SCRIPT }} />
       </head>
       {/* suppressHydrationWarning: MOBILE_AD_INTENTS_SCRIPT below may add one
           class (google-anno-skip) before React hydrates. */}

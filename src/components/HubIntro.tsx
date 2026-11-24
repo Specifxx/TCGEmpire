@@ -41,8 +41,9 @@ export function HubIntro({ path, className }: { path: string; className?: string
       {rest.length > 0 && (
         <details className="group/intro">
           <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 font-semibold text-brand-400 hover:underline [&::-webkit-details-marker]:hidden">
-            <span className="group-open/intro:hidden">Read more</span>
-            <span className="hidden group-open/intro:inline">Read less</span>
+            {/* "How it works" (owner's UX review, 2026-11-24, P1 14), was "Read more". */}
+            <span className="group-open/intro:hidden">How it works</span>
+            <span className="hidden group-open/intro:inline">Show less</span>
             <svg className="h-3.5 w-3.5 shrink-0 transition-transform group-open/intro:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="m6 9 6 6 6-6" />
             </svg>

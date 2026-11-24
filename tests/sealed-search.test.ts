@@ -138,3 +138,22 @@ test("/browse?q= lists the matching sealed products above the cards, each openin
   // The sealed quick view's provider is global, so a tile opens it from here.
   assert.match(read("src/app/layout.tsx"), /<SealedQuickViewProvider>/);
 });
+
+// Owner's UX review (2026-11-24, P0 5): "charizrd returns none … add fuzzy matching, synonyms (ETB, UPC, BB)".
+test("a one-letter typo still finds the product, ranked below exact matches", () => {
+  assert.ok(names("orgins booster box").includes("Origins Booster Box"), "orgins -> origins");
+  assert.ok(names("boostr box").includes("Spirit Forged Booster Box"), "boostr -> booster");
+  assert.deepEqual(names("bxo"), [], "three letters get no typo budget");
+  const mixed = matchSealedGroups([G("Origns Bundle", "Bundle", null), G("Origins Bundle", "Bundle", "OGN")], "origins bundle");
+  assert.equal(mixed[0].name, "Origins Bundle", "the exact match ranks first");
+});
+
+test("shoppers' shorthand is read as the words it stands for", () => {
+  assert.deepEqual(sealedSearchTokens("origins bb"), ["origin", "booster", "box"]);
+  assert.deepEqual(names("origins bb"), ["Origins Booster Box", "Riftbound Booster Box (OGN)"]);
+  assert.ok(names("pg").includes("Proving Grounds Kit"));
+});
+
+test("the /sealed page's own search uses the same matcher", () => {
+  assert.match(code("src/lib/sealed-view.ts"), /matchSealedGroups\(groups, q\)/);
+});

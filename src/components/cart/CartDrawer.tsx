@@ -168,12 +168,12 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   return createPortal(
     <div className={`cd-root${open ? " is-open" : ""}`} aria-hidden={!open} {...(open ? {} : { inert: true })}>
       <div className="cd-backdrop" onClick={onClose} />
-      <div ref={panel} className="cd-panel" role="dialog" aria-modal="true" aria-label="Your cart">
+      <div ref={panel} className="cd-panel" role="dialog" aria-modal="true" aria-label="Your shortlist">
         <header className="cd-head">
           <h2>
-            Your cart{units > 0 && <span className="cd-count"> · {units} item{units === 1 ? "" : "s"}</span>}
+            Your shortlist{units > 0 && <span className="cd-count"> · {units} item{units === 1 ? "" : "s"}</span>}
           </h2>
-          <button ref={closeBtn} type="button" className="cd-x" onClick={onClose} aria-label="Close cart">
+          <button ref={closeBtn} type="button" className="cd-x" onClick={onClose} aria-label="Close shortlist">
             ×
           </button>
         </header>
@@ -181,8 +181,8 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         {!lines.length ? (
           <div className="cd-empty">
             <CartIcon size={34} />
-            <p className="cd-strong">Your cart is empty</p>
-            <p>Tap Add to cart beside any store&apos;s price (you pay each store on its own site, never us). Add from as many stores as you like and check out all of them in one go.</p>
+            <p className="cd-strong">Your shortlist is empty</p>
+            <p>Tap Save beside any store&apos;s price to keep it here. RiftCompare sells nothing: you buy at each store on its own site. Save from as many stores as you like and open all their checkouts in one go.</p>
             <button type="button" className="cd-btn" onClick={onClose}>
               Keep browsing
             </button>
@@ -191,7 +191,8 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           <>
             <div className="cd-body">
               <div className="cd-handoff" role="note">
-                <p className="cd-handoff-lead">You pay each store on its own site. We never take payment.</p>
+                {/* Said every time the drawer opens, not only when it is empty (owner's UX review, 2026-11-24, P1 12). */}
+                <p className="cd-handoff-lead">Prices you saved. RiftCompare sells nothing: you buy at each store on its own site, and we never take payment.</p>
                 <p>{checking ? "Checking prices and stock at each store… " : ""}Each store adds its own postage. Opening a Shopify store&apos;s checkout replaces anything already in your cart there.</p>
               </div>
               {groups.map((g) => {

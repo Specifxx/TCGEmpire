@@ -68,6 +68,8 @@ export function HeaderWatchButton({ className = "", onlyWhenWatching = false }: 
       onClick={() => setOpen(!open)}
       aria-expanded={open}
       aria-label={count > 0 ? `Watchlist, ${count} card${count === 1 ? "" : "s"}` : "Watchlist"}
+      // A tooltip on every header icon (owner's UX review, 2026-11-24, P2 20: "the star and theme icons have no labels").
+      title="Watchlist: cards you starred"
       className={`tap-icon relative rounded-lg transition-colors hover:bg-ink-800 hover:text-white ${
         open ? "text-brand-400" : "text-slate-200"
       } ${className}`}
