@@ -83,6 +83,8 @@ async function main() {
     const p = await fetch(`https://discord.com/api/v10/channels/${CHANNEL}/messages/${id}/crosspost`, { method: "POST", headers: h, signal: AbortSignal.timeout(10_000) });
     if (p.ok) {
       ok++;
+      // Without the bot's Message Content intent Discord returns other senders' messages with no embeds, so nothing is copied.
+      if (!m.embeds?.length) console.log(`publish: ${id} came back with no embeds (is the bot's Message Content intent on?)`);
       for (const [ch, g] of byGameChannel(m.embeds ?? [])) {
         const c = await fetch(`https://discord.com/api/v10/channels/${ch}/messages`, {
           method: "POST",
