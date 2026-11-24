@@ -119,15 +119,13 @@ export default async function PremiumStartPage({
         <p className="mt-2 text-sm text-slate-300">
           {premiumTrialEnabled() ? (
             <>
-              Your account is free and takes one tap — no card needed for it. Checkout opens straight
-              after: {premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} due today for your first {trialDaysPhrase(PREMIUM_TRIAL_DAYS)}{PREMIUM_TRIAL_FEE_CENTS > 0 ? "" : " (free)"} if you
-              haven&apos;t had a trial before, then {priceLine}. A card is required to start the trial, and you can
-              cancel any time before day {PREMIUM_TRIAL_DAYS}.
+              Free account, one tap. Then {premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} today for{" "}
+              {trialDaysPhrase(PREMIUM_TRIAL_DAYS)}{PREMIUM_TRIAL_FEE_CENTS > 0 ? "" : " (free)"} if it&apos;s your first trial, then{" "}
+              {priceLine}. Card needed; cancel before day {PREMIUM_TRIAL_DAYS}.
             </>
           ) : (
             <>
-              Your account is free and takes one tap. Checkout opens straight after — {priceLine}, cancel
-              anytime.
+              Free account, one tap. Then {priceLine}, cancel anytime.
             </>
           )}
         </p>
