@@ -16,7 +16,11 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { blackFriday, cyberMonday, sealedDeals, UNDER_MEDIAN_PCT, UNDER_MSRP_PCT } from "@/lib/black-friday";
 import { FamilyDeals } from "@/components/FamilyDeals";
 import { SalePriceWatch } from "@/components/SalePriceWatch";
-import { RealDrops, realDropRows } from "@/components/RealDrops";
+import { SaleDeals } from "@/components/SaleDeals";
+import { SaleNav } from "@/components/SaleNav";
+import { TELEGRAM_URL } from "@/components/DiscordCta";
+import { saleDealRows } from "@/lib/sale-deals-data";
+import { DISCORD_URL } from "@/lib/site";
 import { TcgplayerSaleBlock } from "@/components/TcgplayerSaleBlock";
 import { TcgplayerCyberBanner } from "@/components/TcgplayerCyberBanner";
 
@@ -122,8 +126,10 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
   const candidates = sealedDeals(groups).slice(0, SHOWN * 2).map((d) => d.group);
   const checked = await withLiveStock(candidates).catch(() => candidates);
   const deals = sealedDeals(checked);
-  const shown = deals.slice(0, SHOWN);
-  const drops = realDropRows(groups, country);
+  // ONE deal list (owner's review, 2026-11-24): the 30-day drops and the deals under the other stores or the MSRP merged, one
+  // price per row (lib/sale-deals*.ts, components/SaleDeals.tsx).
+  const rows = saleDealRows(groups, deals, country, PATH, source);
+  const best = Math.max(0, ...rows.map((r) => Math.max(r.typical?.pct ?? 0, r.median?.pct ?? 0, r.msrp?.pct ?? 0)));
   const ebay = ebayLabel(country);
   const qa = faqs(bf, cm, event);
 
@@ -142,39 +148,45 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       <Breadcrumbs trail={[{ name: `${name} deals`, href: PATH }]} />
 
-      <header className="rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/10 via-ink-900 to-ink-950 p-5 sm:p-7">
-        <div className="max-w-2xl">
-          <span className="chip mb-3 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold [font-feature-settings:'lnum'_1]">
-            Black Friday {longDate(bf)} · Cyber Monday {longDate(cm)}
-          </span>
-          <h1 className="font-display text-2xl font-extrabold text-white sm:text-4xl">Riftbound {name} deals</h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            Sealed Riftbound products whose cheapest {info.adjective} store is well under the other stores or the MSRP
-            today, in {currency}, biggest saving first. We re-read every store daily and re-check the cheapest stores
-            every few hours; sold-out stores are left out. No
-            &ldquo;was&rdquo; prices: only what stores are asking now. Under the deals, the{" "}
-            <a href="#price-watch" className="text-brand-400 hover:underline">price watch</a>: sealed boxes, the week&rsquo;s biggest price drops, graded
-            cards and chase auctions, each with a live eBay listing.
-          </p>
-        </div>
-        {shown.length > 0 && (
-          <ul className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {shown.slice(0, 4).map((d) => (
-              <li key={d.group.groupKey} className="rounded-xl bg-black/30 p-3">
-                <p className="truncate text-xs font-semibold text-slate-300">{d.group.name}</p>
-                <p className="num mt-1 text-xl font-extrabold text-gold">{formatMoney(d.cheapestCents, currency)}</p>
-                <p className="text-xs text-slate-400">
-                  {d.underMedianPct != null && d.underMedianPct >= UNDER_MEDIAN_PCT
-                    ? `${d.underMedianPct}% under the median store`
-                    : `${d.underMsrpPct}% under MSRP`}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
+      <header className="mt-2">
+        <span className="chip mb-2 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold [font-feature-settings:'lnum'_1]">
+          Black Friday {longDate(bf)} · Cyber Monday {longDate(cm)}
+        </span>
+        <h1 className="font-display text-2xl font-extrabold text-white sm:text-4xl">Riftbound {name} deals</h1>
+        <p className="mt-2 text-sm leading-relaxed text-slate-300">
+          {rows.length ? `${rows.length} deals in ${info.adjective} stores today, up to ${best}% off` : `Sealed Riftbound in ${info.adjective} stores`}, in {currency}, re-read every day.{" "}
+          <a href="#how-we-calculate" className="text-brand-400 hover:underline">How we calculate</a>
+        </p>
+        <p className="mt-1 text-xs text-slate-500">Store buttons and eBay links are paid links: we may earn a commission, at no cost to you.</p>
       </header>
 
-      <RealDrops rows={drops} country={country} currency={currency} page={PATH} />
+      <div className="mt-4">
+        <SaleNav
+          page={event}
+          items={[
+            { id: "deals", label: "Deals" },
+            { id: "price-watch", label: "Price watch" },
+            { id: "tcgplayer-sale", label: "TCGplayer sale" },
+            { id: "how-we-calculate", label: "How we calculate" },
+            { id: "faq", label: "Questions" },
+          ]}
+        />
+      </div>
+
+      <section id="deals" aria-labelledby="deals-h" className="mt-4 scroll-mt-header">
+        <h2 id="deals-h" className="sr-only">Riftbound {name} deals</h2>
+        {rows.length ? (
+          <SaleDeals rows={rows} country={country} currency={currency} page={PATH} discordHref={DISCORD_URL || null} telegramHref={TELEGRAM_URL} />
+        ) : (
+          <div className="card-surface p-6">
+            <p className="font-bold text-white">No standout sealed deals in your market today</p>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+              No tracked store is far enough under its own 30-day price, the other stores or the MSRP right now. This page fills in on its own as stores cut prices.
+              Meanwhile every sealed product is on the <Link href="/sealed" className="text-brand-400 hover:underline">sealed price comparison</Link>.
+            </p>
+          </div>
+        )}
+      </section>
 
       {/* Cyber Weekend capture (owned audience, 2026-11-21): a free account's price alert emails the drop. */}
       <InlineSignupPrompt
@@ -183,22 +195,6 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
         title="Get an email when a price here drops further"
         body="A free account lets you set a price alert, and we email you when the price drops, over Black Friday and after. Alerts only, and every email has a stop link."
       />
-
-      {shown.length > 0 ? (
-        <div className="mt-6">
-          <h2 className="sr-only">Riftbound sealed deals by product</h2>
-          <PreorderPriceTable groups={shown.map((d) => d.group)} country={country} currency={currency} page={PATH} released />
-        </div>
-      ) : (
-        <div className="card-surface mt-5 p-6">
-          <h2 className="font-bold text-white">No standout sealed deals in your market today</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-            No tracked store is far enough under the others or the MSRP right now. This page fills in on its own as
-            stores cut prices. Meanwhile every sealed product is on the{" "}
-            <Link href="/sealed" className="text-brand-400 hover:underline">sealed price comparison</Link>.
-          </p>
-        </div>
-      )}
 
       {/* "Also on eBay": under the comparison, never in it (2026-09-26 rule). */}
       <EbaySearchPanel
@@ -216,6 +212,7 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
       {/* The price watch (2026-11-06): sealed boxes, price drops, graded slabs and chase auctions, each ending in a live eBay listing. */}
       <SalePriceWatch country={country} currency={currency} pageType={event.replace(/-/g, "_")} source={source} />
 
+      <div id="tcgplayer-sale" className="scroll-mt-header">
       <TcgplayerCyberBanner
         href={affiliateUrl("https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?ProductTypeName=Sealed+Products", "tcgplayer", PATH)}
         at={Date.now()}
@@ -223,6 +220,19 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
         className="mt-8"
       />
       <TcgplayerSaleBlock name={event === "black-friday" ? "Black Friday" : "Cyber Monday"} country={country} pageType={event.replace(/-/g, "_")} path={PATH} />
+      </div>
+
+      <section id="how-we-calculate" className="card-surface mt-8 scroll-mt-header p-4 text-sm leading-relaxed text-slate-300">
+        <h2 className="font-display text-lg font-bold text-white">How we calculate</h2>
+        <p className="mt-2">
+          Each deal row is the cheapest open store listing in your market (never eBay; the likely deals are re-checked at the store every few hours), and every
+          saving is measured against that one price. &ldquo;Biggest price drops&rdquo; compares it with the product&rsquo;s own 30-day typical price: the median of
+          its cheapest in-stock price on each of the last 30 days we recorded (two weeks of records at least; a day far under the rest is left out as a wrong
+          listing). &ldquo;Under other stores today&rdquo; is at least {UNDER_MEDIAN_PCT}% under the median of three or more stores; &ldquo;Under MSRP&rdquo; at
+          least {UNDER_MSRP_PCT}% under its MSRP. No &ldquo;was&rdquo; prices: only what stores ask now.
+        </p>
+        <p className="mt-2">A row whose store we last read more than 12 hours ago says so. Prices exclude postage; check the store&rsquo;s checkout before you compare two close prices.</p>
+      </section>
 
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>
@@ -237,7 +247,9 @@ export async function HolidaySalePage({ event }: { event: SaleEvent }) {
 
       <FamilyDeals kind="deal" country={country} />
 
-      <HubFaq faqs={qa} />
+      <div id="faq" className="scroll-mt-header">
+        <HubFaq faqs={qa} />
+      </div>
     </div>
   );
 }
