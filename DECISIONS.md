@@ -25610,3 +25610,14 @@ Cards" and the description opens with the page's own first FAQ answer (already o
 `lib/keywords.ts`; no new rules claim), kept under 160 characters. Empower, Flow and Burn keep the reference title and
 description: their guides own the question (`docs/seo-keyword-map.md`). `tests/keyword-page-meta.test.ts` pins it. Read
 clicks on the six pages in the scorecard after ~8 Dec.
+
+## RiftCompare's own emails name and link the brand (2026-11-24)
+
+The Rift Google plan (seo/rift-google-plan-2026-11-25.md, item 4) puts most of Rift's Google drop on brand searches, which halved
+(about 260 to 130 a week) when Reddit posting stopped on 20 Nov. Every owned channel now carries the RiftCompare name with a link.
+In email: the logo in both shells links to riftcompare.com (plain, because the shells also wrap transactional mail, which carries
+no campaign tags); the alert and newsletter footers end with "RiftCompare (riftcompare.com)" linked, tagged `brand-footer`; and
+alert emails carry one footer line to /legacy-preorders (`legacy-footer`) through launch day, 13 Dec, after which it is gone by
+itself (`legacyLine`). RiftCompare's own mail only: the sister alert emails still never name RiftCompare (owner, 2026-11-19,
+`senderOf`). Pinned by tests/email-brand.test.ts. Read on 9 Dec with the plan's brand checkpoint: clicks tagged brand-footer and
+legacy-footer.

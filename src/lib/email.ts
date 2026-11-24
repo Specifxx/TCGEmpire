@@ -220,7 +220,7 @@ function layout(heading: string, body: string, cta: { label: string; url: string
   return `<!doctype html><html><head>${EMAIL_HEAD}</head><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 8px"><tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#131a26;border:1px solid #233047;border-radius:16px">
-      <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#1ea65c">Compare</span></div></td></tr>
+      <tr><td style="padding:28px 32px 6px"><a href="${BRAND_HOME}" style="font-size:22px;font-weight:800;color:#fff;text-decoration:none">Rift<span style="color:#1ea65c">Compare</span></a></td></tr>
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">${body}</td></tr>
       <tr><td style="padding:4px 32px 26px"><a href="${cta.url}" style="display:inline-block;background:#1ea65c;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${cta.label}</a></td></tr>
@@ -705,6 +705,28 @@ function giveawayLine(now: Date = new Date()): { html: string; text: string } | 
   };
 }
 
+// The brand, named and linked in every RiftCompare email (Rift Google plan item 4, 2026-11-24: brand searches halved when
+// Reddit stopped, so every owned channel carries the name and a link). RiftCompare's own mail only: never a sister's
+// (owner, 2026-11-19, lib/sister-alerts/email.ts senderOf).
+const BRAND_HOME = `${SITE_URL}/`; // plain: the shell also wraps transactional mail, which carries no campaign tags
+const BRAND_FOOTER_URL = `${SITE_URL}/?utm_source=email&utm_medium=email&utm_campaign=brand-footer`;
+const LEGACY_UNTIL = Date.UTC(2026, 11, 14); // through launch day, 13 Dec (UTC)
+
+/** One footer line pointing alert readers at Legacy pre-order prices, until the set launches. */
+export function legacyLine(now: Date = new Date()): { html: string; text: string } | null {
+  if (now.getTime() >= LEGACY_UNTIL) return null;
+  const url = `${SITE_URL}/legacy-preorders?utm_source=email&utm_medium=email&utm_campaign=legacy-footer`;
+  return {
+    html: `Legacy is coming: <a href="${escapeHtml(url)}" style="color:#9aa4b2;text-decoration:underline">compare Legacy pre-order prices on RiftCompare</a>.<br/>`,
+    text: `Legacy is coming, compare pre-order prices on RiftCompare: ${url}`,
+  };
+}
+
+/** "RiftCompare (riftcompare.com) · Riftbound card price comparison.", the name linked home. */
+export function brandSignOff(): string {
+  return `<a href="${escapeHtml(BRAND_FOOTER_URL)}" style="color:#9aa4b2;text-decoration:underline">RiftCompare (riftcompare.com)</a> · Riftbound card price comparison.`;
+}
+
 // Footer for every alert email: why it came, how often, and the two separate
 // choices — pause (keeps the watchlist) and delete.
 function alertFooter(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): string {
@@ -715,7 +737,8 @@ function alertFooter(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): str
     &nbsp;·&nbsp; <a href="${escapeHtml(links.deleteAll)}" style="color:#9aa4b2;text-decoration:underline">Delete all my watches</a><br/>
     Want restocks sooner? <a href="${escapeHtml(DISCORD_EMAIL_INVITE)}" style="color:#9aa4b2;text-decoration:underline">Our Discord posts sealed restocks and price drops twice a day</a>.<br/>
     ${giveawayLine()?.html ?? ""}
-    RiftCompare · Riftbound card price comparison.
+    ${legacyLine()?.html ?? ""}
+    ${brandSignOff()}
   </td></tr>`;
 }
 function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): string {
@@ -725,6 +748,8 @@ function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">):
     `Delete all my watches: ${links.deleteAll}`,
     `Restocks sooner, free on our Discord: ${DISCORD_EMAIL_INVITE}`,
     ...(giveawayLine() ? [giveawayLine()!.text] : []),
+    ...(legacyLine() ? [legacyLine()!.text] : []),
+    `RiftCompare, Riftbound card price comparison: ${BRAND_FOOTER_URL}`,
     MAILING_ADDRESS,
   ].join("\n");
 }
@@ -915,7 +940,7 @@ export function emailShell(heading: string, inner: string, footer: string, prehe
   return `<!doctype html><html><head>${EMAIL_HEAD}</head><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">${pre}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 8px"><tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:520px;background:#131a26;border:1px solid #233047;border-radius:16px">
-      <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#1ea65c">Compare</span></div></td></tr>
+      <tr><td style="padding:28px 32px 6px"><a href="${BRAND_HOME}" style="font-size:22px;font-weight:800;color:#fff;text-decoration:none">Rift<span style="color:#1ea65c">Compare</span></a></td></tr>
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       ${inner}
       ${footer}
@@ -930,7 +955,7 @@ export function emailShell(heading: string, inner: string, footer: string, prehe
 function newsletterFooter(unsubUrl: string): string {
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
     You're getting this because you signed up for the weekly ${SITE_NAME} Index summary.<br/>
-    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Unsubscribe</a> · RiftCompare · Riftbound card price comparison.
+    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Unsubscribe</a> · ${brandSignOff()}
   </td></tr>`;
 }
 
