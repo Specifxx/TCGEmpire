@@ -210,6 +210,7 @@ export function OutboundLink({
     | "amazon_search"
     | "amazon_also"
     | "bf_drops"
+    | "bf_list" // the Black Friday / Cyber Monday pages' one deal list (components/SaleDeals.tsx, owner's review 2026-11-24)
     | "bf_strip"
     | "bf_page"
     | "cyber_banner";
