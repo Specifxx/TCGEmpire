@@ -3287,6 +3287,43 @@
     "variants": [],
     "fingerprint": "661664c9278d7d5e"
   },
+  "/tcgplayer-cyber/320x100.jpg": {
+    "src": "/tcgplayer-cyber/320x100.jpg",
+    "width": 640,
+    "height": 200,
+    "bytes": 27528,
+    "webp": "/tcgplayer-cyber/320x100.webp",
+    "webpBytes": 18396,
+    "avif": "/tcgplayer-cyber/320x100.avif",
+    "avifBytes": 12039,
+    "variants": [],
+    "fingerprint": "3904afe61490c143"
+  },
+  "/tcgplayer-cyber/970x90.jpg": {
+    "src": "/tcgplayer-cyber/970x90.jpg",
+    "width": 1600,
+    "height": 148,
+    "bytes": 52600,
+    "webp": "/tcgplayer-cyber/970x90.webp",
+    "webpBytes": 35720,
+    "avif": "/tcgplayer-cyber/970x90.avif",
+    "avifBytes": 23767,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/tcgplayer-cyber/970x90-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/tcgplayer-cyber/970x90-768w.webp"
+      },
+      {
+        "w": 1200,
+        "src": "/tcgplayer-cyber/970x90-1200w.webp"
+      }
+    ],
+    "fingerprint": "31f195cc667152fb"
+  },
   "/vendetta-archetypes.png": {
     "src": "/vendetta-archetypes.png",
     "width": 1200,
