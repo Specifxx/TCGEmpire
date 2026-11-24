@@ -25516,6 +25516,14 @@ Owner, 2026-11-23: "every time I click on the drop downs, I expect it to be a li
 one of the drop downs, it doesn't do anything. It just drops it down." Each label of `HeaderMegaMenu.tsx` is now a `<Link>` to `HeaderMenu.href`: Singles to `/singles`, Sealed to `/sealed`, Deals & market to `/tools/deal-finder`. Hover still opens the panel after the same
 intent delay; the chevron beside the label is now the button that toggles it (click, tap, Enter, Space, ArrowDown), with
 `aria-expanded` and its own label. The panels stay in the server HTML. `tests/header-menus.test.ts` pins that each `href` is a NAV_GROUPS page.
+## 2026-11-23: The weekly page scorecard reads Google per page from a maintenance task
+
+Job D (strategy/agent-reassignment-2026-11-18) makes the Monday growth review rank every site's pages and name the bottom 20%
+with a fix or noindex verdict, published in the project's private files as `strategy/page-scorecard-<date>.html`. The Vercel
+analytics token lives only in Vercel, so the buy-click half comes from each site's committed `data/demand.json` (views per
+page, and buy clicks per product where the site sends `buy_product`). The Google half is the new read-only maintenance task
+`page-scorecard` (`scripts/page-scorecard.ts`): each property's 300 pages with the most impressions over 28 settled days,
+paths and counts only. No amounts, no search terms, nothing scheduled.
 
 ## 2026-11-24: The Black Friday page's one deal list, deals above the fold
 
