@@ -32,7 +32,9 @@ test("the signed state round-trips, and is refused for another provider, a plain
   assert.equal(await readAppState(s, "discord"), null);
   assert.equal(await readAppState("0123456789abcdef0123456789abcdef", "google"), null, "a web flow's hex state is not an app state");
   const [h, p, sig] = s.split(".");
-  assert.equal(await readAppState(`${h}.${p}.${sig.slice(0, -2)}AA`, "google"), null);
+  // Tamper with the signature for real: a fixed "AA" ending was a no-op whenever the signature already ended in it.
+  const tail = sig.slice(-2) === "AA" ? "BB" : "AA";
+  assert.equal(await readAppState(`${h}.${p}.${sig.slice(0, -2)}${tail}`, "google"), null);
   // A next that is not a safe internal path is dropped, not followed.
   const evil = await signAppState({ provider: "google", challenge, next: "//evil.example" });
   assert.equal((await readAppState(evil, "google"))?.next, null);
