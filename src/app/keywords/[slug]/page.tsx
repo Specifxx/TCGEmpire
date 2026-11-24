@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { KEYWORDS, KEYWORD_THIN_THRESHOLD, hasOwnGuide, keywordBySlug, keywordCardWhere, keywordPageTitle } from "@/lib/keywords";
+import { KEYWORDS, KEYWORD_THIN_THRESHOLD, hasOwnGuide, keywordBySlug, keywordCardWhere, keywordPageDescription, keywordPageTitle } from "@/lib/keywords";
 import { getArticle } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -41,9 +41,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // surfaces the definition the page already renders. It is also a better
   // snippet — someone searching "riftbound empower" wants the definition, not a
   // description of the page.
-  const answer = kw.directAnswer.replace(/\s+/g, " ").trim();
-  const lead = answer.length > 96 ? `${answer.slice(0, answer.lastIndexOf(" ", 96)).replace(/[,;:.]$/, "")}…` : answer;
-  const description = `${lead} Plus every card printed with ${kw.name}, live-priced.`;
+  const description = keywordPageDescription(kw);
   return {
     title: { absolute: title },
     description,

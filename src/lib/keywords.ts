@@ -928,9 +928,38 @@ export function hasOwnGuide(kw: { slug: string; guideSlug: string }): boolean {
   return kw.guideSlug === `riftbound-${kw.slug}-explained`;
 }
 
+// Page scorecard, 28 days to 20 Nov 2026: tank, accelerate, repeat, assault, vision and
+// reaction drew 124-308 impressions each at position ~9 and 0 clicks under the
+// "Riftbound <Keyword>: What It Does" title. The searches behind them are questions
+// ("what is tank in riftbound", "what does tank do riftbound", "how does accelerate
+// work in riftbound"), so the title now asks that question in the searcher's words and
+// the description opens with the answer: the page's own first FAQ answer, which is
+// already rendered on the page (no new rules claim).
 export function keywordPageTitle(kw: { slug: string; name: string; guideSlug: string }, total: number): string {
   if (hasOwnGuide(kw)) return `${kw.name} — Riftbound Keyword Reference | RiftCompare`;
   return total > 0
-    ? `Riftbound ${kw.name}: What It Does + All ${total} Cards`
-    : `Riftbound ${kw.name} Keyword: What It Does + Every Card`;
+    ? `What Does ${kw.name} Do in Riftbound? + All ${total} Cards`
+    : `What Does ${kw.name} Do in Riftbound? Rules + Every Card`;
+}
+
+function clip(text: string, max: number): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, t.lastIndexOf(" ", max)).replace(/[,;:.—–-]+$/, "").trim()}…`;
+}
+
+export function keywordPageDescription(kw: {
+  slug: string;
+  name: string;
+  guideSlug: string;
+  directAnswer: string;
+  faqs?: { q: string; a: string }[];
+}): string {
+  // Own-guide keywords keep the reference description (the guide owns the question).
+  if (hasOwnGuide(kw) || !kw.faqs?.[0]?.a) {
+    return `${clip(kw.directAnswer, 96)} Plus every card printed with ${kw.name}, live-priced.`;
+  }
+  // Under ~160 characters so the answer is not cut by Google's own ellipsis.
+  const tail = ` Every card with ${kw.name}, live-priced.`;
+  return `${clip(kw.faqs[0].a, 160 - tail.length)}${tail}`;
 }
