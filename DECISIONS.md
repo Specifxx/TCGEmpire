@@ -25524,3 +25524,21 @@ analytics token lives only in Vercel, so the buy-click half comes from each site
 page, and buy clicks per product where the site sends `buy_product`). The Google half is the new read-only maintenance task
 `page-scorecard` (`scripts/page-scorecard.ts`): each property's 300 pages with the most impressions over 28 settled days,
 paths and counts only. No amounts, no search terms, nothing scheduled.
+
+## 2026-11-24: The Black Friday page's one deal list, deals above the fold
+
+The owner reviewed DexCompare's Black Friday page and asked for the changes "urgently" on every site: deals above the fold with a
+one-line intro, one list with a toggle, a discount badge on every row, filters and sort, sticky section chips, per-row freshness, a
+sparkline, plain labels, one affiliate disclosure, aligned rows, the store button primary and eBay a text link, bigger thumbnails,
+one slim alerts bar, phone rows with 44px targets, and click and scroll tracking per section.
+
+- The page's two lists (`RealDrops`, "furthest under their own 30-day price", and the sealed deals table under the other stores or
+  the MSRP) are ONE list in the visitor's market (`lib/sale-deals.ts`, `lib/sale-deals-data.ts`, `components/SaleDeals.tsx`). Each
+  row carries one offer, the cheapest open store listing (never eBay; the deal candidates keep their live stock re-check), and every
+  saving is measured against that price; the toggle ("Biggest price drops" / "Under other stores today" / "Under MSRP") picks the
+  basis that badges and ranks. The struck price is that basis's reference, labelled for screen readers, never "was". The strongest
+  48 per basis ship to the browser. No database read: it reuses the groups the page loaded and the bundled history files.
+- A row whose store was read more than 12 hours ago says so in amber (the listing's `lastSeen`). Postage is per order and per
+  region here (`lib/shipping.ts`), so a row says "Shipping at checkout" rather than claim a delivered price for one box.
+- Buy clicks are `OutboundLink` surface `bf_list`; GA gets `bf_section` once per section seen (scroll depth) and `bf_filter` per
+  filter used. The chips stick under the header at its measured height.
