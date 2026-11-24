@@ -25597,3 +25597,16 @@ Ads, US exact-match searches for Pokémon sealed prices, bids capped at A$0.15 a
 days to 24 Nov and searchers are expected to earn more; the Meta tests (14-18 Nov) earned nothing. Landings carry
 `utm_source=bing&utm_medium=cpc&utm_campaign=dex-bing-2026-12`; `paidMarkFor` now marks bing/microsoft sources `msad` (here and in
 Dex's copy), and the earnings dashboard's Ad tests panel has the row. Stop if it returns under A$1 per A$1 spent.
+
+## Keyword pages answer the question in the title — 2026-11-24
+
+The 23 Nov page scorecard (28 settled days to 20 Nov) listed six `/keywords/<slug>` pages as FIX: tank 308 impressions,
+accelerate 264, repeat 251, assault 219, vision 177, reaction 124, all at position 8.6-10.3 with 0 clicks. The Search
+Console query report (maintenance `gsc-queries`, 24 Nov) shows the searches behind them are questions: "what is tank in
+riftbound", "what does tank do riftbound", "what is assault in riftbound", "how does accelerate work in riftbound". The
+title "Riftbound Tank: What It Does + All 23 Cards" and a description cut at 96 characters of a long definition did not
+read as the answer. For keywords without their own guide the title is now "What Does <Keyword> Do in Riftbound? + All N
+Cards" and the description opens with the page's own first FAQ answer (already on the page, sourced like the rest of
+`lib/keywords.ts`; no new rules claim), kept under 160 characters. Empower, Flow and Burn keep the reference title and
+description: their guides own the question (`docs/seo-keyword-map.md`). `tests/keyword-page-meta.test.ts` pins it. Read
+clicks on the six pages in the scorecard after ~8 Dec.
