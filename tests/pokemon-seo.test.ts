@@ -95,11 +95,18 @@ test("setTitle: ≤60 for every set, with and without per-pack figures", () => {
     for (const perPack of [true, false]) {
       const title = setTitle(s, { perPack });
       assert.ok(title.length <= TITLE_MAX, `${title.length}: ${title}`);
-      assert.ok(title.startsWith(s));
-      if (!perPack) assert.equal(title, `${s} Sealed Prices`, "no per-pack promise without a figure");
+      assert.ok(title.startsWith(`Pokémon ${s}`) || title.startsWith(s), title);
+      if (!perPack) assert.ok(!title.includes("per Pack"), "no per-pack promise without a figure");
     }
   }
-  assert.equal(setTitle("Phantasmal Flames"), "Phantasmal Flames Sealed Prices & Price per Pack");
+  // The searcher's words first: a bare set name reads as anything on a results page.
+  assert.equal(setTitle("Perfect Order"), "Pokémon Perfect Order Sealed Prices & Price per Pack");
+  assert.equal(setTitle("Phantasmal Flames"), "Pokémon Phantasmal Flames Sealed Prices & Price per Pack");
+  assert.equal(setTitle("Pitch Black", { perPack: false }), "Pokémon Pitch Black Sealed Prices");
+  // Too long for the whole: the per-pack promise goes before "Pokémon" does.
+  assert.equal(setTitle("Scarlet & Violet Black Star Promos"), "Pokémon Scarlet & Violet Black Star Promos Sealed Prices");
+  // A name that already says Pokémon is not doubled.
+  assert.equal(setTitle("Pokémon Day 2026", { perPack: false }), "Pokémon Day 2026 Sealed Prices");
   assert.equal(setTitle("A Set Name Long Enough To Need The Fallback"), "A Set Name Long Enough To Need The Fallback Sealed Prices");
 });
 
@@ -218,7 +225,7 @@ test("setDescription: ≤155, starts with the set, unique over every set", () =>
     for (const s of SETS) {
       const d = setDescription(setFactsFor(s, shape));
       assert.ok(d.length <= DESCRIPTION_MAX, `${d.length}: ${d}`);
-      assert.ok(d.startsWith(`${s}:`), d);
+      assert.ok(d.startsWith(/pok[eé]mon/i.test(s) ? `${s}:` : `Pokémon ${s}:`), d);
       assert.ok(d.endsWith("Updated daily."), d);
       assert.ok(!seen.has(d), d);
       seen.add(d);

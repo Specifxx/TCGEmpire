@@ -164,10 +164,29 @@ export function productTitle(name: string): string {
   return productTitleLadder(name).title;
 }
 
-/** `perPack: false` for a set with no box, ETB or bundle with a known pack count (a collection-only release), so the title promises none. */
+/**
+ * The set's name as a searcher types it: "Pokémon Perfect Order". A bare set
+ * name ("Perfect Order", "Pitch Black") reads as anything in a results page,
+ * and the page-scorecard of 2026-11-23 had three set pages on Google's page
+ * 1-2 (594, 144 and 106 impressions in 28 days) with no click at all. A name
+ * that already says Pokémon is left as it is.
+ */
+function pokemonName(name: string): string {
+  const n = squash(name);
+  return /pok[eé]mon/i.test(n) ? n : `Pokémon ${n}`;
+}
+
+/**
+ * `perPack: false` for a set with no box, ETB or bundle with a known pack count (a collection-only release), so the title promises none.
+ * Longest first, each tried while it fits TITLE_MAX: "Pokémon {set} Sealed Prices & Price per Pack",
+ * "Pokémon {set} Sealed Prices", then the same without "Pokémon".
+ */
 export function setTitle(name: string, opts: { perPack?: boolean } = {}): string {
-  const full = `${squash(name)} Sealed Prices & Price per Pack`;
-  return opts.perPack !== false && full.length <= TITLE_MAX ? full : `${squash(name)} Sealed Prices`;
+  const tails = opts.perPack !== false ? [" Sealed Prices & Price per Pack", " Sealed Prices"] : [" Sealed Prices"];
+  for (const head of [pokemonName(name), squash(name)]) {
+    for (const tail of tails) if (`${head}${tail}`.length <= TITLE_MAX) return `${head}${tail}`;
+  }
+  return `${squash(name)} Sealed Prices`;
 }
 
 /** The first clause list that fits, else the bare name. Clauses are tried most-informative first. */
@@ -239,13 +258,13 @@ export function productDescription(f: ProductFacts): string {
 }
 
 /**
- * "{Set}: 14 sealed products, TCGplayer lists Sep 2026: booster box from US$…, ETB
+ * "Pokémon {Set}: 14 sealed products, TCGplayer lists Sep 2026: booster box from US$…, ETB
  * from US$…. Updated daily." In the visitor's market (the set page is
  * per-request); a crawler reads the US. "From" figures drop from the end
  * until it fits.
  */
 export function setDescription(f: SetFacts): string {
-  const name = squash(f.name);
+  const name = pokemonName(f.name);
   const month = formatMonth(f.releasedOn);
   // Release dates are always TCGplayer's, said as such, out or not.
   const when = month ? `, TCGplayer lists ${month}` : "";

@@ -218,14 +218,14 @@ test("set facts: a pre-order set, a released set with neighbours, a set without 
   const deltaText = setProse(delta).map((b) => proseText(b.parts)).join(" ");
   assert.match(deltaText, /Pre-orders open; TCGplayer lists 6 Nov 2026 for the set\./);
   assert.match(deltaText, /cheapest pre-order listing/);
-  assert.match(setDescription(delta), /^Delta Reign: 14 sealed products, TCGplayer lists Nov 2026/);
+  assert.match(setDescription(delta), /^Pokémon Delta Reign: 14 sealed products, TCGplayer lists Nov 2026/);
 
   const pf = setFacts(catalog, "phantasmal-flames", "2026-10-01");
   assert.ok(pf?.boxes?.earlier || pf?.boxes?.later, "a neighbour with a booster box figure");
   const nb = setProse(pf).find((b) => b.id === "neighbours");
   assert.ok(nb && nb.parts.some((p) => typeof p !== "string" && p.href.startsWith("/pokemon/sets/")), "neighbours are linked");
   assert.match(proseText(nb.parts), /^Phantasmal Flames' booster box comes to US\$\d+\.\d\d a pack/);
-  assert.match(setDescription(pf), /^Phantasmal Flames: \d+ sealed products, TCGplayer lists Nov 2025: booster box from US\$/);
+  assert.match(setDescription(pf), /^Pokémon Phantasmal Flames: \d+ sealed products, TCGplayer lists Nov 2025: booster box from US\$/);
   assert.equal(pf.nav.newer?.slug, "ascended-heroes");
   assert.equal(pf.nav.older?.slug, "mega-evolution");
 
@@ -234,7 +234,7 @@ test("set facts: a pre-order set, a released set with neighbours, a set without 
   assert.equal(fp.countable, false, "no box, ETB or bundle with a pack count");
   assert.equal(pf.countable, true);
   assert.ok(!setProse(fp).some((b) => b.id === "per-pack"));
-  assert.equal(setTitle(fp.name, { perPack: false }), "First Partner Collection 2026 Sealed Prices");
+  assert.equal(setTitle(fp.name, { perPack: false }), "Pokémon First Partner Collection 2026 Sealed Prices");
   // The mix sentence counts every product.
   const mix = setProse(fp).find((b) => b.id === "mix");
   assert.match(proseText(mix?.parts ?? []), /^We price 6 sealed products from First Partner Collection 2026: /);
