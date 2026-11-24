@@ -524,6 +524,8 @@ export const CHAMPION_DECK_SETS: Readonly<Record<string, string>> = {
   fiora: "SFD", rumble: "SFD",
   vex: "UNL", vi: "UNL",
   tryndamere: "LGC", ashe: "LGC", lux: "LGC", garen: "LGC",
+  // The Reckoning's two Champion Decks (riftbound.gg, 2026-11-24): stores already list them for 30 Apr 2027.
+  shyvana: "REC", vayne: "REC",
 };
 const ONE_DECK_TYPE = /^Champion Deck \(([^)]+)\)(?: Display)?$/;
 const flatChampion = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
@@ -588,6 +590,7 @@ export function misfiledChampionDeck(title: string, setCode: string | null): boo
 const CHAMPION_NAME: Readonly<Record<string, string>> = {
   jinx: "Jinx", leesin: "Lee Sin", viktor: "Viktor", fiora: "Fiora", rumble: "Rumble", vex: "Vex", vi: "Vi",
   tryndamere: "Tryndamere", ashe: "Ashe", lux: "Lux", garen: "Garen",
+  shyvana: "Shyvana", vayne: "Vayne",
 };
 
 /** Where an old title-derived /sealed slug of a one-champion deck goes now (its set's deck page), or null. Pure. The
@@ -650,7 +653,11 @@ const SET_NAME_CASE = /\b(?:origins|spirit\s*forged|unleashed|vendetta|radiance|
 
 export function classifySealed(title: string): string {
   const t = title.toLowerCase();
-  const rawChamp = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim() || title.match(CHAMPIONS)?.[1];
+  // A bracket after "Champion Deck" names the champion ("Champion Deck (Viktor)"), unless it is a shipping or pre-order
+  // note: "Shyvana Champion Deck (Ships April 2027)" and "Legacy Champion Deck (Pre Order)" (2026-11-24) were filed as
+  // decks named "Ships April 2027" and "Pre Order", each its own one-store page.
+  const paren = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim();
+  const rawChamp = (paren && !/\b(?:pre[\s-]*orders?|pre[\s-]*sale|presell|ships?|shipping|english|limit|\d{4})\b/i.test(paren) ? paren : null) || title.match(CHAMPIONS)?.[1];
   // A known champion keeps its one spelling: "Origin LeeSin champion deck" (Mayhem Collectables) is the Lee Sin deck.
   const champ = rawChamp ? CHAMPION_NAME[flatChampion(rawChamp)] ?? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
   if (PROVING_GROUNDS_2ND.test(title)) return "Proving Grounds 2nd Edition";

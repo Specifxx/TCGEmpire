@@ -21,6 +21,8 @@ import { preordersHrefForSet, releaseDateLabel as calendarDateLabel } from "@/li
 import { RadianceHub } from "@/components/sets/RadianceHub";
 import { LegacyHub } from "@/components/sets/LegacyHub";
 import { LEGACY_FAQ } from "@/lib/sets/legacy";
+import { ReckoningHub } from "@/components/sets/ReckoningHub";
+import { RECKONING_FAQ } from "@/lib/sets/reckoning";
 import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
 import { RadiancePreorderCta } from "@/components/RadiancePreorderCta";
 import { RadianceReveals } from "@/components/sets/RadianceReveals";
@@ -75,6 +77,13 @@ const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
     { href: "/blog/riftbound-legacy-pack-changes-and-card-templating", label: "How Legacy packs change" },
     { href: "/release-dates", label: "Countdown & release calendar" },
     { href: "/guides/riftbound-pre-rift-rules-explained", label: "Pre-Rift event rules" },
+  ],
+  // Coming soon since 2026-11-05, hub since 2026-11-24; every link is a page that exists today.
+  "the-reckoning": [
+    { href: "/preorders/the-reckoning", label: "Pre-order prices, every store" },
+    { href: "/sets/legacy", label: "Legacy, the set before it" },
+    { href: "/blog/riftbound-2027-set-roadmap", label: "The 2027 set roadmap" },
+    { href: "/release-dates", label: "Countdown & release calendar" },
   ],
 };
 import { SITE_URL } from "@/lib/site";
@@ -437,7 +446,7 @@ export default async function SetPage({
   // FAQPage JSON-LD only where a real, visible FAQ backs it (RadianceHub renders
   // the identical RADIANCE_FAQ array via HubFaq) — Google only honours FAQPage
   // when the answer text is actually on the page, and every other set has none.
-  const faqLd = set.slug === "radiance" ? faqPage(RADIANCE_FAQ) : set.slug === "legacy" ? faqPage(LEGACY_FAQ) : null;
+  const faqLd = set.slug === "radiance" ? faqPage(RADIANCE_FAQ) : set.slug === "legacy" ? faqPage(LEGACY_FAQ) : set.slug === "the-reckoning" ? faqPage(RECKONING_FAQ) : null;
 
   return (
     <SetOwnedProvider setCode={set.code} enabled={trackerOpen}>
@@ -582,6 +591,8 @@ export default async function SetPage({
       {/* Legacy's hub (2026-11-01), the same role RadianceHub played before
           Radiance's cards imported: it is what earns LGC's hubReady. */}
       {set.slug === "legacy" && <LegacyHub country={country} />}
+      {/* The Reckoning's hub (2026-11-24): what earns REC's hubReady. */}
+      {set.slug === "the-reckoning" && <ReckoningHub country={country} />}
 
       {/* Card grid — shown whenever cards EXIST, even for a comingSoon set: through
           spoiler season the official-gallery importer populates revealed cards early

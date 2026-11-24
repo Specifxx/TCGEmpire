@@ -451,7 +451,12 @@ export const SETS: SetInfo[] = [
     name: "The Reckoning",
     slug: "the-reckoning",
     comingSoon: true,
+    // Riot's total, Showcase included ("264 (67 Showcase)"), like Legacy's 239. Never used for price matching.
+    announcedCards: 264,
     releasedOn: "2027-04-30",
+    // hubReady since 2026-11-24: /sets/the-reckoning has its sourced hub (lib/sets/reckoning.ts,
+    // components/sets/ReckoningHub.tsx). No previewFrom: Riot has not dated the preview season.
+    hubReady: true,
   },
 ];
 
