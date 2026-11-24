@@ -8,6 +8,7 @@
 // already read (getSealedGroups() caches itself, so this adds no query).
 import { SETS } from "./constants";
 import { DEFAULT_COUNTRY, type Country } from "./country";
+import { editDistance, typoBudget } from "./did-you-mean";
 
 type Searchable = { name: string; productType: string; setCode: string | null };
 
@@ -27,9 +28,36 @@ const fold = (s: string) =>
 // is a stub ("bundl" for "bundles") still finds "bundle".
 const stem = (t: string) => (t.length > 4 && t.endsWith("es") ? t.slice(0, -2) : t.length > 3 && t.endsWith("s") ? t.slice(0, -1) : t);
 
-/** The words a query is made of, folded and stemmed. [] when there is nothing to match. */
+// Shoppers' shorthand (owner's UX review, 2026-11-24, P0 5: "synonyms (ETB, UPC, BB)"). A whole-word abbreviation is read
+// as the words it stands for before matching. Only abbreviations a store title spells out in full.
+export const SEALED_SYNONYMS: Record<string, string> = {
+  bb: "booster box",
+  bbox: "booster box",
+  bx: "booster box",
+  pg: "proving grounds",
+  pgk: "proving grounds",
+  etb: "elite trainer box",
+  upc: "ultra premium collection",
+  bp: "booster pack",
+  cd: "champion deck",
+};
+
+/** The words a query is made of, folded, shorthand spelled out, stemmed. [] when there is nothing to match. */
 export function sealedSearchTokens(q: string): string[] {
-  return fold(q).split(" ").filter(Boolean).map(stem);
+  return fold(q)
+    .split(" ")
+    .filter(Boolean)
+    .flatMap((w) => (SEALED_SYNONYMS[w] ?? w).split(" "))
+    .map(stem);
+}
+
+// A word of the query that is not in the product's words may still be a typo of one ("spiritforgd", "boostr"): it
+// matches a word within the same edit budget the card search's "Did you mean" uses (lib/did-you-mean.ts; none for
+// three letters or fewer). Only ever a whole word against a whole word, so "box" never fuzzes into "fox".
+function fuzzyIn(token: string, words: readonly string[]): boolean {
+  const max = typoBudget(token.length);
+  if (max === 0) return false;
+  return words.some((w) => editDistance(token, stem(w), max) <= max);
 }
 
 // The set's own name, from its code: a product listed as "Booster Box (OGN)" is
@@ -54,7 +82,14 @@ export function matchSealedGroups<T extends Searchable>(groups: readonly T[], q:
   const ranked: { g: T; rank: number; at: number }[] = [];
   groups.forEach((g, at) => {
     const hay = haystack(g);
-    if (!tokens.every((t) => hay.includes(t))) return;
+    const exact = tokens.every((t) => hay.includes(t));
+    // A typo'd word ranks below every exact match (rank 3), and only when every other word matched.
+    if (!exact) {
+      const words = hay.split(" ");
+      if (!tokens.every((t) => hay.includes(t) || fuzzyIn(t, words))) return;
+      ranked.push({ g, rank: 3, at });
+      return;
+    }
     const name = fold(g.name);
     const rank = name.includes(phrase) ? 0 : tokens.every((t) => name.includes(t)) ? 1 : 2;
     ranked.push({ g, rank, at });

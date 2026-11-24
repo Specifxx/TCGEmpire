@@ -2,9 +2,14 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
+// The default groups the grid under one heading per product type (owner's UX review, 2026-11-24, P0 4: an unlabelled
+// list read as a price order that restarted part way down), so it says so. "Furthest under RRP" and "Most stores" are
+// P0 3's discount and stock sorts (lib/sealed-view.ts).
 const OPTIONS = [
-  { value: "", label: "Sort: Featured" },
+  { value: "", label: "Sort: By product type" },
   { value: "price_asc", label: "Price: Low to High" },
+  { value: "rrp", label: "Furthest under RRP" },
+  { value: "stores", label: "Most stores in stock" },
   { value: "price_desc", label: "Price: High to Low" },
   { value: "name", label: "Name: A–Z" },
   { value: "new", label: "Recently Added" },

@@ -355,6 +355,13 @@ export async function ebayData(d: OpsDeps): Promise<CheckResult[]> {
 
 // ── Prices and scheduled jobs ───────────────────────────────────────────────
 
+// Price freshness lines (owner's UX review, 2026-11-24, P0 2: "add a pipeline alert when data is over 12 hours old"). Both imports
+// run twice a day, so 12 hours means a run was missed: amber on /admin/health and Empire HQ from 12 hours, red (the owner's
+// email) from 20, which allows for GitHub starting a cron several hours late without crying wolf. They were 30/56 (cards) and
+// 36/72 (sealed): a page could say "checked 30 hours ago" with no alarm at all.
+export const PRICE_STALE_WARN_H = 12;
+export const PRICE_STALE_CRIT_H = 20;
+
 export async function priceFreshness(d: OpsDeps): Promise<CheckResult[]> {
   if (!d.db) return [];
   const out: CheckResult[] = [];
@@ -363,9 +370,9 @@ export async function priceFreshness(d: OpsDeps): Promise<CheckResult[]> {
     // first live run) and must neither alarm nor hide a live market that has none.
     const found = new Map((await d.db.priceFreshness()).map((m) => [m.country, m]));
     const rows = (Object.keys(COUNTRIES) as string[]).map((country) => ({ country, newest: found.get(country)?.newest ?? null, h: hoursSince(found.get(country)?.newest ?? null, d.now) }));
-    const stale = rows.filter((r) => ageSeverity(r.h, 30, 56) !== "ok");
+    const stale = rows.filter((r) => ageSeverity(r.h, PRICE_STALE_WARN_H, PRICE_STALE_CRIT_H) !== "ok");
     const worst = rows.reduce<Severity>((w, r) => {
-      const s = ageSeverity(r.h, 30, 56);
+      const s = ageSeverity(r.h, PRICE_STALE_WARN_H, PRICE_STALE_CRIT_H);
       return s === "crit" ? "crit" : s === "warn" && w !== "crit" ? "warn" : w;
     }, "ok");
     out.push(
@@ -386,7 +393,7 @@ export async function priceFreshness(d: OpsDeps): Promise<CheckResult[]> {
   try {
     const at = await d.db.sealedNewest();
     const h = hoursSince(at, d.now);
-    const sev = ageSeverity(h, 36, 72);
+    const sev = ageSeverity(h, PRICE_STALE_WARN_H, PRICE_STALE_CRIT_H);
     out.push(
       result(d, {
         id: "data:sealed",
@@ -442,9 +449,9 @@ export function historyFiles(d: OpsDeps): CheckResult {
 // may be an old manual one, so the staleness clock starts at that time instead (a new
 // schedule is not a job that stopped running). Set it whenever a schedule is added.
 export const JOBS: { file: string; title: string; staleH: number; scheduledSince?: string }[] = [
-  { file: "refresh-prices.yml", title: "Price import job", staleH: 36 },
+  { file: "refresh-prices.yml", title: "Price import job", staleH: 14 }, // twice a day: amber once a run is missed (UX review, 2026-11-24)
   { file: "refresh-auctions.yml", title: "Auction sweep job", staleH: 16 },
-  { file: "sealed-refresh.yml", title: "Sealed refresh job", staleH: 36 },
+  { file: "sealed-refresh.yml", title: "Sealed refresh job", staleH: 14 },
   { file: "store-health.yml", title: "Store health job", staleH: 36 },
   { file: "production-deploy.yml", title: "Daily release job", staleH: 40 },
   // Weekly (2026-10-15): a week and a day before it reads as late.

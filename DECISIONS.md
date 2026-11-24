@@ -25542,3 +25542,50 @@ one slim alerts bar, phone rows with 44px targets, and click and scroll tracking
   region here (`lib/shipping.ts`), so a row says "Shipping at checkout" rather than claim a delivered price for one box.
 - Buy clicks are `OutboundLink` surface `bf_list`; GA gets `bf_section` once per section seen (scroll depth) and `bf_filter` per
   filter used. The chips stick under the header at its measured height.
+## 2026-11-24: The owner's UX review on RiftCompare (P0, P1, P2)
+
+The owner reviewed DexCompare on desktop (AU) on 2026-11-23 and asked for the same fixes site-wide, urgently ("implement and deploy
+all this feedback"). DexCompare's port is CompareEmpire #351/#352. RiftCompare already had much of it: every self-opening prompt
+went through `armNudge` (waits out a focused field, recent keys, scrolls and dialogs, one interruption a visit), no ad opens over
+the page, `/browse` sorts and filters by set, rarity, domain, price and more, and the search box has "Did you mean". What changed:
+
+- **No interrupting prompts (P0 1).** The rating card's return-from-a-store ask was the one bare `setTimeout`: it goes through
+  `armNudge` too.
+- **Honest freshness (P0 2).** The ops monitor's store-price and sealed-price lines were amber at 30/36 hours and red at 56/72, so
+  a page could say "checked 30 hours ago" with no alarm. Both imports run twice a day: amber from 12 hours (one run missed), red,
+  the owner's email, from 20 (`PRICE_STALE_WARN_H`, `PRICE_STALE_CRIT_H`), which leaves room for GitHub starting a cron hours
+  late. The two import jobs go amber at 14 hours. A store row whose last read is over a day old says "· may have changed" in
+  amber (`CheckedAgo`).
+- **Sort and filter, one visible order (P0 3, 4).** `/sealed`'s default ("Featured") was the loader's product-type order with the
+  newest set floated above everything, so the prices ran up, then started again from cheap with no heading. The default is now
+  "By product type": one heading per type ("Booster Boxes · 5 · cheapest first"), cheapest first under each
+  (`typeHeadings`, `typeRuns`); the newest set keeps its "Shop <set> →" callout. Two sorts join it: "Furthest under RRP"
+  (`overMsrpPct`) and "Most stores in stock". No era or language filter: Riftbound sealed is one language, a handful of sets.
+- **Typo-tolerant search (P0 5).** The sealed matcher (`lib/sealed-search.ts`) reads shorthand (bb, pg, etb, upc, cd) and lets a
+  word of 4+ letters be one or two edits off a product's word (the "Did you mean" budget), ranked below exact matches. `/sealed`'s
+  own `?q=` now uses it (it was a plain substring). A header search with no match and no suggestion lists the four most widely
+  stocked sealed products ("Popular right now", `search_popular_click`) above the eBay search.
+- **Less above the title (P0 6).** The Black Friday / Cyber Monday line closes with ✕ for 7 days, hidden before paint once closed
+  (`StripClose`, `STRIP_BOOT`). The Christmas lights are an absolute overlay and take no height.
+- **Stores before marketplaces (P1 10).** On the card page and the sealed product page the stores lead in price order and eBay,
+  TCGplayer and Amazon sit under a labelled "Marketplaces · Ad, paid links" block below them. This reverses the 2026-10-27 /
+  2026-11-06 "eBay and TCGplayer lead every price list" order for those two pages; every row keeps its price rank number and the
+  real cheapest keeps its mark. The quick views keep the pinned order until a read says otherwise. Click guard: Rift
+  `card_detail` `table_pinned` and `sealed_pinned` outbound clicks per 100 views, read on 26 Nov; if paid clicks fall more than
+  40% two days running, put the block back on top and tell the owner (he asked for this by name, so only the placement reverts).
+- **One primary action (P1 11).** "View" stays the button; on phones the thumbs up/down step aside (`[data-store-vote]`).
+- **The cart is the Shortlist (P1 12).** Every label a visitor reads says Shortlist / Save, and the drawer says what it is every
+  time it opens: "Prices you saved. RiftCompare sells nothing". Storage keys, events and `/cart` are unchanged (URL freeze).
+- **Shorter pages (P1 13, 14).** The card page gets jump links (Prices, History, About, FAQ, Details) from 640px; the price history
+  already sits right under the comparison. A hub intro shows one line (two on a phone) and "How it works" (was "Read more")
+  opens the rest; every word stays in the server HTML.
+- **Reliable images (P1 15).** One capture listener in `<head>` (`lib/img-fallback.ts`): a failed image is tried once more after
+  1.5 s, then shows the site mark, faded.
+- **Deals menu and labels (P2 16, 20).** The header's Deals column is the Deal Finder, Rising and the sale page in season
+  (marked ★, `saleStrip`'s date rule); Best Basket and Demand stay in the full menu and the footer. Every header icon has a
+  tooltip.
+
+Not done here, on purpose: delivered price by default (P1 9: most Rift stores have no shipping figure, so a delivered ranking
+would mix delivered and item prices; rows already show "≈ delivered" where known), one product card (P1 7) and one alert pattern
+(P1 19), both bigger than an urgent pass; set logos (P2 17: Riftbound has a handful of sets and no logo files); the card list's
+sign-up prompt after the 12th tile stays (pinned by `tests/signup-inline.test.ts`). `tests/ux-review-2026-11-24.test.ts`.

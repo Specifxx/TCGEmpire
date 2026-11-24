@@ -61,12 +61,16 @@ test("the colour is the only thing that changed: both tables still rank by price
 // they are not the cheapest") the eBay search and TCGplayer's reference lead
 // the comparison panel instead of following it. DECISIONS.md, "eBay and
 // TCGplayer lead every price list".
-test("eBay and TCGplayer lead the panel, the cheaper on top: a listing when there is one, else the search and the market price", () => {
+// Since 2026-11-24 (owner's UX review, P1 10: "lead with the best-price store and move marketplaces to a labelled block
+// below") the block sits UNDER the ranked stores, labelled "Marketplaces · Ad", in the same eBay-then-TCGplayer order.
+test("eBay and TCGplayer sit in a labelled Marketplaces block under the stores: a listing when there is one, else the search and the market price", () => {
   const src = read(SECTION);
   const lead = src.indexOf('{(pin.ebay || ebay || pin.tcgplayer || tcg || tcgSearchHref) && (');
   const ranked = src.indexOf("{[...rest.map((p) => ({ price: p.priceCents, node: renderRow(p, false) })), ...fetchItems]");
-  assert.ok(lead > 0 && ranked > lead, "the pinned rows render before the ranked rest");
-  const block = codeOnly(src.slice(lead, ranked));
+  assert.ok(ranked > 0 && lead > ranked, "the stores render before the marketplaces");
+  const block = codeOnly(src.slice(lead, src.indexOf("<OutOfStockDisclosure", lead)));
+  assert.match(block, /data-marketplaces/);
+  assert.match(block, /Marketplaces/);
   const tcgLead = block.indexOf("{pin.tcgFirst && pin.tcgplayer && renderRow(pin.tcgplayer, true)}");
   const ebayRow = block.indexOf("renderRow(pin.ebay, true)");
   assert.ok(tcgLead >= 0 && tcgLead < ebayRow, "TCGplayer on top when it is the cheaper (tcgFirst)");

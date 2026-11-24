@@ -95,6 +95,7 @@ export function NotificationBell() {
       <button
         onClick={toggle}
         aria-label="Notifications"
+        title="Notifications"
         aria-expanded={open}
         className="tap-icon relative rounded-lg text-slate-300 hover:bg-ink-800 hover:text-white"
       >

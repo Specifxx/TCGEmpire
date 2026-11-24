@@ -190,6 +190,8 @@ export function SearchBar({
   const [sealedCurrency, setSealedCurrency] = useState<string | null>(null);
   // Near-miss card names the route offers when a query matched nothing.
   const [suggest, setSuggest] = useState<string[]>([]);
+  // The no-match fallback: the most widely stocked sealed products (/api/search, UX review 2026-11-24).
+  const [popular, setPopular] = useState<{ name: string; href: string }[]>([]);
   // Guides whose title matches a query no card or product does ("kda", "legacy"); lib/search-words.ts.
   const [guides, setGuides] = useState<{ title: string; href: string }[]>([]);
   // Set when the day's search allowance is used up (lib/search-quota.ts).
@@ -343,6 +345,7 @@ export function SearchBar({
       setResults([]);
       setSealed([]);
       setSuggest([]);
+      setPopular([]);
       setLimited(null);
       setLoading(false);
       return;
@@ -361,6 +364,7 @@ export function SearchBar({
           setResults([]);
           setSealed([]);
           setSuggest([]);
+          setPopular([]);
           setGuides([]);
           trackEvent("search_limit_shown", { tier: data.tier, variant });
           return;
@@ -372,6 +376,7 @@ export function SearchBar({
         setSealed(nextSealed);
         setSealedCurrency(typeof data.sealedCurrency === "string" ? data.sealedCurrency : null);
         setSuggest(Array.isArray(data.suggest) ? data.suggest : []);
+        setPopular(Array.isArray(data.popular) ? data.popular : []);
         const nextGuides: { title: string; href: string }[] = Array.isArray(data.guides) ? data.guides : [];
         setGuides(nextGuides);
         // A free product-gap report: every distinct, debounced-settled query
@@ -925,6 +930,26 @@ export function SearchBar({
                     </button>
                   ))}
                   <span>?</span>
+                </div>
+              )}
+              {!loading && suggest.length === 0 && guides.length === 0 && popular.length > 0 && (
+                <div className="px-2 pb-2">
+                  <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Popular right now</p>
+                  <ul>
+                    {popular.map((p, i) => (
+                      <li key={p.href}>
+                        <Link
+                          href={p.href}
+                          prefetch={false}
+                          onClick={() => trackEvent("search_popular_click", { query: value.trim(), rank: i + 1, variant })}
+                          className="flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-200 hover:bg-ink-800 hover:text-white"
+                        >
+                          <span aria-hidden="true" className="text-brand-400">→</span>
+                          <span className="min-w-0 truncate">{p.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
               {/* NO MATCHES → SEARCH EBAY (2026-09-26, "Pushing eBay clicks" in
