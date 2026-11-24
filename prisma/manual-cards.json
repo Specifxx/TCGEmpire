@@ -6631,5 +6631,23 @@
     "imageThumbUrl": "https://riftcompare.com/collab-cards/edge-of-night-sfd-139-221-top-8.jpg",
     "tags": "top 8",
     "slug": "edge-of-night-sfd-139-221-top-8-promo"
+  },
+  {
+    "externalId": "tcg-662886",
+    "name": "Teemo, Swift Scout",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "263/298",
+    "domain": "Mind",
+    "type": "Legend",
+    "rarity": "Rare",
+    "isPromo": true,
+    "energyCost": null,
+    "might": null,
+    "description": null,
+    "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/662886_in_1000x1000.jpg",
+    "imageThumbUrl": "https://tcgplayer-cdn.tcgplayer.com/product/662886_in_400x400.jpg",
+    "tags": "organized play",
+    "slug": "teemo-swift-scout-ogn-263-298-organized-play-promo"
   }
 ]
