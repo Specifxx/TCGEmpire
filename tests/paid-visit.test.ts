@@ -11,6 +11,7 @@ test("only a paid landing gets a marker, by network", () => {
   assert.equal(paidMarkFor("?utm_source=facebook&utm_medium=paid&utm_campaign=rift-test-2026-11"), "fbad");
   assert.equal(paidMarkFor("?utm_source=instagram&utm_medium=cpc"), "fbad");
   assert.equal(paidMarkFor("?utm_source=reddit_ads"), "rdad");
+  assert.equal(paidMarkFor("?utm_source=bing&utm_medium=cpc&utm_campaign=dex-bing-2026-12"), "msad");
   assert.equal(paidMarkFor("?utm_source=reddit"), null); // a free Reddit post is not an ad
   assert.equal(paidMarkFor("?utm_source=facebook"), null); // nor is an organic share
   assert.equal(paidMarkFor(""), null);

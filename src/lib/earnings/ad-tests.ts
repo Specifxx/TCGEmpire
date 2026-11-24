@@ -25,7 +25,7 @@ export interface AdTest {
   /** Affiliate tag group (tagGroup key): rc, dex, cyberpunk … */
   site: string;
   siteLabel: string;
-  network: "Meta" | "Reddit" | "Google";
+  network: "Meta" | "Reddit" | "Google" | "Microsoft Ads";
   /** The sub-id marker paid-visit.ts adds for this network. */
   mark: string;
   utmCampaign: string;
@@ -43,6 +43,7 @@ export const AD_TESTS: readonly AdTest[] = [
   { id: "rift-test-2026-11", name: "RiftCompare 7-day Meta test", site: "rc", siteLabel: "RiftCompare", network: "Meta", mark: "fbad", utmCampaign: "rift-test-2026-11", countries: "AU", start: "2026-11-14", end: "2026-11-21", budgetCents: 3500, currency: "AUD" },
   { id: "dex-test-2026-11", name: "DexCompare 7-day Meta test", site: "dex", siteLabel: "DexCompare", network: "Meta", mark: "fbad", utmCampaign: "dex-test-2026-11", countries: "US", start: "2026-11-14", end: "2026-11-21", budgetCents: 3500, currency: "AUD" },
   { id: "cyberpunk-test-2026-11", name: "Cyberpunk Compare 7-day Meta test", site: "cyberpunk", siteLabel: "Cyberpunk Compare", network: "Meta", mark: "fbad", utmCampaign: "cyberpunk-test-2026-11", countries: "US, CA, UK", start: "2026-11-14", end: "2026-11-21", budgetCents: 3500, currency: "AUD" },
+  { id: "dex-bing-2026-12", name: "DexCompare 7-day Bing search test", site: "dex", siteLabel: "DexCompare", network: "Microsoft Ads", mark: "msad", utmCampaign: "dex-bing-2026-12", countries: "US", start: "2026-12-02", end: "2026-12-08", budgetCents: 5000, currency: "AUD" },
 ];
 
 /** The ad network's and Vercel's figures for one test, as last posted. */
