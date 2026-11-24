@@ -151,8 +151,9 @@ export const RELEASES: ReleaseEntry[] = [
     code: "REC",
     date: "2027-04-30",
     cards: 264,
-    approxCards: true,
-    note: "Riot's Set 7, built around League of Legends' biggest champions.",
+    // riftbound.gg (4 Nov 2026) states "264 (67 Showcase)" outright; no longer an "around" figure.
+    champions: ["Aurelion Sol", "Cho'Gath", "Shyvana", "Vayne", "Zilean"],
+    note: "Riot's Set 7 — 264 cards (67 Showcase), built around League of Legends' biggest champions, with nine Legends (five named). Pre-Rift runs 23–29 April 2027.",
   },
   {
     name: "Set 8",

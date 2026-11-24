@@ -25621,3 +25621,15 @@ alert emails carry one footer line to /legacy-preorders (`legacy-footer`) throug
 itself (`legacyLine`). RiftCompare's own mail only: the sister alert emails still never name RiftCompare (owner, 2026-11-19,
 `senderOf`). Pinned by tests/email-brand.test.ts. Read on 9 Dec with the plan's brand checkpoint: clicks tagged brand-footer and
 legacy-footer.
+
+## The Reckoning gets its set hub, five months out (2026-11-24)
+
+Owner: "start getting Riftbound Reckoning set up." Set 7 is dated 30 April 2027 (Pre-Rift 23–29 April), after Legacy (29 Jan),
+264 cards with 67 Showcase, code REC, five of nine Legends named (riftbound.gg, 4 Nov 2026; ICv2's "250" loses to Riot's 264).
+REC was already in SETS with its automatic /preorders/the-reckoning page, and stores in the US, CA and EU already list boxes,
+Vaults and Champion Decks. Added: `lib/sets/reckoning.ts` + `ReckoningHub` (LegacyHub's shape, shorter: a facts grid, Legends,
+products, the live pre-order table with eBay below, timeline, a five-question FAQ that is also the FAQPage JSON-LD), so REC is
+`hubReady` and /sets/the-reckoning indexable; the calendar row carries the Legends and the confirmed count. No calendar
+`preordersHref`: that field means "a hand-built page", and on an automatic page it would 308 the URL to itself. Sealed grouping:
+Shyvana and Vayne join the Champion Deck champions (REC), and a bracket that is a shipping or pre-order note ("(Ships April
+2027)", "(Pre Order)") no longer names a deck. No MSRP and no preview date until Riot gives one. `tests/reckoning-setup.test.ts`.
