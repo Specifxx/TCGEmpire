@@ -69,6 +69,8 @@ export interface CheckoutParamsInput {
   surface?: string | null;
   /** A sanitized on-site path to return to. */
   back?: string | null;
+  /** The site the member is buying on (lib/premium-brand.ts): a sister's checkout names that site, never RiftCompare. */
+  brand?: { name: string; sister: boolean; billedBy: string } | null;
   /** A sister site's own absolute success and cancel URLs (lib/sister-premium.ts): fixed per site, never from the request. */
   returnUrls?: { success: string; cancel: string } | null;
   /**
@@ -126,7 +128,7 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
             price_data: {
               currency: i.currency,
               unit_amount: fee,
-              product_data: { name: `RiftCompare ${TIER_NAMES[tier]} — first ${trial.days} days` },
+              product_data: { name: `${i.brand?.sister ? i.brand.name : "RiftCompare"} ${TIER_NAMES[tier]} — first ${trial.days} days` },
             },
             quantity: 1,
           },
@@ -184,13 +186,21 @@ export function buildCheckoutSessionParams(i: CheckoutParamsInput): Stripe.Check
     },
     // Force card collection even though the recurring line is $0 during a trial.
     ...(trial ? { payment_method_collection: "always" as const } : {}),
-    ...(trial
+    // A sister's checkout opens with who bills it (lib/premium-brand.ts billedByLine), so the company name on Stripe's
+    // page and the statement is expected rather than a surprise.
+    ...(trial || i.brand?.sister
       ? {
           custom_text: {
             submit: {
-              message:
-                trialCheckoutMessage(trial, afterTrialPrice(tier, plan, coupon, affiliateDiscount ? i.affiliate!.percentOff : 0)) +
-                (i.adaptivePricing ? ADAPTIVE_PRICING_NOTE : ""),
+              message: [
+                i.brand?.sister ? i.brand.billedBy : "",
+                trial
+                  ? trialCheckoutMessage(trial, afterTrialPrice(tier, plan, coupon, affiliateDiscount ? i.affiliate!.percentOff : 0)) +
+                    (i.adaptivePricing ? ADAPTIVE_PRICING_NOTE : "")
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" "),
             },
           },
         }

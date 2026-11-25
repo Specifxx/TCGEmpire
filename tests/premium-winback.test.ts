@@ -64,7 +64,7 @@ test("the audience is unpaid (isPremium-checked), non-admin, non-seed, not-too-o
   const src = read("src/lib/premium-winback.ts");
   const fnAt = src.indexOf("export async function runPremiumWinbackBlast");
   const body = src.slice(fnAt, fnAt + 6000);
-  assert.match(body, /where: NOT_SEED_WHERE/, "must exclude the seed personas");
+  assert.match(body, /where: \{ AND: \[NOT_SEED_WHERE, RIFT_SIGNUP_WHERE\] \}/, "must exclude the seed personas, and accounts a sister site made (lib/premium-brand.ts)");
   assert.match(body, /if \(isPremium\(u\)\) \{/, "must use the SAME entitlement check every paid gate uses — not a hand-rolled premiumUntil comparison");
   assert.match(body, /u\.createdAt\.getTime\(\) < cutoff\.getTime\(\)/, "must exclude accounts registered before the cutoff");
   assert.match(body, /announcementOptOut\s*\.findMany\(\{ where: \{ optedOutAt: \{ not: null \} \}/, "must honour the announcement opt-out list");

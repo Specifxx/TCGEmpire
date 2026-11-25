@@ -6,6 +6,7 @@ import { stripe } from "@/lib/stripe";
 import { buildCheckoutSessionParams } from "@/lib/checkout-params";
 import { isPremium, premiumCheckoutEnabled, priceCurrencyOf, priceIdFor, trialOfferedTo, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS } from "@/lib/premium";
 import { premiumCors, premiumSiteForOrigin, verifyPremiumSession } from "@/lib/sister-premium";
+import { billedByLine, brandFromSurface } from "@/lib/premium-brand";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,10 @@ export async function POST(req: Request) {
         trial: trialEligible ? { days: PREMIUM_TRIAL_DAYS, feeCents: PREMIUM_TRIAL_FEE_CENTS } : null,
         coupon: null,
         surface: `sister-${site.key}`,
+        brand: (() => {
+          const b = brandFromSurface(`sister-${site.key}`);
+          return { name: b.name, sister: b.sister, billedBy: billedByLine(b) };
+        })(),
         adaptivePricing,
         returnUrls: { success: `${site.url}/premium?welcome=1`, cancel: `${site.url}/premium` },
       });

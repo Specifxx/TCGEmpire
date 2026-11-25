@@ -19,7 +19,7 @@
 // retries; the window caps that at three days of attempts.
 import { prisma } from "./db";
 import type Stripe from "stripe";
-import { NOT_SEED_WHERE, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, trialOfferedTo, trialFeeCentsOf, subscriptionChargeLine, subscriptionIsCancelling, isIntroCouponId, tierFromPriceId } from "./premium";
+import { NOT_SEED_WHERE, RIFT_SIGNUP_WHERE, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, trialOfferedTo, trialFeeCentsOf, subscriptionChargeLine, subscriptionIsCancelling, isIntroCouponId, tierFromPriceId } from "./premium";
 import { premiumFromLine, introOfferEnabled, introPriceLine, PREMIUM_ANNUAL_AMOUNT } from "./site";
 import { sendWelcomeEmail, sendTrialWelcomeEmail } from "./email";
 import { stripe, stripeEnabled } from "./stripe";
@@ -71,6 +71,7 @@ export async function runWelcomeEmails(now = Date.now()): Promise<{ candidates: 
     where: {
       AND: [
         NOT_SEED_WHERE,
+        RIFT_SIGNUP_WHERE,
         {
           welcomeEmailSentAt: null,
           isAdmin: false,

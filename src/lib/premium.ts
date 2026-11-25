@@ -399,9 +399,11 @@ export async function runPremiumTrialReminders(): Promise<number> {
       stripeCustomerId: { not: null },
       premiumUntil: { gt: new Date(), lte: cutoff },
     },
-    select: { id: true, email: true, stripeCustomerId: true },
+    select: { id: true, email: true, stripeCustomerId: true, signupSource: true },
   });
   if (!candidates.length) return 0;
+  // Lazy: premium-brand reads sister-premium, which imports this module.
+  const { premiumBrandFor, brandFrom } = await import("./premium-brand");
 
   let sent = 0;
   for (const u of candidates) {
@@ -417,6 +419,9 @@ export async function runPremiumTrialReminders(): Promise<number> {
         const price = sub.items.data[0]?.price;
         const planName = tierFromPriceId(price?.id) === "plus" ? "Plus" : "Premium";
         const endsAt = new Date(sub.trial_end * 1000);
+        // The site the trial was started on names the notice and sends it (lib/premium-brand.ts).
+        const b = premiumBrandFor({ surface: sub.metadata?.surface ?? null, signupSource: u.signupSource });
+        const brand = { name: b.name, url: b.url, sister: b.sister, color: b.color, from: brandFrom(b) };
         const interval = price?.recurring?.interval === "year" ? "year" : price?.recurring?.interval === "month" ? "month" : null;
         const coupon = sub.discount?.coupon;
         const introAmountOff = coupon && isIntroCouponId(coupon.id) ? coupon.amount_off ?? 0 : 0;
@@ -440,7 +445,7 @@ export async function runPremiumTrialReminders(): Promise<number> {
             interval,
             introAmountOff: introOnKeep ? introAmountOffCents(price!.unit_amount!) : introAmountOff,
           });
-          if (await sendTrialEndingNoChargeEmail(u.email, endsAt, planName, keepLine)) {
+          if (await sendTrialEndingNoChargeEmail(u.email, endsAt, planName, keepLine, brand)) {
             sent++;
             void notify(u.id, "trial_ending", "Your trial ends soon", "Renewal is off, so nothing more will be charged.", "/premium?keep=1").catch(() => {});
           }
@@ -457,7 +462,7 @@ export async function runPremiumTrialReminders(): Promise<number> {
             off > 0 && price?.unit_amount != null
               ? `${formatMoney(price.unit_amount, price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}${months ? ` after ${months} months` : ""}`
               : undefined;
-          if (await sendTrialEndingEmail(u.email, endsAt, amountLabel, planName, thenLabel, trialFeeCentsOf(sub))) {
+          if (await sendTrialEndingEmail(u.email, endsAt, amountLabel, planName, thenLabel, trialFeeCentsOf(sub), brand)) {
             sent++;
             void notify(u.id, "trial_ending", "Your trial ends soon", `${amountLabel} starts once it converts.`, "/premium").catch(() => {});
           }
@@ -906,6 +911,14 @@ export const NOT_SEED_WHERE = {
   NOT: {
     OR: [{ email: { endsWith: "@tcgempire.au" } }, { email: { equals: "test@test.com" } }],
   },
+};
+
+// An account a SISTER site made (signupSource "sister:<site>…", lib/sister-premium.ts) is a DexCompare, MTG Compare… member
+// who never visited riftcompare.com. Owner, 2026-11-25: such a member never sees "RiftCompare". So RiftCompare's own
+// welcome, Premium-offer and win-back mail (Riftbound content, RiftCompare's name) skips them; mail they must get
+// (the trial-ending notice) is sent in their site's name (lib/premium-brand.ts).
+export const RIFT_SIGNUP_WHERE = {
+  OR: [{ signupSource: null }, { NOT: { signupSource: { startsWith: "sister:" } } }],
 };
 
 // ── Portfolio ─────────────────────────────────────────────────────────────────

@@ -40,7 +40,7 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
 import { getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumWinbackEmail } from "./email";
-import { NOT_SEED_WHERE, grantPremiumDays, isPremium } from "./premium";
+import { NOT_SEED_WHERE, RIFT_SIGNUP_WHERE, grantPremiumDays, isPremium } from "./premium";
 import { SITE_URL } from "./site";
 
 // How many days of Premium the claim grants. Env-overridable, day-granular —
@@ -124,7 +124,7 @@ export async function runPremiumWinbackBlast(opts: PremiumWinbackOpts): Promise<
   }
 
   const rows = await prisma.user.findMany({
-    where: NOT_SEED_WHERE,
+    where: { AND: [NOT_SEED_WHERE, RIFT_SIGNUP_WHERE] },
     select: {
       id: true,
       email: true,
@@ -270,7 +270,7 @@ export async function listPremiumWinbackAudience(opts: { registeredAfter: string
   const cutoff = parseRegisteredAfter(opts.registeredAfter) ?? new Date(0);
   const [users, optedOut, trials] = await Promise.all([
     prisma.user.findMany({
-      where: { AND: [NOT_SEED_WHERE, { isAdmin: false }, { createdAt: { gte: cutoff } }] },
+      where: { AND: [NOT_SEED_WHERE, RIFT_SIGNUP_WHERE, { isAdmin: false }, { createdAt: { gte: cutoff } }] },
       orderBy: { createdAt: "desc" },
       take,
       select: { id: true, email: true, displayName: true, createdAt: true, premiumUntil: true, premiumTier: true, premiumTierFloor: true },

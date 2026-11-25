@@ -25718,3 +25718,23 @@ the too-cheap guard the feed path applies. Every card whose cheapest row was a m
   `BASKET_ROW_MAX_AGE_H` (48h). A store whose read fails keeps its rows on card pages for up to 72h, but a plan tells a member to
   buy now. Filtered in memory, same single read. tests/min-condition.test.ts.
 - OP Compare's basket is not affected: its import keeps only variants that say `available` and has no verify pass.
+
+## 2026-11-25 — A sister site's Premium member never sees "RiftCompare"
+
+The owner chose one Premium for every site (RiftCompare's accounts and Stripe as the back end, `lib/sister-premium.ts`), on one
+condition: "people look at it and they'll be like, what the hell is Rift Compare". Sign-in already happened on each site in its
+own name; what still said RiftCompare was the money and the mail. `lib/premium-brand.ts` decides whose name a member sees: the
+subscription's `surface` ("sister-<key>", stamped at checkout on the session and the subscription), else the account's
+`signupSource` ("sister:<key>…"), else RiftCompare.
+
+- Checkout opened from a sister: the trial fee line is "<Site> Premium — first N days", and the pay button's note starts with
+  "<Site> Premium is billed by Compare Empire, the company that runs <Site>." (`billedByLine`), so the account name on Stripe's
+  page and the statement is expected.
+- The trial-ending notices (both kinds) are sent as "<Site> <noreply@…>", headed with the site's name in its own colour, and
+  link to the site's own /premium. `emailShell` takes an optional brand; RiftCompare's mail is unchanged.
+- RiftCompare's welcome, Premium-offer and win-back mail skip accounts a sister made (`RIFT_SIGNUP_WHERE`): their content is
+  Riftbound and RiftCompare's. An existing RiftCompare member who signs in on a sister keeps getting RiftCompare's mail.
+- What one name must cover (Stripe's public business name, statement descriptor, receipts and portal) is the company, Compare
+  Empire, never RiftCompare: an owner step (data/hq/owner-steps.json `stripe-compare-empire-branding`). The sender ADDRESS is
+  still noreply@riftcompare.com; a neutral sending domain needs DNS, and only the display name shows in most inboxes.
+- `tests/premium-brand.test.ts`.
