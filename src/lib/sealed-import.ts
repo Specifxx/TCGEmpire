@@ -177,6 +177,7 @@ function looksSealedAnyLanguage(title: string): boolean {
     (SEALED_TITLE.test(title) || T1_COLLECTION.test(title) || RIOT_DRAWING_TITLE(title)) &&
     !SEALED_EXCLUDE.test(title) &&
     !EVENT_ENTRY.test(title) &&
+    !isPreRiftEntry(title) &&
     // A graded slab (PSA/BGS/CGC/SGC) is one card in a case, never sealed product: "Riftbound Slab Caitlyn 068a Arcane
     // Box Set CGC Pristine 10" from a store's sealed collection made its own sealed page (2026-11-20). Every store path
     // and cleanupStaleSealed run through here, so stored slab rows go on the next sealed refresh.
@@ -207,6 +208,20 @@ const LANGUAGE_GROUP = /\|(?:CN|KR)$/;
 // as "Pre-Rift Kit" — four "kits" from one store, each really a different night.
 // An entry's price is a local event fee, not something another store can beat.
 const EVENT_ENTRY = /\b(?:mon|tues|wednes|thurs|fri|satur|sun)day\b|\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i;
+
+// A Pre-Rift title that never says "kit" and carries an event or component sign (2026-11-25, every title from
+// data/public/sealed-listings.json that day). Event seats: "Riftbound Legacy Pre-Rift (Jan 25th)" (Fabricators Forge,
+// US$30, the cheapest US row on /sealed/lgc-pre-rift-kit beside TCGplayer's US$69.97 kit), "Legacy Pre-Rift Events",
+// "Legacy Pre-Rift (Two Dates)", "Prerift Legacy Prerift January 23rd 11:30 Sunridge", "Prerift Riftbound Radiance
+// 2026-10-16 (18h00)", "Radiance Pre-Rift at Jack's #1", "Radiance Win-A-Box Pre-Rift Oct 17th". A component: "Unleashed
+// Pre-Rift Precon - Ivern" (US$12.99, one deck out of the kit) and "Unleashed Pre-Rift Deck". A title with "kit" in it
+// is never touched, nor a bare "Riftbound Vendetta Pre-Rift" with no sign either way: the rule only refuses.
+const PRE_RIFT = /\bpre[-\s]?rift\b/i;
+const PRE_RIFT_ENTRY_SIGN =
+  /\bevents\b|\b(?:two|\d)\s+dates\b|\bat\s+[a-z]+'s\b|\bwin[-\s]a[-\s]box\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?\b(?!\d)|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}h\d{2}\b|\b\d{1,2}:\d{2}\b|\bprecons?\b|\bdecks?\b/i;
+export function isPreRiftEntry(title: string): boolean {
+  return PRE_RIFT.test(title) && !/\bkits?\b/i.test(title) && PRE_RIFT_ENTRY_SIGN.test(title);
+}
 
 // A sealed product title looks like one of these. "nexus night ... pack" (the real
 // product is titled e.g. "Origins Nexus Night Promo Pack" — night, then an optional
