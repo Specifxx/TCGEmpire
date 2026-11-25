@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { classifySealed, collectionKind, isTrackableSealedTitle, typeLabel } from "../src/lib/sealed-import";
+import { classifySealed, collectionKind, isPreRiftEntry, isTrackableSealedTitle, typeLabel } from "../src/lib/sealed-import";
 import { cheapestEnglishSealed, type TcgProduct, type TcgListing } from "../src/lib/tcgplayer";
 
 // Radiance pre-order coverage gaps found 2026-09-24 by probing every tracked
@@ -71,6 +71,39 @@ test("a Pre-Rift listing for a dated session is an event seat, not a product", (
   }
   assert.ok(isTrackableSealedTitle("Riftbound Radiance Pre-Rift Kit"));
   assert.ok(isTrackableSealedTitle("Riftbound: Radiance Pre-Rift Event Kit"));
+});
+
+test("a Pre-Rift title with no 'kit' and an event or component sign is refused; every kit and bare title is kept (2026-11-25)", () => {
+  // Every title is from data/public/sealed-listings.json, 25 Nov 2026: exactly these 10 of 3,376 rows are refused.
+  for (const t of [
+    "Riftbound Legacy Pre-Rift (Jan 25th)",
+    "Riftbound Legacy Pre-Rift Events",
+    "Riftbound TCG: Legacy Pre-Rift (Two Dates)",
+    "Riftbound Prerift Legacy Prerift January 23rd 11:30 Sunridge",
+    "Prerift Riftbound Radiance 2026-10-16 (18h00)",
+    "Riftbound: League of Legends Radiance Pre-Rift at Jack's  #1",
+    "Riftbound Pre-Rift Unleashed at Jack's",
+    "Riftbound: Radiance Win-A-Box Pre-Rift Oct 17th",
+    "Unleashed Pre-Rift Precon - Ivern",
+    "Riftbound League of Legends TCG: Unleashed Pre-Rift Deck",
+  ]) {
+    assert.ok(isPreRiftEntry(t), t);
+    assert.ok(!isTrackableSealedTitle(t), t);
+  }
+  for (const t of [
+    "Legacy - Pre-Rift Kit",
+    "(Preorder) Legacy - Pre-Rift Event Kit [LGC]",
+    "Riftbound League of Legends Legacy Pre-Rift Kit (Ships Jan 2027)",
+    "Riftbound League of Legends TCG Spiritforged Pre-Rift Kit (Release Date 06 Feb 2026)",
+    "Riftbound Spiritforged Pre Rift Event Sealed 16 Pre-Rift Kits & 1 Booster Box",
+    "Riftbound League of Legends TCG Vendetta Pre-Rift Kit | Preconstructed Champion Deck, 5 Vendetta Booster Packs & Promo Card | Trading Card Game Starter Kit",
+    "Riftbound Vendetta Pre-Rift",
+    "Riftbound Radiance Prerift English",
+    "Riftbound League of Legends Legacy Booster Pack (Ships Jan 2027)",
+    "RIFTBOUND GIFT OF THE RIFT BUNDLE Dec 4 Pre-Order",
+  ]) {
+    assert.ok(!isPreRiftEntry(t), t);
+  }
 });
 
 test("TCGplayer sealed is priced at its cheapest English listing, with market as the fallback", () => {

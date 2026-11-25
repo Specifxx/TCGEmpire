@@ -25633,3 +25633,17 @@ products, the live pre-order table with eBay below, timeline, a five-question FA
 `preordersHref`: that field means "a hand-built page", and on an automatic page it would 308 the URL to itself. Sealed grouping:
 Shyvana and Vayne join the Champion Deck champions (REC), and a bracket that is a shipping or pre-order note ("(Ships April
 2027)", "(Pre Order)") no longer names a deck. No MSRP and no preview date until Riot gives one. `tests/reckoning-setup.test.ts`.
+
+## Pre-Rift event seats and loose decks are not Pre-Rift Kits (2026-11-25)
+
+The 25 Nov sealed export had 10 rows on Pre-Rift Kit pages that were not the kit. Eight were seats at a store's own
+event: "Riftbound Legacy Pre-Rift (Jan 25th)" (Fabricators Forge, US$30) was the cheapest US store row on
+/sealed/lgc-pre-rift-kit beside TCGplayer's US$69.97 kit, three more sat on the CA Legacy page ("Pre-Rift Events",
+"(Two Dates)", "January 23rd 11:30 Sunridge"), and RAD/UNL had "at Jack's", "Win-A-Box … Oct 17th" and
+"2026-10-16 (18h00)". Two were one deck out of the kit ("Unleashed Pre-Rift Precon - Ivern", US$12.99; "Unleashed
+Pre-Rift Deck"). `EVENT_ENTRY` only knew weekdays and am/pm times. `isPreRiftEntry` (lib/sealed-import.ts) now refuses
+a Pre-Rift title that never says "kit" and carries an event or component sign (plural "events", "N dates", "at X's",
+win-a-box, a month and day, an ISO date, 18h00 or 11:30, precon, deck). A title with "kit" is never touched, and a bare
+"Riftbound Vendetta Pre-Rift" stays: a month and day alone would also hit "(Arrives July 31)" and "Dec 4 Pre-Order" on
+real products, so the date sign counts only inside a kit-less Pre-Rift title. Over the whole export it refuses exactly
+those 10 rows; cleanupStaleSealed drops them on the next sealed refresh. Test: tests/radiance-sealed-gaps.test.ts.
