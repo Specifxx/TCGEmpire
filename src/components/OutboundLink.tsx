@@ -188,6 +188,7 @@ export function OutboundLink({
     | "ebay_picks"
     | "tcg_strip"
     | "inline_ads"
+    | "gutter_ads"
     | "ad_dock"
     | "ebay_carousel"
     | "ebay_graded"

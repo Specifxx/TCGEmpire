@@ -917,6 +917,8 @@ longer lands on its entry.
   no footer pair, no in-page pair, no AdSlot (`AD_FREE_GAME_ROUTES`), and
   Auto ads' requests paused there by the boot script and on every client
   navigation (`syncAdPause`, [2026-10-16](../DECISIONS.md#L17845)).
+  From 1440px one labelled TCGplayer column sits in the empty right side of the window (`GutterAds`, owner 2026-11-25), never over
+  or narrowing the page. [2026-11-25](../DECISIONS.md)
   [2026-09-26](../DECISIONS.md#L14680), [2026-10-01](../DECISIONS.md#L16105), [2026-10-02](../DECISIONS.md#L16478)
 - **Phones get fewer Google ads (2026-10-16, owner: "reduce the impact of ads
   on a mobile phone"):** below 1024px, no ad intents on any page

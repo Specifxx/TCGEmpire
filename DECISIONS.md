@@ -25746,6 +25746,24 @@ Owner, 2026-11-26: "I don't really like the Christmas lights on the very top." T
 (2026-11-20) is removed on every Compare site: the `.xmas-garland::after` rule is gone from the `xmas-logo` block in `globals.css`
 and the class is off the header. The Santa hat on the logo stays, and nothing else of the Christmas layer changes.
 
+## 2026-11-25 — A TCGplayer column in the empty right side of a wide window (owner)
+
+The owner, 2026-11-25, on a desktop: "Why are the display ads at the very bottom of the site? … there's so much space on the left and the
+right side of the website." (YGO Compare #267, DexCompare #367, MTG Compare #276, OP Compare #267.) Rift Compare's home already puts its
+banner pair under the deals (`HomeSections`, `arm="low"`), and the card, set and sealed pages put theirs under their own content, so no
+banner moves. What is new is the empty side space.
+
+Rift Compare is a LIGHT site (the ad-intensity test's control, read 10 Dec), so it takes ONE column, not two: `components/GutterAds.tsx`,
+from 1440px wide, TCGplayer products (the banners' own CDN-held picks answer, one request a page view, shared) in the right-hand gutter.
+It is sized to the gutter beside the page's 1152px content (about 110px at 1440, 180px at most), 14px clear of it and of the window; it
+sits absolutely in the layout's content wrapper (`relative`) with a sticky card, so it starts under the header, ends where the content
+ends and never covers or narrows the page (the one-navigation rule of 2026-11-13 is untouched: no rail reserves a left edge). Browser
+only (CLS 0, no SEO change), labelled Ad, tagged `tcg_gutter` with surface `gutter_ads` and retailer `tcgplayer_gutter`, never Amazon,
+never for ad-free members, never on the routes without the banners (`adBlockAllowed`). Its tiles start after the banner's four.
+
+Read: tcg_gutter clicks per 100 desktop visitors; if desktop store buy clicks per visitor fall 10%, the column goes. For the 10 Dec
+heavy/light read, compare Rift's desktop before and after this release separately.
+
 ## 2026-11-25 — A sister site's Premium member never sees "RiftCompare"
 
 The owner chose one Premium for every site (RiftCompare's accounts and Stripe as the back end, `lib/sister-premium.ts`), on one
