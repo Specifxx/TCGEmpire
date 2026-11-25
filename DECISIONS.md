@@ -25718,3 +25718,9 @@ the too-cheap guard the feed path applies. Every card whose cheapest row was a m
   `BASKET_ROW_MAX_AGE_H` (48h). A store whose read fails keeps its rows on card pages for up to 72h, but a plan tells a member to
   buy now. Filtered in memory, same single read. tests/min-condition.test.ts.
 - OP Compare's basket is not affected: its import keeps only variants that say `available` and has no verify pass.
+
+## 2026-11-26: The header's string of Christmas lights is removed (owner)
+
+Owner, 2026-11-26: "I don't really like the Christmas lights on the very top." The string of lights hanging under the header
+(2026-11-20) is removed on every Compare site: the `.xmas-garland::after` rule is gone from the `xmas-logo` block in `globals.css`
+and the class is off the header. The Santa hat on the logo stays, and nothing else of the Christmas layer changes.
