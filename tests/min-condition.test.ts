@@ -101,7 +101,7 @@ test("the floor adds no reads: one RetailerPrice query with the same narrow sele
   assert.equal(queries.length, 2);
   const [a, b] = queries as { where: Record<string, unknown>; select: Record<string, boolean>; take?: number }[];
   assert.deepEqual(a, b, "identical query for every floor: condition is filtered in memory, not in SQL");
-  assert.deepEqual(Object.keys(a.select).sort(), ["cardId", "condition", "priceCents", "retailer", "url"]);
+  assert.deepEqual(Object.keys(a.select).sort(), ["cardId", "condition", "lastSeen", "priceCents", "retailer", "url"]);
   const src = read("src/lib/basket-server.ts").replace(/\/\/[^\n]*/g, "");
   assert.doesNotMatch(src, /unstable_cache/, "nothing here is cached");
 });
@@ -358,4 +358,15 @@ test("the schema change is additive and nullable, and the page code stays client
   assert.doesNotMatch(best, /from "@\/lib\/basket-server"/);
   // Replacement cost (the free portfolio total) keeps reading every condition.
   assert.doesNotMatch(read("src/app/api/portfolio/replacement/route.ts"), /minCondition/);
+});
+
+test("Best Basket never plans on a row older than BASKET_ROW_MAX_AGE_H", async () => {
+  const now = new Date("2026-11-25T12:00:00Z");
+  const at = (h: number) => new Date(now.getTime() - h * 3_600_000);
+  const { db } = listingsDb([
+    { ...row("gamma", "mythicstore", 300, "Near Mint"), lastSeen: at(60) } as Row,
+    { ...row("gamma", "cherry", 500, "Near Mint"), lastSeen: at(20) } as Row,
+  ]);
+  const got = (await loadStoreListings(["gamma"], "US", STORES, db, "any", now)).get("gamma") ?? [];
+  assert.deepEqual(got.map((l) => [l.retailer, l.priceCents]), [["cherry", 500]], "the 60h-old row is left out, even though it is cheaper");
 });

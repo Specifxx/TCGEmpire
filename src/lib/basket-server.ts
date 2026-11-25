@@ -48,22 +48,33 @@ import { missingIn, planSetGap, preReleaseGapMessage, revealedWithoutListing, ty
 // read is the same one query with the same narrow select, zero new rows. Run
 // after the reduction, a store's Near Mint row would already have lost to a
 // cheaper Heavily Played one and the store would drop out of the plan.
+//
+// FRESH ROWS ONLY (2026-11-25). A plan tells a member to go and buy, so it
+// never prices a row older than BASKET_ROW_MAX_AGE_H. A store's rows are
+// rewritten every daily import; one whose read has failed keeps yesterday's
+// rows for up to STORE_ROWS_MAX_AGE_H (72h) so card pages don't flicker, but a
+// two-day-old "in stock" is not something to build an order on. Filtered in
+// memory (lastSeen is in the select) so the query stays the same one read.
+export const BASKET_ROW_MAX_AGE_H = 48;
 export type StoreListingsDb = { retailerPrice: Pick<typeof prisma.retailerPrice, "findMany"> };
 export async function loadStoreListings(
   cardIds: string[],
   country: Country,
   allowed: string[],
   db: StoreListingsDb = prisma,
-  minRank: MinCondition = "any"
+  minRank: MinCondition = "any",
+  now: Date = new Date()
 ): Promise<Map<string, BasketCard["listings"]>> {
   const byCard = new Map<string, BasketCard["listings"]>();
   if (!cardIds.length || !allowed.length) return byCard;
   const rows = await db.retailerPrice.findMany({
     where: { cardId: { in: cardIds }, country, inStock: true, retailer: { in: allowed } },
-    select: { cardId: true, retailer: true, priceCents: true, url: true, condition: true },
+    select: { cardId: true, retailer: true, priceCents: true, url: true, condition: true, lastSeen: true },
   });
+  const oldest = now.getTime() - BASKET_ROW_MAX_AGE_H * 3_600_000;
   const best = new Map<string, (typeof rows)[number]>();
   for (const r of rows) {
+    if (r.lastSeen && new Date(r.lastSeen).getTime() < oldest) continue;
     if (!meetsMinCondition(r.condition, minRank)) continue;
     const k = `${r.cardId}|${r.retailer}`;
     const prev = best.get(k);

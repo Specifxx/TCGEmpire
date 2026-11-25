@@ -87,7 +87,7 @@ test("priceDeckList prices the list the Best Basket way: one bounded listing rea
   assert.equal(q.where.country, "US");
   assert.equal(q.where.inStock, true);
   assert.ok(q.where.retailer.in.length > 0, "scoped to this market's stores");
-  assert.deepEqual(Object.keys(q.select).sort(), ["cardId", "condition", "priceCents", "retailer", "url"], "the narrow select");
+  assert.deepEqual(Object.keys(q.select).sort(), ["cardId", "condition", "lastSeen", "priceCents", "retailer", "url"], "the narrow select");
   const none = await priceDeckList(h.db, { listText: "2 Nobody", market: "US", region: null, trackedOnly: null });
   assert.equal(none, null, "nothing resolved: not priced");
 });

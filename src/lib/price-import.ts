@@ -425,24 +425,73 @@ export function bestVariantPrice(
 // product.json. The collection products.json feed we scrape can lag the live
 // product page (a card showed $33 when the product page was $45), so we confirm the
 // one price we actually display per card. Updates the row if it has drifted.
-async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
+// What the verify pass may do to one row, decided from its product.json.
+//
+// THE ROW'S OWN VARIANT, NEVER ANOTHER (2026-11-25, a Best Basket report). A
+// Shopify row's URL carries the variant the collection feed found IN STOCK
+// (`?variant=`). Before this, the pass re-picked "the cheapest variant of the
+// same condition rank" from product.json, which carries NO availability at all,
+// so a product holding an in-stock Near Mint copy and a SOLD-OUT US$0.99 "Near
+// Mint Foil" variant was rewritten to the sold-out one: Level Up Games MD's
+// Sprite Fountain sat at US$0.99 "in stock" for two weeks (TCGplayer market
+// US$5.86), won every Best Basket for it, and the store's checkout refused it.
+// Now:
+//   • with a variant id, only that variant is read: its price is corrected; a
+//     variant that is gone, or says `available: false` outright, takes the row
+//     out of stock ("gone"); the condition label never changes;
+//   • without one, the old same-rank rule stands;
+//   • either way a corrected price the too-cheap guard refuses is not written
+//     (the feed path already applies it; this path used to skip it).
+// Exported for tests/price-verify.test.ts.
+export type VerifyOutcome =
+  | { kind: "keep" }
+  | { kind: "price"; priceCents: number; condition: string | null; variantId?: number }
+  | { kind: "gone" };
+export function verifyOutcome(
+  row: { url: string; priceCents: number; condition: string | null },
+  variants: ShopifyVariant[],
+  tooCheap: (priceCents: number, condition: string | null) => boolean = () => false,
+): VerifyOutcome {
+  let variantId: string | null = null;
+  try {
+    variantId = new URL(row.url).searchParams.get("variant");
+  } catch {
+    variantId = null;
+  }
+  if (variantId) {
+    const own = variants.find((v) => v.id != null && String(v.id) === variantId);
+    if (!own || (own.available as boolean | null | undefined) === false) return { kind: "gone" };
+    const cents = Math.round(parseFloat(own.price) * 100);
+    if (!(cents > 0) || cents === row.priceCents || tooCheap(cents, row.condition)) return { kind: "keep" };
+    return { kind: "price", priceCents: cents, condition: row.condition };
+  }
+  const v = bestVariantPrice(variants, { condition: row.condition });
+  if (!v || !(v.priceCents > 0)) return { kind: "keep" };
+  if (v.priceCents === row.priceCents && v.condition === row.condition) return { kind: "keep" };
+  if (tooCheap(v.priceCents, v.condition)) return { kind: "keep" };
+  return { kind: "price", ...v };
+}
+
+async function verifyCheapestListings(onlyCountry: string | undefined, tcgUs: Map<string, number>): Promise<number> {
   const rows = await prisma.retailerPrice.findMany({
     where: { inStock: true, NOT: { retailer: { startsWith: "ebay" } }, ...(onlyCountry ? { country: onlyCountry } : {}) },
     select: { id: true, cardId: true, priceCents: true, url: true, country: true, condition: true },
     orderBy: { priceCents: "asc" },
   });
   // Cheapest in-stock listing per card PER MARKET, verified separately.
-  const cheapest = new Map<string, { id: string; priceCents: number; url: string; country: string; condition: string | null }>();
+  const cheapest = new Map<string, { id: string; cardId: string; priceCents: number; url: string; country: string; condition: string | null }>();
   for (const r of rows) {
     const k = `${r.cardId}|${r.country}`;
     if (!cheapest.has(k)) cheapest.set(k, r);
   }
   const targets = Array.from(cheapest.values());
+  // `tcgUs`: the store import's own read of TCGplayer's US market per card (the
+  // too-cheap guard, lib/price-sanity.ts), passed in so the table is read once.
 
   // Fetch a product's authoritative price. Uses the CLEAN product.json URL (no
   // cache-bust query param — that returned a stale/blocked response from the runner;
   // the plain URL returns the live price) with a browser UA, and one retry.
-  async function fetchProductPrice(url: string, country: string, condition: string | null): Promise<{ priceCents: number; condition: string | null; variantId?: number } | null> {
+  async function fetchProductVariants(url: string, country: string): Promise<ShopifyVariant[] | null> {
     // `${url}.json` is a SHOPIFY convention. A WooCommerce product URL is a
     // WordPress permalink (/producto/<slug>/ …) with no .json sibling, so this
     // would spend two requests per listing to get two 404s and return null —
@@ -465,7 +514,7 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
         const data = (await res.json()) as { product?: { variants?: ShopifyVariant[] } };
         const variants = data.product?.variants;
         if (!variants?.length) return null;
-        return bestVariantPrice(variants, { condition });
+        return variants;
       } catch {
         /* retry */
       }
@@ -479,20 +528,29 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
     await Promise.all(
       targets.slice(i, i + BATCH).map(async (t) => {
         try {
-          const v = await fetchProductPrice(t.url, t.country, t.condition);
-          if (!v) return;
-          // Only correct the PRICE — never flip availability from this endpoint
-          // (its `available` is unreliable). Guard against absurd values too.
-          if ((v.priceCents !== t.priceCents || v.condition !== t.condition) && v.priceCents > 0) {
-            // A row that opens checkout follows the corrected price to its variant,
-            // so the cart holds the copy at the price shown (lib/checkout-link.ts).
-            const variant = new URL(t.url).searchParams.has("variant") && v.variantId != null ? withShopifyVariant(t.url, v.variantId) : t.url;
-            await prisma.retailerPrice.update({
-              where: { id: t.id },
-              data: { priceCents: v.priceCents, condition: v.condition, ...(variant !== t.url ? { url: variant } : {}) },
-            });
+          const variants = await fetchProductVariants(t.url, t.country);
+          if (!variants) return;
+          const tooCheap = (cents: number, condition: string | null) =>
+            implausiblyCheap(cents, currencyOf(t.country as Country), tcgUs.get(t.cardId), condition);
+          const v = verifyOutcome(t, variants, tooCheap);
+          if (v.kind === "keep") return;
+          if (v.kind === "gone") {
+            // The exact copy the feed saw is gone or says sold out: no plan,
+            // card page or alert may offer it until the next feed read.
+            await prisma.retailerPrice.update({ where: { id: t.id }, data: { inStock: false } });
             corrected++;
+            return;
           }
+          // A row that opens checkout follows the corrected price to its variant,
+          // so the cart holds the copy at the price shown (lib/checkout-link.ts).
+          // (Only the no-variant path can name a different variant, and its URL
+          // has none to follow.)
+          const variant = new URL(t.url).searchParams.has("variant") && v.variantId != null ? withShopifyVariant(t.url, v.variantId) : t.url;
+          await prisma.retailerPrice.update({
+            where: { id: t.id },
+            data: { priceCents: v.priceCents, condition: v.condition, ...(variant !== t.url ? { url: variant } : {}) },
+          });
+          corrected++;
         } catch {
           /* leave the feed price as-is on any failure */
         }
@@ -1985,7 +2043,7 @@ export async function importPrices(): Promise<ImportSummary> {
   // Confirm each card's displayed (cheapest) price against the live product page,
   // since the collection feed can lag it. In single-market mode only that market's
   // rows are verified (the others weren't rescraped this run).
-  const corrected = await verifyCheapestListings(onlyCountry || undefined);
+  const corrected = await verifyCheapestListings(onlyCountry || undefined, tcgUs);
   if (corrected) console.log(`Verified cheapest listings — corrected ${corrected} stale prices.`);
 
   // ---- eBay AU + US (optional; only when EBAY_CLIENT_ID/SECRET are set) ---------

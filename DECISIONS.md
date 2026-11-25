@@ -25701,3 +25701,20 @@ the four-deck "Champion Deck Set (4)" when it lists all four Legacy champions wi
 Champion Deck (a choice of decks, one price: universetcg's "(Shyvana, Vayne)" at EUR 25). "Trydamere" (zatugames UK) is read as
 Tryndamere. Over the 24 Nov export exactly these 3 store rows change. The old several-champion pages 301
 (`severalChampionDeckRedirect`).
+
+## 2026-11-25 — The verify pass reads only the row's own variant; Best Basket prices rows under 48 hours old
+
+A Premium member's Best Basket sent him to Level Up Games MD for Sprite Fountain (UNL 078/219) at US$0.99 "Near Mint Foil" for
+two weeks; the store's checkout said sold out, and TCGplayer's market is US$5.86. The collection feed had recorded an in-stock
+copy, then `verifyCheapestListings` re-picked "the cheapest variant of the row's condition rank" from product.json, which carries
+no availability at all, and rewrote the row (price, label and `?variant=`) to the store's sold-out foil variant. It also skipped
+the too-cheap guard the feed path applies. Every card whose cheapest row was a multi-variant Shopify product could do this.
+
+- `verifyOutcome` (price-import.ts): a row whose URL names a variant is checked against THAT variant only. A changed price is
+  corrected (the condition stays); a variant that is gone, or says `available: false`, takes the row out of stock. Without a
+  variant id the same-rank rule stands. On both paths a price `implausiblyCheap` refuses is never written.
+  tests/price-verify.test.ts pins the Sprite Fountain case.
+- Best Basket (`loadStoreListings`, shared by the deck watch and the portfolio replacement) leaves out rows older than
+  `BASKET_ROW_MAX_AGE_H` (48h). A store whose read fails keeps its rows on card pages for up to 72h, but a plan tells a member to
+  buy now. Filtered in memory, same single read. tests/min-condition.test.ts.
+- OP Compare's basket is not affected: its import keeps only variants that say `available` and has no verify pass.
