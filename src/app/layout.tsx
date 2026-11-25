@@ -8,6 +8,7 @@ import "@/components/cart/cart.css";
 import "@/components/cart/cart-drawer.css";
 import { Navbar } from "@/components/Navbar";
 import { PhoneDockAds } from "@/components/PhoneDockAds";
+import { GutterAds } from "@/components/GutterAds";
 import { BottomNav } from "@/components/BottomNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
@@ -439,7 +440,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {/* ONE COLUMN, NO RAIL (owner, 2026-11-13; DECISIONS.md "Minimal redesign"): the pinned side rail is gone,
                     so nothing here reserves a left edge any more. The header's menu button opens the full index
                     (CinematicNavMenu) at every width, and the footer's site map carries every link in the HTML. */}
-                <div>
+                <div className="relative">
                   {/* Black Friday, then Cyber Monday (lib/holiday-strip.ts): one server-rendered line, outside <main> so the
                       homepage's full-bleed hero (-mt-6) never slides over it. */}
                   <HolidayStrip />
@@ -453,6 +454,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         page, never a pop-up; gone once this browser rated. */}
                     <RateUsStrip />
                   </main>
+                  {/* The gutter column (owner, 2026-11-25): a labelled TCGplayer column in the empty right side of a wide window (1440px+). */}
+                  <GutterAds />
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
                 {/* No uninvited Premium or sign-up prompt anywhere (owner, 2026-11-03:

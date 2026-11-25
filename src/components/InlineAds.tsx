@@ -35,7 +35,7 @@ export function inlineTiles(data: MiniData, country: string, arm = ""): { ebay: 
 
 // One fetch per set per page view.
 const inflight = new Map<string, Promise<MiniData | null>>();
-function load(set: string): Promise<MiniData | null> {
+export function load(set: string): Promise<MiniData | null> {
   let p = inflight.get(set);
   if (!p) {
     p = fetch(inlinePicksUrl(set))
