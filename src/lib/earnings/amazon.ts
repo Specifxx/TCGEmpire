@@ -317,6 +317,25 @@ export interface AmazonEntryStore {
   to: string;
   days: { day: string; cents: number; items: number }[];
   ids: { trackingId: string; cents: number; items: number }[];
+  /** What sold over the range, one line per product (the Reports page grouped by product): never counted in a total. */
+  products?: AmazonProductLine[];
+}
+
+export interface AmazonProductLine {
+  name: string;
+  asin?: string;
+  cents: number;
+  items: number;
+}
+
+/** The stored products of one store's latest entry (lib/earnings/stored.ts key), read by lib/earnings/top-items.ts. */
+export const amazonProductsKey = (store: string) => `amazon-products-${store}`;
+export interface AmazonStoredProducts {
+  store: string;
+  currency: string;
+  from: string;
+  to: string;
+  products: AmazonProductLine[];
 }
 
 const MAX_RANGE_DAYS = 400;
@@ -330,7 +349,7 @@ export function parseAmazonEntry(text: string): AmazonEntryStore[] {
     if (!cur.from || !cur.to) throw new Error(`Store ${cur.key}: add a "range: YYYY-MM-DD to YYYY-MM-DD" line.`);
     if (Date.parse(cur.to) - Date.parse(cur.from) > MAX_RANGE_DAYS * 86_400_000) throw new Error(`Store ${cur.key}: that range is over a year; enter 90 days at a time.`);
     for (const d of cur.days) if (d.day < cur.from || d.day > cur.to) throw new Error(`Store ${cur.key}: day ${d.day} is outside its range ${cur.from} to ${cur.to}.`);
-    out.push({ key: cur.key, from: cur.from, to: cur.to, days: cur.days, ids: cur.ids });
+    out.push({ key: cur.key, from: cur.from, to: cur.to, days: cur.days, ids: cur.ids, ...(cur.products?.length ? { products: cur.products } : {}) });
     cur = null;
   };
   const lines = text.replace(/\r/g, "").split("\n");
@@ -372,7 +391,14 @@ export function parseAmazonEntry(text: string): AmazonEntryStore[] {
       cur.ids.push({ trackingId, cents: amazonCents(m[2]), items: Math.round(Number((m[3] ?? "0").replace(/,/g, "")) || 0) });
       continue;
     }
-    throw new Error(`${at}: expected "range:", "day <date> <earnings> <items>" or "id <tracking id> <earnings> <items>".`);
+    // "item <earnings> <items> [asin:<ASIN>] <product name…>": what sold over the range (2026-11-25).
+    m = /^item\s*[:=]?\s*(\S+)\s+(\S+)\s+(?:asin:([A-Z0-9]{10})\s+)?(.+)$/i.exec(line);
+    if (m) {
+      const name = m[4].trim().slice(0, 160);
+      cur.products = [...(cur.products ?? []).filter((p) => p.name !== name), { name, ...(m[3] ? { asin: m[3].toUpperCase() } : {}), cents: amazonCents(m[1]), items: Math.round(Number(m[2].replace(/,/g, "")) || 0) }];
+      continue;
+    }
+    throw new Error(`${at}: expected "range:", "day <date> <earnings> <items>", "id <tracking id> <earnings> <items>" or "item <earnings> <items> <product name>".`);
   }
   finish();
   if (!out.length) throw new Error('Nothing to save: start with a "store: au" line.');

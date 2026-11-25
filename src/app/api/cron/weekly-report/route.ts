@@ -8,6 +8,10 @@ import { loadCosts } from "@/lib/earnings/costs";
 import { addDays, dayIn } from "@/lib/earnings/core";
 import { EARNINGS_UNAVAILABLE, earningsDigest } from "@/lib/earnings/digest";
 import { buildGrowthReport, growthReportText, WEEKS } from "@/lib/earnings/growth-report";
+import { readStored } from "@/lib/earnings/stored";
+import { AMAZON_PRODUCT_KEYS, allItems, sellingReportText } from "@/lib/earnings/top-items";
+import { loadTopClicks } from "@/lib/earnings/top-clicks";
+import type { AmazonStoredProducts } from "@/lib/earnings/amazon";
 import { readClickCounts } from "@/lib/click-counter";
 import { getLatestReport } from "@/lib/ops/snapshot";
 import { loadHq } from "@/lib/hq/load";
@@ -66,7 +70,7 @@ async function handlePOST(req: Request) {
   ]);
   const money = sources && costs ? earningsDigest(sources, costs, today, `${origin}/admin/earnings`) : EARNINGS_UNAVAILABLE;
   const vercel = costs?.find((c) => c.key === "vercel");
-  const growthText = sources
+  const growthDetail = sources
     ? growthReportText(
         buildGrowthReport(sources, clicks, today, {
           vercel: vercel?.status === "ok" ? vercel.projects ?? [] : null,
@@ -74,6 +78,13 @@ async function handlePOST(req: Request) {
         }),
       )
     : null;
+  // What's selling (lib/earnings/top-items.ts), under the growth detail. Never fails the report.
+  const selling = sources
+    ? await Promise.all([readStored<AmazonStoredProducts>(AMAZON_PRODUCT_KEYS), loadTopClicks()])
+        .then(([amazon, top]) => sellingReportText(allItems(sources, [...amazon.values()]), top, today))
+        .catch(() => null)
+    : null;
+  const growthText = growthDetail && selling ? `${growthDetail}\n\n${selling}` : growthDetail;
   const mail = buildWeeklyEmail({ hq, riftChecks: report?.results ?? [], money, growthText, siteUrl: origin, today, buyClicks: buy?.status === "ok" ? buyClicksBySite(buy.sites, weekFrom, weekTo) : null, trends: sources ? { visitors: visitorsWeek(buy?.status === "ok" ? buy.sites : [], today), earnings: earningsTrend(sources, today) } : null, networks: nets?.status === "ok" ? nets.sites : null, search: searchTestInput(searchTest, sources, today), abTests: abTestLines(abTest, today), bing: bingLines(bing), bingSubmit: bingSubmitLines(bingSubmit), signups: signupLines(signups) });
 
   const recipients = [...new Set([ownerEmail(), growthReportEmail()])];
