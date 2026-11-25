@@ -135,6 +135,15 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
     return { key: st.key, label: st.label, from: r?._min.day ?? null, to: r?._max.day ?? null };
   });
   const amazonClicks = await loadAmazonClicks().catch(() => null);
+  // Amazon's shared tracking IDs, split by each site's 30-day Amazon clicks (COO, 2026-11-25). An ESTIMATE from clicks,
+  // shown only here: never added to a site's own earnings, the by-site table or any total. Amazon reports subtags
+  // only to accounts it grants subtag reporting, and per-site tracking IDs are off by the owner's rule.
+  const amazonSource = sources.find((s) => s.key === "amazon" && s.tags);
+  const amazonShared30 = amazonSource
+    ? tagBreakdown(amazonSource.tags!, "30d", today, display).find((g) => g.key === "amazon")?.cents ?? 0
+    : 0;
+  const amazonClicks30 = amazonClicks ? amazonClicks.sites.reduce((n, s) => n + s.d30, 0) : 0;
+  const amazonEstimate = (d30: number) => (amazonClicks30 ? Math.round((amazonShared30 * d30) / amazonClicks30) : 0);
   // Ad tests (2026-11-14, owner): spend from the ad network, earned from the sales whose tag carries the ad's marker.
   const adStats = (await readStored<Record<string, AdStats>>([AD_STATS_KEY])).get(AD_STATS_KEY) ?? null;
   const adRows = adTestRows(
@@ -711,15 +720,16 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
       <section className="mt-8" data-amazon-clicks>
         <h2 className="text-lg font-extrabold text-white">Amazon clicks per site (automatic)</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Counted from each site&apos;s Amazon link clicks in Vercel Web Analytics and refreshed every three hours, with nothing for you to do. Visitors who decline analytics are not counted, so treat it as a floor. Amazon earnings themselves are not available automatically; the optional figures box below is for actuals.
+          Counted from each site&apos;s Amazon link clicks in Vercel Web Analytics and refreshed every three hours, with nothing for you to do. Visitors who decline analytics are not counted, so treat it as a floor. Amazon earnings themselves are not available automatically; the optional figures box below is for actuals. The last column splits the shared tracking IDs&apos; 30-day earnings by each site&apos;s share of these clicks: an estimate from clicks, never counted in a site&apos;s own earnings or any total.
         </p>
         {amazonClicks && amazonClicks.sites.length > 0 ? (
-          <table className="mt-3 w-full max-w-md text-sm text-slate-200">
+          <table className="mt-3 w-full max-w-2xl text-sm text-slate-200">
             <thead>
               <tr className="text-left text-slate-400">
                 <th className="py-1 pr-4 font-semibold">Site</th>
                 <th className="py-1 pr-4 text-right font-semibold">7 days</th>
                 <th className="py-1 text-right font-semibold">30 days</th>
+                <th className="py-1 pl-4 text-right font-semibold">Shared-ID earnings, 30 days (estimate from clicks)</th>
               </tr>
             </thead>
             <tbody>
@@ -728,12 +738,14 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
                   <td className="py-1 pr-4">{s.projects[0]}</td>
                   <td className="py-1 pr-4 text-right tabular-nums">{s.d7}</td>
                   <td className="py-1 text-right tabular-nums">{s.d30}</td>
+                  <td className="py-1 pl-4 text-right tabular-nums text-slate-400">≈ {money(amazonEstimate(s.d30))}</td>
                 </tr>
               ))}
               <tr className="border-t border-slate-700 font-bold">
                 <td className="py-1 pr-4">All sites</td>
                 <td className="py-1 pr-4 text-right tabular-nums">{amazonClicks.sites.reduce((n, s) => n + s.d7, 0)}</td>
                 <td className="py-1 text-right tabular-nums">{amazonClicks.sites.reduce((n, s) => n + s.d30, 0)}</td>
+                <td className="py-1 pl-4 text-right tabular-nums">{money(amazonShared30)}</td>
               </tr>
             </tbody>
           </table>
