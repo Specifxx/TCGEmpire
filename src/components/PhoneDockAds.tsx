@@ -30,7 +30,7 @@ export interface MiniData {
 export type Tile = { key: string; href: string; image: string | null; name: string; price: string; cardId: string; cents: number };
 
 /** The dock's and the in-page block's tiles, each tagged with where it shows (dock_us / inline_us, tcg_dock / tcg_inline). Pure. */
-export function railTiles(data: MiniData, country: string, where: "inline" | "dock", arm = ""): { ebay: Tile[]; tcg: Tile[] } {
+export function railTiles(data: MiniData, country: string, where: "inline" | "dock" | "gutter", arm = ""): { ebay: Tile[]; tcg: Tile[] } {
   const ebay: Tile[] = selectPicks(data.ebay, country, MAX_TILES).map((l) => ({
     key: l.cardId,
     href: affiliateUrl(l.url, `${where}${arm}_${l.country.toLowerCase()}`, `/${where}-ads`),
