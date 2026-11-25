@@ -37,6 +37,7 @@ import { SignupWelcome } from "@/components/SignupWelcome";
 import { FeedbackLink } from "@/components/FeedbackLink";
 import { FeedbackAsk } from "@/components/FeedbackAsk";
 import { HolidayStrip } from "@/components/HolidayStrip";
+import { AndroidBetaStrip } from "@/components/AndroidBetaStrip";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { AiReferralTracker } from "@/components/AiReferralTracker";
@@ -444,6 +445,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   {/* Black Friday, then Cyber Monday (lib/holiday-strip.ts): one server-rendered line, outside <main> so the
                       homepage's full-bleed hero (-mt-6) never slides over it. */}
                   <HolidayStrip />
+                  {/* Android visitors only, first page of a visit, shown before paint by its inline script (AndroidBetaStrip.tsx). */}
+                  <AndroidBetaStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
                     {children}
                     {/* The two ad banners sit BELOW every page's own content (owner, 2026-11-19: "all the ads that can negatively

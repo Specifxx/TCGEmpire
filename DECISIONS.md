@@ -25783,3 +25783,12 @@ subscription's `surface` ("sister-<key>", stamped at checkout on the session and
   Empire, never RiftCompare: an owner step (data/hq/owner-steps.json `stripe-compare-empire-branding`). The sender ADDRESS is
   still noreply@riftcompare.com; a neutral sending domain needs DNS, and only the display name shows in most inboxes.
 - `tests/premium-brand.test.ts`.
+
+## 2026-11-26: Android app tester line for Android visitors
+
+Follows "Android app: closed test recruitment (2026-11-18)". The one invite email (sent 19 Nov) brought the closed test to 4 of the 12 testers. `AndroidBetaStrip.tsx` adds
+one line above the content for Android browsers only (not the app's own WebView: `; wv)` in the user agent, or `window.Capacitor`), on
+the first page of a visit only (sessionStorage), ✕ for 30 days, never on `/android`. It is in the server HTML with `display:none` and
+its inline script shows it before first paint, so no layout shift and nothing for crawlers to read. When it shows, the seasonal sale
+line is hidden on that page: one line, never two. It ends by itself after 2027-01-31; remove it with `/android` once the app is public.
+Pinned by `tests/android-strip.test.ts`.
