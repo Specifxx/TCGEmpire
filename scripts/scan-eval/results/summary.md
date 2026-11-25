@@ -1,6 +1,6 @@
-# Card scanner accuracy, 2026-11-25
+# Card scanner accuracy, 2026-11-19
 
-594 images of 97 Riftbound cards through claude-haiku-5-5 + our matcher (1 cards skipped: image would not download). Errors: 0.
+588 images of 98 Riftbound cards through claude-haiku-5-5 + our matcher (2 cards skipped: image would not download). Errors: 0.
 
 "Right printing" counts a twin with the identical picture (a promo and its booster card share art) as right: the photo cannot tell them apart and the picker offers both.
 
@@ -8,54 +8,53 @@
 
 | | images | right printing | right card (any printing) | in the "Wrong card?" picker | wrong card marked "Match" |
 |---|---:|---:|---:|---:|---:|
-| all | 594 | 92.1% | 97.8% | 98.0% | 0.7% |
+| all | 588 | 89.3% | 99.5% | 100.0% | 0.5% |
 
 ### By photo condition
 
 | | images | right printing | right card (any printing) | in the "Wrong card?" picker | wrong card marked "Match" |
 |---|---:|---:|---:|---:|---:|
-| far and small | 99 | 87.9% | 96.0% | 96.0% | 0.0% |
-| clean | 99 | 94.9% | 99.0% | 99.0% | 1.0% |
-| tilted on a table | 99 | 92.9% | 98.0% | 98.0% | 0.0% |
-| glare | 99 | 93.9% | 99.0% | 99.0% | 1.0% |
-| foil sheen | 99 | 91.9% | 98.0% | 98.0% | 1.0% |
-| dim light | 99 | 90.9% | 97.0% | 98.0% | 1.0% |
+| far and small | 98 | 80.6% | 96.9% | 100.0% | 0.0% |
+| tilted on a table | 98 | 90.8% | 100.0% | 100.0% | 0.0% |
+| clean | 98 | 94.9% | 100.0% | 100.0% | 0.0% |
+| dim light | 98 | 88.8% | 100.0% | 100.0% | 0.0% |
+| foil sheen | 98 | 88.8% | 100.0% | 100.0% | 3.1% |
+| glare | 98 | 91.8% | 100.0% | 100.0% | 0.0% |
 
 ### By kind of card
 
 | | images | right printing | right card (any printing) | in the "Wrong card?" picker | wrong card marked "Match" |
 |---|---:|---:|---:|---:|---:|
-| base | 240 | 97.1% | 99.6% | 100.0% | 1.3% |
-| alt art | 120 | 99.2% | 99.2% | 99.2% | 0.0% |
-| overnumbered / signature | 72 | 86.1% | 94.4% | 94.4% | 1.4% |
-| promo | 78 | 62.8% | 91.0% | 91.0% | 0.0% |
-| battlefield | 54 | 100.0% | 100.0% | 100.0% | 0.0% |
-| rune | 30 | 100.0% | 100.0% | 100.0% | 0.0% |
+| base | 240 | 97.1% | 99.2% | 100.0% | 0.4% |
+| alt art | 120 | 99.2% | 99.2% | 100.0% | 0.0% |
+| overnumbered / signature | 72 | 87.5% | 100.0% | 100.0% | 1.4% |
+| promo | 78 | 43.6% | 100.0% | 100.0% | 0.0% |
+| battlefield | 48 | 97.9% | 100.0% | 100.0% | 0.0% |
+| rune | 30 | 96.7% | 100.0% | 100.0% | 3.3% |
 
 ### When the page says…
 
 | confidence | images | share of scans | right printing |
 |---|---:|---:|---:|
-| high | 464 | 78.1% | 99.1% |
-| medium | 97 | 16.3% | 71.1% |
-| low | 33 | 5.6% | 54.5% |
+| high | 454 | 77.2% | 99.3% |
+| medium | 121 | 20.6% | 57.0% |
+| low | 13 | 2.2% | 38.5% |
 
 ### Look-alike printings (second call comparing pictures)
 
 | twin check | images | right printing |
 |---|---:|---:|
-| promo-twin | 96 | 67.7% |
-| picked | 104 | 95.2% |
-| none | 387 | 98.2% |
-| unsure | 7 | 42.9% |
+| promo-twin | 113 | 54.0% |
+| picked | 98 | 98.0% |
+| none | 373 | 98.1% |
+| unsure | 4 | 50.0% |
 
-Latency (model calls, both steps): median 1.38 s, 90th percentile 2.93 s. Cost of this whole run: US$0.177; per Haiku scan US$0.00030.
+Latency (model calls, both steps): median 1.31 s, 90th percentile 2.45 s. Cost of this whole run: US$0.175; per Haiku scan US$0.00030.
 
 ### Wrong cards marked "Match" (up to 25)
 
 | truth | condition | returned | read |
 |---|---|---|---|
-| spoiler-rad-181-yone-blademaster Yone, Blademaster | glare | spoiler-rad-181s-yone-blademaster | {"isTradingCard":true,"game":"riftbound","name":"Yone","setCode":"RAD","collectorNumber":"181/167","promoStamp":false,"language":"en"} |
-| spoiler-rad-181-yone-blademaster Yone, Blademaster | clean | spoiler-rad-181s-yone-blademaster | {"isTradingCard":true,"game":"riftbound","name":"Yone","setCode":"RAD","collectorNumber":"181/167","promoStamp":false,"language":"en"} |
 | spoiler-rad-181-yone-blademaster Yone, Blademaster | foil sheen | spoiler-rad-181s-yone-blademaster | {"isTradingCard":true,"game":"riftbound","name":"Yone","setCode":"RAD","collectorNumber":"181/167","promoStamp":false,"language":"en"} |
-| unl-226-star-219 Jhin, Virtuoso | dim light | unl-226-219 | {"isTradingCard":true,"game":"riftbound","name":"Virtuoso","setCode":"UNL","collectorNumber":"226/219","promoStamp":false,"language":"en"} |
+| ogn-299-298 Kai'Sa, Daughter of the Void | foil sheen | ogn-299-star-298 | {"isTradingCard":true,"game":"riftbound","name":"Daughter of the Void","setCode":"OGN","collectorNumber":"299*/298","promoStamp":false,"language":"en"} |
+| tcg-678224 Fury Rune | foil sheen | tcg-662900 | {"isTradingCard":true,"game":"riftbound","name":"Fury Rune","setCode":"OGN","collectorNumber":"007/298","promoStamp":false,"language":"en"} |
