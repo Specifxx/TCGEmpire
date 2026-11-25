@@ -164,6 +164,20 @@ function glanceSection(x: DigestExtras, currency: string, market: Country): stri
   return `${heading("🧭 The market at a glance")}${bits.map((b) => para(b)).join("")}`;
 }
 
+// The Android app's tester call (2026-11-26, DECISIONS.md "Android app tester line for Android visitors"): Google Play
+// publishes it only after 12 testers stay opted in for 14 days, and we have 4. One short block in the email they already
+// get, like the extension's, for the two editions before 11 Dec, then gone by itself.
+export const ANDROID_FEATURE_UNTIL = new Date("2026-12-11T00:00:00Z");
+export function androidSection(now: Date = new Date()): string {
+  if (now >= ANDROID_FEATURE_UNTIL) return "";
+  const href = "https://riftcompare.com/android?utm_source=riftcompare&utm_medium=email&utm_campaign=android-beta";
+  return `${heading("📱 On Android? Help us launch the app")}
+    <tr><td style="padding:6px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Google Play only lets a new app launch once 12 people have tested it for 14 days, and we have 4. It's the RiftCompare you know, free, and it takes a minute: join the tester group, tap Become a tester, and keep the app for two weeks.
+      <br/><a href="${esc(href)}" style="display:inline-block;margin-top:8px;color:#34d17e;font-weight:700;text-decoration:none">Become a tester →</a>
+    </td></tr>`;
+}
+
 // The free Chrome extension (TCG Prices' buying assistant, tcgcompare/extension), once, in the two editions after it went
 // live (owner, 2026-11-23: "start getting people to use them … send people emails on the extension"). One short block in
 // the email they already get, not an email of its own (owner the same day: "not flooding them"). Gone by itself after.
@@ -330,6 +344,7 @@ export function buildDigest(movers: PriceMovers, market: Country, reveals: Revea
     </td></tr>
     ${glanceSection(extras, currency, market)}
     ${extensionSection()}
+    ${androidSection()}
     ${revealsSection(reveals)}
     ${section("📈 Spiking this week", movers.spiking, currency, 8, market)}
     ${sponsorSection(extras.sponsor)}
