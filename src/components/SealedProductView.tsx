@@ -103,6 +103,10 @@ export function SealedProductView({
           </p>
         )}
         <SealedOffers key={`${group.groupKey}-${shownMarket}`} group={group} currency={currency} amazon source="sealed-page" />
+        {/* Fiverr usability review, 2026-11-25: "is this looking at all the pricing, or only the sites you get a commission from?" */}
+        <p className="mt-3 text-xs text-slate-400">
+          Every store we track is listed, whether it pays us or not, in price order. <a href="/methodology" className="underline underline-offset-2 hover:text-slate-100">How we compare</a>
+        </p>
       </div>
     </div>
     </>
