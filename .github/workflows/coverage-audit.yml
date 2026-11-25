@@ -16,6 +16,7 @@ on:
       - scripts/coverage-audit.ts
       - scripts/store-candidates.ts
       - data/store-vetting/rift-candidates.json
+      - data/store-vetting/rift-discovery.json
       - .github/workflows/coverage-audit.yml
 permissions:
   contents: read
