@@ -25745,3 +25745,19 @@ the same lines in text (the agents read those emails, so it needs no browser):
 Owner, 2026-11-26: "I don't really like the Christmas lights on the very top." The string of lights hanging under the header
 (2026-11-20) is removed on every Compare site: the `.xmas-garland::after` rule is gone from the `xmas-logo` block in `globals.css`
 and the class is off the header. The Santa hat on the logo stays, and nothing else of the Christmas layer changes.
+
+## 2026-11-26: "Is this box worth it?" on Booster Box and Booster Case pages
+
+The box value calculator (/tools/box-ev) answered the question people ask on a box's page, but no box page linked to it.
+A Booster Box or Booster Case page of a released set now carries one small card (`components/BoxEvCard.tsx`): the expected
+value of opening one box, from the calculator's own default model (TCGplayer US market prices, Riot's slot and chase
+rates, the Showcase estimate, 24 packs; `boxEvSummaries` in `lib/box-ev.ts`), beside the cheapest open box on that page
+in the visitor's market, a plain verdict, and one link to the calculator with the set chosen (`?set=`, read after mount).
+A set whose pack cards are under 80% priced (`MIN_PRICED_SHARE`) gets no card: an unpriced card counts as zero in a
+pool's mean, so a thin set would read far too low. Pre-order sets get none. A case page states the per-box value only:
+we do not claim how many boxes a case holds.
+
+Egress: `lib/box-ev-summary.ts` runs the calculator's two whole-catalogue reads, but caches only one row per set (a few
+hundred bytes) for a day, with one in-flight compute per instance, and the sealed page calls it at its top level (never
+inside another cache). The page's CDN day is unchanged. Its success read is buy clicks from these cards by 15 Dec
+(`box_ev_card` event, plus clicks per view).

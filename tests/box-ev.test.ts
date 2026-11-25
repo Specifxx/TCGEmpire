@@ -279,3 +279,40 @@ test("pools with no cards never reach the EV table", () => {
   const ev = computeEv({ stats, rates: { Common: 7, Signature: 99 }, packs: 1, boxPriceCents: 0 });
   assert.deepEqual(ev.lines.map((l) => l.pool), ["Common"]);
 });
+
+// ── The sealed page's "Is this box worth it?" card (lib/box-ev-summary.ts) ──
+import { boxEvSummaries, usdByCardFrom, MIN_PRICED_SHARE } from "../src/lib/box-ev";
+
+test("boxEvSummaries: the calculator's default model, one number per set", () => {
+  const cards = [
+    { id: "c1", setCode: "OGN", collectorNumber: "001/166", rarity: "Common" },
+    { id: "c2", setCode: "OGN", collectorNumber: "050/166", rarity: "Uncommon" },
+    { id: "c3", setCode: "OGN", collectorNumber: "100/166", rarity: "Rare" },
+    { id: "c4", setCode: "OGN", collectorNumber: "120/166", rarity: "Epic" },
+  ];
+  const usd = new Map([["c1", 10], ["c2", 20], ["c3", 100], ["c4", 1000]]);
+  const [s] = boxEvSummaries(cards, usd, new Set(["OGN"]));
+  const stats = poolStats(cards.map((c) => ({ ...c, valueCents: usd.get(c.id)! })));
+  const rates = derivedRates({ counts: new Map([...stats].map(([k, v]) => [k, v.total])), packs: DEFAULT_PACKS, specialsPerBox: DEFAULT_SPECIALS_PER_BOX });
+  assert.equal(s.evBoxUsdCents, computeEv({ stats, rates, packs: DEFAULT_PACKS, boxPriceCents: 0 }).evBoxCents);
+  assert.equal(s.priced, 4);
+});
+
+test("boxEvSummaries: a thinly priced set, a set not asked for and a no-booster set get no number", () => {
+  const cards = Array.from({ length: 10 }, (_, i) => ({ id: `x${i}`, setCode: "SFD", collectorNumber: `${i + 1}/221`, rarity: "Common" }));
+  const usd = new Map(cards.slice(0, Math.floor(10 * MIN_PRICED_SHARE) - 1).map((c) => [c.id, 25]));
+  assert.deepEqual(boxEvSummaries(cards, usd, new Set(["SFD"])), []);
+  assert.deepEqual(boxEvSummaries(cards, new Map(cards.map((c) => [c.id, 25])), new Set(["OGN"])), []);
+  const ogs = [{ id: "p", setCode: "OGS", collectorNumber: "1/24", rarity: "Common" }];
+  assert.deepEqual(boxEvSummaries(ogs, new Map([["p", 50]]), new Set(["OGS"])), []);
+});
+
+test("usdByCardFrom: non-foil wins, foil only as a fallback", () => {
+  const m = usdByCardFrom([
+    { cardId: "a", priceCents: 900, isFoil: true },
+    { cardId: "a", priceCents: 100, isFoil: false },
+    { cardId: "b", priceCents: 700, isFoil: true },
+  ]);
+  assert.equal(m.get("a"), 100);
+  assert.equal(m.get("b"), 700);
+});
