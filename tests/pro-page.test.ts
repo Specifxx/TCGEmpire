@@ -186,3 +186,10 @@ test("a review card needs a written comment (owner, 2026-11-03)", async () => {
   assert.equal(hasComment({ message: "Great site" }), true);
   assert.match(read("src/lib/reviews.ts"), /rows\.filter\(hasComment\)/);
 });
+
+test("the Premium page names the card scanner with its real limits, only while it is on (Premium team, 2026-11-26)", () => {
+  const landing = read("src/components/premium/ProLanding.tsx");
+  assert.match(landing, /c\.enabled && c\.public && c\.premiumPerDay > c\.freePerDay/, "no scanner claim while it is off, closed, or no better on Premium");
+  assert.match(landing, /\$\{scan\.premium\} scans a day \(\$\{scan\.free\} free\)/, "limits from lib/scan/caps.ts, never typed in");
+  assert.match(landing, /feature: "Card scanner", free: `\$\{scan\.free\} a day`, pro: `\$\{scan\.premium\} a day`/);
+});
