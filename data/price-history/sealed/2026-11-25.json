@@ -39,7 +39,7 @@
     },
     "LGC|Booster Case": {
       "EU": 72000,
-      "US": 69377
+      "US": 69376
     },
     "LGC|Booster Pack": {
       "CA": 2400,
@@ -98,8 +98,8 @@
       "US": 125000
     },
     "LGC|Pre-Rift Kit": {
-      "CA": 3499,
-      "US": 3000
+      "CA": 5999,
+      "US": 6997
     },
     "LGC|Proving Grounds 2nd Edition": {
       "CA": 4499,
@@ -111,7 +111,6 @@
       "AU": 40000,
       "CA": 22495,
       "EU": 6497,
-      "SG": 33000,
       "UK": 13303,
       "US": 12999
     },
@@ -239,7 +238,7 @@
       "CA": 599,
       "EU": 395,
       "UK": 400,
-      "US": 489
+      "US": 488
     },
     "RAD|Bundle": {
       "AU": 4950,
@@ -250,7 +249,7 @@
       "US": 2865
     },
     "RAD|Bundle Case": {
-      "US": 37980
+      "US": 37970
     },
     "RAD|Nexus Night Pack": {
       "EU": 300,
@@ -274,7 +273,7 @@
       "EU": 1400,
       "SG": 3266,
       "UK": 1899,
-      "US": 1100
+      "US": 1299
     },
     "RAD|Showdown Decks Display": {
       "AU": 5200,
@@ -283,7 +282,7 @@
     },
     "RAD|Sleeved Booster": {
       "EU": 500,
-      "US": 650
+      "US": 777
     },
     "RAD|Sleeved Booster (Art Set)": {
       "US": 3275
@@ -320,7 +319,7 @@
     },
     "SFD|Booster Box": {
       "AU": 28000,
-      "CA": 22049,
+      "CA": 22287,
       "EU": 9407,
       "SG": 8425,
       "UK": 9999,
@@ -404,7 +403,7 @@
     },
     "SFD|Sleeved Booster": {
       "EU": 999,
-      "US": 1043
+      "US": 1143
     },
     "SFD|Sleeved Booster (Art Set)": {
       "US": 3200
@@ -420,9 +419,9 @@
       "AU": 23900,
       "CA": 21999,
       "EU": 9200,
-      "SG": 24000,
+      "SG": 25000,
       "UK": 11999,
-      "US": 16475
+      "US": 16469
     },
     "UNL|Booster Case": {
       "AU": 144999,
@@ -487,7 +486,7 @@
       "AU": 5000,
       "EU": 3650,
       "UK": 5500,
-      "US": 1299
+      "US": 3298
     },
     "UNL|Sleeved Booster": {
       "EU": 999,
@@ -595,7 +594,7 @@
       "CA": 16000,
       "EU": 12500,
       "UK": 14529,
-      "US": 18932
+      "US": 18874
     },
     "leagueoflegendsriftboundstarterdecks": {
       "CA": 7499,
@@ -633,7 +632,7 @@
     },
     "riftboundleagueoflegendsarcaneboxset": {
       "CA": 80000,
-      "US": 35000
+      "US": 34000
     },
     "riftboundleagueoflegendsarcaneboxseteng": {
       "EU": 54499
