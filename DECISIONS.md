@@ -25783,3 +25783,26 @@ subscription's `surface` ("sister-<key>", stamped at checkout on the session and
   Empire, never RiftCompare: an owner step (data/hq/owner-steps.json `stripe-compare-empire-branding`). The sender ADDRESS is
   still noreply@riftcompare.com; a neutral sending domain needs DNS, and only the display name shows in most inboxes.
 - `tests/premium-brand.test.ts`.
+
+## 2026-11-26 — The phone's home page, tidied (one path: the headline, a row of ways in, the popular cards)
+
+**Owner, 2026-11-26:** "we should still tidy up the landing page for our sites a little bit, because I think there's just too
+much going on, especially for mobile phone."
+
+**Measured at 390px before:** 6,304px tall. Above the first card: the sale strip, the gift pill, the headline, the buy phrase and
+three lines of sub-text, "Shopping from" and six market chips, six tiles in two rows, a line of counts and the giveaway card. The
+first card began on the second screen.
+
+**Now, below 640px only:** the headline, the six ways in as ONE sideways row of chips, then the popular cards (on the first
+screen), then the giveaway, Today's Top Deals, the ad block, the sets, the guides and the folded questions. 5,905px. Hidden on a
+phone: the gift pill while the sale strip is showing (one promo a page; closing the strip brings the pill back), the buy phrase
+and sub-line, the hero's market chips (the header's flag chooser is on the same screen), the line of counts and the shelf's note.
+The giveaway moves under the popular cards by `order`, on a phone only (`/` only: the region homes keep their order). The header's
+Log in, Sign up and menu are untouched. The page was already minimal below the hero (2026-11-13), so the rest stays.
+
+**Unchanged:** the HTML is the same at every width, so a crawler, find-in-page and a desktop see every block; no URL, title,
+heading or JSON-LD changes; no ad moves (the featured eBay listing and the ad block keep their place in the order). CSS only, in
+one block in `globals.css` ("The phone's home page, tidied", above the last reduced-motion block, which must stay last); the
+hooks are `hero-gift`, `hero-sub`, `hero-markets`, `hero-ways`, `hero-meta`, `home-flow`, `home-give`, `home-shelf`, `shelf-note`.
+
+**Read:** phone bounce (non-Reddit) and buy clickers per 100 on the home page, the week after release against the week before.

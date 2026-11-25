@@ -70,7 +70,7 @@ export function HeroStats({
   const storeWord = s.stores === 1 ? "store" : "stores";
 
   return (
-    <div className="mt-3 text-center">
+    <div className="hero-meta mt-3 text-center">
       {/* No entrance animation here (unlike its siblings in CinematicHero): this
           line is Lighthouse's LCP element on mobile, and an opacity-0 → 1 fade
           with a staggered delay pushes back the moment it's actually painted,
