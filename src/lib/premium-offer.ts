@@ -40,7 +40,7 @@ import { PRICE_DROP_CAMPAIGN, PRICE_DROP_SRC, getLastEmailError, isBrevoEnabled,
 import { defaultTcgBuyKeys, getArbitrageVsTcgplayer } from "./arbitrage";
 import { cardHref } from "./card-url";
 import { formatMoney } from "./format";
-import { NOT_SEED_WHERE, isPremium, isSeedEmail } from "./premium";
+import { NOT_SEED_WHERE, RIFT_SIGNUP_WHERE, isPremium, isSeedEmail } from "./premium";
 import { SITE_URL } from "./site";
 
 // 2026-10-27: the campaign is the FEEDBACK + PRO email (owner: "ask them for
@@ -201,7 +201,7 @@ export interface PriceDropDeps {
 export const prismaPriceDropDeps: PriceDropDeps = {
   loadUsers: () =>
     prisma.user.findMany({
-      where: NOT_SEED_WHERE,
+      where: { AND: [NOT_SEED_WHERE, RIFT_SIGNUP_WHERE] },
       orderBy: { createdAt: "desc" }, // newest members first (owner, 2026-11-21)
       select: {
         id: true,
@@ -425,7 +425,7 @@ export async function listPremiumOfferAudience(opts?: { take?: number }): Promis
   const take = opts?.take && opts.take > 0 ? opts.take : 1000;
   const [users, optedOut, clicks] = await Promise.all([
     prisma.user.findMany({
-      where: { AND: [NOT_SEED_WHERE, { isAdmin: false }] },
+      where: { AND: [NOT_SEED_WHERE, RIFT_SIGNUP_WHERE, { isAdmin: false }] },
       orderBy: { createdAt: "desc" },
       take,
       select: {

@@ -933,14 +933,18 @@ export function accountCtaBlock(campaign: string, line?: string): string {
 // text. It is now width 100% capped at max-width 520px, with a viewport meta;
 // the outer cell keeps an 8px gutter. `preheader` is the hidden inbox-preview
 // line (alert emails: "Save A$3.75 · checked 17:10 AEST 25 Sep").
-export function emailShell(heading: string, inner: string, footer: string, preheader?: string): string {
+export function emailShell(heading: string, inner: string, footer: string, preheader?: string, brand?: MailBrand): string {
   const pre = preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px">${escapeHtml(preheader)}</div>`
     : "";
   return `<!doctype html><html><head>${EMAIL_HEAD}</head><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">${pre}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 8px"><tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:520px;background:#131a26;border:1px solid #233047;border-radius:16px">
-      <tr><td style="padding:28px 32px 6px"><a href="${BRAND_HOME}" style="font-size:22px;font-weight:800;color:#fff;text-decoration:none">Rift<span style="color:#1ea65c">Compare</span></a></td></tr>
+      <tr><td style="padding:28px 32px 6px">${
+        brand?.sister
+          ? `<a href="${escapeHtml(brand.url)}" style="font-size:22px;font-weight:800;color:${escapeHtml(brand.color ?? "#fff")};text-decoration:none">${escapeHtml(brand.name)}</a>`
+          : `<a href="${BRAND_HOME}" style="font-size:22px;font-weight:800;color:#fff;text-decoration:none">Rift<span style="color:#1ea65c">Compare</span></a>`
+      }</td></tr>
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       ${inner}
       ${footer}
@@ -1198,10 +1202,21 @@ export async function sendUserDigestEmail(
 // A billing email that names the wrong plan next to the right price is the one
 // thing a trialist will read as a mistake — or as a charge for something they
 // didn't buy.
-function trialReminderFooter(planName: string): string {
+// The site a trial was started on (lib/premium-brand.ts): a sister member's notice is in that site's name and links
+// back to it; it never says RiftCompare (owner, 2026-11-25). Absent = RiftCompare, as before.
+export interface MailBrand {
+  name: string;
+  url: string;
+  sister: boolean;
+  color?: string;
+  /** "DexCompare <noreply@…>" for a sister, undefined for RiftCompare's default sender. */
+  from?: string;
+}
+function trialReminderFooter(planName: string, brand?: MailBrand): string {
+  const tagline = brand?.sister ? `${escapeHtml(brand.name)} · card price comparison.` : "RiftCompare · Riftbound card price comparison.";
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
-    You're getting this because you started a RiftCompare ${planName} trial.<br/>
-    RiftCompare · Riftbound card price comparison.
+    You're getting this because you started a ${escapeHtml(brand?.name ?? "RiftCompare")} ${planName} trial.<br/>
+    ${tagline}
   </td></tr>`;
 }
 
@@ -1213,22 +1228,25 @@ export function buildTrialEndingEmail(opts: {
   thenLabel?: string;
   /** What the customer paid to start the trial (cents); 0 = a free trial. */
   paidCents?: number;
+  brand?: MailBrand;
 }): { subject: string; heading: string; html: string } {
   const planName = opts.planName ?? "Premium";
+  const brandName = opts.brand?.name ?? "RiftCompare";
+  const base = opts.brand?.url ?? SITE_URL;
   const dateLabel = opts.chargeDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const charge = opts.thenLabel ? `${opts.amountLabel} (then ${opts.thenLabel})` : opts.amountLabel;
   const paid = (opts.paidCents ?? 0) > 0 ? ` You paid ${premiumTrialFee(opts.paidCents!)} to start it.` : "";
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      Your RiftCompare ${planName} trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>.${paid} Unless you cancel
+      Your ${escapeHtml(brandName)} ${planName} trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>.${paid} Unless you cancel
       before then, the card on file will be charged ${charge} and your subscription continues automatically.
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium" style="display:inline-block;background:#1ea65c;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${base}/premium" style="display:inline-block;background:#1ea65c;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
   const heading = "Your trial is ending soon";
   return {
-    subject: `Your RiftCompare ${planName} trial ends ${dateLabel}`,
+    subject: `Your ${brandName} ${planName} trial ends ${dateLabel}`,
     heading,
-    html: emailShell(heading, inner, trialReminderFooter(planName)),
+    html: emailShell(heading, inner, trialReminderFooter(planName, opts.brand), undefined, opts.brand),
   };
 }
 
@@ -1239,9 +1257,10 @@ export async function sendTrialEndingEmail(
   planName = "Premium",
   thenLabel?: string,
   paidCents = 0,
+  brand?: MailBrand,
 ): Promise<boolean> {
-  const { subject, html } = buildTrialEndingEmail({ chargeDate, amountLabel, planName, thenLabel, paidCents });
-  return sendEmail(to, subject, html);
+  const { subject, html } = buildTrialEndingEmail({ chargeDate, amountLabel, planName, thenLabel, paidCents, brand });
+  return sendEmail(to, subject, html, brand?.from ? { from: brand.from } : {});
 }
 
 // The trial reminder for a trial whose renewal is already OFF (2026-09-24).
@@ -1254,24 +1273,27 @@ export function buildTrialEndingNoChargeEmail(opts: {
   endsAt: Date;
   planName?: string;
   keepLine?: string | null;
+  brand?: MailBrand;
 }): { subject: string; heading: string; html: string } {
   const planName = opts.planName ?? "Premium";
   const keepLine = opts.keepLine ?? null;
+  const brandName = opts.brand?.name ?? "RiftCompare";
+  const base = opts.brand?.url ?? SITE_URL;
   const dateLabel = opts.endsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      Your RiftCompare ${planName} trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>. You turned off
+      Your ${escapeHtml(brandName)} ${planName} trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>. You turned off
       renewal, so <strong style="color:#e6ebf2">nothing more will be charged</strong> and ${planName} simply stops then.
     </td></tr>
     <tr><td style="padding:0 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       If you'd like to keep it${keepLine ? `, it's ${keepLine}` : ""} — one click on your account page. Otherwise there's nothing to do.
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?keep=1#keep" style="display:inline-block;background:#1ea65c;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Keep ${planName}</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${base}/premium?keep=1#keep" style="display:inline-block;background:#1ea65c;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Keep ${planName}</a></td></tr>`;
   const heading = "Your trial ends soon";
   return {
-    subject: `Your RiftCompare ${planName} trial ends ${dateLabel} — no further charge`,
+    subject: `Your ${brandName} ${planName} trial ends ${dateLabel} — no further charge`,
     heading,
-    html: emailShell(heading, inner, trialReminderFooter(planName)),
+    html: emailShell(heading, inner, trialReminderFooter(planName, opts.brand), undefined, opts.brand),
   };
 }
 
@@ -1280,9 +1302,10 @@ export async function sendTrialEndingNoChargeEmail(
   endsAt: Date,
   planName = "Premium",
   keepLine: string | null = null,
+  brand?: MailBrand,
 ): Promise<boolean> {
-  const { subject, html } = buildTrialEndingNoChargeEmail({ endsAt, planName, keepLine });
-  return sendEmail(to, subject, html);
+  const { subject, html } = buildTrialEndingNoChargeEmail({ endsAt, planName, keepLine, brand });
+  return sendEmail(to, subject, html, brand?.from ? { from: brand.from } : {});
 }
 
 // ─── Premium checkout-recovery (one-time) ────────────────────────────────────
