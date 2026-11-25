@@ -31,8 +31,34 @@ export function paidMarkFor(search: string): string | null {
   if (/^(facebook|instagram|meta|fb|ig)/.test(source)) return "fbad";
   if (/^reddit/.test(source)) return "rdad";
   if (/^google/.test(source)) return "ggad";
+  if (/^(bing|microsoft|msft)/.test(source)) return "msad";
   return "paidad";
 }
+
+// CREATOR VISITS ARE TAGGED THE SAME WAY (2026-11-20, owner: "Let's do it" to the
+// pay-per-click creator programme, up to A$300 a month, each creator cut unless they
+// return 1.5x within 21 days). A landing with `utm_medium=creator` and
+// `utm_campaign=<handle>` gets the marker `cr` + the first six letters and digits of the
+// handle (`?utm_campaign=pokechamp__` → `crpokech`), so the earnings dashboard's
+// "Creator deals" panel can sum what each paid creator's visitors really earned
+// (lib/earnings/creator-deals.ts; its test keeps every deal's marker unique). A free
+// creator's link is tagged too, which only adds information.
+
+/** Pure: the creator marker for a landing's query string, or null. */
+export function creatorMarkFor(search: string): string | null {
+  const q = new URLSearchParams(search);
+  if ((q.get("utm_medium") ?? "").trim().toLowerCase() !== "creator") return null;
+  return creatorMark(q.get("utm_campaign") ?? "");
+}
+
+/** Pure: the marker a creator's utm_campaign maps to ("cr" + six letters or digits), or null. */
+export function creatorMark(campaign: string): string | null {
+  const core = campaign.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 6);
+  return core.length >= 2 ? `cr${core}` : null;
+}
+
+/** Pure: the marker for a landing, paid ad first, then creator, or null. */
+export const visitMarkFor = (search: string): string | null => paidMarkFor(search) ?? creatorMarkFor(search);
 
 /** Pure: does a sub-id already carry this marker as a whole segment? */
 export const hasMark = (sub: string, mark: string) => new RegExp(`(^|[-_])${mark}([-_]|$)`).test(sub.toLowerCase());
@@ -71,7 +97,7 @@ export function tagHref(href: string, mark: string): string | null {
 export function readPaidMark(): string | null {
   try {
     const v = sessionStorage.getItem(KEY);
-    return v && /^[a-z]{2,8}$/.test(v) ? v : null;
+    return v && /^[a-z0-9]{2,8}$/.test(v) ? v : null;
   } catch {
     return null;
   }
@@ -80,7 +106,7 @@ export function readPaidMark(): string | null {
 let installed = false;
 
 /**
- * Client: remember a paid landing (first touch per tab) and, for a paid visit only,
+ * Client: remember a paid or creator landing (first touch per tab) and, for those visits only,
  * add the marker to every affiliate link the visitor opens (click, middle-click, or
  * the context menu's "open in new tab"). Safe to call on every page; installs once.
  */
@@ -89,7 +115,7 @@ export function installPaidVisitTagger(): void {
   installed = true;
   try {
     if (!sessionStorage.getItem(KEY)) {
-      const mark = paidMarkFor(window.location.search);
+      const mark = visitMarkFor(window.location.search);
       if (mark) sessionStorage.setItem(KEY, mark);
     }
   } catch {

@@ -6,6 +6,7 @@ import { armNudge, countSessionView } from "@/lib/nudge-runtime";
 import { BUY_CLICK_EVENT } from "@/lib/buy-intent";
 import { useEscapeLayer } from "./ui/Dialog";
 import { RatingReviewForm } from "./RatingReviewForm";
+import { GIVEAWAY_PROMPT_SESSION_KEY } from "@/lib/giveaway-prompt";
 import {
   PRICING_NUDGE_SESSION_KEY,
   RATE_SESSION_KEY,
@@ -55,7 +56,7 @@ function load(now: number): RateState {
 
 /** The Pricing callout already claimed this visit's one interruption. */
 function otherPromptShown(): boolean {
-  return sessionFlag(PRICING_NUDGE_SESSION_KEY);
+  return sessionFlag(PRICING_NUDGE_SESSION_KEY) || sessionFlag(GIVEAWAY_PROMPT_SESSION_KEY); // the giveaway card took the visit's slot
 }
 
 function sessionFlag(key: string): boolean {
@@ -105,15 +106,17 @@ export function RateUsPrompt() {
   // back. The card asks then, while the price they found is fresh.
   useEffect(() => {
     let armed = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    // Through armNudge, not a bare timer (owner's UX review, 2026-11-24, P0 1: nothing opens while the visitor
+    // types): it waits out a focused field, a key in the last few seconds, a scroll or an open dialog.
+    let disarm: (() => void) | undefined;
     const onBuy = () => {
       armed = true;
     };
     const onVisible = () => {
       if (!armed || document.visibilityState !== "visible") return;
       armed = false;
-      clearTimeout(timer);
-      timer = setTimeout(() => {
+      disarm?.();
+      disarm = armNudge({ delayMs: RETURN_DELAY_MS, onFire: () => {
         const here = window.location.pathname;
         const visitPages = countSessionView("rc_rate_views", here); // the page already counted: no double count
         if (
@@ -125,12 +128,12 @@ export function RateUsPrompt() {
           })
         )
           show();
-      }, RETURN_DELAY_MS);
+      } });
     };
     window.addEventListener(BUY_CLICK_EVENT, onBuy);
     document.addEventListener("visibilitychange", onVisible);
     return () => {
-      clearTimeout(timer);
+      disarm?.();
       window.removeEventListener(BUY_CLICK_EVENT, onBuy);
       document.removeEventListener("visibilitychange", onVisible);
     };

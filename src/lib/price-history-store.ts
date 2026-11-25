@@ -41,6 +41,10 @@ export const CARD_HISTORY_SUBDIR = "cards";
 export const SEALED_HISTORY_SUBDIR = "sealed";
 // Graded slabs (2026-10-09): per card, the cheapest live eBay slab per grade.
 export const GRADED_HISTORY_SUBDIR = "graded";
+// TCGplayer's US market price (2026-11-19, owner: "I really really like opcompare's price history where you have the
+// tcgplayer market price as well as the cheapest price locally"): the dashed gold line of the card page's chart. One
+// point per card per Sydney day, US cents, from the import's own TCGplayer market rows (scripts/record-tcg-market.ts).
+export const TCG_MARKET_HISTORY_SUBDIR = "tcg-market";
 
 const DAY_FILE = /^(\d{4}-\d{2}-\d{2})\.json$/;
 
@@ -51,6 +55,9 @@ export const SEALED_HISTORY_BASIS =
 
 export const GRADED_HISTORY_BASIS =
   "Cheapest live eBay listing for each grader and grade of the card (PSA 10, BGS 9.5, ...) across the markets searched that day, converted to US cents. Keyed by card id, then by grade.";
+
+export const TCG_MARKET_HISTORY_BASIS =
+  "TCGplayer's US market price for the card (recent sales, Near Mint, the card's own TCGplayer product) on this Sydney calendar day, in US cents.";
 
 export type GradedDayFile = { day: string; currency: "USD"; basis: string; prices: Record<string, Record<string, number>> };
 export type GradedHistoryRow = { cardId: string; grade: string; day: Date; lowestPriceCents: number };
@@ -135,6 +142,36 @@ function cardIndex(): CardIndex {
 /** Forget the loaded index (after a write in the same process). */
 export function resetPriceHistoryStore(): void {
   cardMemo = null;
+  tcgMarketMemo = null;
+}
+
+// TCGplayer's market series, loaded once per process like the card series.
+let tcgMarketMemo: { stamp: string; byCard: Map<string, Series> } | null = null;
+function tcgMarketIndex(): Map<string, Series> {
+  const days = historyDays(TCG_MARKET_HISTORY_SUBDIR);
+  const stamp = `${days[days.length - 1] ?? "none"}.${days.length}.${newestHash(TCG_MARKET_HISTORY_SUBDIR, days)}`;
+  if (tcgMarketMemo && tcgMarketMemo.stamp === stamp) return tcgMarketMemo.byCard;
+  const byCard = new Map<string, Series>();
+  for (const iso of days) {
+    const file = readDay<CardDayFile>(TCG_MARKET_HISTORY_SUBDIR, iso);
+    if (!file?.prices) continue;
+    const t = dayDate(iso).getTime();
+    for (const [cardId, cents] of Object.entries(file.prices)) {
+      if (!Number.isInteger(cents) || cents <= 0) continue;
+      let s = byCard.get(cardId);
+      if (!s) byCard.set(cardId, (s = { t: [], c: [] }));
+      s.t.push(t);
+      s.c.push(cents);
+    }
+  }
+  tcgMarketMemo = { stamp, byCard };
+  return byCard;
+}
+
+/** One card's TCGplayer US market price per Sydney day, oldest first, US cents. [] when none is recorded. */
+export function tcgMarketHistory(cardId: string): { t: number; usdCents: number }[] {
+  const s = tcgMarketIndex().get(cardId);
+  return s ? s.t.map((t, i) => ({ t, usdCents: s.c[i] })) : [];
 }
 
 /**
@@ -240,6 +277,17 @@ export function writeCardHistoryDay(day: Date, prices: Iterable<[string, number]
   const file: CardDayFile = { day: iso, currency: "USD", basis: CARD_HISTORY_BASIS, prices: sortedObject(clean) };
   const written = writeAtomic(CARD_HISTORY_SUBDIR, iso, `${JSON.stringify(file, null, 2)}\n`);
   resetPriceHistoryStore();
+  return { file: written, count: clean.length };
+}
+
+/** Writes (or replaces) one Sydney day of TCGplayer's US market price per card. */
+export function writeTcgMarketHistoryDay(day: Date, prices: Iterable<[string, number]>): { file: string; count: number } | null {
+  const clean = [...prices].filter(([id, cents]) => id && Number.isInteger(cents) && cents > 0);
+  if (!clean.length) return null;
+  const iso = isoDay(day);
+  const file: CardDayFile = { day: iso, currency: "USD", basis: TCG_MARKET_HISTORY_BASIS, prices: sortedObject(clean) };
+  const written = writeAtomic(TCG_MARKET_HISTORY_SUBDIR, iso, `${JSON.stringify(file, null, 2)}\n`);
+  tcgMarketMemo = null;
   return { file: written, count: clean.length };
 }
 

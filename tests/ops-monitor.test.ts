@@ -483,9 +483,12 @@ test("store prices: only the live markets count; a retired market's old rows nev
   const missing = (await priceFreshness(mk(six.filter((m) => m.country !== "CA"))))[0]!;
   assert.equal(missing.severity, "crit");
   assert.match(missing.summary, /CA no prices/);
-  const stale = (await priceFreshness(mk(six.map((m) => (m.country === "UK" ? { ...m, newest: new Date(NOW.getTime() - 40 * 3_600_000) } : m)))))[0]!;
+  // Owner's UX review (2026-11-24, P0 2): amber past 12 hours (one run missed), red past 20.
+  const stale = (await priceFreshness(mk(six.map((m) => (m.country === "UK" ? { ...m, newest: new Date(NOW.getTime() - 14 * 3_600_000) } : m)))))[0]!;
   assert.equal(stale.severity, "warn");
-  assert.match(stale.summary, /UK 40 hours/);
+  assert.match(stale.summary, /UK 14 hours/);
+  const dead = (await priceFreshness(mk(six.map((m) => (m.country === "UK" ? { ...m, newest: new Date(NOW.getTime() - 30 * 3_600_000) } : m)))))[0]!;
+  assert.equal(dead.severity, "crit", "a page saying \"checked 30 hours ago\" is red");
 });
 
 test("DexCompare index: a readable index is ok, a changed format warns, an outage is grey", async () => {

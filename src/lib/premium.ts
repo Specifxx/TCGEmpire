@@ -811,8 +811,12 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
 // soliciting one and showing it unlabelled. Hard 0, not an env default, so a
 // leftover FEEDBACK_PREMIUM_DAYS in Vercel can't switch it back on.
 export const FEEDBACK_PREMIUM_DAYS: number = 0;
-// +3 days of Premium to the REFERRER for each friend who signs up via their link.
-export const REFERRAL_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.REFERRAL_PREMIUM_DAYS ?? 3)));
+// Invite a friend, both get a week (owner, 2026-11-18, "Both get 7 days Premium"):
+// 7 days of Premium to the REFERRER for each friend who signs up via their link,
+// and 7 days to the FRIEND's new account. Hard numbers, not env defaults, so a
+// leftover REFERRAL_PREMIUM_DAYS in Vercel can't quietly change the owner's offer.
+import { REFERRAL_PREMIUM_DAYS, REFERRED_PREMIUM_DAYS } from "./premium-days";
+export { REFERRAL_PREMIUM_DAYS, REFERRED_PREMIUM_DAYS };
 export function feedbackPremiumActive(): boolean {
   return FEEDBACK_PREMIUM_DAYS > 0;
 }

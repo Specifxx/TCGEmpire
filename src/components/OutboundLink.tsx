@@ -10,6 +10,12 @@ import { earnCoin } from "@/lib/coins-client";
 import { isCheckoutLink } from "@/lib/checkout-link";
 import { cartArmNow } from "@/lib/cart-list";
 import { dockArmNow } from "@/lib/dock-arm";
+import { adLookNow } from "@/lib/ad-look";
+import { topArmNow } from "@/lib/top-pair";
+import { ebayBtnNow } from "@/lib/ebay-btn";
+import { ebayPopNow } from "@/lib/ebay-pop";
+import { isNativeApp, openExternal } from "@/lib/native";
+import { announceBuyClick } from "@/lib/buy-click-event";
 
 // An outbound "buy" link. It fires a click beacon to /api/click, which adds one
 // to a per-day, per-network Counter row (2026-10-27, "Click counts by day" in
@@ -176,6 +182,7 @@ export function OutboundLink({
     | "ebay_panel"
     | "ebay_search"
     | "ebay_fallback"
+    | "tcg_fallback"
     | "ebay_cta"
     | "ebay_banner"
     | "ebay_picks"
@@ -189,6 +196,7 @@ export function OutboundLink({
     | "search_box"
     | "card_top_buy"
     | "card_top_alt"
+    | "card_top_pair"
     | "table_pinned"
     | "sticky_buy_bar"
     | "price_table_ebay"
@@ -200,7 +208,12 @@ export function OutboundLink({
     | "sealed_row"
     | "ebay_pinned"
     | "amazon_search"
-    | "amazon_also";
+    | "amazon_also"
+    | "bf_drops"
+    | "bf_list" // the Black Friday / Cyber Monday pages' one deal list (components/SaleDeals.tsx, owner's review 2026-11-24)
+    | "bf_strip"
+    | "bf_page"
+    | "cyber_banner";
 }) {
   // Record that a buy link exists on this page (lib/buy-intent.ts). Built so
   // the signup popup (removed 2026-09-30) could stay off the buy path; kept as
@@ -214,7 +227,7 @@ export function OutboundLink({
     // Straight-to-checkout test (lib/checkout-link.ts): did this click open the
     // store's checkout with the item in it, or its product page?
     const checkout = isCheckoutLink(href);
-    trackEvent("buy_click", { dock_arm: dockArmNow(), cart_arm: cartArmNow(),
+    trackEvent("buy_click", { dock_arm: dockArmNow(), ad_look: adLookNow(), cart_arm: cartArmNow(), top_arm: topArmNow(), ebay_btn: ebayBtnNow(), ebay_pop: ebayPopNow(),
       link_type: checkout ? "checkout" : "product",
       retailer,
       country,
@@ -235,6 +248,8 @@ export function OutboundLink({
       campaign: readCampaign(),
       transport_type: "beacon",
     });
+    // Lets the card page offer a watch or a collection add after the click (BuyFollowUp, 2026-11-22).
+    announceBuyClick(cardId);
     // Our own daily click count per network for /admin/growth (lib/click-counter.ts).
     try {
       const q = new URLSearchParams({ r: retailer, c: country });
@@ -252,15 +267,13 @@ export function OutboundLink({
     // RiftCompare Coins: visiting a store is a task. A no-op for anyone but a
     // Premium member under today's cap (lib/coins-client.ts).
     earnCoin("visit");
-    // Inside the native app, open retailer links in the system browser so the user
-    // leaves our WebView (and can come back), instead of getting stuck on the
-    // store's site. On the web this branch never runs — it's a normal link.
-    const cap = (window as any).Capacitor;
-    if (cap?.isNativePlatform?.()) {
+    // Inside the Android app, a store opens in a browser sheet (a Chrome Custom Tab) over the app, so the visitor comes straight
+    // back to us when they close it, through the app's own runtime (lib/native.ts). On the web this branch never runs.
+    if (isNativeApp()) {
       e.preventDefault();
-      import("@capacitor/browser")
-        .then(({ Browser }) => Browser.open({ url: href }))
-        .catch(() => window.open(href, "_blank"));
+      void openExternal(href).then((ok) => {
+        if (!ok) window.location.href = href;
+      });
     }
   }
   return (
@@ -270,6 +283,7 @@ export function OutboundLink({
       rel={outboundRel(href)}
       className={className}
       aria-label={ariaLabel}
+      data-ebay={retailer.startsWith("ebay") ? "" : undefined}
       onClick={onClick}
     >
       {children}

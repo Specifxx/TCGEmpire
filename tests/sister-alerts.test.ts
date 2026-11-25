@@ -23,7 +23,8 @@ test("only the sister sites' own origins may call the signup API", () => {
   assert.equal(allowedOrigin("https://mtgcompare.app.evil.com"), null);
   assert.equal(allowedOrigin("https://evil-mtgcompare.app"), null);
   assert.equal(allowedOrigin("https://riftcompare.com"), null, "RiftCompare has its own alerts");
-  assert.equal(allowedOrigin("https://kaeyoung.com"), null, "KaeYoung is left out (owner, 2026-11-02)");
+  assert.equal(allowedOrigin("https://kaeyoung.com")?.key, "kaeyoung", "KaeYoung joined 2026-11-19 (owner: accounts on every site)");
+  assert.equal(allowedOrigin("https://scentcompare.app")?.key, "scent");
   assert.equal(allowedOrigin("https://opcompare.app"), null, "OP Compare has its own alerts");
   assert.equal(allowedOrigin(null), null);
   assert.equal(corsHeaders("https://evil.com")["Access-Control-Allow-Origin"], undefined);
@@ -88,12 +89,12 @@ test("missing products and old alerts expire", () => {
 test("the confirmation email carries no text from the form, and alerts carry unsubscribe, share and one sister deal", () => {
   const c = buildConfirmEmail("mtg", "tok123", 12500, "US");
   assert.match(c.subject, /MTG Compare/);
-  assert.match(c.html, /api\/sister-alerts\/confirm\?t=tok123/);
+  assert.match(c.html, /https:\/\/mtgcompare\.app\/account-service\/alerts\/confirm\?t=tok123/);
   assert.match(c.html, /US\$125\.00/);
   const feeds = new Map<string, AlertFeed>([["dex", { ...parseFeed({ ...rawFeed, site: "dex" }, { key: "dex" }) }]]);
   const deal = pickDeal(sisterSite("mtg")!, "US", feeds, now);
   assert.equal(deal?.site.key, "dex");
-  assert.equal(pickDeal(sisterSite("wargame")!, "US", feeds, now), null, "deals only come from the same group");
+  assert.equal(pickDeal(sisterSite("wax")!, "US", feeds, now), null, "deals only come from the same group");
   const m = buildAlertEmail("mtg", [{ id: "x1", site: "mtg", name: "Foundations <b>Box</b>", path: "/us/sealed/f", region: "US", priceCents: 8000, targetCents: 8500 }], "tok123", deal);
   assert.match(m.subject, /Foundations <b>Box<\/b> is now US\$80\.00/);
   assert.ok(!m.html.includes("<b>Box</b>"), "names are escaped");
@@ -115,17 +116,35 @@ test("the confirmation email carries no text from the form, and alerts carry uns
 });
 
 // A small in-memory stand-in for the four Prisma tables the run touches.
-function fakeDb(alerts: Record<string, unknown>[], addresses: Record<string, unknown>[]) {
+function fakeDb(alerts: Record<string, unknown>[], addresses: Record<string, unknown>[], digests: Record<string, unknown>[] = []) {
   const counters = new Map<string, number>();
   const updates: { id: string; data: Record<string, unknown> }[] = [];
   const deleted: string[] = [];
+  const stamped: string[] = [];
+  const unconfirmed = (a: Record<string, unknown>) => a.confirmedAt == null;
   const db = {
     sisterAlertAddress: {
-      findMany: async ({ where }: { where: { confirmedAt: unknown } }) =>
-        addresses.filter((a) => (where.confirmedAt === null ? a.confirmedAt == null && (a.createdAt as Date) < new Date(now.getTime() - 7 * DAY) : a.confirmedAt != null)),
+      findMany: async ({ where }: { where: { confirmedAt: unknown; confirmSentAt?: unknown; OR?: unknown } }) => {
+        if (where.confirmedAt !== null) return addresses.filter((a) => a.confirmedAt != null);
+        // step 1b: never sent, within two weeks
+        if (where.confirmSentAt === null) return addresses.filter((a) => unconfirmed(a) && a.confirmSentAt == null && (a.createdAt as Date) >= new Date(now.getTime() - 14 * DAY));
+        // step 1: sent and a week old, or two weeks old
+        return addresses.filter(
+          (a) => unconfirmed(a) && ((a.confirmSentAt != null && (a.createdAt as Date) < new Date(now.getTime() - 7 * DAY)) || (a.createdAt as Date) < new Date(now.getTime() - 14 * DAY)),
+        );
+      },
+      update: async ({ where, data }: { where: { email: string }; data: Record<string, unknown> }) => {
+        if (data.confirmSentAt) stamped.push(where.email);
+        return {};
+      },
+      deleteMany: async () => ({ count: 0 }),
+    },
+    sisterDigest: {
+      findFirst: async ({ where }: { where: { email: string } }) => digests.find((d) => d.email === where.email) ?? null,
       deleteMany: async () => ({ count: 0 }),
     },
     sisterAlert: {
+      findFirst: async ({ where }: { where: { email: string } }) => alerts.find((a) => a.email === where.email) ?? null,
       findMany: async () => alerts,
       update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         updates.push({ id: where.id, data });
@@ -148,7 +167,7 @@ function fakeDb(alerts: Record<string, unknown>[], addresses: Record<string, unk
       },
     },
   };
-  return { db, updates, deleted };
+  return { db, updates, deleted, stamped };
 }
 
 test("the run sends one email per address and site, stamps only what was sent, and fails loudly on a broken feed", async () => {
@@ -192,6 +211,33 @@ test("the run sends one email per address and site, stamps only what was sent, a
   assert.equal(broken.updates.length, 0, "a failed feed leaves the alert untouched");
 });
 
+test("a confirmation that never left is sent by the daily run, once, and its address is not deleted before it can be clicked", async () => {
+  const day = (n: number) => new Date(now.getTime() - n * DAY);
+  const alerts = [
+    { id: "n1", email: "never@example.com", site: "mtg", productId: "a1", region: "US", targetCents: 9500, createdAt: day(9) },
+    { id: "s1", email: "sent@example.com", site: "mtg", productId: "a1", region: "US", targetCents: 9500, createdAt: day(2) },
+  ];
+  const addresses = [
+    { email: "never@example.com", token: "t1", confirmedAt: null, confirmSentAt: null, createdAt: day(9) },
+    { email: "weekly@example.com", token: "t2", confirmedAt: null, confirmSentAt: null, createdAt: day(1) },
+    { email: "sent@example.com", token: "t3", confirmedAt: null, confirmSentAt: day(2), createdAt: day(2) },
+  ];
+  const { db, stamped } = fakeDb(alerts, addresses, [{ email: "weekly@example.com", site: "dex", region: "UK" }]);
+  const sent: { to: string; subject: string }[] = [];
+  const s = await runSisterAlerts({ db: db as never, now, fetchFeed: async () => { throw new Error("unused"); }, send: async (to, subject) => (sent.push({ to, subject }), true) });
+  assert.equal(s.confirmRetried, 2);
+  assert.equal(s.unconfirmedRemoved, 0, "nine days old but never emailed: kept for its second week");
+  assert.deepEqual(sent.map((m) => m.to).sort(), ["never@example.com", "weekly@example.com"]);
+  assert.match(sent.find((m) => m.to === "never@example.com")!.subject, /Confirm your MTG Compare price alert/);
+  assert.match(sent.find((m) => m.to === "weekly@example.com")!.subject, /weekly price drops/);
+  assert.deepEqual(stamped.sort(), ["never@example.com", "weekly@example.com"], "only a sent confirmation is stamped");
+
+  const failing = fakeDb(alerts, addresses);
+  const s2 = await runSisterAlerts({ db: failing.db as never, now, fetchFeed: async () => { throw new Error("unused"); }, send: async () => false });
+  assert.equal(s2.confirmRetried, 0);
+  assert.equal(failing.stamped.length, 0, "a failed send stays unstamped and is tried again tomorrow");
+});
+
 test("the routes keep their safety rails", () => {
   const read = (p: string) => readFileSync(p, "utf8");
   const signup = read("src/app/api/sister-alerts/route.ts");
@@ -204,8 +250,21 @@ test("the routes keep their safety rails", () => {
     const get = src.slice(src.indexOf("export async function GET"), src.indexOf("export async function POST"));
     assert.ok(!/\.(update|delete|deleteMany|create)\(/.test(get), `${p}: a GET never changes anything`);
   }
-  assert.equal(SISTER_ALERT_SITES.length, 11);
+  assert.equal(SISTER_ALERT_SITES.length, 13);
   assert.equal(allowedOrigin("https://bandaicompare.com")?.key, "bandai");
   assert.equal(allowedOrigin("https://tcgprices.app")?.key, "tcgprices");
   assert.equal(allowedOrigin("https://compareempire.com"), null, "Compare Empire has its own alerts");
+});
+
+test("quiet sites (ScentCompare, KaeYoung, SportsCardCompare, FigureCompare) never name RiftCompare in their emails and get no other site's deal", async () => {
+  const { buildConfirmEmail, buildWeeklyConfirmEmail } = await import("../src/lib/sister-alerts/email");
+  for (const key of ["scent", "kaeyoung", "wax", "figure"]) {
+    const site = sisterSite(key)!;
+    assert.equal(site.quiet, true);
+    assert.equal(SISTER_ALERT_SITES.filter((s) => s.group === site.group).length, 1, `${key} is alone in its group`);
+    for (const m of [buildConfirmEmail(key, "tok", 4999, "US"), buildWeeklyConfirmEmail(key, "tok", "US")]) {
+      assert.ok(!/riftcompare\.com\)|RiftCompare's/.test(m.html), `${key} email names RiftCompare`);
+    }
+  }
+  assert.ok(!/RiftCompare's alert service/.test(buildConfirmEmail("mtg", "tok", 4999, "US").html), "since 2026-11-19 no site names RiftCompare");
 });

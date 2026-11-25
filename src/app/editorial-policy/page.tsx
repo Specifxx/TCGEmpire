@@ -136,6 +136,12 @@ export default function EditorialPolicyPage() {
               price, card description, tool result or article is written by an AI model when you open
               a page or use a tool.
             </li>
+            <li>
+              <strong className="text-white">The card scanner reads, it does not write.</strong> When you scan a card, an
+              AI model reads the name and number printed on your photo. Which card it is, and every price shown, comes
+              from our own database. That read happens at the moment you scan (here, or on our sister site TCG Singles
+              DB, which uses the same read), and the photo is not kept.
+            </li>
           </ul>
         </section>
 

@@ -1,6 +1,8 @@
 import type { RiseAnalysis, RisePick, RiseScope, WeekAgoRanking } from "./rise-predictor";
 import { COUNTRIES, type Country } from "./country";
 import { movementFromRanks, type Movement } from "./demand-movement";
+import type { Mover } from "./price-history";
+import { cardDisplayName } from "./card-name";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A shareable, frozen copy of one Rising Cards run — the payload and its title.
@@ -102,6 +104,44 @@ export interface SnapshotEbayDeal {
   gapCents: number;
 }
 
+/**
+ * One of the week's biggest price DROPS, frozen at mint time (owner, 2026-11-20, from a Reddit reply to a Hot 40 post:
+ * "show me the biggest drops. I just want to rip and play"). From /movers' own "plummeting" list (getPriceMovers: the
+ * cheapest price now against about seven days ago, $3+, an 80% fall left out as a misread), in `dropsMarket`'s currency.
+ */
+export interface RisingSnapshotDrop {
+  id: string;
+  slug: string | null;
+  displayName: string;
+  setCode: string;
+  collectorNumber: string;
+  imageThumbUrl: string | null;
+  nowCents: number;
+  refCents: number;
+  /** Signed percent, one decimal: always negative. */
+  pct: number;
+  currency: string;
+}
+
+/** Up to five drops from getPriceMovers' plummeting list, flattened for the frozen payload. */
+export function toSnapshotDrops(plummeting: readonly Mover[], currency: string, max = 5): RisingSnapshotDrop[] {
+  return plummeting
+    .filter((m) => m.pct < 0)
+    .slice(0, max)
+    .map((m) => ({
+      id: m.card.id,
+      slug: m.card.slug ?? null,
+      displayName: cardDisplayName(m.card.name, m.card as unknown as Parameters<typeof cardDisplayName>[1]),
+      setCode: m.card.setCode,
+      collectorNumber: m.card.collectorNumber,
+      imageThumbUrl: m.card.imageThumbUrl ?? null,
+      nowCents: m.nowCents,
+      refCents: m.refCents,
+      pct: m.pct,
+      currency,
+    }));
+}
+
 /** Everything the public page renders. Frozen at mint time; never recomputed. */
 export interface RisingSnapshotData {
   scope: RiseScope;
@@ -126,6 +166,12 @@ export interface RisingSnapshotData {
    * ago ranking: `move` then compares with this earlier Hot 40. Never written now.
    */
   previousChart?: { createdAt: string; count: number } | null;
+  /**
+   * The week's biggest price drops (2026-11-20), biggest fall first, in `dropsMarket`. Absent on older snapshots and
+   * empty when the week had none; the share image then keeps its rises-only layout.
+   */
+  drops?: RisingSnapshotDrop[];
+  dropsMarket?: Country;
 }
 
 /** True for a payload minted before the 2026-09-25 rebuild (see TWO PAYLOAD SHAPES). */
@@ -327,6 +373,7 @@ export function toSnapshotData(
   now = new Date(),
   weekAgo: WeekAgoRanking | null = null,
   ebay: ReadonlyMap<string, SnapshotEbayDeal> = new Map(),
+  drops: { market: Country; rows: RisingSnapshotDrop[] } | null = null,
 ): RisingSnapshotData {
   const moves = weekAgo ? movementFromRanks(analysis.picks.map((p) => p.id), new Map(weekAgo.ranks)) : null;
   return {
@@ -362,5 +409,6 @@ export function toSnapshotData(
     minPointsRequired: analysis.minPointsRequired,
     version: 2,
     weekAgo: weekAgo ? { asOf: weekAgo.asOf } : null,
+    ...(drops ? { drops: drops.rows, dropsMarket: drops.market } : {}),
   };
 }

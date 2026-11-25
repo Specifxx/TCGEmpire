@@ -8,19 +8,19 @@ import { sydneyDay, cachedOrDirect } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { deniedKeys, loadDenylist } from "./denylist";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
-import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, FEED_STORES, parseProductPage, parseSealedFeed, isPurchaseLocked } from "./sealed-stores";
+import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, FEED_STORES, parseProductPage, productPageReplaceScope, parseSealedFeed, isPurchaseLocked } from "./sealed-stores";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
 import { withLiveStock } from "./preorder-live-stock";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { fetchHtmlStoreProducts } from "./storefront-html";
 import { isShopify, withShopifyVariant } from "./checkout-link";
-import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents, ebaySpentThisRun, isGradedListing, SEALED_DECK_CHAMPIONS } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { COUNTRY_LIST, DEFAULT_COUNTRY, currencyOf, isoCountry, type Country } from "./country";
 import { sealedSlug } from "./sealed-slug";
-import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
+import { isPreorderSetCode, EBAY_CA_RETAILER, SETS } from "./constants";
 import { convertCents } from "./fx";
 import { joinOverlapping, typeLabel } from "./price-report";
 import { RIOT_DRAWINGS } from "./riot-drawings";
@@ -173,8 +173,29 @@ function looksSealed(title: string): boolean {
 }
 
 function looksSealedAnyLanguage(title: string): boolean {
-  return (SEALED_TITLE.test(title) || T1_COLLECTION.test(title) || RIOT_DRAWING_TITLE(title)) && !SEALED_EXCLUDE.test(title) && !EVENT_ENTRY.test(title);
+  return (
+    (SEALED_TITLE.test(title) || T1_COLLECTION.test(title) || RIOT_DRAWING_TITLE(title)) &&
+    !SEALED_EXCLUDE.test(title) &&
+    !EVENT_ENTRY.test(title) &&
+    !isPreRiftEntry(title) &&
+    // A graded slab (PSA/BGS/CGC/SGC) is one card in a case, never sealed product: "Riftbound Slab Caitlyn 068a Arcane
+    // Box Set CGC Pristine 10" from a store's sealed collection made its own sealed page (2026-11-20). Every store path
+    // and cleanupStaleSealed run through here, so stored slab rows go on the next sealed refresh.
+    !isGradedListing(title) &&
+    !SINGLE_CARD_SIGNS.test(title)
+  );
 }
+
+// A single card, or a seller's own lot of singles, sold from a store's sealed collection (2026-11-21). Every title is
+// from data/public/sealed-listings.json that day: "Annie, Dark Child - Proving Grounds (Rare) [OGS-017]" at EUR 8.95-
+// 13 was the cheapest row on the Origins Proving Grounds page in the UK and EU; "Ahri, Nine-Tailed Fox - Riftbound x
+// KDA Couture Collection Foil" (a store titles the printing, never the product, "… Foil"), "(001) Foil", "(Oversized)"
+// cards and "(V.1 - Showcase) … [T1X-S001]" each made a "sealed" page; eBay's "Vendetta Common & Uncommon Playset
+// Bundle" (US$24.99) and "Small Bundle Vendetta Rares" sat in the Vendetta Bundle group. A rarity in brackets, a card
+// code in square brackets, a card number before "Foil", a title ending in a bare "Foil", an oversized card, a playset
+// or a "small bundle" of rares is never the sealed product. "[Foil]" (pcatoys' Showdown Decks) is not a sign.
+const SINGLE_CARD_SIGNS =
+  /\((?:common|uncommon|rare|epic|legendary|showcase|overnumbered|signature|alternate\s+art)\)|\[[A-Z][A-Z0-9]{1,3}-[A-Z]?\d{2,3}[a-z*]?\]|\(\d{3}[a-z]?\)\s*foil\b|\bfoil\s*$|\(oversized\)|\bplaysets?\b|\bsmall\s+bundle\b|\bcommons?\s*(?:&|and)\s*uncommons?\b/i;
 
 // The T1 Signature Edition's Chinese and Korean groups ("…|CN", "…|KR") are
 // deliberately non-English (T1_SEEDS below), so the language check above must
@@ -188,6 +209,20 @@ const LANGUAGE_GROUP = /\|(?:CN|KR)$/;
 // An entry's price is a local event fee, not something another store can beat.
 const EVENT_ENTRY = /\b(?:mon|tues|wednes|thurs|fri|satur|sun)day\b|\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i;
 
+// A Pre-Rift title that never says "kit" and carries an event or component sign (2026-11-25, every title from
+// data/public/sealed-listings.json that day). Event seats: "Riftbound Legacy Pre-Rift (Jan 25th)" (Fabricators Forge,
+// US$30, the cheapest US row on /sealed/lgc-pre-rift-kit beside TCGplayer's US$69.97 kit), "Legacy Pre-Rift Events",
+// "Legacy Pre-Rift (Two Dates)", "Prerift Legacy Prerift January 23rd 11:30 Sunridge", "Prerift Riftbound Radiance
+// 2026-10-16 (18h00)", "Radiance Pre-Rift at Jack's #1", "Radiance Win-A-Box Pre-Rift Oct 17th". A component: "Unleashed
+// Pre-Rift Precon - Ivern" (US$12.99, one deck out of the kit) and "Unleashed Pre-Rift Deck". A title with "kit" in it
+// is never touched, nor a bare "Riftbound Vendetta Pre-Rift" with no sign either way: the rule only refuses.
+const PRE_RIFT = /\bpre[-\s]?rift\b/i;
+const PRE_RIFT_ENTRY_SIGN =
+  /\bevents\b|\b(?:two|\d)\s+dates\b|\bat\s+[a-z]+'s\b|\bwin[-\s]a[-\s]box\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?\b(?!\d)|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}h\d{2}\b|\b\d{1,2}:\d{2}\b|\bprecons?\b|\bdecks?\b/i;
+export function isPreRiftEntry(title: string): boolean {
+  return PRE_RIFT.test(title) && !/\bkits?\b/i.test(title) && PRE_RIFT_ENTRY_SIGN.test(title);
+}
+
 // A sealed product title looks like one of these. "nexus night ... pack" (the real
 // product is titled e.g. "Origins Nexus Night Promo Pack" — night, then an optional
 // number/"promo", then "pack") — not bare "nexus night", which also matches a store
@@ -199,8 +234,10 @@ const SEALED_TITLE =
 // …but never these. Singles / accessories / bulk / break slots / non-English slip
 // through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
 // (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
+// Funko POP! vinyl figures (2026-11-23): Ozzie's "Arcane: League of Legends (TV) Bundle - 5 POP! Vinyls" (A$104.95)
+// and "League of Legends Bundle 2 - 4 POP! Vinyls" passed as Riftbound Bundles and each made a sealed page.
 const SEALED_EXCLUDE =
-  /\bsingle\b|\bKDA-\d{3}|art\s*book|concept\s*art|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|radiance|proving\s*grounds)\b[^)]*\)/i;
+  /\bsingle\b|\bKDA-\d{3}|art\s*book|concept\s*art|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|radiance|proving\s*grounds)\b[^)]*\)|\bpop!?\s*vinyls?\b|\bfunko\b/i;
 
 async function fetchText(url: string): Promise<string | null> {
   try {
@@ -243,10 +280,10 @@ async function importFeedStores(): Promise<number> {
     const rows = new Map<string, Prisma.SealedListingCreateManyInput>();
     for (const it of items) {
       if (!isTrackableSealedTitle(it.title)) continue;
-      const setCode = detectSet(it.title);
       const type = classifySealed(it.title);
+      const setCode = sealedSetCode(it.title, type);
       if (it.priceCents < sealedFloorCents(type)) continue;
-      const groupKey = setCode ? `${setCode}|${type}` : it.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+      const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(it.title);
       const prev = rows.get(groupKey);
       if (prev && (prev.inStock || !it.inStock) && prev.priceCents <= it.priceCents) continue;
       rows.set(groupKey, {
@@ -273,6 +310,7 @@ async function importFeedStores(): Promise<number> {
 
 async function importProductPageStores(): Promise<number> {
   let count = 0;
+  const categoryKeys = new Set<string>([...RETAILER_LIST, ...SEALED_ONLY_SHOPIFY].map((s) => s.key));
   for (const store of PRODUCT_PAGE_STORES) {
     const allowed = await robotsAllows(store.base);
     const rows = new Map<string, Prisma.SealedListingCreateManyInput>();
@@ -296,10 +334,10 @@ async function importProductPageStores(): Promise<number> {
         continue;
       }
       if (!isRiftboundSealed(page.title) && !/riftbound/i.test(url)) continue;
-      const setCode = detectSet(page.title) ?? detectSet(url.replace(/[-/]/g, " "));
       const type = classifySealed(page.title);
+      const setCode = setLessGroupKey(page.title) ? null : sealedSetCode(page.title, type) ?? detectSet(url.replace(/[-/]/g, " "));
       if (page.priceCents < sealedFloorCents(type)) continue;
-      const groupKey = setCode ? `${setCode}|${type}` : page.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+      const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(page.title);
       rows.set(groupKey, {
         groupKey,
         title: page.title,
@@ -316,7 +354,8 @@ async function importProductPageStores(): Promise<number> {
       });
     }
     if (failed || !rows.size) continue;
-    await prisma.sealedListing.deleteMany({ where: { retailer: store.key } });
+    // A store whose category is read too keeps those rows (productPageReplaceScope).
+    await prisma.sealedListing.deleteMany({ where: productPageReplaceScope(store.key, [...rows.keys()], categoryKeys) });
     await prisma.sealedListing.createMany({ data: Array.from(rows.values()) });
     count += rows.size;
     console.log(`Sealed: ${store.key} — ${rows.size} product page(s) read.`);
@@ -349,6 +388,18 @@ const PREORDER_COLLECTION =
 // another game's "blooming-radiance-hbp01" or "flash-of-radiance" (seen in the
 // dry run), which only cost a wasted request but crowd the per-store cap.
 const RIFT_ADJACENT_COLLECTION = /^(?:riftbound-)?radiance(?:-|$)|league-of-legends|lol-tcg/i;
+// The NEXT sets' own pre-order collections (2026-11-18, Legacy's pre-order
+// window): the rule above was written for Radiance alone, so a store filing
+// Legacy under "legacy-pre-order" was read only if its sitemap also named a
+// generic pre-order handle. Built from SETS' coming-soon sets, never a hand
+// list, and only WITH the pre-order suffix: "legacy" alone is Magic's format
+// and Yu-Gi-Oh!'s "legacy-of-the-duelist"; "legacy-pre-order" is a set's
+// pre-orders, and its titles still have to pass STRICT_RIFTBOUND.
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const COMING_SET_PREORDER_COLLECTION = new RegExp(
+  `^(?:riftbound-)?(?:${SETS.filter((s) => s.comingSoon).map((s) => escapeRe(s.slug)).join("|") || "(?!)"})-pre-?orders?$`,
+  "i",
+);
 const MAX_PREORDER_HANDLES = 3;
 // Tried when a store's sitemap names no pre-order collection at all. Two 404s
 // at worst, per store per run.
@@ -361,8 +412,11 @@ export function collectionKind(handle: string): "riftbound" | "preorder" | null 
   if (/riftbound/i.test(handle)) return "riftbound";
   if (PREORDER_COLLECTION.test(handle)) return "preorder";
   if (RIFT_ADJACENT_COLLECTION.test(handle) && !/astral/i.test(handle)) return "preorder";
+  if (COMING_SET_PREORDER_COLLECTION.test(handle)) return "preorder";
   return null;
 }
+
+const setNamed = (h: string) => Number(RIFT_ADJACENT_COLLECTION.test(h) || COMING_SET_PREORDER_COLLECTION.test(h));
 
 export async function discoverCollections(base: string): Promise<{ riftbound: string[]; preorder: string[] }> {
   const allowed = await robotsAllows(base);
@@ -386,7 +440,7 @@ export async function discoverCollections(base: string): Promise<{ riftbound: st
     }
   }
   // Set-named collections first — they are the likeliest to hold the product.
-  const ranked = Array.from(preorder).sort((a, b) => Number(RIFT_ADJACENT_COLLECTION.test(b)) - Number(RIFT_ADJACENT_COLLECTION.test(a)));
+  const ranked = Array.from(preorder).sort((a, b) => setNamed(b) - setNamed(a));
   return {
     riftbound: Array.from(handles),
     preorder: ranked.length ? ranked.slice(0, MAX_PREORDER_HANDLES) : CONVENTIONAL_PREORDER_HANDLES,
@@ -448,6 +502,148 @@ export function detectSet(title: string): string | null {
   return SET_FROM_TITLE.find(([re]) => re.test(title))?.[1] ?? null;
 }
 
+// Set-less products every store names differently (2026-11-19, DECISIONS.md "One group for Gift of the Rift"). A
+// product with no set code is grouped by its title, cut to 40 letters, so "Riftbound: League of Legends TCG - Gift
+// of the Rift Bundle (Pre-Order)" and "Riftbound Gift of the Rift Bundle" became two pages, each with a store or
+// two, and TCG Prices (which takes a group by the TCGplayer id of its own TCGplayer row) got none of the ~20 store
+// rows. A title on this list keeps ONE fixed key: the one TCGplayer's own row already had, so that page's URL
+// stays. Checked before the set: the bundle's packs come from five sets, and a title naming one ("… Vendetta
+// promos") must not file it under that set. The title must say "bundle" (a promo card sold alone is not the
+// product), and a case, a lot or several bundles is never the single bundle.
+export const SET_LESS_GROUPS: readonly { re: RegExp; word: string; groupKey: string }[] = [
+  { re: /^(?=.*\bgift\s+of\s+the\s+rift\b)(?=.*\bbundle\b)/i, word: "giftoftherift", groupKey: "giftoftheriftbundle" },
+];
+const SEVERAL = /\bcase\b|\blots?\b|\bset\s+of\s+\d|\b\d+\s*x\b|\bx\s*\d+\b|\(\s*\d+\s*(?:bundles|boxes)\s*\)/i;
+
+/** The fixed group of a set-less product a title names (SET_LESS_GROUPS), or null. */
+export function setLessGroupKey(title: string): string | null {
+  if (SEVERAL.test(title)) return null;
+  return SET_LESS_GROUPS.find((g) => g.re.test(title))?.groupKey ?? null;
+}
+
+/** True when a title names a SET_LESS_GROUPS product but a row of it is stored under another group. Pure. */
+export function misfiledSetLess(title: string, groupKey: string): boolean {
+  const key = setLessGroupKey(title);
+  return key != null && key !== groupKey;
+}
+
+// CHAMPION DECKS THAT NAME NO SET (2026-11-22, DECISIONS.md "A Champion Deck's champion names its set"). Many stores
+// title a deck "Riftbound Champion Deck - Jinx" or "RIFTBOUND CHAMPION DECK VEX (LIMIT 1)" with no set word, so each
+// fell to a title-derived page of one or two stores (79 store rows on 40 such pages in the 22 Nov export, 5 of them US)
+// while the set's own page (OGN|Champion Deck (Jinx), 82 rows) never showed them. Each champion below has a deck in
+// ONE set only (the set-coded groups of that export), so the champion alone names the set. Exactly one champion, one
+// deck: "Jinx & Vi", "4x Lee Sin Sealed Case" or a lot keep their title page. A champion a later set reprises must be
+// taken out of this list, never moved: then a title without a set word again names nothing.
+export const CHAMPION_DECK_SETS: Readonly<Record<string, string>> = {
+  jinx: "OGN", leesin: "OGN", viktor: "OGN",
+  fiora: "SFD", rumble: "SFD",
+  vex: "UNL", vi: "UNL",
+  tryndamere: "LGC", ashe: "LGC", lux: "LGC", garen: "LGC",
+  // The Reckoning's two Champion Decks (riftbound.gg, 2026-11-24): stores already list them for 30 Apr 2027.
+  shyvana: "REC", vayne: "REC",
+};
+const ONE_DECK_TYPE = /^Champion Deck \(([^)]+)\)(?: Display)?$/;
+const flatChampion = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
+
+/** The set a Champion Deck title names only through its champion, or null. Pure. */
+export function championDeckSet(title: string, productType: string): string | null {
+  const champ = productType.match(ONE_DECK_TYPE)?.[1];
+  if (!champ || SEVERAL.test(title)) return null;
+  const named = new Set([...title.matchAll(new RegExp(SEALED_DECK_CHAMPIONS.source, "gi"))].map((m) => flatChampion(m[1])));
+  if (named.size !== 1 || !named.has(flatChampion(champ))) return null;
+  return CHAMPION_DECK_SETS[flatChampion(champ)] ?? null;
+}
+
+/** A sealed title's set: none for a SET_LESS_GROUPS product, else its Showdown pair's, else the set it names, else its
+ *  Champion Deck's. Pure. */
+export function sealedSetCode(title: string, productType: string): string | null {
+  if (setLessGroupKey(title)) return null;
+  return showdownDeckSet(title, productType) ?? detectSet(title) ?? championDeckSet(title, productType);
+}
+
+// SHOWDOWN DECKS THAT NAME NO SET (2026-11-23, DECISIONS.md "A Showdown pair names its set"). The same gap #613 closed
+// for Champion Decks: "RIFTBOUND SHOWDOWN DECK - EVELYNN VS SERAPHINE", "RIFTBOUND League of Legends TCG Zed Vs Shen
+// Showdown Decks" and "Riftbound Vandetta Showdown Deck…" (a misspelt set) named no set, so 21 rows of the 22 Nov
+// export sat on 9 title pages of one to four stores (CA and UK) while RAD|Showdown Decks (112 rows) and VEN|Showdown
+// Decks (144) never showed them. Each pair is ONE product of ONE set, so the pair outranks a set word too: Nerd
+// Merchant's "Unleashed - Showdown Decks - Zed vs Shen" (US$14.99) made a one-store UNL|Showdown Decks page for a
+// product Unleashed never had. Both champions of the pair must be named; a case or a lot keeps its title page.
+export const SHOWDOWN_PAIR_SETS: readonly { pair: readonly [string, string]; set: string }[] = [
+  { pair: ["evelynn", "seraphine"], set: "RAD" },
+  { pair: ["zed", "shen"], set: "VEN" },
+];
+
+/** The set a Showdown Decks title names through its pair, or null. Pure. */
+export function showdownDeckSet(title: string, productType: string): string | null {
+  if (!/^Showdown Decks(?: Display)?$/.test(productType) || SEVERAL.test(title)) return null;
+  const hits = SHOWDOWN_PAIR_SETS.filter((p) => p.pair.every((c) => new RegExp(`\\b${c}\\b`, "i").test(title)));
+  return hits.length === 1 ? hits[0].set : null;
+}
+
+/** True when a stored row's Showdown pair names another set than the one it is filed under. Pure. */
+export function misfiledShowdownDeck(title: string, setCode: string | null): boolean {
+  const set = showdownDeckSet(title, classifySealed(title));
+  return set != null && set !== setCode;
+}
+
+/** Where an old /sealed slug of a Showdown pair goes once its page is empty: the pair's set page when the slug names
+ *  one pair's champion (a title key is cut at 40 letters, so "…evelynnvssera" names only Evelynn), else /sealed. Only
+ *  called after the slug found no product, so a live page is never redirected. Pure. */
+export function showdownDeckSlugRedirect(slug: string): string | null {
+  if (!/^[a-z0-9-]+$/.test(slug) || !slug.includes("showdown") && !/evelynnvs|zedvs/.test(slug)) return null;
+  if (/case|lots?$|setof\d|\d+x|x\d+/.test(slug)) return null;
+  const hits = SHOWDOWN_PAIR_SETS.filter((p) => p.pair.some((c) => slug.includes(c)));
+  if (hits.length !== 1) return "/sealed";
+  return `/sealed/${sealedSlug(`${hits[0].set}|Showdown Decks${/display/.test(slug) ? " Display" : ""}`)}`;
+}
+
+/** True when a stored set-less row's title now names a set through its champion. Pure. */
+export function misfiledChampionDeck(title: string, setCode: string | null): boolean {
+  return setCode == null && championDeckSet(title, classifySealed(title)) != null;
+}
+
+const CHAMPION_NAME: Readonly<Record<string, string>> = {
+  jinx: "Jinx", leesin: "Lee Sin", viktor: "Viktor", fiora: "Fiora", rumble: "Rumble", vex: "Vex", vi: "Vi",
+  tryndamere: "Tryndamere", ashe: "Ashe", lux: "Lux", garen: "Garen",
+  shyvana: "Shyvana", vayne: "Vayne",
+};
+
+/** Where an old title-derived /sealed slug of a one-champion deck goes now (its set's deck page), or null. Pure. The
+ *  champion must sit right before "championdeck" or right after it (then the slug ends, or "limit", "display" or
+ *  "riftbound" follows), so "…championdeckviktor" is never Vi and a slug cut before the name redirects nowhere. */
+export function championDeckSlugRedirect(slug: string): string | null {
+  if (!/^[a-z0-9]+$/.test(slug) || !slug.includes("championdeck") || /case|lots?|setof\d|\d+x|x\d+/.test(slug)) return null;
+  const hits = Object.keys(CHAMPION_DECK_SETS).filter((c) => new RegExp(`championdeck${c}(?:$|limit|display|riftbound)|${c}championdeck`).test(slug));
+  if (hits.length !== 1) return null;
+  const c = hits[0];
+  return sealedSlug(`${CHAMPION_DECK_SETS[c]}|Champion Deck (${CHAMPION_NAME[c]})${/display/.test(slug) ? " Display" : ""}`);
+}
+
+/** A title-derived group key: a SET_LESS_GROUPS key when one fits, else the title's first 40 letters and digits. */
+export function titleGroupKey(title: string): string {
+  return setLessGroupKey(title) ?? title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+}
+
+/** Where a set's old catch-all page ("<SET>|Sealed", slug "rad-sealed") goes once it is empty, or null. Until
+ *  2026-11-21 Cardmarket's "Radiance Booster" (EUR 3.50) and spellnexus's "Riftbound Radiance Case English" (EUR 600)
+ *  both fell to the bare "Sealed" type and shared that page; classifySealed now types them, so the page empties and
+ *  its URL goes to the set's own hub (/sets/<slug>), never a 404. Only called when the slug has no group. */
+export function setCatchAllRedirect(slug: string): string | null {
+  const code = slug.match(/^([a-z]{3})-sealed$/)?.[1]?.toUpperCase();
+  const set = code ? SETS.find((s) => s.code === code) : undefined;
+  return set ? `/sets/${set.slug}` : null;
+}
+
+/** Where an old /sealed slug of a SET_LESS_GROUPS product goes now (its title-derived keys made many: a key is letters
+ *  and digits only, so its slug has no hyphen), or null. Never the page itself, a case or a lot. */
+export function setLessSlugRedirect(slug: string): string | null {
+  if (!/^[a-z0-9]+$/.test(slug) || /case|lots?$|setof\d|\d+x|x\d+/.test(slug)) return null;
+  const g = SET_LESS_GROUPS.find((x) => slug.includes(x.word));
+  if (!g) return null;
+  const target = sealedSlug(g.groupKey);
+  return slug === target ? null : target;
+}
+
 // Classify a sealed product into a specific type. Shared by store scraping and the
 // TCGplayer catalogue so the same product groups together. Champion Decks keep the
 // champion name so each is distinct (e.g. "Champion Deck (Viktor)").
@@ -458,7 +654,8 @@ export function detectSet(title: string): string | null {
 // Tryndamere, Ashe, Lux and Garen (Riot's rundown), and stores already list
 // them ("Riftbound Legacy Champion Deck Ashe English (PRESALE)"). Without them
 // two different decks would share one "LGC|Champion Deck" group and one price.
-const CHAMPIONS = /\b(Lee\s*Sin|Tryndamere|Viktor|Rumble|Fiora|Garen|Annie|Ashe|Lux|Master\s*Yi|Jinx|Vex|Vi)\b/i;
+// The list lives in ebay.ts since 2026-11-22: the eBay sealed search uses it to refuse another champion's deck.
+const CHAMPIONS = SEALED_DECK_CHAMPIONS;
 
 // The sealed types whose identity a listing's OWN title can be trusted to
 // state, used by the eBay pass to reject a result that belongs to a different
@@ -467,10 +664,17 @@ const CHAMPIONS = /\b(Lee\s*Sin|Tryndamere|Viktor|Rumble|Fiora|Garen|Annie|Ashe|
 // what makes this list exactly these four. See the check's own comment.
 const SELF_TYPED = new Set(["Booster Box", "Booster Case", "Booster Pack", "Sleeved Booster"]);
 
+const SET_NAME_CASE = /\b(?:origins|spirit\s*forged|unleashed|vendetta|radiance|legacy|reckoning)\s+case\b/;
+
 export function classifySealed(title: string): string {
   const t = title.toLowerCase();
-  const rawChamp = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim() || title.match(CHAMPIONS)?.[1];
-  const champ = rawChamp ? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
+  // A bracket after "Champion Deck" names the champion ("Champion Deck (Viktor)"), unless it is a shipping or pre-order
+  // note: "Shyvana Champion Deck (Ships April 2027)" and "Legacy Champion Deck (Pre Order)" (2026-11-24) were filed as
+  // decks named "Ships April 2027" and "Pre Order", each its own one-store page.
+  const paren = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim();
+  const rawChamp = (paren && !/\b(?:pre[\s-]*orders?|pre[\s-]*sale|presell|ships?|shipping|english|limit|\d{4})\b/i.test(paren) ? paren : null) || title.match(CHAMPIONS)?.[1];
+  // A known champion keeps its one spelling: "Origin LeeSin champion deck" (Mayhem Collectables) is the Lee Sin deck.
+  const champ = rawChamp ? CHAMPION_NAME[flatChampion(rawChamp)] ?? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
   if (PROVING_GROUNDS_2ND.test(title)) return "Proving Grounds 2nd Edition";
   if (/proving\s*grounds/.test(t)) return /\bcase\b/.test(t) ? "Proving Grounds Case" : "Proving Grounds";
   // Legacy's four Champion Decks sold together (2026-11-01): "Legacy - Champion
@@ -478,7 +682,14 @@ export function classifySealed(title: string): string {
   // four-deck bundle, never one deck (whose group it shared) and never a
   // Showdown Decks pair (Legacy has none).
   if (/(?:champion|showdown)\s*decks?/.test(t) && /set\s*of\s*(?:4|four)|\b4\s*decks\b|all\s*four/.test(t)) return "Champion Deck Set (4)";
-  if (/nexus\s*night\s*(?:\d+\s*)?(?:promo\s*)?pack/.test(t)) return "Nexus Night Pack";
+  // Cardmarket calls the pack a "… Nexus Night Promo Booster" (2026-11-21): it fell to the bare "Sealed" catch-all.
+  if (/nexus\s*night\s*(?:\d+\s*)?(?:promo\s*)?(?:pack|booster)/.test(t)) return "Nexus Night Pack";
+  // Origins' Trial Decks (Cardmarket: "Jinx Trial Deck", "Yasuo Trial Deck"): four products, one per champion, each its
+  // own group. They shared OGN|Sealed with a EUR 4.99 booster and a EUR 2,250 promo booster until 2026-11-21.
+  if (/\btrial\s*deck\b/.test(t)) {
+    const who = title.match(/\b([A-Za-z']+)\s+trial\s*deck\b/i)?.[1];
+    return who ? `Trial Deck (${who[0].toUpperCase()}${who.slice(1).toLowerCase()})` : "Trial Deck";
+  }
   // The Radiance Showdown Decks are also sold as "Champion Deck: Evelynn Vs.
   // Seraphine" (Alt F4, 2026-09-24) — a head-to-head pair is the Showdown Decks
   // product, never a single Champion Deck, so "<a> vs <b>" wins first. It had
@@ -518,6 +729,10 @@ export function classifySealed(title: string): string {
   // keep typing as a Booster Box — that listing is the whole reason this rule is
   // careful.
   if (/booster\s*case|(?:display|booster\s*box|sealed)\s*case|booster\s*display\s*case|case\s*[([]?\s*(?:of\s*)?\d+\s*x?\s*[)\]]?\s*booster\s*box/.test(t)) return "Booster Case";
+  // "Riftbound Radiance Case English" (spellnexus, 2026-11-21): a set's own name, then "case", is that set's booster
+  // case (EUR 600-900, six boxes); it fell to the bare "Sealed" catch-all beside the set's EUR 3 Cardmarket booster.
+  // Only the set name right before "case", so a Vault Bundle Case (above) or "… from a case" never reads as one.
+  if (SET_NAME_CASE.test(t)) return "Booster Case";
   if (/booster\s*box|booster\s*display|display\s*box|\bdisplay\b/.test(t)) return "Booster Box";
   if (/pre-?rift\s*event\s*kit/.test(t)) return "Pre-Rift Event Kit";
   if (/pre-?rift|event\s*kit|pre-?release\s*kit/.test(t)) return "Pre-Rift Kit";
@@ -549,6 +764,10 @@ export function classifySealed(title: string): string {
   if (/two[-\s]?player|starter|precon/.test(t)) return "Starter Set";
   if (/\btin\b/.test(t)) return "Tin";
   if (/promo\s*pack/.test(t)) return "Promo Pack";
+  // Cardmarket's own name for a booster pack is "<Set> Booster" ("Radiance Booster", EUR 3.50), so every set's pack sat
+  // in "<SET>|Sealed" with that set's EUR 600+ case (2026-11-21). A title ENDING in "booster" names one pack; a
+  // promos booster ("Project K Promos Booster", EUR 2,250) is not the set's pack and stays out.
+  if (/\bbooster\s*$/.test(t) && !/\bpromos?\s+booster\s*$/.test(t)) return "Booster Pack";
   if (/booster\s*pack|\bblister\b|\bpack\b/.test(t)) return "Booster Pack";
   return "Sealed";
 }
@@ -694,8 +913,8 @@ export async function importSealed(): Promise<number> {
         const avail = priced.filter((v) => v.available);
         const inStock = avail.length > 0;
         const pool = inStock ? avail : priced;
-        const setCode = detectSet(title);
         const type = classifySealed(title);
+        const setCode = sealedSetCode(title, type);
         // Price-sanity: ignore variants priced implausibly low for the product type —
         // a $1 "deposit"/sample/add-on variant on a real Booster Case, or an outright
         // mis-listing. Taking the raw MIN across all variants otherwise surfaces e.g. a
@@ -706,7 +925,7 @@ export async function importSealed(): Promise<number> {
         if (!inFloor.length) continue;
         const cheapestVar = inFloor.reduce((a, b) => (parseFloat(b.price) < parseFloat(a.price) ? b : a));
         const priceCents = Math.round(parseFloat(cheapestVar.price) * 100);
-        const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+        const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(title);
         const key = `${groupKey}|${store.key}`;
         const prev = rows.get(key);
         if (prev && (prev.inStock || !inStock) && prev.priceCents <= priceCents) continue;
@@ -834,6 +1053,8 @@ export async function importSealed(): Promise<number> {
         if (isEbayRateLimited()) break;
         count += await refreshEbaySealedMarket(mkt, marketRefs);
       }
+      // The ops monitor and the eBay quota board read this line (sealed first, owner 2026-11-19).
+      console.log(`eBay sealed: spent ${ebaySpentThisRun()} Browse calls this run.`);
     } else {
       console.log("eBay sealed: skipped (refreshed within the last 20h).");
     }
@@ -1168,10 +1389,10 @@ export async function refreshTcgplayerSealed(): Promise<number> {
     if (!title || price == null) continue;
     // Pokémon's Astral Radiance, not Riftbound's Radiance — see FOREIGN_RADIANCE.
     if (FOREIGN_RADIANCE.test(title)) continue;
-    const setCode = setCodeFromSetName(p.setName ?? "");
+    const setCode = setLessGroupKey(title) ? null : setCodeFromSetName(p.setName ?? "");
     const type = classifySealed(title);
     if (!setCode) noteUnknownSet(unknownSets, p.setName, title, type);
-    const groupKey = setCode ? `${setCode}|${type}` : title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+    const groupKey = setCode ? `${setCode}|${type}` : titleGroupKey(title);
     rows.push({
       groupKey,
       title,
@@ -1235,7 +1456,7 @@ async function recordUnknownSets(acc: Map<string, UnknownSet>): Promise<void> {
 // scraping, so stale data gets cleaned even when a store didn't refresh.
 export async function cleanupStaleSealed(): Promise<number> {
   const rows = await prisma.sealedListing.findMany({
-    select: { id: true, title: true, retailer: true, productType: true, groupKey: true, country: true, priceCents: true },
+    select: { id: true, title: true, retailer: true, productType: true, groupKey: true, setCode: true, country: true, priceCents: true },
   });
   // Trusted reference per market+product: the cheapest NON-eBay (store/TCGplayer) price.
   const trusted = new Map<string, number>();
@@ -1250,6 +1471,15 @@ export async function cleanupStaleSealed(): Promise<number> {
       // Title filters — TCGplayer's official catalogue is trusted, never title-filter it.
       const titleOk = LANGUAGE_GROUP.test(r.groupKey) ? looksSealedAnyLanguage(r.title) : looksSealed(r.title);
       if (r.retailer !== "tcgplayer" && (!titleOk || !isRiftboundSealed(r.title))) return true;
+      // A set-less product filed under another group (2026-11-21): Cardmarket's "Gift of the Rift Bundle" sat under
+      // VEN|Bundle (its expansion, not the product), and an eBay row kept a pre-#541 title-derived group alive because
+      // the eBay pass searches every group that exists. Its source writes it to the right group on its next read.
+      if (r.retailer !== "tcgplayer" && misfiledSetLess(r.title, r.groupKey)) return true;
+      // A Champion Deck naming no set word (2026-11-22): its store writes it to its set's deck page on the next read;
+      // an eBay row in the old title page goes, and the eBay pass then searches the set's page instead.
+      if (r.retailer !== "tcgplayer" && misfiledChampionDeck(r.title, r.setCode)) return true;
+      // A Showdown pair on another set's page or a title page (2026-11-23): its store rewrites it to the pair's set.
+      if (r.retailer !== "tcgplayer" && misfiledShowdownDeck(r.title, r.setCode)) return true;
       // Price-sanity (every source except TCGplayer's trusted catalogue): drop listings
       // priced implausibly below the trusted price / per-type floor — an accessory, a $1
       // deposit/sample variant, or a mis-listing that escaped the title filter.
@@ -1657,7 +1887,7 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
   ];
   // Champion Decks slot between bundles and packs (display boxes before singles).
   const rank = (t: string) => {
-    if (/champion deck/i.test(t)) return /display/i.test(t) ? 8.4 : 8.6;
+    if (/champion deck|trial deck/i.test(t)) return /display/i.test(t) ? 8.4 : 8.6;
     if (/showdown decks/i.test(t)) return /display/i.test(t) ? 8.3 : 8.5;
     const i = order.indexOf(t);
     return i < 0 ? 99 : i;

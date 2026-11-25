@@ -10,6 +10,7 @@ import { RADIANCE_TIER_GUIDES } from "./content/radiance-tier-guides";
 import { LEGACY_SEASON_ARTICLES } from "./content/legacy-season-articles";
 import { RADIANCE_PRICE_ARTICLES } from "./content/radiance-price-articles";
 import { RIOT_DRAWINGS_ARTICLES } from "./content/riot-drawings-articles";
+import { COLLECTION_ARTICLES } from "./content/collection-articles";
 import { TREND_ARTICLES } from "./content/trend-articles";
 import { monthYear } from "./content/month-year";
 import { REACTION_REMINDERS } from "./keywords";
@@ -1240,7 +1241,7 @@ Two tools on RiftCompare answer the rest with live numbers:
     faq: [
       {
         q: "When do the Riftbound Radiance rules changes take effect?",
-        a: "On 16 October 2026, the first day of Radiance Pre-Rift events. Riot published the core rules patch notes, the Radiance errata and the October 2026 tournament rules changelog together on 9 October 2026, and all three apply from 16 October. Radiance itself releases on 23 October 2026.",
+        a: "On 16 October 2026, the first day of Radiance Pre-Rift events. Riot published the core rules patch notes, the Radiance errata and the October 2026 tournament rules changelog together on 9 October 2026, and all three apply from 16 October. Radiance itself released on 23 October 2026.",
       },
       {
         q: "Which Riftbound cards got errata for Radiance?",
@@ -1565,41 +1566,42 @@ After release, Radiance products move from the pre-order page to **[the sealed c
   {
     slug: "riftbound-radiance-chase-cards",
     category: "blog",
-    title: "Riftbound Radiance Chase Cards: What to Expect",
+    title: "Riftbound Radiance Chase Cards: Prices One Month In",
+    seoTitle: "Radiance Chase Cards: Every Tier's Price One Month In",
     excerpt:
-      "Radiance's chase cards so far, and what Vendetta's chase prices did after launch: signed Legends, overnumbered units, specials, Seraphine and Riven.",
+      "Every Radiance chase tier, priced on 18 Oct, in launch week and on 20 Nov: signed Legends, overnumbers, SP specials, alt arts and Packed Amphitheater.",
     author: "RiftCompare",
     date: "2026-10-07",
-    updated: "2026-10-17", // linked to the Seraphine Signature post
-    readMins: 9,
+    updated: "2026-11-20", // one month of prices: the tier table, the dearest cards and the Vendetta comparison
+    readMins: 12,
     tags: ["radiance", "chase cards", "prices", "seraphine", "riven", "collecting"],
     hero: {
       src: "/radiance-spoilers/seraphine-starry-eyed-songstress.jpg",
       alt: "Seraphine, Starry-Eyed Songstress, the Riftbound Radiance Legend whose overnumbered 174/167 and signed 174*/167 printings are among the set's chase cards",
     },
     summary: [
-      "**Radiance has no prices yet, so this is a map, not a forecast.** We show which chase tiers the set has so far and what the same tiers did in Vendetta, the last set to launch.",
-      "**In Vendetta the money was in the signed Legends.** Nine signed twins made up 72% of what one of each of its 40 chase printings cost on 6 October, and the five dearest chase cards were all signed Legends.",
-      "**Pre release prices were not where Vendetta settled.** The median overnumbered unit cost $177 four days before release and $81 in launch week. The SP1 to SP6 specials fell from $130 to $44.",
-      "**Seraphine's Legend has a signed twin; Riven has no Legend shown yet.** Riven's Vendetta chase print sat in the middle of the pack, so a Riven Legend with a signed twin is the thing to watch for.",
-      "**The Ultimate Rare is Packed Amphitheater, a Battlefield.** riftbound.gg reports it at about 0.025% of packs, a quarter of Unleashed's Baron Nashor, which has not traded under $1,100 since our history began.",
+      "**The signed Legends are the chase, and they are 71% below their first listings.** The median of the 16 Signatures was US$1,400 on 18 October and US$393 on 20 November.",
+      "**They make up 83% of the set's chase money.** One of each of the 56 chase printings cost US$8,885 on 20 November, and US$7,300 of it was the 16 Signatures.",
+      "**The dearest card is Evelynn 175\\* at US$900,** then the Chinese Seraphine 174a\\* (US$891), Seraphine 174\\* (US$710) and Riven 173\\* (US$692). Packed Amphitheater, the Ultimate Rare, is US$380.",
+      "**Radiance fell harder after launch than Vendetta did.** From launch week to now its median Signature lost 40% and its median overnumbered unit 28%; Vendetta's Signatures were higher a month after launch.",
+      "**Prices have levelled off since 12 November.** The Signature median moved 1%, and the overnumbered Legend and unit medians rose about 3% and 8%.",
     ],
     faq: [
       {
         q: "What are the chase cards in Riftbound Radiance?",
+        a: "Sixteen Signatures (numbered with an asterisk, 168* to 183* plus the Chinese 174a*), nine overnumbered Legends (168 to 176), seven overnumbered units (177 to 183), five K/DA SP specials, eighteen alternate arts and the Ultimate Rare, Packed Amphitheater 184/167. On 20 November the Signatures were 83% of what one of each cost.",
+      },
+      {
+        q: "What is the most expensive Radiance card?",
+        a: "Evelynn, Agony's Embrace 175* at US$900 on 20 November 2026, by the cheapest in-stock listing we track. Next were the Chinese Seraphine 174a* (US$891), Seraphine 174* (US$710) and Riven, The Exile 173* (US$692).",
+      },
+      {
+        q: "What were the Radiance chase cards before release?",
         a: "So far: five signed Legends (Ekko 168*, Ziggs 169*, Mordekaiser 170*, Orianna 171* and Seraphine 174*), eight overnumbered Legends numbered 168 to 176, six overnumbered units numbered 178 to 183, five SP specials numbered out of 005 (Ahri, Akali, Evelynn, Kai'Sa and Seraphine), twelve alternate art units and six alternate art runes. The Ultimate Rare is Packed Amphitheater, a Battlefield numbered 184/167.",
       },
       {
-        q: "Will Seraphine be expensive in Radiance?",
-        a: "We do not predict prices. What the data supports is narrower: Seraphine's Legend has an overnumbered printing and a signed twin, and in Vendetta the signed Legend twins were the dearest cards in the set by a wide margin. She also has an SP special, and Vendetta's equivalent tier, the Crystal Rose cards, lost about half its price after launch week. Radiance has no prices yet.",
-      },
-      {
-        q: "Is there a Riven Legend in Radiance?",
-        a: "None has been shown. Riot's gallery has Riven, Broken Blade (043/167) and a Showcase alternate art, and her signature gear, Blade of the Exile (150/167). Every Legend shown so far has a signature card, which makes a Riven Legend a reasonable reading, but it is an inference and Riot has not said so.",
-      },
-      {
         q: "Do chase card prices fall after a set releases?",
-        a: "In Vendetta, the median overnumbered unit cost $177 four days before release and $81 in launch week, and the six SP specials went from $130 to $44. That is one set and a handful of early listings, so treat it as a pattern to check against, not a rule.",
+        a: "In Radiance they did. The median Signature went from US$1,400 on 18 October, before release, to US$656 in launch week and US$393 on 20 November; the median overnumbered unit from US$185 to US$57 and US$41. Vendetta fell before launch too, but its Signatures held up better afterwards.",
       },
       {
         q: "What is the Radiance Ultimate Rare?",
@@ -1624,7 +1626,7 @@ After release, Radiance products move from the pre-order page to **[the sealed c
     embeds: [
       {
         title: "Radiance's signed Legends so far",
-        note: "The asterisk printings, straight from our database. Prices land from release day.",
+        note: "All sixteen asterisk printings, with today's cheapest listing for each.",
         chaseSet: "RAD",
         chaseTier: "signature",
       },
@@ -1653,7 +1655,55 @@ After release, Radiance products move from the pre-order page to **[the sealed c
         ],
       },
     ],
-    body: `**Radiance releases on 23 October, and no Radiance single has a price yet.** What exists is a chase run Riot has been showing for two weeks, and a complete price history for Vendetta, the last set to launch. This post sets the two side by side. It is not a price prediction, because we do not publish those. It is a map of which cards sit in the tiers where Vendetta's money was, and of what those tiers did after launch.
+    body: `**Radiance has been out four weeks, and its chase cards now have a month of prices.** This post opens with what each chase tier costs today and how far it has come from its first listings, then keeps our pre-release map from 7 October below it, so you can see what was expected and what happened. Every price is the cheapest in-stock listing for that exact printing across the AU, US, UK and Singapore stores and marketplaces we track, in US dollars. These are asking prices, not sold prices.
+
+## One month in: what each chase tier costs
+
+The median cheapest listing of each tier on four days: 18 October (before release, when only a few listings existed), 26 October (launch week), 12 November and 20 November.
+
+| Tier (cards) | 18 Oct | 26 Oct | 12 Nov | 20 Nov |
+| --- | --- | --- | --- | --- |
+| Signatures (16) | $1,400 | $656 | $397 | $393 |
+| Overnumbered Legends (9) | $187 | $114 | $76 | $79 |
+| Overnumbered units (7) | $185 | $57 | $38 | $41 |
+| SP specials (5) | $80 | $23 | $16 | $14 |
+| Alternate arts (18) | $27 | $3.74 | $2.67 | $1.98 |
+| Ultimate Rare (1) | $2,298 | $492 | $380 | $380 |
+
+Three things stand out.
+
+**1. The Signatures are the set.** One of each of the 56 chase printings cost $8,885 on 20 November, and $7,300 of that, 83%, was the sixteen Signatures. Vendetta looked the same: its nine signed Legends were 72% of its chase money in October.
+
+**2. Radiance kept falling after launch, where Vendetta did not.** From launch week to 20 November the median Signature lost 40% and the median overnumbered unit 28%. Vendetta's signed Legends were higher a month after launch ($707 in launch week, $983 a month later), and its overnumbered units barely moved. Radiance has sixteen Signatures against Vendetta's nine, which may be part of it: more of them are for sale.
+
+**3. The fall has stopped for now.** Since 12 November the Signature median moved by 1%, and the overnumbered Legends and units rose about 3% and 8%. Sett, Kingpin 183/167 went from $60 to $93, the biggest rise among the chase cards. Eight days is short and the markets are thin, so read that as a pause, not a turn.
+
+## The dearest Radiance cards today
+
+| Card | Number | 18 Oct | 20 Nov |
+| --- | --- | --- | --- |
+| [Evelynn, Agony's Embrace](/card/evelynn-agony-s-embrace-rad-175s-167) | 175\\* | $2,633 | $900 |
+| [Seraphine, Starry-Eyed Songstress (Chinese)](/card/seraphine-starry-eyed-songstress-rad-174as-167) | 174a\\* | $1,232 | $891 |
+| [Seraphine, Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-174s-167) | 174\\* | $3,700 | $710 |
+| [Riven, The Exile](/card/riven-the-exile-rad-173s-167) | 173\\* | $2,400 | $692 |
+| [Ziggs, Hexplosives Expert](/card/ziggs-hexplosives-expert-rad-169s-167) | 169\\* | $1,394 | $575 |
+| [Mordekaiser, Iron Revenant](/card/mordekaiser-iron-revenant-rad-170s-167) | 170\\* | $987 | $525 |
+| [Orianna, Lady of Clockwork](/card/orianna-lady-of-clockwork-rad-171s-167) | 171\\* | $1,400 | $436 |
+| [Kayn, Unleashed](/card/kayn-unleashed-rad-182s-167) | 182\\* | $1,450 | $400 |
+| [Sett, Kingpin](/card/sett-kingpin-rad-183s-167) | 183\\* | $1,250 | $387 |
+| [Packed Amphitheater](/card/packed-amphitheater-rad-184-167) | 184/167 | $2,298 | $380 |
+
+Seraphine 174\\*, the card everyone expected to lead the set, had the highest first listing and the biggest fall, 81%. The Chinese-exclusive Seraphine 174a\\* fell least of the Signatures and now sits within $10 of Evelynn. Below the Signatures, the dearest unsigned chase cards are Riven's overnumbered [173/167](/card/riven-the-exile-rad-173-167) at $117 and Evelynn's [175/167](/card/evelynn-agony-s-embrace-rad-175-167) at $115. Each Signature costs four to twelve times its unsigned overnumbered twin. For all sixteen with three dates each, see [Radiance Signature prices now](/blog/riftbound-radiance-signature-prices-now).
+
+## The cheaper chase tiers
+
+The five K/DA SP specials fell from a median of $80 to $14, and the cheapest, [Seraphine, Not Alone SP5/005](/card/seraphine-not-alone-rad-sp5-005), is $6.25. The alternate arts fell furthest of all: a median of $27 before release and $1.98 now, with Riven, Deserter 114a at $7.59 the dearest of them. That is the same thing Vendetta's Crystal Rose specials did, only more so. For the full list, see [Radiance alt art cards](/guides/riftbound-radiance-alt-art-cards).
+
+[[embed:0]]
+
+## Before release: our map from 7 October
+
+*What follows was written on 7 October, before any Radiance single had a price, and is kept as written. Some of what it waited for has since happened: Riven got her Legend, The Exile 173/167, with a Signature, and Evelynn got hers too.*
 
 For every Radiance card in one place, not just the chase run, see **[the Radiance card list](/sets/radiance)**.
 
@@ -1671,8 +1721,6 @@ As of 7 October our catalogue holds 170 Radiance cards, 43 of them Showcase prin
 | **Ultimate Rare** | A single card above the overnumbered tier | Packed Amphitheater, a Battlefield, 184/167 |
 
 Two things stand out. The Legend run is close to complete, and only five of its eight overnumbered Legends have a signed twin so far; Vendetta gave all nine of its Legends one. And Riot's rundown said 66 Showcase printings against our 43, a figure that does not reconcile with the printed 167 either (see [what we know about Radiance](/blog/riftbound-radiance-what-we-know)), so read the gap as more to be shown, not as a count.
-
-[[embed:0]]
 
 ## What Vendetta's chase prices did after launch
 
@@ -2027,7 +2075,7 @@ The Signatures are the top of Radiance's chase cards, not all of them. **[Packed
       "Seraphine, Starry-Eyed Songstress 174*/167 is the Riftbound: Radiance card collectors are chasing. Every Radiance Signature so far, and what they cost.",
     author: "RiftCompare",
     date: "2026-10-17",
-    updated: "2026-10-17", // first Signature prices; links the all-Signatures post
+    updated: "2026-11-25", // 25 Nov: release-day tense and one month of prices; 17 Oct first Signature prices
     readMins: 9,
     tags: ["radiance", "chase cards", "signature", "collecting", "seraphine", "heartsteel"],
     // 17 Oct, later: photos of 172*, 175*, 176* and 180* added to the gallery.
@@ -2189,7 +2237,7 @@ If you pull a Radiance Signature, sleeve it straight from the pack and put it in
 
 Most of the time, not on the first day. New sets sell their chase cards dearest in their first week, because the people who want them most buy first and supply is still in packs. The median Vendetta overnumbered unit cost $177 four days before release, $81 in launch week and $73 by early October.
 
-Radiance releases on **23 October 2026**, and listings will multiply over the following fortnight. If you want the Seraphine Signature at a better price than its first listing, watch it: a free account emails you when a store lists it and again when the price drops. If you want it first, the card page shows every store's price side by side the moment it appears.
+Radiance released on **23 October 2026**, and the Seraphine Signature's listings multiplied over the following fortnight: its cheapest fell from about $1,582 on 20 October to $696 at a US store on 25 November. If you want it cheaper still, watch it: a free account emails you when a store lists it and again when the price drops. If you want it first, the card page shows every store's price side by side the moment it appears.
 
 ## Every Radiance Signature
 
@@ -2212,10 +2260,10 @@ The HEARTSTEEL Signatures are signed in character: Aphelios, Kayn and Yone each 
     category: "blog",
     title: "Riftbound K/DA Cards: All 5 Specials & Prices",
     excerpt:
-      "All five K/DA special cards in Riftbound: Radiance, SP1 to SP5: Ahri, Akali, Evelynn, Kai'Sa and Seraphine. What each does and what to expect on price.",
+      "All five Riftbound K/DA specials, SP1 to SP5: Ahri, Akali, Evelynn, Kai'Sa and Seraphine. What each does, and what they cost a month after release.",
     author: "RiftCompare",
     date: "2026-10-15",
-    updated: "2026-10-21", // linked to the K/DA Couture Collection post
+    updated: "2026-11-25", // one month of prices after release (freshness sweep); 21 Oct linked the Couture Collection post
     readMins: 6,
     tags: ["radiance", "k/da", "alt art", "collecting", "chase cards"],
     hero: {
@@ -2236,12 +2284,12 @@ The HEARTSTEEL Signatures are signed in character: Aphelios, Kayn and Yone each 
       "**Each is a K/DA art printing of a Radiance Champion Unit.** The same card also has a regular print in the main set, so the K/DA version changes nothing about how it plays.",
       "**It is the first time all five members are in the game.** Ahri and Kai'Sa came in Origins and Akali in Vendetta; Evelynn and Seraphine debut in Radiance.",
       "**They are not rarer than an alt art**, according to riftbound.gg's reporting: about the same rate as a regular alternate art, never guaranteed in a pack or box. Riot publishes no pull rates.",
-      "**Vendetta's closest equivalent, the six Crystal Rose specials, fell hard after launch:** a median of $130 four days before release, $44 in launch week and $22 by 6 October.",
+      "**They fell the way Vendetta's Crystal Rose specials did.** The five K/DA cards' median first listing on 16 October was about $133; on 25 November TCGplayer's US market price for them ran from **$7.67 (Seraphine) to $23.43 (Ahri)**, a median of $13.73.",
     ],
     embeds: [
       {
         title: "The five K/DA specials",
-        note: "SP1 to SP5 of 005, with Riot's own card images. Prices appear on each card as stores list them, most likely from the Pre-Rift events on 16 to 22 October.",
+        note: "SP1 to SP5 of 005, with Riot's own card images. Each card shows every store's live price; click one for its price history.",
         slugs: [
           "ahri-confident-rad-sp1-005",
           "akali-brash-rad-sp2-005",
@@ -2284,7 +2332,7 @@ The HEARTSTEEL Signatures are signed in character: Aphelios, Kayn and Yone each 
     faq: [
       {
         q: "Are there K/DA cards in Riftbound?",
-        a: "Yes. Riftbound: Radiance has five K/DA special cards, numbered SP1 to SP5 of 005: Ahri, Confident; Akali, Brash; Evelynn, In Control; Kai'Sa, Rebel and Seraphine, Not Alone. Radiance releases on 23 October 2026.",
+        a: "Yes. Riftbound: Radiance has five K/DA special cards, numbered SP1 to SP5 of 005: Ahri, Confident; Akali, Brash; Evelynn, In Control; Kai'Sa, Rebel and Seraphine, Not Alone. Radiance released on 23 October 2026.",
       },
       {
         q: "Are the K/DA cards new cards?",
@@ -2300,7 +2348,7 @@ The HEARTSTEEL Signatures are signed in character: Aphelios, Kayn and Yone each 
       },
       {
         q: "How much are the K/DA cards worth?",
-        a: "Nothing has a settled price before release. The closest guide is Vendetta's Crystal Rose specials, whose median fell from $130 four days before release to $44 in launch week and $22 by 6 October. Each K/DA card's page compares every store's price as listings appear.",
+        a: "On 25 November 2026, TCGplayer's US market price was $23.43 for Ahri, Confident (SP1), $14.69 for Kai'Sa, Rebel (SP4), $13.73 for Akali, Brash (SP2), $12.86 for Evelynn, In Control (SP3) and $7.67 for Seraphine, Not Alone (SP5): about $72 for all five. The first listings on 16 October were several times that. Each card's page compares every store's live price.",
       },
       {
         q: "Which K/DA member is in Riftbound for the first time?",
@@ -2308,6 +2356,8 @@ The HEARTSTEEL Signatures are signed in character: Aphelios, Kayn and Yone each 
       },
     ],
     body: `**Update, 21 October:** Riot has announced the **Riftbound x K/DA Couture Collection**, a $150 bundle with four new K/DA Legend cards, sold by drawing from 27 October. **[Our Couture Collection guide](/blog/riftbound-kda-couture-collection)** has the dates, the contents and how the drawing works.
+
+**Update, 25 November:** a month after release, the five K/DA specials have settled at $8 to $23 each on TCGplayer's US market price, down from first listings of $100 to $380. The numbers, card by card, are in **What they cost now**, below.
 
 Riftbound: Radiance is a music set, and it was always going to need K/DA. Riot's virtual pop group gets **five special cards**, one for each member, numbered **SP1 to SP5 of 005**. Here is every card, what it does, how it compares with the cards you can already buy, and what Vendetta's Crystal Rose specials say about prices after release.
 
@@ -2367,7 +2417,27 @@ The specials are only one corner of the K/DA story in Radiance. Each member has 
 
 For a collector chasing the group, that makes Seraphine the deepest K/DA member in Radiance by a distance: nine printings of her own counting the special, before her signature spell.
 
-## What to expect on price
+For every K/DA printing in one live gallery, the Couture Collection's five cards included, see [our K/DA card guide](/guides/riftbound-kda-collection).
+
+## What they cost now
+
+Radiance has been out since 23 October, so the K/DA cards now have a month of real prices. The first column is the cheapest in-stock listing we tracked on 16 October, the first day of Pre-Rift events (across our US, UK, Australian and Singapore stores, converted to US dollars); the next two are from 25 November 2026.
+
+| Card | Cheapest listing, 16 Oct | TCGplayer US market, 25 Nov | Cheapest US store, 25 Nov |
+| --- | --- | --- | --- |
+| [Ahri, Confident (SP1)](/card/ahri-confident-rad-sp1-005) | $379.75 | $23.43 | $23.59 |
+| [Kai'Sa, Rebel (SP4)](/card/kai-sa-rebel-rad-sp4-005) | $133.33 | $14.69 | $12.09 |
+| [Akali, Brash (SP2)](/card/akali-brash-rad-sp2-005) | $100.00 | $13.73 | $10.95 |
+| [Evelynn, In Control (SP3)](/card/evelynn-in-control-rad-sp3-005) | $200.00 | $12.86 | $11.75 |
+| [Seraphine, Not Alone (SP5)](/card/seraphine-not-alone-rad-sp5-005) | $133.33 | $7.67 | $6.48 |
+
+The median fell from about **$133 to $13.73**, roughly a tenth, and almost all of the fall came in the first two weeks: by 30 October the cheapest listings were already between $4 and $38. Since mid-November they have moved by a dollar or two a week. A full set of five cost about **$72** at TCGplayer's market price on 25 November.
+
+The pattern is the one Vendetta's Crystal Rose specials set, and the section below, written before release, is kept as it was. The top of K/DA moved the same way: the signed Seraphine Legend, [174\\*/167](/card/seraphine-starry-eyed-songstress-rad-174s-167), had a cheapest listing of about $1,582 on 20 October and $696 at a US store on 25 November, with TCGplayer's US market price at $985.65.
+
+*Prices are from RiftCompare's daily price history (cheapest in-stock store price) and TCGplayer's US market price (recent sales), read on 25 November 2026. [How we collect prices](/methodology).*
+
+## What we expected before release
 
 The closest thing Riftbound has had to a K/DA tier is Vendetta's Crystal Rose run, and its prices are a warning. Using our daily price history, the median Crystal Rose special cost **$130 four days before Vendetta's release, $44 in launch week, $38 a month later and $22 by 6 October**. Today the dearest two, Kai'Sa and Ahri, are around $70; the other four are around $11 to $20. The full breakdown is in **[Radiance chase cards: what Vendetta's prices say to expect](/blog/riftbound-radiance-chase-cards)**.
 
@@ -2384,7 +2454,7 @@ Those are the 14 October US prices behind the live cards above: Ahri's signed Or
 ## Before you buy a K/DA card
 
 - **Check the number, not just the name.** "Ahri SP" could be Radiance's [Ahri, Confident SP1/005](/card/ahri-confident-rad-sp1-005) or Vendetta's Crystal Rose [Ahri, Inquisitive SP3/006](/card/ahri-inquisitive-ven), and "Kai'Sa SP" could be Radiance's SP4/005 or Vendetta's Crystal Rose SP1/006. The denominator, 005 or 006, tells you which set it is from.
-- **Pre-order or in hand.** Until 23 October, a listing for a K/DA single is a promise to post a card the seller may not have pulled yet. Read the dispatch date.
+- **In hand, not pre-sold.** Radiance is out, so a K/DA single should ship now. A listing with a dispatch date weeks away is a seller who has not pulled the card yet.
 - **Language.** Riftbound is printed in more than one language, and our prices compare English printings. A listing that does not say which language it is should be asked about before you pay.
 - **Compare stores.** Each card page lists every store we track that has the card in stock, cheapest first, in your currency, with eBay alongside.
 
@@ -2539,6 +2609,8 @@ Riot asks everyone to do two things before registration opens:
 ## When it ships
 
 Riot's FAQ says two things about fulfilment. It expects to "begin fulfilling orders within 1-3 business days after they're placed", where fulfilment means processing, packing and shipping, not a delivery date. Separately, it says drawn items "will begin fulfillment the day of the product's wide release". Riot hasn't published a wide release date for the Couture Collection, so if you're drawn, expect the shipping email around the time the product goes wide rather than a fixed date.
+
+All five Couture cards now have their own pages and prices, gathered with Radiance's SP cards in [our K/DA card guide](/guides/riftbound-kda-collection).
 
 ## Are the cards worth anything?
 
@@ -3253,6 +3325,14 @@ For the running list of everything Riot has genuinely shown — kept strictly se
         a: "The promos are alternate-art printings of existing cards, so they play as those cards. Nothing in the box is a new mechanic or a card you cannot otherwise obtain — the value proposition is the art and the object, not the deck.",
       },
     ],
+    embeds: [
+      {
+        title: "The Secret Garden Bundle's three cards",
+        note: "Lillia, Ivern and the Ultrasoft Poro, numbered 001 to 003 of 003, priced live.",
+        slugs: ["lillia-bashful-bloom-unl-001-003-promo", "ivern-green-father-unl-002-003-promo", "ultrasoft-poro-unl-003-003-promo"],
+        ebaySearch: true,
+      },
+    ],
     body: `Riot published its remaining 2026 event schedule for the **Secret Garden Bundle** on 11 September, and for the first time the full distribution plan for this product is public. Read by region rather than by date, that list explains something the price data has been showing for weeks and nobody had a reason for: why the same US$70 box costs roughly twice as much in Europe as it does in the United States.
 
 ## What the Secret Garden Bundle actually is
@@ -3308,6 +3388,8 @@ Two things would prove me wrong, and they are worth stating because they are the
 **Booth allocations could be small.** "Available at an event" is not a quantity. One report from PAX West describes the bundle selling out each day under a two-per-person limit. If European booths receive a few hundred boxes each against 190,000 attendees, four events barely move the needle and the premium holds.
 
 **Demand could arrive with the supply.** An event puts the product in front of people who did not know it existed. Four European shows in 18 days is also four marketing events, and it is genuinely possible that European demand grows faster than European supply.
+
+[[embed:0]]
 
 ## What makes it scarce, and what does not
 
@@ -8234,7 +8316,7 @@ Every card was personally chosen by the corresponding member of T1's championshi
 
 [[embed:0]]
 
-All six printings — the five cards plus Faker's serialised Galio, numbered T1S 001/005 through 005/005 — are now catalogued on RiftCompare, so each has a real page ready for the moment secondary-market listings appear.
+All six printings — the five cards plus Faker's serialised Galio, numbered T1S 001/005 through 005/005 — are now catalogued on RiftCompare, so each has a real page ready for the moment secondary-market listings appear. Every T1 printing, the Player Bundle's own T1A art and the other serial-numbered Signatures included, is in [our T1 card guide](/guides/riftbound-t1-cards).
 
 **One caveat on Seraphine.** Seraphine, Not Alone comes from **Radiance**, Riftbound's fifth set, which does not release until 23 October 2026 (see [the set roadmap](/blog/riftbound-2027-set-roadmap)). Until then it is not legal for sanctioned play, so a Player Bundle bought to actually play with arrives with one card you cannot yet use.
 
@@ -10096,6 +10178,8 @@ Regional Qualifiers are also where a lot of early Vendetta singles and promos ch
 Unlike Vendetta's other alt-art printings (which carry a lettered variant of a normal collector number, e.g. "021a"), the six Crystal Rose cards are numbered **SP1 through SP6** — their own dedicated range, separate from the set's regular 1–166 checklist. Riot's own reasoning: the "Overnumber" treatment is reserved for art created specifically for Riftbound, and Crystal Rose art is ported from Wild Rift, so it gets its own numbering instead.
 
 Despite the different numbering, they pull at the **same rate as any other alt-art card** in [Vendetta boosters](/sealed?q=vendetta) — there's no separate box or bundle required to chase them. Any booster you open has a shot at one.
+
+The SP range came back for K/DA in Radiance: [every K/DA card](/guides/riftbound-kda-collection) is gathered in one gallery, and the [Worlds cards](/guides/riftbound-worlds-cards) do the same for the Worlds Bundle promos.
 
 ## Why Kai'Sa and Ezreal stand out
 
@@ -13090,6 +13174,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
   ...LEGACY_SEASON_ARTICLES,
   ...RADIANCE_PRICE_ARTICLES,
   ...RIOT_DRAWINGS_ARTICLES,
+  ...COLLECTION_ARTICLES,
   ...TREND_ARTICLES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",

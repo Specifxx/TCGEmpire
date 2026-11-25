@@ -24364,6 +24364,1290 @@ the footer, dialogs and the keyboard, ✕ for the visit, labelled Ad, rel sponso
 promotional method it does not expressly permit under prior written approval; the dock has run since 2026-11-06, this changes only
 when it shows. Not on Dex or MTG Compare (their phone A/B runs to 3 Dec).
 
+## 2026-11-18: "Best price" is loud only on a paid row
+
+Owner, 2026-11-18: when the cheapest row is a plain store we earn nothing from, stop drawing it as the thing to click. `lib/best-price.ts`
+(`bestTreatment`) decides: a cheapest row that is eBay, TCGplayer or a partner/affiliate link (`isPaidLink`) keeps the green edge, the green
+"Cheapest" chip and the primary button exactly as before; a non-affiliate cheapest row gets a small neutral "Best price" tag (no fill, no green),
+a plain white price (buttons unchanged), and one muted line under it, "Prices and stock change: also check eBay and TCGplayer", naming only the
+marketplace rows really on that list (no line when neither is there; never a claim that eBay is cheaper). Applied on the card page's price list, the card
+and sealed quick views (and the sealed page), the phone top buy block and the Pokémon board. Row order, sorting, labels, `rel`, tracking, the deal and price-drop
+badges, JSON-LD, feeds and alerts are untouched (display only). Pinned by `tests/best-price.test.ts`.
+
+**Why.** The loud green on a non-paying store pulled clicks away from our paid rows. **Measure:** paid clicks per 100 buy clicks (`buy_click` with
+`data-paid`) for two weeks before and after the release that carries this.
+
+## 2026-11-18: Premium on a phone: members' bottom bar (first step)
+
+Owner, 18 Nov: "if you're a premium and you're on mobile phone, the look and feel should be a lot different". Today a member's phone
+only drops the ad dock and banners. First step (`components/BottomNav.tsx`): for any paid tier (`useMe().tier`), the bar's Deals tab
+becomes **Watching** (`/watching`, active on `/portfolio` and `/alerts` too) and the bar carries a thin gold top line (`.bn[data-member]`).
+Deals stays in the menu. Cart, Menu, price rows, pinned rows, Cheapest and Add to cart are the same for members: the bar changes how a
+member gets around, never what prices they see. Next steps in the plan: a "Your cards today" strip on the phone home and a dot on
+Watching when a watched card moved. 21 members is too few to split, so it is read before/after: members' visit days a week (the
+`return_visit` beacon), four weeks either side. Plan: project files strategy/premium-network-plan-2026-11-18.html.
+
+## 2026-11-18: "Your cards today": an account's watched cards first on the home page (a 50/50 test)
+
+Retention job C (owner's reassignment, 18 Nov). A signed-in account with watches sees its newest 8 watched cards right under the
+hero: today's price in its market, the change since its last look (a snapshot of the shown prices in localStorage `yct-seen`) and a
+30-day sparkline (`components/home/YourCardsToday.tsx`, `/api/alerts/today`, `lib/your-cards-today.ts`). Browser only: the home
+page's server HTML and cache are untouched, and a visitor without an account or watches gets nothing. The route is per user and
+uncached, one bounded read (40 watch rows, card fields only, no store-count subquery); the sparklines come from the committed price
+history files and drop methodology-break windows. A 50/50 arm (`yct-arm`): "off" sees nothing. `yct_eligible {arm}` fires once a
+day per eligible browser, so visit days per eligible account read on against off; `yct_shown`, `yct_click`. A member's phone bar
+shows a gold dot on Watching (`yct-moved`, "on" arm only) until they open /watching. Price rows, buy buttons and the quick view are
+untouched. Read about 2 Dec.
+## 2026-11-18: Invite a friend, you both get a week of Premium, and every member's share is an invite
+
+**Owner:** "I really want people to share stuff with their friends … some sort of loyalty system", then on the decision card,
+"Both get 7 days Premium", and "premium isn't a feature that earns us a lot of money … we need to just have it somewhere".
+
+**What.** The referral program (`lib/referral.ts`, `?ref=<User.id>`, since August) gave the inviter 3 days and lived only on
+`/profile`. Now:
+- **Both sides get 7 days** (`lib/premium-days.ts`, hard numbers, not env defaults): the inviter per friend, the friend's new
+  account once, extend-only through `grantPremiumDays`. An emailed sign-up (`/api/auth/email-link/consume`) now applies the
+  invite too, not only OAuth.
+- **Every signed-in member's Share is an invite.** `/api/me` returns `inviteCode` (the member's own id, the code the invite
+  link already showed); `ShareButton` adds it as `#r=<code>` (`withInvite`). After the `#`, so it never reaches the server: no
+  new CDN copy of any page and no database read per visit. `ReferralCapture` reads `?ref=` or `#r=` (`inviteCodeFrom`).
+- **Visible.** "Invite friends · you both get 7 days Premium" in the account menu (to `/profile#invite`), and after every
+  completed share a small card: a member is told the link carried their invite, a visitor that signing in first earns them
+  both a week (`/login?src=referral`). The share-for-a-deal card (reward arm) gains the same line; the A/B's tap counts are
+  unchanged because the card shows only after a share.
+- **Counted.** `share_visit` gains `invite` (1 when the link carried `#r=`); each credited sign-up bumps the Counter row
+  `referral:YYYY-MM` (one upsert per referred sign-up, nothing per visit). Read with the share A/B around 2 Dec.
+
+**Not points or levels.** The owner switched off Coins on 2026-10-29; the reward is Premium time only.
+
+## 2026-11-18: The ad-look A/B: half of the visitors see the sponsored units in their brands' colours
+
+The owner (18 Nov): the banner ads "can look more attractive … more decorated and more highlighted so people can actually click on
+them". Since 12 Nov the units have been drawn in the calm palette (ink button, no brand colours). Now half of the visitors
+(`lib/ad-look.ts`, localStorage `ad-look`, 50/50, storage failure is the old look) see look "b": the inline eBay / TCGplayer block
+gets its brand's stripe along the top (eBay's four colours, TCGplayer's blue), a tint, a filled brand-colour button with a slow
+shine, a lift on hover and the price in the brand colour; the phone dock gets the eBay stripe and a filled button; the leave
+nudge gets the stripe and a stronger shadow. Paint only (globals.css, "The ad-look A/B", under `html[data-adlook="b"]`): no size,
+position, timing, label, wording or rule changes, CLS 0, every motion off under reduced motion. `<html data-adlook>` is set when
+a sponsored unit mounts, and buy_click carries `ad_look`. Read on 2 Dec: paid clicks per 100 visitors, "b" against "a"; the
+winner becomes the only look. Not on Dex or MTG (their phone A/B runs to 3 Dec).
+## 2026-11-18 — The bottom nav is a floating pill, and closing the cart gives it back
+
+Owner, 2026-11-18: "after you open the cart and then you close it, the little bottom navigation disappears", and the nav should be
+"the little football field kind of shape … floating above the bottom a little bit" (Catchback's), with the eBay / TCGplayer ad dock
+sitting on top of it.
+
+- **The bug.** A header that mounts the cart button twice (desktop and phone copies) mounted two `CartDrawer`s. Only one draws, but both
+  ran the scroll-lock effect: the second saved the first's `overflow: hidden` as "previous" and put it back on close, so the page stayed
+  locked and `BottomNav` (and the ad dock) read it as an open dialog forever. Now only the drawer that draws locks scroll or checks
+  live prices (`mounted` in both effects). Sites with one header button never hit it, but carry the same guard.
+- **The pill.** Geometry only, colours stay the site's own: 12px from each side (at most 460px wide), rounded ends, a soft shadow, and
+  `bottom: var(--bn-gap)` where `--bn-gap` is `max(8px, safe-area − 14px)`, so it floats above the home indicator without the old full
+  safe-area band. `--bn-h` (54px) and `--bn-space` (height + gap) are on `:root`; the stacked ad dock, nudges and toasts sit
+  `var(--bn-space)` + a small gap up, and the body's bottom padding follows it. Hidden, it slides fully off-screen (transform only, CLS 0).
+- **Measured** (local build, dock stacked): Pixel 7 412×915 nav + dock take 129px (14.1%); iPhone 15 393×852 with a 34px safe area
+  143px (16.8%); iPhone SE 375×667 129px (19.3%); the old flush bar took about the same plus the full safe area.
+
+## Ads below content, the position test ended, fewer footer links, two co-founders (2026-11-19)
+
+Owner, 2026-11-19 (core-update quality pass): "all the ads that can negatively impact our indexing let's remove and have
+more strategically placed ads". Google's core update from 10 Nov judges page quality, and a pair of 280px ad banners
+above the content of every page is the first thing it sees.
+
+- **Below the content, every page.** `InlineAdsZone` now follows `{children}` in the layout; the card, sealed and set
+  pages place their `InlineAds` last (the card page's preload of the banners' data went with it, so it no longer
+  competes with the page's own first paint).
+- **The home position test is over.** The 2026-11-18 top-vs-low split (`HomeAdSlot`, `lib/home-ab.ts`, its boot
+  script and CSS) is removed: every visitor gets the pair below the chase cards and Today's Top Deals, tagged `low`
+  so its clicks still compare with the test's.
+- **No cross-site block.** `FamilyDeals` is off (`CROSS_SITE_BLOCKS`); the one family link is the footer's `/our-sites`.
+- **Footer site map** about 63 links → 24 (`FOOTER_KEEP` in `nav-groups.ts`); the header menu still has the full index.
+- **About**: run by its two co-founders, Bill and George; AI tools help with code and article drafts; the group costs
+  about A$790 a month to run (our books, 30 days to 15 Nov 2026).
+
+Kept: the phone dock (after a scroll, dismissible, never on a product page), the in-page "Rate us" strip and the
+engaged-only corner rating card.
+
+## 2026-11-19: The dock A/B ends: the phone ad strip sits above the bottom nav for everyone (owner)
+
+The owner, 2026-11-19: "I want it for all the sites, so people have like an ad on their phone right there." The dock A/B of
+2026-11-18 (`lib/dock-arm.ts`) ends early with its "on" arm for every visitor: the eBay (and, where the site has it, TCGplayer) dock is
+stacked just above the phone bottom nav whenever it shows, instead of taking turns with the nav. Its own rules are unchanged: after a
+scroll, labelled "Ad", ✕ for the visit, never Amazon. `dock_arm` on buy_click now always reads "on".
+
+## eBay calls go to sealed first, the most popular first; cards get what is left (2026-11-19, owner)
+
+The owner, once singles were live on several sites: "we cannot go past the eBay quota … everything goes to sealed
+products first, or at least the most in-demand sealed products, and not the least popular ones … they have TCGplayer
+prices, and they also have their own store prices … we cannot kill the eBay quota." A card page already shows
+TCGplayer's market price and the stores'; a sealed product's eBay price is the one shoppers compare against. So every
+eBay plan now searches every due sealed product, ordered by demand, before any single, and a single gets a call only
+from what sealed leaves. Measured 17-18 Nov before the change: no keyset ran out, but several shared ones ended the
+day at 88-96% of 5,000, and on RiftCompare the singles pass (2,081 calls on 18 Nov) ran before the sealed pass with
+no ceiling of its own.
+
+RiftCompare: the singles passes (catalogue and chase) prime the budget with `hold: SEALED_EBAY_HOLD` (500, env
+`EBAY_SEALED_HOLD`), so they stop 500 calls above the 600 reserve and the sealed pass after them in
+`refresh-prices.yml` always has its calls; the sealed pass primes with no hold and now logs `eBay sealed: spent N`.
+The live-remaining reserve stays the hard stop. If the workflow ever runs sealed before singles, drop the hold
+(`tests/ebay-sealed-first.test.ts` checks the order).
+
+The eBay quota board (`src/lib/hq/ebay-quota.ts`, run by the ops monitor every three hours): every keyset's
+calls on its latest day, from what each site already publishes (`data/state/ebay-usage.json`, `meta.json` `ebay`,
+`data/ebay.json`, `ebay-status.json`, OP's watchdog status, whose "eBay showed R of 5000 left" also gives DexCompare's
+spend). Red (emailed like any red check) when a keyset reaches 5,000, a site spends over its own cap, or a site was
+429'd; amber within 3% of the limit. Not 80%: the agreed caps add up to 88-100% of each keyset by design, so 80%
+would be amber every day and mean nothing. A missing or stale number is unknown, never ok. RiftCompare's own keyset
+keeps its live "eBay daily call allowance" check; MTG Compare, SportsCardCompare and CamCompare publish no usage file
+yet (listed as "not published"). `tests/hq-ebay-quota.test.ts` also pins that each keyset's caps add up to 5,000 or less.
+
+## Giveaway: bonus entries, a public leaderboard, the admin list, monthly (2026-11-19)
+
+Owner, 2026-11-19: "if you are a premium user, you get triple the amount of entries", "increase your entries by
+referring a friend", "a leaderboard ... the top 100", "an admin page so I can see who's entered", "mention we're going
+to do monthly giveaways".
+
+- **Entries** (`entryWeight`, `lib/giveaway.ts`): 1 each; 3 for Premium, and the SAME 3 for a free account that
+  watches any price, so the rules' "no purchase necessary" stays true (paying never buys more than a free account can
+  have: a weighted draw that only payers can climb is a lottery in most places). +1 per friend who joins through the
+  entrant's invite link while the giveaway is open and confirms their email (`GiveawayReferral`, written by
+  `applyReferral`, one row per new account), capped at 10. All counted by the site, never self-reported.
+- **No "follow us on Instagram" entries**: a follow can't be checked automatically, and many subreddits forbid
+  follow-to-enter giveaways.
+- **Leaderboard**: `/api/giveaway/leaderboard`, top 100 by entries, CDN-held six hours, first name and last initial only
+  (`publicName`), an opt-out (`GiveawayEntry.showName`) that shows "Anonymous entrant", the team left out.
+- **Admin**: `/admin/giveaway` lists every entrant (email, country, entries and why, per-day counts), a CSV from
+  `GET /api/admin/giveaway`, and a draw weighted by entries (`weightedPick`, `crypto.randomInt`) that leaves the team out.
+- `/giveaway` says a giveaway is planned every month (a plan, no prize promised), and has its own share image drawn from
+  the prize's art (`assets/og/giveaway-mf-captain.jpg`).
+
+## 2026-11-19: No ads on Premium, account, collection, watches, sign-in or giveaway pages
+
+A production check on a sister site found /premium opening on phones under ad blocks. Premium promises no ads, and these are
+conversion and utility pages, so the layout's ad units (PhoneDockAds) stand down on them (`lib/ad-free-paths.ts`,
+`AdRouteGate.tsx`, `tests/ad-free-paths.test.ts`).
+
+## Card scanner beta: the model reads the card, our code picks the printing (2026-11-19)
+
+Owner, 2026-11-19: "use AI to scan your card … add it to your collection … determine the value … this feature needs to
+be heavily tested before we release it to production, and I need a way to be able to test it myself." The June
+scanner (perceptual hash of the photo, then browser OCR of the number; removed 2026-06-09) failed on real phone
+photos: a hash of a tilted, glared, foil photo is not the hash of a flat scan, and browser OCR misreads small print.
+
+- **How it reads.** `/scan` (a static, noindex shell, linked from nowhere) lets the phone's own camera app take one photo
+  (`<input capture>`: no getUserMedia, so `camera=()` in the Permissions-Policy stays). The browser shrinks it to 1,024 px
+  and posts it to `/api/scan/identify`, which makes ONE Claude Haiku 5.5 call (`lib/scan/read.ts`, structured output,
+  thinking off) that only READS: name, set code, collector number, a promo stamp, the game. The photo is never stored.
+- **How it matches.** `lib/scan/match.ts`, pure: the printed number (with its letter or star) is the key, the name must
+  agree with it, a promo stamp picks the promo twin. Disagreement or a missing number is never "high" confidence; the
+  other printings come back for "Wrong card?". The model never picks a card id, so a hallucinated id cannot happen.
+- **What it shows.** The matched card's ordinary tile and quick view (stored store, TCGplayer and eBay rows, Add to
+  collection through `POST /api/collection`, free limits as everywhere). A high-confidence match opens the quick view
+  at once. A scan never calls eBay and spends no eBay quota (owner, 2026-11-19: eBay quota goes to popular sealed first).
+- **Who and how much.** Off without `ANTHROPIC_API_KEY` (Vercel Production). Admins only until `SCAN_PUBLIC=1`; then
+  signed-in only, `SCAN_FREE_PER_DAY` (5) free and `SCAN_PREMIUM_PER_DAY` (100) for Premium. `SCAN_DAILY_CAP` (300) a UTC
+  day site-wide. Measured US$0.0003 a scan, so the cap costs at most about US$0.09 a day. Counter rows `scan:day:*`,
+  `scan:u:*` and the beta tally `scan:fb:<confidence>:<verdict>` (counts only).
+- **Measured before release.** `scripts/scan-eval/run.ts` (`scan-eval.yml`, Actions only) sends ~600 phone-photo
+  versions of 100 seeded catalogue cards (tilted, glare, dim, foil sheen, far away; base, alt art, overnumbered, promo,
+  battlefield, rune) through the same code and commits `scripts/scan-eval/results/summary.md`. The number that gates a
+  public release is "wrong card marked Match"; the owner's own phone tally (`/api/scan/feedback`) is the real-photo check.
+- **Look-alike printings** (same set and number, different picture): a second Haiku call shows the model the photo
+  and up to four official images and asks which (`pickTwin`). It never overrules a letter or star the model read, and a
+  booster card whose promo has the same number skips it: the page asks "Which one is yours?" with both shown.
+- **Measured, 19 Nov** (`scripts/scan-eval/results/`, 588 phone-style images of 98 cards; synthetic photos made from
+  the official images, so the owner's real-photo tally is still the release gate):
+
+  | run | right printing | right card | in the picker | wrong card marked "Match" |
+  |---|---:|---:|---:|---:|
+  | 1, read + match only | 87.8% | 99.5% | 99.8% | 8.2% |
+  | 2, + picture check | 89.1% | 99.5% | 99.8% | 3.6% |
+  | 3, read letter/star kept, promo twins asked | 89.3% | 99.5% | 100% | 0.5% |
+
+  In run 3, 77% of scans said "Match" and 99.3% of those were the right printing; median 1.3 s, US$0.0003 a scan.
+  Sonnet 5.5 on the 120 hardest images (run 2) was 99.2% right vs Haiku's 96.7% at about 20 times the price: not worth
+  it for a free feature. Promo printings are the weak spot (44% picked right; always in the picker).
+- **Other games later.** The read is game-agnostic; only the catalogue and the matcher's number format are Riftbound's.
+  MTG, One Piece and Yu-Gi-Oh print set + number the same way and fit the same two steps; Pokémon prints number/total
+  without a set code, so its matcher will lean on name + number + the set symbol the model names.
+
+## 2026-11-19: Search-engine-first audit after the November 2026 core update
+
+Google's core-update guidance asks whether a page exists mainly to help people or mainly to catch a search, and names
+content "spread across a large network of sites" and re-dating pages to look fresh as warning signs. What changed here:
+
+- **Seasonal sale pages.** The same template put Boxing Day, January sales and Lunar New Year (and Valentine's Day where
+  a site has it) pages on every Compare site, indexed all year, each listing the same deals as the Black Friday page.
+  `saleIndexable` in `lib/sale-seasons.ts`: Lunar New Year and Valentine's Day pages are never indexed, Boxing Day and
+  January sales only from three weeks before the homepage links them until a week after they end; out of season they are
+  noindex, follow and out of the sitemap (`withoutOffSeasonSales`). The URLs stay live all year (URL freeze).
+
+Black Friday and Cyber Monday pages are unchanged (in season). Judge the effect on 1 to 8 Dec against 3 to 9 Nov.
+
+## 2026-11-19: Deck Coach test
+
+The owner wants an AI subscription of our own (thread "Pick an AI subscription app to build"); the shortlist's top pick
+is Deck Coach: a player pastes a Riftbound deck, a budget and an event, and gets back the upgrades worth buying priced at
+the cheapest store, the matchups that beat it and a cheaper version. Riftbound and MTG players already pay US$7.99 a
+month for deck apps with no coaching in them (Runes, Untapped). Before anything is built, a two-week concierge test
+(go given 19 Nov):
+
+- `/coach` is hidden: `robots: noindex, nofollow`, out of the sitemap, linked from no menu, static (no request or
+  database read). It collects a deck, legend, format, budget, event, an optional goal, an email for signed-out visitors
+  and a "save me the founder price (US$5.99 instead of US$7.99), no charge" tick. The 23 Nov ban list is on the page as
+  the timely reason to send a deck in.
+- `/api/coach` saves one `Feedback` row with `source: "coach"`, `consentPublic: false` and no rating, so no review,
+  rating or public surface ever reads it, and emails the inbox through `notifyOwnerBounded` (kind `coach`).
+  `/admin/coach` (admin session only) lists the requests and counts the founder taps.
+- The site makes **no AI API call**: up to 40 reports are written by the team and sent from the site's inbox.
+- **Read 3 Dec 2026.** Go (build the real tool, then ask the owner for an API ceiling) if 100+ decks AND 30+ founder
+  taps; stop under 40 decks. `tests/coach.test.ts` pins the hidden page and the private rows.
+## 2026-11-19: The phone bar's Menu tab becomes Collection
+
+Owner, 19 Nov: "instead of the menu on the navbar, it should be like my collection, and you need to be able to sign in to see
+your collection … Rift Compare kind of already has a collection, so we don't want to lose that. It's just another way to view
+your collection." The bottom nav's last tab is now Collection, a link to `/portfolio`, the collection Rift already has (nothing
+about it changes; a signed-out visitor is sent to `/login?next=/portfolio` by the page itself). The menu is still one tap away on
+the header's menu button, which stays the one opener (`tests/single-menu-entry.test.ts`). Members keep Watching in place of
+Deals. Same tab as DexCompare, MTG Compare and YGO Compare.
+
+## 2026-11-19: "Continue with Discord" on the sister sites, through Rift's own Discord app
+
+Owner, 19 Nov: "Google OAuth and Discord OAuth … these are basically our only login methods. And we want to have those login
+methods on basically all of our sites now, because … user accounts [are] really important for retention." The sisters (Dex, MTG,
+TCG Prices, Gundam, YGO) had Google (their own client, checked here) and the emailed link, no Discord. A sister has no server, so
+`/api/sister-premium/oauth/discord?site=<key>&next=<path>` runs the round trip through RiftCompare's EXISTING Discord app and its
+already-registered redirect URI: no new Discord app, no new secret, nothing for the owner to set up. The callback applies every
+check a Rift sign-in gets (state, a Discord-verified address only, linked by Discord id then by address, so one person is one
+account everywhere), starts NO Rift session, and sends the visitor to the sister's own `/account/verify#c=<code>&n=<path>`: the same
+20-minute signed code the emailed link carries (`lib/sister-oauth.ts`). The site comes only from `SISTER_PREMIUM_SITES` and the
+return address is its canonical URL. A click on "Continue with Discord" opens Discord and comes back: not a surprise redirect.
+
+Same day, Google too: `/api/sister-premium/oauth/google` does the same through Rift's existing Google app, for the sisters with no
+Google client of their own (MTG Compare had Google before its engine swap and lost it; TCG Prices, Gundam, YGO). DexCompare keeps
+its in-page Google button (its own client). Google's consent screen names RiftCompare: it is one account across our card sites.
+
+## 2026-11-19: One group for Gift of the Rift
+
+The Gift of the Rift Bundle (4 Dec 2026) has no set code, so every listing was grouped by its own title cut to 40 letters:
+the 19 Nov sealed data held it under eight such groups ("riftboundleagueoflegendstcggiftoftherift",
+"riftboundgiftoftheriftbundlepreorder", …), each page with one to twelve rows, plus TCGplayer's own row alone under
+"giftoftheriftbundle". TCG Prices takes a Rift group only by the TCGplayer id of that group's own TCGplayer row, so it
+showed the bundle with no store at all, against about 20 store listings here.
+
+`SET_LESS_GROUPS` (`lib/sealed-import.ts`) gives a set-less product ONE fixed key wherever a title is grouped (store
+feeds, product pages, Shopify collections, the TCGplayer catalogue): the key TCGplayer's row already had, so
+`/sealed/giftoftheriftbundle` keeps its URL. It is checked before the set (the bundle's packs come from five sets, and
+a title naming one must not file it under that set), needs the word "bundle", and never takes a case, a lot or several
+bundles. The old title-derived pages are not left to 404 (URL freeze): `/sealed/[slug]` sends any hyphen-less slug
+holding "giftoftherift" to the one page with a permanent redirect (`setLessSlugRedirect`). Add a product to the list
+only with real store titles in `tests/sealed-set-less-groups.test.ts`. Champion Decks that name no champion have the
+same problem and are not on the list: a title without the champion cannot say which deck it is.
+
+## 2026-11-19: Deck Coach test withdrawn
+
+The owner stopped the Deck Coach test the same day (19 Nov): the money in trading cards comes from collectors, not
+players, so a deck-review subscription aims at the wrong buyer. `/coach`, `/api/coach`, `/admin/coach` and
+`lib/coach.ts` are removed before a release shipped them, and the Reddit post is cancelled. Any AI subscription idea
+starts from collectors.
+
+## 2026-11-19: Collection check-up test
+
+In place of the Deck Coach test, the owner chose (decision card, 19 Nov) a collector-first test of the AI subscription
+idea "Collection Advisor": a weekly note on a member's own collection (worth grading, what moved, wishlist cards at a
+good price). Collectors already pay for the data under it (Card Ladder US$20 a month, Market Movers US$9.99 to US$49.99,
+PriceCharting US$5.99) and new AI apps sell "buy/sell signals" at US$7.99. Before anything is built, two weeks of
+hand-written check-ups:
+
+- Rift's binder (`/portfolio`) shows a "Free binder check-up" card to a member with 10+ saved cards
+  (`CHECKUP_MIN_ITEMS`). One tap sends their list (name, set, number, condition, today's value, what they paid) to
+  `/api/checkup`, with an optional question and a "save me the founder price (US$5.99 instead of US$7.99), no charge"
+  tick. The wording is binder language, not trading-desk language (the 2026-09-16 rule on this page).
+- MTG Compare, OP Compare and DexCompare post the same request cross-origin from their exact https origins
+  (`CHECKUP_SITES`, `checkupCors`) with an email; a cross-origin request never reads Rift's session.
+- Each request is a private `Feedback` row (`source: "checkup"`, `site` = the sending site, `consentPublic: false`, no
+  rating), so no review or rating surface reads it, and is emailed to the inbox through `notifyOwnerBounded`
+  (kind `checkup`). `/admin/checkups` (admin session only) lists them with counts by site and founder ticks.
+- No site makes an AI API call. Up to 40 check-ups are written by the team from our own prices.
+- **Read 3 Dec 2026.** Go (build the weekly AI note into Collector Premium, then ask the owner for an API ceiling) if
+  60+ requests AND 25+ founder ticks; stop under 20. `tests/checkup.test.ts`.
+
+## 2026-11-19: eBay and TCGplayer as two buttons under the phone's Buy (top-pair A/B)
+
+Owner (2026-11-19): Amazon clicks rose about tenfold once its row sat in the top three, "now we want to get more eBay clicks and …
+more TCGplayer clicks. And positioning is really important", with leave to ship placement improvements without asking. The card
+table already leads with eBay then TCGplayer; what a phone sees first is `CardTopBuy`, one Buy button for the cheapest listing, which
+is usually a store that pays nothing, with the paid alternative as one muted text line (2026-10-27). Test, 50/50 in the browser
+(`lib/top-pair.ts`, localStorage `top-arm`): arm "pair" draws eBay's and TCGplayer's own cheapest rows within 20% (the line's band,
+same finish) as two real buttons with their real prices and "+N%" under an "Also on · Paid link" label; arm "line" keeps the line.
+The cheapest keeps "Best price" and its own Buy button, the comparison is untouched, the server HTML is arm "line". `buy_click`
+carries `top_arm`, surface `card_top_pair`; `top_seen` fires once a visit where either arm had a paid row to show. Read on 3 Dec:
+paid top clicks (`card_top_alt` + `card_top_pair`) per `top_seen` visitor, and eBay + TCGplayer clicks per visitor overall, so the
+pair is not just taking clicks from the table. Keep it by making `topArm()` return "pair", drop it with "line".
+
+## 2026-11-19: A store read by category and by product page keeps both
+
+Miniature Market is read twice by the sealed import: its whole Riftbound category (Shopware, `SEALED_ONLY_SHOPIFY`, about 24
+products on 2026-11-04) and then one product page (`PRODUCT_PAGE_STORES`). The product-page pass deleted every row of the store
+before writing its own, so each run wiped the category read: the 18 Nov public snapshot had one Miniature Market row (the Radiance
+box) and none of its Legacy pre-orders, at a time only 4 US stores listed any Legacy product. Now a store that also has a category
+read only replaces the groups its pages read (`productPageReplaceScope`, `tests/sealed-product-page-scope.test.ts`); a pages-only
+store (Game Nerdz) still replaces all its rows, so a page it stops listing drops out. Miniature Market's Legacy booster box, pack
+and Vault Bundle pages (UVSRB06…) were added to its product pages, so the boxes buyers search for are read even on a day the
+category read fails. Game Nerdz has no Legacy page yet.
+
+## 2026-11-19: eBay's own blue on its button, 50/50 (eBay-button A/B)
+
+Owner (2026-11-19) wants more eBay clicks through placement and visibility. Vercel buy clicks, 5-11 Nov vs 12-18 Nov: eBay fell
+31% on DexCompare, 45% here and 60% on OP Compare, from the day the calm palette (2026-11-12) took the colour off the pinned eBay
+row; TCGplayer, which kept its own blue button, rose (Dex +43%, MTG +127%). The calm-palette entry said to strengthen eBay's button
+before bringing any outline back. Test (`lib/ebay-btn.ts`, localStorage `ebay-btn`, 50/50, browser only): arm "b" draws every
+eBay link wearing the filled site button (`a[data-ebay].btn-primary`; `OutboundLink` marks eBay links `data-ebay`) in eBay blue
+#0064d2 with white ink; arm "a" keeps the orange. Colour only: no outline, tint, position or label changes. `buy_click` carries
+`ebay_btn`. Read 3 Dec with the top-pair test: eBay clicks per arm (the split is even, so totals compare; total buy clicks per arm
+check the split). Keep: `ebayBtn()` returns "b"; drop: "a".
+
+## 2026-11-19: Scan a card leads the binder; Collection and Scan in the desktop header
+
+Owner, 19 Nov: "the scan a card should be within the collection page on mobile and on pc it should be visible somewhere as well
+in the navigation". The navigation, by device:
+
+- Phone: the bottom bar's Collection tab opens `/portfolio`, whose first button is now **Scan a card** (`/scan`). The scanner is not
+  a sixth tab: the bar stays five.
+- Computer: the header carries **Collection** (from xl) and **Scan** (from lg; the search is the row's one flexible element and
+  gives the room), beside Sealed, plus Pricing and the account control as before (`HeaderCollectionLinks.tsx`).
+
+Scan shows only when the scanner is open to the viewer: `/api/me`'s `scan` flag and the binder's `canScan` both come from
+`lib/scan/caps.ts` (`scanAccess`, or public), so the links follow the scanner's own switch and never point at a page that refuses.
+
+## 2026-11-19: eBay's button is eBay blue again
+
+Owner (2026-11-19): "our eBay clicks have still stagnated. We're nowhere near our all-time high … I really need to increase it."
+Vercel buy clicks: eBay about 240 a day across the network before 12 Nov, about 170 since; 5-11 Nov vs 12-18 Nov DexCompare 706 to
+489, RiftCompare 298 to 165, OP Compare 153 to 61. The fall starts on 12 Nov, when the calm palette made eBay's button ink;
+TCGplayer, which kept its own blue button, rose (DexCompare 545 to 779, MTG Compare 160 to 363). So eBay's buttons wear eBay's own
+blue again (#3665f3, white ink, fixed in both themes) on every site; nothing else about the rows changes (no outline, tint, order or
+label), and the cheapest row keeps its mark. RiftCompare and OP Compare had started a 50/50 the same morning; it ended for
+everyone. Read: eBay buy clicks per 100 visitors, the week after release vs 12-18 Nov.
+
+## 2026-11-19: The Android app matches the phone site (sign-in, Premium, ads, links)
+
+Owner (2026-11-19): make the RiftCompare app "a lot better and mobile optimised just like the web app". The app (Play closed test,
+build 1.0.0 from branch `claude/riftcompare-android-app-pone02`: Capacitor 8, App Links on riftcompare.com, the
+`com.riftcompare.app://` scheme, `RiftCompareApp` in its User-Agent) is a WebView of this site, but the website half of that
+branch never merged, so `main`'s old NativeShell ran against it. Audit: the bottom nav and the phone ad strip were switched OFF in
+the app (both treated `.capacitor-native` as "hide": they made room for a native AdMob banner), and that banner ran on Google's
+TEST unit ids (no `NEXT_PUBLIC_ADMOB_*` set), so it earned nothing; Google sign-in fails (Google refuses OAuth in a WebView) and an
+emailed link opened in Chrome, signing in the wrong cookie jar; Premium was sold through Stripe inside the app, which Google Play's
+payments policy forbids for a digital subscription; the cart's "open every store" opened nothing in a WebView. All fixed on the
+website, so the testers' build gets it with the next release and no new upload is needed:
+
+- **Sign-in** (`lib/app-auth.ts`, `lib/native.ts`): in the app a provider link opens the provider in a Custom Tab with a signed
+  state carrying a PKCE-style challenge (the verifier stays in the WebView's localStorage); the callback mints a five-minute,
+  single-use `AuthToken` (purpose "app", token `<challenge>.<code>`) and sends Chrome to `com.riftcompare.app://auth?code=`; the
+  app opens `/login/app`, which trades code + verifier at `/api/auth/app-exchange` for a session in its own jar. A leaked or
+  planted code is useless without the verifier. The web flow is untouched (its hex state still needs the cookie).
+- **App Links**: `public/.well-known/assetlinks.json` names Play's app signing key (Play Console's own snippet), so an emailed
+  sign-in link or any riftcompare.com link opens in the app; `/api/*` and `/go/*` are excluded (Android 15 dynamic rules) so a
+  web sign-in in Chrome is never pulled into the app mid-flow.
+- **Ads**: the AdMob banner is gone (an older one is taken down); the app shows the phone site's bottom nav and ad strip.
+- **Premium** (owner's choice on the card, "hide buying in the app for now"): checkout, upgrade and switch-to-annual refuse the
+  app's User-Agent; `PremiumCta` and `GuestCheckoutButton` render nothing in the app; links to `/premium` and `/premium/start`
+  are hidden and those pages are covered by `AppPremiumNotice`, which names no other way to pay (Play forbids that too). A member
+  keeps every Premium feature after signing in. Play Billing is the later option if the app earns it.
+- **Links**: stores open in a Custom Tab; the cart opens one store per tap in the app; launcher shortcuts and App Links route to
+  their page; the app's own "Android app" promo is hidden in it. Plugins come from the app's injected runtime, never from npm
+  (`tests/app-auth.test.ts`), so the website and the build cannot drift apart again.
+## 2026-11-19 — A graded-slab variant never prices the raw card
+
+A store can sell a raw single and its slabs as variants of ONE Shopify product ("Near Mint" A$344 beside "Graded -
+Beckett 9.5" US$115, found on OP Compare). `conditionRank` reads a slab label as an unstated condition (Near Mint), so
+the cheaper slab priced the raw card. The Shopify store pass and `bestVariantPrice` (the verify pass) now drop any
+variant `isGradedVariant` (lib/condition.ts) reads as a slab before choosing; a slab-only product gives no row. Slabs
+stay where they belong, in the eBay graded panel. `tests/graded-variant.test.ts`.
+## 2026-11-19: TCGplayer's market price on the price history chart
+
+Owner: "I really really like opcompare's price history where you have the tcgplayer market price as well as the cheapest price
+locally. Can we pls copy it across all our tcg websites?" The card page's chart (`LocalizedPriceHistory` → `PriceChart`) and the
+quick view's now draw a second, dashed gold line under the cheapest-price line: TCGplayer's US market price per day, converted to
+the visitor's market at the same reference rate as the card's own series (`historySource`), labelled "TCGplayer market
+(converted)" outside the US, in the tooltip and a legend. The stats header (Now / Low / High / change) stays the cheapest price's.
+
+- The data is new: `scripts/record-tcg-market.ts`, a step of `refresh-prices.yml` right after the import, writes
+  `data/price-history/tcg-market/<Sydney day>.json` (US cents per card, same shape as `cards/`) from ONE query of the US TCGplayer
+  market rows the import just wrote, never a derived row, market rows preferred over the legacy row (`preferMarketRows`). Never
+  fatal. The publish step commits it with the day's other history; no new eBay or TCGplayer request, no new page database read
+  (the routes read the bundled files).
+- It is a separate script on purpose: a change to `price-import.ts` re-runs the whole import on push.
+- The free 90-day window and Plus's full history apply to it exactly as to the main line. Display only: never a price row, a
+  best price, a deal, an alert, a sort or structured data. It starts with the next import; until then the chart is unchanged.
+
+
+## Card scanner v2: live viewfinder, and open to everyone signed in (2026-11-19)
+
+The owner tested the beta on his phone the same evening ("the scanner works") and asked for three things: a camera
+view that frames the card with guides and captures on its own, a page that looks like a product rather than two
+buttons, and the scanner open to everyone for a Reddit launch ("100% free for 5 scans a day").
+
+- **Live viewfinder that finds the card itself** (`components/scan/Viewfinder.tsx`, `lib/scan/frame.ts`). The camera
+  opens only when the visitor taps Start, and stops when the tab hides or the page is left. `next.config.js` lets
+  `/scan` alone ask for it (`camera=(self)` on `/:page(scan)`, the last matching rule wins); every other page still
+  sends `camera=()`. About eight times a second a 180 px grey copy of the picture goes through `detectCard`: the rows
+  and columns with the most strong edge make peaks, and the card is the LARGEST 63:88 rectangle on those peaks with at
+  least three sides on a real edge and nearly the best faintest-side strength (the frame printed inside a card is often
+  a sharper line than the card's own border, which is why the largest wins). The owner asked for this over a fixed
+  guide ("it should still be able to auto frame and detect a card ... otherwise it's not as good as other ones"). The
+  outline follows the card; auto-capture fires after half a second of the card big enough (40% of the frame tall),
+  steady (the outline moved under 4% and the picture under 6 grey levels) and sharp (variance of the Laplacian). A card
+  turned more than about 10 degrees is not found; the shutter still takes the middle of the view. Only the capture
+  (the found card plus 8%, at most 1,024 px) leaves the phone, exactly as a photo did; the video is never recorded or sent. After a capture, auto waits until the card leaves the frame or is swapped, so one card never spends
+  two free scans; the shutter always takes another. The photo inputs stay under it for browsers without a camera.
+- **Measured** with Chromium's fake camera playing two real card images sliding onto a grainy table off-centre (one
+  turned 3 degrees): each card found, outlined, captured once and cropped to the card, and the quick view opened.
+  `tests/scan-frame.test.ts` finds three real card images on a grainy table within 4% of their true outline. Thresholds (`FRAME_LIMITS`) come
+  from synthetic frames in `tests/scan-frame.test.ts`; real phones may move them.
+- **Open** (`lib/scan/caps.ts`): public unless `SCAN_PUBLIC=0`, sign-in required, 5 a day free, 100 Premium, admins
+  unlimited. The site cap rises to 1,000 a day for the launch: at the measured US$0.0003 a scan that is at most about
+  US$0.30 a day. A scan that fails on our side is given back. The response carries `remaining`, shown under the shutter.
+- The page stays noindex and out of the sitemap: it is an app screen, linked from the collection and the header.
+
+## 2026-11-19 — ScentCompare and KaeYoung join the shared sign-in, Premium and alerts
+
+**Owner (2026-11-19):** "we want accounts for every single one of our compare sites now", with a Premium "like Rift Compare … with the
+deals and everything". ScentCompare goes first, then KaeYoung.
+
+- Both are added to `SISTER_PREMIUM_SITES` (sign-in by Google, Discord or emailed link, watch list, Stripe Premium) and to
+  `SISTER_ALERT_SITES` (price-drop and back-in-stock alerts, weekly biggest drops), reading each site's own static `/alert-feed.json`.
+  KaeYoung was left out of alerts on 2026-11-02 "unless the owner asks"; this is the ask.
+- Each is a group of one (`scent`, `kbeauty`): an alert email never ends with another site's deal. KaeYoung carries no sister links, and
+  both sit on the other side of the network from RiftCompare.
+- `quiet: true`: their emails' footers say "our shared alert service", never RiftCompare (`senderOf`). The From address stays the shared
+  verified sender with the site's own name.
+
+## 2026-11-19 — Lorcana Compare and Cyberpunk Compare join the shared sign-in and Premium
+
+The same rollout as ScentCompare and KaeYoung (owner, 2026-11-19: accounts on every compare site). Both were already on the shared
+alert service; adding them to `SISTER_PREMIUM_SITES` gives them the sign-in (Google, Discord, emailed link), the watch list and Stripe
+Premium. Their emails keep naming RiftCompare's service as before (same side of the network, not `quiet`).
+
+## SportsCardCompare joins accounts; alert groups follow the two sides (2026-11-19)
+
+Owner, 2026-11-19: accounts and Premium on every compare site. SportsCardCompare (`wax`) joins `SISTER_PREMIUM_SITES` with the same
+sign-in, watch list, back-in-stock and Premium as ScentCompare and KaeYoung. Sports cards sit on the other side of the network from
+RiftCompare (owner, 2026-11-17), so `wax` is now `quiet` (its emails say "our shared alert service") and alone in a new group,
+`sports`, instead of `cards`: a Sports card alert no longer ends with a DexCompare deal, nor a card alert with a Sports card deal.
+The same rule moved WargameCompare from `hobby` to `cards` (it is on the cards side) and left FigureCompare alone in `hobby`, now
+quiet too.
+## 2026-11-19 — eBay stand-out row, 50/50
+
+The owner, the same evening eBay's blue came back: the colour change moved eBay clicks, so "we can do something even more than just a
+color change … make it stand out even more". Every visitor keeps eBay's blue button; a new 50/50 (localStorage `ebay-pop`, arm on
+`<html data-ebaypop>`, `ebay_pop` on buy_click) gives arm "pop" a bolder, larger eBay button with a soft blue halo and tints the list
+row that holds an eBay button eBay blue with a blue edge. Shape and colour only: no new words, no new claim (eBay is called the cheapest
+only when it is), no position change, no extra eBay API call, white on #0064d2 passes contrast. Run on Rift, Dex, MTG and OP. Read
+3 Dec: eBay buy clicks per arm, total buy clicks per arm as the check; keep the winner and roll it out to the other card sites.
+
+## 2026-11-19 — Paid rows always there, and a tag lint that stops the build
+
+From the 19 Nov boardroom review, on the four money sites: a row that is always there beats a perfect row that is often missing. The
+card page's pinned block is now always drawn: eBay's tagged search already stood in when a market had no eBay listing, and now
+TCGplayer's tagged search (`tcgSearchHref`, surface `tcg_fallback`) stands in when a market has no TCGplayer row or reference. eBay's
+search row wears the filled button, so it is eBay blue like the others. And `scripts/tag-lint.ts` runs first in `npm run build`
+(`src/lib/tag-lint.ts`, `tests/tag-lint.test.ts`): every eBay builder in every market must carry campaign 5339155912 and a customid,
+every TCGplayer link must go through Impact (/out/tcgplayer), checked with `classifyLink`, and no component may hard-code a bare eBay
+or TCGplayer href. A failure stops the release: a paid link going out untagged costs more than a late one.
+
+## 2026-11-19: The shared account and alert service never names RiftCompare on another site's flow
+
+Owner, 2026-11-19: "I don't want them to redirect. I don't want the [RiftCompare] logo to appear on any of the site signups."
+
+- Every sister's mail footer now reads "Sent by our shared alert service" (`senderOf`), not only the quiet sites'; the confirm and
+  manage pages' footer reads "Price alerts from our shared alert service". `tests/sister-no-rift-branding.test.ts` pins it.
+- `/api/sister-alerts/unsubscribe` answers with a RELATIVE `Location`, so a visitor who reached it through a sister's own
+  `/account-service/alerts/unsubscribe` rewrite stays on that sister's address.
+- `serviceUrl(path, token, site)` gives a sister's own `/account-service/alerts/<path>` address once its key is in
+  `ON_SITE_ALERT_LINKS` (empty today): add a key only after that sister's `next.config.js` rewrite is live in production.
+- Still RiftCompare's, and only the owner can change them: the Google consent screen's app name, the Discord app's name, Stripe
+  Checkout's business name, and the `noreply@riftcompare.com` sender address.
+
+## 2026-11-19: [urgent] needs eight hours too: a network ceiling of 57 builds a day
+
+[urgent] in a commit subject used to skip the 12-hour gap altogether. On 17 and 18 Nov the network built production 94
+and 137 times a day, almost all of them [urgent] (about eight builds per site per day), and Vercel reached $10.27 a day
+against the $6 cap: every build rewrites the ISR cache and burns build CPU. `scripts/vercel-ignore-build.sh` now builds an
+[urgent] commit only when production last built at least `URGENT_MIN_GAP_HOURS` (8) ago; a plain [deploy] still waits 12.
+So one site builds at most three times a day, and the 19 production projects at most 57 a day (normally about 25).
+Batch urgent changes into one release instead of one per merge. Pinned by `tests/deploy-gap.test.ts`. The same change
+went to every Compare site's gate.
+
+## 2026-11-20: Pay-per-click creators: paid per tracked buy click, cut at day 21 under 1.5x
+
+The owner approved the boardroom's move N6 ("Let's do it", 2026-11-20): up to A$300 a month for creators, paid only per tracked
+click or code, and any creator who has not returned 1.5x within 21 days is cut. Free creator partnerships (the /creators page,
+creator codes) are unchanged; this is the paid lane beside them.
+
+- **What a "tracked click" is.** A buy click (a store, eBay, TCGplayer or Amazon link opened) by a visitor who landed on the
+  creator's own link (`?utm_source=<platform>&utm_medium=creator&utm_campaign=<handle>`). Not a visit: a buy click is what earns,
+  and bots and accidental taps rarely make one. The default offer is A$0.04 a buy click (A$40 per 1,000), A$25 at most in the
+  21-day trial (`DEFAULT_RATE_CENTS`, `DEFAULT_TRIAL_CAP_CENTS`). Our measured value is roughly A$0.04 a visitor and a
+  quarter of visitors click, so about A$0.10-0.15 a buy click; A$0.04 leaves room for the 1.5x rule. A Premium creator code
+  (20% commission) also counts as a code deal and keeps its own ledger.
+- **Creator visits tag their sales** (`lib/paid-visit.ts`, the same file in Dex): `utm_medium=creator` stores the marker `cr` +
+  the first six letters or digits of the campaign (`pokechamp__` → `crpokech`) and adds it to every affiliate sub-id the visitor
+  opens, exactly like the ad tests' `fbad`. A paid ad landing still wins. Free creators' links get tagged too, which is only more
+  information.
+- **"Paid creators" panel** (`lib/earnings/creator-deals.ts`, `CREATOR_DEALS`, one line per signed creator, added only after a
+  written yes): visitors and buy clicks (posted by the daily check to `/api/admin/earnings/creator-stats` from Vercel/GA4 by
+  utm_campaign), paid (the Costs entries in category "Creators" whose label names the deal's `[id]`, so every payment is a receipt
+  and the profit line agrees), owed (clicks x rate, capped in the trial, minus paid), earned (real sales carrying the marker, from
+  the deal's start, any site), back per $1, and the verdict (`verdictForDeal`): on day 21, under 1.5x is "cut". The heading shows
+  this month's creator spend against A$300.
+- **No ops-monitor check.** Money leaves only when the owner pays a hand-entered amount, which the panel shows against the cap the
+  same day; there is no automatic spend to go wrong unwatched.
+- Two deals may never share a marker (`tests/creator-deals.test.ts`); a rate over A$0.10 a click needs the owner.
+
+## 2026-11-20: One Discord hub, linked with a reason to join
+
+The owner asked why the Discord had 9 members after five months. The sites linked `discord.gg/NypdmfAMTa`, a server
+called "RiftCompare" that the owner does not run (another member owns it; the owner's account cannot edit it), with two
+empty text channels, no feeds and no reason given to join, reachable only from RiftCompare's menu and footer. The owner's
+own server (the Dex #pokemon-deals feed, the Sealed Sniper channel) had one member and no link anywhere.
+
+- **One hub:** the owner's server, renamed "TCG Deals & Restocks": the deal feeds on top, a channel per game, chat below.
+- **Every site has its own never-expiring invite code** to the hub (RiftCompare `5pdA3QVPBS`, landing in #riftbound;
+  each card site's alert emails their own, `lib/sister-alerts/discord.ts`; RiftCompare's alert emails `cdJEpmuTW2`). The
+  server's Invites list then counts members per source, with no tracking of ours.
+- **A reason, not a logo:** `DiscordCta` ("Restock and price-drop alerts, free on Discord") in the footer and under the
+  price table on sealed pages. Never above a price, never a pop-up.
+- Card sites only: wargame, sports, figure, scent and K-beauty subscribers never see the hub (the two-sides rule).
+  `tests/discord-invite.test.ts`.
+
+## 2026-11-20: A Hot 40 snapshot freezes the week's biggest drops, and its card is half rises, half drops
+
+**Owner, 2026-11-20**, after a Reddit reply to a Hot 40 post: "show me the biggest drops. I just want to rip and play".
+Every snapshot thumbnail is now roughly half rises, half drops. Minting (`/api/admin/rising-snapshot`) also freezes up to
+five of the week's biggest price drops into the payload (`drops`, `dropsMarket`): `/movers`' own plummeting list
+(`getPriceMovers` in the scope's market, GLOBAL the default market; it caches itself and is called directly, never wrapped;
+its failure is an empty list, never a reason not to mint). The share image (`lib/hot40-og.tsx`) draws the Hot 40's top three
+on the left and the three biggest drops on the right; a snapshot minted before this has no `drops` and keeps the old layout.
+The public page lists the drops under the table. Nothing is recomputed after minting. `tests/rising-snapshot.test.ts`.
+
+## 2026-11-20: Rift Compare is green again
+
+**Owner, 2026-11-20:** "Can we bring back the green theme for Rift Compare? … I like the green theme for Rift Compare better.
+I don't like the orange kind of logo and orange text. Maybe we should bring back the green text."
+
+- **The brand is the pre-rebrand RiftCompare green** (the values the 2026-10-16 rebrand replaced, commit `e5eedca81`):
+  `brand-500` `#1ea65c`, `600` `#188a4c`, `brand-400` (text) `#34d17e` on dark and `#157a45` in the light theme. The logo
+  gradient `--rc-flame` runs `#6af0a6` to `#1ea65c` (light: `#1ea65c` to `#188a4c`), so the R mark and "Compare" are green.
+- **Every orange that was the brand is green:** the hero's embers, vortex and search ring, the top loader, the divider,
+  share images, emails and the store badge (`lib/brand.ts`, renamed `GREEN` / `GREEN_LIGHT` / `FLAME_TOP`). The favicon,
+  `icon.png`, `apple-icon.png` and `icon-512.*` are the green R files from before the rebrand (unchanged since then).
+- **Not changed:** the Riftbound teal ink and Cinzel headings stay (the owner's ask was the orange logo and text). eBay's
+  buttons stay eBay blue, Amazon's amber, TCGplayer's blue, Premium gold; `buy` / `.btn-buy` was already this green, and
+  the one-green-mark cheapest rule is unchanged. Gains, stock and savings were green already.
+- **Not regenerated:** the 197 blog hero images and the app store icon still carry whatever they baked in.
+- `tests/theme.test.ts` and `tests/price-report.test.ts` pin the new hexes.
+
+## 2026-11-20: A Santa hat on the logo and lights under the header (every Compare site)
+
+**Owner, 2026-11-20:** "change the logo for all of our websites so that it's Christmas themed now. Put a Santa hat on top
+of the logos … and add some decorations here and there, like some Christmas lights … and yeah, Santa Claus." This
+deliberately extends the 2026-11-12 "tasteful accents" layer, which had ruled out hats and lights after the owner's
+2026-11-08 "a bit too much": the owner asked for these two by name, so they come back, kept to the header.
+
+- **What:** the header's R mark wears a Santa hat (`BrandLogo cap`, class `xmas-cap`), a string of lights hangs under
+  the header (`xmas-garland` on `NavbarShell`'s `<header>`), and the home page's gift-guide line gets a small Santa
+  (`.xmas-banner::before`). The `xmas-logo` block in `globals.css` (the same block on every Compare site).
+- **Cost:** CSS only. Three inline SVG data URIs (~2.5 KB in the stylesheet), no request, no script, no animation, no
+  image in the HTML. Every piece is `position: absolute` and `pointer-events: none`, so nothing moves and no tap is
+  caught. Favicons and share images are unchanged (a hat is unreadable at 16 px, and share images are cached a day).
+- **Off switch:** the same as the festive layer, `CHRISTMAS_FESTIVE_LAYER` in `lib/season.ts` (`data-xmas-layer`), and
+  the season window ends it on 27 December by itself. Remove after New Year: delete the block and the two classes.
+- Sports Card Compare keeps its own hat and lights (it never took the tone-down).
+
+## 2026-11-20: Most popular leads the home strip, and "See full page" is a secondary button again
+
+**Owner, 2026-11-20 (boardroom on buy clicks):** "Maybe like the Radiance chase cards, like we can get rid of that section
+now … just have the most popular as the first, as like what shows on the homepage."
+
+- **The chase-card tab is gone from every home** (`/` and the five region homes). The popular-cards strip opens on "Most
+  popular" (demand-ranked, `lib/home-rank.ts`), then Biggest movers and Recently updated. The homes no longer call
+  `getSetChaseTiles` (one cached read fewer per render). Chase printings stay on `/sets/<slug>` and in eBay Picks;
+  `featuredSet()` is unchanged.
+- **"See full page: price history and details" is `btn-ghost`, not `btn-primary`,** in the card, sealed and Pokémon quick
+  views. Same words, same place, same full width and 44 px height; only the colour. The measurement (Vercel buy_click,
+  surface `modal`): quick-view buy clickers were ~41 visitors a day on 15–17 Nov and ~10 a day on 18–19 Nov, while quick
+  view opens ROSE (~100 to ~210 visitors a day, "quick view from every card link", #484). The button turned primary on
+  18 Nov (#505), and on a phone it sits under the card image, above every price row, so it was the first loud button in
+  the dialog. Site-wide Rift buy clickers went from ~70 a day (8–17 Nov) to 47 and 36. The buy rows are the only primary
+  actions again.
+- **Recheck 23 Nov:** modal buy clickers back at 30+ a day means this was it. If not, the cause is elsewhere (the cart
+  A/B, #506, is the next suspect) and the button colour can go back on the owner's word.
+- `tests/radiance-featured.test.ts` and `tests/amazon-button.test.ts` pin both.
+## 2026-11-20: The missing collector printings, and one gallery page per collection
+
+**Owner, 2026-11-20:** "a lot of these alternate arts … we just haven't been updating the website with these cards … these
+cards are out there and they need to be in our database", with pages "similar to … the Crystal Rose ones" for the Worlds,
+K/DA and T1 cards.
+
+- **Found by data, not by memory.** `scripts/collab-cards.ts` (`collab-cards.yml`, dispatched on a session branch: the cloud
+  sessions cannot reach TCGplayer) runs the importer's own matcher over `data/public/cards.json` and lists every numbered
+  TCGplayer single no card of ours lands on, plus every product of the collector groups.
+- **25 cards added** to `prisma/manual-cards.json`, each `tcg-<productId>` (so the importer prices it directly), `isPromo`,
+  game data copied from the base printing: K/DA Couture (set `KDC`, 001–005/005), the T1 Player Bundle (`T1A`, 001–005/005),
+  the serial-numbered T1S Ambessa and Miss Fortune (`001*`, `004*`), Secret Garden's Lillia and Ivern, the Worlds Bundle 2025
+  oversized Battlefields (custom `-oversized-promo` slugs, since they share the standard printings' numbers) and eight
+  Champion / Top 8 prizes. The Couture cards are numbered WITHOUT TCGplayer's star: a star makes a card a Signature
+  (`isSignature`), and Riot does not say they are signed.
+- **Images are cropped from TCGplayer's product photo** (sharp trim, 744 px, `public/collab-cards/`). Five products have no
+  photo on TCGplayer (a 403); those reuse their sibling printing's art, as earlier promos did, until one exists.
+- **131 existing promos pinned** in `PROMO_PRODUCT_OVERRIDES`: 102 by the product image their `imageUrl` already carried,
+  the rest by hand. Both Jinx, Rebel 202/298 products and Teemo, Swift Scout 662886 stay unpinned (two products, one card).
+- **Three guides** (`lib/content/collection-articles.ts`): `/guides/riftbound-worlds-cards`, `/guides/riftbound-kda-collection`,
+  `/guides/riftbound-t1-cards`. Each is live galleries of every printing plus dated TCGplayer prices; over 1,500 words.
+  `related-guides.ts` sends T1S, T1A and KDC card pages to them first. The Worlds 2026 Edition's cards are not on TCGplayer
+  yet; they get added when listed.
+## 2026-11-20: Snapshot pages and /movers sell, not just rank (buy-clicks boardroom, move 2)
+
+**Why:** Reddit link posts land on `/rising/<token>` snapshots and `/movers`, and those visitors almost never clicked buy:
+2 buy clickers in 997 snapshot visitors (13–19 Nov), Rift's Reddit visitors 0.7% against 12% from Google. The boardroom
+decided (no owner question needed) to make every snapshot and Hot 100 page buyable. Target 8%+; read 27 Nov and 4 Dec.
+
+- **"Shop the top risers"** (`RisersShop.tsx`) in the first screen of both pages: the top three risers, each with its
+  cheapest price now in the visitor's market (`useCountry().price`, the figure every tile shows) and a Buy button into
+  the quick view (eBay and TCGplayer first). On `/movers` the cards come from `getPriceMovers`, already loaded. A snapshot
+  is frozen and holds no live price, so it passes slugs and the strip reads those three cards from `/api/card/<slug>` in
+  the browser: the quick view's own request, CDN-cached six hours. The page's cache and its frozen numbers are unchanged.
+- **Every snapshot row** gets a Buy link under its frozen price: a plain card link the site-wide handler turns into the
+  quick view, so the buyer sees today's prices there. **Every `/movers` row** (the panels and the table) gets a Buy pill
+  under its move, inside the row's existing quick-view link (`MoverRow buy`): under the price, never beside it, because a
+  button beside every row squeezed names to ~44px at 390px (2026-09-27). The homepage's Price Watch is unchanged.
+- No database read, no new loader, no `revalidate` change, no deploy marker: it rides the daily release.
+## 2026-11-19 — Events sent on mount were dropped: trackEvent queues them
+
+`top_seen` (the top-pair A/B's exposure event, lib/top-pair.ts) read 0 in Vercel on its first day while buy_click carried `top_arm`.
+`@vercel/analytics` `track()` calls `window.va?.(…)`, and `window.va` exists only once `<Analytics />` injects its script, which
+`ConsentGatedAnalytics` renders after the consent check, after the page's own mount effects. So any event sent on mount was silently
+dropped (and top_seen's once-a-visit guard then never sent it again); clicks, which come later, were fine. `trackEvent` now sets up the
+library's own queue first (`vaQueue()` in lib/analytics.ts, the same `window.vaq` its `inject()` makes and its script drains); without
+consent the script never loads and nothing is sent. `tests/va-queue.test.ts`. The 3 Dec read of the top-pair test counts top_seen only
+from the release that carries this; before it, compare clicks per arm.
+
+## 2026-11-20 — Card scanner for TCG Singles DB: Rift reads, the sister matches
+
+**Decision (owner's brief, scanner thread).** TCG Singles DB gets the card scanner for Pokémon, Yu-Gi-Oh! and One Piece. It has
+no accounts, no database and no model key, and the owner wants no new keys or spend, so Rift makes the read and the sister
+does everything else:
+
+- `POST /api/scan/read` (`lib/scan/sister.ts`): cross-origin from the exact origin `https://tcgsinglesdb.com` only, never a
+  session or cookie. ONE Haiku 5.5 call (`readAnyCard` in `lib/scan/read.ts`, a game-aware prompt that also reads the
+  1st Edition stamp); it returns only what was read. TCG Singles DB matches the reading to its own catalogue by TCGplayer
+  product id; Rift never holds that catalogue.
+- Caps: 5 reads a visitor a UTC day (`SISTER_SCAN_FREE_PER_DAY`), keyed by a salted hash of the IP in a Counter row (no raw
+  IP stored; per visitor, not per account, because the sister has no accounts), and 500 a day per sister
+  (`SISTER_SCAN_DAILY_CAP`, about US$0.15 at the measured US$0.0003 a read), separate from Rift's own 1,000. A failed
+  model call gives the read back. `SISTER_SCAN=0` switches it off; it is off without `ANTHROPIC_API_KEY`.
+- No second "which printing" call: on TCG Singles DB look-alike printings are shown with their pictures and the visitor picks.
+- The photo is never stored and no eBay call is made. `tests/scan-sister.test.ts`.
+
+## 2026-11-20: Vercel drops any event with more than 16 properties; buy_click is trimmed to 16 for Vercel
+
+**Found by the buy-clicks boardroom, 2026-11-20.** Probe events sent from riftcompare.com showed the limit. Events with 8 to 16 properties
+arrived in Vercel Web Analytics. Events with 17, 18 and 19 properties never arrived: Vercel drops them silently and whole,
+and nothing errors in the browser.
+
+- **What it broke:** from 18 Nov the A/B arms (`cart_arm` #506, `dock_arm` #516, `ad_look` #525, `top_arm` #539,
+  `ebay_btn` #544, `ebay_pop` #555) were prepended to every `buy_click`. A card row's click carries `card_id`,
+  `card_name`, `variant`, `condition` and `in_stock` too, which comes to 19 to 21 properties, so every quick-view (`modal`)
+  and card-table buy click vanished from Vercel. Sealed rows have fewer properties and kept counting. The clicks still
+  reached the stores. Only the count was lost. Vercel showed Rift's buy clickers falling from ~70 to 36 a day, and
+  every Rift A/B read that relies on card rows is short from 18 Nov until this ships.
+- **The fix:** `trackEvent` sends Vercel `forVercel(data)`, at most `VERCEL_MAX_PROPS` (16). It drops `transport_type`,
+  `card_id`, `condition`, `variant`, `dock_arm`, `ebay_btn`, `in_stock` and `campaign` first, in that order, then anything
+  past 16. GA4 still gets every key. `tests/analytics-props.test.ts` pins it.
+- **Correction to the entry above:** the "See full page" restyle in #571 rested on this artefact. Card-row
+  clicks were not falling; they were not being counted. The button goes back to `btn-primary`, as the owner asked on 18 Nov.
+  The chase-tab removal stands, since the owner asked for it.
+- **Rule:** no Vercel custom event may carry more than 16 properties. Add a new A/B arm to buy_click only after
+  checking the count, or fold it into an existing key.
+emblem is a token: rarity T, or a letter number such as E1. Only those are left out now; a card with a plain number stays.
+
+## 2026-11-20 — Black Friday pages: products furthest under their own 30-day price, with a buy button on every line
+
+Code red plan (20 Nov), Cyber Week buy sprint: the season's pages lead with a list a shopper can act on. `lib/real-drops.ts`: a product
+is listed only when its cheapest in-stock price today is 10% or more under the median of its OWN recorded daily prices over the
+last 30 days (today left out), with 14+ recorded days, wrong-listing days (under half the median) left out, no claim when the
+records swing more than 2x, no placeholder prices (9999.99), and a typical price of 20.00 or more. Each line carries the
+cheapest store's buy button (its own link, `offerLink`) and a tagged eBay search, surface `bf_drops`. It replaces the
+"Under their own 30-day typical price" list on the same pages (same idea, no buy button, fewer guards). Copy says "under its
+30-day typical" and "lowest since <date>", never "was", "dropped" or "ever" (BANNED_COPY). Read 3 Dec: `bf-drops` buy clicks
+28 Nov to 1 Dec against the 4 days before. Rift reads its sealed history files (`sealedHistoryRows`), whose weeks of wrong-product rows the 2x guard refuses; never an eBay row as the store. The same file ships on Dex, MTG and OP.
+
+## 2026-11-20: A sister confirmation that never left is sent by the daily run (owned audience)
+
+Half the sister-site addresses (6 of 12) never confirmed. The sign-up sends its one confirmation only when the day's mail cap
+(`claimMailSlot`, 30 a day for the non-Dex sites) has room and the send works; when it had none, nothing tried again, and the
+daily run deleted the address a week later without it ever getting an email. Now `runSisterAlerts` step 1b sends up to
+`CONFIRM_RETRY_PER_RUN` (10) never-sent confirmations a run, oldest first, under the same cap and before any alert spends it,
+stamping `confirmSentAt` only on a real send; and an address never emailed is kept for two weeks instead of one, so the person
+has time to click. Still one confirmation per address (no reminders), still double opt-in. `scripts/owned-audience.ts` prints how
+many unconfirmed addresses were never emailed against emailed but not clicked. `tests/sister-alerts.test.ts` pins it.
+
+## 2026-11-21: Cyber Weekend editions of the weekly drops email (owner: "capitalise on cyber weekend")
+
+The sister sites' weekly biggest-drops email lands on Black Friday (27 Nov) and Cyber Monday (30 Nov) mornings: the daily run is
+14:20 UTC, 9:20 in New York. `PINNED_EDITIONS` in `lib/sister-alerts/digest.ts`: on a pinned UTC day every site with subscribers
+builds a fresh edition unless it already built one that day; in the three days before one, a regular edition waits, so the Black
+Friday email compares with the week before rather than with a day. The subject names the occasion ("Black Friday: the real
+price drops on …"). Nothing else changes: drops are still the site's own feed prices, MIN_DROPS still holds (a quiet site sends
+nothing), the digest's share of the mail cap is the same, and there is no promotional blast. Subscribers get two editions that
+week, three days apart, then the weekly rhythm resumes from Cyber Monday. Price alerts already run daily at the same hour, so a
+real Black Friday drop reaches its watcher that morning without a change. `tests/sister-digest.test.ts` pins the dates.
+
+
+## 2026-11-21: A Cyber Weekend sign-up under the real drops (owned audience)
+
+The Black Friday and Cyber Monday pages carry one sign-up directly under the real-drops block: the weekly drops email (KeepUpStrip,
+placement `black-friday`, email only because the Discord box sits lower on the page) on the sister-alert sites, a free-account
+prompt on the account sites. The weekly email has its own Black Friday (27 Nov) and Cyber Monday (30 Nov) editions on RiftCompare's
+service (TCGEmpire DECISIONS, same day), so a sign-up before 26 Nov gets the Black Friday one. Inline, never a pop-up; real drops only.
+## 2026-11-19 — Black Friday strip on sealed pages
+
+The owner's board (19 Nov): ride Black Friday on the pages we already have, no new URLs. `/sealed/<slug>` shows one short card
+above the product's price and board, through 1 Dec (`lib/bf-strip.ts`, `lib/bf-strip-sealed.ts`, `BlackFridayStrip.tsx`, labelled
+by `saleStrip`: Black Friday, then Cyber Monday), in the visitor's market: the cheapest open price today and where, "Free shipping"
+only when that store's MEASURED checkout (`shippingFor`, shipping-rates.json) posts the order free (the probe measured card-sized
+carts, so a paid rate is never quoted for a box), when that price was read, the pre-order date, and where today's price sits
+against the product's own sealed history (data/price-history/sealed). The cue needs 14 priced days in the last 90; it says "Lowest
+price in 90 days" only when the history reaches back 90 days, otherwise "Lowest price since <first day>"; a price that never moved
+says "Same price since <first day>"; above the low it gives the window's real low and its day. A day under half the window's median
+is a wrong listing and never the low, and a window whose prices (or today's against them) differ by more than 2x gets no cue: the
+sealed series holds weeks of wrong-product rows (Origins booster box at US$60 from 29 Sep to 6 Nov), and the strip must not repeat
+them. Built per market on the server and picked in SealedProductView, so the one CDN copy still reads no cookie. No new read, no eBay
+call; the quick view and the phone strip ad are untouched. Same strip on DexCompare, MTG Compare and OP Compare. Judge on buy clicks
+per sealed-page view, 24 Nov to 1 Dec against 10 to 17 Nov.
+
+Amended 2026-11-21 (partner terms): TCGplayer's commission rises with a calendar month's sales, so Cyber Weekend sales through us
+also lift the month's rate. The strip gains ONE link, on its own line under the facts: an "Ad"-labelled, tagged TCGplayer search
+for the product ("See Black Friday prices on TCGplayer", `surface="bf_strip"`). It claims no price and no deal, ranks nothing, and
+never takes the cheapest badge; the board below stays sorted by price. Counted in the 3 Dec Cyber Week read. When TCGplayer's own
+Cyber Weekend landing page is available it replaces the search.
+
+## 2026-11-21: Which site sends people to the Discord hub
+
+People started joining "TCG Deals & Restocks" on 21 Nov. Each card site links its own never-expiring invite, so the per-invite
+use count says which site works. `scripts/discord-hub-stats.ts` (`discord-hub-stats.yml`, daily and on demand) prints the hub's
+member count from the public invite and, with the price bot's token, each invite's uses (it needs Manage Server in the hub; it says
+so instead of failing). Counts only; the Discord agent reads it for its Monday self-review and leans into the site that converts.
+
+## 2026-11-21: Alert emails link to each site's own address
+
+The eleven sister sites with the `/account-service/*` rewrite (DECISIONS, 2026-11-19, "the sign-in flow never names another
+site") were each checked live on 2026-11-21: `https://<site>/account-service/alerts/manage?t=x` returned this service's own
+"That link has expired" page. All eleven are now in `ON_SITE_ALERT_LINKS` (`lib/sister-alerts/email.ts`), so their confirm,
+manage and stop links use the site's own address. BandaiCompare and FigureCompare (idle, no rewrite) keep the service's links.
+
+## 2026-11-21: Discord sign-in stays on each sister's own address
+
+**Decision.** A sister's "Continue with Discord" now starts at its own `/account-service/oauth/discord?via=site` (the rewrite to
+Rift's `/api/sister-premium/oauth/discord` each sister already has) and Discord returns to `https://<site>/account-service/oauth/discord/callback`,
+rewritten to Rift's callback. The owner asked for it (accounts/signin-settings.md); the 11 sister callbacks were added to the Discord
+app on 2026-11-21 and the app renamed "Compare Empire". `ON_SITE_OAUTH` in `lib/oauth.ts` lists the providers this applies to; the
+start route sets `oauth_sister_via_<provider>` and the callback exchanges the code with the same redirect URI. Without `via=site`
+(an old sister build, or Google) nothing changes.
+
+**Why.** The visitor never sees riftcompare.com in the address bar during a sister sign-in. Google waits: its redirect URIs can only be
+added once the Google account that owns Rift's Cloud project has 2-step verification on; then add `"google"` to `ON_SITE_OAUTH` and
+flip the sisters' Google button too.
+
+## 2026-11-21: "Get these first on Discord or Telegram" in the alert and weekly emails
+
+Riley (Discord) opened a Telegram channel beside the hub, t.me/tcgdealsrestocks, posting the same checked drops. The footer line
+of every sister alert and weekly email now reads "Get these first on Discord or Telegram": the site's OWN hub invite (so the
+Invites list still counts members per site) and the channel, in the HTML and the text part (`discordLine`, `discordText`,
+`telegramChannel` in `lib/sister-alerts`). Card sites only, like the invites (the two-sides rule). A footer line, never a send of its own.
+
+## 2026-11-21: Google sign-in stays on each sister's own address too
+
+**Decision.** The Google consent screen is renamed "Compare Empire" (Rift's client lives in the bill.jyang101 Cloud project
+"My First Project", voltaic-talent-395302) and nine sister callbacks `https://<site>/account-service/oauth/google/callback` are
+registered. `onSiteOAuth(provider, siteKey)` in `lib/oauth.ts` replaces the Discord-only list: Discord on-site for every sister,
+Google for all but DexCompare (its own Google client, never this flow) and SportsCardCompare.
+
+**Why.** Google allows 10 unverified authorized domains per project: riftcompare.com plus nine. SportsCardCompare (idle, fewest
+sign-ins) keeps Rift's callback until its domain is verified in Search Console under the project owner; then add its callback and
+drop it from `OFF_SITE_OAUTH`.
+
+## 2026-11-21: Single cards on sealed pages, and Gift of the Rift rows in other groups
+
+**Decision.** `looksSealed` refuses a title with a sign of a single card or a seller's lot of singles (`SINGLE_CARD_SIGNS` in
+`lib/sealed-import.ts`): a rarity in brackets ("(Rare)", "(Showcase)"), a card code in square brackets ("[OGS-017]"), a card number
+before "Foil", a title ending in a bare "Foil", "(Oversized)", a playset, a "small bundle" or "Common & Uncommon". "[Foil]" is not a sign
+(pcatoys' Showdown Decks). `cleanupStaleSealed` also deletes a non-TCGplayer row whose title names a `SET_LESS_GROUPS` product but which
+sits in another group (`misfiledSetLess`), and Cardmarket files such a product under its fixed group instead of its expansion.
+
+**Why.** The 20 Nov snapshot had 23 such rows: Proving Grounds rares at EUR 8.95-13 were the cheapest row on the Origins Proving
+Grounds page in the UK and EU, 16 foil singles from two stores each had a "sealed" page, eBay playsets (US$24.99) sat in the Vendetta
+Bundle group, Cardmarket's Gift of the Rift Bundle (EUR 167) sat in VEN|Bundle, and two eBay rows kept a pre-#541 Gift of the Rift group
+alive because the eBay pass searches every group that exists. Rules only refuse; every title is in `tests/sealed-single-cards.test.ts`.
+
+## 2026-11-21: A set's booster and its case no longer share the bare "Sealed" page
+
+**Decision.** `classifySealed` types four title shapes that fell to the bare "Sealed" catch-all: a title ending in "booster" is a
+Booster Pack (Cardmarket's "Radiance Booster"; a "promos booster" stays out), "… Nexus Night Promo Booster" is the Nexus Night Pack,
+a set's name right before "case" is that set's Booster Case (spellnexus's "Riftbound Radiance Case English"), and "<Champion> Trial
+Deck" is its own `Trial Deck (<Champion>)`. A `/sealed/<set>-sealed` slug with no group left 301s to `/sets/<set slug>`
+(`setCatchAllRedirect`), never a 404.
+
+**Why.** In the 21 Nov 16:26 UTC export each set's "<SET>|Sealed" page held Cardmarket's single booster (EUR 3-5) beside that set's
+six-box case (EUR 600-900), so the page's cheapest price was a pack, and the EU case and pack pages missed one row each. OGN|Sealed
+also held four different Trial Decks and a EUR 2,250 promo booster under one name. Checked by running the old and new
+`classifySealed` over every title of the export: only the 24 catch-all titles and one eBay "Nexus Night Booster Pack" change type.
+Titles are in `tests/sealed-catch-all.test.ts`.
+
+## 2026-11-21: One Premium email page: the showcase email with a live Deal Finder snippet, newest members first
+
+**What.** `/admin/premium-offer` is now the one "Premium email" page (owner: "one page where I can send a premium ad to
+people where it includes a snippet of the deal finder or scanner or something and lists the feature and is a very nicely
+formatted email … newest members first"). The campaign is `premium-showcase-2026-11` (`PREMIUM_OFFER_SINCE`
+2026-11-21 22:00 UTC), so everyone the feedback email reached can get this one, once. The email
+(`buildPremiumOfferEmail`) leads with today's top three US Deal Finder rows (`loadEmailDeals`: the tool's own
+`getArbitrageVsTcgplayer` ranking, store rows only, read once per batch; a failed read sends without the snippet, never a
+made-up one), then six Premium features with their own links (the scanner's 100 scans a day against 5 free, from
+`lib/scan/caps.ts`), then Premium at its `lib/site.ts` prices. The star rating is gone; a plain /feedback link stays, no
+reward named. `loadUsers` reads accounts newest first, so each 90-account batch goes to the newest members not yet
+emailed. The page draws the email as it sends in a preview frame, and carries the win-back link console below it (the
+admin home has one tile; `/admin/premium-winback` still works).
+
+**Why.** Every link is still riftcompare.com (card pages, tools, checkout); TCGplayer is named as the market reference,
+never linked, and no eBay listing is named, because eBay Partner Network does not allow its links in email.
+
+## 2026-11-22: Giveaway: on the home page and one corner card
+
+**Decision.** While a giveaway is open (`giveawayState`), the home page shows `GiveawayHomeBanner` straight under the hero, every
+alert email's footer carries one line to `/giveaway` (`giveawayLine` in `lib/email.ts`, UTM `giveaway-footer`), and the layout
+mounts `GiveawayPrompt`, a small corner card (never a modal) whose rules are `shouldShowGiveawayPrompt` in
+`lib/giveaway-prompt.ts`: from a visit's second page, after six quiet seconds, never on `/`, the ad-free pages (giveaway, account,
+sign-in, Premium…) or admin, at most three times two days apart, never after "Don't show again" or after this browser's account
+entered (`GiveawayEnter` marks it). It takes the visit's one interruption: it does not show after the rating card, and the rating
+card does not show after it. Everything stops by itself when the giveaway closes. GA events `giveaway_prompt_show` and
+`giveaway_prompt_click`.
+
+**Why.** Owner, 2026-11-22: "we're not actually, can't find the giveaway. We got to feature it on our homepage ... have a pop-up or
+whatever to enter our giveaway", and he will not promote it himself any more. It was only in the header menu and on /giveaway:
+56 entrants, 103 entries on 21 Nov 22:42 UTC, four days after it opened. The 2026-11-03 rule (one interruption a visit, never on
+arrival) is kept: the card is the giveaway's, the slot is still one. `tests/giveaway-prompt.test.ts`.
+
+## 2026-11-22: Giveaways on five sites, by points, drawn in public
+
+**Decision.** Entries are now points, and one engine on RiftCompare runs a giveaway for each of five sites (`GIVEAWAYS` in
+`lib/giveaway.ts`, `site` rift, dex, mtg, ygo, op), every one closing 14 Dec 2026 23:59 Sydney and drawn the 15th, then a new
+round every two months (`GIVEAWAY_EVERY_MONTHS`).
+
+- **Points** (`entryPoints`): 10 for entering, a 40-point bonus, 5 for each Sydney day the entrant checks in on the giveaway page
+  while it is open (`GiveawayCheckin`, one row a day), 25 for each friend who makes a new account with their invite link and
+  confirms their email, up to 10. Premium gets the bonus automatically (50 to start); a free account gets the same 40 by watching
+  any price or pressing "Claim the free bonus" (`GiveawayEntry.bonusClaimedAt`), so paying never buys a better chance. This
+  replaces the 2026-11-19 entries (1, or 3 with Premium or a watch, +1 a friend) and the 00:52 "Premium 3x" ask, which the owner
+  replaced two minutes later with the points.
+- **Sister sites** (Dex, MTG, YGO) have no database: their accounts are RiftCompare's sister Premium sessions, so their
+  `/giveaway` pages post the stored session token to `/api/sister-giveaway` (exact-origin CORS, `verifyPremiumSession`), and read
+  `/api/giveaway/leaderboard?site=<key>`. One person, one account, five entries. OP has its own accounts, so its page waits on a
+  sign-in bridge; its giveaway is already in the list.
+- **Prizes** (owner: "less than $20 most recent booster pack ... from Good Games or like another TCG store in Australia"): the
+  newest English booster of each game, as many packs as fit under A$20 at Australian stores' in-stock prices on 22 Nov
+  (tcgprices data): 2 Delta Reign, 2 Star Trek Play Boosters, 3 Beyond the Brave, 1 OP-18. Rift keeps the owner's own card.
+- **Draw** (`giveaway-draw.yml` every six hours → `/api/cron/giveaway-draw` → `runGiveawayDraws`, or the admin button): each
+  valid entrant's points become consecutive numbered tickets in entry order (`assignTickets`), and the winning ticket is the
+  randomness of drand's mainnet round at or just after the close, modulo the tickets, plus 1 (`winningTicket`). Nobody, us
+  included, can know it before entries close, and the trophy on the page (`GiveawayWinner`) shows the round, the randomness and
+  the arithmetic so anyone can check it. `GiveawayDraw` keeps every attempt.
+- **Winner** (owner: "I need to be notified ... grab their details ... and be able to send it to them"): the winner is emailed a
+  private link (`/giveaway/claim#t=`, an EdDSA token with `use: giveaway-claim`, expiring at the claim date, kept in the fragment
+  so no log sees it); the owner gets an email and an inbox notice (`giveaway-winner`). The form saves the address to
+  `GiveawayClaim` and emails the owner a ready-to-post packet; `/admin/giveaway` shows it with a "Mark as posted" button, and the
+  public trophy then says it was posted. Unclaimed after 14 days, the next cron redraws from the tickets left (seed
+  `sha256("randomness:attempt")`), at most two redraws.
+
+**Why.** Owner, 2026-11-22: "a point system ... Don't ask me any questions. Let's get all these sites a giveaway feature ... every 2
+months ... as nice and aesthetic and usable and user friendly as possible", and the trophy banner with "the winning raffle, the
+winning number". A public beacon makes "random" provable without a third-party raffle service. `tests/giveaway.test.ts`.
+
+## 2026-11-22: The Premium email is the one marketing send turned back on
+
+**What.** Bill: "it says marketing email is switched off from the 9th of November. So can we please fix that and deploy
+urgently … let's send like 2 batches." `MARKETING_EMAIL_OFF` stays true; `sendEmail` / `sendEmailBrevo` now let through a
+marketing send that names a campaign in `MARKETING_ALLOWED`, and the only one is `premium-offer` (the Premium showcase
+email, `/admin/premium-offer`). The newsletter, digests, welcome, release-day, win-back and checkout-recovery mail stay
+off (`tests/email-policy.test.ts`). The email keeps its opt-out link, one-click List-Unsubscribe and the announcement
+opt-out list. `premium-offer-send.yml` (dispatch only, never scheduled) asks `/api/cron/premium-offer` for one batch, so
+an agent can run the owner's batches without the browser.
+
+**Why.** Turning the whole flag off would restart every promotional sender at once; the 2026-11-09 entry asks that each
+one be brought back by its own decision. The 90 sends that failed under the flag were never stamped, so they are still
+pending and go first.
+
+## 2026-11-22: The confirm page asks for the weekly email (repeat awareness, opt-in only)
+
+The audience programme asked for "a weekly drops email to every confirmed address". The weekly email stays opt-in (DECISIONS
+2026-11-08: an alert address never gets mail it did not ask for, and the shared Resend domain also carries sign-in mail, so spam
+complaints cost more than a send). Instead the moment of confirming, when the person has just said yes to us, now asks: an address
+with a price alert and no weekly email sees "Also get <site>'s biggest price drops once a week?" with one button, which posts to the
+manage route (the same subscribe path as the link in every alert email). Nothing subscribes without that click;
+`tests/sister-weekly-signup.test.ts` pins it.
+## 2026-11-22: Bot rules never untag a real person
+
+The owner (22 Nov): "make sure that there are literally zero false negatives when you filter bots, and false positives are okay."
+A buy link sent untagged to a real person is a lost sale; a bot sent tagged costs nothing we can see. `lib/bot-click.ts` had
+untagged anything with no Accept-Language, no Sec-Fetch-Mode, or a Sec-Fetch-Site of "none" or "cross-site". Real people
+send all of those: iOS before 16.4 and some in-app browsers send no Sec-Fetch-*, and a link opened from Discord, an email, a
+pasted URL or a translate proxy is "none" or "cross-site". "yandex" and "baidu" also matched real browsers' UAs (YaBrowser
+builds, baiduboxapp). Now `looksLikeBot` (the one thing that untags) is only an empty User-Agent or a self-named crawler or
+script; the header checks moved to `suspectClick`, which at most leaves a click out of the server-side click log, never the tag.
+The 10-14 Nov crawler with full browser headers will reach the networks tagged again: accepted by the owner's rule.
+
+## 2026-11-22: Giveaway star friends: 100 points for a friend who takes Premium or plays
+
+**Decision.** A referred friend is worth `STAR_REFERRAL_POINTS` (100) instead of 25 once they have Premium **or** have checked in
+on `STAR_FRIEND_CHECKINS` (3) days of the same giveaway (`liveWeights` in `lib/giveaway-server.ts`, `entryPoints`'
+`starReferrals`); still ten friends at most, star friends counted first. The rules and the panel say both routes.
+
+**Why.** Owner, 2026-11-22: "if you refer someone and they sign up to premium, then you will get 100 points ... I'll let you adjust
+the amount ... we should give more incentives for premium." A Premium-only bonus would let a purchase buy chances, which breaks
+"no purchase necessary"; the free route (three daily check-ins) earns exactly the same, so the bonus still pushes Premium without
+selling entries. `tests/giveaway.test.ts`.
+
+## 2026-11-22: An eBay sealed listing must be ONE of the product searched for
+
+**Decision.** `searchEbaySealed` refuses, through `wrongSealedEbayProduct` in `lib/ebay.ts`, a result that its own title says is
+another product: a Champion Deck naming no or another champion (only when the group's champion is a real one, so TCGplayer's
+"Champion Deck (Set 1)" keeps eBay), "BRICK ONLY", an "open pack/box", a lot of 100+ cards, a PCG slab, and for single packs,
+decks, bundles, box sets, starter sets, tins, Proving Grounds and vaults a stated "set/bundle/lot of N" (packs and decks also
+"Nx" and "N packs"). The champion list moved to `SEALED_DECK_CHAMPIONS`, shared with `classifySealed`.
+
+**Why.** The 21 Nov export filed eBay AU's Origins Jinx deck as the Lee Sin deck's cheapest, a brick-only Viktor deck in two deck
+groups, a US$95 "bundle of 10" Nexus Night packs as one pack and as the Unleashed Bundle, a 47-pack kit with an opened pack at
+US$249.95 as one pack, a set of two starter decks and a 1,000-card lot as one Starter Set, and a PCG 9.5 slab as an Arcane Box
+Set. Every rule was run over every row of the export: it refused exactly those 15 eBay rows and no other eBay row. eBay rows are
+rewritten whole per market on each sealed run, so the old rows go on the next one. `tests/ebay-sealed-one-product.test.ts`.
+
+## 2026-11-22: A one-off watchlist recap to dormant accounts, built but held behind the marketing switch
+
+**What.** Retention (Pillar 3 of the audience programme): `lib/watch-recap.ts` writes one email per dormant account (older than
+30 days, not active or signed in for 30 days) that has cards on its watchlist: each watched card's TCGplayer market price
+today and 30 days ago from the committed history, biggest moves first, up to six, and a button to the watchlist. Newest
+accounts first, 90 a batch, stamped in the new nullable `User.watchRecapSentAt` only after a successful send, opt-out and
+one-click List-Unsubscribe through the announcement list. `watch-recap-send.yml` (dispatch only) runs it through
+`/api/cron/watch-recap`: dry, a test to the owner's address, or one batch.
+
+**Why held.** The 2026-11-09 entry turned off the digests, and this is close to one, so the campaign `watch-recap` is NOT in
+`MARKETING_ALLOWED`: every send is refused until the owner says yes, and then the change is that one word
+(`tests/watch-recap.test.ts` pins that it is off today).
+
+## 2026-11-22: After a buy click, the card page offers a watch or a collection add, inline
+
+**What.** Retention (Pillar 3): `OutboundLink` announces each buy click that names a card (`lib/buy-click-event.ts`), and
+`BuyFollowUp` on the card page shows, under the phone buy row, one in-flow block for that card: "Bought it, or still
+deciding?" with the Watch button and "I bought it: add to my collection" (signed out: a sign-in link, source
+`buy_followup`). Once per card per tab, dismissible, never fixed, never an overlay; GA4-only events `buy_followup_shown`,
+`_collection`, `_signin`.
+
+**Why.** A watch or a collection entry is what brings a visitor back (an alert, a value to check), and the moment just after a
+buy click is when the card matters most to them. It stays inside the no-pop-up rule because it is part of the page, and the
+card page stays one cached copy: everything is client-side (`tests/buy-followup.test.ts`).
+
+## 2026-11-22: The watchlist recap is let through: the owner said yes
+
+**What.** Bill answered the decision card "Send dormant members a one-off email with their watched cards' price moves?" with
+"Yes, send it". `watch-recap` joins `premium-offer` in `MARKETING_ALLOWED`; nothing else changes. `MARKETING_EMAIL_OFF` stays
+true and every other marketing send stays refused (`tests/email-policy.test.ts` pins the two names).
+
+**How it is sent.** After the release: one test to the owner's address, then batches through `watch-recap-send.yml`, sharing
+Brevo's 300 a day with the Premium email batches. It is one-off: each account is stamped once and never sent it again.
+
+## Giveaway: OP Compare enters by email (2026-11-22)
+
+OP Compare has its own accounts, so it cannot hand us a RiftCompare session. For its giveaway only,
+`/api/sister-giveaway` accepts the exact origin `https://opcompare.app` and two extra bodies: `{method:"email", email}`
+mails a one-time sign-in link (the same signed code as email sign-in, `signEmailLinkCode`) to `opcompare.app/giveaway#c=…`,
+capped at 3 an hour per address and 6 per IP; `{code}` verifies it, finds or makes the RiftCompare account and returns a
+premium-session token, which the OP page keeps in localStorage and posts like any sister. OP stores no address. The
+`op` entry's url is `https://opcompare.app` (it was wrongly `.com`).
+
+## 2026-11-22: A Champion Deck's champion names its set
+
+**What.** A sealed title that is one Champion Deck and names no set word ("Riftbound: Champion Deck – Jinx", "RIFTBOUND
+CHAMPION DECK VEX (LIMIT 1)", "Riftbound League of Legends Trading Card Game: Lee Sin Champion Deck") now takes its set from
+its champion (`CHAMPION_DECK_SETS`, `sealedSetCode` in `lib/sealed-import.ts`): Jinx, Lee Sin, Viktor are Origins; Fiora,
+Rumble Spiritforged; Vex, Vi Unleashed; Tryndamere, Ashe, Lux, Garen Legacy. A set word in the title still wins. Two
+champions ("Jinx & Vi"), a case or a lot ("4x Lee Sin Sealed Case") and a deck naming no champion keep their title page.
+"LeeSin" is spelled "Lee Sin" (one group). `cleanupStaleSealed` drops a set-less row whose title now names its set
+(`misfiledChampionDeck`), and an old title page whose slug names one champion beside "championdeck" 301s to the set's
+deck page (`championDeckSlugRedirect`); a slug cut before the name has nothing to redirect to and behaves as before.
+
+**Why.** The 22 Nov export held 71 such rows (US 5, CA 38, AU 20, EU 6, UK 2) on about 40 pages of one or two stores,
+while `/sealed/ogn-champion-deck-jinx` and its siblings never showed them: US buyers missed The Collection Realm's three
+Origins decks and Trove of Collectibles' Vi. Each champion had a deck in one set only (the set-coded groups of that
+export). A later set that reprises a champion takes that champion OUT of the list, never moves it: a title with no set
+word then names nothing, as before. `tests/sealed-champion-deck-set.test.ts`.
+
+## 2026-11-23 — #sealed-sniper is a followable announcement channel
+
+Restock chats spread our finds (22 Nov: a Canadian pre-order sold 10 in 41 minutes through one), so other servers should
+get the Sniper's drops in their own channel. Discord's channel following does that with nothing to hold on their side: the
+hub's #sealed-sniper became an Announcement channel (owner's yes, 2026-11-22), and `discord-publish.yml` has the price bot
+publish each unpublished webhook drop of the last day (a webhook cannot publish). Links stay tagged utm_source=discord.
+
+## 2026-11-23: "Share this deal with your group chat" on the product page
+
+`components/DropShare.tsx` (ported from DexCompare) sits under the sealed page's price card (`SealedProductView`, the visitor's own market only): the phone's share sheet, else one line copied with
+the cheapest in-stock STORE price in the visitor's market (`dropText` and `isStoreRetailer` in `lib/share-link.ts`: never eBay, TCGplayer or Amazon, never
+converted, "Pre-order: " when that offer is one) and this page's link tagged `utm_source=share&utm_medium=drop`. A separate component,
+so ShareButton's share-for-a-deal A/B test is untouched; event `share { medium: "drop" }`.
+
+**Why.** On 22 Nov a CA$89.99 Delta Reign ETB pre-order at Cardboard Hero took ten referral orders in 41 minutes, almost none through
+a click we tracked: the store link had been pasted into a restock chat. People share drops anyway; this makes the link they paste ours.
+Owner, 2026-11-23: "apply all these learnings to all the other sites". Read `share` medium `drop` and `share_visit` a week after release.
+
+## 2026-11-23: Cardboard Hero (GoAffPro) on the earnings dashboard
+
+Owner, 2026-11-23: "can we add the cardboard hero earnings to our earning dashboard". `lib/earnings/sources.ts` `fetchGoaffpro`
+reads the partner portal's own API (`api.goaffpro.com/partner/sales`, 100 a page, folded by order id) with the affiliate's
+access token (`GOAFFPRO_ACCESS_TOKEN`, Vercel Production only, set by the owner's `set-goaffpro-token.ps1`; the token carries
+no expiry). It is a stored source like Impact and EPN, refreshed by the earnings cron every three hours.
+
+- A sale counts on the Sydney day of its order, in its own currency (CA$), and stays **pending until the store ships it**
+  (`goaffproState` in `lib/earnings/core.ts`): GoAffPro marks a pre-order "approved" the moment it is placed, but it can
+  still be cancelled. Rejected, cancelled and refunded orders are shown as a check and not counted.
+- **No per-site split.** One referral code (`apthvqnu`) serves every site and GoAffPro gives an affiliate no sub-id, so its
+  earnings go to the site ledger's "No tag" row. `tests/earnings-goaffpro.test.ts`.
+## 2026-11-22: Operational database moves RM12 -> RM9 before RM12's transfer allowance runs out
+
+Owner, 2026-11-22 (decision card: "Yes, move it now"). Ops monitor at 15:21 UTC: RM12 had used 3.03 of its 5 GB monthly
+transfer at about 0.38 GB a day, so it would run out around 27 Nov, four days before the 1 Dec reset; its compute (41 of 100
+CU-hours) would have followed by about 1 Dec. RM9 (last live 2026-10-17..10-25) had used 0.00 GB and 0.1 CU-hours this
+period by the Neon API, and probe-databases found it reachable and behind RM12 on every table. `migrate-main-db-rm12-to-rm9`
+(the RM11 -> RM12 step with the names moved along; the rm9-to-rm10 and rm8-to-rm9 legacy steps dropped to keep
+maintenance.yml under the 450 KB test) copied it with every table matching (User 756, RetailerPrice 240,703), and runs once
+more just before this commit goes live. `OPERATIONAL_VARS = ["RM9"]`; RM12 stays untouched as the rollback. It rides the
+normal daily release, not an urgent one: the deadline is days away. The burn is still the one CURRENT-STATE names.
+
+## Giveaway corner card: ✕ hides it for a week (2026-11-22)
+
+Product & UX's clutter budget (rule 2): a dismissed prompt stays away for 7 days. `GIVEAWAY_PROMPT_GAP_MS` goes from two
+days to seven (`lib/giveaway-prompt.ts`); still at most three shows a giveaway, never on arrival, never after "Don't show
+again" or an entry.
+
+## 2026-11-23: A set's generic Champion Deck page takes no champion's deck from eBay
+
+**Context.** The 22 Nov 16:24 UTC sealed export held 16 eBay rows (US, UK, CA, AU, SG) on five sets' generic
+`<SET>|Champion Deck` pages, the group of store titles that name no champion ("Origins Champion Deck"). The search for that
+group is "Riftbound Origins Champion Deck", and eBay's cheapest match was one champion's deck ("… Origins Champion Deck -
+Jinx", "Unleashed Champion Deck (Vi)") or a deck display ("Champion Deck Display: Zed vs."). `OGN|Box Set` (Fire and Dice's
+"Arcane Box Set - Origins: Promos") took two eBay booster boxes (EUR 449, GBP 208.70).
+
+**Decision.** `wrongSealedEbayProduct` (the 2026-11-22 entry above) also refuses, for the bare type "Champion Deck", a title
+naming any champion in `SEALED_DECK_CHAMPIONS` or saying "display", and for "Box Set" a title saying booster box or display
+without "box set". The champion's own group already searches for that deck, so no price is lost. Run over the whole export it
+refuses exactly those 16 rows and no other eBay row (`tests/ebay-sealed-one-product.test.ts`). A generic "Champion Deck
+Display" is left alone: a display naming two champions is the mixed display. Rules only refuse.
+
+## 2026-11-23: The phone menu's links run two to a row
+
+Owner, 2026-11-23: "our site's … navigation and stuff can be significantly improved". Measured on a 390 px phone, the menu
+(`CinematicNavMenu.tsx`) was its 69 links in one column, 3,967 px tall: nearly five screens to reach Help. Each group's
+links now sit two to a row below `sm` (2,438 px, 39% shorter); from `sm` up nothing changes. Every link is still there and
+still ungated: the 2026-09-16 call (no Popular subset, no "Show all features") stands, and `tests/nav-menu-full-grid.test.ts`
+still pins it. Labels may wrap to two lines; the 44 px tap height stays.
+
+## 2026-11-23: Each Sealed Sniper drop is copied into its game's channel
+
+The owner saw the deals hub as Pokémon-only ("our tcg restocks so far only has pokemon notifications"): every game's deals landed in
+#sealed-sniper, and the only per-game feed was Dex's #pokemon-deals. The Sniper now covers 13 games (tcgcompare, same date), and
+`scripts/discord-publish.ts` copies each drop's posts, right after it publishes the drop, into the game's own channel (#pokemon,
+#one-piece, #riftbound, #magic, #lorcana, #yugioh; every other game to #more-tcgs), read from the embed footer the Sniper writes.
+A copy happens only after a successful publish, and a published drop is never picked again, so a drop is copied once. One copy per
+game channel per drop, so a member who reads one game's channel sees at most the hub's daily drops. No ping, no new key: the price
+bot's role has Embed Links and Read Message History for it.
+
+## 2026-11-23: TCGplayer's performance bonus is read from Impact invoices
+
+The owner asked whether the earnings dashboard counts TCGplayer's tier bonus (4% at US$10k a month, 4.5% at 50k). It did
+not: the Impact source summed each Action's `Payout`, and a performance bonus is not an Action. Impact works it out monthly
+once the month's actions lock and puts it on the partner invoice as a line whose `Description` is `BONUS` (partner API v16,
+`GET /Mediapartners/{SID}/Invoices`; `MEDIA_PAYOUT` lines are the commissions the Actions already count). The source now also
+reads the invoices, in the same 44-day windows, and adds each `BONUS` line once (`impactBonuses`, `impactBonusDays` in
+`lib/earnings/core.ts`, `tests/earnings-impact-bonus.test.ts`), dated to the last day of the month it rewards (never after
+today), in the invoice's currency, pending until the line is `PAID`. It shows as its own "Performance bonus" check row and is
+not split by site (a bonus carries no tag). An invoice read that fails leaves the commissions untouched and says so in the
+source's detail. Same keys as before, so nothing for the owner to set.
+
+## 2026-11-23: A Showdown pair names its set
+
+The same gap "A Champion Deck's champion names its set" closed for Champion Decks: a Showdown Decks title that named no set
+("RIFTBOUND SHOWDOWN DECK - EVELYNN VS SERAPHINE", "RIFTBOUND League of Legends TCG Zed Vs Shen Showdown Decks", a misspelt
+"Vandetta") fell to a title page of one to four stores, and a wrong set word filed it under that set: Nerd Merchant's
+"Unleashed - Showdown Decks - Zed vs Shen" (US$14.99) made a one-store UNL|Showdown Decks page for a product Unleashed never
+had, and The Side Deck's "… VENDETTA EVELYNN VS SERAPHINE …" sat on Vendetta's page. Each pair is one product of one set
+(Evelynn vs Seraphine: Radiance; Zed vs Shen: Vendetta), so when a Showdown Decks title names both champions of exactly one
+pair, the pair decides the set, ahead of any set word (`SHOWDOWN_PAIR_SETS`, `showdownDeckSet` in `lib/sealed-import.ts`). A
+case, a lot, half a pair or no pair keeps what it had. `cleanupStaleSealed` drops a stored row its pair now files elsewhere
+(`misfiledShowdownDeck`), and its store writes it to the pair's page on the next read. Over the 22 Nov export that moves 21
+rows (CA 15, UK 4, US 2) and no other. An old title page, once empty, 301s to the pair's page, or to `/sealed` when its
+slug was cut before the pair (`showdownDeckSlugRedirect`), never a 404. A new pair goes in the list only when its set is
+certain; a pair a later set reprints must come out of it.
+
+The same change refuses Funko POP! vinyls (`SEALED_EXCLUDE`): Ozzie's "Arcane: League of Legends (TV) Bundle - 5 POP!
+Vinyls" (A$104.95) and "League of Legends Bundle 2 - 4 POP! Vinyls" passed as Riftbound Bundles and each had a sealed page.
+`tests/sealed-showdown-deck-set.test.ts`.
+
+## Giveaway: the sister sites' alert emails carry their own giveaway (2026-11-23)
+
+Owner, 2026-11-23: Rift gets the sign-ups and Dex does not, "is there anything we can do similar for Dex Compare and MTG Compare".
+Rift's alert emails have had a giveaway line in the footer since 22 Nov (`lib/email.ts` `giveawayLine`); the sister sites' alert
+and weekly-drops emails, which RiftCompare sends for them, had none. `sisterGiveawayLine` (`lib/sister-alerts/email.ts`) adds the
+site's own open giveaway (Dex, MTG, YGO, OP), linked to that site's `/giveaway` with `utm_campaign=giveaway-footer`. It is a
+footer line, not a prompt, so the one-prompt-a-visit budget is untouched, and it disappears by itself at the close.
+
+## 2026-11-23: A header dropdown's label is a link
+
+Owner, 2026-11-23: "every time I click on the drop downs, I expect it to be a link and … take me somewhere … when I click on
+one of the drop downs, it doesn't do anything. It just drops it down." Each label of `HeaderMegaMenu.tsx` is now a `<Link>` to `HeaderMenu.href`: Singles to `/singles`, Sealed to `/sealed`, Deals & market to `/tools/deal-finder`. Hover still opens the panel after the same
+intent delay; the chevron beside the label is now the button that toggles it (click, tap, Enter, Space, ArrowDown), with
+`aria-expanded` and its own label. The panels stay in the server HTML. `tests/header-menus.test.ts` pins that each `href` is a NAV_GROUPS page.
+## 2026-11-23: The weekly page scorecard reads Google per page from a maintenance task
+
+Job D (strategy/agent-reassignment-2026-11-18) makes the Monday growth review rank every site's pages and name the bottom 20%
+with a fix or noindex verdict, published in the project's private files as `strategy/page-scorecard-<date>.html`. The Vercel
+analytics token lives only in Vercel, so the buy-click half comes from each site's committed `data/demand.json` (views per
+page, and buy clicks per product where the site sends `buy_product`). The Google half is the new read-only maintenance task
+`page-scorecard` (`scripts/page-scorecard.ts`): each property's 300 pages with the most impressions over 28 settled days,
+paths and counts only. No amounts, no search terms, nothing scheduled.
+
+## 2026-11-24: The Black Friday page's one deal list, deals above the fold
+
+The owner reviewed DexCompare's Black Friday page and asked for the changes "urgently" on every site: deals above the fold with a
+one-line intro, one list with a toggle, a discount badge on every row, filters and sort, sticky section chips, per-row freshness, a
+sparkline, plain labels, one affiliate disclosure, aligned rows, the store button primary and eBay a text link, bigger thumbnails,
+one slim alerts bar, phone rows with 44px targets, and click and scroll tracking per section.
+
+- The page's two lists (`RealDrops`, "furthest under their own 30-day price", and the sealed deals table under the other stores or
+  the MSRP) are ONE list in the visitor's market (`lib/sale-deals.ts`, `lib/sale-deals-data.ts`, `components/SaleDeals.tsx`). Each
+  row carries one offer, the cheapest open store listing (never eBay; the deal candidates keep their live stock re-check), and every
+  saving is measured against that price; the toggle ("Biggest price drops" / "Under other stores today" / "Under MSRP") picks the
+  basis that badges and ranks. The struck price is that basis's reference, labelled for screen readers, never "was". The strongest
+  48 per basis ship to the browser. No database read: it reuses the groups the page loaded and the bundled history files.
+- A row whose store was read more than 12 hours ago says so in amber (the listing's `lastSeen`). Postage is per order and per
+  region here (`lib/shipping.ts`), so a row says "Shipping at checkout" rather than claim a delivered price for one box.
+- Buy clicks are `OutboundLink` surface `bf_list`; GA gets `bf_section` once per section seen (scroll depth) and `bf_filter` per
+  filter used. The chips stick under the header at its measured height.
+## 2026-11-24: The owner's UX review on RiftCompare (P0, P1, P2)
+
+The owner reviewed DexCompare on desktop (AU) on 2026-11-23 and asked for the same fixes site-wide, urgently ("implement and deploy
+all this feedback"). DexCompare's port is CompareEmpire #351/#352. RiftCompare already had much of it: every self-opening prompt
+went through `armNudge` (waits out a focused field, recent keys, scrolls and dialogs, one interruption a visit), no ad opens over
+the page, `/browse` sorts and filters by set, rarity, domain, price and more, and the search box has "Did you mean". What changed:
+
+- **No interrupting prompts (P0 1).** The rating card's return-from-a-store ask was the one bare `setTimeout`: it goes through
+  `armNudge` too.
+- **Honest freshness (P0 2).** The ops monitor's store-price and sealed-price lines were amber at 30/36 hours and red at 56/72, so
+  a page could say "checked 30 hours ago" with no alarm. Both imports run twice a day: amber from 12 hours (one run missed), red,
+  the owner's email, from 20 (`PRICE_STALE_WARN_H`, `PRICE_STALE_CRIT_H`), which leaves room for GitHub starting a cron hours
+  late. The two import jobs go amber at 14 hours. A store row whose last read is over a day old says "· may have changed" in
+  amber (`CheckedAgo`).
+- **Sort and filter, one visible order (P0 3, 4).** `/sealed`'s default ("Featured") was the loader's product-type order with the
+  newest set floated above everything, so the prices ran up, then started again from cheap with no heading. The default is now
+  "By product type": one heading per type ("Booster Boxes · 5 · cheapest first"), cheapest first under each
+  (`typeHeadings`, `typeRuns`); the newest set keeps its "Shop <set> →" callout. Two sorts join it: "Furthest under RRP"
+  (`overMsrpPct`) and "Most stores in stock". No era or language filter: Riftbound sealed is one language, a handful of sets.
+- **Typo-tolerant search (P0 5).** The sealed matcher (`lib/sealed-search.ts`) reads shorthand (bb, pg, etb, upc, cd) and lets a
+  word of 4+ letters be one or two edits off a product's word (the "Did you mean" budget), ranked below exact matches. `/sealed`'s
+  own `?q=` now uses it (it was a plain substring). A header search with no match and no suggestion lists the four most widely
+  stocked sealed products ("Popular right now", `search_popular_click`) above the eBay search.
+- **Less above the title (P0 6).** The Black Friday / Cyber Monday line closes with ✕ for 7 days, hidden before paint once closed
+  (`StripClose`, `STRIP_BOOT`). The Christmas lights are an absolute overlay and take no height.
+- **Stores before marketplaces (P1 10).** On the card page and the sealed product page the stores lead in price order and eBay,
+  TCGplayer and Amazon sit under a labelled "Marketplaces · Ad, paid links" block below them. This reverses the 2026-10-27 /
+  2026-11-06 "eBay and TCGplayer lead every price list" order for those two pages; every row keeps its price rank number and the
+  real cheapest keeps its mark. The quick views keep the pinned order until a read says otherwise. Click guard: Rift
+  `card_detail` `table_pinned` and `sealed_pinned` outbound clicks per 100 views, read on 26 Nov; if paid clicks fall more than
+  40% two days running, put the block back on top and tell the owner (he asked for this by name, so only the placement reverts).
+- **One primary action (P1 11).** "View" stays the button; on phones the thumbs up/down step aside (`[data-store-vote]`).
+- **The cart is the Shortlist (P1 12).** Every label a visitor reads says Shortlist / Save, and the drawer says what it is every
+  time it opens: "Prices you saved. RiftCompare sells nothing". Storage keys, events and `/cart` are unchanged (URL freeze).
+- **Shorter pages (P1 13, 14).** The card page gets jump links (Prices, History, About, FAQ, Details) from 640px; the price history
+  already sits right under the comparison. A hub intro shows one line (two on a phone) and "How it works" (was "Read more")
+  opens the rest; every word stays in the server HTML.
+- **Reliable images (P1 15).** One capture listener in `<head>` (`lib/img-fallback.ts`): a failed image is tried once more after
+  1.5 s, then shows the site mark, faded.
+- **Deals menu and labels (P2 16, 20).** The header's Deals column is the Deal Finder, Rising and the sale page in season
+  (marked ★, `saleStrip`'s date rule); Best Basket and Demand stay in the full menu and the footer. Every header icon has a
+  tooltip.
+
+Not done here, on purpose: delivered price by default (P1 9: most Rift stores have no shipping figure, so a delivered ranking
+would mix delivered and item prices; rows already show "≈ delivered" where known), one product card (P1 7) and one alert pattern
+(P1 19), both bigger than an urgent pass; set logos (P2 17: Riftbound has a handful of sets and no logo files); the card list's
+sign-up prompt after the 12th tile stays (pinned by `tests/signup-inline.test.ts`). `tests/ux-review-2026-11-24.test.ts`.
+
+## Bing search-ads test for DexCompare — 2026-11-24
+
+The owner approved one paid-traffic test (decision card, 24 Nov): A$50 at most, 7 days (2 to 8 Dec, after Cyber Monday), Microsoft
+Ads, US exact-match searches for Pokémon sealed prices, bids capped at A$0.15 a click. A Dex visitor earned about A$0.08 in the 30
+days to 24 Nov and searchers are expected to earn more; the Meta tests (14-18 Nov) earned nothing. Landings carry
+`utm_source=bing&utm_medium=cpc&utm_campaign=dex-bing-2026-12`; `paidMarkFor` now marks bing/microsoft sources `msad` (here and in
+Dex's copy), and the earnings dashboard's Ad tests panel has the row. Stop if it returns under A$1 per A$1 spent.
+
+## Keyword pages answer the question in the title — 2026-11-24
+
+The 23 Nov page scorecard (28 settled days to 20 Nov) listed six `/keywords/<slug>` pages as FIX: tank 308 impressions,
+accelerate 264, repeat 251, assault 219, vision 177, reaction 124, all at position 8.6-10.3 with 0 clicks. The Search
+Console query report (maintenance `gsc-queries`, 24 Nov) shows the searches behind them are questions: "what is tank in
+riftbound", "what does tank do riftbound", "what is assault in riftbound", "how does accelerate work in riftbound". The
+title "Riftbound Tank: What It Does + All 23 Cards" and a description cut at 96 characters of a long definition did not
+read as the answer. For keywords without their own guide the title is now "What Does <Keyword> Do in Riftbound? + All N
+Cards" and the description opens with the page's own first FAQ answer (already on the page, sourced like the rest of
+`lib/keywords.ts`; no new rules claim), kept under 160 characters. Empower, Flow and Burn keep the reference title and
+description: their guides own the question (`docs/seo-keyword-map.md`). `tests/keyword-page-meta.test.ts` pins it. Read
+clicks on the six pages in the scorecard after ~8 Dec.
+
+## RiftCompare's own emails name and link the brand (2026-11-24)
+
+The Rift Google plan (seo/rift-google-plan-2026-11-25.md, item 4) puts most of Rift's Google drop on brand searches, which halved
+(about 260 to 130 a week) when Reddit posting stopped on 20 Nov. Every owned channel now carries the RiftCompare name with a link.
+In email: the logo in both shells links to riftcompare.com (plain, because the shells also wrap transactional mail, which carries
+no campaign tags); the alert and newsletter footers end with "RiftCompare (riftcompare.com)" linked, tagged `brand-footer`; and
+alert emails carry one footer line to /legacy-preorders (`legacy-footer`) through launch day, 13 Dec, after which it is gone by
+itself (`legacyLine`). RiftCompare's own mail only: the sister alert emails still never name RiftCompare (owner, 2026-11-19,
+`senderOf`). Pinned by tests/email-brand.test.ts. Read on 9 Dec with the plan's brand checkpoint: clicks tagged brand-footer and
+legacy-footer.
+
+## The Reckoning gets its set hub, five months out (2026-11-24)
+
+Owner: "start getting Riftbound Reckoning set up." Set 7 is dated 30 April 2027 (Pre-Rift 23–29 April), after Legacy (29 Jan),
+264 cards with 67 Showcase, code REC, five of nine Legends named (riftbound.gg, 4 Nov 2026; ICv2's "250" loses to Riot's 264).
+REC was already in SETS with its automatic /preorders/the-reckoning page, and stores in the US, CA and EU already list boxes,
+Vaults and Champion Decks. Added: `lib/sets/reckoning.ts` + `ReckoningHub` (LegacyHub's shape, shorter: a facts grid, Legends,
+products, the live pre-order table with eBay below, timeline, a five-question FAQ that is also the FAQPage JSON-LD), so REC is
+`hubReady` and /sets/the-reckoning indexable; the calendar row carries the Legends and the confirmed count. No calendar
+`preordersHref`: that field means "a hand-built page", and on an automatic page it would 308 the URL to itself. Sealed grouping:
+Shyvana and Vayne join the Champion Deck champions (REC), and a bracket that is a shipping or pre-order note ("(Ships April
+2027)", "(Pre Order)") no longer names a deck. No MSRP and no preview date until Riot gives one. `tests/reckoning-setup.test.ts`.
+
+## Pre-Rift event seats and loose decks are not Pre-Rift Kits (2026-11-25)
+
+The 25 Nov sealed export had 10 rows on Pre-Rift Kit pages that were not the kit. Eight were seats at a store's own
+event: "Riftbound Legacy Pre-Rift (Jan 25th)" (Fabricators Forge, US$30) was the cheapest US store row on
+/sealed/lgc-pre-rift-kit beside TCGplayer's US$69.97 kit, three more sat on the CA Legacy page ("Pre-Rift Events",
+"(Two Dates)", "January 23rd 11:30 Sunridge"), and RAD/UNL had "at Jack's", "Win-A-Box … Oct 17th" and
+"2026-10-16 (18h00)". Two were one deck out of the kit ("Unleashed Pre-Rift Precon - Ivern", US$12.99; "Unleashed
+Pre-Rift Deck"). `EVENT_ENTRY` only knew weekdays and am/pm times. `isPreRiftEntry` (lib/sealed-import.ts) now refuses
+a Pre-Rift title that never says "kit" and carries an event or component sign (plural "events", "N dates", "at X's",
+win-a-box, a month and day, an ISO date, 18h00 or 11:30, precon, deck). A title with "kit" is never touched, and a bare
+"Riftbound Vendetta Pre-Rift" stays: a month and day alone would also hit "(Arrives July 31)" and "Dec 4 Pre-Order" on
+real products, so the date sign counts only inside a kit-less Pre-Rift title. Over the whole export it refuses exactly
+those 10 rows; cleanupStaleSealed drops them on the next sealed refresh. Test: tests/radiance-sealed-gaps.test.ts.
+
 ## 2026-11-18: The weekly "your watched cards" email, opt-in, tested by arm (retention lever 3)
 
 Accounts that watch a card come back after week one at 56% against 25% for those that don't (retention census, 18 Nov), and

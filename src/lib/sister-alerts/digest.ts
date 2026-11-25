@@ -18,9 +18,10 @@ import type { Prisma as PrismaNS } from "@prisma/client";
 import type { prisma as Prisma } from "../db";
 import { escapeHtml, getLastEmailError } from "../email";
 import { sendSisterMail } from "./send";
+import { discordInvite } from "./discord";
 import { MAILING_ADDRESS } from "../mailing-address";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
-import { button, feedbackAsk, fromFor, money, REGION_LABEL, serviceUrl, shell, siteLink, type BuiltMail } from "./email";
+import { button, discordLine, discordText, sisterGiveawayLine, feedbackAsk, fromFor, money, REGION_LABEL, serviceUrl, shell, senderOf, siteLink, type BuiltMail } from "./email";
 import { SISTER_ALERT_SITES, SISTER_REGIONS, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
 import { claimMailSlot, mailLane, SISTER_DAILY_MAIL_CAP } from "./mail-cap";
 
@@ -124,18 +125,39 @@ export function computeDrops(previous: PriceSnapshot, feed: Pick<AlertFeed, "ite
 
 export const editionId = (now: Date) => now.toISOString().slice(0, 10);
 
+/**
+ * Cyber Weekend 2026 (owner, 2026-11-21: "capitalise on cyber weekend"): the editions land on Black Friday and Cyber Monday
+ * mornings (the daily run is 14:20 UTC, 9:20 in New York). On those UTC days every site with subscribers builds a fresh edition
+ * unless it already built one that day; in the three days before one, a regular edition waits for it, so the Black Friday email
+ * compares with the week before instead of a day. Still real feed prices only and still MIN_DROPS: a quiet site sends nothing.
+ */
+export const PINNED_EDITIONS: Record<string, string> = { "2026-11-27": "Black Friday", "2026-11-30": "Cyber Monday" };
+const PIN_HOLD_MS = 3 * 24 * 60 * 60 * 1000;
+const utcDay = (d: Date) => d.toISOString().slice(0, 10);
+
+/** The occasion an edition built at this time is for ("Black Friday"), or null for an ordinary week. */
+export function editionOccasion(builtAt: Date): string | null {
+  return PINNED_EDITIONS[utcDay(builtAt)] ?? null;
+}
+
 export function editionDue(builtAt: Date | null, now: Date): boolean {
-  return !builtAt || now.getTime() - builtAt.getTime() >= EDITION_EVERY_MS;
+  if (!builtAt) return true;
+  if (PINNED_EDITIONS[utcDay(now)]) return utcDay(builtAt) !== utcDay(now);
+  const nextPin = Object.keys(PINNED_EDITIONS).map((d) => Date.parse(`${d}T00:00:00Z`)).find((t) => t > now.getTime() && t - now.getTime() <= PIN_HOLD_MS);
+  if (nextPin != null) return false;
+  return now.getTime() - builtAt.getTime() >= EDITION_EVERY_MS;
 }
 
 const pctOff = (d: Drop) => Math.round(((d.was - d.now) / d.was) * 100);
 
 /** One subscriber's weekly email: the site's biggest drops in their region, each linking to the site's own page. */
-export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: Drop[], token: string): BuiltMail {
+export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: Drop[], token: string, occasion: string | null = null): BuiltMail {
   const site = sisterSite(siteKey)!;
   const rows = drops.slice(0, MAX_DROPS);
   const top = rows[0]!;
-  const subject = `This week's biggest price drops on ${site.name}: ${top.n} −${pctOff(top)}%`;
+  const subject = occasion
+    ? `${occasion}: the real price drops on ${site.name}, ${top.n} −${pctOff(top)}%`
+    : `This week's biggest price drops on ${site.name}: ${top.n} −${pctOff(top)}%`;
   const items = rows
     .map((d) => {
       const link = siteLink(site, d.u, "weekly-drops", region);
@@ -148,8 +170,8 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
     .join("");
   const cta = `<tr><td style="padding:14px 28px 6px">${button(site, siteLink(site, "/", "weekly-drops", region), `Compare prices on ${site.name}`)}</td></tr>`;
   const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Each price is the lowest in-stock price at ${REGION_LABEL[region]} stores we compare, this week against last week, before postage. Stores change prices quickly, so check before you buy.<br/>${feedbackAsk(site, "weekly-drops")}</td></tr>`;
-  const stop = `${serviceUrl("manage", token)}&stop=${encodeURIComponent(`digest:${site.key}`)}`;
-  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you asked ${escapeHtml(site.name)} for its weekly biggest price drops. <a href="${escapeHtml(stop)}" style="color:#4b5563">Stop the weekly email</a> · <a href="${escapeHtml(serviceUrl("manage", token))}" style="color:#4b5563">Manage your emails</a><br/>Sent by our sister site RiftCompare's alert service (riftcompare.com).</td></tr>`;
+  const stop = `${serviceUrl("manage", token, site)}&stop=${encodeURIComponent(`digest:${site.key}`)}`;
+  const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you asked ${escapeHtml(site.name)} for its weekly biggest price drops. <a href="${escapeHtml(stop)}" style="color:#4b5563">Stop the weekly email</a> · <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your emails</a><br/>${sisterGiveawayLine(site.key)?.html ?? ""}${discordLine(site.key)}Sent by ${senderOf(site)}.</td></tr>`;
   const text = [
     subject,
     "",
@@ -158,6 +180,8 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
     `Lowest in-stock price at ${REGION_LABEL[region]} stores, this week against last week, before postage.`,
     `What would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "weekly-drops", region)}`,
     `Stop the weekly email: ${stop}`,
+    ...(sisterGiveawayLine(site.key) ? [sisterGiveawayLine(site.key)!.text] : []),
+    ...(discordInvite(site.key) ? [discordText(site.key)!] : []),
     "",
     MAILING_ADDRESS,
   ].join("\n");
@@ -270,7 +294,7 @@ export async function runSisterDigest(deps: DigestDeps): Promise<DigestSummary> 
     }
     const site = sisterSite(s.site)!;
     const token = tokenOf.get(s.email)!;
-    const mail = buildDigestEmail(site.key, s.region as SisterRegion, drops, token);
+    const mail = buildDigestEmail(site.key, s.region as SisterRegion, drops, token, editionOccasion(ed.builtAt));
     const ok = await send(s.email, mail.subject, mail.html, { text: mail.text, headers: digestUnsubscribeHeaders(token, site.key), from: fromFor(site) }, site.key);
     if (ok) {
       summary.emailed += 1;

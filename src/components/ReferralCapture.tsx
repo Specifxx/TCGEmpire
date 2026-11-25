@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { REFERRAL_COOKIE } from "@/lib/referral-cookie";
+import { inviteCodeFrom } from "@/lib/share-link";
 import { captureEntrySource, readCampaign } from "@/lib/entry-source";
 import { installPaidVisitTagger } from "@/lib/paid-visit";
 
@@ -19,9 +20,10 @@ export function ReferralCapture() {
     // A paid ad visit (utm_medium=paid) tags its affiliate clicks, so the earnings
     // dashboard can say what each ad test earned. See lib/paid-visit.ts.
     installPaidVisitTagger();
-    const ref = new URLSearchParams(window.location.search).get("ref");
-    // cuids are lowercase alphanumeric; validate loosely before storing.
-    if (!ref || !/^[a-z0-9]{6,40}$/i.test(ref)) return;
+    // ?ref= (the profile's invite link) or #r= (a member's shared link, 2026-11-18);
+    // cuids are lowercase alphanumeric, validated loosely in inviteCodeFrom.
+    const ref = inviteCodeFrom(window.location.search, window.location.hash);
+    if (!ref) return;
     document.cookie = `${REFERRAL_COOKIE}=${encodeURIComponent(ref)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
   }, []);
   return null;

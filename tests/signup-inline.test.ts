@@ -40,6 +40,8 @@ const PLACEMENTS: Record<string, string> = {
   "src/app/movers/page.tsx": "inline_movers",
   "src/app/champions/[slug]/page.tsx": "inline_champion",
   "src/components/CardSignupPrompt.tsx": "inline_card",
+  "src/app/rising/[token]/page.tsx": "inline_rising",
+  "src/components/HolidaySalePage.tsx": "inline_black_friday",
 };
 
 function walk(dir: string, out: string[] = []): string[] {

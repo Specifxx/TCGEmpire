@@ -144,7 +144,7 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
   inner += open.length
     ? `<tr><td style="padding:2px 32px;font-size:13px;line-height:1.55;color:#b8c0cc">${open
         .map((s) => `<div style="margin:4px 0">☐ <strong style="color:#e6ebf2">${esc(s.title)}</strong>${s.why ? ` — ${esc(s.why)}` : ""}${s.prompt ? `<br/><span style="font-size:12px;color:#6b7585">Chrome prompt: project files › ${esc(s.prompt)}</span>` : ""}</div>`)
-        .join("")}<div style="margin-top:6px;font-size:12px;color:#6b7585">These are joined into one Chrome batch each Monday. Press Done on <a href="${esc(hqUrl)}#steps" style="color:#f29733">Empire HQ</a> when finished.</div></td></tr>`
+        .join("")}<div style="margin-top:6px;font-size:12px;color:#6b7585">These are joined into one Chrome batch each Monday. Press Done on <a href="${esc(hqUrl)}#steps" style="color:#34d17e">Empire HQ</a> when finished.</div></td></tr>`
     : `<tr><td style="padding:2px 32px;font-size:13px;color:#b8c0cc">Nothing. Every step is done.</td></tr>`;
 
   // One row per site.
@@ -194,7 +194,7 @@ export function buildWeeklyEmail(x: WeeklyInput): { subject: string; html: strin
     inner += `<tr><td style="padding:2px 32px"><pre style="margin:0;font:11px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;color:#b8c0cc">${esc(x.growthText)}</pre></td></tr>`;
   }
   if (hq.errors.length) inner += `<tr><td style="padding:10px 32px 2px;font-size:11px;color:#6b7585">${hq.errors.map(esc).join(" ")}</td></tr>`;
-  inner += `<tr><td style="padding:14px 32px 22px"><a href="${esc(hqUrl)}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open Empire HQ →</a></td></tr>`;
+  inner += `<tr><td style="padding:14px 32px 22px"><a href="${esc(hqUrl)}" style="display:inline-block;background:#1ea65c;color:#1e3043;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:10px">Open Empire HQ →</a></td></tr>`;
 
   const footer = `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;line-height:1.6;color:#6b7585">The one Monday report for every Compare Empire site. Red problems are still emailed the moment they happen; everything else waits for this. If it ever does not arrive on a Monday, the monitor has stopped.</td></tr>`;
 

@@ -18,6 +18,7 @@ import { browserKind, buildCheckout, checkLines, isGone, openAll, popupSteps, re
 import { CART_SITE } from "./cart-config";
 import { CartThumb } from "./CartThumb";
 import { CartIcon } from "./CartIcon";
+import { isNativeApp, openExternal } from "@/lib/native";
 
 function track(name: string, params: Record<string, unknown>) {
   try {
@@ -62,7 +63,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   // Live price and stock from each Shopify store, each time the drawer opens or a line is added or removed.
   const key = lines.map((l) => l.id).join("|");
   useEffect(() => {
-    if (!open || !lines.some((l) => l.variantId && l.productUrl)) return;
+    if (!open || !mounted || !lines.some((l) => l.variantId && l.productUrl)) return;
     let live = true;
     setChecking(true);
     checkLines(lines).then((c) => {
@@ -74,11 +75,13 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       live = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, key]);
+  }, [open, key, mounted]);
 
   // Escape closes; the page behind stops scrolling; focus goes in and comes back.
   useEffect(() => {
-    if (!open) return;
+    // Only the drawer that draws locks the page (owner, 2026-11-18): a header that mounts the cart button twice ran this twice, and the
+    // second copy restored the first copy's "hidden" on close, so the page stayed locked and the phone bottom nav never came back.
+    if (!open || !mounted) return;
     const prevFocus = document.activeElement as HTMLElement | null;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -105,7 +108,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       document.body.style.overflow = prevOverflow;
       prevFocus?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open, onClose, mounted]);
 
   const groups = useMemo(() => groupByStore(lines), [lines]);
   const items = useMemo(() => buildCheckout(lines, checks, CART_SITE, ref.current), [lines, checks]);
@@ -139,7 +142,16 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     setAgain(readPopupMemory());
     setHelp({ kind: browserKind(navigator.userAgent), host: location.host });
   }, []);
+  // Inside the Android app there are no tabs: each store opens in its own browser sheet, one per tap, and the button then
+  // names the next store (lib/native.ts).
+  const [inApp, setInApp] = useState(false);
+  useEffect(() => setInApp(isNativeApp()), []);
   const checkout = () => {
+    if (inApp) {
+      const first = todo[0];
+      if (first) void openExternal(first.url).then((ok) => ok && markDone(first, "app"));
+      return;
+    }
     const r = openAll(todo);
     for (const it of r.opened) markDone(it, blockedTry ? "drawer-retry" : "drawer");
     if (r.opened.length > 1) {
@@ -156,12 +168,12 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   return createPortal(
     <div className={`cd-root${open ? " is-open" : ""}`} aria-hidden={!open} {...(open ? {} : { inert: true })}>
       <div className="cd-backdrop" onClick={onClose} />
-      <div ref={panel} className="cd-panel" role="dialog" aria-modal="true" aria-label="Your cart">
+      <div ref={panel} className="cd-panel" role="dialog" aria-modal="true" aria-label="Your shortlist">
         <header className="cd-head">
           <h2>
-            Your cart{units > 0 && <span className="cd-count"> · {units} item{units === 1 ? "" : "s"}</span>}
+            Your shortlist{units > 0 && <span className="cd-count"> · {units} item{units === 1 ? "" : "s"}</span>}
           </h2>
-          <button ref={closeBtn} type="button" className="cd-x" onClick={onClose} aria-label="Close cart">
+          <button ref={closeBtn} type="button" className="cd-x" onClick={onClose} aria-label="Close shortlist">
             ×
           </button>
         </header>
@@ -169,8 +181,8 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         {!lines.length ? (
           <div className="cd-empty">
             <CartIcon size={34} />
-            <p className="cd-strong">Your cart is empty</p>
-            <p>Tap Add to cart beside any store&apos;s price (you pay each store on its own site, never us). Add from as many stores as you like and check out all of them in one go.</p>
+            <p className="cd-strong">Your shortlist is empty</p>
+            <p>Tap Save beside any store&apos;s price to keep it here. RiftCompare sells nothing: you buy at each store on its own site. Save from as many stores as you like and open all their checkouts in one go.</p>
             <button type="button" className="cd-btn" onClick={onClose}>
               Keep browsing
             </button>
@@ -179,7 +191,8 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           <>
             <div className="cd-body">
               <div className="cd-handoff" role="note">
-                <p className="cd-handoff-lead">You pay each store on its own site. We never take payment.</p>
+                {/* Said every time the drawer opens, not only when it is empty (owner's UX review, 2026-11-24, P1 12). */}
+                <p className="cd-handoff-lead">Prices you saved. RiftCompare sells nothing: you buy at each store on its own site, and we never take payment.</p>
                 <p>{checking ? "Checking prices and stock at each store… " : ""}Each store adds its own postage. Opening a Shopify store&apos;s checkout replaces anything already in your cart there.</p>
               </div>
               {groups.map((g) => {
@@ -281,7 +294,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                 <p className="cd-alldone">All {items.length} stores are open. Finish paying in each tab.</p>
               ) : (
                 <button type="button" className="cd-btn" onClick={checkout} disabled={!items.length}>
-                  {showHelp ? `Try again: open all ${todo.length} stores` : started ? `Open the other ${todo.length === 1 ? "store" : `${todo.length} stores`}` : `Check out ${items.length} stores`}
+                  {inApp && todo[0] ? `Open ${todo[0].storeName}${todo.length > 1 ? `, then ${todo.length - 1} more` : ""}` : showHelp ? `Try again: open all ${todo.length} stores` : started ? `Open the other ${todo.length === 1 ? "store" : `${todo.length} stores`}` : `Check out ${items.length} stores`}
                 </button>
               )}
               <div className="cd-links2">

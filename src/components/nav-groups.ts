@@ -1,3 +1,4 @@
+import { saleStrip } from "@/lib/holiday-strip";
 import { DISCORD_URL } from "@/lib/site";
 import { SETS, hasSetGallery } from "@/lib/constants";
 import { pokemonSectionOn } from "@/lib/pokemon/flag";
@@ -184,6 +185,9 @@ export const NAV_GROUPS: NavGroup[] = [
       // The creators hub (2026-10-15): beside Community links, where a reader
       // looking for "who else makes Riftbound content" looks. Moved from Help.
       { href: "/creators", label: "Riftbound Creators", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok", "buy a pack", "tip", "donate", "support creators"], hideInFooter: true },
+      // The prize draw (2026-11-18, closes 14 Dec 2026): free entry with an account. In the menu and the launcher
+      // while it runs; hideInFooter keeps the footer's columns at their ceiling.
+      { href: "/giveaway", label: "Giveaway", keywords: ["giveaway", "win", "prize", "contest", "competition", "free card", "draw", "miss fortune"], hideInFooter: true },
       { href: "/learn", label: "Learn Riftbound", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
       { href: "/authors", label: "Who writes this", keywords: ["authors", "team", "byline", "who writes"] },
       { href: "/editorial-policy", label: "Editorial policy", keywords: ["editorial", "policy", "standards", "corrections"] },
@@ -326,6 +330,8 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
 // in NAV_GROUPS throws at import (tests/header-menus.test.ts). 7 top-level items or fewer in the header row.
 export interface HeaderMenu {
   label: string;
+  // Where a click on the label goes: the section page (owner, 2026-11-23), a NAV_GROUPS page.
+  href: string;
   columns: { title: string; links: { href: string; label: string }[] }[];
 }
 const ALL_NAV_LINKS = NAV_GROUPS.flatMap((g) => g.links);
@@ -336,9 +342,16 @@ function pick(...hrefs: string[]): { href: string; label: string }[] {
     return { href: l.href, label: l.label };
   });
 }
+// The sale page in season, if any, picked from NAV_GROUPS like every other header link. Read at module load: the header is
+// in cached HTML that the daily release refreshes, and the sale pages themselves say when their sale is over.
+function seasonalPick(today = new Date().toISOString().slice(0, 10)): { href: string; label: string }[] {
+  const s = saleStrip(today);
+  return s ? pick(s.href).map((l) => ({ ...l, label: `${l.label} ★` })) : [];
+}
 export const HEADER_MENUS: HeaderMenu[] = [
   {
     label: "Singles",
+    href: "/singles",
     columns: [
       { title: "Browse cards by", links: pick("/sets", "/domains", "/champions", "/cards") },
       { title: "Find a card", links: pick("/browse", "/price-guide", "/cards/all", "/gallery", "/graded") },
@@ -346,6 +359,7 @@ export const HEADER_MENUS: HeaderMenu[] = [
   },
   {
     label: "Sealed",
+    href: "/sealed",
     columns: [
       { title: "Boxes & packs", links: pick("/sealed", "/singles") },
       { title: "Sets & pre-orders", links: pick("/sets/radiance", "/legacy-preorders", "/release-dates") },
@@ -354,9 +368,15 @@ export const HEADER_MENUS: HeaderMenu[] = [
   },
   {
     label: "Deals & market",
+    href: "/tools/deal-finder",
     columns: [
       { title: "Market", links: pick("/market", "/movers", "/auctions") },
-      { title: "Deals", links: pick("/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/demand") },
+      // Fewer, clearer deal links (owner's UX review, 2026-11-24, P2 16: "reduce to four or five, with seasonal pages as one
+      // highlighted item"): the Deal Finder, Rising and the sale page in season (saleStrip, the same date rule as the line under
+      // the header). Best Basket and Demand stay in the full menu and the footer.
+      { title: "Deals", links: [...pick("/tools/deal-finder", "/tools/rising"), ...seasonalPick()] },
+      // The prize draw (owner, 2026-11-19): visible in the header while one runs, not only in the launcher.
+      { title: "Win", links: pick("/giveaway") },
     ],
   },
 ];
@@ -396,7 +416,18 @@ const miscLinks = byTitle["Miscellaneous"] ?? [];
 // conventionally goes looking for the "for partners" link anyway.
 const storeLinks = byTitle["For stores"] ?? [];
 
-export const FOOTER_GROUPS: NavGroup[] = [
+// The footer keeps the pages a buyer and a search engine most need (2026-11-19, core-update quality pass: about 63
+// links on every page down to these). The full index stays in the header menu and /sitemap.
+const FOOTER_KEEP = new Set([
+  "/browse", "/price-guide", "/sets", "/cards", "/sealed", "/release-dates", "/market", "/movers", "/stores/tracked",
+  "/decks", "/deck", "/watching", "/portfolio", "/alerts",
+  "/tools/deal-finder", "/tools/best-basket", "/tools/box-ev", "/tools",
+  "/games/pack-sim", "/riftle",
+  "/learn", "/guides", "/blog", "/about", "/methodology", "/editorial-policy", "/how-we-pick-stores", "/contact",
+]);
+const keep = (l: NavGroupLink) => FOOTER_KEEP.has(l.href) || l.href === CARD_SHOP_FINDER.url;
+
+const FOOTER_ALL: NavGroup[] = [
   {
     title: "Shop",
     links: [...(byTitle["Prices"] ?? []), ...miscLinks, ...storeLinks],
@@ -425,3 +456,5 @@ export const FOOTER_GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+export const FOOTER_GROUPS: NavGroup[] = FOOTER_ALL.map((g) => ({ ...g, links: g.links.filter(keep) }));

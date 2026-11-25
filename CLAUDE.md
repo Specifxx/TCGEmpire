@@ -4,7 +4,7 @@
 
 **One production build per 12 hours, and production only (owner, 2026-11-02: Vercel spend capped at $5–6 a
 day).** `scripts/vercel-ignore-build.sh` skips a `[deploy]` commit within 12 hours of the last production
-deployment (it rides the next release); `[urgent]` in the subject overrides that, only when the owner says
+deployment (it rides the next release); `[urgent]` in the subject shortens that to 8 hours (never less: 2026-11-19, a network ceiling of 57 builds a day), only when the owner says
 so. `vercel.json` disables every branch except production (`"**": false`), so no preview is ever built.
 Never dispatch a manual release just to ship a merge. DECISIONS.md, 2026-11-02.
 
@@ -64,8 +64,8 @@ So, for automated sessions:
 
 ## Databases
 
-Two Neon projects: operational and history. The live names rotate (RM12 and
-`HISTORY_DATABASE_URL_4` as of 2026-11-16) — `OPERATIONAL_VARS` / the history
+Two Neon projects: operational and history. The live names rotate (RM9 and
+`HISTORY_DATABASE_URL_4` as of 2026-11-22) — `OPERATIONAL_VARS` / the history
 chain in `src/lib/db-chains.ts` are the source of truth, not this file. Both resolve
 through `src/lib/db-chains.ts`; never hand-roll a connection chain in a script
 (`tests/db-chain.test.ts` fails if you do). Free-tier transfer is 5 GB/month

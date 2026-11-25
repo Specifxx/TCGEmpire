@@ -1,0 +1,48 @@
+name: Premium email batch
+
+# Sends ONE batch of the Premium email (/admin/premium-offer) through the site's own
+# /api/cron/premium-offer route, so an agent can run the owner's batches without a
+# browser (owner, 2026-11-22: "let's send like 2 batches … do all of this autonomously").
+# Dispatch only, never scheduled: each run is a deliberate send. The route applies the
+# same audience as the admin button (newest first, never paying, admins, seed accounts
+# or anyone who opted out; nobody twice) and caps a batch at 300.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Accounts in this batch (90 = one admin-button batch)"
+        type: string
+        default: "90"
+      dry:
+        description: "1 = count only, 0 = send"
+        type: choice
+        options: ["1", "0"]
+        default: "1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: premium-offer-send
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Ask the site to send one batch
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE: ${{ vars.SITE_URL || 'https://riftcompare.com' }}
+          LIMIT: ${{ inputs.limit }}
+          DRY: ${{ inputs.dry }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "::error::CRON_SECRET is not set"; exit 1; fi
+          case "$LIMIT" in ''|*[!0-9]*) echo "::error::limit must be a number"; exit 1;; esac
+          code=$(curl -sS -o result.json -w '%{http_code}' -X POST --max-time 290 \
+            -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/cron/premium-offer?dry=$DRY&limit=$LIMIT")
+          echo "HTTP $code"
+          # Counts and error reasons only; the route never returns an address.
+          jq '{ok, dryRun, audienceSize, alreadySent, pending, sent, failed, remaining, errors, error}' result.json || cat result.json
+          [ "$code" = "200" ] || { echo "::error::The site did not send the batch (HTTP $code)"; exit 1; }

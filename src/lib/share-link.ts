@@ -5,7 +5,7 @@
 // growth report (lib/earnings/growth-report.ts) counts both for every site.
 // DECISIONS.md, "Share buttons and shared lists".
 
-export type ShareMedium = "card" | "sealed" | "deck" | "list" | "page" | "daily" | "pulls" | "binder" | "guide" | "set" | "movers";
+export type ShareMedium = "card" | "sealed" | "deck" | "list" | "page" | "daily" | "pulls" | "binder" | "guide" | "set" | "movers" | "drop";
 
 /** `path` (an existing query string is kept) on `origin`, with the share tags. */
 export function shareUrl(origin: string, path: string, medium: ShareMedium): string {
@@ -47,6 +47,17 @@ export function shareText(name: string, gap: PriceGap | null, fmt: (cents: numbe
   return `${name}: ${fmt(gap.low.priceCents)} at ${gap.low.retailerName}, up to ${fmt(gap.high.priceCents)} elsewhere (${gap.pct}% less). Compared on ${site}`;
 }
 
+// "Share this deal with your group chat" (owner, 2026-11-23; ported from DexCompare, components/DropShare.tsx): the cheapest open
+// STORE listing's real price and name in the visitor's market (never eBay, TCGplayer or Amazon, never converted). People paste drops
+// into restock chats anyway; this makes the link they paste ours.
+export function dropText(name: string, best: { priceCents: number; retailerName: string } | null, place: string, fmt: (cents: number) => string, preorder = false, site = "RiftCompare"): string | null {
+  if (!best) return null;
+  return `${preorder ? "Pre-order: " : ""}${name} for ${fmt(best.priceCents)} at ${best.retailerName}, the cheapest store price we found in ${place}. Every store compared on ${site}:`;
+}
+
+/** Store rows only: never eBay, TCGplayer or Amazon (dropText). */
+export const isStoreRetailer = (retailer: string) => retailer !== "ebay" && !retailer.startsWith("tcgplayer") && !retailer.startsWith("amazon");
+
 // Share-for-a-deal test (owner, 2026-11-18: "if you share … you can open Deal
 // Finder"). Half of browsers (kept in localStorage) see "Share · get a deal" and,
 // after a share completes, a small card under the button pointing to Deal
@@ -57,4 +68,27 @@ export const SHARE_ARM_KEY = "share_arm";
 export function pickShareArm(saved: string | null | undefined, roll: number): ShareArm {
   if (saved === "reward" || saved === "plain") return saved;
   return roll < 0.5 ? "reward" : "plain";
+}
+
+// Invite links (owner, 2026-11-18: "people … share stuff with their friends"): a
+// signed-in member's share carries their referral code after the #, so every share
+// is also an invite. The # part never reaches the server: no new CDN copy of the
+// page and no database read until the friend signs up (lib/referral.ts, which
+// credits the referrer once per new account). ReferralCapture reads it back.
+const INVITE_CODE = /^[a-z0-9]{6,40}$/i;
+
+/** `url` with `#r=<code>` when `code` is a valid referral code, else `url` unchanged. */
+export function withInvite(url: string, code: string | null | undefined): string {
+  if (!code || !INVITE_CODE.test(code)) return url;
+  const u = new URL(url);
+  u.hash = `r=${code}`;
+  return u.toString();
+}
+
+/** The referral code a landing carries: `?ref=` (the profile's invite link) or `#r=` (a member's share). */
+export function inviteCodeFrom(search: string, hash: string): string | null {
+  const q = new URLSearchParams(search).get("ref");
+  if (q && INVITE_CODE.test(q)) return q;
+  const h = new URLSearchParams(hash.replace(/^#/, "")).get("r");
+  return h && INVITE_CODE.test(h) ? h : null;
 }

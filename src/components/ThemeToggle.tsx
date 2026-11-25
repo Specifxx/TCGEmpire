@@ -95,6 +95,7 @@ export function ThemeToggle({ variant = "icon", className = "" }: { variant?: "i
         type="button"
         onClick={toggle}
         aria-label={label}
+        title={label}
         className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-semibold text-slate-200 transition-colors hover:bg-ink-800 hover:text-white ${className}`}
       >
         {icon}

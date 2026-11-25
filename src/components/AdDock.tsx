@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { applyAdLook } from "@/lib/ad-look";
 import { dockArm } from "@/lib/dock-arm";
 
 // The phone dock (owner, 2026-11-06: "how can we have those [side rail ads] on mobile … in the best way that doesn't interrupt user
@@ -57,13 +58,20 @@ function dismissedThisVisit(): boolean {
 }
 
 /**
+ * The phone dock is OFF (Head of Product, 2026-11-21; owner 2026-11-20: "there actually might be too many ads"). In 28 days it
+ * drew ~23 of 15,053 buy clickers across the sites (0.15%, Vercel by placement) while covering the foot of every phone screen.
+ * Off means nothing renders and nothing is fetched. `true` brings it back exactly as it was.
+ */
+export const PHONE_DOCK_ON = false;
+
+/**
  * Renders its children (the dock and the data hooks that feed it) only on a screen narrower than `minWidth`, once the visitor has
  * scrolled a third of a screen and has not hidden the dock this visit. Before that: nothing, and no request.
  */
 export function DockGate({ minWidth, children }: { minWidth: number; children: ReactNode }) {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
-    if (dismissedThisVisit()) return;
+    if (!PHONE_DOCK_ON || dismissedThisVisit()) return;
     const wide = window.matchMedia(`(min-width: ${minWidth}px)`);
     const check = () => {
       if (!wide.matches && window.scrollY >= window.innerHeight * (DOCK_ARM / 2)) {
@@ -109,6 +117,7 @@ export function DockTile({ img, alt, brand, title, price, cta, plate = false }: 
  * `buybar`: the site's phone buy bar (a page that has one never shows the dock).
  */
 export function AdDock({ label, sides, placement, minWidth, yieldTo = "[data-ad]", buybar = "[data-buybar]" }: { label: string; sides: DockSide[]; placement: string; minWidth: number; yieldTo?: string; buybar?: string }) {
+  useEffect(() => applyAdLook(), []);
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -135,9 +144,9 @@ export function AdDock({ label, sides, placement, minWidth, yieldTo = "[data-ad]
           screen: window.innerHeight,
           blockers: blockers.size,
           buybar: !!document.querySelector(buybar),
-          // An ad-free visitor (Plus/Premium where a site has them) and a native app with its own banner: never. Nor while the
+          // An ad-free visitor (Plus/Premium where a site has them): never (the Android app shows it like the phone site). Nor while the
           // phone bottom nav shows (BottomNav.tsx): the two take turns, the nav on scroll up, the dock on scroll down.
-          modal: modal() || document.documentElement.matches(stack ? "[data-adfree], .capacitor-native" : "[data-adfree], .capacitor-native, [data-bottomnav]"),
+          modal: modal() || document.documentElement.matches(stack ? "[data-adfree]" : "[data-adfree], [data-bottomnav]"),
           typing,
           dismissed: false,
         }),

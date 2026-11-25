@@ -16,11 +16,14 @@ import {
   type RisingSnapshotPick,
 } from "@/lib/rising-snapshot";
 import { MoveBadge } from "@/components/MoveBadge";
+import { RisersShop } from "@/components/RisersShop";
+import { InlineSignupPrompt } from "@/components/InlineSignupPrompt";
 import { weekAgoLabel } from "@/lib/rising-movement";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure, PaidLinkTag } from "@/components/AffiliateDisclosure";
 import { affiliateUrl } from "@/lib/affiliate";
 import { ENTRY_TIER_NAME } from "@/lib/site";
+import { COUNTRIES } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -169,6 +172,11 @@ function Row({ p, rank, legacy, showMove, newTitle }: { p: RisingSnapshotPick; r
       <td className="num px-3 py-2 text-right text-white">
         {p.priceCents != null ? formatMoney(p.priceCents, p.currency) : "—"}
         <EbayCheapest p={p} rank={rank} />
+        {/* Buy (boardroom 2026-11-20): a plain card link, which the site-wide handler turns into the quick view with
+            today's prices, eBay and TCGplayer first. The price beside it stays the frozen one. */}
+        <Link href={cardHref(p)} data-snapshot-buy="" className="btn-buy mt-1 inline-flex min-h-8 px-3 py-1 text-xs">
+          Buy
+        </Link>
       </td>
       <td className="num px-3 py-2 text-right"><Pct v={weekMove(p)} /></td>
       {legacy && <td className="num px-3 py-2 text-right"><Pct v={p.trend30} /></td>}
@@ -215,6 +223,20 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
         <span aria-hidden>📌</span>
         Frozen on {snapshotDateLabel(taken)} — prices have moved since
       </p>
+
+      {data.picks.length > 0 && (
+        <div className="mt-5">
+          <RisersShop
+            seeds={data.picks.slice(0, 3).map((p) => ({
+              slug: p.slug ?? p.id,
+              name: p.displayName,
+              image: p.imageThumbUrl,
+              setCode: p.setCode,
+              collectorNumber: p.collectorNumber,
+            }))}
+          />
+        </div>
+      )}
 
       {data.picks.length === 0 ? (
         <div className="card-surface mt-6 grid place-items-center p-12 text-center text-sm text-slate-400">
@@ -303,6 +325,45 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
             ) : null}
           </p>
         </div>
+      )}
+
+      {/* Owned audience (2026-11-20): Reddit lands here and rarely buys; a free account's watchlist emails them when a card
+          drops, a way back that is not Reddit. Signed-out only, a client island after the chart, never above it. */}
+      <InlineSignupPrompt
+        className="mt-8"
+        surface="inline_rising"
+        title="Get an email when a card on this chart gets cheaper"
+        body="With a free account you can watch any card here, and we email you when its price drops. Alerts only, and every email has a stop link."
+      />
+
+      {data.drops && data.drops.length > 0 && (
+        <section className="mt-8" aria-labelledby="drops">
+          <h2 id="drops" className="text-lg font-bold text-white">Biggest drops this week</h2>
+          <p className="mt-1 text-xs text-slate-400">
+            Frozen with this snapshot: the cards worth $3 or more whose cheapest tracked price fell most against about seven days
+            before{data.dropsMarket ? ` (${COUNTRIES[data.dropsMarket].label})` : ""}, the same list as{" "}
+            <Link href="/movers" className="underline hover:text-white">Price movers</Link>. A fall of 80% or more is left out as a misread price.
+          </p>
+          <ol className="mt-3 divide-y divide-ink-800 rounded-xl border border-ink-800">
+            {data.drops.map((d, i) => (
+              <li key={d.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+                <span className="num w-5 text-slate-500">{i + 1}</span>
+                <Link href={cardHref(d)} className="flex min-w-0 flex-1 items-center gap-2.5 hover:text-brand-400">
+                  {d.imageThumbUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={d.imageThumbUrl} alt={cardImageAlt({ name: d.displayName, setCode: d.setCode, collectorNumber: d.collectorNumber })} width={28} height={39} loading="lazy" className="h-[39px] w-7 shrink-0 rounded-sm object-cover" />
+                  ) : (
+                    <span className="h-[39px] w-7 shrink-0 rounded-sm bg-ink-800" aria-hidden />
+                  )}
+                  <span className="truncate font-medium text-white">{d.displayName}</span>
+                </Link>
+                <span className="num text-slate-400">{formatMoney(d.refCents, d.currency)} →</span>
+                <span className="num text-white">{formatMoney(d.nowCents, d.currency)}</span>
+                <span className="num w-16 text-right"><Pct v={d.pct} /></span>
+              </li>
+            ))}
+          </ol>
+        </section>
       )}
 
       {/* The upsell, and it is an honest one: what this page withholds is not

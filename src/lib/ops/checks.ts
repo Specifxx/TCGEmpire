@@ -355,6 +355,13 @@ export async function ebayData(d: OpsDeps): Promise<CheckResult[]> {
 
 // ── Prices and scheduled jobs ───────────────────────────────────────────────
 
+// Price freshness lines (owner's UX review, 2026-11-24, P0 2: "add a pipeline alert when data is over 12 hours old"). Both imports
+// run twice a day, so 12 hours means a run was missed: amber on /admin/health and Empire HQ from 12 hours, red (the owner's
+// email) from 20, which allows for GitHub starting a cron several hours late without crying wolf. They were 30/56 (cards) and
+// 36/72 (sealed): a page could say "checked 30 hours ago" with no alarm at all.
+export const PRICE_STALE_WARN_H = 12;
+export const PRICE_STALE_CRIT_H = 20;
+
 export async function priceFreshness(d: OpsDeps): Promise<CheckResult[]> {
   if (!d.db) return [];
   const out: CheckResult[] = [];
@@ -363,9 +370,9 @@ export async function priceFreshness(d: OpsDeps): Promise<CheckResult[]> {
     // first live run) and must neither alarm nor hide a live market that has none.
     const found = new Map((await d.db.priceFreshness()).map((m) => [m.country, m]));
     const rows = (Object.keys(COUNTRIES) as string[]).map((country) => ({ country, newest: found.get(country)?.newest ?? null, h: hoursSince(found.get(country)?.newest ?? null, d.now) }));
-    const stale = rows.filter((r) => ageSeverity(r.h, 30, 56) !== "ok");
+    const stale = rows.filter((r) => ageSeverity(r.h, PRICE_STALE_WARN_H, PRICE_STALE_CRIT_H) !== "ok");
     const worst = rows.reduce<Severity>((w, r) => {
-      const s = ageSeverity(r.h, 30, 56);
+      const s = ageSeverity(r.h, PRICE_STALE_WARN_H, PRICE_STALE_CRIT_H);
       return s === "crit" ? "crit" : s === "warn" && w !== "crit" ? "warn" : w;
     }, "ok");
     out.push(
@@ -386,7 +393,7 @@ export async function priceFreshness(d: OpsDeps): Promise<CheckResult[]> {
   try {
     const at = await d.db.sealedNewest();
     const h = hoursSince(at, d.now);
-    const sev = ageSeverity(h, 36, 72);
+    const sev = ageSeverity(h, PRICE_STALE_WARN_H, PRICE_STALE_CRIT_H);
     out.push(
       result(d, {
         id: "data:sealed",
@@ -442,9 +449,9 @@ export function historyFiles(d: OpsDeps): CheckResult {
 // may be an old manual one, so the staleness clock starts at that time instead (a new
 // schedule is not a job that stopped running). Set it whenever a schedule is added.
 export const JOBS: { file: string; title: string; staleH: number; scheduledSince?: string }[] = [
-  { file: "refresh-prices.yml", title: "Price import job", staleH: 36 },
+  { file: "refresh-prices.yml", title: "Price import job", staleH: 14 }, // twice a day: amber once a run is missed (UX review, 2026-11-24)
   { file: "refresh-auctions.yml", title: "Auction sweep job", staleH: 16 },
-  { file: "sealed-refresh.yml", title: "Sealed refresh job", staleH: 36 },
+  { file: "sealed-refresh.yml", title: "Sealed refresh job", staleH: 14 },
   { file: "store-health.yml", title: "Store health job", staleH: 36 },
   { file: "production-deploy.yml", title: "Daily release job", staleH: 40 },
   // Weekly (2026-10-15): a week and a day before it reads as late.
@@ -470,6 +477,8 @@ export const JOBS: { file: string; title: string; staleH: number; scheduledSince
   { file: "sister-alerts.yml", title: "Sister-site price alerts job", staleH: 36 },
   // Daily (2026-11-03): registers the Discord bot's commands and finishes its setup; a green no-op until its secrets exist.
   { file: "discord-commands.yml", title: "Discord bot setup job", staleH: 36, scheduledSince: "2026-11-03T00:49:00Z" },
+  // Twice a day (2026-11-23): publishes the Sealed Sniper drops to servers that follow #sealed-sniper.
+  { file: "discord-publish.yml", title: "Discord publish job", staleH: 36, scheduledSince: "2026-11-23T00:00:00Z" },
   // Weekly (2026-11-02): every site's store domains checked from outside (docs/store-vetting.md).
   { file: "store-vetting.yml", title: "Store vetting job (weekly)", staleH: 200 },
   // Weekly (2026-11-08): every site's outbound links; red when a tag is lost (lib/affiliate-gaps.ts).
@@ -481,6 +490,12 @@ export const JOBS: { file: string; title: string; staleH: number; scheduledSince
   // fails: this row is how a failed gate is heard. Not on a clock of its own: it follows the
   // release, and a release the 12-hour build gate skips leaves a gap of up to two days.
   { file: "seo-preview-gate.yml", title: "After-deploy SEO check", staleH: 60 },
+  // Weekly (2026-11-18): every priced TCGplayer single has a card page, prices fresh, pages fast (scripts/coverage-audit.ts).
+  // Every two days (2026-11-18): a set's revealed cards from Riot's gallery, a no-op outside reveal season.
+  { file: "set-reveals.yml", title: "New-set reveals job", staleH: 60, scheduledSince: "2026-11-19T05:37:00Z" },
+  { file: "coverage-audit.yml", title: "Riftbound coverage audit (weekly)", staleH: 200, scheduledSince: "2026-11-24T09:23:00Z" },
+  // Every six hours (2026-11-22): the five sites' giveaway draws, winner emails and redraws (lib/giveaway-run.ts).
+  { file: "giveaway-draw.yml", title: "Giveaway draw job", staleH: 18, scheduledSince: "2026-11-23T00:41:00Z" },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {
@@ -669,6 +684,32 @@ export async function discordBot(d: OpsDeps): Promise<CheckResult> {
   }
 }
 
+// The Discord hub's size (DECISIONS.md, "One Discord hub", 2026-11-20). Status only, never an
+// alert: the Monday report shows members against the 150-by-14-Dec target. Read from the public
+// invite endpoint (no key); members per site are the uses per invite in Server Settings > Invites.
+export const DISCORD_HUB_INVITE = "cdJEpmuTW2";
+export const DISCORD_HUB_TARGET = 150;
+export async function discordMembers(d: OpsDeps): Promise<CheckResult> {
+  const id = "discord:members";
+  const title = "Discord hub members";
+  try {
+    const r = await retry(d, () => d.fetch(`https://discord.com/api/v10/invites/${DISCORD_HUB_INVITE}?with_counts=true`), 2, 10_000);
+    if (!r.ok) return unknown(d, id, "site", title, `Discord answered ${r.status}.`);
+    const j = (await r.json()) as { approximate_member_count?: number; approximate_presence_count?: number };
+    const n = j.approximate_member_count;
+    if (typeof n !== "number") return unknown(d, id, "site", title, "Discord gave no member count.");
+    return result(d, {
+      id,
+      area: "site",
+      title,
+      severity: "ok",
+      summary: `${n} members (${j.approximate_presence_count ?? 0} online); target ${DISCORD_HUB_TARGET} by 14 Dec.`,
+    });
+  } catch (e) {
+    return unknown(d, id, "site", title, `Could not reach Discord (${msg(e)}).`);
+  }
+}
+
 export async function dexcompareIndex(d: OpsDeps): Promise<CheckResult> {
   const id = "partner:dexcompare";
   const title = "DexCompare store prices (Pokémon)";
@@ -759,6 +800,7 @@ export async function amazonPrices(d: OpsDeps): Promise<CheckResult> {
   const r = await d.fetch(`${SITE}/api/amazon/sealed/${slug}?c=US`, ua);
   const st = r.ok ? ((await r.json()) as { status?: string }).status ?? "error" : `HTTP ${r.status}`;
   const action = 'Set AMAZON_CREATORS_AU_CLIENT_ID / _CLIENT_SECRET / _VERSION in Vercel (Production) once Associates Central shows the credential; a 403 means the US store\'s account has no qualifying sales yet. Tell Claude: "the Amazon prices check says <status>".';
+  if (st === "off") return result(d, { id, area, title, severity: "ok", summary: "Off by the owner's choice (2026-11-19: the Amazon API allowance goes to ScentCompare); the rows are search links." });
   if (st === "no-credentials") return unknown(d, id, area, title, "No AMAZON_CREATORS_* variables in Vercel: the Amazon rows are search links.");
   if (st === "ok") return result(d, { id, area, title, severity: "ok", summary: `Amazon US priced /sealed/${slug}.` });
   if (st === "none") return result(d, { id, area, title, severity: "ok", summary: `Amazon US answered for /sealed/${slug}; no listing matched it (the row keeps its search link).` });
@@ -1244,6 +1286,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("site:live", "site", "Live site", () => siteProbe(d));
   await add("site:store-votes", "site", "Store thumbs up / down (every site)", () => storeVotes(d));
   await add("discord:bot", "site", "Discord price bot", () => discordBot(d));
+  await add("discord:members", "site", "Discord hub members", () => discordMembers(d));
   await add("partner:dexcompare", "data", "DexCompare store prices (Pokémon)", () => dexcompareIndex(d));
   await add("data:family-feeds", "data", "Sister-site deal feeds", () => familyFeedsCheck(d));
 

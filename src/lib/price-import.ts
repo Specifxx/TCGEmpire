@@ -12,7 +12,7 @@ import { gradedSnapshot } from "./graded-history";
 import { deniedKeys, loadDenylist } from "./denylist";
 import { DECOMMISSIONED_RETAILERS, RETAILER_LIST, RetailerInfo, SINGLES_RETIRED_RETAILERS, STORE_ROWS_MAX_AGE_H } from "./retailers";
 import { offerCurrencyOk, storeCurrency } from "./offer-currency";
-import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, SEALED_EBAY_HOLD, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
 import { sydneyDay } from "./price-history";
 import { snapshotDemand } from "./demand-snapshot";
@@ -20,7 +20,7 @@ import { refreshTcgplayerPrices } from "./tcgplayer";
 import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { refreshCardTraderPrices } from "./cardtrader";
-import { conditionRank, listingCondition } from "./condition";
+import { conditionRank, isGradedVariant, listingCondition } from "./condition";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO, convertCents } from "./fx";
@@ -401,7 +401,7 @@ export function bestVariantPrice(
   variants: ShopifyVariant[],
   sameConditionAs?: { condition: string | null },
 ): { priceCents: number; condition: string | null; variantId?: number } | null {
-  let priced = variants.filter((v) => parseFloat(v.price) > 0 && (v.available as boolean | null | undefined) !== false);
+  let priced = variants.filter((v) => parseFloat(v.price) > 0 && (v.available as boolean | null | undefined) !== false && !isGradedVariant(v.title));
   if (sameConditionAs) {
     const rank = conditionRank(sameConditionAs.condition ?? "");
     priced = priced.filter((v) => conditionRank(v.title) === rank);
@@ -1095,8 +1095,9 @@ export async function refreshEbayMarkets(
     );
   }
   // Check the live quota and set a spend budget (leaves a reserve) so this can never
-  // exhaust eBay's 5,000/day limit, however many times the importer runs.
-  await primeEbayBudget();
+  // exhaust eBay's 5,000/day limit, however many times the importer runs. Singles leave
+  // SEALED_EBAY_HOLD calls for the sealed pass that runs next (sealed first, owner 2026-11-19).
+  await primeEbayBudget({ hold: SEALED_EBAY_HOLD });
   let written = 0;
   // Cards the pass actually queried (before the budget/quota cut it off). Used to
   // tell "no eBay listing because none exist" apart from "we never got to check".
@@ -1913,7 +1914,7 @@ export async function importPrices(): Promise<ImportSummary> {
       // Prefer in-stock variants. If none are available but the store still LISTS
       // the card with a price, record it as out-of-stock so the card page can show
       // "Store had it — currently sold out" (useful demand/availability signal).
-      const priced = p.variants.filter((v) => parseFloat(v.price) > 0);
+      const priced = p.variants.filter((v) => parseFloat(v.price) > 0 && !isGradedVariant(v.title));
       if (!priced.length) continue;
       const avail = priced.filter((v) => v.available);
       const inStock = avail.length > 0;
@@ -2129,7 +2130,7 @@ export async function importPrices(): Promise<ImportSummary> {
     // are thin markets — often one or two live listings — so a single sale moves
     // the cheapest price outright, and they are the most expensive cards we
     // track, which makes a stale figure on one the most costly kind of wrong.
-    await primeEbayBudget();
+    await primeEbayBudget({ hold: SEALED_EBAY_HOLD });
     try {
       // The SAME market set the catalogue pass used today, not
       // EBAY_ALWAYS_MARKETS. Those were the same list until 2026-08-23; once UK

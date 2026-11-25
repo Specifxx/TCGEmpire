@@ -62,8 +62,8 @@ test("the two lanes never spend each other's day, and each stops at its own cap"
 test("the weekly-only confirmation names the site, the region and one confirm link", () => {
   const m = buildWeeklyConfirmEmail("dex", "tok_1", "UK");
   assert.match(m.subject, /^Confirm your DexCompare weekly price drops$/);
-  assert.match(m.html, /sister-alerts\/confirm\?t=tok_1/);
-  assert.match(m.text, /sister-alerts\/confirm\?t=tok_1/);
+  assert.match(m.html, /https:\/\/dexcompare\.io\/account-service\/alerts\/confirm\?t=tok_1/);
+  assert.match(m.text, /https:\/\/dexcompare\.io\/account-service\/alerts\/confirm\?t=tok_1/);
   assert.match(m.text, /ignore this email and nothing will be sent/);
   assert.ok(!/price alert/i.test(m.text), "it promises no alert");
 });
@@ -89,4 +89,11 @@ test("the Monday report's sign-up lines are counts only", () => {
   assert.equal(lines[1], "DexCompare: 4 price alerts (+3 this week), 9 on the weekly email (+9).");
   assert.match(lines[2]!, /^None yet: /);
   assert.ok(!lines.join(" ").includes("@"));
+});
+
+test("the confirm page ASKS for the weekly email with one button; it never subscribes by itself", () => {
+  const src = readFileSync("src/app/api/sister-alerts/confirm/route.ts", "utf8");
+  assert.match(src, /action="\/api\/sister-alerts\/manage"/);
+  assert.match(src, /hidden\("weekly", site\.key\)/);
+  assert.doesNotMatch(src, /sisterDigest\.(create|upsert)/, "only the manage route's POST, after the click, subscribes");
 });

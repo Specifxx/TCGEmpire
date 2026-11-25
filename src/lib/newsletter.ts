@@ -35,7 +35,7 @@ export interface RevealRow {
 // Switches itself off on release day (isBeforeRadianceRelease).
 function revealsSection(reveals: RevealRow[]): string {
   if (!reveals.length) return "";
-  return `<tr><td style="padding:14px 32px 0;font-size:13px;font-weight:700;color:#f29733">✨ New Radiance reveals this week</td></tr>
+  return `<tr><td style="padding:14px 32px 0;font-size:13px;font-weight:700;color:#34d17e">✨ New Radiance reveals this week</td></tr>
     <tr><td style="padding:0 32px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${reveals
       .map(
         (c) => `<tr><td style="padding:8px 0;border-bottom:1px solid #233047">
@@ -43,7 +43,7 @@ function revealsSection(reveals: RevealRow[]): string {
       <div style="font-size:12px;color:#6b7585;margin-top:2px">${c.setCode} · ${c.collectorNumber}</div></td></tr>`,
       )
       .join("")}</table></td></tr>
-    <tr><td style="padding:8px 32px 0;font-size:13px"><a href="${utm("/blog/riftbound-radiance-spoilers")}" style="color:#f29733;font-weight:700;text-decoration:none">Every Radiance card revealed so far →</a></td></tr>`;
+    <tr><td style="padding:8px 32px 0;font-size:13px"><a href="${utm("/blog/riftbound-radiance-spoilers")}" style="color:#34d17e;font-weight:700;text-decoration:none">Every Radiance card revealed so far →</a></td></tr>`;
 }
 
 /** Radiance cards imported in the last 7 days, while the set is unreleased. */
@@ -114,7 +114,7 @@ const esc = (t: string) =>
   t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 function heading(title: string): string {
-  return `<tr><td style="padding:18px 32px 0;font-size:13px;font-weight:700;color:#f29733">${title}</td></tr>`;
+  return `<tr><td style="padding:18px 32px 0;font-size:13px;font-weight:700;color:#34d17e">${title}</td></tr>`;
 }
 
 function para(html: string): string {
@@ -164,12 +164,29 @@ function glanceSection(x: DigestExtras, currency: string, market: Country): stri
   return `${heading("🧭 The market at a glance")}${bits.map((b) => para(b)).join("")}`;
 }
 
+// The free Chrome extension (TCG Prices' buying assistant, tcgcompare/extension), once, in the two editions after it went
+// live (owner, 2026-11-23: "start getting people to use them … send people emails on the extension"). One short block in
+// the email they already get, not an email of its own (owner the same day: "not flooding them"). Gone by itself after.
+export const EXTENSION_FEATURE_UNTIL = new Date("2026-12-07T00:00:00Z");
+const EXTENSION_LISTING = "https://chromewebstore.google.com/detail/fdhpgledimoadpaokiipficepklogmha";
+export function extensionSection(now: Date = new Date()): string {
+  if (now >= EXTENSION_FEATURE_UNTIL) return "";
+  const href = `${EXTENSION_LISTING}?utm_source=riftcompare&utm_medium=email&utm_campaign=extension-launch`;
+  const rate = `${EXTENSION_LISTING}/reviews?utm_source=riftcompare&utm_medium=email&utm_campaign=extension-rate`;
+  return `${heading("🧩 New: our free Chrome extension")}
+    <tr><td style="padding:6px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
+      On TCGplayer it tells you what you'd save: the page's price against the cheapest card store, with the three cheapest stores one click away. Turn it on for other shops and eBay too, and press Watch price to hear when a box drops. Riftbound, Pokémon, Magic and many more. No account, and it tracks nothing.
+      <br/><a href="${esc(href)}" style="display:inline-block;margin-top:8px;color:#34d17e;font-weight:700;text-decoration:none">Add it to Chrome, free →</a>
+      <br/><span style="font-size:12px;color:#8b95a5">Already using it? If it saved you money, <a href="${esc(rate)}" style="color:#8b95a5">a quick rating</a> helps other collectors find it.</span>
+    </td></tr>`;
+}
+
 function sponsorSection(sp: DigestExtras["sponsor"]): string {
   if (!sp) return "";
   if (sp === "house") {
     return `<tr><td style="padding:18px 32px 0"><div style="border:1px dashed #2b3a52;border-radius:10px;padding:12px 14px;font-size:13px;color:#8b95a5">
       <span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:#6b7585">SPONSORED</span><br/>
-      Want to reach Riftbound collectors every week? <a href="${utm("/contact")}" style="color:#f29733;font-weight:700;text-decoration:none">Sponsor this newsletter →</a>
+      Want to reach Riftbound collectors every week? <a href="${utm("/contact")}" style="color:#34d17e;font-weight:700;text-decoration:none">Sponsor this newsletter →</a>
     </div></td></tr>`;
   }
   const sep = sp.url.includes("?") ? "&" : "?";
@@ -179,7 +196,7 @@ function sponsorSection(sp: DigestExtras["sponsor"]): string {
     ${sp.imageUrl ? `<a href="${esc(href)}" rel="sponsored"><img src="${esc(sp.imageUrl)}" alt="${esc(sp.name)}" width="536" style="display:block;width:100%;max-width:536px;border-radius:8px;margin-top:8px" /></a>` : ""}
     <div style="margin-top:8px;font-size:16px;font-weight:700;color:#fff">${esc(sp.headline)}</div>
     <div style="margin-top:4px;font-size:14px;line-height:1.6;color:#b8c0cc">${esc(sp.body)}</div>
-    <a href="${esc(href)}" rel="sponsored" style="display:inline-block;margin-top:10px;color:#f29733;font-weight:700;text-decoration:none">${esc(sp.cta)} →</a>
+    <a href="${esc(href)}" rel="sponsored" style="display:inline-block;margin-top:10px;color:#34d17e;font-weight:700;text-decoration:none">${esc(sp.cta)} →</a>
   </div></td></tr>`;
 }
 
@@ -195,7 +212,7 @@ function peaksSection(rows: NonNullable<DigestExtras["peaks"]>, currency: string
     </td></tr>`,
       )
       .join("")}</table></td></tr>
-    ${para(`<a href="${utm("/market/records")}" style="color:#f29733;font-weight:700;text-decoration:none">All-time price records →</a>`)}`;
+    ${para(`<a href="${utm("/market/records")}" style="color:#34d17e;font-weight:700;text-decoration:none">All-time price records →</a>`)}`;
 }
 
 function popularSection(cards: CardTileData[], currency: string, market: Country): string {
@@ -230,7 +247,7 @@ function releasesSection(list: NonNullable<DigestExtras["releases"]>): string {
   return `${heading("📅 Coming up")}${list
     .map((r) =>
       para(
-        `<strong style="color:#fff">${esc(r.name)}</strong> — ${fmtDay(r.date)} (${r.daysAway === 0 ? "today" : `in ${r.daysAway} ${r.daysAway === 1 ? "day" : "days"}`})${r.href ? ` · <a href="${utm(r.href)}" style="color:#f29733;text-decoration:none">details →</a>` : ""}`,
+        `<strong style="color:#fff">${esc(r.name)}</strong> — ${fmtDay(r.date)} (${r.daysAway === 0 ? "today" : `in ${r.daysAway} ${r.daysAway === 1 ? "day" : "days"}`})${r.href ? ` · <a href="${utm(r.href)}" style="color:#34d17e;text-decoration:none">details →</a>` : ""}`,
       ),
     )
     .join("")}`;
@@ -312,6 +329,7 @@ export function buildDigest(movers: PriceMovers, market: Country, reveals: Revea
       Your weekly read on the Riftbound market: the biggest price moves, the most valuable cards, what collectors are searching for and what's coming up — from live lowest in-stock prices compared across ${info.adjective} stores.
     </td></tr>
     ${glanceSection(extras, currency, market)}
+    ${extensionSection()}
     ${revealsSection(reveals)}
     ${section("📈 Spiking this week", movers.spiking, currency, 8, market)}
     ${sponsorSection(extras.sponsor)}
@@ -321,7 +339,7 @@ export function buildDigest(movers: PriceMovers, market: Country, reveals: Revea
     ${extras.popular ? popularSection(extras.popular, currency, market) : ""}
     ${extras.articles ? articlesSection(extras.articles) : ""}
     ${extras.releases ? releasesSection(extras.releases) : ""}
-    <tr><td style="padding:18px 32px 24px"><a href="${utm("/movers")}" style="display:inline-block;background:#ef7d00;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See all movers + price charts</a></td></tr>`;
+    <tr><td style="padding:18px 32px 24px"><a href="${utm("/movers")}" style="display:inline-block;background:#1ea65c;color:#1e3043;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See all movers + price charts</a></td></tr>`;
 
   return { subject, heading: "This week on the Riftbound market", inner };
 }

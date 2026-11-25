@@ -163,8 +163,8 @@ test("minting and the live pages use the rebuilt week-ago ranking, never a snaps
   assert.match(demand, /GROUP BY "cardId"/, "aggregated in the database: one row per card");
   assert.match(demand, /const v = velocityBetween\(pts\[0\], pts\[pts\.length - 1\], pts\.length\);/, "today's velocity uses the same arithmetic");
   const route = read("src/app/api/admin/rising-snapshot/route.ts");
-  assert.match(route, /Promise\.all\(\[getRisingWeekAgo\(scope\), cheapestOnEbayByPick\(analysis\.picks\)\]\)/);
-  assert.match(route, /toSnapshotData\(analysis, scope, now, weekAgo, ebay\)/);
+  assert.match(route, /getRisingWeekAgo\(scope\),\s*cheapestOnEbayByPick\(analysis\.picks\),\s*getPriceMovers\(dropsMarket, 5\)/);
+  assert.match(route, /toSnapshotData\(analysis, scope, now, weekAgo, ebay, drops\)/);
   for (const f of ["src/app/tools/rising/page.tsx", "src/app/admin/rising/page.tsx"]) {
     const src = read(f);
     assert.match(src, /Promise\.all\(\[getCachedRisingCards\(scope\), getRisingWeekAgo\(scope\)\]\)/, f);

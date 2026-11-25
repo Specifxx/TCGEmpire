@@ -15,7 +15,9 @@ import { StoreCodeChip } from "./StoreCodeChip";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
 import { normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
-import { isPaidLink } from "@/lib/affiliate";
+import { affiliateUrl, isPaidLink } from "@/lib/affiliate";
+import { bestTreatment } from "@/lib/best-price";
+import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
 import { playedDiscounts, playedDiscountText } from "@/lib/played-discount";
 import type { FetchRows } from "@/lib/fetchtcg";
 import { lastKnownLabel, lastKnownTitle, type LastKnownPrice } from "@/lib/last-known-price";
@@ -382,6 +384,8 @@ export function CardPriceComparison({
     return [...byRetailer.values()];
   }, [prices, outOfStock]);
   const ebay = m.hasEbay ? null : ebaySearch[country] ?? null;
+  // TCGplayer's tagged search for this card: the pinned TCGplayer row when the market has no TCGplayer row or reference (2026-11-19).
+  const tcgSearchHref = affiliateUrl(`https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?q=${encodeURIComponent(displayName)}`, "tcgplayer", "/card");
   const pin = useMemo(() => pinMarketplaces(prices), [prices]);
   const rest = pin.rest;
   // "LP · 22% under the cheapest NM here" on each played in-stock row that has
@@ -500,10 +504,12 @@ export function CardPriceComparison({
   // more says by how much.
   const renderRow = (p: ComputedRow, pinned: boolean) => {
     const i = prices.indexOf(p);
+    // Owner, 2026-11-18: the cheapest mark is loud only on a paid row; a plain store gets a small neutral tag and a note.
+    const best = bestTreatment(i === 0 && prices.length > 1, { ebay: p.retailer.startsWith("ebay"), source: p.retailer, paid: isPaidLink(p.buyHref) });
     return (
               <li
                 key={p.id}
-                className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4 ${rowOutline({ cheapest: i === 0 && prices.length > 1, ebay: pinned && p.retailer.startsWith("ebay") })}`}
+                className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-3 hover:bg-ink-900/50 sm:flex-nowrap sm:p-4 ${rowOutline({ cheapest: best === "loud", ebay: pinned && p.retailer.startsWith("ebay") })}`}
               >
                 <div className="w-5 shrink-0 text-center text-sm font-bold text-slate-500 sm:w-6">{i + 1}</div>
                 <div className="min-w-0 flex-1">
@@ -515,12 +521,14 @@ export function CardPriceComparison({
                     {/* The cheapest row is the one visitors should click — a small
                         badge draws the eye there, the same way a highlighted price
                         naturally pulls clicks. */}
-                    {i === 0 && prices.length > 1 && (
+                    {best === "loud" && (
                       <span className="chip shrink-0 bg-buy/20 text-[10px] font-bold uppercase tracking-wide text-brand-300">
                         Cheapest
                       </span>
                     )}
+                    {best === "plain" && <BestPriceTag className="shrink-0" />}
                   </div>
+                  {best === "plain" && <BestPriceNote has={{ ebay: Boolean(pin.ebay || ebay), tcgplayer: Boolean(pin.tcgplayer || tcg) }} className="mt-0.5" />}
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                     {/* Foil is a per-row BADGE, never a filter: a foil listing
                         ranks in this one combined list on its price like any
@@ -580,7 +588,7 @@ export function CardPriceComparison({
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className={`num text-lg font-bold ${i === 0 ? "text-accent" : "text-white"}`}>
+                  <div className={`num text-lg font-bold ${best === "loud" ? "text-accent" : "text-white"}`}>
                     {fmt(p.priceCents)}
                   </div>
                   {pinned && i > 0 && prices[0].priceCents > 0 && (
@@ -679,12 +687,59 @@ export function CardPriceComparison({
           )}
         </div>
 
-        {/* eBay and TCGplayer first (owner, 2026-10-27), the cheaper of the two
+
+        {prices.length === 0 && fetchItems.length > 0 ? (
+          <ul className="divide-y divide-ink-800">{fetchItems.map((x) => x.node)}</ul>
+        ) : prices.length === 0 && outOfStock.length === 0 && emptyState ? (
+          <div className="p-3 sm:p-4">{emptyState}</div>
+        ) : prices.length === 0 && outOfStock.length === 0 ? (
+          <div className="p-8 text-center text-sm text-slate-400">
+            <p className="font-semibold text-white">No prices found yet</p>
+            <p className="mt-1">
+              We haven&apos;t matched this card to a store listing in this market. Check back soon —
+              our price feeds refresh regularly.
+            </p>
+          </div>
+        ) : prices.length === 0 ? (
+          <div className="p-6 text-center text-sm text-slate-400">
+            <p className="font-semibold text-white">Currently sold out everywhere</p>
+            {/* Distinct retailers, matching the disclosure's own count (see the
+                note in OutOfStockDisclosure). And "expand … below" rather than
+                the old "see them below": the list underneath is a
+                closed-by-default disclosure, so there is nothing to see until
+                the reader opens it — the copy has to name the action. */}
+            <p className="mt-1">
+              {(() => {
+                const n = new Set(outOfStock.map((p) => p.retailer)).size;
+                return `${n} ${n === 1 ? "store has" : "stores have"}`;
+              })()}{" "}
+              listed this card but it&apos;s out of stock right now — expand the list below to see
+              their last known prices.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-ink-800">
+            {[...rest.map((p) => ({ price: p.priceCents, node: renderRow(p, false) })), ...fetchItems]
+              .sort((x, y) => x.price - y.price)
+              .map((x) => x.node)}
+          </ul>
+        )}
+
+        {/* MARKETPLACES BELOW THE STORES (owner's UX review, 2026-11-24, P1 10: "the product page puts eBay, TCGplayer and
+            Amazon rows above the actual cheapest store. Lead with the best-price store and move marketplaces to a labelled
+            block below"). This block led the table from 2026-10-27 to 2026-11-24. Each row keeps its price rank number, so a
+            marketplace that is the cheapest still says 1 and wears the Cheapest mark.
+            eBay and TCGplayer (owner, 2026-10-27), the cheaper of the two
             on top (tcgFirst): the cheapest listing of each when this market has one, else eBay's search and,
             outside the US, TCGplayer's US market price as a labelled reference.
             Stores follow below, ranked by price. */}
-        {(pin.ebay || ebay || pin.tcgplayer || tcg) && (
-          <ul className="divide-y divide-ink-800 border-b border-ink-800">
+        {/* Always drawn (2026-11-19, "a row that is always there beats a perfect row that is often missing"): with no TCGplayer row
+            or reference for this market, a tagged TCGplayer search (tcgSearchHref) stands in, as eBay's search does for eBay. */}
+        {(pin.ebay || ebay || pin.tcgplayer || tcg || tcgSearchHref) && (
+          <ul className="divide-y divide-ink-800 border-t border-ink-800" aria-label="Marketplaces, paid links">
+            <li className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:px-4" data-marketplaces>
+              Marketplaces <span className="font-normal normal-case text-slate-500">· Ad, paid links</span>
+            </li>
             {pin.tcgFirst && pin.tcgplayer && renderRow(pin.tcgplayer, true)}
             {pin.ebay
               ? renderRow(pin.ebay, true)
@@ -723,7 +778,7 @@ export function CardPriceComparison({
                       cardName={displayName}
                       pageType="card_detail"
                       surface="ebay_fallback"
-                      className="btn-buy flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]"
+                      className="btn-primary flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]"
                     >
                       Search {ebay.label} →
                     </OutboundLink>
@@ -734,7 +789,44 @@ export function CardPriceComparison({
               ? null
               : pin.tcgplayer
               ? renderRow(pin.tcgplayer, true)
-              : tcg && (
+              : !tcg?.href ? (
+                  <li className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4">
+                    <div className="w-5 shrink-0 sm:w-6" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="min-w-0 truncate font-semibold text-white">TCGplayer</span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        No TCGplayer price on file for this card. Search TCGplayer&apos;s listings. <PaidLinkTag />
+                      </p>
+                    </div>
+                    <div className="order-last flex w-full basis-full items-stretch gap-2 sm:order-none sm:w-auto sm:basis-auto">
+                    <CartAddButton
+                      href={tcgSearchHref}
+                      productUrl={tcgSearchHref}
+                      storeName="TCGplayer"
+                      title={displayName}
+                      detail="Search results"
+                      priceCents={0}
+                      currency={COUNTRIES[country].currency}
+                      image={image}
+                      className="text-slate-300"
+                    />
+                    <OutboundLink
+                      href={tcgSearchHref}
+                      retailer="tcgplayer"
+                      country={country}
+                      cardId={cardId}
+                      cardName={displayName}
+                      pageType="card_detail"
+                      surface="tcg_fallback"
+                      className="btn-tcg flex-1 justify-center sm:flex-none xl:min-w-[11.25rem]"
+                    >
+                      Search TCGplayer →
+                    </OutboundLink>
+                    </div>
+                  </li>
+                ) : (
                   <li className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap sm:p-4">
                     <div className="w-5 shrink-0 sm:w-6" />
                     <div className="min-w-0 flex-1">
@@ -782,43 +874,6 @@ export function CardPriceComparison({
                     )}
                   </li>
                 )}
-          </ul>
-        )}
-
-        {prices.length === 0 && fetchItems.length > 0 ? (
-          <ul className="divide-y divide-ink-800">{fetchItems.map((x) => x.node)}</ul>
-        ) : prices.length === 0 && outOfStock.length === 0 && emptyState ? (
-          <div className="p-3 sm:p-4">{emptyState}</div>
-        ) : prices.length === 0 && outOfStock.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-400">
-            <p className="font-semibold text-white">No prices found yet</p>
-            <p className="mt-1">
-              We haven&apos;t matched this card to a store listing in this market. Check back soon —
-              our price feeds refresh regularly.
-            </p>
-          </div>
-        ) : prices.length === 0 ? (
-          <div className="p-6 text-center text-sm text-slate-400">
-            <p className="font-semibold text-white">Currently sold out everywhere</p>
-            {/* Distinct retailers, matching the disclosure's own count (see the
-                note in OutOfStockDisclosure). And "expand … below" rather than
-                the old "see them below": the list underneath is a
-                closed-by-default disclosure, so there is nothing to see until
-                the reader opens it — the copy has to name the action. */}
-            <p className="mt-1">
-              {(() => {
-                const n = new Set(outOfStock.map((p) => p.retailer)).size;
-                return `${n} ${n === 1 ? "store has" : "stores have"}`;
-              })()}{" "}
-              listed this card but it&apos;s out of stock right now — expand the list below to see
-              their last known prices.
-            </p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-ink-800">
-            {[...rest.map((p) => ({ price: p.priceCents, node: renderRow(p, false) })), ...fetchItems]
-              .sort((x, y) => x.price - y.price)
-              .map((x) => x.node)}
           </ul>
         )}
 

@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { lastUpgradeFeature, marketFromCookie, tierRequiredFor, trackUpgradeCta } from "@/lib/upgrade-intent";
 import { trackEvent } from "@/lib/analytics";
+import { pabKey } from "@/lib/premium-ab";
 import { markSignupSource } from "@/lib/signup-source";
 import { premiumStartHref } from "@/lib/premium-start";
 import { PREMIUM_COPY_VERSION, TIER_NAMES, trialButtonLabel, trialDisclosure, type PremiumTierKey } from "@/lib/site";
 import { recallPremiumSurface } from "@/lib/premium-surface";
+import { useIsNativeApp } from "@/lib/native";
 
 // GREEN, NOT GOLD, AND BIG — on this page only (2026-09-10, owner brief: "it
 // should just be a big green button... I'm just gonna click that shit without
@@ -83,6 +85,8 @@ export function PremiumCta({
   /** The Premium page's orange primary button instead of the green buy button. */
   pro?: boolean;
 }) {
+  // No buying inside the Android app (Play payments policy; owner, 2026-11-19).
+  const inApp = useIsNativeApp();
   const btn = pro ? CTA_PRO : CTA_BTN;
   // The plan's price after the trial, as the card quotes it ("$2.99/month").
   const thenPrice = priceLabel || "the paid price";
@@ -95,7 +99,7 @@ export function PremiumCta({
     // Fired BEFORE the fetch — a low-volume conversion-funnel step, so it goes
     // to both GA4 and Vercel (not added to GA4_ONLY_EVENTS), unlike the
     // high-volume impression events elsewhere in the Premium funnel.
-    trackEvent("premium_checkout_started", { plan, tier, trial_eligible: trialEligible, source: "premium-page", copy: PREMIUM_COPY_VERSION });
+    trackEvent("premium_checkout_started", { plan, tier, trial_eligible: trialEligible, source: "premium-page", copy: PREMIUM_COPY_VERSION, pk: pabKey() });
     trackUpgradeCta(premiumPageContext(true), tier, plan);
     try {
       const res = await fetch("/api/premium/checkout", {
@@ -182,6 +186,7 @@ export function PremiumCta({
       </div>
     );
   }
+  if (inApp) return null;
   return (
     <div className="w-full">
       <button onClick={subscribe} disabled={busy} className={btn}>

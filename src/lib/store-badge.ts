@@ -14,7 +14,7 @@ const esc = (s: string) =>
 
 /** The R mark as a 16px inline SVG (brand orange circle, navy R; green until the 2026-10-16 rebrand, so badges pasted before it stay green). */
 const MARK =
-  '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><circle cx="8" cy="8" r="8" fill="#ef7d00"/><path d="M5.5 12V4h3a2.4 2.4 0 0 1 .6 4.7L11 12H9.3L7.6 8.9H7V12z M7 7.6h1.4a1.1 1.1 0 0 0 0-2.2H7z" fill="#1e3043"/></svg>';
+  '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><circle cx="8" cy="8" r="8" fill="#1ea65c"/><path d="M5.5 12V4h3a2.4 2.4 0 0 1 .6 4.7L11 12H9.3L7.6 8.9H7V12z M7 7.6h1.4a1.1 1.1 0 0 0 0-2.2H7z" fill="#1e3043"/></svg>';
 
 export function storeBadgeHtml(store: { slug: string; name: string }): string {
   const href = `${SITE_URL}/stores/${encodeURIComponent(store.slug)}`;

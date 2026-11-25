@@ -46,7 +46,7 @@ test("HubIntro: the first paragraph shows, the rest is a closed native <details>
     assert.ok(details > 0, `${path}: the paragraphs after the first are in a <details>`);
     assert.doesNotMatch(html, /<details[^>]*\sopen/, `${path}: closed until the reader opens it`);
     assert.equal((html.match(/<details/g) ?? []).length, 1, path);
-    assert.match(html, /<summary[^>]*>.*Read more.*<\/summary>/s, path);
+    assert.match(html, /<summary[^>]*>.*How it works.*<\/summary>/s, path);
     assert.equal((html.slice(0, details).match(/<p>/g) ?? []).length, 1, `${path}: exactly one paragraph outside the <details>`);
     assert.equal((html.slice(details).match(/<p>/g) ?? []).length, paragraphs.length - 1, `${path}: the rest inside it`);
     const seen = text(html);
@@ -58,14 +58,17 @@ test("HubIntro: the first paragraph shows, the rest is a closed native <details>
   assert.equal(renderToStaticMarkup(createElement(HubIntro, { path: "/no-such-hub" })), "", "no entry, no markup");
 });
 
-test("HubIntro on a phone: three lines of the first paragraph, only while a closed 'Read more' follows it", () => {
+test("HubIntro: two lines of the first paragraph on a phone, one wider (UX review 2026-11-24), only while a closed 'How it works' follows it", () => {
   const css = read("src/app/globals.css");
   const at = css.indexOf("[data-hub-intro]:has(> details:not([open])) > p:first-child");
   assert.ok(at > 0, "the rule is tied to a CLOSED <details>: an opened intro, or an intro of one paragraph, is never cut");
   const media = css.lastIndexOf("@media", at);
   assert.match(css.slice(media, at), /^@media \(max-width: 639px\) \{\s*$/, "phones only");
   const rule = css.slice(at, css.indexOf("}", at));
-  assert.match(rule, /-webkit-line-clamp: 3;/);
+  assert.match(rule, /-webkit-line-clamp: 2;/);
+  const wide = css.indexOf("[data-hub-intro]:has(> details:not([open])) > p:first-child", at + 10);
+  assert.match(css.slice(css.lastIndexOf("@media", wide), wide), /^@media \(min-width: 640px\) \{\s*$/);
+  assert.match(css.slice(wide, css.indexOf("}", wide)), /-webkit-line-clamp: 1;/);
   assert.match(rule, /overflow: hidden;/);
   // The cut is on the screen only. A browser without :has() drops the whole rule and shows the paragraph whole; nothing in the
   // component hides text (no `hidden`, no `sr-only`, no line-clamp class on the paragraph itself).

@@ -76,14 +76,15 @@ export const HQ_SITES: HqSite[] = [
   { key: "ygo", label: "YGO Compare", url: "https://ygocompare.com", host: "ygocompare.com", repo: "ygocompare", tags: ["ygo"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   { key: "cyberpunk", label: "Cyberpunk Compare", url: "https://cyberpunkcompare.com", host: "cyberpunkcompare.com", repo: "cyberpunkcompare", tags: ["cyberpunk"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   { key: "bandai", label: "BandaiCompare", url: "https://bandaicompare.com", host: "bandaicompare.com", repo: "bandaicompare", tags: ["bandai"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
-  { key: "wgc", label: "WargameCompare", url: "https://wargamecompare.com", host: "wargamecompare.com", repo: "wargamecompare", tags: ["wgc"], monitor: { workflow: "ops-monitor.yml", everyH: 6 } },
+  { key: "wgc", label: "WargameCompare", url: "https://wargamecompare.com", host: "wargamecompare.com", repo: "wargamecompare", tags: ["wgc"], monitor: { workflow: "ops-monitor.yml", everyH: 168 } },
   { key: "figure", label: "FigureCompare", url: "https://figurecompare.com", host: "figurecompare.com", repo: "figurecompare", tags: ["figure"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   { key: "ky", label: "KaeYoung", url: "https://kaeyoung.com", host: "kaeyoung.com", repo: "kaeyoung", tags: ["ky"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   { key: "sc", label: "ScentCompare", url: "https://scentcompare.app", host: "scentcompare.app", repo: "scentcompare", tags: ["sc"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
+  // Idle since 2026-11-19 (owner): both imports run weekly, on Mondays, so a job is late only after eight days.
   { key: "wax", label: "SportsCardCompare", url: "https://sportscardcompare.com", host: "sportscardcompare.com", repo: "waxcompare", tags: ["wax"], monitor: null,
     jobs: [
-      { file: "sealed-import.yml", label: "Sealed price import", maxAgeH: 18 },
-      { file: "ebay-import.yml", label: "eBay import", maxAgeH: 30 },
+      { file: "sealed-import.yml", label: "Sealed price import", maxAgeH: 192 },
+      { file: "ebay-import.yml", label: "eBay import", maxAgeH: 192 },
     ],
   },
   {

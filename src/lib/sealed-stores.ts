@@ -286,7 +286,12 @@ export const PRODUCT_PAGE_STORES: ProductPageStore[] = [
     country: "US",
     currency: "USD",
     platform: "product-pages",
-    productUrls: ["https://www.gamenerdz.com/riftbound-league-of-legends-tcg-radiance-booster-box-preorder"],
+    // Gift of the Rift Bundle added 2026-11-19 (releases 4 Dec): its own pre-order page, filed under the one
+    // SET_LESS_GROUPS key. Game Nerdz listed no Legacy (Set 6) page that day; add one when it does.
+    productUrls: [
+      "https://www.gamenerdz.com/riftbound-league-of-legends-tcg-radiance-booster-box-preorder",
+      "https://www.gamenerdz.com/riftbound-league-of-legends-tcg-gift-of-the-rift-bundle-preorder",
+    ],
     crawlDelayMs: 10_000,
   },
   {
@@ -296,10 +301,38 @@ export const PRODUCT_PAGE_STORES: ProductPageStore[] = [
     country: "US",
     currency: "USD",
     platform: "product-pages",
-    productUrls: ["https://www.miniaturemarket.com/Riftbound-TCG-Radiance-Booster-Box-24-Preorder/UVSRB05BD01-BOX"],
+    // Its whole Riftbound category is read too (SEALED_ONLY_SHOPIFY, shopware):
+    // these pages only make sure the boxes buyers search for are read even on a
+    // day the category read fails. Legacy (Set 6) pages added 2026-11-19, the
+    // URLs from Miniature Market's own listing (UVSRB06…).
+    productUrls: [
+      "https://www.miniaturemarket.com/Riftbound-TCG-Radiance-Booster-Box-24-Preorder/UVSRB05BD01-BOX",
+      "https://www.miniaturemarket.com/Riftbound-TCG-Legacy-Booster-Box-24-Preorder/UVSRB06BD01-BOX",
+      "https://www.miniaturemarket.com/Riftbound-TCG-Legacy-Booster-Pack-Preorder/UVSRB06BD01-PACK",
+      "https://www.miniaturemarket.com/Riftbound-TCG-Legacy-Vault-Bundle-Preorder/UVSRB06VB01",
+    ],
     crawlDelayMs: 10_000,
   },
 ];
+
+/**
+ * What the product-page pass may delete before it writes a store's rows.
+ *
+ * Until 2026-11-19 it deleted EVERY row of the store. Miniature Market is read
+ * twice, its whole Riftbound category (shopware, in importSealed) and then one
+ * product page, and the second read wiped the first: the snapshot of 18 Nov had
+ * one Miniature Market row (the Radiance box) where its category lists ~24, and
+ * no Legacy pre-order. A store that also has a category read now only replaces
+ * the products its pages read; a pages-only store (Game Nerdz) still replaces
+ * all its rows, so a page it no longer lists drops out. Pure.
+ */
+export function productPageReplaceScope(
+  storeKey: string,
+  groupKeys: readonly string[],
+  categoryKeys: ReadonlySet<string>,
+): { retailer: string; groupKey?: { in: string[] } } {
+  return categoryKeys.has(storeKey) ? { retailer: storeKey, groupKey: { in: [...groupKeys] } } : { retailer: storeKey };
+}
 
 // A store that publishes its own Riftbound stock feed: one JSON document of
 // { game, currency, items: [{ type, name, set_name, language, price, quantity,

@@ -100,7 +100,12 @@ export default async function WatchingPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <div className="mb-5">
+      {/* LIST FIRST, PROSE FOLDED (owner, 2026-11-24: "I hate text heavy pages
+          like this"). The page opens on the cards being watched; what triggers
+          an email is four short chips, and the full rules (every word that used
+          to sit above the list) live in "How alerts work" below, closed by
+          default but in the server HTML. */}
+      <div className="mb-4">
         <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-slate-300">Home</Link>
           <span>/</span>
@@ -110,6 +115,60 @@ export default async function WatchingPage() {
           <NavIcon name="heart" className="h-6 w-6 shrink-0 text-brand-400" />
           My watchlist
         </h1>
+        <ul className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300" aria-label="We email you when">
+          {["New low", member ? "Your price" : `Your price · ${FREE_TARGET_ALERT_LIMIT} card`, "Back in stock", "Max 1 email a week"].map((c) => (
+            <li key={c} className="rounded-full border border-ink-700 bg-ink-900/60 px-2.5 py-1">
+              {c}
+            </li>
+          ))}
+          <li>
+            <a href="#how-alerts" className="inline-flex px-1 py-1 text-brand-400 hover:underline">
+              How it works
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <Watchlist />
+
+      {digestArm === "offer" && <WatchDigestToggle initialOn={digestOn} />}
+
+      {(member || lapsedSealed > 0) && (
+        <section id="sealed" aria-labelledby="sealed-h" className="card-surface mt-8 scroll-mt-header p-5">
+          <h2 id="sealed-h" className="font-display text-lg font-bold text-white">
+            Sealed
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Checked after every price update: back in stock after selling out everywhere, at RRP, at your target, or a real drop.
+          </p>
+          <div className="mt-3">
+            <SealedWatchList names={sealedNames} limit={Number.isFinite(sealedLimit) ? sealedLimit : null} lapsed={!member} />
+          </div>
+        </section>
+      )}
+
+      {(onPremium || lapsedDecks > 0) && (
+        <section id="decks" aria-labelledby="decks-h" className="card-surface mt-8 scroll-mt-header p-5">
+          <h2 id="decks-h" className="font-display text-lg font-bold text-white">
+            Decks
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Each list is re-priced delivered — cards and postage, across every store — after every price update, the way Best Basket
+            prices it.
+          </p>
+          <div className="mt-3">
+            <DeckWatchList lapsed={!onPremium} />
+          </div>
+        </section>
+      )}
+
+      {nudgeCopy && <PremiumNudgeCard {...nudgeCopy} member={isPremium(user)} surface="nudge:watchlist" className="mt-8" />}
+
+      <details id="how-alerts" className="card-surface group mt-8 scroll-mt-header p-4">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-sm font-semibold text-white">
+          How alerts work
+          <span aria-hidden className="text-slate-500 transition-transform group-open:rotate-180">⌄</span>
+        </summary>
         {/* Matches the code (lib/price-alerts.ts, lib/alert-price.ts): the
             price is the cheapest in-stock Near Mint copy at a store we track,
             never eBay; "watching from" is PriceAlert.startPriceCents (older
@@ -124,46 +183,40 @@ export default async function WatchingPage() {
             wait. Snooze and pause are lib/alert-actions.ts and
             lib/alert-mute.ts. Plus is described as ad-free wherever it is
             described (lineup marketing rule). */}
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Every card you&apos;re tracking, with the price it was at when you started. We email{" "}
-          <strong className="text-slate-200">{user.email}</strong> when the cheapest Near Mint copy at a store hits a new
-          low (at least 5% under the price we last told you), when a card is first listed or opens for pre-order, and when
-          one is back in stock, naming the stores and their postage — at most one email a week.{" "}
-          {member ? (
-            <>
-              Set your own price on {onPlus ? `up to ${PLUS_TARGET_ALERT_LIMIT} cards` : "any card"} below and we
-              email you as soon as it&apos;s met — and when a card drops at least 15% below TCGplayer market, or is back
-              in stock, after every price update.
-            </>
-          ) : (
-            <>
-              Your free account sets its own price on {FREE_TARGET_ALERT_LIMIT} card below, and we email you when a
-              store has it there.{" "}
-              {PLUS_ON_SALE ? (
-                <>With Plus (ad-free), set your own price on up to {PLUS_TARGET_ALERT_LIMIT} cards and hear as soon as</>
-              ) : (
-                <>With Premium (ad-free), set your own price on every card you watch and hear as soon as</>
-              )}{" "}
-              it&apos;s met, after every price update, and when one drops below TCGplayer market.
-            </>
-          )}{" "}
-          Every alert email has one-tap links to stop watching a card or snooze it for 30 days, and you can pause all alert
-          emails without losing this list. Tap the heart on any card to stop watching it.{" "}
-          {!member && (
-            <>
-              A free account watches as many cards as you like.
-            </>
-          )}
-        </p>
-      </div>
-
-      {nudgeCopy && <PremiumNudgeCard {...nudgeCopy} member={isPremium(user)} surface="nudge:watchlist" className="mb-5" />}
-
+        <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-slate-400">
+          <li>
+            A new low: the cheapest Near Mint copy at a store, at least 5% under the price we last told you. Also when a card is
+            first listed, opens for pre-order or is back in stock. At most one email a week, naming the stores and postage.
+          </li>
+          <li>
+            {member ? (
+              <>
+                Set your own price on {onPlus ? `up to ${PLUS_TARGET_ALERT_LIMIT} cards` : "any card"} and we email you as soon as
+                it&apos;s met — and when a card drops at least 15% below TCGplayer market, or is back in stock, after every price
+                update.
+              </>
+            ) : (
+              <>
+                Your free account sets its own price on {FREE_TARGET_ALERT_LIMIT} card, and watches as many cards as you like.{" "}
+                {PLUS_ON_SALE ? (
+                  <>With Plus (ad-free), set your own price on up to {PLUS_TARGET_ALERT_LIMIT} cards and hear as soon as</>
+                ) : (
+                  <>With Premium (ad-free), set your own price on every card you watch and hear as soon as</>
+                )}{" "}
+                it&apos;s met, after every price update, and when one drops below TCGplayer market.
+              </>
+            )}
+          </li>
+          <li>
+            Every email has one-tap links to stop watching a card or snooze it for 30 days; pause all emails above the list.
+            Tap the heart on any card to stop watching it.
+          </li>
+        </ul>
       {/* WHAT YOU CAN WATCH (2026-09-29, "Premium works while you're away"):
           three kinds, each in one plain line, so someone new to the site can
           tell a card watch from a target from a sealed or deck watch without a
           popup. The paid kinds carry the ordinary PremiumButton, inline. */}
-      <section aria-labelledby="what-h" className="card-surface mb-5 p-4" data-watch-explainer>
+      <section aria-labelledby="what-h" className="mt-4" data-watch-explainer>
         <h2 id="what-h" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           What you can watch
         </h2>
@@ -200,39 +253,7 @@ export default async function WatchingPage() {
           </li>
         </ul>
       </section>
-
-      {digestArm === "offer" && <WatchDigestToggle initialOn={digestOn} />}
-
-      <Watchlist />
-
-      {(member || lapsedSealed > 0) && (
-        <section id="sealed" aria-labelledby="sealed-h" className="card-surface mt-8 scroll-mt-header p-5">
-          <h2 id="sealed-h" className="font-display text-lg font-bold text-white">
-            Sealed
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Checked after every price update: back in stock after selling out everywhere, at RRP, at your target, or a real drop.
-          </p>
-          <div className="mt-3">
-            <SealedWatchList names={sealedNames} limit={Number.isFinite(sealedLimit) ? sealedLimit : null} lapsed={!member} />
-          </div>
-        </section>
-      )}
-
-      {(onPremium || lapsedDecks > 0) && (
-        <section id="decks" aria-labelledby="decks-h" className="card-surface mt-8 scroll-mt-header p-5">
-          <h2 id="decks-h" className="font-display text-lg font-bold text-white">
-            Decks
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Each list is re-priced delivered — cards and postage, across every store — after every price update, the way Best Basket
-            prices it.
-          </p>
-          <div className="mt-3">
-            <DeckWatchList lapsed={!onPremium} />
-          </div>
-        </section>
-      )}
+      </details>
     </div>
   );
 }

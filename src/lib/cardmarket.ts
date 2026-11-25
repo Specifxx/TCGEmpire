@@ -180,7 +180,7 @@ import { readFile } from "node:fs/promises";
 import { CARDMARKET_EU_RETAILER, CARDMARKET_RETAILER } from "@/lib/constants";
 import { cardmarketProductUrl } from "@/lib/cardmarket-url";
 import { isForeignLanguageTitle } from "@/lib/scrape-http";
-import { classifySealed } from "@/lib/sealed-import";
+import { classifySealed, setLessGroupKey } from "@/lib/sealed-import";
 import { poolOf, POOL_ORDER, type PoolCard } from "@/lib/box-ev";
 
 // ---- configuration ----------------------------------------------------------
@@ -747,9 +747,12 @@ export function buildCardmarketSealedRows(
     // really trades at €143-180. Found 2026-09-20 by reading the table with
     // diagnose-sealed while checking a different fix.
     if (isForeignLanguageTitle(p.name)) continue;
-    const setCode = expansionSetCode.get(p.idExpansion) ?? null;
+    // A set-less product (Gift of the Rift Bundle) keeps its one fixed group: Cardmarket files it under an
+    // expansion (Vendetta), which put its EUR row in VEN|Bundle beside the real Vendetta bundle (2026-11-21).
+    const setLess = setLessGroupKey(p.name);
+    const setCode = setLess ? null : expansionSetCode.get(p.idExpansion) ?? null;
     const type = classifySealed(p.name);
-    const groupKey = setCode ? `${setCode}|${type}` : normName(p.name).replace(/\s+/g, "").slice(0, 40);
+    const groupKey = setLess ?? (setCode ? `${setCode}|${type}` : normName(p.name).replace(/\s+/g, "").slice(0, 40));
     matched++;
     rows.push({
       groupKey,

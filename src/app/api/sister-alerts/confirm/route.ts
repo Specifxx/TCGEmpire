@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { badLink, hidden, page } from "@/lib/sister-alerts/pages";
+import { escapeHtml } from "@/lib/email";
 import { sisterSite } from "@/lib/sister-alerts/sites";
 import { resolvePath } from "@/lib/sister-alerts/feed";
 
@@ -39,5 +40,11 @@ export async function POST(req: Request) {
   const weekly = await prisma.sisterDigest.count({ where: { email: a.email } });
   const back = site ? `<p><a href="${new URL(last?.path ? resolvePath(last.path, last.region) : "/", site.url).toString()}">Back to ${site.name}</a></p>` : "";
   if (!last && weekly) return page("Weekly email confirmed", `<h1>You're all set</h1><p>Your weekly email of the biggest price drops is on; the first one comes within about a week. Every email has a link to stop it.</p>`);
-  return page("Price alerts confirmed", `<h1>You're all set</h1><p>Your price alerts are on. We check prices once a day and email you when one reaches your price. New alerts you set on any of our sites start straight away.</p>${weekly ? `<p>Your weekly email of the biggest price drops is on too; the first one comes within about a week.</p>` : ""}${back}`);
+  // Repeat awareness (2026-11-21, opt-in only): the moment someone confirms is where a weekly email is most welcome, so an
+  // address without one is ASKED, with one button that posts to the manage route. Never subscribed without that click.
+  const offer =
+    !weekly && site
+      ? `<form method="post" action="/api/sister-alerts/manage">${hidden("t", token)}${hidden("weekly", site.key)}<p><strong>Also get ${escapeHtml(site.name)}'s biggest price drops once a week?</strong> One email a week, real store prices, with a link to stop it.</p><button type="submit">Yes, send it weekly</button></form>`
+      : "";
+  return page("Price alerts confirmed", `<h1>You're all set</h1><p>Your price alerts are on. We check prices once a day and email you when one reaches your price. New alerts you set on any of our sites start straight away.</p>${weekly ? `<p>Your weekly email of the biggest price drops is on too; the first one comes within about a week.</p>` : ""}${offer}${back}`);
 }

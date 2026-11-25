@@ -245,7 +245,8 @@ test("/sealed filters its already-loaded groups by q in memory: no new query, no
   assert.match(page, /const q = one\(searchParams\.q\)\.trim\(\);/);
   assert.match(code("src/app/sealed/page.tsx"), /await buildSealedView\(DEFAULT_COUNTRY, searchParams\)/);
   assert.match(code("src/app/api/sealed-view/route.ts"), /await buildSealedView\(market, sp\)/);
-  assert.match(page, /g\.name\.toLowerCase\(\)\.includes\(ql\) \|\|\s*g\.productType\.toLowerCase\(\)\.includes\(ql\) \|\|\s*\(g\.setCode \?\? ""\)\.toLowerCase\(\)\.includes\(ql\)/);
+  // The search box's matcher (lib/sealed-search.ts, pure) since 2026-11-24: name, type, set code and set name, typos.
+  assert.match(page, /if \(ql\) groups = matchSealedGroups\(groups, q\);/);
   assert.equal((page.match(/getSealedGroups\(/g) ?? []).length, 2, "the market read and its default-market fallback, as before");
   assert.doesNotMatch(page, /unstable_cache|prisma/);
   // /pokemon/sealed reads q through parseBrowse and filterTiles (tests/pokemon-board.test.ts).

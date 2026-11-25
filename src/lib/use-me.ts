@@ -13,6 +13,8 @@ export interface Me {
   // Deliberately NOT part of MenuUser: it is a measurement identifier, not
   // profile data, and nothing that renders the account chrome should read it.
   analyticsId: string | null;
+  // The member's referral code, for ShareButton's invite links (lib/share-link.ts withInvite).
+  inviteCode: string | null;
   premium: boolean;
   // Ads hidden for this viewer — every paid tier, Plus included (2026-09-25).
   // Still its own flag rather than `premium`, so the line can move again
@@ -37,6 +39,8 @@ export interface Me {
   // Which OAuth sign-in buttons are configured — for client components that
   // render AuthForm themselves (PremiumDialog's signed-out state).
   providers: ("google" | "discord")[];
+  // The card scanner is open to this viewer (/api/me, lib/scan/caps.ts): the nav's Scan links show.
+  scan?: boolean;
   // /api/me really answered (2xx). False for the EMPTY_ME a failed request
   // falls back to — which reads as "signed out", and must not be acted on as
   // one by anything that would undo a member's state (PremiumProvider's
@@ -47,6 +51,7 @@ export interface Me {
 const EMPTY_ME: Me = {
   user: null,
   analyticsId: null,
+  inviteCode: null,
   premium: false,
   adFree: false,
   tier: null,
@@ -75,6 +80,7 @@ export function fetchMe(): Promise<Me> {
         answered: d.answered === true,
         user: d.user ?? null,
         analyticsId: typeof d.analyticsId === "string" ? d.analyticsId : null,
+        inviteCode: typeof d.inviteCode === "string" && /^[a-z0-9]{6,40}$/i.test(d.inviteCode) ? d.inviteCode : null,
         premium: !!d.premium,
         adFree: !!d.adFree,
         tier: d.tier === "plus" || d.tier === "premium" ? d.tier : null,

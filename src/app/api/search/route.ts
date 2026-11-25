@@ -13,6 +13,7 @@ import { getPriceGuideRows } from "@/lib/price-guide";
 import { matchGuides, type GuideHit } from "@/lib/search-words";
 import { getArticles } from "@/lib/articles";
 import { meterAndStore, quotaContext } from "@/lib/search-quota-server";
+import { sealedPath } from "@/lib/sealed-slug";
 
 // Typeahead search for the navbar dropdown. Returns full tile data so a result can
 // open the same instant quick-view modal as the browse grid, plus any matching
@@ -116,9 +117,19 @@ export async function GET(req: Request) {
     // carries every word (lib/search-words.ts, 2026-11-12). Static content, no read.
     guides = matchGuides(q, getArticles());
   }
+  // Never a dead end (owner's UX review, 2026-11-24, P0 5 and P2 18): with no match and no "did you mean", the most
+  // widely stocked sealed products, from the sealed read this route already made (no new query).
+  const popular =
+    ranked.length === 0 && sealed.length === 0 && suggest.length === 0
+      ? [...sealedRead.groups]
+          .filter((g) => g.storeCount > 0)
+          .sort((a, b) => b.storeCount - a.storeCount)
+          .slice(0, 4)
+          .map((g) => ({ name: g.name, href: sealedPath(g.groupKey) }))
+      : [];
 
   return NextResponse.json(
-    { results: ranked, sealed, sealedCurrency, ...(suggest.length ? { suggest } : {}), ...(guides.length ? { guides } : {}), ...(quota ? { quota } : {}) },
+    { results: ranked, sealed, sealedCurrency, ...(suggest.length ? { suggest } : {}), ...(guides.length ? { guides } : {}), ...(popular.length ? { popular } : {}), ...(quota ? { quota } : {}) },
     { headers: { "Cache-Control": "private, no-store" } },
   );
 }

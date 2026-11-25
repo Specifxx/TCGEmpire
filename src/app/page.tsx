@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { ADSENSE_SERVING } from "@/lib/adsense";
 import Link from "next/link";
-import { getPopularCards, getSetChaseTiles } from "@/lib/cheapest-cards";
-import { featuredSet } from "@/lib/constants";
+import { getPopularCards } from "@/lib/cheapest-cards";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { getCachedTopDeals, topDealsForGrid, type TopDeals } from "@/lib/top-deals";
 import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/price-history";
@@ -11,6 +10,8 @@ import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { HomeFeaturedListing } from "@/components/home/HomeFeaturedListing";
+import { GiveawayHomeBanner } from "@/components/giveaway/GiveawayHomeBanner";
+import { YourCardsToday } from "@/components/home/YourCardsToday";
 import { RIOT_DRAWINGS } from "@/lib/riot-drawings";
 import { EditorialHub } from "@/components/home/EditorialHub";
 import { COUNTRIES } from "@/lib/country";
@@ -275,17 +276,13 @@ export default async function HomePage() {
   // "Australia"); CardTile re-prices to the visitor's market after hydration.
   // The copy Google indexes (hero, FAQs, about) is market-neutral.
   const country = DEFAULT_COUNTRY;
-  const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
-  // The set whose chase cards lead the popular-cards strip: Radiance from its
-  // "New" day (lib/constants.ts featuredSet), the next set on its own.
-  const chaseSet = featuredSet();
+  const COUNTRY_CODES: Country[] = ["US", "AU", "UK", "SG", "CA", "EU"];
   const [
     { totalCards, statsByCountry, freshness, freshnessAt },
     popularPool,
     topDealsArr,
     recentlyUpdated,
     moversArr,
-    chasePool,
   ] = await Promise.all([
     // Per-market stat tiles + the "Prices updated Xh ago" freshness signal —
     // shared with the 4 region home pages (see lib/home-stats.ts) so they read
@@ -318,14 +315,11 @@ export default async function HomePage() {
     // six fresh DB scans. moversByCountry[country] (the baseline) also feeds the
     // popular-cards carousel's "Movers" tab below, unchanged from before.
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 30).then((m) => featuredMovers(m, c, 6)))),
-    // The featured set's chase printings, dearest first (16 rows).
-    chaseSet ? getSetChaseTiles(chaseSet.code, 16, country) : Promise.resolve([]),
   ]);
   // HOME RANKING (owner, 2026-11-18; lib/home-rank.ts, DECISIONS.md "Home pages rank items by demand"): the most-searched 24
   // are ordered by what visitors did with each card (page views and buy clicks, data/demand.json) times what a click can earn
   // (stores in stock, price), and the first 12 shown; the hero's six trending cards are the head of that list.
   const popularCards = rankItems(popularPool, cardFacts, HOME_DEMAND).slice(0, 12);
-  const chaseCards = rankItems(chasePool, cardFacts, HOME_DEMAND);
   // One memoised aggregate; null (hidden) until 100 real ratings exist.
   const rating = await getSiteRating();
   const storeCount = statsByCountry[country].stores;
@@ -347,6 +341,12 @@ export default async function HomePage() {
         freshnessAt={freshnessAt}
         rating={rating}
       />
+
+      {/* The giveaway, right under the hero while it is open (owner, 2026-11-22: "we got to feature it on our homepage"). */}
+      <GiveawayHomeBanner />
+
+      {/* "Your cards today" (2026-11-18): an account's watched cards, browser-only, nothing in the server HTML or for visitors. */}
+      <YourCardsToday />
 
       {/* The reviews section, the sealed shelf and Welcome back left the front page 2026-11-13 (owner). */}
 
@@ -397,8 +397,6 @@ export default async function HomePage() {
         // The "Most popular" shelf is back (owner, 2026-09-26) and carries the
         // ItemList for these cards now the price table is gone (2026-09-30).
         popularCards={popularCards}
-        chaseCards={chaseCards}
-        chaseSet={chaseSet ? { name: chaseSet.name, slug: chaseSet.slug } : null}
         popularItemList
         showTopDeals
         topDealsByCountry={topDealsByCountry}

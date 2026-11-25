@@ -12,6 +12,7 @@ import {
   googleClientIdFor,
   maskEmail,
   memberFor,
+  sisterSignupSource,
   premiumCors,
   premiumSiteForOrigin,
   premiumStatusFor,
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
   if (!rateLimit(`sister-premium-sign-in:${ip}`, 12, 10 * 60_000).ok) {
     return NextResponse.json({ error: "Too many tries. Wait a few minutes." }, { status: 429, headers });
   }
-  const body = (await req.json().catch(() => null)) as { method?: unknown; credential?: unknown; email?: unknown; code?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { method?: unknown; credential?: unknown; email?: unknown; code?: unknown; src?: unknown } | null;
 
   try {
     if (body?.method === "google") {
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
       if (!clientId) return NextResponse.json({ error: "Google sign-in isn't set up yet. Use the email link." }, { status: 503, headers });
       const g = await verifyGoogleCredential(body.credential, clientId);
       if (!g) return NextResponse.json({ error: "Google didn't confirm that sign-in. Try again." }, { status: 401, headers });
-      const m = await memberFor(g.email, g);
+      const m = await memberFor(g.email, g, sisterSignupSource(site.key, body.src));
       return await session(site, m.email, headers);
     }
 
@@ -89,7 +90,7 @@ export async function POST(req: Request) {
     if (body?.method === "link") {
       const email = await verifyEmailLinkCode(body.code, site);
       if (!email) return NextResponse.json({ error: "That link has expired. Ask for a new one." }, { status: 401, headers });
-      const m = await memberFor(email);
+      const m = await memberFor(email, null, sisterSignupSource(site.key, body.src));
       return await session(site, m.email, headers);
     }
   } catch (e) {

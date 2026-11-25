@@ -8,7 +8,7 @@ import type { HeaderMenu } from "./nav-groups";
 // (HEADER_MENUS in nav-groups.ts, picked from NAV_GROUPS) so header, rail, phone menu and launcher agree.
 //
 // Every panel is in the server HTML, closed with the `hidden` attribute dropped by CSS state, never removed: the links are
-// real <a href>s a crawler reads without running script. Open on click or Enter/Space/ArrowDown; on hover with a short
+// real <a href>s a crawler reads without running script. The label is a link to the section's page; the chevron button opens on click or Enter/Space/ArrowDown; on hover with a short
 // intent delay (so a diagonal move to the panel does not close it); Escape closes and returns focus to the trigger; Left/Right
 // move between triggers; focus leaving the menu or a click outside closes it. Shown from 1440px only (the lg-xl header row has no
 // slack and the inline search needs its width); below that the Sealed link and the rail / phone menu carry the same destinations.
@@ -64,27 +64,42 @@ export function HeaderMegaMenu({ menus, className = "" }: { menus: HeaderMenu[];
         const panel = `${uid}-p${i}`;
         return (
           <div key={m.label} className="relative" onMouseEnter={() => later(i, open === null ? OPEN_DELAY : 0)}>
-            <button
-              type="button"
-              ref={(el) => { triggers.current[i] = el; }}
-              aria-expanded={isOpen}
-              aria-controls={panel}
-              aria-haspopup="true"
-              onClick={() => { clear(); setOpen(isOpen ? null : i); }}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowDown") { e.preventDefault(); setOpen(i); requestAnimationFrame(() => document.getElementById(panel)?.querySelector<HTMLElement>("a")?.focus()); }
-                if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-                  e.preventDefault();
-                  const n = (i + (e.key === "ArrowRight" ? 1 : menus.length - 1)) % menus.length;
-                  triggers.current[n]?.focus();
-                  if (open !== null) setOpen(n);
-                }
-              }}
-              className={`inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium hover:bg-ink-800 hover:text-white [@media(pointer:coarse)]:py-3.5 ${isOpen ? "bg-ink-800 text-white" : "text-slate-200"}`}
-            >
-              {m.label}
-              <svg viewBox="0 0 12 12" className={`h-3 w-3 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2.5 4.5 6 8l3.5-3.5" /></svg>
-            </button>
+            {/* The label is a link to the section's own page (owner, 2026-11-23: "every time I click on the drop downs, I expect
+                it to be a link"); hover still opens the panel, and the chevron beside it is the button that toggles it. */}
+            <div className={`inline-flex items-center rounded-lg hover:bg-ink-800 ${isOpen ? "bg-ink-800" : ""}`}>
+              <Link
+                href={m.href}
+                prefetch={false}
+                onClick={() => { clear(); setOpen(null); }}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") { e.preventDefault(); setOpen(i); requestAnimationFrame(() => document.getElementById(panel)?.querySelector<HTMLElement>("a")?.focus()); }
+                }}
+                className={`whitespace-nowrap rounded-l-lg py-2 pl-2.5 pr-1 text-sm font-medium hover:text-white [@media(pointer:coarse)]:py-3.5 ${isOpen ? "text-white" : "text-slate-200"}`}
+              >
+                {m.label}
+              </Link>
+              <button
+                type="button"
+                ref={(el) => { triggers.current[i] = el; }}
+                aria-label={`${m.label} menu`}
+                aria-expanded={isOpen}
+                aria-controls={panel}
+                aria-haspopup="true"
+                onClick={() => { clear(); setOpen(isOpen ? null : i); }}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") { e.preventDefault(); setOpen(i); requestAnimationFrame(() => document.getElementById(panel)?.querySelector<HTMLElement>("a")?.focus()); }
+                  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    const n = (i + (e.key === "ArrowRight" ? 1 : menus.length - 1)) % menus.length;
+                    triggers.current[n]?.focus();
+                    if (open !== null) setOpen(n);
+                  }
+                }}
+                className={`inline-flex items-center self-stretch rounded-r-lg pl-1 pr-2.5 hover:text-white [@media(pointer:coarse)]:px-3 ${isOpen ? "text-white" : "text-slate-200"}`}
+              >
+                <svg viewBox="0 0 12 12" className={`h-3 w-3 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2.5 4.5 6 8l3.5-3.5" /></svg>
+              </button>
+            </div>
             <div
               id={panel}
               data-open={isOpen}

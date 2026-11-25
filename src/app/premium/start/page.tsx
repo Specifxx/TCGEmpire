@@ -11,6 +11,7 @@ import { isPremium, premiumCheckoutEnabled, premiumPlusEnabled, premiumTrialEnab
 import { parseCheckoutSelection, parseStartSrc, sanitizeBackPath, PREMIUM_START_PATH } from "@/lib/premium-start";
 import { TIER_NAMES, premiumTrialFee, trialDaysPhrase, tierAnnualAmount, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, introOfferEnabled, introPriceLine } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
+import { AppPremiumNotice } from "@/components/AppPremiumNotice";
 
 // SIGN-IN AS A STEP INSIDE CHECKOUT, NOT A GATE IN FRONT OF IT.
 //
@@ -80,6 +81,7 @@ export default async function PremiumStartPage({
     priceLine = introShown(await hasEverPaid(dbUser?.stripeCustomerId)) ? introPriceLine(tier) : fullPriceLine;
     return (
       <div className="mx-auto w-full max-w-lg px-4">
+        <AppPremiumNotice />
         <p className="pt-10 text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
           RiftCompare {tierName}
         </p>
@@ -107,6 +109,7 @@ export default async function PremiumStartPage({
 
   return (
     <div className="mx-auto w-full max-w-sm px-4 py-10">
+      <AppPremiumNotice />
       <div className="card-surface p-6">
         <Link href={back ?? "/premium"} className="mb-3 inline-block text-xs text-slate-500 hover:text-white">
           ← Back
@@ -116,15 +119,13 @@ export default async function PremiumStartPage({
         <p className="mt-2 text-sm text-slate-300">
           {premiumTrialEnabled() ? (
             <>
-              Your account is free and takes one tap — no card needed for it. Checkout opens straight
-              after: {premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} due today for your first {trialDaysPhrase(PREMIUM_TRIAL_DAYS)}{PREMIUM_TRIAL_FEE_CENTS > 0 ? "" : " (free)"} if you
-              haven&apos;t had a trial before, then {priceLine}. A card is required to start the trial, and you can
-              cancel any time before day {PREMIUM_TRIAL_DAYS}.
+              Free account, one tap. Then {premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)} today for{" "}
+              {trialDaysPhrase(PREMIUM_TRIAL_DAYS)}{PREMIUM_TRIAL_FEE_CENTS > 0 ? "" : " (free)"} if it&apos;s your first trial, then{" "}
+              {priceLine}. Card needed; cancel before day {PREMIUM_TRIAL_DAYS}.
             </>
           ) : (
             <>
-              Your account is free and takes one tap. Checkout opens straight after — {priceLine}, cancel
-              anytime.
+              Free account, one tap. Then {priceLine}, cancel anytime.
             </>
           )}
         </p>

@@ -33,8 +33,10 @@ from an Actions runner. The PR description answers each of these:
 - **Weekly outside check** (`scripts/store-vetting.mjs`, `store-vetting.yml`, Mondays
   03:41 UTC): reads every site's registry from its repo and checks every store domain.
   RED (the run fails and GitHub emails the owner): banned, dead (does not resolve,
-  refuses or answers 404/410/5xx), parked or for sale, or a domain under a year old
-  whose home page shows no contact or policy link. LOOK (one "Store vetting" issue
+  refuses or answers 404/410/5xx, and still does after a pause, with neither its
+  `/products.json` nor its robots.txt answering; 2026-11-18), parked or for sale, or a domain under a year old
+  whose home page shows no contact or policy link and whose usual contact and policy
+  pages (`/pages/contact`, `/contact`, `/policies/refund-policy`…) do not exist either. LOOK (one "Store vetting" issue
   here): redirects to a different domain, young domain, no contact link, no domain
   of its own (a myshopify.com address). Bot protection is never worked around: a
   store that blocks the check is "unknown", never failed. Trustpilot refuses

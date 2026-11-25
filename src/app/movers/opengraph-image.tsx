@@ -39,7 +39,7 @@ export default async function Image() {
   } catch {
     /* plain card below */
   }
-  const accent = "#f29733"; // lib/brand.ts ORANGE_LIGHT
+  const accent = "#34d17e"; // lib/brand.ts ORANGE_LIGHT
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", padding: "44px 64px", background: "linear-gradient(135deg, #04131c 0%, #062436 55%, #013951 100%)", fontFamily: "sans-serif" }}>

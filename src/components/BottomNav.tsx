@@ -6,6 +6,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cartArm, CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
 import { CartIcon } from "./cart/CartIcon";
 import { NavIcon } from "./NavIcon";
+import { useMe } from "@/lib/use-me";
+import { YCT_MOVED_KEY } from "@/lib/your-cards-today";
 import { bottomNavEnabled, bottomNavShows, isActivePath, nextDir, NAV_H, OPT_KEY, type BottomNavMode } from "@/lib/bottom-nav";
 
 // The phone bottom nav (owner, 2026-11-18, after Catchback's; ported from TCG Prices). READ DECISIONS.md "The mobile bottom tab bar is deleted" (2026-09-18)
@@ -32,13 +34,21 @@ interface Tab {
 }
 
 // A function, so no JSX runs when the module loads (the tests import this file before React exists globally).
-const tabs = (): Tab[] => [
+// Members (any paid tier, owner 2026-11-18: "premium on a phone should look and feel different"): the Deals tab becomes Watching, their
+// own cards (watch list, then the collection from there), and the bar carries a small Premium mark. Deals stays one tap away in the menu.
+// Price rows, pinned rows, Cheapest and Add to cart are untouched: the bar changes how a member gets around, never what prices they see.
+const tabs = (member = false): Tab[] => [
   { key: "home", label: "Home", href: "/", icon: <NavIcon name="home" className="h-[22px] w-[22px]" /> },
   // Rift's header search submits to the Card Database, so the Search tab goes there too.
   { key: "search", label: "Search", href: "/browse", also: ["/cards"], icon: <NavIcon name="browse" className="h-[22px] w-[22px]" /> },
-  { key: "deals", label: "Deals", href: "/tools/deal-finder", also: ["/movers", "/rising"], icon: <NavIcon name="deals" className="h-[22px] w-[22px]" /> },
-  { key: "cart", label: "Cart", icon: <CartIcon size={22} /> },
-  { key: "menu", label: "Menu", icon: <NavIcon name="menu" className="h-[22px] w-[22px]" /> },
+  member
+    ? { key: "watching", label: "Watching", href: "/watching", also: ["/portfolio", "/alerts"], icon: <NavIcon name="heart" className="h-[22px] w-[22px]" /> }
+    : { key: "deals", label: "Deals", href: "/tools/deal-finder", also: ["/movers", "/rising"], icon: <NavIcon name="deals" className="h-[22px] w-[22px]" /> },
+  { key: "cart", label: "Shortlist", icon: <CartIcon size={22} /> },
+  // My collection (owner, 2026-11-19: "instead of the menu on the navbar, it should be like my collection, and you need to be able to
+  // sign in to see your collection"): the SAME Rift collection as always (/portfolio, which sends a signed-out visitor to /login first),
+  // just one more way in. The menu stays one tap away on the header's menu button, the one opener.
+  { key: "collection", label: "Collection", href: "/portfolio", also: ["/profile", "/dashboard"], icon: <NavIcon name="collection" className="h-[22px] w-[22px]" /> },
 ];
 
 
@@ -51,6 +61,19 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(false);
   const [count, setCount] = useState(0);
+  const { tier } = useMe();
+  const member = tier !== null;
+  // The Watching dot: a watched card moved since the member last opened /watching ("Your cards today" sets it; visiting clears it).
+  const [moved, setMoved] = useState(false);
+  useEffect(() => {
+    if (!member) return;
+    try {
+      if (pathname.startsWith("/watching")) localStorage.setItem(YCT_MOVED_KEY, "0");
+      setMoved(localStorage.getItem(YCT_MOVED_KEY) === "1");
+    } catch {
+      /* no storage, no dot */
+    }
+  }, [member, pathname]);
   // The cart A/B (lib/cart-list.ts cartArm): the "off" arm has no Cart tab unless its cart already holds lines.
   const [cartOn, setCartOn] = useState(false);
   useEffect(() => setCartOn(cartArm() === "on"), []);
@@ -107,7 +130,7 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
       if (show) el.removeAttribute("aria-hidden");
       else el.setAttribute("aria-hidden", "true");
       root.toggleAttribute("data-bottomnav", show);
-      root.style.scrollPaddingBottom = show ? `calc(${NAV_H}px + env(safe-area-inset-bottom))` : "";
+      root.style.scrollPaddingBottom = show ? `calc(${NAV_H}px + var(--bn-gap, env(safe-area-inset-bottom)) + 8px)` : "";
     };
     const decide = () => {
       const y = Math.max(0, window.scrollY); // iOS rubber-banding reports negative values past the top
@@ -137,8 +160,7 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
         // The cart drawer is always in the DOM, aria-modal but inert and aria-hidden while closed: only an open one counts.
         [...document.querySelectorAll("dialog[open], [aria-modal='true']")].some((d) => !d.closest("[inert], [aria-hidden='true']")) ||
         document.body.style.overflow === "hidden" ||
-        root.style.overflow === "hidden" ||
-        root.matches(".capacitor-native");
+        root.style.overflow === "hidden";
       buybar = !!document.querySelector(".buybar, [data-buybar]"); // Rift's card-page buy bar is `.buybar` (CardMobileBuy)
       decide();
     };
@@ -223,14 +245,12 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
 
   const click = (key: string) => {
     if (key === "cart") window.dispatchEvent(new CustomEvent(CART_OPEN_EVENT));
-    // The header's menu button stays the ONE opener of the menu (tests/single-menu-entry.test.ts): this tab presses it.
-    if (key === "menu") document.querySelector<HTMLButtonElement>("button[data-menu-button]")?.click();
   };
 
   return (
-    <nav ref={ref} aria-label="Quick links" data-bottomnav-bar="hidden" aria-hidden="true" className="bn md:hidden">
+    <nav ref={ref} aria-label="Quick links" data-bottomnav-bar="hidden" aria-hidden="true" data-member={member ? "" : undefined} className="bn md:hidden">
       <ul className="bn-row">
-        {tabs().filter((t) => t.key !== "cart" || cartOn || count > 0).map((t) => {
+        {tabs(member).filter((t) => t.key !== "cart" || cartOn || count > 0).map((t) => {
           const active = t.href ? isActivePath(pathname, t.href, t.also) && (t.href !== "/" || pathname === "/") : false;
           return (
             <li key={t.key} className="bn-cell">
@@ -244,7 +264,10 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
                   // The target starts loading on touch-down, a head start on the tap itself (one page, only when it is touched).
                   onPointerDown={() => router.prefetch(t.href!)}
                 >
-                  <span className="bn-ico">{t.icon}</span>
+                  <span className="bn-ico">
+                    {t.icon}
+                    {t.key === "watching" && moved && <span aria-hidden="true" className="bn-dot" />}
+                  </span>
                   <span className="bn-label">{t.label}</span>
                 </Link>
               ) : (

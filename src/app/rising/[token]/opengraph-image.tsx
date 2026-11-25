@@ -38,7 +38,7 @@ export default async function Image({ params }: { params: { token: string } }) {
 
   const data = (snap?.data ?? null) as RisingSnapshotData | null;
   return new ImageResponse(
-    <Hot40Image picks={data?.picks ?? []} dateLabel={snap ? snapshotDateLabel(new Date(snap.createdAt)) : null} />,
+    <Hot40Image picks={data?.picks ?? []} drops={data?.drops} dateLabel={snap ? snapshotDateLabel(new Date(snap.createdAt)) : null} />,
     size,
   );
 }

@@ -369,7 +369,8 @@ test("the sealed naming mirror still matches getAllSealedGroups", () => {
   assert.match(route, /rows\.find\(\(r\) => r\.priceCents >= sealedFloorCents\(r\.productType\)\)/);
   assert.match(route, /sealedReportTarget\(report\.sealedGroupKey, row\)/);
   // And the ?q= link finds a tile by its name.
-  assert.match(read("src/lib/sealed-view.ts"), /g\.name\.toLowerCase\(\)\.includes\(ql\)/);
+  // Through the search box's matcher since 2026-11-24 (every word of the name, any order, typos), which a whole name passes.
+  assert.match(read("src/lib/sealed-view.ts"), /matchSealedGroups\(groups, q\)/);
 });
 
 test("the email never repeats a store name the reporter's form supplied", () => {
@@ -433,7 +434,7 @@ test("the thank-you email is transactional, on-brand, and escapes what it is giv
   assert.ok(!/<script>/.test(mail.html), "nothing reporter-supplied may reach the HTML raw");
   assert.match(mail.html, /href="https:\/\/riftcompare\.com\/sealed\?set=VEN&amp;type=Booster%20Box"/, "links to the item");
   // The standard shell and footer, and nothing marketing.
-  assert.match(mail.html, /Rift<span style="color:#ef7d00">Compare<\/span>/);
+  assert.match(mail.html, /Rift<span style="color:#1ea65c">Compare<\/span>/);
   assert.match(mail.html, /RiftCompare · Riftbound card price comparison\./);
   assert.ok(
     !/Unsubscribe|Create your free account|utm_/i.test(mail.html),

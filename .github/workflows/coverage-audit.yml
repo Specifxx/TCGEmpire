@@ -1,0 +1,67 @@
+# Riftbound coverage audit (scripts/coverage-audit.ts): every priced TCGplayer
+# single has a card page, every card has a price, store feeds are fresh, and a
+# sample of card, set and pre-order pages answer 200 quickly from the CDN.
+# Read-only and database-free (the public snapshot + TCGplayer + the live site),
+# so it costs the Neon compute cap nothing. Red fails the run (GitHub emails the
+# owner). The candidate-store job measures and vets stores proposed for
+# retailers.ts (data/store-vetting/rift-candidates.json) and changes nothing.
+name: Coverage audit
+on:
+  schedule:
+    - cron: "23 9 * * 2" # Tuesdays, after Monday's store vetting
+  workflow_dispatch: {}
+  push:
+    branches: ["claude/**"]
+    paths:
+      - scripts/coverage-audit.ts
+      - scripts/store-candidates.ts
+      - data/store-vetting/rift-candidates.json
+      - .github/workflows/coverage-audit.yml
+permissions:
+  contents: read
+concurrency:
+  group: coverage-audit-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - run: npx tsx scripts/coverage-audit.ts
+        env:
+          # A session-branch run is a trial of the script: it reports, never pages.
+          REPORT_ONLY: ${{ github.event_name == 'push' && '1' || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-audit
+          path: coverage-audit.json
+          retention-days: 30
+  candidates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - run: npx tsx scripts/store-candidates.ts
+        env:
+          STORE_VETTING_RECHECK_MS: "5000"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: store-candidates
+          path: store-candidates.json
+          retention-days: 30

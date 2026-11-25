@@ -54,6 +54,7 @@ export function HeaderMenuButton({ className = "" }: { className?: string }) {
       data-menu-button=""
       onClick={() => setOpen(true)}
       aria-label="Open menu"
+      title="Menu: every page"
       aria-expanded={open}
       aria-haspopup="dialog"
       className={`tap-icon rounded-lg text-slate-200 transition-colors hover:bg-ink-800 hover:text-white ${className}`}

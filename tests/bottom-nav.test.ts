@@ -74,10 +74,11 @@ test("the layout mounts it only through SITE.bottomNav, and the server HTML neve
   assert.ok(/if \(!enabled\) return null;/.test(src), "renders nothing until the browser has read the opt-in");
 });
 
-test("the Menu tab presses the header's menu button: still ONE opener of the menu (tests/single-menu-entry.test.ts)", () => {
+test("Collection replaces Menu (owner, 2026-11-19): the existing Rift collection, and the header's button stays the ONE menu opener", () => {
   const src = readFileSync(new URL("../src/components/BottomNav.tsx", import.meta.url), "utf8").replace(/\/\/.*$/gm, "");
   assert.ok(!/setOpen\(true\)|useMegaMenu/.test(src), "never opens the menu itself");
-  assert.ok(/button\[data-menu-button\]/.test(src));
+  assert.ok(/\{ key: "collection", label: "Collection", href: "\/portfolio"/.test(src), "into the collection Rift already has");
+  assert.ok(!/key: "menu"/.test(src), "no Menu tab");
   const header = readFileSync(new URL("../src/components/HeaderMenuButton.tsx", import.meta.url), "utf8");
   assert.ok(/data-menu-button/.test(header));
 });
@@ -97,4 +98,11 @@ test("the active tab: its own path and those under it, Home only on the home pag
   assert.ok(isActivePath("/movers", "/tools/deal-finder", ["/movers"]));
   assert.ok(!isActivePath("/browser", "/browse"));
   assert.ok(isActivePath("/", "/") && !isActivePath("/sets", "/"));
+});
+
+test("members get Watching in place of Deals; Cart, Collection and every price surface are the same for them", () => {
+  const src = readFileSync(new URL("../src/components/BottomNav.tsx", import.meta.url), "utf8");
+  assert.ok(/const member = tier !== null;/.test(src), "any paid tier, from /api/me");
+  assert.ok(/member\s*\?\s*\{ key: "watching", label: "Watching", href: "\/watching"/.test(src));
+  assert.ok(/key: "cart"/.test(src) && /key: "collection"/.test(src), "the cart and collection tabs stay for members");
 });

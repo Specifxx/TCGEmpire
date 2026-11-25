@@ -95,6 +95,9 @@ model User {
   // because every account stamped by the "month on us" offer must still get
   // this one. Set on a successful send only. Additive + nullable, no backfill.
   priceDropEmailSentAt DateTime?
+  // The one-off "your watchlist" recap to dormant accounts (lib/watch-recap.ts, 2026-11-22).
+  // Stamped only on a successful send, so the batched run is resumable. Additive, nullable.
+  watchRecapSentAt     DateTime?
   // Set once when the early-adopter "first 100 users get Premium" comp is granted,
   // so the grant is idempotent (never re-granted / re-extended on re-runs).
   earlyPremiumGranted Boolean   @default(false)
@@ -1678,9 +1681,89 @@ model GiveawayEntry {
   giveaway  String
   userId    String
   createdAt DateTime @default(now())
+  // Entries this account counts as in the draw (lib/giveaway.ts entryWeight): 3 for Premium or for a free
+  // account that watches a price, else 1. Raised when the account presses the button again; the admin page and the
+  // draw also recompute it, so the higher of the two counts.
+  weight    Int      @default(1)
+  // The public leaderboard on /giveaway shows a short form of the account's name unless the entrant hides it.
+  showName  Boolean  @default(true)
+  // "Claim the free bonus" (lib/giveaway.ts BONUS_POINTS): the free way to the same points Premium gets automatically.
+  bonusClaimedAt DateTime?
+  // The sister site the entry was made on (dex, mtg, ygo, op), or null for RiftCompare itself.
+  site      String?
 
   @@unique([giveaway, userId])
   @@index([giveaway])
+}
+
+// One row per Sydney day an entrant checked in (lib/giveaway.ts CHECKIN_POINTS, 2026-11-22). Private.
+model GiveawayCheckin {
+  id        String   @id @default(cuid())
+  giveaway  String
+  userId    String
+  day       String
+  createdAt DateTime @default(now())
+
+  @@unique([giveaway, userId, day])
+  @@index([giveaway, userId])
+}
+
+// Each draw of a giveaway (lib/giveaway-run.ts): attempt 0 is the first, a redraw after an unclaimed prize is 1, 2. The ticket
+// comes from the public drand round (randomness). publicName is what the winner banner shows. Private (the winner id).
+model GiveawayDraw {
+  id           String    @id @default(cuid())
+  giveaway     String
+  attempt      Int
+  drandRound   Int
+  randomness   String
+  totalTickets Int
+  entrants     Int
+  ticket       Int
+  winnerId     String
+  publicName   String
+  country      String?
+  drawnAt      DateTime  @default(now())
+  claimBy      DateTime
+  // pending (emailed, waiting), claimed (address in), shipped (the owner sent it), expired (not claimed in time: redrawn)
+  status       String    @default("pending")
+  claimedAt    DateTime?
+  shippedAt    DateTime?
+
+  @@unique([giveaway, attempt])
+  @@index([giveaway])
+}
+
+// The winner's postal address, from the claim form (/giveaway/claim). Private: read only by /admin/giveaway and the owner's email.
+model GiveawayClaim {
+  id        String   @id @default(cuid())
+  giveaway  String
+  userId    String
+  fullName  String
+  line1     String
+  line2     String?
+  city      String
+  region    String?
+  postcode  String
+  country   String
+  phone     String?
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([giveaway, userId])
+}
+
+// A friend who joined through an entrant's invite link while a giveaway was open (lib/referral.ts). Each new
+// account counts once per giveaway; it earns the inviter a bonus entry only once the friend's email is confirmed
+// (lib/giveaway-server.ts), capped at MAX_REFERRAL_ENTRIES. Private.
+model GiveawayReferral {
+  id         String   @id @default(cuid())
+  giveaway   String
+  referrerId String
+  referredId String
+  createdAt  DateTime @default(now())
+
+  @@unique([giveaway, referredId])
+  @@index([giveaway, referrerId])
 }
 
 model Counter {

@@ -98,8 +98,8 @@ jobs:
           restore-keys: ops-state-
       - name: Run the checks
         env:
-          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
-          DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           NEON_ORG_ID: ${{ secrets.NEON_ORG_ID || vars.NEON_ORG_ID }}
@@ -117,8 +117,8 @@ jobs:
         if: ${{ always() && !inputs.dry_run }}
         continue-on-error: true
         env:
-          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
-          DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
           GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
         run: npx tsx scripts/growth-snapshot.ts
       - name: Save the monitor's memory

@@ -7,7 +7,7 @@ export const alt = "RiftCompare Blog";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const BRAND = "#f29733"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
+const BRAND = "#34d17e"; // lib/brand.ts ORANGE_LIGHT (2026-10-16 rebrand)
 
 export default async function Image({ params }: { params: { slug: string } }) {
   const a = await getBlogPost(params.slug);
@@ -75,7 +75,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
               display: "flex",
               padding: "6px 18px",
               borderRadius: 999,
-              background: "rgba(239,125,0,0.15)",
+              background: "rgba(30,166,92,0.15)",
               border: `2px solid ${BRAND}`,
               color: BRAND,
               fontSize: 22,

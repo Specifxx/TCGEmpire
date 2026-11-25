@@ -11,6 +11,7 @@
 // ISO string or null) because the API route sends it over fetch.
 import { getSealedGroups, type SealedGroup } from "./sealed-import";
 import { soldOutEverywhere } from "./sealed-offers";
+import { matchSealedGroups } from "./sealed-search";
 import { DEFAULT_COUNTRY, type Country } from "./country";
 import { newestReleasedSet } from "./constants";
 
@@ -59,6 +60,8 @@ export interface SealedView {
   isFiltered: boolean;
   /** The newest released set's code when its sealed is in this market's feed and the view is unfiltered. */
   featuredSetCode: string | null;
+  /** True in the default order: the board draws a heading over each product type's run (UX review, 2026-11-24, P0 4). */
+  typeHeadings: boolean;
 }
 
 export async function buildSealedView(country: Country, searchParams: SealedParams): Promise<SealedView> {
@@ -107,13 +110,9 @@ export async function buildSealedView(country: Country, searchParams: SealedPara
   if (atMsrpOnly) groups = groups.filter((g) => g.atMsrp);
   if (minCents != null) groups = groups.filter((g) => g.lowestPriceCents != null && g.lowestPriceCents >= minCents);
   if (maxCents != null) groups = groups.filter((g) => g.lowestPriceCents != null && g.lowestPriceCents <= maxCents);
-  if (ql)
-    groups = groups.filter(
-      (g) =>
-        g.name.toLowerCase().includes(ql) ||
-        g.productType.toLowerCase().includes(ql) ||
-        (g.setCode ?? "").toLowerCase().includes(ql)
-    );
+  // The search box's own matcher (lib/sealed-search.ts): every word in any order, set names, shorthand ("bb", "pg") and
+  // one-letter typos (owner's UX review, 2026-11-24, P0 5). It was a plain substring, so "spiritforgd" found nothing.
+  if (ql) groups = matchSealedGroups(groups, q);
 
   if (sort === "price_asc") groups = [...groups].sort((a, b) => (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity));
   else if (sort === "price_desc") groups = [...groups].sort((a, b) => (b.lowestPriceCents ?? -1) - (a.lowestPriceCents ?? -1));
@@ -123,17 +122,23 @@ export async function buildSealedView(country: Country, searchParams: SealedPara
     // see recordSealedFirstSeen) sorts LAST, not first: "unknown" must never look
     // like "just added" the way it would if missing sorted as epoch-0 descending.
     groups = [...groups].sort((a, b) => (b.firstSeenAt?.getTime() ?? -1) - (a.firstSeenAt?.getTime() ?? -1));
-  else
-    // Default: float the newest released set's sealed to the top via a stable
-    // sort, leaving every other group in its (already-filtered) order.
-    groups = groups
-      .map((g, i) => [g, i] as const)
-      .sort((a, b) => {
-        const av = newest && a[0].setCode === newest.code ? 0 : 1;
-        const bv = newest && b[0].setCode === newest.code ? 0 : 1;
-        return av - bv || a[1] - b[1];
-      })
-      .map(([g]) => g);
+  else if (sort === "rrp")
+    // Furthest under RRP first (overMsrpPct most negative); a product with no published RRP, or no price, goes last.
+    groups = [...groups].sort((a, b) => (a.overMsrpPct ?? Infinity) - (b.overMsrpPct ?? Infinity) || (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity));
+  else if (sort === "stores")
+    groups = [...groups].sort((a, b) => b.storeCount - a.storeCount || (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity));
+  else {
+    // Default: by product type, in the loader's order (boxes, kits, bundles, decks, packs…), cheapest first within each
+    // type. Until 2026-11-24 the newest released set floated above every type, so the list ran cheap-to-dear, then
+    // started again from cheap with no heading (owner's UX review, P0 4: "either label the groups or use one continuous
+    // order"). Now the board draws one heading per type (typeHeadings) and each heading's run is one price order; the
+    // newest set keeps its callout above the board ("Shop <set> →").
+    const typeAt = new Map<string, number>();
+    for (const g of groups) if (!typeAt.has(g.productType)) typeAt.set(g.productType, typeAt.size);
+    groups = [...groups].sort(
+      (a, b) => typeAt.get(a.productType)! - typeAt.get(b.productType)! || (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity),
+    );
+  }
 
   // "Sold out at every store we track" (free, 2026-09-25): every store listing
   // the product in this market says sold out on a fresh read. Computed from the
@@ -155,5 +160,6 @@ export async function buildSealedView(country: Country, searchParams: SealedPara
     setOptions,
     isFiltered,
     featuredSetCode,
+    typeHeadings: !["price_asc", "price_desc", "name", "new", "rrp", "stores"].includes(sort),
   };
 }

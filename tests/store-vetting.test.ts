@@ -84,3 +84,41 @@ test("every hand-verified store says why", () => {
   const v = JSON.parse(readFileSync("data/store-vetting/verified.json", "utf8")) as { domain: string; why: string; checked: string }[];
   for (const e of v) assert.ok(e.domain && e.why.length > 20 && /^\d{4}-\d{2}-\d{2}$/.test(e.checked), e.domain);
 });
+
+// 2026-11-18: the RED list was mostly one-off HTTP 500s that changed every Monday.
+type Fake = Record<string, { status: number; body?: string; url?: string }>;
+async function withFetch<T>(pages: Fake, fn: () => Promise<T>): Promise<T> {
+  const real = globalThis.fetch;
+  process.env.STORE_VETTING_RECHECK_MS = "0";
+  globalThis.fetch = (async (input: string | URL) => {
+    const u = String(input);
+    const hit = pages[u] ?? (u.startsWith("https://rdap") || u.includes("iana.org") ? { status: 404 } : { status: 500 });
+    return { status: hit.status, url: hit.url ?? u, text: async () => hit.body ?? "" } as Response;
+  }) as typeof fetch;
+  try {
+    return await fn();
+  } finally {
+    globalThis.fetch = real;
+  }
+}
+
+test("a one-off 500 that answers on the second try is not dead", async () => {
+  const { recheck } = await import("../scripts/store-vetting.mjs");
+  const ok = await withFetch({ "https://shop.com/": { status: 200, body: '<a href="mailto:a@shop.com">' + "x".repeat(3000) } }, () => recheck("shop.com"));
+  assert.ok(ok.home);
+});
+
+test("a home page stuck on 500 while the catalogue answers is a look, not red", async () => {
+  const { recheck } = await import("../scripts/store-vetting.mjs");
+  const r = await withFetch({ "https://shop.com/products.json?limit=1": { status: 200, body: '{"products":[{"id":1}]}' } }, () => recheck("shop.com"));
+  assert.ok(r.alive && !r.home);
+  const dead = await withFetch({}, () => recheck("gone.com"));
+  assert.deepEqual(dead, {});
+});
+
+test("a contact page counts as contact, a redirect to home does not", async () => {
+  const { hasContactPage } = await import("../scripts/store-vetting.mjs");
+  const big = "y".repeat(800);
+  assert.equal(await withFetch({ "https://a.com/pages/contact": { status: 200, body: big } }, () => hasContactPage("a.com")), true);
+  assert.equal(await withFetch({ "https://b.com/pages/contact": { status: 200, body: big, url: "https://b.com/" } }, () => hasContactPage("b.com")), false);
+});

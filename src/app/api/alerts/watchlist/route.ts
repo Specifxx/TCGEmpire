@@ -104,7 +104,7 @@ export async function GET(req: Request) {
 
 const schema = z.object({
   cardId: z.string().min(1).max(64),
-  market: z.enum(["AU", "US", "UK", "SG", "CA", "EU"]).default("AU"),
+  market: z.enum(["AU", "US", "UK", "SG", "CA", "EU"]).default("US"),
 });
 
 // POST — watch one card for the signed-in account.

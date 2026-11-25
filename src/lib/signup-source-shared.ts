@@ -23,11 +23,15 @@ export const INLINE_SIGNUP_SURFACES = [
   "inline_movers", // /movers, after the lists
   "inline_champion", // /champions/[slug], after the champion's printings
   "inline_card", // /card/[id], under the markets table (2026-10-20)
+  "inline_black_friday", // /black-friday and /cyber-monday (components/HolidaySalePage.tsx), under the real drops (Cyber Weekend, 2026-11-21)
+  "inline_rising", // /rising/[token] (the Hot 40 snapshot Reddit posts link), after the chart (owned audience, 2026-11-20)
 ] as const;
 export type InlineSignupSurface = (typeof INLINE_SIGNUP_SURFACES)[number];
 
 export const SIGNUP_SOURCES = new Set<string>([
   "navbar",
+  // The card scanner's sign-in card on /scan (2026-11-19).
+  "scan",
   // The Stores plan (2026-10-23): the subscribe form on /stores and the
   // signed-out /stores/account page.
   "stores_plan",
@@ -37,6 +41,10 @@ export const SIGNUP_SOURCES = new Set<string>([
   "email_link",
   // /featured's "Sign in to feature a listing" (2026-11-07, lib/featured/).
   "featured",
+  // The card page's after-click follow-up (BuyFollowUp, 2026-11-22).
+  "buy_followup",
+  // The Android app's Premium page, which sells nothing there (2026-11-19, components/AppPremiumNotice.tsx).
+  "app_premium",
   // RETIRED 2026-09-30 with the sign-up popup ("The sign-up slider is gone").
   // Kept, like "gate" below, so accounts that carry it and a cookie set just
   // before the deploy still parse.

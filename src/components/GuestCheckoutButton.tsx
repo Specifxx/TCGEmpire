@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { pabKey } from "@/lib/premium-ab";
 import { recallPremiumSurface } from "@/lib/premium-surface";
 import { PREMIUM_COPY_VERSION, type PremiumTierKey } from "@/lib/site";
+import { useIsNativeApp } from "@/lib/native";
 
 // Straight to Stripe without an account (2026-10-20, lib/guest-checkout.ts):
 // Stripe collects the email, the webhook ties the subscription to that email's
@@ -23,12 +25,14 @@ export function GuestCheckoutButton({
   children: React.ReactNode;
   source?: string;
 }) {
+  // No buying inside the Android app (Play payments policy; owner, 2026-11-19).
+  const inApp = useIsNativeApp();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function go() {
     setBusy(true);
     setError(null);
-    trackEvent("premium_checkout_started", { plan, tier, guest: true, source, copy: PREMIUM_COPY_VERSION });
+    trackEvent("premium_checkout_started", { plan, tier, guest: true, source, copy: PREMIUM_COPY_VERSION, pk: pabKey() });
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
@@ -47,6 +51,7 @@ export function GuestCheckoutButton({
       setBusy(false);
     }
   }
+  if (inApp) return null;
   return (
     <div className="w-full">
       <button type="button" onClick={go} disabled={busy} className={className}>

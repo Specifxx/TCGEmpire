@@ -14,7 +14,7 @@ import { convertCents } from "../fx";
 // source's API response live here too, for the same reason; the fetching is in
 // lib/earnings/sources.ts.
 
-export type EarningsSourceKey = "stripe" | "tcgplayer" | "ebay" | "amazon" | "adsense" | "mediavine";
+export type EarningsSourceKey = "stripe" | "tcgplayer" | "ebay" | "amazon" | "adsense" | "mediavine" | "goaffpro";
 
 export const SOURCE_LABELS: Record<EarningsSourceKey, string> = {
   stripe: "Stripe (Premium + Stores)",
@@ -23,6 +23,7 @@ export const SOURCE_LABELS: Record<EarningsSourceKey, string> = {
   amazon: "Amazon Associates",
   adsense: "Google AdSense",
   mediavine: "Mediavine",
+  goaffpro: "Cardboard Hero (GoAffPro)",
 };
 
 /** Money one source earned on one calendar day, in one currency. */
@@ -534,6 +535,71 @@ export function impactDays(json: unknown): DayAmount[] {
   return impactActionDays(uniqueActions(impactActions(json)));
 }
 
+// ── Impact performance bonuses (owner, 2026-11-23: "are we factoring TCGplayer's
+// bonus earnings?") ─────────────────────────────────────────────────────────
+// A performance bonus (TCGplayer's tier: 4% at US$10k a month, 4.5% at 50k) is
+// NOT an Action: Impact works it out monthly once the month's actions lock and
+// puts it on the partner's invoice as a LineItem whose Description is "BONUS"
+// ("MEDIA_PAYOUT is a standard commission payout; BONUS is for meeting program
+// requirements", partner API v16, GET /Mediapartners/{SID}/Invoices). So the
+// Actions list alone never shows it. Each bonus line is dated to the last day of
+// its EventMonthYear (the month it rewards; the invoice's own day when that
+// cannot be read, never after today), in the invoice's currency, pending until
+// the line's Status is PAID.
+export interface ImpactBonus {
+  key: string;
+  day: string;
+  currency: string;
+  cents: number;
+  paid: boolean;
+  campaign: string;
+}
+
+/** The last day of the month an EventMonthYear names ("2026-11", "11/2026", "2026-11-01", "November 2026"), or null. */
+export function monthEndOf(v: unknown): string | null {
+  const s = String(v ?? "").trim();
+  const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  let y = 0;
+  let m = 0;
+  let r: RegExpMatchArray | null;
+  if ((r = s.match(/^(\d{4})[-/](\d{1,2})(?:[-/]\d{1,2})?(?:T.*)?$/))) [y, m] = [+r[1], +r[2]];
+  else if ((r = s.match(/^(\d{1,2})[-/](\d{4})$/))) [y, m] = [+r[2], +r[1]];
+  else if ((r = s.match(/^([A-Za-z]{3})[a-z]*\.?,?\s+(\d{4})$/))) [y, m] = [+r[2], MONTHS.indexOf(r[1].toLowerCase()) + 1];
+  if (!y || m < 1 || m > 12) return null;
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+}
+
+export function impactBonuses(json: unknown, today: string): ImpactBonus[] {
+  const invoices = (json as { Invoices?: unknown[] } | null)?.Invoices ?? [];
+  const out: ImpactBonus[] = [];
+  for (const inv of invoices as Record<string, unknown>[]) {
+    const lines = Array.isArray(inv.LineItems) ? (inv.LineItems as Record<string, unknown>[]) : [];
+    const created = Date.parse(String(inv.CreatedDate ?? ""));
+    lines.forEach((l, i) => {
+      if (String(l.Description ?? "").trim().toUpperCase() !== "BONUS") return;
+      const cents = toCents(l.NetItemAmount ?? l.TotalItemAmount);
+      if (!cents) return;
+      let day = monthEndOf(l.EventMonthYear) ?? (Number.isFinite(created) ? dayIn(created) : today);
+      if (day > today) day = today;
+      out.push({
+        key: `${String(inv.Id ?? inv.Uri ?? "")}|${i}|${String(l.CampaignId ?? "")}|${String(l.EventMonthYear ?? "")}`,
+        day,
+        currency: String(inv.Currency ?? "USD").toUpperCase(),
+        cents,
+        paid: String(l.Status ?? "").toUpperCase() === "PAID",
+        campaign: String(l.CampaignName ?? ""),
+      });
+    });
+  }
+  return out;
+}
+
+/** Bonus lines as earnings days, each bonus once (an invoice seen in two windows counts once). */
+export function impactBonusDays(bonuses: readonly ImpactBonus[]): DayAmount[] {
+  const once = new Map(bonuses.map((b) => [b.key, b]));
+  return mergeDays([...once.values()].map((b) => ({ day: b.day, currency: b.currency, cents: b.cents, pendingCents: b.paid ? 0 : b.cents })));
+}
+
 // ── eBay Partner Network: the Performance by Day report ─────────────────────
 // GET …/Reports/ebay_partner_perf_by_day_v2.json (EPN_DAILY_REPORT) — one row per day and checkout
 // site, with Earnings (and OtherEarnings) in that site's currency. The JSON is
@@ -922,4 +988,49 @@ export async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (it
   };
   await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
   return out;
+}
+
+// ── Cardboard Hero via GoAffPro (owner, 2026-11-23) ─────────────────────────
+// One referral code (apthvqnu, lib/awin.ts DIRECT_REFERRALS) serves every site and
+// GoAffPro shows affiliates no sub-id, so its sales carry no site. A sale counts on
+// the Sydney day of its order. It is PENDING until the store ships it: most of the
+// first sales are pre-orders, which can still be cancelled. Rejected, cancelled and
+// refunded sales are not counted.
+export interface GoaffproSale {
+  order_id?: number | string;
+  order_date?: string;
+  affiliate_commission?: number | string;
+  order_currency?: string;
+  status?: string;
+  fulfillment_status?: string | null;
+}
+
+export type GoaffproState = "paid" | "pending" | "rejected";
+
+export function goaffproState(s: GoaffproSale): GoaffproState {
+  const st = String(s.status ?? "").toLowerCase();
+  if (/reject|cancel|refund|declin|void/.test(st)) return "rejected";
+  if (st !== "approved" && st !== "paid") return "pending";
+  return String(s.fulfillment_status ?? "").toLowerCase() === "fulfilled" ? "paid" : "pending";
+}
+
+/** Commission per day; `only` limits it to one state (the dashboard's checks). */
+export function goaffproDays(sales: readonly GoaffproSale[], only?: GoaffproState): DayAmount[] {
+  const rows: DayAmount[] = [];
+  for (const s of sales) {
+    const t = Date.parse(String(s.order_date ?? ""));
+    const cents = toCents(s.affiliate_commission);
+    if (!Number.isFinite(t) || !cents) continue;
+    const state = goaffproState(s);
+    if (only ? state !== only : state === "rejected") continue;
+    rows.push({ day: dayIn(t), currency: String(s.order_currency || "CAD").toUpperCase(), cents, pendingCents: state === "pending" ? cents : 0 });
+  }
+  return mergeDays(rows);
+}
+
+/** One sale per order id (pages may overlap). */
+export function uniqueGoaffpro(sales: readonly GoaffproSale[]): GoaffproSale[] {
+  const m = new Map<string, GoaffproSale>();
+  for (const s of sales) m.set(String(s.order_id ?? `${s.order_date}|${s.affiliate_commission}`), s);
+  return [...m.values()];
 }

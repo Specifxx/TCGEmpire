@@ -131,6 +131,24 @@ export function SealedMarketBoard({ baseline, query }: { baseline: SealedView; q
                 </p>
               </div>
             </div>
+          ) : view.typeHeadings ? (
+            // The default order, one heading per product type, cheapest first under each (owner's UX review,
+            // 2026-11-24, P0 4: the list "restarts its price order partway down … with no heading explaining why").
+            <div className="space-y-8">
+              {typeRuns(displayGroups).map((run) => (
+                <section key={run.type} aria-labelledby={`type-${slugOf(run.type)}`}>
+                  <h2 id={`type-${slugOf(run.type)}`} className="mb-3 flex items-baseline gap-2 text-base font-bold text-white">
+                    {plural(run.type)}
+                    <span className="num text-xs font-normal text-slate-400">{run.groups.length} · cheapest first</span>
+                  </h2>
+                  <Reveal stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                    {run.groups.map((g) => (
+                      <SealedTile key={g.groupKey} group={asGroup(g)} currency={displayCurrency} soldOutEverywhere={soldOut.has(g.groupKey)} />
+                    ))}
+                  </Reveal>
+                </section>
+              ))}
+            </div>
           ) : (
             <Reveal stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
               {displayGroups.map((g) => (
@@ -148,3 +166,19 @@ export function SealedMarketBoard({ baseline, query }: { baseline: SealedView; q
     </>
   );
 }
+
+/** Consecutive runs of one product type, in the view's order (the default order groups them). Pure. */
+export function typeRuns<G extends { productType: string }>(groups: readonly G[]): { type: string; groups: G[] }[] {
+  const out: { type: string; groups: G[] }[] = [];
+  for (const g of groups) {
+    const last = out[out.length - 1];
+    if (last && last.type === g.productType) last.groups.push(g);
+    else out.push({ type: g.productType, groups: [g] });
+  }
+  return out;
+}
+
+const slugOf = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+// "Booster Box" -> "Booster Boxes", "Bundle" -> "Bundles"; names already plural or ending in a bracket stay as they are.
+const plural = (t: string) =>
+  t === "Sealed" ? "Other sealed" : /s$|\)$|edition$/i.test(t) ? t : /(x|ch|sh)$/i.test(t) ? `${t}es` : `${t}s`;

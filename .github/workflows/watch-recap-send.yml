@@ -1,0 +1,49 @@
+name: Watchlist recap batch
+
+# The one-off "your watchlist" recap to dormant accounts (lib/watch-recap.ts). Dispatch only, never
+# scheduled. mode: dry (counts only), test (one real recap to the owner's address, chosen on the
+# server), send (one batch). A send is refused by the marketing switch until the owner lets the
+# "watch-recap" campaign through (DECISIONS.md, 2026-11-22).
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        options: ["dry", "test", "send"]
+        default: "dry"
+      limit:
+        type: string
+        default: "90"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: watch-recap-send
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Ask the site
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE: ${{ vars.SITE_URL || 'https://riftcompare.com' }}
+          MODE: ${{ inputs.mode }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "::error::CRON_SECRET is not set"; exit 1; fi
+          case "$LIMIT" in ''|*[!0-9]*) echo "::error::limit must be a number"; exit 1;; esac
+          case "$MODE" in
+            test) q="test=owner" ;;
+            send) q="dry=0&limit=$LIMIT" ;;
+            *) q="dry=1" ;;
+          esac
+          code=$(curl -sS -o result.json -w '%{http_code}' -X POST --max-time 290 \
+            -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/cron/watch-recap?$q")
+          echo "HTTP $code"
+          # Counts and error reasons only; the route never returns an address.
+          cat result.json; echo
+          [ "$code" = "200" ] || { echo "::error::HTTP $code"; exit 1; }

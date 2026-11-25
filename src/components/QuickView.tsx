@@ -18,6 +18,8 @@ import { cardHref } from "@/lib/card-url";
 import { QUANTITY_CAP } from "@/lib/collection-cost";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
+import { bestTreatment } from "@/lib/best-price";
+import { BestPriceTag, BestPriceNote } from "./BestPriceTag";
 import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, isPaidLink, riftboundEbayQuery } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
 import { CartAddButton } from "@/components/cart/CartAddButton";
@@ -189,6 +191,7 @@ function QuickViewModal({
   const [graded, setGraded] = useState<GradedRow[]>([]);
   const [ebayCheckedAt, setEbayCheckedAt] = useState<string | null>(null);
   const [history, setHistory] = useState<PricePoint[] | null>(null);
+  const [marketHistory, setMarketHistory] = useState<PricePoint[]>([]);
   // The history series' newest recorded day for the market it was fetched for
   // (the history route's `lastKnown`), so a late response for another market is
   // never shown under this one. Display-only: see lib/last-known-price.ts.
@@ -258,13 +261,14 @@ function QuickViewModal({
       .then((d) => {
         if (!alive) return;
         setHistory(d.points ?? []);
+        setMarketHistory(Array.isArray(d.market) ? d.market : []);
         const lk = d.lastKnown;
         setRecorded({
           country,
           price: lk && typeof lk.cents === "number" && typeof lk.day === "string" ? { cents: lk.cents, day: lk.day } : null,
         });
       })
-      .catch(() => { if (alive) setHistory([]); });
+      .catch(() => { if (alive) { setHistory([]); setMarketHistory([]); } });
     return () => {
       alive = false;
     };
@@ -717,8 +721,10 @@ function QuickViewModal({
                     return [...lead.map((p) => ({ p, pinned: true })), ...pin.rest.map((p) => ({ p, pinned: false }))].slice(0, 6);
                   })().map(({ p, pinned }) => {
                     const i = inStock.indexOf(p);
+                    // Owner, 2026-11-18: loud only on a paid cheapest row; a plain store gets a neutral tag and a note.
+                    const bt = bestTreatment(i === 0 && inStock.length > 1, { ebay: p.retailer.startsWith("ebay"), source: p.retailer, paid: isPaidLink(p.buyHref) });
                     return (
-                    <li key={p.id} className={`flex flex-wrap items-center gap-x-3 gap-y-2 py-2 md:flex-nowrap ${(() => { const o = rowOutline({ cheapest: i === 0 && inStock.length > 1, ebay: pinned && p.retailer.startsWith("ebay") }); return o ? `-mx-2 px-2 ${o}` : ""; })()}`}>
+                    <li key={p.id} className={`flex flex-wrap items-center gap-x-3 gap-y-2 py-2 md:flex-nowrap ${(() => { const o = rowOutline({ cheapest: bt === "loud", ebay: pinned && p.retailer.startsWith("ebay") }); return o ? `-mx-2 px-2 ${o}` : ""; })()}`}>
                       {/* Wraps below md, with the buy button on its own
                           full-width line (2026-09-23): an inline button squeezed
                           store names to 51px at 390, and eBay's to 0px at 320.
@@ -732,12 +738,14 @@ function QuickViewModal({
                         <div className="flex min-w-0 flex-wrap items-center gap-1.5 gap-y-0.5">
                           <span className="min-w-0 truncate text-sm font-semibold text-white">{p.retailerName}</span>
                           <StoreVote url={p.url} name={p.retailerName} className="shrink-0 text-slate-400" />
-                          {i === 0 && inStock.length > 1 && (
+                          {bt === "loud" && (
                             <span className="chip shrink-0 bg-buy/20 text-[9px] font-bold uppercase tracking-wide text-brand-300">
                               Cheapest
                             </span>
                           )}
+                          {bt === "plain" && <BestPriceTag className="shrink-0" />}
                         </div>
+                        {bt === "plain" && <BestPriceNote has={{ ebay: inStock.some((x) => x.retailer.startsWith("ebay")) || Boolean(ebaySearchUrl && ebayMkt), tcgplayer: inStock.some((x) => x.retailer.startsWith("tcgplayer")) }} />}
                         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500">
                           {p.isFoil && <span className="font-semibold text-gold">✦ Foil</span>}
                           {(() => {
@@ -754,7 +762,7 @@ function QuickViewModal({
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`text-sm font-bold ${i === 0 ? "text-accent" : "text-white"}`}>{fmt(p.priceCents)}</div>
+                        <div className={`text-sm font-bold ${bt === "loud" ? "text-accent" : "text-white"}`}>{fmt(p.priceCents)}</div>
                         <div className="text-[10px] text-slate-500">
                           {p.ship == null ? (
                             shippingPolicyUrl(p.retailer) ? (
@@ -936,7 +944,15 @@ function QuickViewModal({
                     cheapest price" fix as the full card page — history is a
                     daily import snapshot, inStock[0] is this modal's own
                     live cheapest row, already sorted price-ascending above. */}
-                <PriceChart points={history} currency={currency} compact nowOverrideCents={inStock[0]?.priceCents ?? null} rawCardHistory />
+                <PriceChart
+                  points={history}
+                  reference={marketHistory}
+                  referenceLabel={country === "US" ? "TCGplayer market" : "TCGplayer market (converted)"}
+                  currency={currency}
+                  compact
+                  nowOverrideCents={inStock[0]?.priceCents ?? null}
+                  rawCardHistory
+                />
               </div>
             )}
 

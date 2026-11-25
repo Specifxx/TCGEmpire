@@ -52,6 +52,9 @@ on:
         required: true
         default: AU
         options: [AU, US, UK, CA, EU, SG, all]
+      stores:
+        description: "Only these store keys (comma-separated, one market). Their rebuilt snapshot lines are printed to the log, for adding a new store without downloading the artifact."
+        required: false
 
 permissions:
   contents: read
@@ -75,7 +78,7 @@ jobs:
       - run: npm ci
 
       - name: Probe ${{ matrix.market }} checkouts
-        run: npx tsx scripts/probe-shipping-rates.ts --market=${{ matrix.market }} --out=shipping-${{ matrix.market }}.json
+        run: npx tsx scripts/probe-shipping-rates.ts --market=${{ matrix.market }} ${{ inputs.stores && format('--store={0}', inputs.stores) || '' }} --out=shipping-${{ matrix.market }}.json
 
       - name: Compare with the checked-in snapshot
         run: |
@@ -83,6 +86,13 @@ jobs:
             --base=src/lib/shipping-rates.json \
             --out=shipping-rates.${{ matrix.market }}.json \
             --summary="$GITHUB_STEP_SUMMARY"
+
+      - name: Print the probed stores' rebuilt lines
+        if: inputs.stores
+        env:
+          STORES: ${{ inputs.stores }}
+        run: |
+          for k in ${STORES//,/ }; do grep "^\"$k\":" shipping-rates.${{ matrix.market }}.json || echo "$k: no line"; done
 
       - uses: actions/upload-artifact@v4
         if: always()

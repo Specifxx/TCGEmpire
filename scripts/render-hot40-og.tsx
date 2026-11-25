@@ -44,6 +44,17 @@ async function main() {
   writeFileSync(out, Buffer.from(await res.arrayBuffer()));
   console.log(`wrote ${out}`);
 
+  // Since 2026-11-20 a snapshot also freezes the week's biggest drops: the split layout.
+  const drops = [
+    { id: "d1", slug: "d1", displayName: "Jinx, Demolitionist (Overnumbered)", setCode: "OGN", collectorNumber: "301/298", imageThumbUrl: null, nowCents: 4200, refCents: 6100, pct: -31.1, currency: "AUD" },
+    { id: "d2", slug: "d2", displayName: "Teemo, Swift Scout", setCode: "OGN", collectorNumber: "005/298", imageThumbUrl: null, nowCents: 899, refCents: 1150, pct: -21.8, currency: "AUD" },
+    { id: "d3", slug: "d3", displayName: "Garen, Rugged", setCode: "OGN", collectorNumber: "006/298", imageThumbUrl: null, nowCents: 350, refCents: 420, pct: -16.7, currency: "AUD" },
+  ];
+  const split = new ImageResponse(<Hot40Image picks={picks} drops={drops} dateLabel="20 November 2026" />, HOT40_SIZE);
+  const splitOut = out.replace(/\.png$/, "-drops.png");
+  writeFileSync(splitOut, Buffer.from(await split.arrayBuffer()));
+  console.log(`wrote ${splitOut}`);
+
   const empty = new ImageResponse(<Hot40Image picks={[]} dateLabel={null} />, HOT40_SIZE);
   const fallback = out.replace(/\.png$/, "-fallback.png");
   writeFileSync(fallback, Buffer.from(await empty.arrayBuffer()));

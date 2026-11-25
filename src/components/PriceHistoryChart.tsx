@@ -1,4 +1,4 @@
-import { getPriceHistory } from "@/lib/price-history";
+import { getPriceHistory, getTcgMarketHistory } from "@/lib/price-history";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import type { MarketRow } from "@/lib/market-rows";
 import { LocalizedPriceHistory } from "./LocalizedPriceHistory";
@@ -19,6 +19,7 @@ export async function PriceHistoryChart({ cardId, rows }: { cardId: string; rows
     <LocalizedPriceHistory
       cardId={cardId}
       initialPoints={recentWindow(points)}
+      initialMarket={recentWindow(getTcgMarketHistory(cardId, DEFAULT_COUNTRY))}
       initialOlderFrom={olderFrom(points)}
       initialCountry={DEFAULT_COUNTRY}
       rows={rows}

@@ -149,17 +149,29 @@ async function fetchRemaining(): Promise<number | null> {
 // down to the full reserve by design, and a sweep held to the same line found
 // a budget of 0 and stored nothing (2026-10-31, DECISIONS.md "The auction sweep
 // spends from the reserve").
+//
+// `hold` (SEALED FIRST, owner 2026-11-19: "everything goes to sealed products first … singles have TCGplayer and
+// store prices") is a further number of calls the SINGLES passes leave untouched for the sealed pass that runs after
+// them in the same workflow, so a growing card catalogue can never spend the calls sealed needs. It is only the
+// singles' cut: the sealed pass primes with no hold and spends it.
+export const SEALED_EBAY_HOLD = Math.max(0, Number(process.env.EBAY_SEALED_HOLD ?? 500) || 0);
+/** The spendable calls for a pass: live remaining minus the reserve and any hold; the fallback budget when unknown. */
+export function budgetFromRemaining(remaining: number | null, reserve: number, hold = 0, fallback = FALLBACK_BUDGET): number {
+  if (remaining == null) return Math.max(0, fallback - hold);
+  return Math.max(0, remaining - reserve - hold);
+}
 export async function primeEbayBudget(
-  opts: { reserve?: number } = {},
+  opts: { reserve?: number; hold?: number } = {},
 ): Promise<{ remaining: number | null; budget: number }> {
   rateLimited = false;
   spentThisRun = 0;
   const reserve = opts.reserve ?? QUOTA_RESERVE;
+  const hold = Math.max(0, opts.hold ?? 0);
   const remaining = await fetchRemaining();
-  spendable = remaining == null ? FALLBACK_BUDGET : Math.max(0, remaining - reserve);
+  spendable = budgetFromRemaining(remaining, reserve, hold);
   if (spendable <= 0) rateLimited = true;
   console.log(
-    `eBay quota: ${remaining ?? "unknown"}/5000 remaining today → budget ${spendable} calls this run (reserve ${reserve}).`
+    `eBay quota: ${remaining ?? "unknown"}/5000 remaining today → budget ${spendable} calls this run (reserve ${reserve}${hold ? `, ${hold} held for sealed` : ""}).`
   );
   return { remaining, budget: spendable };
 }
@@ -1216,6 +1228,72 @@ export function wrongBoosterCaseQuantity(title: string): boolean {
   return packs.length > 0 && !packs.includes(144);
 }
 
+// THE LISTING MUST BE ONE OF THE PRODUCT (2026-11-22). The 21 Nov sealed export held eBay rows that were real Riftbound
+// listings of another product, filed under the group searched for:
+//   • another champion's deck: "… Set 1 Origins Jinx Champion Deck" (eBay AU) as the Lee Sin deck's cheapest. A Champion
+//     Deck's type names its champion, and no keyword filtered it, so any "Riftbound … Champion Deck" passed;
+//   • a deck out of its box: "BRICK ONLY … Champion Deck (Viktor)";
+//   • more than one: "Nexus Night Packs bundle of 10" (eBay US, US$95) as one Nexus Night Pack and as the Unleashed Bundle,
+//     "Nexus Night Kit - 47 Sealed Packs 1 Open pack" (US$249.95) as one pack, "Set of 2 … Starter Decks" as one Starter
+//     Set, "Starter Set 1000 cartas" (a card lot);
+//   • a slab by a smaller grader: "ARCANE BOX SET JINX - REBEL PCG 9.5".
+// Each rule only refuses, and each was checked against every other title of that type in the export (none refused).
+// Champion names: longest first so "Viktor"/"Vex" win before the short "Vi". Shared with classifySealed.
+export const SEALED_DECK_CHAMPIONS = /\b(Lee\s*Sin|Tryndamere|Viktor|Rumble|Fiora|Garen|Annie|Ashe|Lux|Master\s*Yi|Shyvana|Vayne|Jinx|Vex|Vi)\b/i;
+const flatName = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
+// One unit of these is a single pack or a single deck: a stated count of more than one is another product.
+const ONE_PACK_OR_DECK = /^(?:Booster Pack|Nexus Night Pack|Promo Pack|Sleeved Booster|Champion Deck(?: \([^)]+\))?|Trial Deck(?: \([^)]+\))?)$/;
+// One unit of these is one item, though its title may list what is inside ("Bundle (10 boosters)").
+const ONE_ITEM = /^(?:Bundle|Box Set|Starter Set|Tin|Proving Grounds(?: 2nd Edition)?|Vault)$/;
+const NUM_WORDS: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, ten: 10, twelve: 12 };
+const countOf = (s: string) => NUM_WORDS[s.toLowerCase()] ?? Number(s);
+const GROUP_OF = /\b(?:set|bundle|lot|pack|bulk|case|box)\s+of\s+(\d{1,3}|two|three|four|five|six|ten|twelve)\b/gi;
+const TIMES = /(?<![\d.])\b(\d{1,3})\s*x\b(?!\s*\d)|\bx\s*(\d{1,3})\b/gi;
+const PLURAL_UNITS = /(?<![\d.])\b(\d{1,3})\s+(?:sealed\s+)?(?:(?:booster|nexus\s+night|promo|champion)\s+)?(?:packs|boosters|decks)\b/gi;
+const SMALL_GRADER = /\bpcg\s*\d/i;
+const LOOSE_DECK = /\bbrick\s*only\b/i;
+const OPENED_PACK = /\bopen\s+(?:packs?|box)\b/i;
+const CARD_LOT = /\b\d{3,}\s*(?:cards|cartas|karten|cartes|carte)\b/i;
+
+/** Why an eBay title is not ONE of `productType`, or null when nothing in it says so. Pure; refuses only. */
+export function wrongSealedEbayProduct(title: string, productType: string): string | null {
+  const t = title ?? "";
+  if (SMALL_GRADER.test(t)) return "graded";
+  if (LOOSE_DECK.test(t)) return "brick only";
+  if (OPENED_PACK.test(t)) return "opened";
+  if (CARD_LOT.test(t)) return "card lot";
+  const champ = productType.match(/^(?:Champion|Trial) Deck \(([^)]+)\)(?: Display)?$/)?.[1];
+  // Only a real champion: TCGplayer-derived groups such as "Champion Deck (Set 1)" or "(Eng)" name none, and keep eBay.
+  if (champ && new RegExp(`^(?:${SEALED_DECK_CHAMPIONS.source})$`, "i").test(champ)) {
+    const target = flatName(champ);
+    const named = new Set([...t.matchAll(new RegExp(SEALED_DECK_CHAMPIONS.source, "gi"))].map((m) => flatName(m[1])));
+    const says = named.has(target) || new RegExp(`\\b${champ.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*")}\\b`, "i").test(t);
+    if (!says) return "another champion";
+    if ([...named].some((n) => n !== target)) return "another champion";
+  }
+  // A set's generic Champion Deck group (store titles that name no champion: "Origins Champion Deck") is searched as
+  // "Riftbound Origins Champion Deck", and eBay answered with one champion's deck ("… Origins Jinx Champion Deck",
+  // "Unleashed Champion Deck (Vi)"): 16 such rows on 5 sets' generic pages in the 22 Nov export, each a product the
+  // champion's own group already prices. A deck display ("Champion Deck Display: Zed vs.") is not one deck either.
+  if (productType === "Champion Deck") {
+    if (SEALED_DECK_CHAMPIONS.test(t)) return "a champion's own deck";
+    if (/\bdisplay\b/i.test(t)) return "a display";
+  }
+  // OGN|Box Set (Fire and Dice's "Arcane Box Set - Origins: Promos") took two eBay booster boxes (EUR 449, GBP 208.70):
+  // a title that says booster box or display and never "box set" is the set's booster box.
+  if (productType === "Box Set" && /booster\s*(?:box|display)|display\s*box/i.test(t) && !/box\s*set/i.test(t)) return "a booster box";
+  const single = ONE_PACK_OR_DECK.test(productType);
+  if (single || ONE_ITEM.test(productType)) {
+    const counts = [...t.matchAll(GROUP_OF)].map((m) => countOf(m[1]));
+    if (single) {
+      counts.push(...[...t.matchAll(TIMES)].map((m) => Number(m[1] ?? m[2])));
+      counts.push(...[...t.matchAll(PLURAL_UNITS)].map((m) => Number(m[1])));
+    }
+    if (counts.some((n) => n > 1)) return "more than one";
+  }
+  return null;
+}
+
 export async function searchEbaySealed(
   name: string,
   productType: string,
@@ -1301,12 +1379,17 @@ export async function searchEbaySealed(
     // language search (proxy/sleeve/empty/accessory/…) — only the language-word
     // branch is dropped, since that's exactly what CN/KR are searching for.
     .filter((it) => !(language ? SEALED_EXCLUDE_EBAY_BASE : SEALED_EXCLUDE_EBAY).test(sealedExclusionText(it.title ?? "")))
+    // A graded slab is a single card in a case, never the sealed product (2026-11-20: a PSA 9 Teemo at US$1,264.95 on
+    // the Origins Nexus Night Pack page, a PSA 10 Poro on the Secret Garden Box's). A language search drops it too.
+    .filter((it) => !isGradedListing(it.title ?? ""))
     .filter((it) => (language ? LANGUAGE_SIGNAL[language].test(it.title ?? "") : !isForeignListing(it)))
     // Price-sanity: drop anything below the per-type / reference floor (the $22
     // "booster box" accessory class).
     .filter((it) => Math.round(parseFloat(it.price.value) * 100) >= floor)
     // A case of another quantity (a "Case of 4", two cases, a sleeved display) is not the six-box case.
     .filter((it) => productType !== "Booster Case" || !wrongBoosterCaseQuantity(it.title ?? ""))
+    // Another champion's deck, a loose deck, a lot or a bundle of several, an opened pack, a small grader's slab.
+    .filter((it) => !wrongSealedEbayProduct(it.title ?? "", productType))
     .sort((a, b) => delivered(a) - delivered(b));
 
   // Secondary net for a low outlier that cleared the floor (e.g. a mis-listed item in

@@ -10,8 +10,8 @@ import { Navbar } from "@/components/Navbar";
 import { PhoneDockAds } from "@/components/PhoneDockAds";
 import { BottomNav } from "@/components/BottomNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
-import { HOME_AB_BOOT_SCRIPT } from "@/lib/home-ab";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
+import { IMG_FALLBACK_SCRIPT } from "@/lib/img-fallback";
 import { AD_FREE_BOOT_SCRIPT, MOBILE_AD_INTENTS_SCRIPT, MOBILE_NO_VIGNETTE_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
@@ -23,6 +23,7 @@ import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
+import { DiscordCta } from "@/components/DiscordCta";
 import { BOTTOM_NAV, CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION, IMPACT_SITE_VERIFICATION_2 } from "@/lib/affiliate";
 import { FooterNav } from "@/components/FooterNav";
@@ -43,6 +44,8 @@ import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED, ADSENSE_SERVING } from "@/lib/adsense";
 import NextTopLoader from "nextjs-toploader";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
+import { AdRouteGate } from "@/components/AdRouteGate";
+import { EbayBtnArm } from "@/components/EbayBtnArm";
 
 // Not needed for the initial paint or SEO: the alert modal only opens in
 // response to a PriceWatchButton click. ssr:false + dynamic import keeps it out
@@ -69,6 +72,8 @@ const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then(
 const RateUsStrip = dynamic(() => import("@/components/RateUsStrip").then((m) => m.RateUsStrip), {
   ssr: false,
 });
+// The giveaway's one corner card while it is open (owner, 2026-11-22; lib/giveaway-prompt.ts): browser-only.
+const GiveawayPrompt = dynamic(() => import("@/components/giveaway/GiveawayPrompt").then((m) => m.GiveawayPrompt), { ssr: false });
 const RateUsPrompt = dynamic(() => import("@/components/RateUsPrompt").then((m) => m.RateUsPrompt), {
   ssr: false,
 });
@@ -376,10 +381,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             light), so the page never flashes the wrong palette. Generated in
             src/lib/theme-shared.ts. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
-        <script dangerouslySetInnerHTML={{ __html: HOME_AB_BOOT_SCRIPT }} />
         {/* Seasonal theme (Halloween until 31 October): data-season on <html>
             from the visitor's own date, before first paint. lib/season.ts. */}
         <script dangerouslySetInnerHTML={{ __html: SEASON_BOOT_SCRIPT }} />
+        {/* A broken image retries once, then shows the site mark (lib/img-fallback.ts, UX review 2026-11-24). */}
+        <script dangerouslySetInnerHTML={{ __html: IMG_FALLBACK_SCRIPT }} />
       </head>
       {/* suppressHydrationWarning: MOBILE_AD_INTENTS_SCRIPT below may add one
           class (google-anno-skip) before React hydrates. */}
@@ -410,7 +416,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             2px, no spinner (the fade in template.tsx is the rest of the
             feedback). zIndex 200 matches the skip link's own z-[200] above —
             it must win over every overlay's backdrop, including a modal. */}
-        <NextTopLoader color="#ef7d00" height={2} showSpinner={false} shadow={false} zIndex={200} />
+        <NextTopLoader color="#1ea65c" height={2} showSpinner={false} shadow={false} zIndex={200} />
         <PremiumProvider>
         <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>
@@ -422,9 +428,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Navbar />
                 {/* The phone dock (PhoneDockAds.tsx; owner, 2026-11-06): browser-only, narrow screens, after a scroll, never on a product page;
                     none for ad-free members. The side rails are gone (2026-11-13). */}
-                <PhoneDockAds />
+                <AdRouteGate><PhoneDockAds /></AdRouteGate>
                 {/* The phone bottom nav (BottomNav.tsx; owner, 2026-11-18): browser-only, phones only, behind BOTTOM_NAV in lib/site.ts. */}
                 {BOTTOM_NAV !== "off" && <BottomNav mode={BOTTOM_NAV} />}
+                {/* The eBay-button A/B (lib/ebay-btn.ts, 2026-11-19): sets <html data-ebaybtn> in the browser. */}
+                <EbayBtnArm />
                 {/* No announcement ribbon here any more — the homepage's Vendetta
                     block (right under the hero) carries the "it's here" message
                     with real prices instead of a repeating marquee claim. */}
@@ -436,11 +444,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       homepage's full-bleed hero (-mt-6) never slides over it. */}
                   <HolidayStrip />
                   <main id="main-content" className="container-app min-w-0 py-6">
-                    {/* The two big ad banners (owner, 2026-11-14) at the TOP of every page that does not place them itself (policy and
-                        trust pages carry none, FooterAds' BANNER_FREE_ROUTES, owner decision 2026-09-26). The market comes from the client
-                        country context, so the layout stays cookie-free and cacheable. */}
-                    <InlineAdsZone />
                     {children}
+                    {/* The two ad banners sit BELOW every page's own content (owner, 2026-11-19: "all the ads that can negatively
+                        impact our indexing let's remove and have more strategically placed ads"), on pages that do not place them
+                        themselves; policy and trust pages carry none. Client country context, so the layout stays cacheable. */}
+                    <InlineAdsZone />
                     {/* "Rate us" at the end of every page's content: in the
                         page, never a pop-up; gone once this browser rated. */}
                     <RateUsStrip />
@@ -464,6 +472,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {/* The one uninvited opinion ask: a corner rating card, only
                     after real engagement, at most twice (lib/rate-prompt.ts). */}
                 <RateUsPrompt />
+                {/* The giveaway card shares the rating card's one-interruption-a-visit slot (lib/giveaway-prompt.ts). */}
+                <GiveawayPrompt />
                 {/* A fixed bottom tab bar USED TO BE here (<BottomTabBar />).
                     Removed outright: three successive attempts to keep a fixed
                     bottom bar pinned on a phone all failed (see
@@ -483,6 +493,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* "Was this page useful?" (owner, 2026-11-18: more feedback). One inline line, never a pop-up. */}
           <div className="mb-6 flex justify-center text-left text-sm text-slate-300"><FeedbackAsk email={CONTACT_EMAIL} /></div>
           <NewsletterSignup siteName="RiftCompare" />
+          <DiscordCta className="mx-auto mb-6 max-w-2xl" />
           {/* Site-map — surfaced here so every page links to every feature even
               now that no rail lists them (and on a phone, where none ever did). 4 columns
               on desktop, collapsible accordions on mobile — see FooterNav /

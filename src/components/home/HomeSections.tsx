@@ -1,7 +1,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Reveal } from "@/components/Reveal";
-import { HomeAdSlot } from "@/components/HomeAdSlot";
+import { InlineAds } from "@/components/InlineAds";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { SETS, hasSetGallery, hasSetHub, newestReleasedSet, nextUpcomingSet, showsAsNew } from "@/lib/constants";
@@ -37,8 +37,6 @@ export interface HomeSectionsProps {
   popularCards: CardTileData[];
   /** The featured set's chase cards (lib/cheapest-cards.ts getSetChaseTiles):
    *  the popular-cards strip's first tab when there are any. */
-  chaseCards?: CardTileData[];
-  chaseSet?: { name: string; slug: string } | null;
   /** Emit the "Most popular Riftbound cards" ItemList JSON-LD. False where the
    *  page's "Riftbound card prices today" table already lists these cards and
    *  owns that markup (2026-09-24); the carousel came back on 2026-09-26 as a
@@ -77,8 +75,6 @@ export function HomeSections({
   storeCount,
   storeWord,
   popularCards,
-  chaseCards = [],
-  chaseSet = null,
   popularItemList = true,
   showTopDeals = true,
   showEbayPicks = true,
@@ -123,9 +119,6 @@ export function HomeSections({
 
   return (
     <>
-      {/* The two big ad banners (owner, 2026-11-14), eBay and TCGplayer apart: the first thing under the hero, the newest set's chase
-          cards. Every home renders them here. */}
-      {showEbayPicks && <HomeAdSlot arm="top" />}
 
       {/* Recently viewed WAS the first thing here (2026-09-19 to 2026-09-28).
           Removed from the homepage on the owner's instruction ("get rid of
@@ -184,7 +177,6 @@ export function HomeSections({
           behind the two commercial units, and is still the section that sends
           the most visitors into card pages. */}
       <PopularCardsCarousel
-        chase={chaseSet ? { cards: chaseCards, setName: chaseSet.name, setSlug: chaseSet.slug } : null}
         allTime={popularCards}
         movers={biggestMovers}
         recentlyUpdated={recentlyUpdatedCards}
@@ -192,15 +184,16 @@ export function HomeSections({
         storeWord={storeWord}
       />
 
-      {/* Today's Top Deals sit BELOW the chase cards on every home (owner, 2026-11-16). */}
+      {/* Today's Top Deals sit BELOW the popular-cards strip on every home (owner, 2026-11-16; the chase tab left it 2026-11-20). */}
       {showTopDeals && anyDeals && (
         <Reveal>
           <TodaysTopDeals dealsByCountry={Object.fromEntries(Object.entries(topDealsByCountry).map(([c, d]) => [c, topDealsForGrid(d)])) as Record<Country, TopDeals>} />
         </Reveal>
       )}
 
-      {/* The same banner pair, for the half of visitors in the "low" arm of the position test (HomeAdSlot): CSS shows exactly one slot. */}
-      {showEbayPicks && <HomeAdSlot arm="low" />}
+      {/* The two ad banners, below the chase cards and Today's Top Deals for every visitor (owner, 2026-11-19: ads that can hurt
+          indexing out, the rest placed lower). The top-vs-low position test ended here; "low" stays in the tags so clicks compare. */}
+      {showEbayPicks && <InlineAds pageType="homepage" arm="low" />}
 
       {/* Real, consented, approved reviews — renders NOTHING when there are
           none (see ReviewsSection); no placeholder or seeded example. Moved up

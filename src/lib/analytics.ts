@@ -57,6 +57,10 @@ import { rememberPremiumSurface } from "./premium-surface";
 // sign_up do; GA4 (no per-event billing) is where high-cardinality usage
 // telemetry like this belongs.
 const GA4_ONLY_EVENTS = new Set([
+  // The card page's after-click follow-up (BuyFollowUp, 2026-11-22): GA4 only.
+  "buy_followup_shown",
+  "buy_followup_collection",
+  "buy_followup_signin",
   // /premium's per-view and per-interaction events (2026-10-23): GA4 only, like
   // the slide-in impressions; its CTA clicks and demo runs go to both.
   "premium_page_view",
@@ -80,11 +84,29 @@ const GA4_ONLY_EVENTS = new Set([
   "creator_apply",
 ]);
 
+// VERCEL DROPS AN EVENT WITH MORE THAN 16 PROPERTIES, silently and whole (measured 2026-11-20 with probe events: 16
+// arrived, 17, 18 and 19 never did). From 18 Nov the A/B arms on buy_click pushed card-row clicks to 19-21 properties,
+// so every quick-view and card-table buy click vanished from Vercel while sealed rows (fewer properties) still counted.
+// Vercel gets at most VERCEL_MAX_PROPS: the keys in VERCEL_DROP_FIRST go first, then any key past the limit. GA4 still
+// gets every key. tests/analytics-props.test.ts pins it.
+export const VERCEL_MAX_PROPS = 16;
+const VERCEL_DROP_FIRST = ["transport_type", "card_id", "condition", "variant", "dock_arm", "ebay_btn", "in_stock", "campaign"];
+export function forVercel(data: Record<string, string | number | boolean> | undefined): Record<string, string | number | boolean> | undefined {
+  if (!data) return data;
+  const keys = Object.keys(data);
+  if (keys.length <= VERCEL_MAX_PROPS) return data;
+  const drop = new Set<string>();
+  for (const k of VERCEL_DROP_FIRST) if (keys.length - drop.size > VERCEL_MAX_PROPS && k in data) drop.add(k);
+  const kept = keys.filter((k) => !drop.has(k)).slice(0, VERCEL_MAX_PROPS);
+  return Object.fromEntries(kept.map((k) => [k, data[k]]));
+}
+
 export function trackEvent(name: string, params?: Record<string, string | number | boolean | undefined>): void {
   const cleaned = params
     ? (Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string | number | boolean>)
     : undefined;
-  if (!GA4_ONLY_EVENTS.has(name)) vercelTrack(name, cleaned);
+  vaQueue();
+  if (!GA4_ONLY_EVENTS.has(name)) vercelTrack(name, forVercel(cleaned));
   if (typeof window !== "undefined") window.gtag?.("event", name, cleaned);
   // A buy click by a visitor a creator sent counts toward that creator's revenue
   // share (lib/creator-payout.ts). Only those visitors carry the cookie.
@@ -124,4 +146,20 @@ export function firePremiumClickBeacon(source: string): void {
   } catch {
     /* never let the beacon break the click it's attached to */
   }
+}
+
+/**
+ * Vercel's track() drops an event when `window.va` does not exist yet (it calls `window.va?.(…)`), and `window.va` only exists once
+ * <Analytics /> has injected its script, which ConsentGatedAnalytics renders after the consent check, i.e. after the page's own
+ * mount effects. So an event sent on mount (top_seen, 2026-11-19: 0 in Vercel while buy_click carried its arm) was lost every time.
+ * This sets up the same queue the library's own inject() makes (`window.vaq`, drained by the script when it loads); without consent
+ * the script never loads and nothing is sent.
+ */
+export function vaQueue(): void {
+  if (typeof window === "undefined") return;
+  const w = window as unknown as { va?: (...a: unknown[]) => void; vaq?: unknown[][] };
+  if (w.va) return;
+  w.va = (...params: unknown[]) => {
+    (w.vaq = w.vaq || []).push(params);
+  };
 }

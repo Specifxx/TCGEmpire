@@ -115,7 +115,10 @@ test("only sets with a built hub are hubReady: Radiance, and Legacy since 2026-1
   assert.equal(radiance!.hubReady, true);
   // Each comingSoon hubReady set must have its hub component rendered by the set page.
   const page = read("src/app/sets/[set]/page.tsx");
-  const withHub: Record<string, RegExp> = { legacy: /set\.slug === "legacy" && <LegacyHub country=\{country\} \/>/ };
+  const withHub: Record<string, RegExp> = {
+    legacy: /set\.slug === "legacy" && <LegacyHub country=\{country\} \/>/,
+    "the-reckoning": /set\.slug === "the-reckoning" && <ReckoningHub country=\{country\} \/>/,
+  };
   for (const s of SETS.filter((x) => x.slug !== "radiance" && x.comingSoon && x.hubReady)) {
     assert.ok(withHub[s.slug], `${s.name} is hubReady without a hub: it would be indexable while empty`);
     assert.match(page, withHub[s.slug]);
@@ -133,8 +136,9 @@ test("the noindex guard flips ONLY for a hubReady set — every other empty set 
 
 test("FAQPage JSON-LD is emitted only for the hub sets, from the same arrays the visible FAQs render", () => {
   const src = read("src/app/sets/[set]/page.tsx");
-  assert.match(src, /set\.slug === "radiance" \? faqPage\(RADIANCE_FAQ\) : set\.slug === "legacy" \? faqPage\(LEGACY_FAQ\) : null/);
+  assert.match(src, /set\.slug === "radiance" \? faqPage\(RADIANCE_FAQ\) : set\.slug === "legacy" \? faqPage\(LEGACY_FAQ\) : set\.slug === "the-reckoning" \? faqPage\(RECKONING_FAQ\) : null/);
   assert.match(read("src/components/sets/LegacyHub.tsx"), /<HubFaq faqs=\{LEGACY_FAQ\}/);
+  assert.match(read("src/components/sets/ReckoningHub.tsx"), /<HubFaq faqs=\{RECKONING_FAQ\}/);
   assert.match(src, /breadcrumb, collection, \.\.\.\(faqLd \? \[faqLd\] : \[\]\)/);
 });
 

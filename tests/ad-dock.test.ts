@@ -31,7 +31,8 @@ test("the phone dock: narrow screens only, never on the first screen, never besi
   assert.match(s, /surface="ad_dock"/);
   assert.match(s, /yieldTo="\[data-ad-placement\], \[data-rate-prompt\]"/, "yields to every ad unit and the rating card");
   assert.match(s, /if \(!narrow \|\| adFree\) return null;/, "never for Plus/Premium");
-  assert.match(d, /\[data-adfree\], \.capacitor-native/, "never for Plus/Premium or in the app");
+  assert.match(d, /stack \? "\[data-adfree\]"/, "never for Plus/Premium");
+  assert.doesNotMatch(d, /\.capacitor-native/, "shown in the Android app like the phone site (2026-11-19: its AdMob banner is gone)");
   assert.match(s, /buybar="\.buybar"/, "never on a card page (the buy bar)");
   assert.match(src("app/globals.css"), /html\[data-ad-dock\] \.above-bottombar/, "the feedback button lifts above it");
   assert.doesNotMatch(d + s, /amazon/i, "no Amazon in the dock");

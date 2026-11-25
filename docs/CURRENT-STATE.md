@@ -32,7 +32,7 @@ longer lands on its entry.
 - **At most one production build every 12 hours, and production only (owner, 2026-11-02):**
   Vercel spend is capped at $5–6 a day; 1 November cost $11.82 after 14 `[deploy]` builds here. The
   ignore script skips a `[deploy]` commit within 12 hours of the last production deployment
-  (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject overrides, only on the owner's word.
+  (`VERCEL_GIT_PREVIOUS_SHA`); `[urgent]` in the subject shortens the wait to 8 hours, only on the owner's word ([2026-11-19](../DECISIONS.md#2026-11-19-urgent-needs-eight-hours-too-a-network-ceiling-of-57-builds-a-day)).
   `vercel.json` sets `"**": false` with `"main": true`, so no branch or pull request builds a
   preview, `[preview]` included. [2026-11-02](../DECISIONS.md#L21685)
 - **The after-deploy check reads the public site (2026-11-13):** `seo-preview-gate.yml` checks a
@@ -112,6 +112,7 @@ longer lands on its entry.
   [2026-09-18](../DECISIONS.md#L8523), [2026-09-22](../DECISIONS.md#L10455)
 
 - **Home lists rank by demand × value (owner, 2026-11-18):** `src/lib/home-rank.ts` (same file in every repo) orders each home list by product page views and buy clicks (`data/demand.json`, from `/api/demand/<site>`, `src/lib/analytics/item-demand.ts`) times stock, paid rows, price and recency; one exploration slot in eight; `NEXT_PUBLIC_HOME_RANK=off` turns it off. [2026-11-18](../DECISIONS.md#2026-11-18-home-pages-rank-items-by-demand-owner-the-most-popular-items-should-be-on-the-homepage-in-that-order)
+- **eBay calls go to sealed first (owner, 2026-11-19):** the singles passes prime with `hold: SEALED_EBAY_HOLD` (500) so the sealed pass after them always has its calls; the 600 live-remaining reserve is the hard stop. Cards get eBay only from what sealed leaves. [2026-11-19](../DECISIONS.md#ebay-calls-go-to-sealed-first-the-most-popular-first-cards-get-what-is-left-2026-11-19-owner)
 
 ## Databases
 
@@ -169,7 +170,7 @@ longer lands on its entry.
   more), links only to the site (no eBay or Amazon), inside 20 of the service's 30 daily mails. `SisterDigest`, `SisterDigestEdition`.
   [2026-11-08](../DECISIONS.md#L22993)
 - **Live names** (since 2026-11-16; `src/lib/db-chains.ts` is the source of
-  truth): operational `RM12`, one variable, never a chain, because
+  truth): operational `RM9`, one variable, never a chain, because
   `resolveVar()` takes the first SET variable, not the first healthy one.
   History: `HISTORY_DATABASE_URL_4`, then `_3`, then `DATABASE_URL`
   (terminal). Never rotate onto `DATABASE_URL`.
@@ -293,6 +294,11 @@ longer lands on its entry.
   after entitlement and never fatal. The intro coupon, when on, keeps the one
   discount slot. Paid out by hand ("Mark paid"). All four tables private.
   [2026-10-16](../DECISIONS.md#L17655)
+- **Pay-per-click creators (2026-11-20, owner):** paid only per tracked buy click (default
+  A$0.04, A$25 trial cap) or a creator code, A$300 a month in all; a creator's link
+  (`utm_medium=creator`) tags their visitors' sub-ids `cr<handle6>`, and the "Paid creators"
+  panel on /admin/earnings sets paid ("Creators" costs naming `[id]`) against real tagged sales;
+  under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24883)
 - **RiftCompare Premium at $4.99/mo or $39.99/yr with a free 14-day trial again (owner,
   2026-11-05: "use something that we used early on which had the best
   retention"; August's setup, 7 of 7 trials paid):** the
@@ -311,6 +317,9 @@ longer lands on its entry.
   on return from a store tab from the second page of a visit, at most twice 30
   days apart, and is the one uninvited opinion ask
   ([2026-11-03](../DECISIONS.md#one-interruption-per-visit-never-on-arrival));
+  while a giveaway is open its corner card shares that one slot (from a visit's second page, at most three times two
+  days apart, never on the home page, giveaway, account or Premium pages, never after an entry), and the home page
+  carries its banner under the hero ([2026-11-22](../DECISIONS.md#2026-11-22-giveaway-on-the-home-page-and-one-corner-card); entries are points, one RiftCompare account for five sites' giveaways (Rift, Dex, MTG, YGO, OP), every two months, drawn from a public drand number, the winner claiming by a private address form ([2026-11-22](../DECISIONS.md#2026-11-22-giveaways-on-five-sites-by-points-drawn-in-public));
   a tapped star counts even when the form is closed unsent ([2026-10-28](../DECISIONS.md#L20608)); one rating-and-review form everywhere (corner card,
   footer panel, a "Rate us" row at the end of every page except the home pages (2026-11-13), /feedback), reviews
   shown unless unticked, still admin-approved ([2026-10-27](../DECISIONS.md#L20240)); no floating button ([2026-10-27](../DECISIONS.md#L20201)); the homepage hero and the
@@ -353,10 +362,13 @@ longer lands on its entry.
 - **Free 14-day trial (2026-10-12; replaces the $1 first month below):**
   `PREMIUM_TRIAL_DAYS` 14 and `PREMIUM_TRIAL_FEE_CENTS` 0 by default, card
   required, prices unchanged. Leave price, trial and pitch alone until two
-  14-day cohorts have matured (late November). Since 2026-10-27 `/admin/premium-offer` sends
-  the feedback + Pro email instead (one-tap star rating, then Pro at its own
-  prices, no trial, no affiliate links) to every non-paying account.
-  [2026-10-27](../DECISIONS.md#feedback-and-pro-email-to-registered-accounts--2026-10-27) `/premium/welcome` leads with
+  14-day cohorts have matured (late November). Since 2026-11-21 `/admin/premium-offer` is the one
+  Premium email page: the showcase email (live Deal Finder snippet, feature list, Premium at its own
+  prices, no trial, no affiliate links) to every non-paying account, newest first, plus the win-back console.
+  [2026-11-21](../DECISIONS.md#2026-11-21-one-premium-email-page-the-showcase-email-with-a-live-deal-finder-snippet-newest-members-first)
+  It and the one-off dormant watchlist recap are the ONLY marketing sends let past `MARKETING_EMAIL_OFF` (`MARKETING_ALLOWED`); every other promotional
+  sender stays off. [2026-11-22](../DECISIONS.md#2026-11-22-the-premium-email-is-the-one-marketing-send-turned-back-on)
+  [2026-11-22](../DECISIONS.md#2026-11-22-the-watchlist-recap-is-let-through-the-owner-said-yes) `/premium/welcome` leads with
   watching a card until the account has one. [2026-10-12](../DECISIONS.md#L16934)
 - **Superseded 2026-10-12, kept for its mechanics: the $1 first month, no intro (2026-09-30, owner: "Can we do $1 free trial for both
   pro and premium please? And the trial is for the first month?"):** a PAID trial on
@@ -668,7 +680,7 @@ longer lands on its entry.
   Basket's preview (`limit:basket`, leading with the list's own saving) and
   the tool walls — the header's Pricing callout (`PricingNudge`) and the
   monthly→annual corner card (`AnnualSwitchNudge`) are GONE since 11-03 (owner:
-  no Pro or sign-up sliders; the rating card is the only uninvited prompt)
+  no Pro or sign-up sliders; the rating card is the only uninvited prompt, beside an open giveaway's card since 11-22)
   ([2026-11-03](../DECISIONS.md#the-trial-on-the-pro-page-and-no-pro-or-sign-up-sliders-at-all-2026-11-03));
   the corner `PremiumSlideIn` is gone — and a tick on a set page (the same
   `limit:portfolio` panel, reworded for a set). The header carries the shiny
@@ -694,9 +706,8 @@ longer lands on its entry.
   carries the pulls, no database row. The owner's outreach list is
   `docs/GROWTH-PLAYBOOK-2026-10.md`. [2026-10-16](../DECISIONS.md#L18158)
 - **Radiance leads (2026-10-17):** `featuredSet()` (upcoming set from its
-  `newFrom`, else newest released) drives eBay Picks and the homepage strip's
-  first tab, "<set> chase cards" (`getSetChaseTiles`, art only); "Most popular"
-  is second. `singlesLive()` (released, or past `newFrom`) gates every card-price
+  `newFrom`, else newest released) drives eBay Picks (the homepage strip's chase tab went
+  2026-11-20: "Most popular" leads). `singlesLive()` (released, or past `newFrom`) gates every card-price
   surface on `/sets/<slug>` and its gallery; sealed copy keeps
   `isPreorderSetCode()`. Signatures (`*`) are in no official feed: add them to
   `prisma/manual-cards.json` with their own `externalId`.
@@ -818,8 +829,11 @@ longer lands on its entry.
   By-surface numbers compare only from 2026-09-26 on (the eBay-only surfaces
   from 09-27). [2026-09-26](../DECISIONS.md#L13640),
   [2026-09-26](../DECISIONS.md#L13751)
-- **eBay and TCGplayer lead every price list** (owner, 2026-10-27): the card
-  page's comparison and the QuickView draw the cheapest eBay row and the
+- **Product pages: stores first, marketplaces below** (owner's UX review, [2026-11-24](../DECISIONS.md#2026-11-24-the-owners-ux-review-on-riftcompare-p0-p1-p2)):
+  the card page and the sealed product page draw the stores in price order, then eBay, TCGplayer and Amazon under a labelled
+  "Marketplaces · Ad" block. The quick views keep the pinned order below.
+- **eBay and TCGplayer lead every price list** (owner, 2026-10-27; product pages since 2026-11-24: above): the
+  QuickView draws the cheapest eBay row and the
   cheapest TCGplayer row, eBay always on top since [2026-11-06](../DECISIONS.md#2026-11-06--ebay-and-amazon-rows-are-full-price-rows-on-top-outlined) (no
   coloured outline since [2026-11-12](../DECISIONS.md#2026-11-12--a-calmer-price-table-owner): only the cheapest row is marked, with a
   green edge; `tcgFirst` is always false; the sealed page's Amazon row second),
@@ -895,7 +909,8 @@ longer lands on its entry.
 - **Footer:** the always-visible row is Home, Blog, Guides, Tools, About us,
   Editorial policy, Methodology, Who writes this, Contact & feedback, Privacy
   policy, Terms of service (the site map stays collapsed on `/`). Privacy and
-  Terms are also in the menu's Help group (`hideInFooter`). The footer's share band is gone (2026-11-13). `InlineAdsZone` (2026-11-13: the footer banner pair is gone, one block per page)
+  Terms are also in the menu's Help group (`hideInFooter`). The footer's share band is gone (2026-11-13). Since 2026-11-19 every page's ad block sits below its own content (`InlineAdsZone` after `{children}`; the
+  home position test ended) and the site map is the short `FOOTER_KEEP` list. `InlineAdsZone` (2026-11-13: the footer banner pair is gone, one block per page)
   renders no ad block on /about, /authors(/*), /contact, /editorial-policy,
   /methodology, /privacy, /support and /terms, nor on `/pokemon` (another game:
   `OFF_TOPIC_ROUTES`). The arcade (/games/*, /riftle) is ad-free for everyone:
@@ -950,7 +965,7 @@ longer lands on its entry.
 - **The phone bottom nav is back, without position arithmetic** (owner, 2026-11-18: `BottomNav.tsx`, `BOTTOM_NAV` in
   `lib/site.ts` is the rollback, `?bn=0`/`?bn=1` per visitor): `fixed; bottom: 0`, transform only, hides on scroll down, zoom,
   keyboard, any dialog, the buy bar and over an Add to cart. Never compute where the browser's chrome is (the 2026-09-18 bar
-  died of that). Its Menu tab presses `HeaderMenuButton`, the one opener. [2026-11-18](../DECISIONS.md#L24186)
+  died of that). Its last tab is Collection (`/portfolio`, owner 2026-11-19), not Menu; `HeaderMenuButton` stays the one menu opener. [2026-11-18](../DECISIONS.md#L24186)
 - **No notification bell** (build a `/notifications` page rather than
   restore it). One control opens `CinematicNavMenu` below lg.
   The one fixed-bottom exception is the card page's owner-requested sticky
@@ -979,7 +994,7 @@ longer lands on its entry.
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417),
   [2026-09-28](../DECISIONS.md#L14549)
 - **Homepage order (all six homes, owner 2026-11-13):** the hero (words, the search, the market switch, six ways in, one
-  line of numbers; no products, chips, creators badge or Premium link), Today's Top Deals, the tabbed chase-cards shelf (it
+  line of numbers; no products, chips, creators badge or Premium link), Today's Top Deals, the tabbed popular-cards shelf, Most popular first since 2026-11-20 (it
   carries the ItemList on `/`), the one ad block, the set grid with the next set's one-line countdown, the guides and news
   card (`EditorialHub`), then the reference text and FAQ folded in `<details>`. Off the homes since 2026-11-13: the
   Pokémon line, the return-visit cards (Riftle, pack simulator, watch a card), the free-account strip, the partners
@@ -1130,6 +1145,9 @@ longer lands on its entry.
   60% of the body (`tests/reddit-landing-conversion.test.ts`). Links posted
   to Reddit should carry `?utm_source=reddit`: the apps often send no
   referrer. [2026-09-26](../DECISIONS.md#L13640)
+- **Snapshot pages and /movers sell:** a "Shop the top risers" strip (top three, today's cheapest in the visitor's
+  market, Buy into the quick view) in the first screen, and a Buy link or pill on every row; nothing new read, caches
+  unchanged. [2026-11-20](../DECISIONS.md#L25011)
 - **RiftboundStocks per-page links:** card, champion and set pages link to
   the same page on RiftboundStocks.com through the map it publishes
   (`lib/riftboundstocks.ts`); no link when there is no match. Copy describes
@@ -1414,6 +1432,12 @@ longer lands on its entry.
 
 ## Removed, declined, kept
 
+- **Card scanner (2026-11-19):** `/scan`, open to everyone signed in (5 a day free, 100 Premium, admins unlimited;
+  `SCAN_PUBLIC=0` closes it); a live viewfinder that finds, outlines and captures the card on its own (`camera=(self)` on `/scan` only); one Haiku 5.5
+  read of name + set + number, our pure matcher picks the printing, the quick view shows prices; never eBay, photo never
+  stored, `SCAN_DAILY_CAP` 1,000 a day. [2026-11-19](../DECISIONS.md#L24530), [2026-11-19 v2](../DECISIONS.md#L24786)
+- **Sister scanner read (2026-11-20):** `POST /api/scan/read` serves TCG Singles DB only (exact origin), one Haiku read, 5 a
+  visitor a day by salted IP hash, 500 a day per sister; the sister matches. [2026-11-20](../DECISIONS.md#L25037)
 - **Meta decks:** never from a hand copy; rebuild a meta/tier list only from
   a licensed source. `/decks` is live again (2026-09-26) as the PLAYER-published
   library only — signed-in publishes and owner imports, nothing seeded, no
@@ -1478,21 +1502,20 @@ longer lands on its entry.
 - **Theme:** dark by default, no `prefers-color-scheme`. Light is a `theme`
   cookie stamped before paint; the root layout never reads cookies.
   [2026-09-12](../DECISIONS.md#L5530)
-- **Brand (2026-10-16):** Riftbound's palette, read from playriftbound.com:
-  teal-navy ink, orange `#ef7d00` as the one accent (`brand-*`; `#f29733` as
-  text on dark), Cinzel headings (the Beaufort stand-in), Inter body. The logo
-  is the R mark (`public/brand/r-mark.svg`, a CSS mask over the `--rc-flame`
-  gold-to-orange gradient) beside "Rift" + "Compare" as live mixed-case text,
-  "Compare" in the same gradient (owner: not all caps). The gradient is
-  decoration only (the logo, the H1's "Riftbound"). Purchases keep the
-  pre-rebrand green, `buy` / `.btn-buy`: every store's buy button, Premium's
-  checkout, the Cheapest and savings chips. eBay stays blue, the header's
-  Premium link gold, and a green that means something (gains, in stock) green.
-  The homepage hero moves (RiftEmbers, `.rb-vortex`, `.rb-flame-live`,
-  `.rb-search-aura`), stilled by reduced motion. Mask classes live in
-  `@layer components`, or they beat `hidden`. `lib/brand.ts` holds the hexes
-  for OG images and email.
-  [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713)
+- **Brand (2026-10-16, green again 2026-11-20):** Riftbound's teal-navy ink,
+  Cinzel headings (the Beaufort stand-in), Inter body, and RiftCompare GREEN as
+  the one accent (`brand-*`, `#1ea65c`; `#34d17e` as text on dark, `#157a45` in
+  light): the owner disliked the rebrand's orange logo and text. The logo is the
+  R mark (`public/brand/r-mark.svg`, a CSS mask over the `--rc-flame` green
+  gradient) beside "Rift" + "Compare" as live mixed-case text, "Compare" in the
+  same gradient (owner: not all caps). The gradient is decoration only (the
+  logo, the H1's "Riftbound"). Purchases use `buy` / `.btn-buy` (the same
+  green): every store's buy button, Premium's checkout, the Cheapest and
+  savings chips. eBay stays blue, the header's Premium link gold. The homepage
+  hero moves (RiftEmbers, `.rb-vortex`, `.rb-flame-live`, `.rb-search-aura`),
+  stilled by reduced motion. Mask classes live in `@layer components`, or they
+  beat `hidden`. `lib/brand.ts` holds the hexes for OG images and email.
+  [2026-10-16](../DECISIONS.md#L17677), [2026-10-16](../DECISIONS.md#L17713), [2026-11-20](../DECISIONS.md#L24935)
 - **Seasons and scroll motion (2026-10-16):** a season is a local-date window
   (`lib/season.ts`; Halloween 16-31 Oct, Christmas 1 Nov to 26 Dec) stamped
   as `data-season` on `<html>` before paint, so it starts and ends with no
@@ -1503,9 +1526,11 @@ longer lands on its entry.
   so a season comes out by deleting them. Christmas is a few tasteful accents
   in the site's own colours (a gift-guide banner, a 3px cranberry/pine
   hairline, the two colours as tokens on the gifts pill and sale strip; one off
-  switch, `CHRISTMAS_FESTIVE_LAYER`): no snow, lights, art, hats, stripes or
-  palette swap, on any sister site; the theme must match the domain
-  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420)).
+  switch, `CHRISTMAS_FESTIVE_LAYER`), plus, since the owner asked on 2026-11-20,
+  a Santa hat on the header's logo and a string of lights under the header
+  (the `xmas-logo` block, CSS only): no snow, art, stripes or palette swap, on
+  any sister site; the theme must match the domain
+  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420), [2026-11-20](../DECISIONS.md#L24952)).
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired

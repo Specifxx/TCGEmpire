@@ -3,11 +3,14 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { applyReferral } from "@/lib/referral";
-import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
+import { onSiteOAuth, providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, sisterRedirectUri, type OAuthProvider } from "@/lib/oauth";
 import { claimAlertsForUser } from "@/lib/alerts";
 import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
 import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
 import { PREMIUM_START_PATH } from "@/lib/premium-start";
+import { appReturnUrl, appFailUrl, isAppUserAgent, mintAppCode, readAppState } from "@/lib/app-auth";
+import { sisterSignupSource } from "@/lib/sister-premium";
+import { sisterFailUrl, sisterForCookie, sisterOAuthCookie, sisterOAuthNextCookie, sisterOAuthViaCookie, sisterReturnUrl } from "@/lib/sister-oauth";
 
 // Where a failed sign-in lands. /login by default — it renders AuthForm, which
 // turns ?error= into a readable message and offers the buttons again.
@@ -26,7 +29,31 @@ function errorBase(req: Request, provider: string): string {
   return next && (next === PREMIUM_START_PATH || next.startsWith(`${PREMIUM_START_PATH}?`)) ? next : "/login";
 }
 
+/** A sign-in started on a sister site (lib/sister-oauth.ts), or null. */
+function sisterOf(provider: string) {
+  return provider ? sisterForCookie(cookies().get(sisterOAuthCookie(provider))?.value) : null;
+}
+
+function clearSister(provider: string) {
+  cookies().set(sisterOAuthCookie(provider), "", { path: "/", maxAge: 0 });
+  cookies().set(sisterOAuthNextCookie(provider), "", { path: "/", maxAge: 0 });
+  cookies().set(sisterOAuthViaCookie(provider), "", { path: "/", maxAge: 0 });
+}
+
+/** The redirect URI the sign-in started with: the sister's own callback when it ran through the sister's address, else Rift's. */
+function webRedirectUri(provider: OAuthProvider): string {
+  const sister = sisterOf(provider);
+  return sister && onSiteOAuth(provider, sister.key) && cookies().get(sisterOAuthViaCookie(provider))?.value === "1"
+    ? sisterRedirectUri(sister.url, provider)
+    : redirectUri(provider);
+}
+
 function fail(req: Request, code: string, provider = "") {
+  const sister = sisterOf(provider);
+  if (sister) {
+    clearSister(provider);
+    return NextResponse.redirect(sisterFailUrl(sister, code));
+  }
   const dest = new URL(errorBase(req, provider), req.url);
   dest.searchParams.set("error", code);
   return NextResponse.redirect(dest);
@@ -34,79 +61,23 @@ function fail(req: Request, code: string, provider = "") {
 
 export async function GET(req: Request, { params }: { params: { provider: string } }) {
   const provider = params.provider;
-  if (!isOAuthProvider(provider) || !isProviderEnabled(provider)) return fail(req, "provider_unavailable");
+  if (!isOAuthProvider(provider) || !isProviderEnabled(provider)) return fail(req, "provider_unavailable", provider);
 
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   const state = searchParams.get("state");
+  // A sign-in from inside the Android app carries a signed state instead of a cookie (lib/app-auth.ts): it may land here in
+  // Chrome's Custom Tab or, as an App Link, in the app's own WebView.
+  const app = await readAppState(state, provider);
+  const inApp = isAppUserAgent(req.headers.get("user-agent"));
   const saved = cookies().get(`oauth_state_${provider}`)?.value;
   cookies().set(`oauth_state_${provider}`, "", { path: "/", maxAge: 0 });
-  if (!code || !state || !saved || state !== saved) return fail(req, "oauth_state", provider);
+  if (!code || !state || (!app && (!saved || state !== saved))) return fail(req, "oauth_state", provider);
+  if (app) return finishAppSignIn(req, provider, code, app.challenge, app.next, inApp);
 
-  const cfg = providerConfig(provider);
-
-  // 1) Exchange the code for an access token.
-  let tok: { access_token?: string };
-  try {
-    const res = await fetch(cfg.tokenUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-      body: new URLSearchParams({
-        client_id: cfg.clientId!,
-        client_secret: cfg.clientSecret!,
-        grant_type: "authorization_code",
-        code,
-        redirect_uri: redirectUri(provider),
-      }),
-    });
-    if (!res.ok) return fail(req, "oauth_token", provider);
-    tok = await res.json();
-  } catch {
-    return fail(req, "oauth_token", provider);
-  }
-  if (!tok.access_token) return fail(req, "oauth_token", provider);
-
-  // 2) Fetch the profile.
-  let profile: Record<string, unknown>;
-  try {
-    const res = await fetch(cfg.userUrl, { headers: { Authorization: `Bearer ${tok.access_token}` } });
-    if (!res.ok) return fail(req, "oauth_profile", provider);
-    profile = await res.json();
-  } catch {
-    return fail(req, "oauth_profile", provider);
-  }
-
-  // 3) Normalise the fields per provider.
-  //
-  // emailVerified is NOT decoration — it is the entire basis on which an EMAIL
-  // MATCH is allowed to hand this sign-in someone's account. Both providers let
-  // an account CLAIM an address it has not proven: Discord returns
-  // `verified:false` on /users/@me until the new address is confirmed, and Google
-  // returns `email_verified:false` for accounts whose address it hasn't
-  // validated. So the address alone says nothing about who owns the inbox —
-  // anyone can point a throwaway account at someone else's address and authorise
-  // from it. It is passed down to upsertOAuthUser, which gates the two branches
-  // that actually consume the address; see the note there for why the gate does
-  // NOT live up here.
-  let providerId: string | undefined;
-  let email: string | undefined;
-  let emailVerified = false;
-  let name: string | undefined;
-  let avatar: string | null = null;
-  if (provider === "google") {
-    providerId = profile.sub as string;
-    email = (profile.email as string)?.toLowerCase();
-    emailVerified = profile.email_verified === true || profile.email_verified === "true";
-    name = profile.name as string;
-    avatar = (profile.picture as string) ?? null;
-  } else {
-    providerId = profile.id as string;
-    email = (profile.email as string)?.toLowerCase();
-    emailVerified = profile.verified === true;
-    name = (profile.global_name as string) || (profile.username as string);
-    avatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : null;
-  }
-  if (!providerId || !email) return fail(req, "oauth_noemail", provider);
+  const who = await identify(provider, code, webRedirectUri(provider));
+  if (typeof who === "string") return fail(req, who, provider);
+  const { providerId, email, emailVerified, name, avatar } = who;
 
   // 4) Find-or-create the user (by provider id, then by email), link the identity,
   // and start their session. Wrapped so a DB blip or a misconfigured AUTH_SECRET
@@ -119,6 +90,17 @@ export async function GET(req: Request, { params }: { params: { provider: string
     if (!linked) return fail(req, "oauth_unverified", provider);
     user = linked.user;
     isNew = linked.isNew;
+    // From a sister site: back there with the emailed link's own code, no RiftCompare session (lib/sister-oauth.ts).
+    const sister = sisterOf(provider);
+    if (sister) {
+      const back = await sisterReturnUrl(sister, user.email, cookies().get(sisterOAuthNextCookie(provider))?.value);
+      clearSister(provider);
+      // A new account made from a sister's Google or Discord button is credited to that sister (lib/sister-premium.ts).
+      if (isNew) void prisma.user.update({ where: { id: user.id }, data: { signupSource: sisterSignupSource(sister.key) } }).catch(() => {});
+      void claimAlertsForUser(user.id, user.email).catch(() => {});
+      void prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
+      return NextResponse.redirect(back);
+    }
     await createSession(user.id);
   } catch {
     return fail(req, "oauth_session", provider);
@@ -173,6 +155,111 @@ export async function GET(req: Request, { params }: { params: { provider: string
   const dest = new URL(next ?? POST_SIGN_IN_FALLBACK, req.url);
   if (isNew) dest.searchParams.set("welcome", provider);
   return NextResponse.redirect(dest);
+}
+
+interface Identity {
+  providerId: string;
+  email: string;
+  emailVerified: boolean;
+  name: string | undefined;
+  avatar: string | null;
+}
+
+// Steps 1-3 of a sign-in, shared by the web and the app flows: the provider's code → its profile → our fields. A string is the
+// error code to show.
+async function identify(provider: OAuthProvider, code: string, redirect = redirectUri(provider)): Promise<Identity | string> {
+  const cfg = providerConfig(provider);
+
+  // 1) Exchange the code for an access token.
+  let tok: { access_token?: string };
+  try {
+    const res = await fetch(cfg.tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+      body: new URLSearchParams({
+        client_id: cfg.clientId!,
+        client_secret: cfg.clientSecret!,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: redirect,
+      }),
+    });
+    if (!res.ok) return "oauth_token";
+    tok = await res.json();
+  } catch {
+    return "oauth_token";
+  }
+  if (!tok.access_token) return "oauth_token";
+
+  // 2) Fetch the profile.
+  let profile: Record<string, unknown>;
+  try {
+    const res = await fetch(cfg.userUrl, { headers: { Authorization: `Bearer ${tok.access_token}` } });
+    if (!res.ok) return "oauth_profile";
+    profile = await res.json();
+  } catch {
+    return "oauth_profile";
+  }
+
+  // 3) Normalise the fields per provider.
+  //
+  // emailVerified is NOT decoration — it is the entire basis on which an EMAIL
+  // MATCH is allowed to hand this sign-in someone's account. Both providers let
+  // an account CLAIM an address it has not proven: Discord returns
+  // `verified:false` on /users/@me until the new address is confirmed, and Google
+  // returns `email_verified:false` for accounts whose address it hasn't
+  // validated. So the address alone says nothing about who owns the inbox —
+  // anyone can point a throwaway account at someone else's address and authorise
+  // from it. It is passed down to upsertOAuthUser, which gates the two branches
+  // that actually consume the address; see the note there for why the gate does
+  // NOT live up here.
+  let providerId: string | undefined;
+  let email: string | undefined;
+  let emailVerified = false;
+  let name: string | undefined;
+  let avatar: string | null = null;
+  if (provider === "google") {
+    providerId = profile.sub as string;
+    email = (profile.email as string)?.toLowerCase();
+    emailVerified = profile.email_verified === true || profile.email_verified === "true";
+    name = profile.name as string;
+    avatar = (profile.picture as string) ?? null;
+  } else {
+    providerId = profile.id as string;
+    email = (profile.email as string)?.toLowerCase();
+    emailVerified = profile.verified === true;
+    name = (profile.global_name as string) || (profile.username as string);
+    avatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : null;
+  }
+  if (!providerId || !email) return "oauth_noemail";
+  return { providerId, email, emailVerified, name, avatar };
+
+}
+
+// The end of a sign-in started inside the Android app (lib/app-auth.ts): the same find-or-create as the web, then a one-time code
+// for the app instead of a session here, since "here" may be Chrome's jar rather than the app's.
+async function finishAppSignIn(
+  req: Request,
+  provider: OAuthProvider,
+  code: string,
+  challenge: string,
+  next: string | null,
+  inApp: boolean
+): Promise<NextResponse> {
+  const failApp = (c: string) => NextResponse.redirect(appFailUrl(c, inApp, req.url));
+  const who = await identify(provider, code);
+  if (typeof who === "string") return failApp(who);
+  let appCode: string;
+  try {
+    const linked = await upsertOAuthUser(provider, who.providerId, who.email, who.emailVerified, who.name, who.avatar);
+    if (!linked) return failApp("oauth_unverified");
+    if (linked.isNew) await applyReferral(linked.user.id).catch(() => {});
+    void claimAlertsForUser(linked.user.id, linked.user.email).catch(() => {});
+    appCode = await mintAppCode(linked.user.id, challenge);
+  } catch {
+    return failApp("oauth_session");
+  }
+  return NextResponse.redirect(appReturnUrl(appCode, next, inApp, req.url));
 }
 
 // Returns null when the sign-in must be refused. `emailVerified` says whether the

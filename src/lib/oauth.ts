@@ -58,3 +58,20 @@ export function enabledProviders(): OAuthProvider[] {
 export function redirectUri(provider: OAuthProvider): string {
   return `${SITE_URL}/api/auth/oauth/${provider}/callback`;
 }
+
+/**
+ * A sister sign-in that came through the sister's own /account-service/oauth rewrite (`?via=site`) uses the sister's own callback, so
+ * the visitor never sees riftcompare.com, for every site whose callback is registered with that provider (owner, 2026-11-21):
+ * - Discord: all 11 sister callbacks are in the Discord app.
+ * - Google: 9 are in Rift's Google client. Google allows 10 unverified authorized domains per project, so DexCompare (its own Google
+ *   client, never this flow) and SportsCardCompare stay on Rift's callback until the domains are verified in Search Console.
+ */
+const OFF_SITE_OAUTH: Record<OAuthProvider, readonly string[]> = { discord: [], google: ["dex", "wax"] };
+
+export function onSiteOAuth(provider: OAuthProvider, siteKey: string): boolean {
+  return !OFF_SITE_OAUTH[provider].includes(siteKey);
+}
+
+export function sisterRedirectUri(siteUrl: string, provider: OAuthProvider): string {
+  return `${siteUrl}/account-service/oauth/${provider}/callback`;
+}

@@ -1,6 +1,5 @@
 import { metalKindOf } from "@/lib/metal-cards";
 import { InlineAds } from "@/components/InlineAds";
-import { inlinePicksUrl } from "@/lib/inline-picks-url";
 import { publicRead, routeRaw } from "@/lib/public-data/route";
 import { BanNotice } from "@/components/BanNotice";
 import type { Metadata } from "next";
@@ -13,6 +12,7 @@ import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "@/components/Badge";
 import { displayRarity, isUltimate, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, isFallbackRetailer } from "@/lib/constants";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
+import { BuyFollowUp } from "@/components/BuyFollowUp";
 import { PriceDropAlertCta } from "@/components/PriceDropAlertCta";
 import { cardHref } from "@/lib/card-url";
 import { enabledProviders } from "@/lib/oauth";
@@ -1022,10 +1022,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </ol>
       </nav>
 
-      {/* The two big ad banners (owner, 2026-11-14): at the top, under the breadcrumbs. */}
-      {/* Speed (2026-11-16): the banners' data starts loading with the HTML, not after hydration. Nothing visible. */}
-      <link rel="preload" as="fetch" href={inlinePicksUrl(card.setCode)} crossOrigin="anonymous" />
-      <InlineAds setCode={card.setCode} pageType="card_detail" className="mb-4 lg:mb-6" />
 
       <div className="grid grid-cols-1 gap-4 lg:gap-6 lg:grid-cols-[160px_1fr] xl:grid-cols-[320px_1fr]">
         {/* Card visual. Capped much smaller on phones than desktop (was a flat
@@ -1106,6 +1102,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             {/* Phones: the cheapest listing in the visitor's market and its Buy
                 button directly under the name (2026-09-26) — see CardMobileBuy. */}
             <CardTopBuy rows={rows} displayName={displayName} />
+            {/* After a buy click on this card: watch it or add it to the collection (inline, 2026-11-22). */}
+            <BuyFollowUp cardId={card.id} cardName={displayName} />
 
             {/* Market-localised metrics (SSR = AU baseline; client reconciles). */}
             <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} lastKnown={lastKnown} />
@@ -1275,6 +1273,22 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               so it never reads as one of its rows. */}
           {featured && <FeaturedListingBox listing={featured} imageUrl={cardImageSrc(card, { absolute: true })} />}
 
+          {/* Jump links (owner's UX review, 2026-11-24, P1 13: "add anchors (Prices, History, Facts, FAQ)"). Plain anchors in the
+              server HTML: no script, no cookie, and the URL never changes. */}
+          <nav aria-label="On this page" className="mt-5 hidden flex-wrap gap-x-1 gap-y-1 text-xs sm:flex">
+            {[
+              ["#price-comparison", "Prices"],
+              ["#price-history", "History"],
+              ["#about-card", "About"],
+              ["#card-faq", "FAQ"],
+              ["#card-details", "Details"],
+            ].map(([href, label]) => (
+              <a key={href} href={href} className="chip min-h-9 border border-ink-700 bg-ink-900 px-3 text-slate-300 hover:border-ink-600 hover:text-white focus-visible:ring-2 focus-visible:ring-brand-400">
+                {label}
+              </a>
+            ))}
+          </nav>
+
           <section className="mt-4 sm:mt-6">
             <h2 className="sr-only">Price history &amp; where to buy {card.name}</h2>
             {/* How the list below is ordered, and where that is explained in
@@ -1318,7 +1332,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
             {/* Price-history chart — free for everyone (AU history; the series is
                 collected on the AU baseline market). */}
-            <PriceHistoryChart cardId={card.id} rows={rows} />
+            <div id="price-history" className="scroll-mt-header">
+              <PriceHistoryChart cardId={card.id} rows={rows} />
+            </div>
 
             {/* The same card on RiftboundStocks, our sister site: US (TCGplayer)
                 price history, foil prices and daily movers — the chart above is
@@ -1355,7 +1371,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               column, so an AdSense reviewer (or a reader) hits real, original
               writing well before any affiliate content. See docs/adsense-
               remediation.md § Phase 8. */}
-          <section className="card-surface mt-6 p-5">
+          <section id="about-card" className="card-surface mt-6 scroll-mt-header p-5">
             <h2 className="font-bold text-white">About {card.name}</h2>
             {/* max-w-3xl (2026-09-23): a measure cap, left-aligned, so the
                 card-surface still fills its row. At 1920 the paragraphs ran
@@ -1414,7 +1430,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             </div>
           </section>
 
-          <section className="card-surface mt-6 p-5">
+          <section id="card-faq" className="card-surface mt-6 scroll-mt-header p-5">
             <h2 className="font-bold text-white">Frequently asked questions</h2>
             <dl className="mt-3 space-y-4">
               {faqs.map((f) => (
@@ -1471,7 +1487,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               Signature, Overnumbered, Crystal Rose, Promo) already exist in the badge
               row and the About prose above; this just gives them one crawlable,
               explicitly-headed answer for "is this printing rare/special" queries. */}
-          <section className="card-surface mt-6 p-5">
+          <section id="card-details" className="card-surface mt-6 scroll-mt-header p-5">
             <h2 className="font-bold text-white">Card details</h2>
             {/* WHAT THIS CARD IS, as data rather than as prose.
                 This list used to carry four cells — Rarity, Printing, Set and a
@@ -1744,6 +1760,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           Play online on Rift Atlas
         </a>
       </p>
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds setCode={card.setCode} pageType="card_detail" className="mt-8" />
     </div>
   );
 }

@@ -1,0 +1,38 @@
+name: Discord publish
+
+# Publishes the Sealed Sniper's drops in the hub's #sealed-sniper announcement channel so servers that follow it get them
+# (scripts/discord-publish.ts, DECISIONS.md 2026-11-23), and copies each into its game's channel. Runs hourly: GitHub starts the
+# Sniper's scheduled run (tcgcompare refresh-prices, 21:37 and 09:47 UTC) hours late on some days (01:56 and 17:25 on 22-23 Nov),
+# so a fixed window after it missed drops. Only unpublished drops of the last day are touched. Never fails.
+# GitHub also fired the hourly cron only twice in 23-24 Nov, so it also runs after every CI run on main (merges and pushes
+# land many times a day); the concurrency group keeps two runs from copying the same drop.
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["CI", "CI build"]
+    branches: [main]
+    types: [completed]
+
+concurrency:
+  group: discord-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Publish drops
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: npx -y tsx scripts/discord-publish.ts

@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomBytes } from "node:crypto";
-import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri } from "@/lib/oauth";
+import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type OAuthProvider } from "@/lib/oauth";
 import { sanitizeNextPath } from "@/lib/next-param";
 import { PREMIUM_START_PATH } from "@/lib/premium-start";
+import { sisterOAuthCookie } from "@/lib/sister-oauth";
+import { isAppChallenge, signAppState } from "@/lib/app-auth";
+
+export const dynamic = "force-dynamic";
 
 // Kick off the OAuth flow: set a CSRF state cookie and redirect to the provider.
 export async function GET(req: Request, { params }: { params: { provider: string } }) {
@@ -20,7 +24,17 @@ export async function GET(req: Request, { params }: { params: { provider: string
     dest.searchParams.set("error", "provider_unavailable");
     return NextResponse.redirect(dest);
   }
-  const cfg = providerConfig(provider);
+  const search = new URL(req.url).searchParams;
+  // From inside the Android app (lib/app-auth.ts): the WebView asks for the provider's URL as JSON and opens it in a Custom Tab.
+  // The state is a signed token carrying the app's challenge, so no cookie is set: the callback may land in either jar.
+  const appChallenge = search.get("app");
+  if (isAppChallenge(appChallenge)) {
+    const appState = await signAppState({ provider, challenge: appChallenge, next: wanted });
+    const appUrl = providerAuthUrl(provider, appState);
+    return search.get("json") === "1" ? NextResponse.json({ url: appUrl }) : NextResponse.redirect(appUrl);
+  }
+  // A sister site's abandoned round trip (lib/sister-oauth.ts) must not send THIS Rift sign-in to that site.
+  cookies().set(sisterOAuthCookie(provider), "", { path: "/", maxAge: 0 });
   const state = randomBytes(16).toString("hex");
   cookies().set(`oauth_state_${provider}`, state, {
     httpOnly: true,
@@ -45,6 +59,11 @@ export async function GET(req: Request, { params }: { params: { provider: string
     });
   }
 
+  return NextResponse.redirect(providerAuthUrl(provider, state));
+}
+
+function providerAuthUrl(provider: OAuthProvider, state: string): string {
+  const cfg = providerConfig(provider);
   const url = new URL(cfg.authUrl);
   url.searchParams.set("client_id", cfg.clientId!);
   url.searchParams.set("redirect_uri", redirectUri(provider));
@@ -55,5 +74,5 @@ export async function GET(req: Request, { params }: { params: { provider: string
     url.searchParams.set("access_type", "online");
     url.searchParams.set("prompt", "select_account");
   }
-  return NextResponse.redirect(url.toString());
+  return url.toString();
 }

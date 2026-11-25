@@ -34,6 +34,7 @@ import { AUTHORS } from "./content/authors";
 import { REGION_HOME_PATH } from "./seo";
 import { pokemonSectionOn } from "./pokemon/flag";
 import { pokemonSitemapEntries } from "./pokemon/sitemap";
+import { withoutOffSeasonSales } from "@/lib/sale-seasons";
 
 export interface SitemapEntry {
   url: string;
@@ -217,12 +218,12 @@ async function core(): Promise<SitemapEntry[]> {
     ...openAutoPreorderSets().map((s) => ({ url: `${SITE_URL}/preorders/${s.slug}`, changeFrequency: "daily" as const, priority: 0.8 })),
     // Black Friday sealed deals (2026-10-30), one URL kept year round so it builds history.
     { url: `${SITE_URL}/black-friday`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/black-friday") },
+    // The prize draw (2026-11-18): indexable while it runs, so "Riftbound giveaway" searches can find it.
+    { url: `${SITE_URL}/giveaway`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/giveaway") },
     // Cyber Monday's own URL (2026-11-06), the same page and price watch under the Monday query.
     { url: `${SITE_URL}/cyber-monday`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/cyber-monday") },
-    // The seasonal sale pages (2026-11-02), one URL each kept year round like /black-friday.
-    { url: `${SITE_URL}/boxing-day`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/boxing-day") },
-    { url: `${SITE_URL}/january-sales`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/january-sales") },
-    { url: `${SITE_URL}/lunar-new-year`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/lunar-new-year") },
+    // The seasonal sale pages (2026-11-02): only while each is in season (2026-11-19, lib/sale-seasons.ts saleIndexable).
+    ...withoutOffSeasonSales(["/boxing-day", "/january-sales"] as const, new Date().toISOString().slice(0, 10)).map((p) => ({ url: `${SITE_URL}${p}`, changeFrequency: "daily" as const, priority: 0.8, lastModified: staticPageDate(p) })),
     // /feedback is NOT submitted: src/app/feedback/page.tsx sets
     // robots: { index: false, follow: true } (AdSense remediation § Phase 7 —
     // /contact already covers the same intent with real content). Submitting a

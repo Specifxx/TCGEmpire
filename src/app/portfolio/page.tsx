@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { scanAccess, scanConfig } from "@/lib/scan/caps";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getPortfolio, isPremium, premiumCheckoutEnabled, premiumTierOf, PORTFOLIO_FREE, type Portfolio } from "@/lib/premium";
@@ -20,6 +21,8 @@ import { HoldingsGrid } from "@/components/HoldingsGrid";
 import { PortfolioReplacementCost } from "@/components/PortfolioReplacementCost";
 import { PortfolioQuickAdd } from "@/components/PortfolioQuickAdd";
 import { NavIcon } from "@/components/NavIcon";
+import { CheckupOffer } from "@/components/CheckupOffer";
+import { CHECKUP_MIN_ITEMS } from "@/lib/checkup";
 
 export const dynamic = "force-dynamic";
 
@@ -149,6 +152,7 @@ export default async function PortfolioPage() {
     (premium || premiumCheckoutEnabled()) && portfolio.holdings.length > 0
       ? await getPremiumNudge(user.id, country).catch(() => null)
       : null;
+  const canScan = scanAccess(scanConfig(), { isAdmin: user.isAdmin, premium }).ok;
   const ownedNudge = nudge ? nudgeCopy(nudge, "owned", premium ? "member" : "free") : null;
 
   return (
@@ -169,6 +173,18 @@ export default async function PortfolioPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Scan a card (owner, 2026-11-19: "the scan a card should be within the collection page on mobile"): first, as the page's
+              main action, whenever the scanner is open to this account (lib/scan/caps.ts: admins in the beta, everyone signed in
+              once SCAN_PUBLIC=1). */}
+          {canScan && (
+            <Link href="/scan" prefetch={false} className="btn-primary text-sm" data-binder-scan>
+              <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" />
+                <rect x="9" y="7.5" width="6" height="9" rx="1" />
+              </svg>
+              Scan a card
+            </Link>
+          )}
           {/* The set tracker (2026-09-29): what the binder is missing, per set. Free. */}
           <Link href="/portfolio/sets" className="btn-ghost text-sm">Set checklist</Link>
         {premium && (
@@ -292,6 +308,19 @@ export default async function PortfolioPage() {
                 </p>
               )}
             </section>
+          )}
+
+          {/* Free binder check-up (lib/checkup.ts, 2026-11-19 test): members with 10+ cards. */}
+          {portfolio.holdings.length >= CHECKUP_MIN_ITEMS && (
+            <CheckupOffer
+              market={info.code}
+              items={portfolio.holdings.map(
+                (h) =>
+                  `${h.quantity}x ${h.name} (${h.setCode} ${h.collectorNumber}${h.isFoil ? ", foil" : ""}, ${h.condition})` +
+                  (h.unitCents != null ? ` ${formatMoney(h.unitCents, info.currency)} each` : "") +
+                  (h.costBasisCents != null ? `, paid ${formatMoney(h.costBasisCents, info.currency)}` : ""),
+              )}
+            />
           )}
 
           {/* Your cards — a visual showcase, dearest first. */}

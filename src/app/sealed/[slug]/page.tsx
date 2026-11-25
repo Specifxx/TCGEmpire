@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getSealedProductBySlug } from "@/lib/sealed-import";
+import { notFound, permanentRedirect } from "next/navigation";
+import { getSealedProductBySlug, setLessSlugRedirect, setCatchAllRedirect, championDeckSlugRedirect, showdownDeckSlugRedirect } from "@/lib/sealed-import";
 import { DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { isPreorderSetCode, SETS } from "@/lib/constants";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SealedProductView } from "@/components/SealedProductView";
 import { InlineAds } from "@/components/InlineAds";
+import { bfStripByMarket } from "@/lib/bf-strip-sealed";
+import { DiscordCta } from "@/components/DiscordCta";
+import { TcgplayerCyberBanner } from "@/components/TcgplayerCyberBanner";
+import { affiliateUrl } from "@/lib/affiliate";
 
 // A sealed product's own page (2026-11-03, owner: Amazon "up there with eBay and TCGplayer" on RiftCompare too, which
 // had no sealed page to put it on; DECISIONS.md "Sealed products get their own pages"). The /sealed tiles and the quick
@@ -37,7 +41,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function SealedProductPage({ params }: { params: { slug: string } }) {
   const byMarket = await getSealedProductBySlug(params.slug);
   const g = pick(byMarket);
-  if (!g) notFound();
+  if (!g) {
+    // A set-less product's old title-derived slugs (SET_LESS_GROUPS): one 301 to its one page, never a 404.
+    const moved = setLessSlugRedirect(params.slug);
+    if (moved) permanentRedirect(`/sealed/${moved}`);
+    // A one-champion deck's old title page ("riftboundchampiondeckjinx"): its set's deck page.
+    const deck = championDeckSlugRedirect(params.slug);
+    if (deck) permanentRedirect(`/sealed/${deck}`);
+    // A Showdown pair's old title page (2026-11-23): the pair's set page, or /sealed when the slug names no pair.
+    const pair = showdownDeckSlugRedirect(params.slug);
+    if (pair) permanentRedirect(pair);
+    const setHub = setCatchAllRedirect(params.slug);
+    if (setHub) permanentRedirect(setHub);
+    notFound();
+  }
   const set = g.setCode ? SETS.find((s) => s.code === g.setCode) ?? null : null;
   const preorder = isPreorderSetCode(g.setCode);
   const listedIn = (Object.keys(byMarket) as Country[]).length;
@@ -50,8 +67,6 @@ export default async function SealedProductPage({ params }: { params: { slug: st
           { name: g.name, href: `/sealed/${params.slug}` },
         ]}
       />
-      {/* The two big ad banners (owner, 2026-11-14): at the top, under the breadcrumbs. */}
-      <InlineAds setCode={g.setCode ?? ""} pageType="sealed_page" className="mb-5" />
       <header className="mb-5">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="chip bg-brand-500/15 font-semibold text-brand-300">{g.productType}</span>
@@ -65,7 +80,21 @@ export default async function SealedProductPage({ params }: { params: { slug: st
         </p>
       </header>
 
-      <SealedProductView byMarket={byMarket} />
+      <SealedProductView byMarket={byMarket} bf={bfStripByMarket(byMarket, g.setCode)} sharePath={`/sealed/${params.slug}`} preorder={preorder} />
+
+      {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the price table, 22 Nov to 1 Dec, labelled Ad. */}
+      <TcgplayerCyberBanner
+        href={affiliateUrl(
+          `https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?q=${encodeURIComponent(g.name)}&ProductTypeName=Sealed+Products`,
+          "tcgplayer",
+          `/sealed/${params.slug}`,
+        )}
+        at={Date.now()}
+        pageType="sealed_page"
+        name={g.name}
+        className="mt-6"
+      />
+      <DiscordCta className="mt-6" />
 
       <nav className="mt-8 flex flex-wrap gap-2 text-sm" aria-label="More sealed">
         {g.setCode && (
@@ -82,6 +111,8 @@ export default async function SealedProductPage({ params }: { params: { slug: st
           </Link>
         )}
       </nav>
+      {/* Ads sit below the page's own content, never above it (2026-11-19, core-update quality pass). */}
+      <InlineAds setCode={g.setCode ?? ""} pageType="sealed_page" className="mt-8" />
     </div>
   );
 }

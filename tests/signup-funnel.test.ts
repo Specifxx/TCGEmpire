@@ -95,7 +95,7 @@ test("the inline sign-up prompt's impression is GA4-only; its click reaches both
   assert.doesNotMatch(setMatch![1], /"signup_promo_/, "the retired popup's events fire nowhere now");
   // The Vercel leg must be the one that is gated, and GA4's must NOT be —
   // suppressing both would delete the funnel rather than move it.
-  assert.match(src, /if \(!GA4_ONLY_EVENTS\.has\(name\)\) vercelTrack\(name, cleaned\);/);
+  assert.match(src, /if \(!GA4_ONLY_EVENTS\.has\(name\)\) vercelTrack\(name, forVercel\(cleaned\)\);/);
   // Pinned as a POSITIVE match on the whole statement: the GA4 leg is guarded
   // by the window check and nothing else. A negative "GA4_ONLY_EVENTS near
   // gtag" regex looks equivalent and is not — the two dispatch lines are

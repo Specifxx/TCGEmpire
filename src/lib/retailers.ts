@@ -1083,6 +1083,49 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. $5.00",
     country: "US",
   },
+  // 2026-11-18: found by TCG Singles DB's weekly store probe (Riftbound singles
+  // collections at US Shopify stores Rift did not list), then measured and vetted by
+  // scripts/store-candidates.ts from an Actions runner: domain over a year old,
+  // contact details, USD, robots.txt allows the catalogue, and the importer's own
+  // matcher places 96%+ of the collection on one card. Seven others were held
+  // (empty collection, too few singles, or a domain under a year old), and
+  // Columbus Card Shop stays out: the 2026-10-16 audit found its online store
+  // not taking orders (tests/store-audit.test.ts).
+  // 469 in stock, 99% matched.
+  cardsnmo: {
+    key: "cardsnmo",
+    name: "Cards N MO",
+    base: "https://cardsnmo.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+  // 666 in stock, 98% matched.
+  five6gaming: {
+    key: "five6gaming",
+    name: "FIVE6 Gaming",
+    base: "https://www.five6gaming.com",
+    collections: ["in-stock-riftbound-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+  // 105 in stock, 96% matched.
+  pcatoys: {
+    key: "pcatoys",
+    name: "PCA Designer Toys",
+    base: "https://pcatoys.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 500,
+    freeOverCents: 0,
+    shippingNote: "est. $5.00",
+    country: "US",
+  },
+
+
 
   // Store audit, 2026-10-16, second batch (the rest of the registry sweep).
   // Gilroy CA; 711 in stock, 100% matched.
@@ -1686,6 +1729,27 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 0,
     shippingNote: "est. A$9.95",
     country: "AU",
+    platform: "bigcommerce",
+  },
+  // Forge and Fire Gaming, Maryland Heights MO (2462 Schuetz Rd; on the official
+  // Flesh and Blood store locator; 1,355 TCGplayer sales over two years). Its
+  // staff asked to be listed on Reddit (2026-11-20). BigCommerce, read in the
+  // browser 2026-11-20 with this file's parser: /riftbound-1/ holds all 23 of its
+  // Riftbound sealed products (boxes, champion decks, vault bundles, playmats),
+  // every price in US$. Sealed only: it lists no Riftbound singles. Ships to the
+  // 48 contiguous states only. Postage measured 2026-11-20 from its own checkout
+  // (BigCommerce storefront API, carts of US$14.95 and US$474.85, New York, San
+  // Francisco, Dallas, Chicago): "Flat Rate" US$6 every time, tracked (UPS/USPS).
+  forgeandfire: {
+    key: "forgeandfire",
+    name: "Forge and Fire Gaming",
+    base: "https://forgeandfiregaming.com",
+    collections: [],
+    sealedCollections: ["/riftbound-1/"],
+    shippingFlatCents: 600,
+    freeOverCents: 0,
+    shippingNote: "$6.00 flat",
+    country: "US",
     platform: "bigcommerce",
   },
 

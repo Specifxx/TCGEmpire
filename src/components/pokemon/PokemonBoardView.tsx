@@ -1,5 +1,7 @@
 "use client";
 
+import { bestTreatment } from "@/lib/best-price";
+import { BestPriceTag, BestPriceNote } from "../BestPriceTag";
 import { useCountry } from "../CountryProvider";
 import { OutboundLink } from "../OutboundLink";
 import { CheckedAgo } from "../CheckedAgo";
@@ -98,6 +100,8 @@ export function PokemonBoardView({
             const open = state === "open";
             const isBest = l === best;
             const ebay = l.source === "ebay";
+            // Owner, 2026-11-18: the loud "Cheapest" is for a paid (eBay) row; a plain store gets the neutral tag and a note.
+            const bt = bestTreatment(isBest, { ebay, source: l.source });
             return (
               <li key={l.source} data-stock={state} className={`flex items-center gap-3 py-2.5 ${open ? "" : "opacity-55"}`}>
                 <div className="min-w-0 flex-1">
@@ -105,14 +109,16 @@ export function PokemonBoardView({
                     <span className={ebay ? "text-sky-300" : undefined}>{l.label}</span>
                   </div>
                   <div className="text-[11px] text-slate-500">{l.basis}</div>
+                  {bt === "plain" && <BestPriceNote has={{ ebay: board.listings.some((x) => x.source === "ebay"), tcgplayer: false }} />}
                   <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
                     <span className={open ? "text-brand-400" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>
                     <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
                   </div>
                 </div>
-                {isBest && <span className="chip shrink-0 bg-brand-500/15 text-brand-300">Cheapest</span>}
+                {bt === "loud" && <span className="chip shrink-0 bg-brand-500/15 text-brand-300">Cheapest</span>}
+                {bt === "plain" && <BestPriceTag className="shrink-0" />}
                 <div className="text-right">
-                  <div className={`num text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${open ? "" : "text-slate-500 line-through"}`}>
+                  <div className={`num text-sm font-bold ${bt === "loud" ? "text-accent" : "text-white"} ${open ? "" : "text-slate-500 line-through"}`}>
                     {money(l.priceCents)}
                   </div>
                   {ebay && (
@@ -132,7 +138,7 @@ export function PokemonBoardView({
                   inStock={open}
                   className={
                     open
-                      ? `px-3 py-1.5 text-xs ${ebay ? "btn-ebay" : isBest ? "btn-accent" : "btn-primary"}`
+                      ? `px-3 py-1.5 text-xs ${ebay ? "btn-ebay" : bt === "loud" ? "btn-accent" : "btn-primary"}`
                       : "px-3 py-1.5 text-xs text-slate-500 underline-offset-2 hover:underline"
                   }
                 >

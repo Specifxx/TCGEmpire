@@ -4,10 +4,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { brevoPayload, buildPremiumOfferEmail, feedbackStarLinks, premiumOfferSubject, priceDropLinks, PRICE_DROP_CAMPAIGN, PRICE_DROP_SRC, type PremiumOfferEmailOpts } from "../src/lib/email";
+import { brevoPayload, buildPremiumOfferEmail, feedbackStarLinks, premiumEmailFeedbackUrl, premiumEmailToolLinks, premiumOfferSubject, priceDropLinks, PRICE_DROP_CAMPAIGN, PRICE_DROP_SRC, type PremiumEmailDeal, type PremiumOfferEmailOpts } from "../src/lib/email";
 import {
   DEFAULT_BATCH,
   announcementUnsubUrls,
+  premiumOfferArm,
+  premiumOfferArmRead,
   priceDropAudience,
   runPremiumOfferBlast,
   type PriceDropDeps,
@@ -190,7 +192,7 @@ test("the prices are the site's own constants (2026-11-05: $4.99, $3.33 billed y
   assert.equal(premiumEffectiveMonthly("plus"), "$2.00");
   assert.equal(annualSavingPct("premium"), 33, "$39.99 against 12 × $4.99");
   assert.equal(annualSavingPct("plus"), 33);
-  assert.equal(premiumOfferSubject(), "How's RiftCompare working for you?");
+  assert.equal(premiumOfferSubject(), "Riftbound cards under market today, and what Premium unlocks");
   assert.equal(email.subject, premiumOfferSubject());
   for (const body of [email.html, email.text]) {
     for (const amount of [PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT]) {
@@ -242,7 +244,7 @@ test("the Premium subscribe links through /premium/start with tier, plan, src an
     assert.equal(u.searchParams.get("tier"), tier);
     assert.equal(u.searchParams.get("plan"), plan);
     assert.equal(u.searchParams.get("src"), "price-drop-email");
-    assert.equal(u.searchParams.get("utm_campaign"), "feedback-pro-2026-10");
+    assert.equal(u.searchParams.get("utm_campaign"), "premium-showcase-2026-11");
     assert.equal(u.searchParams.get("utm_source"), "email");
     assert.ok(email.html.includes(url), `the html carries ${tier} ${plan}`);
     assert.ok(email.text.includes(url), `the text part carries ${tier} ${plan}`);
@@ -252,7 +254,7 @@ test("the Premium subscribe links through /premium/start with tier, plan, src an
   assert.equal(compare.searchParams.get("src"), "price-drop-email");
   assert.ok(email.html.includes(links.compare));
   assert.equal(PRICE_DROP_SRC, "price-drop-email");
-  assert.equal(PRICE_DROP_CAMPAIGN, "feedback-pro-2026-10");
+  assert.equal(PRICE_DROP_CAMPAIGN, "premium-showcase-2026-11");
 });
 
 test("the attribution source is valid end to end: click allow-list, start step, launcher, /premium beacon", () => {
@@ -292,20 +294,53 @@ test("honest: no deadline, no scarcity and no trial (2026-10-27: there is none)"
   }
 });
 
-test("it asks for a rating first: five star links to /feedback with that rating picked", () => {
-  const stars = feedbackStarLinks();
-  assert.equal(stars.length, 5);
-  stars.forEach((url, i) => {
-    const u = new URL(url);
-    assert.equal(u.origin + u.pathname, "https://riftcompare.com/feedback");
-    assert.equal(u.searchParams.get("rating"), String(i + 1));
-    assert.equal(u.searchParams.get("utm_campaign"), "feedback-pro-2026-10");
-    assert.ok(email.html.includes(url) && email.text.includes(url), `star ${i + 1} is in both parts`);
-  });
-  assert.ok(email.html.indexOf(stars[0]) < email.html.indexOf(priceDropLinks().premiumMonthly), "the rating comes before the Premium offer");
-  // The page reads ?rating= into its form.
-  assert.match(read("src/app/feedback/page.tsx"), /r >= 1 && r <= 5/);
-  assert.match(read("src/components/FeedbackForm.tsx"), /source="page"[\s\S]*initialRating=\{initialRating\}/);
+test("no star rating any more: one plain feedback link, after the offer (2026-11-21)", () => {
+  for (const url of feedbackStarLinks()) assert.ok(!email.html.includes(url) && !email.text.includes(url), "no star links");
+  const fb = premiumEmailFeedbackUrl();
+  const u = new URL(fb);
+  assert.equal(u.origin + u.pathname, "https://riftcompare.com/feedback");
+  assert.equal(u.searchParams.get("rating"), null);
+  assert.ok(email.html.includes(fb) && email.text.includes(fb));
+  assert.ok(email.html.indexOf(priceDropLinks().premiumMonthly) < email.html.indexOf(fb), "the offer comes first");
+});
+
+test("it lists the features, the scanner included, each linking to its own riftcompare.com page", () => {
+  const t = premiumEmailToolLinks();
+  for (const url of Object.values(t)) {
+    assert.equal(new URL(url).hostname, "riftcompare.com");
+    assert.ok(email.html.includes(url) && email.text.includes(url), url);
+  }
+  for (const body of [email.html, email.text]) {
+    assert.match(body, /Every deal in Deal Finder/);
+    assert.match(body, /100 card scans a day/);
+    assert.match(body, /free accounts get 5/);
+    assert.match(body, /No ads on any page/);
+  }
+});
+
+const DEALS: PremiumEmailDeal[] = [
+  { name: "Jinx <Loose Cannon>", setName: "Origins", href: "https://riftcompare.com/card/jinx?src=price-drop-email", imageUrl: "https://cdn.riftscribe.gg/cards/thumbnails/large/x.webp", price: "$10.00", store: "Store A", market: "$20.00", belowPct: 50 },
+  { name: "Ahri", setName: "Spiritforged", href: "https://riftcompare.com/card/ahri?src=price-drop-email", imageUrl: null, price: "$5.00", store: "Store B", market: "$8.00", belowPct: 37.5 },
+];
+
+test("the Deal Finder snippet: real rows only, escaped, linked to our card pages; none means no snippet", () => {
+  const withDeals = buildPremiumOfferEmail({ displayName: "Bill", unsubUrl: "https://riftcompare.com/announcements/unsubscribe?token=abc", deals: DEALS });
+  assert.match(withDeals.html, /Live from Deal Finder/);
+  assert.match(withDeals.text, /LIVE FROM DEAL FINDER/);
+  assert.match(withDeals.html, /Jinx &lt;Loose Cannon&gt;/);
+  assert.doesNotMatch(withDeals.html, /<Loose Cannon>/);
+  assert.match(withDeals.html, /50% below/);
+  assert.match(withDeals.text, /\$10\.00 at Store A, 50% below TCGplayer market \$20\.00/);
+  assert.match(withDeals.preheader, /Jinx <Loose Cannon> is 50% below market/);
+  // Every LINK is ours; the card image is the only other host.
+  const hrefs = [...withDeals.html.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
+  for (const h of hrefs) assert.equal(new URL(h).hostname, "riftcompare.com", h);
+  assert.doesNotMatch(withDeals.html + withDeals.text, /ebay|campid|mkcid/i);
+  assert.doesNotMatch(email.html, /Live from Deal Finder/, "no deals → no snippet, never a made-up one");
+  const lib = read("src/lib/premium-offer.ts");
+  assert.match(lib, /getArbitrageVsTcgplayer\(country, \{ buy, sort: "saving"/, "the tool's own ranking");
+  assert.match(lib, /filter\(\(k\) => !k\.startsWith\("ebay"\)\)/, "store rows only");
+  assert.match(lib, /orderBy: \{ createdAt: "desc" \}, \/\/ newest members first/);
 });
 
 test("no reward is offered for a rating (an incentivised review must not be solicited unlabelled)", () => {
@@ -320,7 +355,7 @@ test("no affiliate link: every link in the email is riftcompare.com", () => {
     assert.ok(urls.length > 5);
     for (const url of urls) assert.equal(new URL(url.replace(/[.,]$/, "")).hostname, "riftcompare.com", url);
   }
-  assert.doesNotMatch(email.html + email.text, /ebay|tcgplayer|campid|mkcid/i);
+  assert.doesNotMatch(email.html + email.text, /ebay|tcgplayer\.com|campid|mkcid/i, "TCGplayer is named as the market reference, never linked");
 });
 
 test("the sender is named, with a contact link", () => {
@@ -345,7 +380,7 @@ test("opt-out: footer link, plain-text link, and one-click List-Unsubscribe head
   assert.equal(payload.textContent, email.text);
   assert.deepEqual(payload.headers, email.headers);
   assert.deepEqual(Object.keys(brevoPayload({ sender: { name: "R", email: "r@x" }, to: [{ email: "a@b" }], subject: "s", htmlContent: "h" })).sort(), ["htmlContent", "sender", "subject", "to"], "callers passing no extras send exactly what they did");
-  assert.match(read("src/lib/email.ts"), /sendEmailBrevo\(to, subject, html, \{ text, headers, marketing: true \}\)/);
+  assert.match(read("src/lib/email.ts"), /const extras = \{ text, headers, marketing: true, campaign: "premium-offer" \} as const;\s*return opts\.via === "resend" \? sendEmail\(to, subject, html, extras\) : sendEmailBrevo\(to, subject, html, extras\);/);
 });
 
 test("an email-shaped display name falls back to a plain greeting, and names are HTML-escaped", () => {
@@ -410,4 +445,44 @@ test("the test send stamps nothing and mints no opt-out row", () => {
   const body = src.slice(at, at + 1200);
   assert.doesNotMatch(body, /prisma\./);
   assert.doesNotMatch(body, /stamp|optOutToken/);
+});
+
+// ── Subject-line test E1 (Premium team, 2026-11-22) ──────────────────────────
+
+const e1Deals: PremiumEmailDeal[] = [
+  { name: "Jinx, Rebel", setName: "Origins", href: "https://riftcompare.com/card/x", imageUrl: null, price: "$10.00", store: "Shop", market: "$14.00", belowPct: 28.6 },
+  { name: "Ahri, Alluring", setName: "Origins", href: "https://riftcompare.com/card/y", imageUrl: null, price: "$20.00", store: "Shop", market: "$32.00", belowPct: 37.5 },
+];
+
+test("E1: arm B leads with the batch's real biggest gap; A and a deal-less B keep the original subject", () => {
+  const a = "Riftbound cards under market today, and what Premium unlocks";
+  assert.equal(premiumOfferSubject("a", e1Deals), a);
+  assert.equal(premiumOfferSubject("b", e1Deals), "Ahri, Alluring is 38% under TCGplayer market today");
+  assert.equal(premiumOfferSubject("b", []), a);
+  const built = buildPremiumOfferEmail({ displayName: "Bill", unsubUrl: "#", deals: e1Deals, subjectArm: "b" });
+  assert.equal(built.subject, premiumOfferSubject("b", e1Deals));
+});
+
+test("E1: an account's arm is fixed by its id and splits about 50/50", () => {
+  assert.equal(premiumOfferArm("user_1"), premiumOfferArm("user_1"));
+  let b = 0;
+  for (let i = 0; i < 2000; i++) if (premiumOfferArm(`cm${i.toString(36)}x${i * 7919}`) === "b") b++;
+  assert.ok(b > 900 && b < 1100, `B got ${b} of 2000`);
+});
+
+test("E1: the read counts only emailed accounts, and a click only after the send", () => {
+  const now = new Date("2026-11-30T00:00:00Z");
+  const sent = new Date("2026-11-23T00:00:00Z");
+  const ids = Array.from({ length: 40 }, (_, i) => `u${i}`);
+  const rows = ids.map((id, i) => ({
+    id,
+    sentAt: i < 30 ? sent : null,
+    clickedAt: i % 3 === 0 ? new Date(i % 2 ? "2026-11-24T00:00:00Z" : "2026-11-01T00:00:00Z") : null,
+    premiumUntil: i === 3 ? new Date("2026-12-07T00:00:00Z") : null,
+  }));
+  const read = premiumOfferArmRead(rows, now);
+  assert.equal(read[0]!.sent + read[1]!.sent, 30);
+  // clicks: i % 3 === 0 and odd i (after the send) among the 30 sent: 3, 9, 15, 21, 27
+  assert.equal(read[0]!.clicked + read[1]!.clicked, 5);
+  assert.equal(read[0]!.paying + read[1]!.paying, 1);
 });

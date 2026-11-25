@@ -27,7 +27,8 @@ export const metadata: Metadata = {
 //                         List-Unsubscribe headers, AlertMute
 //   • payments          → Stripe checkout for subscriptions (and store consulting,
 //                         sold until 2026-10-16; its bookings are still held)
-//   • AI                → none since 2026-10-16 (the Trade Roast was retired)
+//   • AI                → the card scanner only (2026-11-19): lib/scan/read.ts sends the photo to
+//                         Anthropic to read the printed text; nothing is stored
 // tests/trust-pages.test.ts pins the cookie names and providers to that code.
 export default function PrivacyPage() {
   const jsonLd = {
@@ -363,6 +364,11 @@ export default function PrivacyPage() {
             <li><strong className="text-white">Discord</strong> — sign-in.</li>
             <li><strong className="text-white">Stripe</strong> — payments and invoices.</li>
             <li><strong className="text-white">Resend and Brevo</strong> — sending email.</li>
+            <li>
+              <strong className="text-white">Anthropic</strong> — only when you use the card scanner: your photo is sent to
+              Anthropic&rsquo;s Claude model at the moment you scan, to read the card&rsquo;s name and number. The same read
+              serves the scanner on our sister site TCG Singles DB, sent from your browser there. We do not keep the photo.
+            </li>
           </ul>
         </section>
 

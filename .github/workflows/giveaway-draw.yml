@@ -1,0 +1,47 @@
+name: Giveaway draws
+
+# Every six hours: draws each closed giveaway once drand's round for its close is out, emails the winner a claim link and the
+# owner who won, and redraws a prize left unclaimed past its claim date (lib/giveaway-run.ts, DECISIONS.md 2026-11-22). The work
+# runs ON VERCEL (/api/cron/giveaway-draw), where the mail key and database live; this job only calls it with CRON_SECRET.
+
+on:
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: decide and answer, write and send nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: giveaway-draw
+  cancel-in-progress: false
+
+jobs:
+  draw:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Run the giveaway draws on Vercel
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DRY: ${{ inputs.dry_run && '1' || '0' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET is not set as an Actions secret."
+            exit 1
+          fi
+          code=$(curl -sS --max-time 90 -o response.json -w "%{http_code}" -X POST \
+            "https://riftcompare.com/api/cron/giveaway-draw?dry=$DRY" -H "Authorization: Bearer $CRON_SECRET")
+          echo "HTTP $code"
+          cat response.json
+          echo
+          if [ "$code" = "404" ]; then
+            echo "::warning::The route is not deployed yet; it ships with the next release."
+            exit 0
+          fi
+          [ "$code" = "200" ] || { echo "::error::Giveaway draw failed (HTTP $code)"; exit 1; }

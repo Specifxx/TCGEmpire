@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { applyAdLook } from "@/lib/ad-look";
 import { OutboundLink } from "./OutboundLink";
 import { usePremium } from "./PremiumProvider";
 import { useCountry } from "./CountryProvider";
@@ -84,8 +85,9 @@ function Banner({ brand, headline, cta, ctaHref, ctaRetailer, tiles, retailer, n
   );
 }
 
-// `arm` ("top" | "low") is the home page's banner-position test (HomeAdSlot): it reaches EPN's customid and buy_click's pageType.
+// `arm` ("low") marks the home page's banners (the 2026-11-18 position test ended 2026-11-19 with the pair below the deals): it reaches EPN's customid and buy_click's pageType.
 export function InlineAds({ setCode = "", pageType, className = "", arm = "" }: { setCode?: string; pageType: string; className?: string; arm?: string }) {
+  useEffect(() => applyAdLook(), []);
   const { country } = useCountry();
   const adFree = usePremium();
   const [data, setData] = useState<MiniData | null | undefined>(undefined);

@@ -4,4 +4,5 @@
 import raw from "../../data/demand.json";
 import type { DemandFile } from "./home-rank";
 
-export const HOME_DEMAND = raw as DemandFile;
+// Through `unknown`: the JSON import types each day's file literally, and a day with no clicks yet ({}) no longer overlaps DemandFile.
+export const HOME_DEMAND = raw as unknown as DemandFile;

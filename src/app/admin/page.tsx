@@ -56,15 +56,9 @@ const TOOLS: Tool[] = [
   },
   {
     href: "/admin/premium-offer",
-    title: "Feedback and Premium email",
+    title: "Premium email",
     icon: "🎁",
-    desc: "Ask every non-paying account for a one-tap rating and invite them to Premium: see the reach, send yourself a test, then send in daily batches.",
-  },
-  {
-    href: "/admin/premium-winback",
-    title: "Premium win-back email",
-    icon: "🔗",
-    desc: "Send recently-registered free accounts a single-use link that grants a few days of Premium instantly — no card, no checkout, no manual grant step.",
+    desc: "One page for Premium email: the showcase email with today's Deal Finder deals and the feature list, sent newest members first in daily batches, plus the free-days win-back link email.",
   },
   {
     href: "/admin/growth",

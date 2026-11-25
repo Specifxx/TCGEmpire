@@ -6,7 +6,9 @@ import { track } from "@vercel/analytics";
 import { earnCoin } from "@/lib/coins-client";
 import { useCountryMaybe } from "@/components/CountryProvider";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
-import { pickShareArm, priceGap, SHARE_ARM_KEY, shareText, shareUrl, type GapRow, type ShareArm, type ShareMedium } from "@/lib/share-link";
+import { useMe } from "@/lib/use-me";
+import { REFERRAL_PREMIUM_DAYS } from "@/lib/premium-days";
+import { pickShareArm, priceGap, SHARE_ARM_KEY, shareText, shareUrl, withInvite, type GapRow, type ShareArm, type ShareMedium } from "@/lib/share-link";
 
 // Share (2026-11-02, word of mouth; a copy-the-link button since 2026-09): the
 // phone's own share sheet where there is one, else the link copied. No pop-up.
@@ -47,13 +49,22 @@ export function ShareButton({
       setArm(a);
     } catch {}
   }, []);
+  // After a completed share, everyone is told about invites (owner, 2026-11-18: the
+  // invite reward "needs to be visible"): a member that the link carried their code,
+  // a visitor that signing in first earns them both a week. The deal card stays the
+  // reward arm's only.
+  const [invite, setInvite] = useState(false);
   const unlock = () => {
+    setInvite(true);
     if (arm !== "reward") return;
     setThanks(true);
     try {
       track("share_unlock", { medium });
     } catch {}
   };
+  // The shared session (one /api/me per page load, already asked by the header):
+  // a signed-in member's link carries their invite code after the #.
+  const { inviteCode, loaded: meLoaded } = useMe();
   const ctx = useCountryMaybe();
   const country = ctx?.country;
   const market = useMemo(() => (rows && country ? computeMarket(rows, country).prices : null), [rows, country]);
@@ -61,7 +72,7 @@ export function ShareButton({
     <span className="relative inline-flex">
     <button
       onClick={async () => {
-        const url = shareUrl(location.origin, path ?? location.pathname, medium);
+        const url = withInvite(shareUrl(location.origin, path ?? location.pathname, medium), inviteCode);
         const gapRows = prices ?? market ?? null;
         const fmt = ctx?.fmt ?? ((c: number) => `$${(c / 100).toFixed(2)}`);
         const title = name ?? document.title;
@@ -110,6 +121,22 @@ export function ShareButton({
       </svg>
       <span className={responsive && arm !== "reward" ? "hidden sm:inline" : arm === "reward" ? "text-xs sm:text-sm" : undefined}>{copied ? "Link copied" : arm === "reward" ? "Share · get a deal" : "Share"}</span>
     </button>
+    {invite && !thanks && meLoaded && (
+      <span className="absolute right-0 top-full z-20 mt-2 flex w-72 max-w-[85vw] flex-col gap-1.5 rounded-xl border border-white/10 bg-slate-900 p-3 text-left text-sm text-slate-200 shadow-lg">
+        <span className="flex items-start justify-between gap-2">
+          <span className="font-semibold text-white">{inviteCode ? "Sent with your invite" : "Share as an invite"}</span>
+          <button type="button" onClick={() => setInvite(false)} className="text-slate-400" aria-label="Close">✕</button>
+        </span>
+        <span className="text-slate-400">
+          {inviteCode
+            ? `When a friend makes a free account from your link, you both get ${REFERRAL_PREMIUM_DAYS} days of Premium.`
+            : `Sign in before you share, and when a friend makes a free account you both get ${REFERRAL_PREMIUM_DAYS} days of Premium.`}
+        </span>
+        <Link rel="nofollow" href={inviteCode ? "/profile#invite" : "/login?src=referral"} prefetch={false} className="text-xs font-semibold text-brand-400 underline">
+          {inviteCode ? "Your invite link →" : "Sign in free →"}
+        </Link>
+      </span>
+    )}
     {thanks && (
       <span className="absolute right-0 top-full z-20 mt-2 flex w-72 max-w-[85vw] flex-col gap-1.5 rounded-xl border border-white/10 bg-slate-900 p-3 text-left text-sm text-slate-200 shadow-lg">
         <span className="flex items-start justify-between gap-2">
@@ -117,6 +144,7 @@ export function ShareButton({
           <button type="button" onClick={() => setThanks(false)} className="text-slate-400" aria-label="Close">✕</button>
         </span>
         <span className="text-slate-400">Today’s Riftbound cards selling below TCGplayer market, and the ones cheapest on eBay, checked every day.</span>
+        <span className="text-xs text-slate-400">{inviteCode ? `Your link carries your invite: a friend who joins gets you both ${REFERRAL_PREMIUM_DAYS} days of Premium.` : `Sign in before sharing and a friend who joins gets you both ${REFERRAL_PREMIUM_DAYS} days of Premium.`}</span>
         <Link href="/tools/deal-finder?utm_source=share&utm_medium=unlock" prefetch={false} className="text-xs font-semibold text-brand-400 underline">Open Deal Finder →</Link>
       </span>
     )}
