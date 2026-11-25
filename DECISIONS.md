@@ -25664,3 +25664,24 @@ a broadcast; this is an email a person turns on for their own watchlist, so it i
   cheaper-than-when-you-started first. Cards link to their own pages, never eBay or another affiliate link (EPN messaging
   approval is not granted). Every email has a stop link and a one-click List-Unsubscribe; the stop page mutates only on POST.
 - Read at the retention read of 2 Dec, then weekly: subscribers, sends, stops, and offer vs control activity.
+
+## US store sweep: 87 sealed-only shops and 2 singles shops (2026-11-25)
+
+The owner's US-first push (22 Nov) left Rift with 59 US singles stores against 107 in Canada, and only 3 US shops in
+`SEALED_ONLY_SHOPIFY`. `scripts/store-candidates.ts` now also takes a discovery pool (`data/store-vetting/rift-discovery.json`,
+the 454 US shops TCG Prices lists): it reads each shop's own `/collections.json` (3 pages at most, four shops at a time, one
+request a second per shop) for Riftbound collections, then measures them twice: singles with the importer's own matcher, and
+sealed with the sealed importer's own gates (`isTrackableSealedTitle`, an in-stock variant over `sealedFloorCents`). The
+store-level checks (domain age, banned list and denylist, robots.txt, the shop's own currency) apply to both verdicts.
+
+- Of 393 shops read, 206 had a Riftbound collection. Singles ADD: The Castle Games (154 in-stock singles matched) and
+  Solacido (754; its September rejection for bare card names no longer holds). Columbus Card Shop also passed and stays
+  out: its online store is not taking orders (tests/store-audit.test.ts).
+- Sealed ADD (3+ in-stock Riftbound sealed products, no store-level flag): 89 shops; 87 went into `SEALED_ONLY_SHOPIFY`
+  with their discovered collections (event, supplies, playmat and other-game handles left out). Dynamic Card Collectors
+  (its only Riftbound products sit in a collection named for Union Arena) and Stomping Grounds (already tracked through
+  its singles subdomain) were left out. 668 in-stock sealed products in all on the day.
+- A title that says the box can only be bought in the shop ("Booster Box (In-Store Only)", "local pickup only") is kept
+  but never in stock (`isInStoreOnlyTitle`, tests/in-store-only-sealed.test.ts).
+- The sealed refresh reads every store in turn and took 26 minutes on 25 Nov; its timeout goes from 45 to 60 minutes for
+  the ~87 extra shops. Read the first run's duration and the US row counts on /sealed/* after it.

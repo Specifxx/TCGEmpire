@@ -949,7 +949,7 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // playmats and alt-art printings, not unparseable titles:
   //   thewarpgate 400/459 (87%) · wulfgaming 142/158 (90%) · larrysgamestore
   //   95/101 (94%) · gatorscardden 87/127 · sweetsandgeeks 45/66
-  // Rejected: solacido.com. Its 250 "singles" are bare card names ("Abandon")
+  // Rejected (until 2026-11-25, see the US sweep below): solacido.com. Its 250 "singles" are bare card names ("Abandon")
   // with no set or collector number and none in stock, so nothing would match.
   // A store with no published free-shipping threshold gets freeOverCents 0 (no
   // threshold) rather than an invented one; see the Quack Opens entry.
@@ -3490,6 +3490,31 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$2.50 · free over US$50",
     country: "US",
   }, // sweep 2026-10-28: 64 in-stock singles, cur=USD
+  // US sweep 2026-11-25 (scripts/store-candidates.ts over the 454 US shops TCG Prices
+  // lists): the two that cleared every check (Columbus Card Shop also passed, but its online
+  // store is not taking orders: tests/store-audit.test.ts), 20+ in-stock singles on our cards and
+  // 80%+ of the collection matching. Solacido was turned away in September for bare
+  // card names; its "riftbound" collection now reads 754 in-stock singles that match.
+  castlegameshoppe: {
+    key: "castlegameshoppe",
+    name: "The Castle Games",
+    base: "https://castlegameshoppe.com",
+    collections: ["riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep 2026-11-25: 154 in-stock singles match, cur=USD
+  solacido: {
+    key: "solacido",
+    name: "Solacido",
+    base: "https://solacido.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // sweep 2026-11-25: 754 in-stock singles match, cur=USD
 
 };
 

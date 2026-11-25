@@ -158,6 +158,12 @@ function isRiftboundSealed(title: string): boolean {
  * changed. This is the gate that decides whether a real pre-order on a real
  * storefront reaches the site at all, so it is worth being able to assert on.
  */
+/** "Booster Box (In-Store Only)", "in store pickup only", "local pickup only": the shop
+ *  will not post it, so the row is kept but never counted as in stock. */
+export function isInStoreOnlyTitle(title: string): boolean {
+  return /\bin[\s-]*store[\s-]*(?:only|pick[\s-]*up[\s-]*only|purchase[\s-]*only)\b|\b(?:local\s+)?pick[\s-]*up\s+only\b/i.test(title);
+}
+
 export function isTrackableSealedTitle(title: string): boolean {
   return isRiftboundSealed(title) && looksSealed(title);
 }
@@ -911,8 +917,10 @@ export async function importSealed(): Promise<number> {
         const priced = p.variants.filter((v) => parseFloat(v.price) > 0);
         if (!priced.length) continue;
         const avail = priced.filter((v) => v.available);
-        const inStock = avail.length > 0;
-        const pool = inStock ? avail : priced;
+        // A title that says it can only be bought in the shop is never "in stock" here:
+        // the buy button would promise a box nobody can order (US sweep 2026-11-25).
+        const inStock = avail.length > 0 && !isInStoreOnlyTitle(title);
+        const pool = avail.length > 0 ? avail : priced;
         const type = classifySealed(title);
         const setCode = sealedSetCode(title, type);
         // Price-sanity: ignore variants priced implausibly low for the product type —
