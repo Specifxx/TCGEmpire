@@ -475,3 +475,55 @@ export function cheapestBoxOffers(
   }
   return out;
 }
+
+// ── One number per set, for the sealed product page's "Is this box worth it?" card ──
+// The calculator's own default model (Riot's slot rates, the default Showcase estimate, the set's own Ultimate
+// rate, 24 packs), so the card and /tools/box-ev quote the same expected value. A set whose pack cards are not
+// priced well enough (under MIN_PRICED_SHARE of them) gets no number at all: an unpriced card counts as zero in a
+// pool's mean, so a thinly priced set would read far too low, and no number is better than an invented one.
+export const MIN_PRICED_SHARE = 0.8;
+
+export interface BoxEvSummary {
+  setCode: string;
+  evBoxUsdCents: number;
+  priced: number;
+  total: number;
+}
+
+export function boxEvSummaries(
+  cards: readonly (PoolCard & { id: string })[],
+  usdByCard: ReadonlyMap<string, number>,
+  setCodes: ReadonlySet<string>,
+): BoxEvSummary[] {
+  const bySet = new Map<string, (PoolCard & { valueCents: number | null })[]>();
+  for (const c of cards) {
+    if (!setCodes.has(c.setCode) || NO_BOOSTER_SETS.has(c.setCode)) continue;
+    const list = bySet.get(c.setCode) ?? [];
+    list.push({ ...c, valueCents: usdByCard.get(c.id) ?? null });
+    bySet.set(c.setCode, list);
+  }
+  const out: BoxEvSummary[] = [];
+  for (const [setCode, list] of bySet) {
+    const stats = poolStats(list);
+    let priced = 0;
+    let total = 0;
+    for (const s of stats.values()) {
+      priced += s.priced;
+      total += s.total;
+    }
+    if (total === 0 || priced / total < MIN_PRICED_SHARE) continue;
+    const counts = new Map<PoolKey, number>([...stats].map(([k, s]) => [k, s.total]));
+    const rates = derivedRates({ counts, packs: DEFAULT_PACKS, specialsPerBox: DEFAULT_SPECIALS_PER_BOX, ultimatePerPack: ULTIMATE_PER_PACK_BY_SET[setCode] });
+    const { evBoxCents } = computeEv({ stats, rates, packs: DEFAULT_PACKS, boxPriceCents: 0 });
+    if (evBoxCents > 0) out.push({ setCode, evBoxUsdCents: evBoxCents, priced, total });
+  }
+  return out;
+}
+
+/** One USD value per card: the non-foil TCGplayer market row, a foil row only where no non-foil exists (the calculator's rule). */
+export function usdByCardFrom(rows: readonly { cardId: string; priceCents: number; isFoil: boolean }[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const r of rows) if (r.isFoil) out.set(r.cardId, r.priceCents);
+  for (const r of rows) if (!r.isFoil) out.set(r.cardId, r.priceCents);
+  return out;
+}

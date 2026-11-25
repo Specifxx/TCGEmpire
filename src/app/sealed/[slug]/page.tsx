@@ -12,6 +12,9 @@ import { bfStripByMarket } from "@/lib/bf-strip-sealed";
 import { DiscordCta } from "@/components/DiscordCta";
 import { TcgplayerCyberBanner } from "@/components/TcgplayerCyberBanner";
 import { affiliateUrl } from "@/lib/affiliate";
+import { BoxEvCard } from "@/components/BoxEvCard";
+import { getBoxEvSummaries } from "@/lib/box-ev-summary";
+import { headlineOffer } from "@/lib/sealed-offers";
 
 // A sealed product's own page (2026-11-03, owner: Amazon "up there with eBay and TCGplayer" on RiftCompare too, which
 // had no sealed page to put it on; DECISIONS.md "Sealed products get their own pages"). The /sealed tiles and the quick
@@ -61,6 +64,18 @@ export default async function SealedProductPage({ params }: { params: { slug: st
   const set = g.setCode ? SETS.find((s) => s.code === g.setCode) ?? null : null;
   const preorder = isPreorderSetCode(g.setCode);
   const listedIn = (Object.keys(byMarket) as Country[]).length;
+  // "Is this box worth it?" (components/BoxEvCard.tsx): Booster Box and Booster Case pages of a released set whose
+  // cards are priced well enough; the summary is one small cached entry (lib/box-ev-summary.ts), read at the top level.
+  const isBox = g.productType === "Booster Box" || g.productType === "Booster Case";
+  const ev = isBox && g.setCode && !preorder ? (await getBoxEvSummaries())[g.setCode] ?? null : null;
+  const boxPrices: Partial<Record<Country, number>> = {};
+  if (ev && g.productType === "Booster Box") {
+    const now = Date.now();
+    for (const [m, mg] of Object.entries(byMarket) as [Country, NonNullable<(typeof byMarket)[Country]>][]) {
+      const best = headlineOffer(mg.listings.filter((l) => !l.retailer.startsWith("ebay")), now);
+      if (best) boxPrices[m] = best.priceCents;
+    }
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
@@ -84,6 +99,10 @@ export default async function SealedProductPage({ params }: { params: { slug: st
       </header>
 
       <SealedProductView byMarket={byMarket} bf={bfStripByMarket(byMarket, g.setCode)} sharePath={`/sealed/${params.slug}`} preorder={preorder} />
+
+      {ev && g.setCode && (
+        <BoxEvCard setCode={g.setCode} setName={set?.name ?? g.setCode} evBoxUsdCents={ev.evBoxUsdCents} isCase={g.productType === "Booster Case"} boxPrices={boxPrices} />
+      )}
 
       {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the price table, 22 Nov to 1 Dec, labelled Ad. */}
       <TcgplayerCyberBanner

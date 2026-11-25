@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { convertUsdCents, gbpCentsToEur, USD_TO } from "@/lib/fx";
 import { useCountry } from "@/components/CountryProvider";
@@ -93,6 +93,13 @@ export function BoxEvCalculator({ sets, offers = {} }: { sets: BoxEvSet[]; offer
   const [typedPrice, setTypedPrice] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Partial<Record<PoolKey, number>>>({});
   const [showRates, setShowRates] = useState(false);
+
+  // A link from a sealed box page's "Is this box worth it?" card names its set (?set=RAD). Read after mount, so the
+  // ISR page needs no searchParams and no Suspense boundary.
+  useEffect(() => {
+    const want = new URLSearchParams(window.location.search).get("set");
+    if (want && sets.some((s) => s.setCode === want)) setSetCode(want);
+  }, [sets]);
 
   const set = sets.find((s) => s.setCode === setCode) ?? sets[0];
 
