@@ -25792,3 +25792,6 @@ the first page of a visit only (sessionStorage), ✕ for 30 days, never on `/and
 its inline script shows it before first paint, so no layout shift and nothing for crawlers to read. When it shows, the seasonal sale
 line is hidden on that page: one line, never two. It ends by itself after 2027-01-31; remove it with `/android` once the app is public.
 Pinned by `tests/android-strip.test.ts`.
+
+The weekly email carries one short block too (`androidSection` in `lib/newsletter.ts`, like the Chrome extension's): the two
+editions before 11 Dec, then gone by itself, never an email of its own. `tests/newsletter-android.test.ts`.
