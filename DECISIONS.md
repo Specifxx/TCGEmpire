@@ -25739,3 +25739,9 @@ the same lines in text (the agents read those emails, so it needs no browser):
   Web Analytics read as `/api/demand/<site>`) and RiftCompare's ClickEvent rows by page, read by the earnings-refresh cron at
   most once in 20 hours (`top-clicks`). A site that sends no click event shows its most-viewed product pages separately, never
   in the click ranking. Counts only.
+
+## 2026-11-26: The header's string of Christmas lights is removed (owner)
+
+Owner, 2026-11-26: "I don't really like the Christmas lights on the very top." The string of lights hanging under the header
+(2026-11-20) is removed on every Compare site: the `.xmas-garland::after` rule is gone from the `xmas-logo` block in `globals.css`
+and the class is off the header. The Santa hat on the logo stays, and nothing else of the Christmas layer changes.
