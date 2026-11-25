@@ -1529,10 +1529,11 @@ longer lands on its entry.
   in the site's own colours (a gift-guide banner, a 3px cranberry/pine
   hairline, the two colours as tokens on the gifts pill and sale strip; one off
   switch, `CHRISTMAS_FESTIVE_LAYER`), plus, since the owner asked on 2026-11-20,
-  a Santa hat on the header's logo and a string of lights under the header
-  (the `xmas-logo` block, CSS only): no snow, art, stripes or palette swap, on
+  a Santa hat on the header's logo (the `xmas-logo` block, CSS only; its
+  string of lights under the header was removed on 2026-11-26, the owner
+  disliked it): no snow, art, stripes or palette swap, on
   any sister site; the theme must match the domain
-  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420), [2026-11-20](../DECISIONS.md#L24952)).
+  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420), [2026-11-20](../DECISIONS.md#L24952), [2026-11-26](../DECISIONS.md#L25743)).
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired
