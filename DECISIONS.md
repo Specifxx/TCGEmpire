@@ -25685,3 +25685,10 @@ store-level checks (domain age, banned list and denylist, robots.txt, the shop's
   but never in stock (`isInStoreOnlyTitle`, tests/in-store-only-sealed.test.ts).
 - The sealed refresh reads every store in turn and took 26 minutes on 25 Nov; its timeout goes from 45 to 60 minutes for
   the ~87 extra shops. Read the first run's duration and the US row counts on /sealed/* after it.
+
+## 2026-11-25 — Fiverr usability review, ported from TCG Prices
+
+A paid tester's think-aloud on TCG Prices (tcgcompare DECISIONS.md, 2026-11-25) asked whether we compare every store or only the
+ones that pay us. Under the price table the product page now says "Every store we track is listed, whether it pays us or not, in
+price order" with a link to /methodology, and the group-chat share button reads "Share deal" (its full wording stays as the
+button's accessible name): the tester found the page's buttons too wordy. Cart and watch wording wait for their A/B verdicts.

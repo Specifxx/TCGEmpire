@@ -44,9 +44,9 @@ export function DropShare({ path, name, text, className = "" }: { path: string; 
   }
   return (
     <span className={`relative inline-flex ${className}`}>
-      <button type="button" onClick={share} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-slate-400 underline underline-offset-4 hover:text-slate-100">
+      <button type="button" onClick={share} aria-label="Share this deal with your group chat" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-slate-400 underline underline-offset-4 hover:text-slate-100">
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" /><path d="M16 6l-4-4-4 4" /><path d="M12 2v13" /></svg>
-        Share this deal with your group chat
+        Share deal
       </button>
       <span role="status" aria-live="polite" className={`pointer-events-none absolute left-0 top-full z-10 mt-1 whitespace-nowrap rounded-full bg-ink-800 px-3 py-1.5 text-xs font-semibold text-white shadow transition-opacity motion-reduce:transition-none ${note ? "opacity-100" : "opacity-0"}`}>
         {note}
