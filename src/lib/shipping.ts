@@ -554,7 +554,14 @@ function zoneQuote(store: SnapshotStore, zone: SnapshotZone, cart: PostageCart, 
   }
   let std = evalClass(sp, cart, false);
   const floor = letterFloor(store, zone, lp);
-  const ltr = floor != null && cart.subtotalCents < floor ? null : evalClass(lp, cart, true);
+  // A measured cart the order contains (no more value, no more cards) that was
+  // quoted postage but NOT the letter: the letter is not offered for this order
+  // either (Solacido, 2026-11-25: a letter at US$2.50 / 10 cards and US$53.50 /
+  // 2 cards, none at US$20.25 / 3 cards). This only ever refuses a letter.
+  const letterRefused =
+    lp.length > 0 &&
+    store.carts.some(([cv, cn], j) => cv <= cart.subtotalCents && cn <= Math.max(1, cart.items) && cv >= Math.min(...lp.map((p) => p.v)) && !!zone.std[j] && !zone.ltr?.[j]);
+  const ltr = (floor != null && cart.subtotalCents < floor) || letterRefused ? null : evalClass(lp, cart, true);
   let beyondFallback = false;
   if (!std && !ltr) {
     // The store only ever quoted letters here and this order is bigger than

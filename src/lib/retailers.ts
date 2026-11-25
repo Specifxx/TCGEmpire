@@ -3500,9 +3500,9 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     name: "The Castle Games",
     base: "https://castlegameshoppe.com",
     collections: ["riftbound-single"],
-    shippingFlatCents: 250,
-    freeOverCents: 5000,
-    shippingNote: "est. US$2.50 · free over US$50",
+    shippingFlatCents: 899,
+    freeOverCents: 0,
+    shippingNote: "US$8.99 Economy (probed 2026-11-25) · no free-shipping threshold",
     country: "US",
   }, // sweep 2026-11-25: 154 in-stock singles match, cur=USD
   solacido: {
@@ -3510,9 +3510,9 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     name: "Solacido",
     base: "https://solacido.com",
     collections: ["riftbound"],
-    shippingFlatCents: 250,
-    freeOverCents: 5000,
-    shippingNote: "est. US$2.50 · free over US$50",
+    shippingFlatCents: 679,
+    freeOverCents: 0,
+    shippingNote: "US$6.25-7.43 Ground Advantage, US$2.09 letter (probed 2026-11-25) · no free-shipping threshold",
     country: "US",
   }, // sweep 2026-11-25: 754 in-stock singles match, cur=USD
 
