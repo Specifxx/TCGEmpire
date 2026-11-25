@@ -12,13 +12,11 @@ import { SITES } from "./sites";
 import { USER_AGENT_DESKTOP } from "./journeys";
 
 export function buildId(html: string): string | null {
-  return (
-    html.match(/"buildId":"([^"]+)"/)?.[1] ??
-    html.match(/\/_next\/static\/([A-Za-z0-9_-]{6,})\/_(?:buildManifest|ssgManifest)\.js/)?.[1] ??
-    // App router pages carry no buildId; their chunk names change with every build.
-    (html.match(/\/_next\/static\/chunks\/(?:app\/)?[^"']*?-([0-9a-f]{12,})\.js/g) ?? []).slice(0, 8).join(",") ||
-    null
-  );
+  const pages = html.match(/"buildId":"([^"]+)"/)?.[1] ?? html.match(/\/_next\/static\/([A-Za-z0-9_-]{6,})\/_(?:buildManifest|ssgManifest)\.js/)?.[1];
+  if (pages) return pages;
+  // App router pages carry no buildId; their chunk names change with every build.
+  const chunks = (html.match(/\/_next\/static\/chunks\/[^"' ]*?-[0-9a-f]{12,}\.js/g) ?? []).slice(0, 8).join(",");
+  return chunks || null;
 }
 
 async function main() {
