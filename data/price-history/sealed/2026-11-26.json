@@ -39,7 +39,7 @@
     },
     "LGC|Booster Case": {
       "EU": 71400,
-      "US": 69375
+      "US": 69376
     },
     "LGC|Booster Pack": {
       "CA": 2400,
@@ -239,7 +239,7 @@
       "CA": 92970,
       "EU": 56000,
       "UK": 53000,
-      "US": 52195
+      "US": 52500
     },
     "RAD|Booster Pack": {
       "AU": 1000,
@@ -254,7 +254,7 @@
       "EU": 2598,
       "SG": 4656,
       "UK": 2495,
-      "US": 2824
+      "US": 1758
     },
     "RAD|Bundle Case": {
       "US": 34999
@@ -273,7 +273,7 @@
       "CA": 3299,
       "EU": 3199,
       "UK": 2999,
-      "US": 2145
+      "US": 2299
     },
     "RAD|Showdown Decks": {
       "AU": 3500,
@@ -281,7 +281,7 @@
       "EU": 1400,
       "SG": 3266,
       "UK": 1899,
-      "US": 1299
+      "US": 1446
     },
     "RAD|Showdown Decks Display": {
       "AU": 5200,
@@ -483,7 +483,7 @@
     "UNL|Champion Deck (Vi) Display": {
       "AU": 4000,
       "CA": 7590,
-      "US": 5490
+      "US": 4250
     },
     "UNL|Nexus Night Pack": {
       "CA": 1900,
@@ -527,7 +527,7 @@
       "CA": 96999,
       "EU": 60000,
       "UK": 58499,
-      "US": 62500
+      "US": 64200
     },
     "VEN|Booster Pack": {
       "AU": 1000,
@@ -569,7 +569,7 @@
     "VEN|Showdown Decks": {
       "AU": 3000,
       "CA": 1995,
-      "EU": 1995,
+      "EU": 1895,
       "SG": 2105,
       "UK": 1655,
       "US": 1099
@@ -703,7 +703,7 @@
       "US": 34500
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 23849
+      "US": 31000
     },
     "riftboundxt12025worldschampionsignaturee": {
       "EU": 105000
