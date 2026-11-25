@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { forgetEarnings } from "@/lib/earnings/sources";
-import { AMAZON_STORES, allocateAmazonEntry, amazonTag, parseAmazonEntry } from "@/lib/earnings/amazon";
+import { AMAZON_STORES, allocateAmazonEntry, amazonProductsKey, amazonTag, parseAmazonEntry, type AmazonStoredProducts } from "@/lib/earnings/amazon";
+import { writeStored } from "@/lib/earnings/stored";
 import { liveRoute } from "@/lib/public-data/live-route";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +43,7 @@ async function handlePOST(req: Request) {
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Couldn't read that" }, { status: 400 });
   }
-  const saved: { store: string; from: string; to: string; days: number; trackingIds: number; items: number; cents: number; currency: string }[] = [];
+  const saved: { store: string; from: string; to: string; days: number; trackingIds: number; items: number; cents: number; currency: string; products: number }[] = [];
   for (const e of stores) {
     const store = AMAZON_STORES.find((s) => s.key === e.key)!;
     const rows = allocateAmazonEntry(e);
@@ -59,6 +60,11 @@ async function handlePOST(req: Request) {
         ],
       }),
     ]);
+    // What sold over the range (item lines), kept apart: never part of a total. A store's newest entry with items replaces its last.
+    if (e.products?.length) {
+      const kept: AmazonStoredProducts = { store: store.key, currency: store.currency, from, to, products: e.products.slice(0, 200) };
+      await writeStored(amazonProductsKey(store.key), kept);
+    }
     saved.push({
       store: store.key,
       from,
@@ -68,6 +74,7 @@ async function handlePOST(req: Request) {
       items: rows.reduce((n, r) => n + r.items, 0),
       cents: rows.reduce((n, r) => n + r.cents, 0),
       currency: store.currency,
+      products: e.products?.length ?? 0,
     });
   }
   forgetEarnings("amazon");

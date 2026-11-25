@@ -25719,6 +25719,33 @@ the too-cheap guard the feed path applies. Every card whose cheapest row was a m
   buy now. Filtered in memory, same single read. tests/min-condition.test.ts.
 - OP Compare's basket is not affected: its import keeps only variants that say `available` and has no verify pass.
 
+## 2026-11-25 — Top sellers on the earnings dashboard: sales by item, clicks kept apart
+
+Owner: the earnings dashboard "doesn't show the top products or sets that are selling … so we know what's in demand".
+`/admin/earnings` now has a "What's selling" section for the picked range, and the growth report and the Monday report carry
+the same lines in text (the agents read those emails, so it needs no browser):
+
+- **Sales** are the networks' own item rows, never our clicks: eBay's Transaction Detail (the listing title of each sale,
+  `epnItemSales`), TCGplayer through Impact's partner Reports API "Action Listing (SKU)" (`mp_action_listing_sku_fast`,
+  `IMPACT_SKU_REPORT` overrides it), each order line joined to its action by action id so it takes the order's tag and its
+  share of the order's payout in the action's currency (`impactItemSales`; a reversed order drops), and Amazon's Reports page
+  grouped by product, typed in by the daily Chrome run as `item <earnings> <items> [asin:…] <name>` lines (stored apart,
+  `amazon-products-<store>`, never part of a total; a 30-day total, so it shows only in the 30-day and longer views). Item rows
+  are kept for 90 days (`ITEM_DAYS`) inside each source's stored copy. A failed item read never sinks the earnings: the source's
+  detail says what was read and the report's columns, so a renamed column is visible.
+- **Sets**: no network says which set an item is from, so a set is the product name with the box, pack, bundle and condition
+  words taken off (`setOf`), labelled on the page as a best guess.
+- **Most clicked** is labelled "buy clicks, not sales": every sister site's `buy_product` events by product (the same Vercel
+  Web Analytics read as `/api/demand/<site>`) and RiftCompare's ClickEvent rows by page, read by the earnings-refresh cron at
+  most once in 20 hours (`top-clicks`). A site that sends no click event shows its most-viewed product pages separately, never
+  in the click ranking. Counts only.
+
+## 2026-11-26: The header's string of Christmas lights is removed (owner)
+
+Owner, 2026-11-26: "I don't really like the Christmas lights on the very top." The string of lights hanging under the header
+(2026-11-20) is removed on every Compare site: the `.xmas-garland::after` rule is gone from the `xmas-logo` block in `globals.css`
+and the class is off the header. The Santa hat on the logo stays, and nothing else of the Christmas layer changes.
+
 ## 2026-11-25 — A sister site's Premium member never sees "RiftCompare"
 
 The owner chose one Premium for every site (RiftCompare's accounts and Stripe as the back end, `lib/sister-premium.ts`), on one

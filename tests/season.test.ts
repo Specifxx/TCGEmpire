@@ -182,7 +182,6 @@ test("Christmas is one quiet line, not a costume (owner, 2026-11-08: the theme m
   // festive layer's switch, three inline SVGs, no image file, no motion, nothing in the flow.
   const logo = css.slice(css.indexOf("xmas-logo:start"), css.indexOf("xmas-logo:end")).replace(/\/\*[\s\S]*?\*\//g, "");
   assert.match(logo, /:root\[data-season="christmas"\]\[data-xmas-layer\] \.xmas-cap::before \{[^}]*position: absolute;[^}]*pointer-events: none;/);
-  assert.match(logo, /:root\[data-season="christmas"\]\[data-xmas-layer\] \.xmas-garland::after \{[^}]*position: absolute;[^}]*pointer-events: none;/);
   for (const gone of ["@keyframes", "animation:", "url(/", "--c-ink-", "--c-brand-"]) assert.ok(!logo.includes(gone), `${gone} stays out of the logo CSS`);
   assert.match(read("src/components/Navbar.tsx"), /<BrandLogo cap \/>/);
   // The one touch: the gifts line, gated by the season.
