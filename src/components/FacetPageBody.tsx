@@ -20,6 +20,14 @@ import type { Facet } from "@/lib/facets";
 // which already paginates.
 const RENDER_CAP = 60;
 
+// The price table above the grid (Search Recovery, 2026-11-26): the facet pages slid from
+// about position 9 to 12 in the November core update while their visible content was a
+// caption over image tiles. A plain HTML table of the most valuable cards (name, set,
+// rarity, US price, in-stock stores) is text Google can read and quote, and answers
+// "how much are <facet> cards" before the grid. Same rows as the grid's first tiles: no
+// extra query. Priced rows only, never a last-known or converted price.
+export const PRICE_TABLE_ROWS = 10;
+
 // Shared body for every /cards/<dimension>/<value> facet page — one query shape
 // (buildCardWhere, from lib/cards.ts) so a facet page and the equivalent /browse
 // checkbox can never disagree on what counts as a match.
@@ -172,6 +180,50 @@ export async function FacetPageBody({
           </p>
         )}
       </div>
+
+      {(() => {
+        const rows = cards
+          .map((c) => ({ c, cents: (c as unknown as Record<string, number | null>)[field] ?? null }))
+          .filter((r): r is { c: (typeof cards)[number]; cents: number } => r.cents != null && r.cents > 0)
+          .slice(0, PRICE_TABLE_ROWS);
+        if (rows.length < 3) return null;
+        return (
+          <section aria-labelledby="facet-price-table" className="card-surface overflow-x-auto p-4">
+            <h2 id="facet-price-table" className="mb-2 text-lg font-bold text-white">
+              Most valuable Riftbound {facet.label} cards right now
+            </h2>
+            <table className="w-full min-w-[480px] text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th scope="col" className="py-1.5 pr-3 font-semibold">Card</th>
+                  <th scope="col" className="py-1.5 pr-3 font-semibold">Set</th>
+                  <th scope="col" className="py-1.5 pr-3 font-semibold">Rarity</th>
+                  <th scope="col" className="py-1.5 pr-3 text-right font-semibold">Lowest price</th>
+                  <th scope="col" className="py-1.5 text-right font-semibold">Stores</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-800 text-slate-300">
+                {rows.map(({ c, cents }) => (
+                  <tr key={c.id}>
+                    <td className="py-1.5 pr-3">
+                      <Link href={`/card/${c.slug ?? c.id}`} className="text-brand-300 hover:underline">{c.name}</Link>
+                      {c.collectorNumber ? <span className="ml-1 text-xs text-slate-500">#{c.collectorNumber}</span> : null}
+                    </td>
+                    <td className="py-1.5 pr-3">{c.setName ?? c.setCode}</td>
+                    <td className="py-1.5 pr-3">{c.rarity ?? "—"}</td>
+                    <td className="num py-1.5 pr-3 text-right font-semibold text-white">{formatMoney(cents, COUNTRIES[country].currency)}</td>
+                    <td className="num py-1.5 text-right">{c._count?.retailerPrices ?? 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-2 text-xs text-slate-500">
+              Lowest in-stock {COUNTRIES[country].label} price across the stores we track, checked daily. Prices for
+              other markets are on each card&apos;s page.
+            </p>
+          </section>
+        );
+      })()}
 
       {cards.length === 0 ? (
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
