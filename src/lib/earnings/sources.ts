@@ -22,6 +22,13 @@ import {
   tagDays,
   txnDays,
   type EpnTxn,
+  addDays,
+  epnItemSales,
+  impactItemSales,
+  impactSkuLines,
+  ITEM_DAYS,
+  type ItemSale,
+  type SkuLine,
   mergeDays,
   stripeDays,
   windows,
@@ -114,6 +121,43 @@ async function impactPages(sid: string, headers: Record<string, string>, query: 
   return uniqueActions(perWindow.flat());
 }
 
+// What sold, line by line (core.ts impactSkuLines): Impact's "Action Listing (SKU)"
+// report through the same partner Reports API eBay's reports use, for the last
+// ITEM_DAYS days. IMPACT_SKU_REPORT overrides the handle if Impact renames it.
+const IMPACT_SKU_REPORTS = [
+  ...(/^[a-z0-9_]+$/.test(process.env.IMPACT_SKU_REPORT ?? "") ? [process.env.IMPACT_SKU_REPORT!] : []),
+  "mp_action_listing_sku_fast",
+  "mp_action_listing_sku",
+];
+async function impactSkuReport(sid: string, headers: Record<string, string>): Promise<{ lines: SkuLine[]; report: string; rows: number; columns: string[] }> {
+  const today = dayIn(Date.now());
+  let lastError: unknown = new Error("no SKU report answered");
+  for (const report of IMPACT_SKU_REPORTS) {
+    try {
+      let rows = 0;
+      let columns: string[] = [];
+      const perWindow = await mapLimit(windows(addDays(today, -(ITEM_DAYS - 1)), today, 31), WINDOW_CONCURRENCY, async ([from, to]) => {
+        const out: SkuLine[] = [];
+        let url: string | null = `https://api.impact.com/Mediapartners/${encodeURIComponent(sid)}/Reports/${report}.json?timeRange=CUSTOM&START_DATE=${from}&END_DATE=${to}&PageSize=1000`;
+        for (let page = 0; url && page < 20; page++) {
+          const json = (await getJson(url, { headers })) as { "@nextpageuri"?: string } | null;
+          const shape = reportShape(json);
+          rows += shape.rows;
+          if (!columns.length) columns = shape.columns;
+          out.push(...impactSkuLines(json));
+          const next: string | undefined = json?.["@nextpageuri"];
+          url = next ? `https://api.impact.com${next}` : null;
+        }
+        return out;
+      });
+      return { lines: perWindow.flat(), report, rows, columns };
+    } catch (e) {
+      lastError = e;
+    }
+  }
+  throw lastError;
+}
+
 const fetchImpact: Fetcher = async () => {
   const sid = process.env.IMPACT_ACCOUNT_SID;
   const token = process.env.IMPACT_AUTH_TOKEN;
@@ -150,17 +194,29 @@ const fetchImpact: Fetcher = async () => {
     bonusNote = " Bonus invoices could not be read this time.";
   }
   const bonusDays = impactBonusDays(bonuses);
+  // The items of each order. A failed read never sinks the commissions either.
+  let items: ItemSale[] | undefined;
+  let itemNote = "";
+  try {
+    const sku = await impactSkuReport(sid, headers);
+    items = impactItemSales(sku.lines, actions, dayIn(Date.now()));
+    itemNote = ` Items: ${items.length} order lines from the ${sku.report} report (${sku.rows} rows; columns ${sku.columns.join(", ").slice(0, 200) || "none"}).`;
+  } catch (e) {
+    console.error("[earnings] impact SKU report failed:", e);
+    itemNote = ` Items could not be read (${e instanceof Error ? scrubSecrets(e.message).slice(0, 100) : "failed"}).`;
+  }
   return {
     status: "ok",
     days: mergeDays([...impactActionDays(actions), ...bonusDays]),
     tags: impactTagDays(actions),
+    items,
     checks: [
       { label: `Approved (${count("APPROVED")} actions)`, counted: true, days: impactActionDays(actions, ["APPROVED"]) },
       { label: `Pending (${actions.length - count("APPROVED") - count("REVERSED")} actions)`, counted: true, days: impactActionDays(actions, ["PENDING"]) },
       { label: `Reversed (${count("REVERSED")} actions, not counted)`, counted: false, days: impactActionDays(actions, ["REVERSED"]) },
       { label: `Performance bonus (${new Set(bonuses.map((b) => b.key)).size} invoice lines)`, counted: true, days: bonusDays },
     ],
-    detail: `${actions.length} actions, fetched ${how}, plus performance bonuses from Impact invoices (dated to the month they reward). Payouts in each action's own currency.${bonusNote}`,
+    detail: `${actions.length} actions, fetched ${how}, plus performance bonuses from Impact invoices (dated to the month they reward). Payouts in each action's own currency.${bonusNote}${itemNote}`,
   };
 };
 
@@ -270,7 +326,9 @@ const fetchEpn: Fetcher = async () => {
     checks.push({ label: `Transaction report · ${t.sales.length} sales (latest record of each)`, counted: !d?.days.length, days: tdrDays });
     checks.push({ label: "Transaction report · of which pending", counted: false, days: tdrDays.map((x) => ({ ...x, cents: x.pendingCents ?? 0 })) });
   }
-  return { status: "ok", days, tags, checks, reportedThrough, detail: parts.join(" ") };
+  const items = t ? epnItemSales(t.sales, today) : undefined;
+  if (t) parts.push(`${items?.length ?? 0} sales of the last ${ITEM_DAYS} days name their item.`);
+  return { status: "ok", days, tags, items, checks, reportedThrough, detail: parts.join(" ") };
 };
 
 // ── Google AdSense ───────────────────────────────────────────────────────────

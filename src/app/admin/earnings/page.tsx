@@ -43,6 +43,10 @@ import { AMAZON_STORES, amazonChromePrompt } from "@/lib/earnings/amazon";
 import { CostEntriesForm } from "@/components/admin/CostEntriesForm";
 import { EarningsLineChart } from "@/components/admin/EarningsLineChart";
 import { EarningsForecast } from "@/components/admin/EarningsForecast";
+import { WhatsSelling } from "@/components/admin/WhatsSelling";
+import { AMAZON_PRODUCT_KEYS, allItems, itemCoverage, topClickedOverall, topProducts, topSets } from "@/lib/earnings/top-items";
+import { loadTopClicks } from "@/lib/earnings/top-clicks";
+import type { AmazonStoredProducts } from "@/lib/earnings/amazon";
 
 export const dynamic = "force-dynamic";
 // Visits read the stored copy (lib/earnings/stored.ts) in one query; only Refresh
@@ -149,6 +153,10 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
     display,
   );
   const creatorMonthSpent = programmeSpentThisMonth(costEntries, today, display);
+  // What's selling (2026-11-25, owner): the networks' item rows, and every site's buy clicks. lib/earnings/top-items.ts.
+  const amazonProducts = [...(await readStored<AmazonStoredProducts>(AMAZON_PRODUCT_KEYS)).values()];
+  const items = allItems(sources, amazonProducts);
+  const topClicks = await loadTopClicks().catch(() => null);
   const oldest = Math.min(...sources.map((s) => s.fetchedAt));
   // eBay by tracking tag (2026-10-25, owner): one EPN account, every site's links.
   // TCGplayer by tag (2026-10-26): Impact's sharedid, broken down the same way.
@@ -344,6 +352,22 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
           {lagged.map(({ s }) => SOURCE_LABELS[s.key]).join(", ")}: no same-day figures. eBay reports whole days in US time and adds sales up to 48 hours late, and Amazon counts only the reports uploaded below, so each shows its latest day with earnings, dated. Combined Today counts only what is dated today.
         </p>
       )}
+      {/* What's selling: products and sets by orders (sales), then the most-clicked items (clicks) */}
+      <WhatsSelling
+        rangeLabel={RANGES.find((r) => r.key === range)!.label}
+        products={topProducts(items, range, today, display)}
+        sets={topSets(items, range, today, display)}
+        coverage={itemCoverage(sources, amazonProducts)}
+        amazonNote={
+          amazonProducts.length
+            ? `Amazon's products are 30-day totals from the daily Chrome read (${amazonProducts.map((a) => `${a.store.toUpperCase()} ${a.from} to ${a.to}`).join(", ")}), so they show only in the 30-day and longer views.`
+            : "Amazon's products arrive once the daily Chrome read adds its product lines."
+        }
+        clicked={topClickedOverall(topClicks)}
+        clicks={topClicks}
+        money={money}
+      />
+
       {/* eBay and TCGplayer by tracking tag: site prefix, then each full tag */}
       {tagged.map(({ s, groups, total }) => (
         <section key={s.key} className="card-surface mt-4 rounded-2xl border border-ink-700 p-4" data-ebay-tags={s.key === "ebay" ? "" : undefined} data-source-tags={s.key}>

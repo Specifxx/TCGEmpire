@@ -12,6 +12,20 @@ import { prisma } from "@/lib/db";
 import { stripeEnabled } from "@/lib/stripe";
 import { computeSubscriptionMetrics, fetchAllSubscriptions } from "@/lib/subscription-metrics";
 import { premiumReportSection } from "@/lib/premium-report";
+import { readStored } from "@/lib/earnings/stored";
+import { AMAZON_PRODUCT_KEYS, allItems, sellingReportText } from "@/lib/earnings/top-items";
+import { loadTopClicks } from "@/lib/earnings/top-clicks";
+import type { AmazonStoredProducts } from "@/lib/earnings/amazon";
+
+// WHAT'S SELLING (lib/earnings/top-items.ts): the top products and sets sold, then the most-clicked items. Never fails the report.
+async function sellingSection(sources: Awaited<ReturnType<typeof loadEarnings>>, today: string): Promise<string> {
+  try {
+    const [amazon, clicks] = await Promise.all([readStored<AmazonStoredProducts>(AMAZON_PRODUCT_KEYS), loadTopClicks().catch(() => null)]);
+    return sellingReportText(allItems(sources, [...amazon.values()]), clicks, today);
+  } catch {
+    return "WHAT'S SELLING: could not be read this time.";
+  }
+}
 
 // The PREMIUM section (lib/premium-report.ts): Stripe counts and the entitled-account count. Never fails the report.
 async function premiumSection(): Promise<string> {
@@ -56,7 +70,7 @@ async function handlePOST(req: Request) {
       vercel: vercel?.status === "ok" ? vercel.projects ?? [] : null,
       other: costs.filter((c) => c.key !== "vercel").flatMap((c) => c.days),
     }, shares?.status === "ok" ? shares.sites : null),
-  )}\n\n${premium}`;
+  )}\n\n${await sellingSection(sources, today)}\n\n${premium}`;
   const subject = `Growth report ${today}`;
   const to = growthReportEmail();
   if (await sendEmail(to, subject, growthReportHtml(text), { text })) return NextResponse.json({ ok: true, via: "resend" });

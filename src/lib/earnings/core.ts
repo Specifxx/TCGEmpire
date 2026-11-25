@@ -53,8 +53,34 @@ export interface SourceResult {
    *  it earned nothing. Set only for eBay, whose report lags Sydney's today; it
    *  marks the source as lagging (see latestDayFigure). */
   reportedThrough?: string;
+  /** What sold, item by item, for the last ITEM_DAYS days (eBay's transaction report, Impact's SKU report).
+   *  Sales, not clicks: lib/earnings/top-items.ts ranks them. */
+  items?: ItemSale[];
   /** When this source's data was fetched (ms). */
   fetchedAt: number;
+}
+
+/** How far back item rows are kept in a source's stored copy (it stays small). */
+export const ITEM_DAYS = 90;
+
+/** One sold item (or one line of an order), as the network reported it. */
+export interface ItemSale {
+  network: "ebay" | "tcgplayer" | "amazon";
+  day: string;
+  /** For a range total (Amazon's report has no day per item): the first day it covers; `day` is the last. */
+  from?: string;
+  tag: string;
+  name: string;
+  itemId?: string;
+  category?: string;
+  qty: number;
+  /** What the buyer paid for it (0 when the report does not say), in `currency`. */
+  saleCents: number;
+  /** Our commission on it, in `currency`. */
+  cents: number;
+  currency: string;
+  /** Orders this row stands for (1 for a sale; Amazon's range rows carry their item count). */
+  orders: number;
 }
 
 // ── Days and ranges ───────────────────────────────────────────────────────────
@@ -481,6 +507,8 @@ export interface ImpactAction {
   state: string;
   currency: string;
   cents: number;
+  /** The order's sale amount, in `currency` (Impact's Amount), 0 when absent. */
+  saleCents?: number;
   /** The click's sharedid (every site's TCGplayer links carry `<site>-<market>-<placement>`), "" when none. */
   tag?: string;
 }
@@ -497,6 +525,7 @@ export function impactActions(json: unknown): ImpactAction[] {
       state: String(a.State ?? "").toUpperCase(),
       currency: String(a.Currency ?? "USD").toUpperCase(),
       cents: toCents(a.Payout),
+      saleCents: toCents(a.Amount ?? a.IntendedAmount),
       // First NON-EMPTY of the two: the API returns both keys on every action,
       // and the engine sites (Gundam, Lorcana, YGO) tagged only subId1 before
       // 2026-10-28, so SharedId alone read as "No tag" for their sales.
@@ -699,6 +728,107 @@ export function uniqueRecords(records: readonly Record<string, unknown>[]): Reco
   return out;
 }
 
+// ── TCGplayer's items: Impact's Action Listing by SKU report ───────────────
+// The Actions API says what an order paid us, not what was in it. Impact's
+// partner report "Action Listing (SKU)" (handle mp_action_listing_sku_fast, the
+// same report engine as eBay's) lists every order's lines: SKU, name, quantity
+// and amount. Each line is joined to its action by the action id, so a line
+// takes its order's tag and its share of the order's payout and sale amount in
+// the action's own currency (a report may show amounts converted). A report
+// without an action id column stands alone on its own amounts.
+const SKU_ACTION_COLUMNS = ["ActionId", "Action Id", "ActionID", "Oid", "OrderId", "Id"];
+const SKU_NAME_COLUMNS = ["ItemName", "Item Name", "ProductName", "Product Name", "Name", "Product", "ItemDescription", "Description", "Item"];
+const SKU_ID_COLUMNS = ["Sku", "SKU", "ItemSku", "ProductSku", "ProductId", "ItemId"];
+const SKU_CATEGORY_COLUMNS = ["Category", "ItemCategory", "ProductCategory", "Subcategory"];
+const SKU_QTY_COLUMNS = ["Quantity", "Qty", "ItemQuantity", "Units"];
+const SKU_AMOUNT_COLUMNS = ["SaleAmount", "Sale Amount", "ItemAmount", "Amount", "Revenue", "ItemSubtotal", "Subtotal", "Price"];
+const SKU_EARNING_COLUMNS = ["Earnings", "Payout", "Commission", "ItemPayout"];
+const SKU_DATE_COLUMNS = ["EventDate", "ActionDate", "Date", "ReferringDate", "LockingDate"];
+
+export interface SkuLine {
+  actionId: string;
+  day: string | null;
+  name: string;
+  sku: string;
+  category: string;
+  qty: number;
+  amountCents: number;
+  earningCents: number;
+  currency: string;
+}
+
+export function impactSkuLines(json: unknown): SkuLine[] {
+  const out: SkuLine[] = [];
+  for (const r of recordsOf(json)) {
+    const name = String(pick(r, ...SKU_NAME_COLUMNS) ?? "").trim().slice(0, 160);
+    const sku = String(pick(r, ...SKU_ID_COLUMNS) ?? "").trim().slice(0, 60);
+    if (!name && !sku) continue;
+    const qty = Math.round(Number(String(pick(r, ...SKU_QTY_COLUMNS) ?? "1").replace(/[^0-9.\-]/g, "")));
+    out.push({
+      actionId: String(pick(r, ...SKU_ACTION_COLUMNS) ?? "").trim(),
+      day: reportDay(pick(r, ...SKU_DATE_COLUMNS)),
+      name,
+      sku,
+      category: String(pick(r, ...SKU_CATEGORY_COLUMNS) ?? "").trim().slice(0, 60),
+      qty: Number.isFinite(qty) && qty > 0 ? qty : 1,
+      amountCents: toCents(pick(r, ...SKU_AMOUNT_COLUMNS)),
+      earningCents: toCents(pick(r, ...SKU_EARNING_COLUMNS)),
+      currency: String(pick(r, "Currency", "CurrencyCode", "ConvCurrency") ?? "").trim().toUpperCase(),
+    });
+  }
+  return out;
+}
+
+/** SKU lines as item rows: joined to their action (tag, day, share of payout) when the ids meet; reversed orders left out. */
+export function impactItemSales(lines: readonly SkuLine[], actions: readonly ImpactAction[], today: string, fallbackCurrency = "USD"): ItemSale[] {
+  const from = addDays(today, -(ITEM_DAYS - 1));
+  const byId = new Map(actions.filter((a) => a.id).map((a) => [a.id!, a]));
+  const perAction = new Map<string, SkuLine[]>();
+  for (const l of lines) if (l.actionId && byId.has(l.actionId)) perAction.set(l.actionId, [...(perAction.get(l.actionId) ?? []), l]);
+  const out: ItemSale[] = [];
+  const seen = new Set<string>();
+  for (const l of lines) {
+    const a = l.actionId ? byId.get(l.actionId) : undefined;
+    const key = `${l.actionId}|${l.sku}|${l.name}|${l.qty}|${l.amountCents}`;
+    if (seen.has(key)) continue; // overlapping report windows
+    seen.add(key);
+    if (a) {
+      if (a.state === "REVERSED") continue;
+      const siblings = perAction.get(a.id!) ?? [l];
+      const total = siblings.reduce((n, x) => n + Math.max(0, x.amountCents), 0);
+      const share = total > 0 ? Math.max(0, l.amountCents) / total : 1 / siblings.length;
+      out.push({
+        network: "tcgplayer",
+        day: a.day,
+        tag: a.tag ?? "",
+        name: l.name || `TCGplayer SKU ${l.sku}`,
+        ...(l.sku ? { itemId: l.sku } : {}),
+        ...(l.category ? { category: l.category } : {}),
+        qty: l.qty,
+        saleCents: Math.round((a.saleCents || 0) * share) || 0,
+        cents: Math.round(a.cents * share),
+        currency: a.currency,
+        orders: 1,
+      });
+    } else if (l.day) {
+      out.push({
+        network: "tcgplayer",
+        day: l.day,
+        tag: "",
+        name: l.name || `TCGplayer SKU ${l.sku}`,
+        ...(l.sku ? { itemId: l.sku } : {}),
+        ...(l.category ? { category: l.category } : {}),
+        qty: l.qty,
+        saleCents: l.amountCents,
+        cents: l.earningCents,
+        currency: l.currency || fallbackCurrency,
+        orders: 1,
+      });
+    }
+  }
+  return out.filter((x) => x.day >= from && x.day <= today);
+}
+
 // ── eBay Transaction Detail report: one sale, many records ──────────────────
 // eBay's glossary: an adjusted sale gets an UPDATED RECORD whose Earnings is the
 // sale's new final value (DeltaEarnings is the change). Summing every record
@@ -715,6 +845,8 @@ export interface EpnTxn {
   currency: string;
   cents: number;
   updated: string;
+  /** The item sold, when the report names it (Transaction Detail carries the listing's title and id). */
+  item?: { name: string; itemId: string; category: string; qty: number; saleCents: number };
 }
 
 export function epnTransactions(json: unknown, accountCurrency = "AUD"): EpnTxn[] {
@@ -733,9 +865,54 @@ export function epnTransactions(json: unknown, accountCurrency = "AUD"): EpnTxn[
       currency: String(pick(r, "Currency", "CurrencyCode", "EarningsCurrency") ?? accountCurrency).toUpperCase(),
       cents: toCents(pick(r, "Earnings", "TotalEarnings", "Commission")),
       updated: String(pick(r, "UpdateDate", "EventDate") ?? ""),
+      item: epnItem(r),
     });
   }
   return out;
+}
+
+// WHAT SOLD (2026-11-25, owner: "the earnings dashboard also doesn't show the top
+// products or sets that are selling … so we know what's in demand"). eBay's
+// Transaction Detail report names the listing of every sale; whichever of these
+// columns it carries is read, and a sale with neither a title nor an item id has
+// no item (it still counts in every total).
+const ITEM_NAME_COLUMNS = ["ItemName", "ItemTitle", "Title", "ListingTitle", "ProductName", "ItemDescription"];
+const ITEM_ID_COLUMNS = ["ItemId", "ItemID", "EbayItemId", "ListingId", "LegacyItemId"];
+const ITEM_CATEGORY_COLUMNS = ["LeafCategoryName", "LeafCategory", "CategoryName", "MetaCategoryName", "MetaCategory", "ItemCategory"];
+const ITEM_QTY_COLUMNS = ["Quantity", "Qty", "QuantitySold", "ItemQuantity", "Units"];
+const ITEM_SALE_COLUMNS = ["Sales", "SalesGmv", "SalesGMV", "Gmv", "SaleAmount", "SalesAmount", "TotalSaleAmount", "ItemPrice"];
+export function epnItem(r: Record<string, unknown>): EpnTxn["item"] {
+  const name = String(pick(r, ...ITEM_NAME_COLUMNS) ?? "").trim().slice(0, 160);
+  const itemId = String(pick(r, ...ITEM_ID_COLUMNS) ?? "").trim().slice(0, 40);
+  if (!name && !itemId) return undefined;
+  const qty = Math.round(Number(String(pick(r, ...ITEM_QTY_COLUMNS) ?? "1").replace(/[^0-9.\-]/g, "")));
+  return {
+    name,
+    itemId,
+    category: String(pick(r, ...ITEM_CATEGORY_COLUMNS) ?? "").trim().slice(0, 60),
+    qty: Number.isFinite(qty) && qty > 0 ? qty : 1,
+    saleCents: toCents(pick(r, ...ITEM_SALE_COLUMNS)),
+  };
+}
+
+/** The sales of the last ITEM_DAYS days that name their item, as item rows. */
+export function epnItemSales(sales: readonly EpnTxn[], today: string): ItemSale[] {
+  const from = addDays(today, -(ITEM_DAYS - 1));
+  return sales
+    .filter((t) => t.item && t.day >= from && t.day <= today)
+    .map((t) => ({
+      network: "ebay" as const,
+      day: t.day,
+      tag: t.tag,
+      name: t.item!.name || `eBay item ${t.item!.itemId}`,
+      ...(t.item!.itemId ? { itemId: t.item!.itemId } : {}),
+      ...(t.item!.category ? { category: t.item!.category } : {}),
+      qty: t.item!.qty,
+      saleCents: t.item!.saleCents,
+      cents: t.cents,
+      currency: t.currency,
+      orders: 1,
+    }));
 }
 
 // UNTAGGED SALES, EXPLAINED (2026-10-26). A third of eBay's 30-day earnings came

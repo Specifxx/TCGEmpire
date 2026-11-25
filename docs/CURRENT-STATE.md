@@ -1531,7 +1531,7 @@ longer lands on its entry.
   string of lights under the header was removed on 2026-11-26, the owner
   disliked it): no snow, art, stripes or palette swap, on
   any sister site; the theme must match the domain
-  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420), [2026-11-20](../DECISIONS.md#L24952), [2026-11-26](../DECISIONS.md#L25722)).
+  ([2026-11-08](../DECISIONS.md#L22966), [2026-11-12](../DECISIONS.md#L23420), [2026-11-20](../DECISIONS.md#L24952), [2026-11-26](../DECISIONS.md#L25743)).
   Scroll motion is scroll-driven CSS (scroll/view timelines; transform and
   opacity only) under `@supports` and no-preference; `Reveal` steps aside where
   it runs. No scroll-jacking library. Riftbound 2048 is retired
