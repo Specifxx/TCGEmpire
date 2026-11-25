@@ -120,7 +120,7 @@ export function PopularCardsCarousel({
   if (tabs.length === 0) return null;
 
   return (
-    <section>
+    <section className="home-shelf">
       <SegmentedTabs
         label="Popular cards"
         active={active}
@@ -140,7 +140,7 @@ export function PopularCardsCarousel({
               <div className="mb-4 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="min-w-0">
                   <h2 className="text-xl font-extrabold text-white">{t.heading}</h2>
-                  <p className="mt-0.5 text-sm text-slate-400">{t.description}</p>
+                  <p className="shelf-note mt-0.5 text-sm text-slate-400">{t.description}</p>
                 </div>
                 <Link href={t.allHref} className="btn-ghost text-xs shrink-0">{t.allLabel}</Link>
               </div>

@@ -7,7 +7,7 @@ import { CURRENT_GIVEAWAY as G, giveawayState } from "@/lib/giveaway";
 export function GiveawayHomeBanner({ now = new Date() }: { now?: Date }) {
   if (giveawayState(G, now) !== "open") return null;
   return (
-    <section aria-label="Giveaway" className="rounded-2xl border border-gold/30 bg-gold/10 p-4 sm:p-5" data-giveaway-banner>
+    <section aria-label="Giveaway" className="home-give rounded-2xl border border-gold/30 bg-gold/10 p-4 sm:p-5" data-giveaway-banner>
       <Link href="/giveaway" prefetch={false} className="flex items-center gap-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={G.imageUrl} alt="" aria-hidden="true" width={64} height={89} loading="lazy" className="h-[89px] w-16 flex-none rounded-md" />

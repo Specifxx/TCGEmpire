@@ -115,7 +115,7 @@ export function CinematicHero({
 
       <div className="rb-hero-content container-app relative z-10 w-full py-8 text-center sm:py-14 lg:py-16">
         {/* The one eyebrow, in season only: each of these renders nothing outside its own season. */}
-        <div className="rb-rise" style={riseAt(0)}>
+        <div className="rb-rise hero-gift" style={riseAt(0)}>
           <NocturneComing />
           <ChristmasGifts />
         </div>
@@ -124,7 +124,7 @@ export function CinematicHero({
           <span className="rb-flame-text rb-flame-live">Riftbound</span> Card Prices{region ? ` in ${SHORT_PLACE[region.code]}` : ""}
         </h1>
 
-        <p className="rb-rise mx-auto mt-4 max-w-4xl text-slate-300 sm:mt-5" style={riseAt(1)}>
+        <p className="rb-rise hero-sub mx-auto mt-4 max-w-4xl text-slate-300 sm:mt-5" style={riseAt(1)}>
           <strong className="block text-lg font-semibold text-white sm:text-xl">Buy Riftbound cards at the best price</strong>
           <span className="mt-1.5 block text-sm leading-relaxed sm:text-base">
             Price check any card and find the cheapest place to buy — live Riftbound prices from every {heroAdjective} retailer we track, updated daily.
@@ -139,11 +139,11 @@ export function CinematicHero({
           </Suspense>
         </div>
 
-        <div className="rb-rise" style={riseAt(3)}>
+        <div className="rb-rise hero-markets" style={riseAt(3)}>
           <CountryHeroToggle />
         </div>
 
-        <nav aria-label="Start here" className="rb-rise mx-auto mt-6 grid max-w-3xl grid-cols-3 gap-2 sm:mt-8 sm:grid-cols-6 sm:gap-3" style={riseAt(4)}>
+        <nav aria-label="Start here" className="rb-rise hero-ways mx-auto mt-6 grid max-w-3xl grid-cols-3 gap-2 sm:mt-8 sm:grid-cols-6 sm:gap-3" style={riseAt(4)}>
           {WAYS.map((w) => (
             <Link key={w.href} href={w.href} prefetch={false} className="rb-way">
               <NavIcon name={w.icon} className="h-5 w-5" />

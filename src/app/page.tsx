@@ -331,7 +331,7 @@ export default async function HomePage() {
   const moversByCountry = Object.fromEntries(COUNTRY_CODES.map((c, i) => [c, moversArr[i]])) as Record<Country, PriceMovers>;
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="home-flow flex flex-col gap-10">
       {/* Cinematic full-bleed hero — search-first (see CinematicHero + Task 3). */}
       <CinematicHero
         totalCards={totalCards}
