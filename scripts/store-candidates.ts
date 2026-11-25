@@ -17,6 +17,9 @@ import { buildCardIndex, resolveCardId, type CardLite, type ShopifyProduct } fro
 import { DECOMMISSIONED_RETAILERS, RETAILERS } from "../src/lib/retailers";
 import { SCRAPE_HEADERS, robotsAllows, sleep, isRateLimited } from "../src/lib/scrape-http";
 import { vetHost } from "./store-vetting.mjs";
+import { classifySealed, isTrackableSealedTitle } from "../src/lib/sealed-import";
+import { sealedFloorCents } from "../src/lib/ebay";
+import { SEALED_ONLY_SHOPIFY } from "../src/lib/sealed-stores";
 
 type Candidate = { key: string; name: string; base: string; country: "US" | "UK" | "CA" | "AU" | "SG" | "EU"; collections: string[]; sealed?: string[] };
 const CURRENCY: Record<Candidate["country"], string> = { US: "USD", UK: "GBP", CA: "CAD", AU: "AUD", SG: "SGD", EU: "EUR" };
@@ -95,7 +98,12 @@ async function measure(c: Candidate) {
     matchedInStock = 0,
     status = 0;
   const sample: string[] = [];
-  for (const h of c.collections) {
+  // Sealed (2026-11-25): the same gates the sealed import runs (Riftbound + sealed
+  // title, a priced in-stock variant over the type's floor), so a shop with no
+  // singles can still be judged for SEALED_ONLY_SHOPIFY.
+  let sealedInStock = 0;
+  const sealedSample: string[] = [];
+  for (const h of [...c.collections, ...(c.sealed ?? [])]) {
     if (!allowed(`/collections/${h}/products.json`)) continue;
     for (let page = 1; page <= 10; page++) {
       await sleep(1000);
@@ -107,6 +115,13 @@ async function measure(c: Candidate) {
         total++;
         const avail = (p.variants ?? []).some((v: any) => v.available);
         if (avail) inStock++;
+        if (avail && isTrackableSealedTitle(p.title ?? "")) {
+          const floor = sealedFloorCents(classifySealed(p.title ?? ""));
+          if ((p.variants ?? []).some((v: any) => v.available && Math.round(parseFloat(v.price) * 100) >= floor)) {
+            sealedInStock++;
+            if (sealedSample.length < 3) sealedSample.push(p.title ?? "");
+          }
+        }
         const id = resolveCardId(p, idx);
         if (id) {
           matched++;
@@ -126,7 +141,12 @@ async function measure(c: Candidate) {
   if (!total) why.push(`no products read from the collection (last HTTP ${status})`);
   if (matchedInStock < 20) why.push(`only ${matchedInStock} in-stock singles match our cards`);
   if (total && matched / total < 0.8) why.push(`only ${Math.round((100 * matched) / total)}% of its listings match one card`);
-  return { ...c, host, age: vet.age, state: vet.state, currency, total, inStock, matched, matchedInStock, unmatchedSample: sample, verdict: why.length ? "HOLD" : "ADD", why };
+  // Sealed-only verdict: every store-level reason above still applies; the singles
+  // reasons do not.
+  const sealedWhy = why.filter((w) => !/singles match|listings match|no products read/.test(w));
+  if (SEALED_ONLY_SHOPIFY.some((s) => s.key === c.key || new URL(s.base).host.replace(/^www\./, "") === host)) sealedWhy.push("already tracked for sealed");
+  if (sealedInStock < 3) sealedWhy.push(`only ${sealedInStock} in-stock Riftbound sealed products`);
+  return { ...c, host, age: vet.age, state: vet.state, currency, total, inStock, matched, matchedInStock, unmatchedSample: sample, verdict: why.length ? "HOLD" : "ADD", why, sealedInStock, sealedSample, sealedVerdict: sealedWhy.length ? "HOLD" : "ADD", sealedWhy };
 }
 
 async function inBatches<T, R>(items: T[], n: number, fn: (t: T) => Promise<R>): Promise<R[]> {
@@ -153,14 +173,17 @@ async function inBatches<T, R>(items: T[], n: number, fn: (t: T) => Promise<R>):
   const sealedOnly: string[] = [];
   for (const { p, d } of found) {
     if (d.singles.length) candidates.push({ ...p, collections: d.singles, sealed: d.sealed });
-    else if (d.sealed.length) sealedOnly.push(`| ${p.name} (${p.base}) | SEALED ONLY | ${d.sealed.join(", ")} |`);
+    else if (d.sealed.length) {
+      sealedOnly.push(`| ${p.name} (${p.base}) | SEALED ONLY | ${d.sealed.join(", ")} |`);
+      candidates.push({ ...p, collections: [], sealed: d.sealed });
+    }
   }
   console.log(`discovery: ${fresh.length} shops read, ${candidates.length} with Riftbound singles to measure, ${sealedOnly.length} sealed only`);
   for (const l of sealedOnly) console.log(l);
   const measured = await inBatches(candidates, 4, measure);
   for (const r of measured) {
     out.push(r);
-    const line = `| ${r.name} (${r.host}) | ${r.verdict} | ${r.inStock}/${r.total} | ${r.matched} (${r.matchedInStock}) | ${r.age ?? "?"} d | ${r.currency ?? "?"} | ${r.why.join("; ") || "-"} | ${r.collections.join(",")} | sealed: ${(r.sealed ?? []).join(",")} |`;
+    const line = `| ${r.name} (${r.host}) | ${r.verdict} | ${r.inStock}/${r.total} | ${r.matched} (${r.matchedInStock}) | ${r.age ?? "?"} d | ${r.currency ?? "?"} | ${r.why.join("; ") || "-"} | ${r.collections.join(",")} | sealed: ${(r.sealed ?? []).join(",")} | SEALED ${r.sealedVerdict} ${r.sealedInStock} ${r.sealedWhy.join("; ") || "-"} | ${r.sealedSample.join(" / ")} |`;
     console.log(line);
     lines.push(line);
   }
