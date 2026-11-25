@@ -8,6 +8,7 @@ import { FREE_HISTORY_DAYS } from "@/lib/history-access";
 import { FREE_PLANS_PER_MONTH } from "@/lib/basket-meter";
 import { DECK_LINE_CAP, FREE_BULK_LINES } from "@/lib/deck";
 import { DECK_WATCH_LIMIT } from "@/lib/alert-limits";
+import { scanConfig } from "@/lib/scan/caps";
 
 // /premium FOR A VISITOR WHO HAS NOT BOUGHT.
 //
@@ -89,6 +90,12 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M4 6h.01M4 12h.01M4 18h.01" />
     </>
   ),
+  camera: (
+    <>
+      <path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+      <circle cx="12" cy="14" r="3.5" />
+    </>
+  ),
   shield: (
     <>
       <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" />
@@ -140,6 +147,15 @@ const COMPARISON: { feature: string; free: string | boolean; pro: string | boole
   { feature: "No ads", free: false, pro: true },
 ];
 
+// The card scanner, with its real limits (lib/scan/caps.ts), only while it is
+// switched on and open to members. Premium team, 2026-11-26: Collectr sells
+// "unlimited scanning" as a Pro feature and our page never said Premium
+// raises the scanner's daily limit.
+function scannerOn(): { free: number; premium: number } | null {
+  const c = scanConfig();
+  return c.enabled && c.public && c.premiumPerDay > c.freePerDay ? { free: c.freePerDay, premium: c.premiumPerDay } : null;
+}
+
 function Cell({ value, pro }: { value: string | boolean; pro?: boolean }) {
   if (value === true)
     return (
@@ -165,6 +181,17 @@ function trialOn(cta: ProCtaProps): boolean {
 }
 
 export function ProLanding({ prices, cta, rating, proof }: { prices: ProPriceFigures; cta: ProCtaProps; rating: SiteRating | null; proof?: ReactNode }) {
+  const scan = scannerOn();
+  const features = scan
+    ? [
+        ...FEATURES.slice(0, 2),
+        { icon: "camera" as const, title: "Card scanner", body: `Photograph a card and see its price at every store: ${scan.premium} scans a day (${scan.free} free).` },
+        ...FEATURES.slice(2),
+      ]
+    : FEATURES;
+  const comparison = scan
+    ? [...COMPARISON.slice(0, 6), { feature: "Card scanner", free: `${scan.free} a day`, pro: `${scan.premium} a day` }, ...COMPARISON.slice(6)]
+    : COMPARISON;
   return (
     <div data-pro-landing>
       {/* On a phone the plan card comes straight after the headline, before
@@ -238,7 +265,7 @@ export function ProLanding({ prices, cta, rating, proof }: { prices: ProPriceFig
         </h2>
         <p className="mt-2 max-w-2xl text-slate-400">From the cheapest way to buy a deck to every price we have recorded. Premium does the watching for you.</p>
         <div className="mt-8 grid gap-px overflow-hidden rounded-lg border border-ink-800 bg-ink-800 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
+          {features.map((f) => (
             <div key={f.title} className="bg-ink-900 p-5">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-ink-700 bg-ink-850 text-brand-400">
@@ -281,7 +308,7 @@ export function ProLanding({ prices, cta, rating, proof }: { prices: ProPriceFig
               </tr>
             </thead>
             <tbody>
-              {COMPARISON.map((r) => (
+              {comparison.map((r) => (
                 <tr key={r.feature} className="border-b border-ink-800 last:border-0">
                   <th scope="row" className="px-4 py-3 font-normal text-slate-200 sm:px-6">
                     {r.feature}

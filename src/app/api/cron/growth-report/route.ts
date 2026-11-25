@@ -8,6 +8,24 @@ import { addDays, dayIn } from "@/lib/earnings/core";
 import { readClickCounts } from "@/lib/click-counter";
 import { loadShareCounts } from "@/lib/analytics/vercel";
 import { buildGrowthReport, growthReportHtml, growthReportText, WEEKS } from "@/lib/earnings/growth-report";
+import { prisma } from "@/lib/db";
+import { stripeEnabled } from "@/lib/stripe";
+import { computeSubscriptionMetrics, fetchAllSubscriptions } from "@/lib/subscription-metrics";
+import { premiumReportSection } from "@/lib/premium-report";
+
+// The PREMIUM section (lib/premium-report.ts): Stripe counts and the entitled-account count. Never fails the report.
+async function premiumSection(): Promise<string> {
+  if (!stripeEnabled()) return premiumReportSection(null);
+  try {
+    const [{ rows, capped }, entitled] = await Promise.all([
+      fetchAllSubscriptions(),
+      prisma.user.count({ where: { premiumUntil: { gt: new Date() } } }).catch(() => null),
+    ]);
+    return premiumReportSection(computeSubscriptionMetrics(rows, Date.now()), { entitled, capped });
+  } catch {
+    return premiumReportSection(null, { entitled: null, error: true });
+  }
+}
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -25,19 +43,20 @@ function authorized(req: Request): boolean {
 async function handlePOST(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const today = dayIn(Date.now());
-  const [sources, clicks, costs, shares] = await Promise.all([
+  const [sources, clicks, costs, shares, premium] = await Promise.all([
     loadEarnings(true),
     readClickCounts(addDays(today, -7 * WEEKS - 1)).catch(() => new Map()),
     loadCosts(true).catch(() => []),
     loadShareCounts(addDays(today, -7 * WEEKS - 1), today).catch(() => null),
+    premiumSection(),
   ]);
   const vercel = costs.find((c) => c.key === "vercel");
-  const text = growthReportText(
+  const text = `${growthReportText(
     buildGrowthReport(sources, clicks, today, {
       vercel: vercel?.status === "ok" ? vercel.projects ?? [] : null,
       other: costs.filter((c) => c.key !== "vercel").flatMap((c) => c.days),
     }, shares?.status === "ok" ? shares.sites : null),
-  );
+  )}\n\n${premium}`;
   const subject = `Growth report ${today}`;
   const to = growthReportEmail();
   if (await sendEmail(to, subject, growthReportHtml(text), { text })) return NextResponse.json({ ok: true, via: "resend" });
