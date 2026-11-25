@@ -164,6 +164,7 @@ longer lands on its entry.
   browser hands to Dex (fragment, 60 days); `/api/sister-premium/*` re-reads the account every call. Members get 200 alerts and
   a watch list; back-in-stock watches (`RESTOCK_TARGET_CENTS`) are free for everyone since 2026-11-18 (owner; [entry](../DECISIONS.md#2026-11-18-back-in-stock-alerts-on-the-sister-sites-are-free-for-everyone-owner)). Same Stripe, price and trial as Rift.
   [2026-11-10](../DECISIONS.md#L23131)
+- **The weekly watched-cards email on Rift (2026-11-18):** opt-in only, offered on `/watching` to half the accounts (`watchDigestArm`), the other half the control; `lib/watch-digest.ts`, `WatchDigestSub`, sent after the 07:00 alert run through Brevo, no affiliate links ([entry](../DECISIONS.md#2026-11-18-the-weekly-your-watched-cards-email-opt-in-tested-by-arm-retention-lever-3)).
 - **A weekly biggest-drops email for the sister sites (2026-11-08):** opt-in only (an unticked box on their alert form,
   a button on the manage page, or since 2026-11-12 the sites' own "weekly price drops" box, `kind: "weekly"`), double opt-in, one edition a week per site from its feed (8–60% drops, three or
   more), links only to the site (no eBay or Amazon), inside 20 of the service's 30 daily mails. `SisterDigest`, `SisterDigestEdition`.

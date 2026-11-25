@@ -25647,3 +25647,20 @@ win-a-box, a month and day, an ISO date, 18h00 or 11:30, precon, deck). A title 
 "Riftbound Vendetta Pre-Rift" stays: a month and day alone would also hit "(Arrives July 31)" and "Dec 4 Pre-Order" on
 real products, so the date sign counts only inside a kit-less Pre-Rift title. Over the whole export it refuses exactly
 those 10 rows; cleanupStaleSealed drops them on the next sealed refresh. Test: tests/radiance-sealed-gaps.test.ts.
+
+## 2026-11-18: The weekly "your watched cards" email, opt-in, tested by arm (retention lever 3)
+
+Accounts that watch a card come back after week one at 56% against 25% for those that don't (retention census, 18 Nov), and
+the owner wants retention email to opted-in people with a control group. The daily user digest that went off on 2026-11-09 was
+a broadcast; this is an email a person turns on for their own watchlist, so it is not marketing and does not pass `marketing`.
+
+- `/watching` shows one "Turn on" card only to the OFFER arm (`watchDigestArm`: a hash of the user id, half the accounts). The
+  CONTROL arm never sees it, and `/api/watch-digest` refuses it an opt-in, so the arms compare cleanly without anyone being
+  denied an email they asked for. The census's `watchDigest` block reads both arms' 7- and 14-day activity.
+- `WatchDigestSub` (one row per opted-in account) holds the stop token and the ISO-week edition. `refresh-prices.yml` calls
+  `/api/cron/watch-digest` after the 07:00 free alert run; each run sends to whoever is still due, at most `DIGEST_BATCH`
+  (120) through Brevo, leaving room in its 300 a day.
+- Prices are the ones the alert run already keeps on each watch (`lastPriceCents` against `startPriceCents`), no new query;
+  cheaper-than-when-you-started first. Cards link to their own pages, never eBay or another affiliate link (EPN messaging
+  approval is not granted). Every email has a stop link and a one-click List-Unsubscribe; the stop page mutates only on POST.
+- Read at the retention read of 2 Dec, then weekly: subscribers, sends, stops, and offer vs control activity.

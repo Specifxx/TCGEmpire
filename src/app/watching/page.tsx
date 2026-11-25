@@ -16,6 +16,8 @@ import { getSealedGroups } from "@/lib/sealed-import";
 import { DeckWatchList } from "@/components/DeckWatchList";
 import { SealedWatchList, type SealedWatchName } from "@/components/SealedWatchList";
 import { PremiumButton } from "@/components/PremiumButton";
+import { WatchDigestToggle } from "@/components/WatchDigestToggle";
+import { watchDigestArm } from "@/lib/watch-digest";
 
 // getCurrentUser() reads cookies(), so this route can never be cached. Declared
 // explicitly rather than left to inference — a stray session read is what once
@@ -86,6 +88,16 @@ export default async function WatchingPage() {
     for (const g of groups) sealedNames[g.groupKey] = { name: g.name, lowestPriceCents: g.lowestPriceCents, msrpCents: g.msrpCents };
   }
 
+  // The weekly watched-cards email (retention lever 3, lib/watch-digest.ts): offered to half the accounts only.
+  const digestArm = watchDigestArm(user.id);
+  const digestOn =
+    digestArm === "offer"
+      ? await prisma.watchDigestSub
+          .findUnique({ where: { userId: user.id }, select: { optedOutAt: true } })
+          .then((r) => Boolean(r && !r.optedOutAt))
+          .catch(() => false)
+      : false;
+
   return (
     <div className="mx-auto max-w-5xl">
       {/* LIST FIRST, PROSE FOLDED (owner, 2026-11-24: "I hate text heavy pages
@@ -118,6 +130,8 @@ export default async function WatchingPage() {
       </div>
 
       <Watchlist />
+
+      {digestArm === "offer" && <WatchDigestToggle initialOn={digestOn} />}
 
       {(member || lapsedSealed > 0) && (
         <section id="sealed" aria-labelledby="sealed-h" className="card-surface mt-8 scroll-mt-header p-5">
