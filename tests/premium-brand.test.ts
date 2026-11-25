@@ -43,7 +43,8 @@ test("a sister's sender, checkout line and fee line never say RiftCompare", () =
   const json = JSON.stringify(params);
   assert.doesNotMatch(json, /RiftCompare/);
   assert.match(json, /DexCompare Premium — first 14 days/);
-  assert.match(String(params.custom_text?.submit?.message), /^DexCompare Premium is billed by Compare Empire/);
+  const submit = params.custom_text?.submit as { message?: string } | undefined;
+  assert.match(String(submit?.message), /^DexCompare Premium is billed by Compare Empire/);
 });
 
 test("the trial-ending notices are in the site's name, colour and links", () => {
