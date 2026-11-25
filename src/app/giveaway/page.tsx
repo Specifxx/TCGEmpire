@@ -48,7 +48,7 @@ export default function GiveawayPage() {
     <main className="mx-auto max-w-4xl px-4 py-8">
       {/* Hero: the prize, the clock and the entry panel. */}
       <section className="gw-hero relative overflow-hidden rounded-3xl border border-white/10 p-5 sm:p-8">
-        <div className="grid items-start gap-6 sm:grid-cols-[230px_1fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 sm:grid-cols-[230px_minmax(0,1fr)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={G.imageUrl}
@@ -58,7 +58,7 @@ export default function GiveawayPage() {
             className="gw-prize mx-auto rounded-xl shadow-2xl"
             loading="eager"
           />
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">Giveaway · free to enter · worldwide</p>
             <h1 className="mt-1 text-3xl font-extrabold leading-tight sm:text-4xl">{G.title}</h1>
             <p className="mt-2 opacity-90">
