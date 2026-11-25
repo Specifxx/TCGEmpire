@@ -15,7 +15,7 @@ import { withLiveStock } from "./preorder-live-stock";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { fetchHtmlStoreProducts } from "./storefront-html";
 import { isShopify, withShopifyVariant } from "./checkout-link";
-import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents, ebaySpentThisRun, isGradedListing, SEALED_DECK_CHAMPIONS } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents, ebaySpentThisRun, isGradedListing, SEALED_DECK_CHAMPIONS, flatName } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { COUNTRY_LIST, DEFAULT_COUNTRY, currencyOf, isoCountry, type Country } from "./country";
@@ -549,7 +549,7 @@ export const CHAMPION_DECK_SETS: Readonly<Record<string, string>> = {
   shyvana: "REC", vayne: "REC",
 };
 const ONE_DECK_TYPE = /^Champion Deck \(([^)]+)\)(?: Display)?$/;
-const flatChampion = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
+const flatChampion = flatName;
 
 /** The set a Champion Deck title names only through its champion, or null. Pure. */
 export function championDeckSet(title: string, productType: string): string | null {
@@ -625,6 +625,16 @@ export function championDeckSlugRedirect(slug: string): string | null {
   return sealedSlug(`${CHAMPION_DECK_SETS[c]}|Champion Deck (${CHAMPION_NAME[c]})${/display/.test(slug) ? " Display" : ""}`);
 }
 
+/** Where the old page of a set's deck "named" by several champions goes (2026-11-25): "lgc-champion-deck-tryndamere-ashe-
+ *  lux-garen" is the four-deck set, any other several-champion bracket the set's plain deck page. Null otherwise. Pure. */
+export function severalChampionDeckRedirect(slug: string): string | null {
+  const m = slug.match(/^([a-z]{3})-champion-deck-([a-z-]+?)(-display)?$/);
+  if (!m || !SETS.some((s) => s.code === m[1].toUpperCase())) return null;
+  const named = new Set(m[2].split("-").map(flatChampion).filter((w) => w in CHAMPION_NAME));
+  if (named.size < 2) return null;
+  return m[1] === "lgc" && LEGACY_FOUR.every((c) => named.has(c)) ? "lgc-champion-deck-set-4" : `${m[1]}-champion-deck${m[3] ?? ""}`;
+}
+
 /** A title-derived group key: a SET_LESS_GROUPS key when one fits, else the title's first 40 letters and digits. */
 export function titleGroupKey(title: string): string {
   return setLessGroupKey(title) ?? title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
@@ -662,6 +672,7 @@ export function setLessSlugRedirect(slug: string): string | null {
 // two different decks would share one "LGC|Champion Deck" group and one price.
 // The list lives in ebay.ts since 2026-11-22: the eBay sealed search uses it to refuse another champion's deck.
 const CHAMPIONS = SEALED_DECK_CHAMPIONS;
+const LEGACY_FOUR = ["tryndamere", "ashe", "lux", "garen"];
 
 // The sealed types whose identity a listing's OWN title can be trusted to
 // state, used by the eBay pass to reject a result that belongs to a different
@@ -678,9 +689,16 @@ export function classifySealed(title: string): string {
   // note: "Shyvana Champion Deck (Ships April 2027)" and "Legacy Champion Deck (Pre Order)" (2026-11-24) were filed as
   // decks named "Ships April 2027" and "Pre Order", each its own one-store page.
   const paren = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim();
-  const rawChamp = (paren && !/\b(?:pre[\s-]*orders?|pre[\s-]*sale|presell|ships?|shipping|english|limit|\d{4})\b/i.test(paren) ? paren : null) || title.match(CHAMPIONS)?.[1];
+  // A bracket naming several champions is not one deck (2026-11-25): universetcg's "Legacy Champion Deck (Tryndamere,
+  // Ashe, Lux, Garen)" (EUR 100, four decks at EUR 25) had its own one-store page beside "Champion Deck Set (4)".
+  const parenChamps = paren ? new Set([...paren.matchAll(new RegExp(CHAMPIONS.source, "gi"))].map((m) => flatChampion(m[1]))) : new Set<string>();
+  if (parenChamps.size > 1) {
+    const allFour = LEGACY_FOUR.every((c) => parenChamps.has(c)) && !/\/|\bor\b/i.test(paren!);
+    if (allFour) return "Champion Deck Set (4)";
+  }
+  const rawChamp = (paren && parenChamps.size <= 1 && !/\b(?:pre[\s-]*orders?|pre[\s-]*sale|presell|ships?|shipping|english|limit|\d{4})\b/i.test(paren) ? paren : null) || title.match(CHAMPIONS)?.[1];
   // A known champion keeps its one spelling: "Origin LeeSin champion deck" (Mayhem Collectables) is the Lee Sin deck.
-  const champ = rawChamp ? CHAMPION_NAME[flatChampion(rawChamp)] ?? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
+  const champ = parenChamps.size > 1 ? null : rawChamp ? CHAMPION_NAME[flatChampion(rawChamp)] ?? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
   if (PROVING_GROUNDS_2ND.test(title)) return "Proving Grounds 2nd Edition";
   if (/proving\s*grounds/.test(t)) return /\bcase\b/.test(t) ? "Proving Grounds Case" : "Proving Grounds";
   // Legacy's four Champion Decks sold together (2026-11-01): "Legacy - Champion

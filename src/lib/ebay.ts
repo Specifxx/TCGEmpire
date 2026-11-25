@@ -1239,8 +1239,9 @@ export function wrongBoosterCaseQuantity(title: string): boolean {
 //   • a slab by a smaller grader: "ARCANE BOX SET JINX - REBEL PCG 9.5".
 // Each rule only refuses, and each was checked against every other title of that type in the export (none refused).
 // Champion names: longest first so "Viktor"/"Vex" win before the short "Vi". Shared with classifySealed.
-export const SEALED_DECK_CHAMPIONS = /\b(Lee\s*Sin|Tryndamere|Viktor|Rumble|Fiora|Garen|Annie|Ashe|Lux|Master\s*Yi|Shyvana|Vayne|Jinx|Vex|Vi)\b/i;
-const flatName = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
+export const SEALED_DECK_CHAMPIONS = /\b(Lee\s*Sin|Tryn?damere|Viktor|Rumble|Fiora|Garen|Annie|Ashe|Lux|Master\s*Yi|Shyvana|Vayne|Jinx|Vex|Vi)\b/i;
+// "Trydamere" (zatugames UK, 2026-11-25) is Tryndamere misspelt: one champion, one deck.
+export const flatName = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "").replace(/^trydamere$/, "tryndamere");
 // One unit of these is a single pack or a single deck: a stated count of more than one is another product.
 const ONE_PACK_OR_DECK = /^(?:Booster Pack|Nexus Night Pack|Promo Pack|Sleeved Booster|Champion Deck(?: \([^)]+\))?|Trial Deck(?: \([^)]+\))?)$/;
 // One unit of these is one item, though its title may list what is inside ("Bundle (10 boosters)").

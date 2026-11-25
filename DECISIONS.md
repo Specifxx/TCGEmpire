@@ -25692,3 +25692,12 @@ A paid tester's think-aloud on TCG Prices (tcgcompare DECISIONS.md, 2026-11-25) 
 ones that pay us. Under the price table the product page now says "Every store we track is listed, whether it pays us or not, in
 price order" with a link to /methodology, and the group-chat share button reads "Share deal" (its full wording stays as the
 button's accessible name): the tester found the page's buttons too wordy. Cart and watch wording wait for their A/B verdicts.
+
+## 2026-11-25 — A Champion Deck bracket naming several champions is not one deck
+
+universetcg (EU) listed "Legacy Champion Deck (Tryndamere, Ashe, Lux, Garen)" at EUR 100, four decks at EUR 25, and the bracket
+made it a one-store deck "named" Tryndamere, Ashe, Lux, Garen. `classifySealed` now reads a bracket with two or more champions as
+the four-deck "Champion Deck Set (4)" when it lists all four Legacy champions without "/" or "or", else as the set's plain
+Champion Deck (a choice of decks, one price: universetcg's "(Shyvana, Vayne)" at EUR 25). "Trydamere" (zatugames UK) is read as
+Tryndamere. Over the 24 Nov export exactly these 3 store rows change. The old several-champion pages 301
+(`severalChampionDeckRedirect`).
