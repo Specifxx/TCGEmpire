@@ -1,0 +1,42 @@
+name: QA guard (live sites, desktop and phone)
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["scripts/qa-guard/**", ".github/workflows/qa-guard.yml"]
+  workflow_dispatch:
+    inputs:
+      sites:
+        description: "Site keys, comma separated (blank: all)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-guard
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright and tsx only
+        run: |
+          mkdir -p /tmp/qa && cd /tmp/qa && npm init -y >/dev/null
+          npm i --no-audit --no-fund playwright@1.56.1 tsx@4.19.2
+          npx playwright install --with-deps chromium
+      - name: Walk the sites
+        run: ln -sfn /tmp/qa/node_modules node_modules && node_modules/.bin/tsx scripts/qa-guard/run.ts --sites "${{ inputs.sites }}" --out qa-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qa-report
+          path: qa-report.json
+          retention-days: 14
