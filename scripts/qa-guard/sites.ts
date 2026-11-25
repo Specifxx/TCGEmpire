@@ -168,7 +168,8 @@ export const SITES: Site[] = [
     url: "https://compareempire.com",
     repo: "Specifxx/compareempiretake2",
     searches: [{ kind: "single", q: "LEGO", expect: ["lego"] }],
-    product: /^\/(?:[a-z]{2}\/)?(p|product|products)\/[^/]+\/?$/,
+    // /<market>/<category>/<product>: the market's own hubs (deals, stores, launches…) are not products.
+    product: /^\/(us|uk|ca|au|sg|eu)\/(?!deals|stores|launches|browse|search)[a-z0-9-]+\/[a-z0-9-]+\/?$/,
     searchPage: "/search?q={q}",
   },
   {

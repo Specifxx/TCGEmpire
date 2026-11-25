@@ -116,14 +116,18 @@ export async function productLinks(page: Page, site: Site): Promise<Link[]> {
 const SEARCH_INPUT =
   'input[type="search"], input[name="q"], input[role="combobox"], input[placeholder*="earch" i], input[aria-label*="earch" i], input[placeholder*="find" i]';
 
+/** The header's own box first (a home page can hold other finders), then a search landmark, then any. */
 async function visibleSearchInput(page: Page) {
-  const inputs = page.locator(SEARCH_INPUT);
-  const n = await inputs.count();
-  for (let i = 0; i < n; i++) {
-    const el = inputs.nth(i);
-    if (await el.isVisible().catch(() => false)) {
-      const box = await el.boundingBox().catch(() => null);
-      if (box && box.width > 40) return el;
+  const scopes = [`header :is(${SEARCH_INPUT})`, `nav :is(${SEARCH_INPUT})`, `[role="search"] :is(${SEARCH_INPUT})`, `[role="dialog"] :is(${SEARCH_INPUT})`, SEARCH_INPUT];
+  for (const sel of scopes) {
+    const inputs = page.locator(sel);
+    const n = await inputs.count();
+    for (let i = 0; i < n; i++) {
+      const el = inputs.nth(i);
+      if (await el.isVisible().catch(() => false)) {
+        const box = await el.boundingBox().catch(() => null);
+        if (box && box.width > 40) return el;
+      }
     }
   }
   return null;
@@ -187,6 +191,13 @@ export async function searchJourney(t: Tracked, site: Site, spec: SearchSpec): P
     await page.waitForTimeout(1500);
     const links = await productLinks(page, site);
     found = relevant(page.url() === startUrl ? links.filter((l) => !before.has(l.path)) : links, spec, site);
+    // An exact match can open its product page straight away: that is a result too.
+    const here = new URL(page.url());
+    if (!found.length && here.href !== startUrl && site.product.test(here.pathname)) {
+      const title = (await page.title().catch(() => "")) || "";
+      found = relevant([{ path: here.pathname, href: here.href, text: title }], spec, site);
+      if (found.length) mode = "enter → product page";
+    }
   }
   if (!found.length) {
     const any = await productLinks(page, site);
@@ -286,13 +297,25 @@ export async function productJourney(t: Tracked, site: Site, link: Link, kind: s
     if (u.host.replace(/^www\./, "") === host) {
       if (resolved >= 3) continue;
       resolved++;
+      // The sites' own /go and /out routes add the tags server-side and send a self-declared bot on UNTAGGED
+      // (lib/bot-click.ts), so the guard cannot read the tag there without posing as a person and logging a
+      // fake click. It checks the route answers and sends the visitor to the retailer the link names; the
+      // tags themselves are pinned by each site's tests and the weekly affiliate-gap audit.
       try {
         const r = await page.request.get(a.href, { maxRedirects: 0, timeout: 15_000, failOnStatusCode: false });
         const loc = r.headers()["location"];
+        const named = u.searchParams.get("u");
         if (r.status() >= 400) problems.push(`buy link ${u.pathname}${u.search.slice(0, 60)} answers HTTP ${r.status()}`);
-        else if (loc) {
-          const p = tagProblem(new URL(loc, a.href).href);
-          if (p) problems.push(p);
+        else if (r.status() < 300 || !loc) problems.push(`buy link ${u.pathname} does not redirect (HTTP ${r.status()})`);
+        else {
+          const to = new URL(loc, a.href);
+          if (to.host.replace(/^www\./, "") === host) problems.push(`buy link ${u.pathname} sends the visitor back to ${to.pathname} on our own site`);
+          else if (named) {
+            try {
+              const want = new URL(named).host.replace(/^www\./, "").split(".").slice(-2).join(".");
+              if (!to.host.includes(want.split(".")[0])) problems.push(`buy link names ${want} but sends the visitor to ${to.host}`);
+            } catch {}
+          }
         }
       } catch (e) {
         problems.push(`buy link ${u.pathname} failed: ${(e as Error).message.slice(0, 80)}`);
@@ -347,17 +370,34 @@ export async function filterJourney(t: Tracked, site: Site): Promise<Omit<Check,
   return { journey, ok: true, level: "ok", detail: `${n0} → ${after.length} products, ${matching.length} naming "${f.q}"`, url: page.url() };
 }
 
-export async function basketJourney(t: Tracked, site: Site): Promise<Omit<Check, "site" | "viewport">> {
+/** Best Basket as a buyer uses it: shortlist a store's price on a product page, then open the basket and see a total. */
+export async function basketJourney(t: Tracked, site: Site, product?: Link): Promise<Omit<Check, "site" | "viewport">> {
   const journey = "best basket";
   const url = site.url + site.basket!;
+  let added = false;
+  if (product) {
+    await go(t, product.href);
+    const add = t.page.getByRole("button", { name: /^\s*\+?\s*(shortlist|add to (shortlist|basket|list))\b/i }).first();
+    if (await add.isVisible().catch(() => false)) {
+      await add.click({ timeout: 5000 }).catch(() => {});
+      await t.page.waitForTimeout(800);
+      added = true;
+    }
+  }
   const { status } = await go(t, url);
   if (status >= 400) return { journey, ok: false, level: "fail", detail: `HTTP ${status}`, url };
   const body = await t.page.locator("body").innerText();
   if (/application error|something went wrong|unhandled runtime error|this page couldn.t load/i.test(body))
     return { journey, ok: false, level: "fail", detail: "the page shows an error", url };
-  const controls = await t.page.locator("main :is(input, textarea, button, select):visible").count();
-  if (!controls) return { journey, ok: false, level: "fail", detail: "no inputs or buttons: the tool did not render", url };
-  return { journey, ok: true, level: "ok", detail: `${controls} controls`, url };
+  await t.page.waitForTimeout(2500);
+  const main = await t.page.locator("main").first().innerText().catch(() => body);
+  if (added) {
+    if (!PRICE.test(main)) return { journey, ok: false, level: "fail", detail: `shortlisted ${product!.path}, but the basket shows no total or price`, url };
+    return { journey, ok: true, level: "ok", detail: `shortlisted ${product!.path}; the basket prices it`, url };
+  }
+  const controls = await t.page.locator(":is(main, body) :is(input, textarea, button, select, a):visible").count();
+  if (main.trim().length < 40 && !controls) return { journey, ok: false, level: "fail", detail: "the page is empty: the tool did not render", url };
+  return { journey, ok: true, level: "warn", detail: `opens, but no "+ Shortlist" button was found on ${product?.path ?? "a product page"} to test it with`, url };
 }
 
 /** Wider than the screen: the classic phone bug. Reports the widest element so the fix is quick. */

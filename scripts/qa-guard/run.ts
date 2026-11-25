@@ -102,7 +102,10 @@ async function runSite(browser: Browser, site: Site, v: Viewport): Promise<Check
 
     // 3. Filters and Best Basket.
     if (site.filters) await fresh("filters", (t) => filterJourney(t, site));
-    if (site.basket) await fresh("best basket", (t) => basketJourney(t, site));
+    if (site.basket) {
+      const pick = firsts.find((f) => f.kind === "sealed") ?? firsts[0];
+      await fresh("best basket", (t) => basketJourney(t, site, pick?.link));
+    }
   } catch (e) {
     add({ journey: "guard", ok: false, level: "fail", detail: `guard crashed: ${(e as Error).message.slice(0, 200)}` });
   } finally {

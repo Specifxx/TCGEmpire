@@ -1,6 +1,13 @@
 name: QA guard (live sites, desktop and phone)
 
+# Walks every live site's core journeys in a real browser (docs/qa-guard.md, DECISIONS.md 2026-11-26).
+# Hourly: only the sites whose build id changed (every release within the hour). 21:17 UTC: every site.
+# A broken site is a `qa-guard` issue here (issues.ts); this job is red only when the guard itself broke.
+
 on:
+  schedule:
+    - cron: "41 * * * *"
+    - cron: "17 21 * * *"
   push:
     branches: ["claude/**"]
     paths: ["scripts/qa-guard/**", ".github/workflows/qa-guard.yml"]
@@ -13,6 +20,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: qa-guard
@@ -27,15 +35,46 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      # Only Playwright and tsx: the site's own dependencies are not needed to walk the live sites.
       - name: Install Playwright and tsx only
         run: |
           mkdir -p /tmp/qa && cd /tmp/qa && npm init -y >/dev/null
           npm i --no-audit --no-fund playwright@1.56.1 tsx@4.19.2
-          npx playwright install --with-deps chromium
-      - name: Walk the sites
-        run: ln -sfn /tmp/qa/node_modules node_modules && node_modules/.bin/tsx scripts/qa-guard/run.ts --sites "${{ inputs.sites }}" --out qa-report.json
-      - uses: actions/upload-artifact@v4
+          cd "$GITHUB_WORKSPACE" && ln -sfn /tmp/qa/node_modules node_modules
+      - name: Restore last build ids
+        uses: actions/cache/restore@v4
+        with:
+          path: qa-state.json
+          key: qa-state-${{ github.run_id }}
+          restore-keys: qa-state-
+      - name: Which sites to walk
+        id: pick
+        env:
+          QA_ALL: ${{ (github.event_name != 'schedule' || github.event.schedule == '17 21 * * *') && '1' || '0' }}
+        run: |
+          if [ -n "${{ inputs.sites }}" ]; then sites="${{ inputs.sites }}"; else sites=$(node_modules/.bin/tsx scripts/qa-guard/changed.ts qa-state.json); fi
+          echo "sites=$sites" >> "$GITHUB_OUTPUT"
+          echo "Walking: ${sites:-nothing changed}"
+      - name: Save build ids
         if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: qa-state.json
+          key: qa-state-${{ github.run_id }}
+      - name: Install Chromium
+        if: steps.pick.outputs.sites != ''
+        run: npx playwright install --with-deps chromium
+      - name: Walk the sites
+        if: steps.pick.outputs.sites != ''
+        run: node_modules/.bin/tsx scripts/qa-guard/run.ts --sites "${{ steps.pick.outputs.sites }}" --out qa-report.json
+      - name: File or close issues
+        # Branch runs only report: issues are filed from main's runs.
+        if: steps.pick.outputs.sites != '' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node_modules/.bin/tsx scripts/qa-guard/issues.ts qa-report.json
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.pick.outputs.sites != ''
         with:
           name: qa-report
           path: qa-report.json
