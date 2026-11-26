@@ -10,12 +10,15 @@
 #
 # THE WHOLE DIRECTORY. The export is a full snapshot, so main's data/public/ is
 # replaced by this job's copy (deletions included: a card with no listings left
-# loses its file). Nothing outside data/public/ is touched. Retries when another
-# push wins the race.
+# loses its file). Nothing outside data/public/ is touched, except the monthly
+# cheapest-store record (data/store-wins/, scripts/store-wins.ts), which rides
+# the same commit and is copied WITHOUT --delete (each month is its own file).
+# Retries when another push wins the race.
 set -euo pipefail
 
 WHO="${1:-a workflow}"
 DIR="data/public"
+WINS="data/store-wins"
 
 if printf '%s' "$WHO" | grep -qiF -- '[deploy]'; then
   echo "::error::refusing to publish public data with a deploy marker in the message."
@@ -44,9 +47,11 @@ for attempt in 1 2 3 4 5; do
   git worktree add --quiet --detach "$WORK/tree" origin/main
   mkdir -p "$WORK/tree/$DIR"
   rsync -a --delete --exclude='*.tmp-*' "$DIR/" "$WORK/tree/$DIR/"
+  if [ -d "$WINS" ]; then mkdir -p "$WORK/tree/$WINS" && rsync -a "$WINS/" "$WORK/tree/$WINS/"; fi
   if (
     cd "$WORK/tree"
     git add -A -- "$DIR"
+    if [ -d "$WINS" ]; then git add -A -- "$WINS"; fi
     if git diff --cached --quiet; then
       echo "Public data: main already has this snapshot."
       exit 0
