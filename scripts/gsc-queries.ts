@@ -131,6 +131,19 @@ async function main() {
       console.log(`      ${q.keys[0].slice(0, 58).padEnd(58)} ${String(q.clicks).padStart(4)} ${String(q.impressions).padStart(6)}  pos ${q.position.toFixed(1)}`);
   }
 
+  // Zero-click pages near page one (Search Recovery, 2026-11-26): seen often, ranked 1-13, never clicked.
+  // Their own top queries say what the title and description should answer.
+  console.log("\nZERO-CLICK PAGES NEAR PAGE ONE (position 1-13, 30+ impressions, 0 clicks), with their top queries");
+  console.log(head(70));
+  for (const r of pages
+    .filter((p) => p.clicks === 0 && p.impressions >= 30 && p.position <= 13)
+    .sort((a, b) => b.impressions - a.impressions)
+    .slice(0, 40)) {
+    console.log(line({ ...r, keys: [path(r.keys[0])] }, 70));
+    for (const q of qp.filter((x) => x.keys[1] === r.keys[0]).sort((a, b) => b.impressions - a.impressions).slice(0, 6))
+      console.log(`      ${q.keys[0].slice(0, 58).padEnd(58)} ${String(q.clicks).padStart(4)} ${String(q.impressions).padStart(6)}  pos ${q.position.toFixed(1)}`);
+  }
+
   // Every comparison and question query (all of them, not the top N): compare pairs and posts to write.
   const byQuery = new Map<string, { impr: number; clicks: number; pos: number; page: string }>();
   for (const r of qp) {
