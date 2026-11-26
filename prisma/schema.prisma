@@ -1074,6 +1074,26 @@ model SisterDigestEdition {
   drops   Json
 }
 
+// A signed-in member's /collection list on a sister site (lib/sister-stash.ts, 2026-11-26): it follows them between
+// devices, and with `weekly` on (opt-in) it is valued once a week from the site's /alert-feed.json and emailed to the
+// account's own address. `rev` is the optimistic-concurrency revision every write names. `lastPrices` is each item's
+// unit price at the last weekly email ("<market>:<id>" → cents), for the week-on-week change. PRIVATE, never exported.
+model SisterStash {
+  email      String
+  site       String
+  items      Json
+  rev        Int       @default(0)
+  weekly     Boolean   @default(false)
+  weeklyAt   DateTime?
+  lastSentAt DateTime?
+  lastPrices Json?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@id([email, site])
+  @@index([weekly, lastSentAt])
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // DECK PRICE WATCH — Premium (2026-09-29, "Premium works while you're away").
 // ─────────────────────────────────────────────────────────────────────────────

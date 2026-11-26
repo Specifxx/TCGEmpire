@@ -26031,6 +26031,42 @@ now also returns the member's handle.
 The community plan (move 3): every contribution so far was anonymous, so nobody had a reason to tell anyone. Target 50 named
 contributors by 31 Dec. No new prompt: the handle lives on the profile page, and a vote's own reply is the only nudge.
 
+## 2026-11-26 — A signed-in member's collection follows them, and a weekly stash email
+
+Owner, 2026-11-26 ("get these implemented ASAP … designed in a very, very nice way … tested"), move 5 of the deal-site study (OzBargain,
+PriceCharting): a sealed stash tracker with a weekly "your stash moved" email, on TCG Prices first. TCG Prices's `/collection` list lived
+in one browser only (`ce_vault_v1`), so it could not follow a member to another device and nothing could email them about it.
+
+- **The list lives here too, for a signed-in member.** `SisterStash` (email + site, PRIVATE, never exported) holds the items: product id,
+  market, quantity, price when added, and the name, page and image for the member's own browser only. `/api/sister-premium/stash` takes the
+  same premium-session token as the watch list (any signed-in account, Premium or not), exact-origin CORS, 60 a minute per address,
+  `STASH_SITES` only (TCG Prices). Every write names the revision it was built on and is a compare-and-set (`updateMany … rev: baseRev`);
+  a stale write gets 409 with the current list, and the browser merges and tries again. The browser merges three ways against the last
+  list both sides agreed on (TCG Prices `lib/vault-sync.ts`), so adds and removals on two devices both survive and a quantity changed on
+  both keeps the larger, never the sum.
+- **The weekly email is opt-in and goes to the account's own address only.** An unticked switch on `/collection`; switching it on marks
+  the address confirmed for the shared alert service (signing in proved the inbox), whose manage page and RFC 8058 one-click unsubscribe
+  (`&stash=<site>`) stop it. Stopping it, or "stop all", only switches the email off: the list is never deleted from an email link.
+- **Real prices, the site's own words.** `lib/sister-stash.ts` values the list from the site's `/alert-feed.json` (lowest in-stock store
+  price per market, never eBay, Amazon or a conversion), like for like: the weekly change counts only items priced both this week and at
+  the last email (`lastPrices`), the first email compares with the price when added. Every name and link in it comes from the feed, never
+  from what the browser stored. Up to three items up and three down, by money moved; a list with nothing in stock today sends nothing.
+- **Inside the mail cap.** It runs in the daily `sister-alerts` call after the alerts and the biggest-drops email, claiming under the same
+  `DIGEST_MAIL_CEILING` (20 of the shared 30), so a busy day defers it to the next and the alerts' reserve is never spent. A due site whose
+  feed fails or is stale fails the job, which the ops monitor's job check sees.
+
+## 2026-11-26 — The pull tracker shares an "I pulled" picture
+
+Community plan move 4 (owner: community is what makes things blow up; target 200 shares in December). The pull tracker's
+"Share my win / Share my pulls" button, on a phone that can share a picture, now sends a 1080×1350 card drawn in the browser
+(`lib/brag-card.ts`, the same file as TCG Prices'): the best card's own art (our same-origin `/card-art/` copy, so the canvas
+stays readable), "I pulled · <set>", that card's price in the visitor's market, a pill ("$135.50 more than I paid", or the plain
+total when the log lost or no price was paid) and three rows (all my pulls, I paid, cards logged), with the share link
+(`/tools/pull-tracker/<set>/s/<code>`) beside it. Only the numbers the tracker shows (`pullBragFields`, `lib/pull-tracker.ts`);
+nothing priced means no card. Drawn ahead a second after the last change in idle time, so the tap opens the share sheet at once.
+Desktops share the link as before (that page has its own share image). Counted as `brag_share { kind: "pull", how }`.
+`tests/brag-card.test.ts`.
+
 ## 2026-11-26 — Collector pulse: "buying, holding or skipping" on sister product pages
 
 **Asked:** the owner (26 Nov) wants community to be a main focus: what makes visitors talk about us. Move 1 of the

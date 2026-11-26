@@ -16,10 +16,14 @@ export async function POST(req: Request) {
   if (!token || token.length > 100) return NextResponse.json({ error: "Missing token" }, { status: 400 });
   const a = await prisma.sisterAlertAddress.findUnique({ where: { token }, select: { email: true } });
   const digest = (new URL(req.url).searchParams.get("digest") ?? "").slice(0, 32);
-  if (a && digest) await prisma.sisterDigest.deleteMany({ where: { email: a.email, site: digest } });
+  // The weekly collection email's own header adds &stash=<site>: it stops that email and keeps the collection.
+  const stash = (new URL(req.url).searchParams.get("stash") ?? "").slice(0, 32);
+  if (a && stash) await prisma.sisterStash.updateMany({ where: { email: a.email, site: stash }, data: { weekly: false } });
+  else if (a && digest) await prisma.sisterDigest.deleteMany({ where: { email: a.email, site: digest } });
   else if (a) {
     await prisma.sisterAlert.deleteMany({ where: { email: a.email } });
     await prisma.sisterDigest.deleteMany({ where: { email: a.email } });
+    await prisma.sisterStash.updateMany({ where: { email: a.email }, data: { weekly: false } });
   }
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }
@@ -27,7 +31,8 @@ export async function POST(req: Request) {
 export function GET(req: Request) {
   const u = new URL(req.url);
   const digest = (u.searchParams.get("digest") ?? "").slice(0, 32);
-  const stop = digest ? `digest:${digest}` : "all";
+  const stash = (u.searchParams.get("stash") ?? "").slice(0, 32);
+  const stop = stash ? `stash:${stash}` : digest ? `digest:${digest}` : "all";
   // A RELATIVE Location: reached through a sister's own /account-service/alerts/unsubscribe rewrite, the visitor stays on that
   // site's address (owner, 2026-11-19: sign-up and alert pages never send the visitor to another site).
   return new Response(null, { status: 303, headers: { Location: `manage?t=${encodeURIComponent(u.searchParams.get("t") ?? "")}&stop=${encodeURIComponent(stop)}`, "Cache-Control": "no-store" } });
