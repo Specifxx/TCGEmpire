@@ -1,0 +1,31 @@
+name: Discord top hunters
+
+# Posts last month's Top deal hunters in the hub's #announcements (scripts/discord-top-hunters.ts; community plan move 3,
+# 2026-11-26). Handles and points only; an empty list posts nothing. Never fails.
+
+on:
+  schedule:
+    - cron: "17 9 1 * *"
+  workflow_dispatch:
+    inputs:
+      month:
+        description: "Month to post (YYYY-MM); empty means last month"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Post the list
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          MONTH: ${{ inputs.month }}
+        run: npx -y tsx scripts/discord-top-hunters.ts
