@@ -9,6 +9,8 @@ import { shippingPolicyUrl } from "@/lib/retailers";
 import { STORE_PAGES, storeBySlug, storePageName, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
 import { formatMeasuredDate, shippingSummary, type StoreShippingSummary } from "@/lib/shipping";
 import { storeBadgeHtml } from "@/lib/store-badge";
+import { badgeMonth, storeClaim } from "@/lib/store-wins";
+import { StoreCheapestBadge } from "@/components/StoreCheapestBadge";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { StoreCodeChip } from "@/components/StoreCodeChip";
 import { cardHref } from "@/lib/card-url";
@@ -126,6 +128,16 @@ export default async function StorePage({ params }: { params: { slug: string } }
     // or any other is ordered by it.
     verifiedStoreProfile(store.key),
   ]);
+  // Last month's cheapest-price record (lib/store-wins.ts): committed files, no query. A file that will not read
+  // costs the page this one section, never the page.
+  let wins: { month: NonNullable<ReturnType<typeof badgeMonth>>; claim: NonNullable<ReturnType<typeof storeClaim>> } | null = null;
+  try {
+    const month = badgeMonth();
+    const claim = storeClaim(month, store.key);
+    if (month && claim) wins = { month, claim };
+  } catch (e) {
+    console.error(`stores/${store.key}: store-wins unreadable:`, e);
+  }
   const policyUrl = shippingPolicyUrl(store.key);
   const siblings = STORE_PAGES.filter((s) => (s.country ?? "AU") === country && s.slug !== store.slug);
   // The market's buying guide and the all-markets one, for "Is it the
@@ -334,6 +346,8 @@ export default async function StorePage({ params }: { params: { slug: string } }
         </Link>{" "}
         — a live repricing report for your store, on the Stores plan.
       </p>
+
+      {wins && <StoreCheapestBadge store={store} claim={wins.claim} month={wins.month.month} days={wins.month.days.length} />}
 
       {/* "Add this badge" (2026-09-24): the store-owner reader above, given
           something to take away. Plain HTML + inline SVG from lib/store-badge.ts

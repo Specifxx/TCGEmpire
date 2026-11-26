@@ -25905,3 +25905,32 @@ only from the sites in `DEAL_VOTE_SITES` (exact origins, 30 a minute per address
 tally; its GET is one bounded `groupBy` over at most 60 drops, cached by the CDN for six hours (the route floor), so a
 board costs at most four reads a day per set of drops. Votes order nothing: no price, store row, alert or drop changes.
 A vote is a tap with no text and no address, so it is not an inbox item and does not call `notifyOwnerBounded`.
+
+## 2026-11-26 — Monthly cheapest-price badges for stores
+
+**Asked:** the COO's OzBargain study (move 6), approved by the owner ("get these implemented ASAP … tested … state of
+the art"): tell each store, once a month, how often it was the cheapest, give it a badge saying so that links back to
+us, and email the stores offering it in exchange for the link.
+
+**Now:** `scripts/store-wins.ts` runs in `refresh-prices.yml` right after the morning export (never fatal) and adds the
+UTC day to `data/store-wins/<YYYY-MM>.json`, which `publish-public-data.sh` commits with the snapshot (copied without
+`--delete`: each month is its own file). It reads the public sealed snapshot only, never Neon. Rows first pass the sealed
+pages' own guards (`lib/store-wins-rows.ts`: legacy type, store currency, the per-type price floor) and take the
+product's own name. A product is contested in a market when two or more stores have it in stock that day, and the store
+or stores at the lowest price win it (ties win for each; the only store with stock never wins; no eBay, TCGplayer,
+Amazon or Cardmarket; one market, one currency, nothing converted). The badge number is the count of different products
+a store was cheapest on, on at least one day of a COMPLETE month, and needs `MIN_BADGE_WINS` (3). A day is recorded once.
+November was backfilled from the 24 snapshot commits of 1 to 24 Nov (25 Nov has none): 136 stores won something, 62
+qualify.
+
+**Where:** `/stores/[slug]` shows the record (count, rank in its market, the products with days cheapest) and the badge
+in a dark and a light version with copyable code; `/stores/cheapest` ranks each market (the last complete month, or the
+current month labelled "so far"). The badge (`cheapestBadgeHtml`) is plain HTML with an inline SVG rosette, one followed
+link to the store's page, no script, image, iframe, class or query string, and every property a host stylesheet might
+set is reset inline (checked against a hostile stylesheet). Store pages read one small committed file, no query.
+
+**Why the store's page, not the leaderboard:** the products behind the number are there, so a shopper who follows the
+badge can check the claim, and it is the page the store would want to link anyway.
+
+**Read:** badges live on store sites and referral visits from them, counted in the listing-backlinks tracker from the
+first send (1 to 2 Dec, November's numbers).
