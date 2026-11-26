@@ -15,7 +15,8 @@ export const INVITE_SOURCES: Record<string, string> = {
   Dg4qYhAV7X: "YGO Compare",
   SRrMNdKbDp: "Lorcana Compare",
   cdJEpmuTW2: "Singles DB / emails / other",
-  Rj4zzzay2V: "Cyberpunk Compare",
+  Rj4zzzay2V: "Cyberpunk Compare (old, #general)",
+  gvRKMSq2Ym: "Cyberpunk Compare (#more-tcgs)",
   cmN2J9hCRQ: "Gundam Compare",
 };
 
