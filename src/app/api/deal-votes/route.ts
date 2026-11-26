@@ -74,12 +74,14 @@ export async function POST(req: Request) {
     const t = (await read(site.key, [drop]))[drop] ?? EMPTY;
     // A signed-in member's vote or flag is a community contribution (counted once per drop and kind; lib/contributions.ts).
     let earned = 0;
+    let handle: string | null = null;
     if (token && next) {
       const member = await communityMember(req, token).catch(() => null);
       const kind = action === "hot" && next.vote === 1 ? "hot" : action === "cold" && next.vote === -1 ? "cold" : action === "expired" && next.expired ? "flag" : null;
       if (member && kind) earned = (await recordContribution(member.id, kind, site.key, drop)).points;
+      if (member) handle = member.handle;
     }
-    return NextResponse.json({ ok: true, mine: next ?? { vote: 0, expired: false }, tally: t, earned }, { headers });
+    return NextResponse.json({ ok: true, mine: next ?? { vote: 0, expired: false }, tally: t, earned, handle }, { headers });
   } catch (e) {
     console.warn("[deal-votes] vote failed:", e);
     return NextResponse.json({ error: "Couldn't save your vote." }, { status: 503, headers });
