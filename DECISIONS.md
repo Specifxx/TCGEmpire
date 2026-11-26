@@ -26030,3 +26030,21 @@ now also returns the member's handle.
 **Why.** Owner, 2026-11-26: "building a community is probably the harder part ... I really want to focus on the community aspect".
 The community plan (move 3): every contribution so far was anonymous, so nobody had a reason to tell anyone. Target 50 named
 contributors by 31 Dec. No new prompt: the handle lives on the profile page, and a vote's own reply is the only nudge.
+
+## 2026-11-26 — Collector pulse: "buying, holding or skipping" on sister product pages
+
+**Asked:** the owner (26 Nov) wants community to be a main focus: what makes visitors talk about us. Move 1 of the
+community plan (`/mnt/project-files/strategy/community-2026-11-26.html`).
+
+**What:** one inline question under a sister site's price table, "What are you doing with this today?", three taps:
+Buying, Holding, Skipping. Once 10 people answered (`MIN_PUBLIC`, `lib/sentiment.ts`) the page shows the split. The
+point is shared data people quote: the weekly market posts and The Spread can say "62% of collectors are holding X",
+which only we can say, and finance subs discuss.
+
+**How:** table `SentimentVote` (site, productId, voter, choice), the same shape as `DealVote`: no sign-in, voter is an
+HMAC of IP + user agent under its own derived key, never the address. `/api/sentiment` takes answers only from the exact
+origins of MTG Compare, TCG Prices and DexCompare (`PULSE_SITES`), 20 a minute per IP; GET is one bounded `groupBy`
+over at most 40 ids, CDN-cached six hours. Below 10 answers the GET returns only the count, so one tap is never "100%".
+A pulse never orders prices, never touches a store row, deal, alert or ranking. MTG Compare is first (biggest audience,
+the r/mtgfinance crowd); the site shows it only to a visitor who already answered or skipped its other inline question,
+so a visit still meets one question at most (UX guard, owner 2026-11-23).

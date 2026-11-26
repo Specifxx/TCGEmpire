@@ -4,6 +4,7 @@
 // Publishes only webhook messages of the last day that are not yet published; never fails the run.
 // Then copies each published drop's posts into its game's own channel (owner, 2026-11-23: cover every game), so a member
 // who follows one game sees its deals there. Copies happen only right after a publish succeeds, so a drop is copied once.
+// Each copy is published as well, so a partner server can follow ONE game's room (game-first rooms, 2026-11-26).
 const CHANNEL = "1573082997203275887"; // #sealed-sniper in TCG Deals & Restocks
 const CROSSPOSTED = 1;
 const DAY = 86_400_000;
@@ -78,6 +79,7 @@ async function main() {
   const ids = msgs.map((m) => m.id);
   let ok = 0;
   let copies = 0;
+  let gamePublished = 0;
   for (const m of msgs) {
     const id = m.id;
     const p = await fetch(`https://discord.com/api/v10/channels/${CHANNEL}/messages/${id}/crosspost`, { method: "POST", headers: h, signal: AbortSignal.timeout(10_000) });
@@ -92,8 +94,17 @@ async function main() {
           body: JSON.stringify(copyMessage(g)),
           signal: AbortSignal.timeout(10_000),
         });
-        if (c.ok) copies++;
-        else console.log(`publish: copy of ${id} to ${ch} answered HTTP ${c.status}${await c.json().then((b: { code?: number; message?: string }) => ` (code ${b.code}: ${b.message})`).catch(() => "")}`);
+        if (c.ok) {
+          copies++;
+          // Game rooms are announcement channels too (game-first rooms, 2026-11-26), so a partner server that runs one game
+          // follows that game's room and gets only its drops. Publish the bot's own copy; member chat there is never published.
+          const copy = (await c.json().catch(() => null)) as { id?: string } | null;
+          if (copy?.id) {
+            const x = await fetch(`https://discord.com/api/v10/channels/${ch}/messages/${copy.id}/crosspost`, { method: "POST", headers: h, signal: AbortSignal.timeout(10_000) });
+            if (x.ok) gamePublished++;
+            else console.log(`publish: copy ${copy.id} in ${ch} not published, HTTP ${x.status} (a plain text channel cannot be followed)`);
+          }
+        } else console.log(`publish: copy of ${id} to ${ch} answered HTTP ${c.status}${await c.json().then((b: { code?: number; message?: string }) => ` (code ${b.code}: ${b.message})`).catch(() => "")}`);
       }
     } else {
       // Discord's own error code says which permission is missing (50013 Missing Permissions, 50001 Missing Access).
@@ -101,7 +112,7 @@ async function main() {
       console.log(`publish: ${id} answered HTTP ${p.status}${why}`);
     }
   }
-  console.log(`publish: ${ok} of ${ids.length} drop(s) published to following servers, ${copies} game-channel cop${copies === 1 ? "y" : "ies"}.`);
+  console.log(`publish: ${ok} of ${ids.length} drop(s) published to following servers, ${copies} game-channel cop${copies === 1 ? "y" : "ies"} (${gamePublished} published to servers following a game room).`);
 }
 
 if (process.argv[1]?.endsWith("discord-publish.ts")) main().catch((e) => console.log(`publish: ${e instanceof Error ? e.message : e}`));
