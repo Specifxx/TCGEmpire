@@ -39,6 +39,13 @@ export type Tracked = { page: Page; errors: string[]; badResponses: string[] };
 
 export async function openPage(ctx: BrowserContext): Promise<Tracked> {
   const page = await ctx.newPage();
+  // The shortlist is an A/B on some sites (lib/cart-list.ts `cartArm`): the guard always takes the arm that HAS it, so Best
+  // Basket can be tested. Its events never reach analytics (blocked below), so the test's numbers are untouched.
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("cart-arm", "on");
+    } catch {}
+  });
   const errors: string[] = [];
   const badResponses: string[] = [];
   page.on("console", (m) => {
@@ -377,7 +384,7 @@ export async function basketJourney(t: Tracked, site: Site, product?: Link): Pro
   let added = false;
   if (product) {
     await go(t, product.href);
-    const add = t.page.getByRole("button", { name: /^\s*\+?\s*(shortlist|add to (shortlist|basket|list))\b/i }).first();
+    const add = t.page.getByRole("button", { name: /^\s*\+?\s*(shortlist|add to (shortlist|basket|list))\b|^save .+ to your shortlist$/i }).first();
     if (await add.isVisible().catch(() => false)) {
       await add.click({ timeout: 5000 }).catch(() => {});
       await t.page.waitForTimeout(800);
