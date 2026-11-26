@@ -38,6 +38,24 @@ export interface LiveWeight extends Points {
 type WeightUser = { id: string; email: string; isAdmin: boolean; premiumUntil: Date | null };
 type WindowGiveaway = Pick<Giveaway, "key" | "opensAt" | "closesAt" | "checkinRule">;
 
+async function allCheckinDays(giveaway: string, ids: string[], window: { gte: Date; lte: Date }): Promise<{ userId: string; day: string }[]> {
+  const out: { userId: string; day: string }[] = [];
+  const PAGE = 20_000;
+  let cursor: string | undefined;
+  for (;;) {
+    const rows = await prisma.giveawayCheckin.findMany({
+      where: { giveaway, userId: { in: ids }, createdAt: window },
+      select: { id: true, userId: true, day: true },
+      orderBy: { id: "asc" },
+      take: PAGE,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+    });
+    for (const r of rows) out.push({ userId: r.userId, day: r.day });
+    if (rows.length < PAGE) return out;
+    cursor = rows[rows.length - 1].id;
+  }
+}
+
 /** Each account's points right now (lib/giveaway.ts entryPoints). */
 export async function liveWeights(
   g: WindowGiveaway,
@@ -56,10 +74,9 @@ export async function liveWeights(
     prisma.giveawayReferral
       .findMany({ where: { giveaway: g.key, referrerId: { in: ids } }, select: { referrerId: true, referredId: true }, take: 20_000 })
       .catch(() => []),
-    // Every check-in day, not a count: a streak round (lib/giveaway.ts checkinRuleOf) scores the days in order.
-    prisma.giveawayCheckin
-      .findMany({ where: { giveaway: g.key, userId: { in: ids }, createdAt: window }, select: { userId: true, day: true }, take: 100_000 })
-      .catch(() => [] as { userId: string; day: string }[]),
+    // Every check-in day, not a count: a streak round (lib/giveaway.ts checkinRuleOf) scores the days in order. Read in full,
+    // page by page, and a failure throws: a partial list would silently change the draw's weights.
+    allCheckinDays(g.key, ids, window),
     prisma.giveawayEntry
       .findMany({ where: { giveaway: g.key, userId: { in: ids }, bonusClaimedAt: { not: null } }, select: { userId: true } })
       .catch(() => []),

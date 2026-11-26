@@ -1,5 +1,6 @@
 "use client";
 
+import { STREAK_CAP } from "@/lib/streak";
 import { useEffect, useState, type ReactNode } from "react";
 
 // The giveaway entry panel (owner, 2026-11-22: "a point system ... as nice and aesthetic and usable and user friendly as possible").
@@ -162,8 +163,8 @@ export function GiveawayPanel({
   }
 
   const streakRule = me.checkinRule === "streak";
-  const ciToday = me.checkinToday ?? 5;
-  const ciTomorrow = me.checkinTomorrow ?? 5;
+  const ciToday = me.checkinToday ?? (streakRule ? 1 : 5);
+  const ciTomorrow = me.checkinTomorrow ?? (streakRule ? 2 : 5);
   const b = me.breakdown ?? { entry: 10, bonus: 0, bonusVia: null, checkin: 0, referral: 0, referralsCounted: 0 };
   const points = me.points ?? 0;
   const parts = [
@@ -220,7 +221,7 @@ export function GiveawayPanel({
           <div className="rounded-xl border border-white/10 p-3">
             <p className="font-semibold">Daily check-in · +{ciToday}</p>
             <p className="mt-0.5 text-sm opacity-80">
-              {me.checkedInToday ? `Done for today. Come back tomorrow for ${ciTomorrow} more.` : streakRule ? "Each day in a row is worth one more point, up to 10 a day. Miss a day and it starts again at 1." : "Tap once a day while the giveaway is open."}
+              {me.checkedInToday ? `Done for today. Come back tomorrow for ${ciTomorrow} more.` : streakRule ? `Each day in a row is worth one more point, up to ${STREAK_CAP} a day. Miss a day and it starts again at 1.` : "Tap once a day while the giveaway is open."}
               {(me.streak ?? 0) > 1 && <> {me.streak}-day streak.</>}
             </p>
             <button

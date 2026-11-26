@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getPremiumSubscriptionDetails, grantPremiumDays } from "@/lib/premium";
+import { stripe, stripeEnabled } from "@/lib/stripe";
 import { checkinDay, checkinRuleOf, giveawayFor, giveawayState, type GiveawaySite } from "@/lib/giveaway";
 import { canRedeem, LOYALTY_ENABLED, loyaltyState, redemptionSlot, REWARDS, rewardByKey, type LoyaltyState } from "@/lib/loyalty";
 
@@ -35,7 +36,9 @@ export async function loyaltyCheckIn(userId: string, site: string): Promise<void
     .findUnique({ where: { giveaway_userId: { giveaway: g.key, userId } }, select: { id: true } })
     .catch(() => null);
   if (!entered) return;
-  await prisma.giveawayCheckin.create({ data: { giveaway: g.key, userId, day }, select: { id: true } }).catch(() => {});
+  await prisma.giveawayCheckin.create({ data: { giveaway: g.key, userId, day }, select: { id: true } }).catch((e: unknown) => {
+    if ((e as { code?: string })?.code !== "P2002") throw e;
+  });
 }
 
 export interface MyLoyalty extends LoyaltyState {
@@ -45,21 +48,35 @@ export interface MyLoyalty extends LoyaltyState {
 
 export async function myLoyalty(userId: string, now = new Date()): Promise<MyLoyalty> {
   const today = checkinDay(now);
-  const [days, contrib, spent, recent] = await Promise.all([
+  const [days, contrib, spent, recent, user] = await Promise.all([
     // Bounded: about five years of daily check-ins.
     prisma.loyaltyDay.findMany({ where: { userId }, select: { day: true }, orderBy: { day: "desc" }, take: 2000 }),
     prisma.contribution.aggregate({ where: { userId }, _sum: { points: true } }),
     prisma.loyaltyRedemption.aggregate({ where: { userId }, _sum: { points: true } }),
     prisma.loyaltyRedemption.findMany({ where: { userId }, select: { reward: true, points: true, slot: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 12 }),
+    prisma.user.findUnique({ where: { id: userId }, select: { emailVerified: true, stripeCustomerId: true } }),
   ]);
   const state = loyaltyState({ days: days.map((d) => d.day), contributionPoints: contrib._sum.points ?? 0, spent: spent._sum.points ?? 0 }, today);
   const slots = new Set(recent.map((r) => r.slot));
   const rewards = REWARDS.map((r) => {
-    // "paying" is checked against Stripe only when the member presses Redeem; the card shows the points and the month's slot.
-    const check = canRedeem(r, { balance: state.balance, paying: false, slotTaken: slots.has(redemptionSlot(r, today)) });
+    // Stripe is asked only when the member presses Redeem (a Stripe customer may be a lapsed one); the card checks the rest.
+    const check = !user?.emailVerified
+      ? { ok: false as const, error: "Confirm your email address first." }
+      : canRedeem(r, { balance: state.balance, paying: false, slotTaken: slots.has(redemptionSlot(r, today)) });
     return { key: r.key, title: r.title, points: r.points, available: check.ok, reason: check.ok ? null : check.error };
   });
   return { ...state, rewards, redeemed: recent.map((r) => ({ reward: r.reward, points: r.points, at: r.createdAt.toISOString() })) };
+}
+
+/** Whether Stripe could not be asked about this customer (an outage), as opposed to "no live subscription". */
+async function stripeUnreadable(customer: string): Promise<boolean> {
+  if (!stripeEnabled()) return true;
+  try {
+    await stripe().customers.retrieve(customer);
+    return false;
+  } catch {
+    return true;
+  }
 }
 
 export type RedeemResult = { ok: true; premiumUntil: string | null } | { ok: false; status: number; error: string };
@@ -74,18 +91,31 @@ export async function redeemReward(userId: string, rewardKey: unknown, site: str
   const today = checkinDay(new Date());
   const slot = redemptionSlot(reward, today);
   const mine = await myLoyalty(userId);
-  const sub = reward.premiumDays > 0 ? await getPremiumSubscriptionDetails(u.stripeCustomerId) : null;
-  const paying = !!sub && !sub.cancelAtPeriodEnd;
+  // Fail closed: a Stripe customer whose subscription can't be read right now is treated as unknown, and nothing is granted.
+  // Any live subscription (active, trialing, past due, even one set to cancel) counts as paying.
+  let paying = false;
+  if (reward.premiumDays > 0 && u.stripeCustomerId) {
+    const sub = await getPremiumSubscriptionDetails(u.stripeCustomerId);
+    if (sub) paying = true;
+    else if (await stripeUnreadable(u.stripeCustomerId)) return { ok: false, status: 503, error: "Couldn't check your subscription. Try again in a minute." };
+  }
   const taken = await prisma.loyaltyRedemption.findUnique({ where: { userId_slot: { userId, slot } }, select: { id: true } });
   const check = canRedeem(reward, { balance: mine.balance, paying, slotTaken: !!taken });
   if (!check.ok) return { ok: false, status: 409, error: check.error };
+  let redemptionId: string;
   try {
     // The unique (userId, slot) makes two presses at once take one reward, never two.
-    await prisma.loyaltyRedemption.create({ data: { userId, reward: reward.key, points: reward.points, slot, site }, select: { id: true } });
+    redemptionId = (await prisma.loyaltyRedemption.create({ data: { userId, reward: reward.key, points: reward.points, slot, site }, select: { id: true } })).id;
   } catch (e) {
     if ((e as { code?: string })?.code === "P2002") return { ok: false, status: 409, error: "One Premium reward a month. Your next one opens on the 1st." };
     throw e;
   }
-  const until = reward.premiumDays > 0 ? await grantPremiumDays(userId, reward.premiumDays) : null;
-  return { ok: true, premiumUntil: until ? until.toISOString() : null };
+  try {
+    const until = reward.premiumDays > 0 ? await grantPremiumDays(userId, reward.premiumDays) : null;
+    return { ok: true, premiumUntil: until ? until.toISOString() : null };
+  } catch (e) {
+    // The grant failed: give the points and the month's slot back, so a retry works.
+    await prisma.loyaltyRedemption.delete({ where: { id: redemptionId } }).catch(() => {});
+    throw e;
+  }
 }
