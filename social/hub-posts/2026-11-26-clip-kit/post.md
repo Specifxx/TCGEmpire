@@ -9,4 +9,4 @@ The rules are simple:
 2. Put #ad on the post and use our link only.
 3. Never call a store a scam and never invent savings.
 
-The first 21 days are a trial with up to A$25 per clipper. The whole programme pays out at most A$300 a month, so once that's spoken for, new clippers start on the 1st. Questions? Ask here.
+The first 21 days are a trial with up to A$25 per clipper. The whole programme pays out at most A$300 a month, so once that's spoken for, new clippers start on the 1st. Questions? Email riftcompare@gmail.com.
