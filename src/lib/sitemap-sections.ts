@@ -153,6 +153,9 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/tools/box-ev`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     // The pull tracker, one page per set (2026-10-16). Shared results (/s/…) are noindex and stay out.
     ...["radiance", "vendetta", "unleashed", "spiritforged", "origins"].map((s) => ({ url: `${SITE_URL}/tools/pull-tracker/${s}`, changeFrequency: "daily" as const, priority: 0.6, lastModified: day })),
+    // Community pull rates (2026-11-26): the hub only. A set's page is noindex until enough packs are in,
+    // and is reached by the hub's links once it is published.
+    { url: `${SITE_URL}/pull-rates`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/tools/selling-fees`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/tools/selling-fees") },
     { url: `${SITE_URL}/tools/is-this-a-good-price`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/tools/is-this-a-good-price") },
     // Raised from 0.6 to 0.8 when it briefly had a header nav item and a

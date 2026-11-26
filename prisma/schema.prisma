@@ -192,6 +192,8 @@ model User {
   // a Premium member's watchlist; the email's stop link sets Off, snooze sets Until.
   auctionAlertsOff    Boolean   @default(false)
   auctionAlertsSnoozedUntil DateTime?
+  // Packs a member logged for the community pull rates (2026-11-26, lib/pull-rates.ts).
+  pullLogs            PullLog[]
 
   @@index([googleId])
   @@index([discordId])
@@ -2516,4 +2518,43 @@ model DealVote {
 
   @@id([site, dropId, voter])
   @@index([site, dropId])
+}
+
+// COMMUNITY PULL RATES (2026-11-26, DECISIONS.md "Community pull rates"; lib/pull-rates.ts).
+// A signed-in member says "I opened N packs of <set> and these were every Epic and Showcase in them".
+// PRIVATE: a log is never shown on its own. Pages read only lib/pull-rates-server.ts's grouped
+// counts per set, published once MIN_MEMBERS different members and MIN_PACKS packs are in. Deleted
+// with the account (cascade) and by its author (DELETE /api/pulls).
+model PullLog {
+  id        String   @id @default(cuid())
+  userId    String
+  /// SETS code, e.g. "RAD"; only PULL_RATE_SETS
+  setCode   String
+  /// booster packs opened, 1..MAX_PACKS_PER_LOG (a box is 24)
+  packs     Int
+  /// "scan" when at least one hit came through the card scanner, else "pick"
+  source    String   @default("pick")
+  createdAt DateTime @default(now())
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hits PullHit[]
+
+  @@index([userId, createdAt])
+  @@index([setCode])
+}
+
+model PullHit {
+  id      String @id @default(cuid())
+  logId   String
+  /// denormalised from the log, so the public tally is one groupBy
+  setCode String
+  cardId  String
+  /// pullTier() at the time of logging: epic | altart | overnumbered | signature | ultimate | showcase
+  tier    String
+  qty     Int    @default(1)
+
+  log PullLog @relation(fields: [logId], references: [id], onDelete: Cascade)
+
+  @@index([setCode, cardId])
+  @@index([logId])
 }

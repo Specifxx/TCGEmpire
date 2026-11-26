@@ -25906,6 +25906,111 @@ tally; its GET is one bounded `groupBy` over at most 60 drops, cached by the CDN
 board costs at most four reads a day per set of drops. Votes order nothing: no price, store row, alert or drop changes.
 A vote is a tap with no text and no address, so it is not an inbox item and does not call `notifyOwnerBounded`.
 
+## 2026-11-26 — Stray files stay out of pull requests
+
+**Found:** threads share one `claude/*` branch name per repository, and several workflows commit their output to the
+branch they ran on: the research sweeps (`eu-shop-directory.yml`, `coverage-audit.yml` write `research/`), the sister
+sites' store and page probes (`probe/`), and both scan evals (`scripts/scan-eval/results*/`). That output then rode into
+whatever pull request was opened from the branch next: the EU sweep's research JSON landed in #672, and a scan eval
+committed its results to the PR branch that triggered it.
+
+**Now:** the scan evals never push to the triggering branch. Each run's results go to the run's artifact and to the
+`scan-eval-results` branch (never merged, never deployed; `results/` and `results-singles/`, latest run of each, the
+history in its log). Every repository gets `.github/workflows/stray-paths.yml`, the same file everywhere except its
+`STRAY_EXTRA` line: a pull request that adds or changes a file under `research/`, `probe/`, `assets-candidates/` or
+`scripts/scan-eval/results*/`, a `qa-state.json` / `qa-report.json`, a `*.bundle`, an `.env*` (not `.env.example`),
+`.claude/settings.local.json`, `node_modules/` or `.next/` fails. Repositories whose `data/public/` belongs to their
+workflows alone add `^data/public/`. Deleting a stray file always passes. A pull request that means to change one of
+those paths takes the label `paths-ok` and says why in its body. `tests/stray-paths.test.ts` pins both.
+
+## 2026-11-26 — Restock sightings: a member-posted forum in the Discord hub (three-week test)
+
+Bill approved move 7 of the OzBargain report: members post the restocks they see, which agents cannot crawl (big-box
+shelves block us). It is a Discord forum, `#restock-sightings` (1575416782443913308), not a page and not a bot form:
+the forum's own composer is the report form (title, required tags for game, region, in store or online, a photo), it
+costs no code to run, and a member needs nothing new to post. Our pinned how-to carries the moderator-only tag
+"How to post" so it never counts as a sighting. Rules in the post guidelines: real sightings seen by the poster, no
+selling, no reselling, no referral or affiliate links; "Sold out" tag and a "gone" reply instead of deleting. 🔥 is the
+default reaction, posts are slowed to one per two minutes, and the forum is a default channel in onboarding.
+
+`scripts/discord-hub-stats.ts` adds one daily line through `lib/discord/sightings.ts`: sightings since launch and in
+seven days, distinct posters, replies, 🔥 reactions, sold-out marks and the split by tag. Counts only, never a title or
+anything a member wrote. Read on 17 Dec 2026: keep it if members (not us) posted 10 or more sightings in the three
+weeks; build a page on TCG Prices only then (the report's own rule). Otherwise the forum is archived, not deleted.
+## 2026-11-26 — Monthly cheapest-price badges for stores
+
+**Asked:** the COO's OzBargain study (move 6), approved by the owner ("get these implemented ASAP … tested … state of
+the art"): tell each store, once a month, how often it was the cheapest, give it a badge saying so that links back to
+us, and email the stores offering it in exchange for the link.
+
+**Now:** `scripts/store-wins.ts` runs in `refresh-prices.yml` right after the morning export (never fatal) and adds the
+UTC day to `data/store-wins/<YYYY-MM>.json`, which `publish-public-data.sh` commits with the snapshot (copied without
+`--delete`: each month is its own file). It reads the public sealed snapshot only, never Neon. Rows first pass the sealed
+pages' own guards (`lib/store-wins-rows.ts`: legacy type, store currency, the per-type price floor) and take the
+product's own name. A product is contested in a market when two or more stores have it in stock that day, and the store
+or stores at the lowest price win it (ties win for each; the only store with stock never wins; no eBay, TCGplayer,
+Amazon or Cardmarket; one market, one currency, nothing converted). The badge number is the count of different products
+a store was cheapest on, on at least one day of a COMPLETE month, and needs `MIN_BADGE_WINS` (3). A day is recorded once.
+November was backfilled from the 24 snapshot commits of 1 to 24 Nov (25 Nov has none): 136 stores won something, 62
+qualify.
+
+**Where:** `/stores/[slug]` shows the record (count, rank in its market, the products with days cheapest) and the badge
+in a dark and a light version with copyable code; `/stores/cheapest` ranks each market (the last complete month, or the
+current month labelled "so far"). The badge (`cheapestBadgeHtml`) is plain HTML with an inline SVG rosette, one followed
+link to the store's page, no script, image, iframe, class or query string, and every property a host stylesheet might
+set is reset inline (checked against a hostile stylesheet). Store pages read one small committed file, no query.
+
+**Why the store's page, not the leaderboard:** the products behind the number are there, so a shopper who follows the
+badge can check the claim, and it is the page the store would want to link anyway.
+
+**Read:** badges live on store sites and referral visits from them, counted in the listing-backlinks tracker from the
+first send (1 to 2 Dec, November's numbers).
+
+## 2026-11-26 — Community pull rates
+
+**Asked:** move 4 of the OzBargain study (owner's thread, 26 Nov): a pull-rate tracker on the scanner, members log what a
+box or pack gave them and the site shows aggregated pull rates per set, live well before Legacy's previews (13 Dec).
+
+**Built on the pull tracker, not beside it.** `/tools/pull-tracker/<set>` (2026-10-16) already lets anyone tap their pulls,
+in their own browser. Its panel now has an "Add to the <set> pull rates" block: packs opened (1 pack / a box of 24 / any
+number to 48) and one button that sends the Epic-and-up cards already tapped. A signed-in member also gets "Scan a hit",
+which runs one photo through `/api/scan/identify` (their ordinary scan allowance; a file input, so no camera permission
+change) and adds the card when it is from that set. No pop-up and no new sign-in prompt: a signed-out visitor sees one line
+saying adding packs needs an account, under the tracker's existing save buttons (UX guard, one prompt a visit).
+
+**Storage:** two private tables, `PullLog` (member, set, packs, source) and `PullHit` (card, tier, count), cascading with
+the account. `POST /api/pulls` checks the log against the set's own cards (`parsePullLog`, `lib/pull-rates.ts`) and refuses
+rather than trims: another set's card, more than 48 packs, more than three hits a pack. Caps: 10 logs a member a UTC day
+(Counter), 480 packs a member per set. `GET` lists the member's own logs, `DELETE ?id=` takes one back ("Undo" in the panel).
+The owner gets the first log and every 50th through `notifyOwnerBounded` (kind `pull-log`), never one email a log.
+
+**Only Epic and up.** Riot publishes no Rare rate, and asking for two Rares a pack is the tedium that stops people logging.
+Tiers (`pullTier`, rarest wins): Ultimate, Signature, Overnumbered, Alternate art, other Showcase (alt-art runes and
+specials, no published rate), Epic. Riot's column is `PULL_RATES` from the Origins collectability article, labelled as such.
+
+**Public only in aggregate.** `lib/pull-rates-server.ts` makes three `groupBy` reads, memoised six hours on globalThis;
+`/pull-rates` and `/pull-rates/<set>` revalidate every 21600 s and `/api/pulls/rates` sends a six-hour CDN header. A set
+publishes nothing but "N packs by M members" until 3 members and 24 packs are in (`MIN_MEMBERS`, `MIN_PACKS`): before that
+no tier or card count leaves the server, so one box can never be read off the page. A set page is noindex until then;
+the hub is in the sitemap. Legacy's page exists now (Riot's pack contents, the dates) and logging opens on its first
+Pre-Rift day, 22 Jan 2027 (`opensOn`); 13 Dec is previews, not packs.
+
+**Watched:** the ops check `site:pull-rates` reads the tally (warn when it is not JSON, never crit) and its summary carries
+logs, packs and published sets for the Monday read. Not promoted on r/riftboundtcg (it bans scanner promotion).
+
+## 2026-11-26 — "Worked / didn't work" votes on the sister sites' discount codes
+
+**Asked:** the OzBargain study's move 3, approved by the owner: discount-code pages for the stores that pay us commission
+(ScentCompare and KaeYoung first, their Awin partners' own published codes), where visitors say whether a code worked.
+
+**Now:** `/api/code-votes` (`lib/code-votes.ts`) reuses the deal board's `DealVote` table with no schema change: every
+code vote is stored under the one site key `codes`, so a store listed on two sites shares one tally per code; "worked"
+is vote 1, "didn't work" -1, and "expired" the separate flag. The voter is the deal board's keyed HMAC (`voterId`), never
+the address. Votes come only from the exact origins in `CODE_VOTE_SITES` (30 a minute per address); the GET is one
+bounded `groupBy` over at most 60 codes, CDN-cached six hours, and adds the newest "worked" time so a page can say
+"last worked 2 days ago". Votes order nothing: a code list stays in the sister's own order, and no price or store row
+changes. A vote is a tap with no text, so it is not an inbox item.
+
 ## 2026-11-26 — A signed-in member's collection follows them, and a weekly stash email
 
 Owner, 2026-11-26 ("get these implemented ASAP … designed in a very, very nice way … tested"), move 5 of the deal-site study (OzBargain,

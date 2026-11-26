@@ -1444,6 +1444,10 @@ longer lands on its entry.
   `SCAN_PUBLIC=0` closes it); a live viewfinder that finds, outlines and captures the card on its own (`camera=(self)` on `/scan` only); one Haiku 5.5
   read of name + set + number, our pure matcher picks the printing, the quick view shows prices; never eBay, photo never
   stored, `SCAN_DAILY_CAP` 1,000 a day. [2026-11-19](../DECISIONS.md#L24530), [2026-11-19 v2](../DECISIONS.md#L24786)
+- **Community pull rates (2026-11-26):** members add packs and every Epic-and-up pull from the pull tracker (tapped or
+  scanned) to `/api/pulls`; two private tables, 10 logs a day, 480 packs a set per member, three hits a pack at most.
+  `/pull-rates` pages show only per-set totals beside Riot's odds, and nothing per tier until 3 members and 24 packs; a set
+  page is noindex until then. Legacy logging opens at Pre-Rift, 22 Jan 2027. [2026-11-26](../DECISIONS.md#2026-11-26--community-pull-rates)
 - **Sister scanner read (2026-11-20):** `POST /api/scan/read` serves TCG Singles DB only (exact origin), one Haiku read, 5 a
   visitor a day by salted IP hash, 500 a day per sister; the sister matches. [2026-11-20](../DECISIONS.md#L25037)
 - **Meta decks:** never from a hand copy; rebuild a meta/tier list only from

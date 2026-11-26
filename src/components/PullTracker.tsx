@@ -15,6 +15,8 @@ import { pullKey, pullsCsv, shareCode, summarisePulls, type PullLine } from "@/l
 import { shareUrl } from "@/lib/share-link";
 import type { PullCard } from "@/lib/pull-tracker-server";
 import { Toast } from "./ui/Toast";
+import { MAX_PACKS_PER_LOG, pullTier } from "@/lib/pull-rates";
+import { shrinkPhoto } from "@/lib/scan/shrink";
 
 // The pull tracker (lib/pull-tracker.ts has the why). Everything here is the
 // visitor's own: the pulls live in this browser until they save them to their
@@ -45,11 +47,19 @@ export function PullTracker({
   const [saveState, setSaveState] = useState<{ kind: "idle" | "busy" } | { kind: "done"; text: string } | { kind: "error"; text: string }>({ kind: "idle" });
   const [shared, setShared] = useState<string | null>(null);
   const restored = useRef(false);
+  // Community pull rates (lib/pull-rates.ts): the packs these pulls came from, and the one POST.
+  const [packs, setPacks] = useState<string>("");
+  const [contrib, setContrib] = useState<{ kind: "idle" | "busy" } | { kind: "done"; id: string } | { kind: "error"; text: string }>({ kind: "idle" });
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState<string | null>(null);
+  const usedScan = useRef(false);
+  const scanInput = useRef<HTMLInputElement>(null);
   // A short confirmation after each tap, for phones, where the total sits below the grid.
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
 
   const byNum = useMemo(() => new Map(cards.map((c) => [pullKey(c.collectorNumber), c])), [cards]);
+  const byId = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
   const priceOf = (c: PullCard) => c.p[country] ?? null;
 
   // Restore this set's pulls (and what was paid) from the last visit.
@@ -88,6 +98,7 @@ export function PullTracker({
       return [{ num, qty: 1 }, ...ls].slice(0, 60);
     });
     setShared(null);
+    if (contrib.kind === "done") setContrib({ kind: "idle" });
     trackEvent("pull_add", { set: set.code });
     const c = byNum.get(num);
     if (c) {
@@ -96,6 +107,37 @@ export function PullTracker({
       toastTimer.current = window.setTimeout(() => setToast(null), 1800);
     }
   };
+  // "Scan a hit": one card through the card scanner (/api/scan/identify, the member's daily scans), added
+  // when it is a card of this set. The photo is shrunk here and never stored.
+  const scanHit = async (file: File | undefined) => {
+    if (!file) return;
+    setScanning(true);
+    setScanMsg(null);
+    try {
+      const photo = await shrinkPhoto(file);
+      const res = await fetch("/api/scan/identify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image: photo.split(",")[1] }) });
+      const d = (await res.json().catch(() => ({}))) as { error?: string; card?: { id: string } | null; remaining?: number | null };
+      if (!res.ok) {
+        setScanMsg(d.error ?? "Couldn't read that photo. Try again, or tap the card below.");
+        return;
+      }
+      const c = d.card ? byId.get(d.card.id) : undefined;
+      if (!c) {
+        setScanMsg(d.card ? `That card isn't from ${set.name}.` : "No card found in that photo. Try a sharper one, or tap it below.");
+        return;
+      }
+      usedScan.current = true;
+      add(pullKey(c.collectorNumber));
+      setScanMsg(`Scanned: ${c.name} ${c.collectorNumber}${typeof d.remaining === "number" ? ` · ${d.remaining} scan${d.remaining === 1 ? "" : "s"} left today` : ""}`);
+      trackEvent("pull_scan", { set: set.code });
+    } catch {
+      setScanMsg("Couldn't read that photo. Try again, or tap the card below.");
+    } finally {
+      setScanning(false);
+      if (scanInput.current) scanInput.current.value = "";
+    }
+  };
+
   const bump = (num: string, d: number) => {
     setLines((ls) => ls.map((l) => (l.num === num ? { ...l, qty: Math.max(0, Math.min(99, l.qty + d)) } : l)).filter((l) => l.qty > 0));
     setShared(null);
@@ -110,6 +152,40 @@ export function PullTracker({
     return { num: l.num, qty: l.qty, eachCents: c ? priceOf(c) : null };
   });
   const sum = summarisePulls(priced, paidCents);
+
+  // What the community tally would count from these pulls: Epic and up only.
+  const hitLines = lines
+    .map((l) => ({ l, c: byNum.get(l.num) }))
+    .filter((x): x is { l: PullLine; c: PullCard } => !!x.c && pullTier({ setCode: set.code, rarity: x.c.rarity, collectorNumber: x.c.collectorNumber }) != null);
+  const hitCount = hitLines.reduce((n, x) => n + x.l.qty, 0);
+  const packsN = (() => {
+    const v = Number(packs);
+    return Number.isInteger(v) && v >= 1 && v <= MAX_PACKS_PER_LOG ? v : null;
+  })();
+  const contribute = async () => {
+    if (!packsN || contrib.kind === "busy") return;
+    setContrib({ kind: "busy" });
+    try {
+      const r = await fetch("/api/pulls", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ set: set.slug, packs: packsN, hits: hitLines.map((x) => ({ cardId: x.c.id, qty: x.l.qty })), source: usedScan.current ? "scan" : "pick" }),
+      });
+      const d = (await r.json().catch(() => ({}))) as { ok?: boolean; id?: string; error?: string };
+      if (!r.ok || !d.id) throw new Error(d.error ?? "Couldn't add them just now. Try again.");
+      setContrib({ kind: "done", id: d.id });
+      trackEvent("pull_log", { set: set.code, packs: packsN, hits: hitCount });
+    } catch (e) {
+      setContrib({ kind: "error", text: e instanceof Error ? e.message : "Couldn't add them just now. Try again." });
+    }
+  };
+  const undoContribute = async () => {
+    if (contrib.kind !== "done") return;
+    const id = contrib.id;
+    setContrib({ kind: "busy" });
+    const r = await fetch(`/api/pulls?id=${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => null);
+    setContrib(r?.ok ? { kind: "idle" } : { kind: "done", id });
+  };
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -206,6 +282,15 @@ export function PullTracker({
           className="input mt-3 w-full"
           aria-label={`Search ${set.name} cards`}
         />
+        {loaded && user && (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <input ref={scanInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => scanHit(e.target.files?.[0])} />
+            <button type="button" disabled={scanning} onClick={() => scanInput.current?.click()} className="btn-ghost px-3 py-1.5 text-xs disabled:opacity-60">
+              {scanning ? "Reading the card…" : "📷 Scan a hit"}
+            </button>
+            {scanMsg && <span className="text-xs text-slate-400" role="status">{scanMsg}</span>}
+          </div>
+        )}
         <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Rarity">
           {[["hits", "Rare and up"], ...RARITIES.map((r) => [r, r]), ["all", "All"]].map(([v, label]) => (
             <button
@@ -368,6 +453,9 @@ export function PullTracker({
                   setLines([]);
                   setShared(null);
                   setSaveState({ kind: "idle" });
+                  setPacks("");
+                  setContrib({ kind: "idle" });
+                  usedScan.current = false;
                 }}
                 className="w-full text-xs font-semibold text-slate-500 hover:text-slate-300"
               >
@@ -376,6 +464,59 @@ export function PullTracker({
             </div>
           )}
         </div>
+        {/* ── Community pull rates: the packs these came from (lib/pull-rates.ts). No pop-up: it sits here. ── */}
+        <section aria-labelledby="pt-community" className="card-surface mt-3 rounded-2xl p-4">
+          <h2 id="pt-community" className="text-sm font-extrabold text-white">
+            Add to the {set.name} pull rates
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+            Say how many packs these came from, with every Epic and Showcase they gave you tapped above (none is fine too). Members&apos; packs make the{" "}
+            <Link href={`/pull-rates/${set.slug}`} className="text-brand-300 underline-offset-2 hover:underline">
+              community pull rates
+            </Link>
+            ; only the totals are ever shown.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <span>Packs opened</span>
+              <input
+                inputMode="numeric"
+                value={packs}
+                onChange={(e) => {
+                  setPacks(e.target.value.replace(/[^0-9]/g, "").slice(0, 2));
+                  if (contrib.kind === "done") setContrib({ kind: "idle" });
+                }}
+                placeholder="24"
+                className="input w-16 py-1 text-right num"
+                aria-label="Packs opened"
+              />
+            </label>
+            {[["1", "1 pack"], ["24", "A box (24)"]].map(([v, label]) => (
+              <button key={v} type="button" onClick={() => setPacks(v)} aria-pressed={packs === v} className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${packs === v ? "bg-brand-500/20 text-brand-200 ring-brand-500/50" : "bg-ink-800 text-slate-300 ring-white/10"}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-slate-400">
+            Counts {hitCount} Epic or Showcase card{hitCount === 1 ? "" : "s"}
+            {lines.length > hitLines.length ? "; Rares and below are not part of the rates" : ""}.
+          </p>
+          {!loaded ? null : !user ? (
+            <p className="mt-2 text-xs text-slate-400">Adding packs needs a free account, one per opener, so the counts stay honest.</p>
+          ) : contrib.kind === "done" ? (
+            <p className="mt-2 text-xs text-gold" role="status">
+              Added, thank you. Your packs count from the next update, within about 12 hours.{" "}
+              <button type="button" onClick={undoContribute} className="font-semibold text-slate-300 underline">
+                Undo
+              </button>
+            </p>
+          ) : (
+            <button type="button" onClick={contribute} disabled={!packsN || contrib.kind === "busy"} className="btn-ghost mt-2 w-full text-sm disabled:opacity-50">
+              {contrib.kind === "busy" ? "Adding…" : packsN ? `Add my ${packsN} pack${packsN === 1 ? "" : "s"}` : "Enter the packs you opened"}
+            </button>
+          )}
+          {contrib.kind === "error" && <p className="mt-1 text-xs text-red-400">{contrib.text}</p>}
+        </section>
         <p className="mt-2 px-1 text-[11px] leading-relaxed text-slate-500">
           Each card is valued at the cheapest in-stock store price in {country === "EU" ? "the eurozone" : "your country"}, updated twice a day. It is what the
           card costs to buy, not what a store would pay you for it.
