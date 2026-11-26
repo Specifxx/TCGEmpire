@@ -7,6 +7,7 @@ import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
 import { WelcomeChecklist } from "@/components/WelcomeChecklist";
 import { MyCollection } from "@/components/MyCollection";
 import { ReferralLinkCard } from "@/components/ReferralLinkCard";
+import { CommunityHandleCard } from "@/components/CommunityHandleCard";
 import { REFERRAL_PREMIUM_DAYS } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
 
@@ -51,6 +52,9 @@ export default async function ProfilePage() {
       {/* Renders nothing once dismissed, no longer eligible, or all three
           steps are done — see its own comment. */}
       <WelcomeChecklist />
+
+      {/* The community handle (community plan move 3): one public name for votes, flags, pulse answers and pull logs. */}
+      <CommunityHandleCard />
 
       {/* My Collection — cards the user owns, valued live (separate from wishlist) */}
       <MyCollection />

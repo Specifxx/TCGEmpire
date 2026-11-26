@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { contributionPoints } from "@/lib/contributions-server";
 import {
   assignTickets,
   checkinDay,
@@ -43,7 +44,7 @@ export async function liveWeights(
   const ids = users.map((u) => u.id);
   const emails = users.map((u) => u.email.toLowerCase());
   const window = { gte: new Date(g.opensAt), lte: new Date(g.closesAt) };
-  const [byUser, byEmail, sealed, refs, checkins, claims] = await Promise.all([
+  const [byUser, byEmail, sealed, refs, checkins, claims, contrib] = await Promise.all([
     prisma.priceAlert.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _count: { _all: true } }).catch(() => []),
     prisma.priceAlert.groupBy({ by: ["email"], where: { email: { in: emails } }, _count: { _all: true } }).catch(() => []),
     prisma.sealedWatch.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _count: { _all: true } }).catch(() => []),
@@ -56,6 +57,7 @@ export async function liveWeights(
     prisma.giveawayEntry
       .findMany({ where: { giveaway: g.key, userId: { in: ids }, bonusClaimedAt: { not: null } }, select: { userId: true } })
       .catch(() => []),
+    contributionPoints(ids, window).catch(() => new Map<string, number>()),
   ]);
   // A referral counts once the friend's account has a confirmed email, and never for the inviter's own account. A star friend
   // (lib/giveaway.ts STAR_REFERRAL_POINTS) also has Premium now, or STAR_FRIEND_CHECKINS check-ins in this giveaway.
@@ -98,7 +100,7 @@ export async function liveWeights(
     const referrals = refCount.get(u.id) ?? 0;
     const held = (watches.get(u.id) ?? 0) + (emailCount.get(u.email.toLowerCase()) ?? 0);
     const c = checkinCount.get(u.id) ?? 0;
-    const p = entryPoints({ premium, watches: held, bonusClaimed: claimed.has(u.id), checkins: c, referrals, starReferrals: starCount.get(u.id) ?? 0 });
+    const p = entryPoints({ premium, watches: held, bonusClaimed: claimed.has(u.id), checkins: c, referrals, starReferrals: starCount.get(u.id) ?? 0, contributions: contrib.get(u.id) ?? 0 });
     out.set(u.id, { ...p, weight: p.points, referrals, watches: held, checkins: c, admin: u.isAdmin || isAdminEmail(u.email) });
   }
   return out;
@@ -185,7 +187,7 @@ export interface MyGiveaway {
   emailVerified: boolean;
   entered: boolean;
   points: number;
-  breakdown: { entry: number; bonus: number; bonusVia: string | null; checkin: number; referral: number; referralsCounted: number; starCounted: number };
+  breakdown: { entry: number; bonus: number; bonusVia: string | null; checkin: number; referral: number; contribution: number; referralsCounted: number; starCounted: number };
   checkins: number;
   checkedInToday: boolean;
   /** Consecutive Sydney days checked in, ending today or yesterday. */
@@ -243,7 +245,7 @@ export async function myGiveaway(g: Giveaway, user: Account, isAdminEmail: (e: s
     emailVerified: !!user.emailVerified,
     entered: !!entry,
     points: entry ? p.points : 0,
-    breakdown: { entry: p.entry, bonus: p.bonus, bonusVia: p.bonusVia, checkin: p.checkin, referral: p.referral, referralsCounted: p.referralsCounted, starCounted: p.starCounted },
+    breakdown: { entry: p.entry, bonus: p.bonus, bonusVia: p.bonusVia, checkin: p.checkin, referral: p.referral, contribution: p.contribution, referralsCounted: p.referralsCounted, starCounted: p.starCounted },
     checkins: w?.checkins ?? 0,
     checkedInToday: dayList.includes(today),
     streak: streakOf(dayList, today),

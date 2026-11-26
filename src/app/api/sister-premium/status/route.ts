@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { prisma } from "@/lib/db";
 import { maskEmail, premiumCors, premiumSiteForOrigin, premiumStatusFor, verifyPremiumSession } from "@/lib/sister-premium";
 
 export const dynamic = "force-dynamic";
 
 // Is this sister-site token a Premium member right now? (lib/sister-premium.ts)
 // Called from the sister's browser only (exact origin). Returns the address
-// masked, whether Premium is active and when it ends: nothing else.
+// masked, whether Premium is active and when it ends, and the member's own community handle: nothing else.
 export function OPTIONS(req: Request) {
   const origin = req.headers.get("origin");
   return new NextResponse(null, { status: premiumSiteForOrigin(origin) ? 204 : 403, headers: premiumCors(origin) });
@@ -25,7 +26,9 @@ export async function POST(req: Request) {
   try {
     const s = await premiumStatusFor(email);
     if (!s) return NextResponse.json({ error: "Sign in again" }, { status: 401, headers });
-    return NextResponse.json({ ok: true, premium: s.premium, until: s.until, who: maskEmail(email) }, { headers });
+    // The community handle (lib/handles.ts), so the sister's profile can show and edit it.
+    const handle = await prisma.user.findUnique({ where: { email }, select: { handle: true } }).then((u) => u?.handle ?? null).catch(() => null);
+    return NextResponse.json({ ok: true, premium: s.premium, until: s.until, who: maskEmail(email), handle }, { headers });
   } catch (e) {
     console.warn("[sister-premium] status failed:", e);
     return NextResponse.json({ error: "Couldn't check your membership. Try again." }, { status: 503, headers });

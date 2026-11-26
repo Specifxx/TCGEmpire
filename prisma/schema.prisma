@@ -149,6 +149,12 @@ model User {
   // rather than passing a whole row through.
   collectionShareId String? @unique
 
+  // ── Community handle (2026-11-26, community plan move 3; lib/handles.ts) ──
+  // The one public name a member chooses, shown on what they contribute ("First vouched by @name", the monthly Top deal hunters)
+  // on every site of the shared account. Lowercase, 3-20 of a-z 0-9 _, starting with a letter. Null = never shown anywhere:
+  // without a handle a contribution still counts, but no name is ever published. Additive and nullable.
+  handle String? @unique
+
   // ── Saved default shipping address (marketplace checkout) ─────────────────────
   // Prefills the checkout address step; a fresh snapshot is copied onto each Order
   // at purchase time (see Order.ship* below) so editing this later never rewrites
@@ -194,6 +200,7 @@ model User {
   auctionAlertsSnoozedUntil DateTime?
   // Packs a member logged for the community pull rates (2026-11-26, lib/pull-rates.ts).
   pullLogs            PullLog[]
+  contributions       Contribution[]
 
   @@index([googleId])
   @@index([discordId])
@@ -2573,4 +2580,32 @@ model PullHit {
 
   @@index([setCode, cardId])
   @@index([logId])
+}
+
+/// COMMUNITY CONTRIBUTIONS (2026-11-26, community plan move 3: "names on contributions"; lib/contributions.ts).
+/// One row per thing a signed-in member gave the community: a hot or cold vote or an expired flag on a deal-board drop, a
+/// collector-pulse answer, a pull log. Each is worth a few points (capped per Sydney day) that count in the open giveaway and on
+/// the monthly Top deal hunters list. PRIVATE: never in PUBLIC_MODELS or the export; only a member's chosen handle and point
+/// total are ever shown, and only when they chose a handle. Deleted with the account (cascade).
+model Contribution {
+  id        String   @id @default(cuid())
+  userId    String
+  /// hot | cold | flag | pulse | pull
+  kind      String
+  /// the site it was made on (lib/sister-premium.ts keys, or "rift")
+  site      String
+  /// what it was on: a drop id, a product slug, a pull log id
+  ref       String
+  /// points it earned after the day's cap (0 once the cap is reached: it still counts as a contribution)
+  points    Int
+  /// Sydney day, YYYY-MM-DD (the cap is per day)
+  day       String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, site, ref])
+  @@index([userId, day])
+  @@index([site, createdAt])
+  @@index([site, kind, ref])
 }

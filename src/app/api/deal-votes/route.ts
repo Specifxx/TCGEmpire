@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { allowedOrigin, corsHeaders } from "@/lib/sister-alerts/sites";
+import { communityMember } from "@/lib/community-member";
+import { firstVouchers, recordContribution } from "@/lib/contributions-server";
 import { DEAL_VOTE_SITES, DROP_ID, EMPTY, apply, parseIds, tallies, voterId } from "@/lib/deal-votes";
 
 export const dynamic = "force-dynamic";
@@ -40,14 +42,16 @@ export async function GET(req: Request) {
   const ids = parseIds(url.searchParams.get("ids"));
   const headers = { "Access-Control-Allow-Origin": "*", "Cache-Control": CDN, "Vercel-CDN-Cache-Control": CDN };
   try {
-    return NextResponse.json({ tallies: await read(site, ids) }, { headers });
+    // "First vouched by @name": the first signed-in member with a handle to vote each drop hot (lib/contributions.ts).
+    const [t, by] = await Promise.all([read(site, ids), firstVouchers(site, ids)]);
+    return NextResponse.json({ tallies: t, by }, { headers });
   } catch (e) {
     console.warn("[deal-votes] read failed:", e);
     return NextResponse.json({ tallies: {} }, { status: 503, headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" } });
   }
 }
 
-const schema = z.object({ drop: z.string().regex(DROP_ID), action: z.enum(["hot", "cold", "expired", "clear"]) });
+const schema = z.object({ drop: z.string().regex(DROP_ID), action: z.enum(["hot", "cold", "expired", "clear"]), token: z.string().max(4096).optional() });
 
 export async function POST(req: Request) {
   const origin = req.headers.get("origin");
@@ -59,7 +63,7 @@ export async function POST(req: Request) {
   if (!rl.ok) return NextResponse.json({ error: "Too many votes. Try again in a minute." }, { status: 429, headers });
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Bad vote" }, { status: 400, headers });
-  const { drop, action } = parsed.data;
+  const { drop, action, token } = parsed.data;
   const voter = voterId(ip, req.headers.get("user-agent") ?? "");
   const where = { site_dropId_voter: { site: site.key, dropId: drop, voter } };
   try {
@@ -68,7 +72,16 @@ export async function POST(req: Request) {
     if (!next) await prisma.dealVote.deleteMany({ where: { site: site.key, dropId: drop, voter } });
     else await prisma.dealVote.upsert({ where, create: { site: site.key, dropId: drop, voter, ...next }, update: next });
     const t = (await read(site.key, [drop]))[drop] ?? EMPTY;
-    return NextResponse.json({ ok: true, mine: next ?? { vote: 0, expired: false }, tally: t }, { headers });
+    // A signed-in member's vote or flag is a community contribution (counted once per drop and kind; lib/contributions.ts).
+    let earned = 0;
+    let handle: string | null = null;
+    if (token && next) {
+      const member = await communityMember(req, token).catch(() => null);
+      const kind = action === "hot" && next.vote === 1 ? "hot" : action === "cold" && next.vote === -1 ? "cold" : action === "expired" && next.expired ? "flag" : null;
+      if (member && kind) earned = (await recordContribution(member.id, kind, site.key, drop)).points;
+      if (member) handle = member.handle;
+    }
+    return NextResponse.json({ ok: true, mine: next ?? { vote: 0, expired: false }, tally: t, earned, handle }, { headers });
   } catch (e) {
     console.warn("[deal-votes] vote failed:", e);
     return NextResponse.json({ error: "Couldn't save your vote." }, { status: 503, headers });

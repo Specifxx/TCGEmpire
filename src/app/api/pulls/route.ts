@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { recordContribution } from "@/lib/contributions-server";
 import { getPullSetCards } from "@/lib/pull-tracker-server";
 import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 import { MAX_LOGS_PER_DAY, MAX_PACKS_PER_MEMBER_SET, parsePullLog, pullRateSetByCode, pullRateSetBySlug } from "@/lib/pull-rates";
@@ -71,6 +72,8 @@ export async function POST(req: Request) {
     },
     select: { id: true },
   });
+  // Community contribution (lib/contributions.ts): a pull log is worth points in the open giveaway and on Top deal hunters.
+  const earned = await recordContribution(user.id, "pull", "rift", saved.id);
 
   const total = await prisma.counter.upsert({ where: { key: "pulls:logs" }, create: { key: "pulls:logs", value: 1 }, update: { value: { increment: 1 } } }).catch(() => null);
   if (total && (total.value === 1 || total.value % 50 === 0)) {
@@ -83,7 +86,7 @@ export async function POST(req: Request) {
       ],
     });
   }
-  return NextResponse.json({ ok: true, id: saved.id }, { headers: NO_STORE });
+  return NextResponse.json({ ok: true, id: saved.id, earned: earned.points }, { headers: NO_STORE });
 }
 
 export async function DELETE(req: Request) {
@@ -92,5 +95,7 @@ export async function DELETE(req: Request) {
   const id = new URL(req.url).searchParams.get("id") ?? "";
   if (!id || id.length > 40) return NextResponse.json({ error: "Which log?" }, { status: 400, headers: NO_STORE });
   const r = await prisma.pullLog.deleteMany({ where: { id, userId: user.id } });
+  // A deleted log takes its community points with it, so add-delete-add earns nothing.
+  if (r.count) await prisma.contribution.deleteMany({ where: { userId: user.id, kind: "pull", ref: id } }).catch(() => {});
   return NextResponse.json({ ok: r.count > 0 }, { status: r.count ? 200 : 404, headers: NO_STORE });
 }

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { allowedOrigin, corsHeaders } from "@/lib/sister-alerts/sites";
+import { communityMember } from "@/lib/community-member";
+import { recordContribution } from "@/lib/contributions-server";
 import { PRODUCT_ID, PULSE_CHOICES, PULSE_SITES, parseIds, pulseVoter, pulses } from "@/lib/sentiment";
 
 export const dynamic = "force-dynamic";
@@ -47,7 +49,7 @@ export async function GET(req: Request) {
   }
 }
 
-const schema = z.object({ product: z.string().regex(PRODUCT_ID), choice: z.enum([...PULSE_CHOICES, "clear"]) });
+const schema = z.object({ product: z.string().regex(PRODUCT_ID), choice: z.enum([...PULSE_CHOICES, "clear"]), token: z.string().max(2000).optional() });
 
 export async function POST(req: Request) {
   const origin = req.headers.get("origin");
@@ -59,14 +61,20 @@ export async function POST(req: Request) {
   if (!rl.ok) return NextResponse.json({ error: "Too many answers. Try again in a minute." }, { status: 429, headers });
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Bad answer" }, { status: 400, headers });
-  const { product, choice } = parsed.data;
+  const { product, choice, token } = parsed.data;
   const voter = pulseVoter(ip, req.headers.get("user-agent") ?? "");
   const key = { site: site.key, productId: product, voter };
   try {
     if (choice === "clear") await prisma.sentimentVote.deleteMany({ where: key });
     else await prisma.sentimentVote.upsert({ where: { site_productId_voter: key }, create: { ...key, choice }, update: { choice } });
     const p = (await read(site.key, [product]))[product] ?? { n: 0 };
-    return NextResponse.json({ ok: true, mine: choice === "clear" ? null : choice, pulse: p }, { headers });
+    // A signed-in member's answer is a community contribution, once per product (lib/contributions.ts); the answer stays anonymous.
+    let earned = 0;
+    if (token && choice !== "clear") {
+      const member = await communityMember(req, token).catch(() => null);
+      if (member) earned = (await recordContribution(member.id, "pulse", site.key, product)).points;
+    }
+    return NextResponse.json({ ok: true, mine: choice === "clear" ? null : choice, pulse: p, earned }, { headers });
   } catch (e) {
     console.warn("[sentiment] vote failed:", e);
     return NextResponse.json({ error: "Couldn't save your answer." }, { status: 503, headers });
