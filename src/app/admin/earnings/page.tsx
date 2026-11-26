@@ -220,6 +220,9 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
               {c}
             </Link>
           ))}
+          <Link href={`/admin/earnings/products${keyQ ? `?${keyQ.slice(0, -1)}` : ""}`} className="btn-ghost px-3 py-1.5 text-xs" prefetch={false}>
+            By product
+          </Link>
           <Link href={href({ fresh: true })} className="btn-ghost px-3 py-1.5 text-xs" prefetch={false}>
             Refresh
           </Link>

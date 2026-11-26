@@ -26064,3 +26064,37 @@ over at most 40 ids, CDN-cached six hours. Below 10 answers the GET returns only
 A pulse never orders prices, never touches a store row, deal, alert or ranking. MTG Compare is first (biggest audience,
 the r/mtgfinance crowd); the site shows it only to a visitor who already answered or skipped its other inline question,
 so a visit still meets one question at most (UX guard, owner 2026-11-23).
+
+## 2026-11-26 — Earnings by product and set, for DexCompare and MTG Compare
+
+**Asked:** the owner (26 Nov): earnings are only by link placement tag, never by product or set. A view for DexCompare and
+MTG Compare with earnings, clicks and sales by product and set for the last 30 days, split by TCGplayer and eBay, plus
+Amazon clicks by product. Read only, no change to either site.
+
+**What:** `/admin/earnings/products?site=mtg|dex` (linked "By product" from `/admin/earnings`, same gate). Per site: a
+card per network (earned under the site's tags, what the named item rows cover, buy clicks on product pages, earned per
+click), a set table and a product table, each with TCGplayer and eBay clicks, orders, sale value and earnings side by side,
+then Amazon clicks and all buy clicks (DexCompare adds its `buy_product` clicks, quick view included).
+
+**How the halves are joined** (`lib/earnings/product-earnings.ts`, pure): no sub-id names a product (`mtg-us-product-table`
+names site, market and placement), so a SALE is the network's item row (eBay Transaction Detail title, TCGplayer SKU
+line; "Top sellers", 2026-11-25) under the site's tag, matched to ONE catalogue product when every significant word of the
+product's name is in the title and no other product of the same length fits; a tie or no fit stays unmatched under its own
+title. The catalogue is each site's public `products.json` on GitHub; a product's set is its set code, labelled by the
+shortest name its products reduce to (no code: the product type). CLICKS (`lib/earnings/product-clicks.ts`) are Vercel's
+`buy_click` events grouped by the page they fired on (`requestPath`), per network by an extra `eventData/retailer eq`
+filter for each TCGplayer, eBay and Amazon retailer value; the earnings-refresh cron reads them at most once in 20 hours
+(about 20 queries a site), kept in the OpsSnapshot row `earnings:product-clicks`. A query Vercel refuses leaves that part
+unknown (shown as "not split by Vercel"), never zero; the page lists which retailer values counted as which network.
+
+**What it cannot attribute, shown, never spread:** untagged sales (about a fifth of eBay's; ones whose title looks like
+the site's game are counted, but RiftCompare and TCG Prices sell the same products, so none goes to the site), tagged
+sales whose item has no name, sales no product matched, and clicks off product pages (list quick views, home, guides).
+Clicks are not sales: eBay pays on any purchase within 24 hours of a click. Clicks are unsampled (only MTG's impression
+events are sampled 1 in 10). Amazon earnings stay off this view: Amazon reports per tracking ID and store, not per site
+or product.
+
+**Unverified at merge:** the container cannot reach Vercel's analytics API, so the `requestPath` grouping on the events
+endpoint and the two-condition `and` filter are untested against the live API. If the page's click status shows
+"refused", the per-network split falls back to unknown and only the sales half stands; fix the query, not the view.
+`tests/earnings-by-product.test.ts`.

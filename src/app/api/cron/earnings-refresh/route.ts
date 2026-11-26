@@ -5,6 +5,7 @@ import { storeAmazonClicks } from "@/lib/earnings/amazon-clicks";
 import { storeSearchTest } from "@/lib/earnings/search-test";
 import { storeAbTest } from "@/lib/earnings/ab-test";
 import { storeTopClicks } from "@/lib/earnings/top-clicks";
+import { storeProductClicks } from "@/lib/earnings/product-clicks";
 import { liveRoute } from "@/lib/public-data/live-route";
 
 // Refreshes the earnings dashboard's stored copy (lib/earnings/stored.ts; DECISIONS.md
@@ -24,15 +25,17 @@ async function handleGET(req: Request) {
   const started = Date.now();
   // storeAbTest: the quick view's A/B tests on DexCompare and MTG Compare (lib/earnings/ab-test.ts); idle outside their dates.
   // storeTopClicks: every site's most-clicked items for the dashboard's "What's selling" (lib/earnings/top-clicks.ts), at most once in 20 hours.
-  const [sources, costs, clicks, search, ab, topClicks] = await Promise.all([
+  // storeProductClicks: DexCompare's and MTG Compare's buy clicks by product page and network for /admin/earnings/products (lib/earnings/product-clicks.ts), at most once in 20 hours.
+  const [sources, costs, clicks, search, ab, topClicks, productClicks] = await Promise.all([
     loadEarnings(true),
     loadCosts(true),
     storeAmazonClicks(),
     storeSearchTest(),
     storeAbTest(),
     storeTopClicks().catch(() => ({ status: "error" as const })),
+    storeProductClicks().catch(() => ({ status: "error" as const })),
   ]);
-  const status = [...sources.map((s) => ({ key: s.key, status: s.status })), ...costs.filter((c) => !c.entry).map((c) => ({ key: c.key, status: c.status })), { key: "amazon-clicks", status: clicks.status }, { key: "search-test", status: search.status }, { key: "ab-test", status: ab.status }, { key: "top-clicks", status: topClicks.status }];
+  const status = [...sources.map((s) => ({ key: s.key, status: s.status })), ...costs.filter((c) => !c.entry).map((c) => ({ key: c.key, status: c.status })), { key: "amazon-clicks", status: clicks.status }, { key: "search-test", status: search.status }, { key: "ab-test", status: ab.status }, { key: "top-clicks", status: topClicks.status }, { key: "product-clicks", status: productClicks.status }];
   return NextResponse.json({ ok: status.every((s) => s.status !== "error"), seconds: Math.round((Date.now() - started) / 1000), status });
 }
 
