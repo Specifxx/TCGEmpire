@@ -26202,3 +26202,20 @@ account, so a member earns it on every site they are signed in to, each site dra
 
 **Why break-even holds.** The only reward costs no cash, and taking it needs about five weeks of daily visits; the plan
 (/mnt/project-files/loyalty/loyalty-plan-2026-11-26.html) models the value of those visits against any paid reward.
+
+## 2026-11-27 — Legacy preview season: live reveals on the set page and the spoilers post
+
+Bill (2026-11-26): "Rift Compare keeps on losing visitors". Vercel, Google referrals to riftcompare.com: 15-28 Sep 2,788
+visitors, 20 Oct-2 Nov 3,062, 12-25 Nov 1,129. In both peaks most Google visitors landed on set-cycle news: Radiance leaked
+mechanics 331, Radiance spoilers 283, the Deploy keyword explainer 274 (Sep); the Radiance signature-cards post 754 (late Oct,
+87 now). Between sets that demand is gone, and Legacy's previews (Convergence Fest, 11-13 Dec) are the recovery, so the site has
+to be the fastest place to see each Legacy card.
+
+- `lib/radiance-reveals.ts` now serves any set (`getSetReveals`): Legacy's counter and newest 12 imported cards show on
+  `/sets/legacy` and, through a `[[reveals]]` body marker (`Article.reveals`), inside `/blog/riftbound-legacy-spoilers-set-6`.
+  Database cards only (set-reveals.yml writes them), and both switch off on Legacy's street date. Before the first card they say
+  when previews start.
+- The post is ISR for a day, so it reads the loader with a one-day TTL (db.ts rule 5); the import's `CONTENT_TAG` purge still
+  refreshes it the day cards land. The set page is dynamic and keeps 900 s, as Radiance's did.
+- `set-reveals.yml` runs twice a day (05:37 and 13:37 UTC, before the daily release) instead of every second day: a spoiler
+  search goes to whoever has the card first, and outside a reveal season the run is a no-op.

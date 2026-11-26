@@ -3,11 +3,14 @@
 # official card gallery and imports whatever is revealed so far: the same two scripts
 # as maintenance.yml's set-pipeline task, additive and idempotent. Outside a season it
 # is a green no-op. The cards reach pages with the next daily snapshot and release.
-# Neon cost: one upsert pass of at most a few hundred Card rows every two days.
+# Neon cost: one upsert pass of at most a few hundred Card rows, twice a day in season.
 name: Set reveals
 on:
   schedule:
-    - cron: "37 5 */2 * *"
+    # Twice a day since 2026-11-27 (Legacy previews): 05:37 catches the previous
+    # US-evening reveals, 13:37 lands before the ~15:00 UTC daily release, so a
+    # revealed card has its page the same day rivals post it. A no-op outside a season.
+    - cron: "37 5,13 * * *"
   workflow_dispatch:
     inputs:
       set_slug:

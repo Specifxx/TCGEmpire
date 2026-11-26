@@ -50,6 +50,6 @@ test("the homepage tile, the sets index and the share image read showsAsNew", ()
 
 test("past the announced total the count stands alone, never '197 of 180'", () => {
   assert.match(read("src/app/sets/[set]/page.tsx"), /revealed >= announced \? `\$\{revealed\} Cards` : `\$\{revealed\} of \$\{announced\}`/);
-  assert.match(read("src/components/sets/RadianceReveals.tsx"), /data\.revealed >= RADIANCE_TOTAL_CARDS \?/);
+  assert.match(read("src/components/sets/RadianceReveals.tsx"), /data\.revealed >= total \?/);
   assert.match(read("src/app/sets/[set]/gallery/page.tsx"), /preview && announced && total < announced \? `of \$\{announced\} cards so far`/);
 });

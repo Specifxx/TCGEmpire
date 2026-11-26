@@ -1,4 +1,7 @@
 import { Fragment } from "react";
+import { SetRevealsStrip } from "@/components/sets/RadianceReveals";
+import { getLegacyReveals } from "@/lib/radiance-reveals";
+import { LEGACY_TOTAL_CARDS } from "@/lib/sets/legacy";
 import { TcgplayerPicks } from "@/components/TcgplayerPicks";
 import Link from "next/link";
 import { PageTrail } from "@/components/PageTrail";
@@ -344,6 +347,8 @@ export async function ArticleView({ article }: { article: Article }) {
   // Every legacy-tagged post until Legacy's street date (lib/sets/legacy.ts).
   // Never both: a post tagged for both sets keeps Radiance's block.
   const legacyCta = !preorderCta && carriesLegacyPreorderCta(article);
+  // A spoilers post's live reveal strip, placed with [[reveals]] (2026-11-27).
+  const reveals = article.reveals === "legacy" ? await getLegacyReveals(DEFAULT_COUNTRY, 86400) : null;
   const radianceAlertOpen = !!setByCode(RADIANCE_SET_CODE)?.comingSoon;
   // Radiance posts lead with "Follow the chase cards" instead of the email box
   // (2026-10-16 growth pass, components/ChaseWatchCta.tsx): their readers came
@@ -370,7 +375,7 @@ export async function ArticleView({ article }: { article: Article }) {
   // the viewer's market. Resolved here, at ISR render time.
   const mentions = await resolveArticleCardMentions(article.body);
   const cards = mentions.cards;
-  const bodyParts = mentions.body.split(/^\[\[(embed|closeup|shop)(?::(\d+))?\]\]$/m);
+  const bodyParts = mentions.body.split(/^\[\[(embed|closeup|shop|reveals)(?::(\d+))?\]\]$/m);
   const placed = new Set<number>();
   for (let i = 1; i < bodyParts.length; i += 3) {
     if (bodyParts[i] === "embed") placed.add(parseInt(bodyParts[i + 1], 10));
@@ -607,6 +612,20 @@ export async function ArticleView({ article }: { article: Article }) {
           if (i % 3 === 0) return part.trim() ? <Markdown key={i} content={part} cards={cards} /> : null;
           if (i % 3 === 2) return null; // the index token — consumed with its kind below
           const n = parseInt(bodyParts[i + 1], 10);
+          if (part === "reveals") {
+            return reveals ? (
+              <div key={i} className="my-6">
+                <SetRevealsStrip
+                  data={reveals}
+                  setName="Legacy"
+                  total={LEGACY_TOTAL_CARDS}
+                  logHref="/sets/legacy"
+                  logLabel="Every revealed Legacy card on the set page →"
+                  emptyNote="No Legacy card has been revealed yet. Previews start at Convergence Fest on 13 December 2026; this list fills the day Riot shows each card."
+                />
+              </div>
+            ) : null;
+          }
           if (part === "shop") {
             return article.shop && article.shop.length > 0 ? (
               <ArticleShopStrip key={i} items={article.shop} placement="inline" />
