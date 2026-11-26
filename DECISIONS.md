@@ -26099,3 +26099,18 @@ two. Inside the three-day gap the restock is dropped and `missingSince` cleared,
 keeps `missingSince` and fires next run. A plain price alert is unchanged. `sister-alerts.yml` runs at 02:20 and 14:20 UTC
 (Dex imports at 08:47 and 20:47 and releases each one with its feed); the gap, the further-5% refire rule and the weekly
 emails' edition keys mean a second run a day sends nothing twice. DexCompare turns it on for the US only (`lib/follow.ts`).
+
+## 2026-11-26: Open clipping on the creator terms, and the A$300 cap holds itself
+
+The owner said yes on 26 Nov (the Cluely brief's move 2) to opening the pay-per-buy-click programme to anyone who
+clips our 9:16 price clips onto their own TikTok, Shorts or Reels. The terms stay as they were: A$0.04 per tracked buy
+click, the same A$300 a month for everyone together, the day-21 cut under 1.5x, and nothing paid per view.
+
+An open call means the cap can't depend on someone remembering to check it, so the ledger now enforces it:
+
+- `creatorDealRows` credits owed amounts oldest deal first. It stops when this month's "Creators" payouts plus
+  everything owed reach A$300. Whatever is left over is `heldByCap`, shown on the panel in amber, and is never owed.
+- `programmeHeadroom` closes the door to new clippers once paid + owed reaches 90% (`CLIPPER_INTAKE_SHARE`, A$270).
+  The panel then says "New clippers: PAUSED", and no new `CREATOR_DEALS` line is added until the next month.
+- A clipper's deal carries `kind: "clipper"`. Its `utmCampaign` must differ from every other deal's in its first six
+  letters and digits, because the `cr` marker is built from them.
