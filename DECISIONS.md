@@ -25892,3 +25892,16 @@ already had this rule; signatures already say "Price". Other printings are uncha
 table of the 10 most valuable priced cards above the grid (#664).
 
 **Read:** clicks and CTR on `/card/*` overnumbered pages, 3 to 9 Dec against 16 to 22 Nov.
+
+## 2026-11-26 — Hot, cold and expired on Sealed Sniper drops (deal board, phase one)
+
+**Asked:** the COO's OzBargain study (move 1): let visitors vote a Sealed Sniper drop hot or cold and flag it expired, on
+TCG Prices first, stored here, as phase one of a TCG deal board. No sign-in, no raw IP, inline on the drop card, no prompt.
+
+**Now:** `DealVote` (private, never in `PUBLIC_MODELS`) holds one row per site, drop and visitor, where the visitor is an
+HMAC of IP + user agent under a key derived from `AUTH_SECRET` (`lib/deal-votes.ts`): the address is never stored. A
+second tap undoes a vote; hot and cold exclude each other; the expired flag is separate. `/api/deal-votes` takes votes
+only from the sites in `DEAL_VOTE_SITES` (exact origins, 30 a minute per address) and answers with that drop's fresh
+tally; its GET is one bounded `groupBy` over at most 60 drops, cached by the CDN for six hours (the route floor), so a
+board costs at most four reads a day per set of drops. Votes order nothing: no price, store row, alert or drop changes.
+A vote is a tap with no text and no address, so it is not an inbox item and does not call `notifyOwnerBounded`.
