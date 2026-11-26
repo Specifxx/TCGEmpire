@@ -26109,6 +26109,21 @@ row now adds one line, "Premium scans up to 100 cards a day, free for 14 days. S
 with the click beacon `limit:scan` (the existing `limit:` surface family) and a `scan_limit_hit` event. Members
 never see it. No pop-up, no new limit, nothing moved behind Premium: the cap is unchanged. Premium pricing
 review, 26 Nov ("Rethink Premium pricing and model" thread).
+
+## 2026-11-26: Open clipping on the creator terms, and the A$300 cap holds itself
+
+The owner said yes on 26 Nov (the Cluely brief's move 2) to opening the pay-per-buy-click programme to anyone who
+clips our 9:16 price clips onto their own TikTok, Shorts or Reels. The terms stay as they were: A$0.04 per tracked buy
+click, the same A$300 a month for everyone together, the day-21 cut under 1.5x, and nothing paid per view.
+
+An open call means the cap can't depend on someone remembering to check it, so the ledger now enforces it:
+
+- `creatorDealRows` credits owed amounts oldest deal first. It stops when this month's "Creators" payouts plus
+  everything owed reach A$300. Whatever is left over is `heldByCap`, shown on the panel in amber, and is never owed.
+- `programmeHeadroom` closes the door to new clippers once paid + owed reaches 90% (`CLIPPER_INTAKE_SHARE`, A$270).
+  The panel then says "New clippers: PAUSED", and no new `CREATOR_DEALS` line is added until the next month.
+- A clipper's deal carries `kind: "clipper"`. Its `utmCampaign` must differ from every other deal's in its first six
+  letters and digits, because the `cr` marker is built from them.
 ## 2026-11-26 — Compounding daily streaks, and member rewards
 
 **Owner (26 Nov):** "the daily check-in gives too many tickets ... should just be like one ticket ... It compounds. Like, every

@@ -32,6 +32,7 @@ import {
   PROGRAMME_MONTHLY_CAP_CENTS,
   TRIAL_DAYS,
   creatorDealRows,
+  programmeHeadroom,
   programmeSpentThisMonth,
   type CreatorStats,
 } from "@/lib/earnings/creator-deals";
@@ -162,6 +163,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
     display,
   );
   const creatorMonthSpent = programmeSpentThisMonth(costEntries, today, display);
+  const creatorHeadroom = programmeHeadroom(creatorRows, costEntries, today, display);
   // What's selling (2026-11-25, owner): the networks' item rows, and every site's buy clicks. lib/earnings/top-items.ts.
   const amazonProducts = [...(await readStored<AmazonStoredProducts>(AMAZON_PRODUCT_KEYS)).values()];
   const items = allItems(sources, amazonProducts);
@@ -485,7 +487,9 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
           <h2 className="text-sm font-extrabold text-white">
             Paid creators: {money(creatorMonthSpent)} of {money(toDisplay(PROGRAMME_MONTHLY_CAP_CENTS, "AUD", display))} this month
           </h2>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-400" data-clipper-intake={creatorHeadroom.newClippersOpen ? "open" : "paused"}>
+            {money(creatorHeadroom.committed)} paid or owed, {money(creatorHeadroom.remaining)} left.{" "}
+            {creatorHeadroom.newClippersOpen ? "New clippers: open." : "New clippers: PAUSED until next month (90% of the cap is committed)."}{" "}
             Paid per tracked buy click. Paid = Costs entries in &ldquo;Creators&rdquo; with the deal&apos;s [id] in the label. Earned = real sales whose tag carries the creator&apos;s marker. Under {KEEP_ROI}x on day {TRIAL_DAYS}: cut.
           </span>
         </div>
@@ -508,7 +512,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
                 {creatorRows.map((r) => (
                   <tr key={r.deal.id} data-creator-deal={r.deal.id} data-creator-verdict={r.verdict.key}>
                     <td className="px-3 py-2 text-white">
-                      {r.deal.handle}
+                      {r.deal.handle}{r.deal.kind === "clipper" ? " (clipper)" : ""}
                       <span className="block text-xs text-slate-500">
                         [{r.deal.id}] · {r.deal.platform} · {r.deal.sites.join(", ")} · tag {r.mark} · from {r.deal.start}
                         {r.stats ? ` · read ${r.stats.asOf.slice(0, 16).replace("T", " ")} UTC` : ""}
@@ -519,6 +523,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: { k
                     <td className="num px-3 py-2 text-right text-slate-200">
                       {money(r.paid)}
                       {r.owed ? <span className="block text-xs text-slate-500">{money(r.owed)} owed</span> : null}
+                      {r.heldByCap ? <span className="block text-xs text-amber-400">{money(r.heldByCap)} over the month&apos;s cap</span> : null}
                     </td>
                     <td className="num px-3 py-2 text-right text-slate-200">{r.earned.sales}</td>
                     <td className="num px-3 py-2 text-right text-white">
