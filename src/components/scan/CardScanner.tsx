@@ -11,7 +11,7 @@ import { useMe } from "@/lib/use-me";
 import { CardTile, type CardTileData } from "@/components/CardTile";
 import { useQuickView } from "@/components/QuickView";
 import { useCountry } from "@/components/CountryProvider";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, firePremiumClickBeacon } from "@/lib/analytics";
 import { shrinkPhoto as shrink } from "@/lib/scan/shrink";
 
 type Confidence = "high" | "medium" | "low" | "none";
@@ -29,6 +29,8 @@ interface Scanned {
   photo: string;
   result: ScanResult | null;
   error: string | null;
+  /** The visitor's free daily scans ran out: the one moment the Premium offer is shown (DECISIONS.md 2026-11-26). */
+  limited?: boolean;
   chosen: CardTileData | null;
   feedback: "right" | "picked-other" | "not-listed" | null;
   added: boolean;
@@ -48,7 +50,7 @@ export function CardScanner() {
   const [busy, setBusy] = useState(false);
   const [tally, setTally] = useState<Record<string, number> | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
-  const { user, loaded } = useMe();
+  const { user, loaded, premium } = useMe();
   const { open } = useQuickView();
   const { price, fmt } = useCountry();
 
@@ -67,7 +69,8 @@ export function CardScanner() {
       const data = await res.json().catch(() => ({}));
       if (typeof data.remaining === "number") setRemaining(data.remaining);
       if (!res.ok) {
-        update(key, { error: data.error ?? "Something went wrong. Try again." });
+        update(key, { error: data.error ?? "Something went wrong. Try again.", limited: data.limited === true && !premium });
+        if (data.limited === true && !premium) trackEvent("scan_limit_hit", {});
         return;
       }
       const result = data as ScanResult;
@@ -79,7 +82,7 @@ export function CardScanner() {
     } finally {
       setBusy(false);
     }
-  }, [open]);
+  }, [open, premium]);
 
   async function onFile(file: File | undefined) {
     if (!file) return;
@@ -152,6 +155,14 @@ export function CardScanner() {
               <div className="min-w-0 flex-1 text-sm">
                 {!it.result && !it.error && <p className="animate-pulse text-slate-300">Reading the card…</p>}
                 {it.error && <p className="text-rose-300">{it.error}</p>}
+                {it.limited && (
+                  <p className="mt-2 text-slate-200">
+                    Premium scans up to 100 cards a day, free for 14 days.{" "}
+                    <a href="/premium?src=scan-limit" className="font-semibold text-brand-400 underline" onClick={() => firePremiumClickBeacon("limit:scan")}>
+                      See Premium
+                    </a>
+                  </p>
+                )}
                 {it.result && (
                   <>
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${CONF_COPY[it.result.confidence].badge}`}>{CONF_COPY[it.result.confidence].label}</span>
