@@ -49,6 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: github.event_name != 'schedule'
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -66,3 +68,13 @@ jobs:
           name: store-candidates
           path: store-candidates.json
           retention-days: 30
+      - name: Keep the result on a claude/** branch
+        if: always() && startsWith(github.ref_name, 'claude/')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          mkdir -p research && cp -f store-candidates.json research/ 2>/dev/null || true
+          git add -f research/store-candidates.json || true
+          git commit -m "Research: store-candidates.json (${{ github.run_id }})" || exit 0
+          git pull --rebase -q origin ${{ github.ref_name }} || true
+          git push origin HEAD:${{ github.ref_name }}
