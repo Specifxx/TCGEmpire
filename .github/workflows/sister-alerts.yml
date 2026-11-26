@@ -11,7 +11,12 @@ name: Sister-site price alerts
 
 on:
   schedule:
+    # Twice a day (owner, 2026-11-26: "check prices on the existing twice daily run"): DexCompare imports at 08:47 and
+    # 20:47 UTC and releases each run's prices with its /alert-feed.json; these run after each release has had time to
+    # build. evaluateAlert keeps it to one email per alert (never twice inside three days), and the weekly emails are
+    # keyed by edition, so a second run a day sends nothing twice.
     - cron: "20 14 * * *"
+    - cron: "20 2 * * *"
   workflow_dispatch:
     inputs:
       dry_run:

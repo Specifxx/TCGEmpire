@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     if (!status) return NextResponse.json({ error: "Sign in again" }, { status: 401, headers });
     const rows = await prisma.sisterAlert.findMany({
       where: { email, site: site.key },
-      select: { id: true, productId: true, region: true, targetCents: true, name: true, path: true, lastPriceCents: true, lastNotifiedAt: true, createdAt: true },
+      select: { id: true, productId: true, region: true, targetCents: true, alsoRestock: true, name: true, path: true, lastPriceCents: true, lastNotifiedAt: true, createdAt: true },
       orderBy: { createdAt: "desc" },
       take: 300,
     });
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
           kind: isRestockTarget(r.targetCents) ? "restock" : "price",
           region: r.region,
           targetCents: isRestockTarget(r.targetCents) ? null : r.targetCents,
+          alsoRestock: r.alsoRestock,
           name: r.name,
           path: r.path,
           priceCents: r.lastPriceCents,
