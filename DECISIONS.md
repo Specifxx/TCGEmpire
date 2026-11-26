@@ -25905,3 +25905,16 @@ only from the sites in `DEAL_VOTE_SITES` (exact origins, 30 a minute per address
 tally; its GET is one bounded `groupBy` over at most 60 drops, cached by the CDN for six hours (the route floor), so a
 board costs at most four reads a day per set of drops. Votes order nothing: no price, store row, alert or drop changes.
 A vote is a tap with no text and no address, so it is not an inbox item and does not call `notifyOwnerBounded`.
+
+## 2026-11-26 — "Worked / didn't work" votes on the sister sites' discount codes
+
+**Asked:** the OzBargain study's move 3, approved by the owner: discount-code pages for the stores that pay us commission
+(ScentCompare and KaeYoung first, their Awin partners' own published codes), where visitors say whether a code worked.
+
+**Now:** `/api/code-votes` (`lib/code-votes.ts`) reuses the deal board's `DealVote` table with no schema change: every
+code vote is stored under the one site key `codes`, so a store listed on two sites shares one tally per code; "worked"
+is vote 1, "didn't work" -1, and "expired" the separate flag. The voter is the deal board's keyed HMAC (`voterId`), never
+the address. Votes come only from the exact origins in `CODE_VOTE_SITES` (30 a minute per address); the GET is one
+bounded `groupBy` over at most 60 codes, CDN-cached six hours, and adds the newest "worked" time so a page can say
+"last worked 2 days ago". Votes order nothing: a code list stays in the sister's own order, and no price or store row
+changes. A vote is a tap with no text, so it is not an inbox item.
