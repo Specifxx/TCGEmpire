@@ -2500,6 +2500,22 @@ model DealVote {
   @@index([site, dropId])
 }
 
+// COLLECTOR PULSE (2026-11-26, DECISIONS.md "Collector pulse"; lib/sentiment.ts). "Buying / holding / skipping" on a sister
+// site's product page. No account: voter is an HMAC of IP + user agent, never the address. Public only as a split per
+// product once MIN_PUBLIC answered; never orders a price, a deal or an alert.
+model SentimentVote {
+  site      String
+  /// the sister site's own product id
+  productId String
+  voter     String
+  /// "buy" | "hold" | "skip"
+  choice    String
+  at        DateTime @default(now()) @updatedAt
+
+  @@id([site, productId, voter])
+  @@index([site, productId])
+}
+
 // COMMUNITY PULL RATES (2026-11-26, DECISIONS.md "Community pull rates"; lib/pull-rates.ts).
 // A signed-in member says "I opened N packs of <set> and these were every Epic and Showcase in them".
 // PRIVATE: a log is never shown on its own. Pages read only lib/pull-rates-server.ts's grouped
