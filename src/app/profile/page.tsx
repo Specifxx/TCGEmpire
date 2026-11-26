@@ -8,6 +8,7 @@ import { WelcomeChecklist } from "@/components/WelcomeChecklist";
 import { MyCollection } from "@/components/MyCollection";
 import { ReferralLinkCard } from "@/components/ReferralLinkCard";
 import { CommunityHandleCard } from "@/components/CommunityHandleCard";
+import { MemberRewardsCard } from "@/components/MemberRewardsCard";
 import { REFERRAL_PREMIUM_DAYS } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
 
@@ -55,6 +56,9 @@ export default async function ProfilePage() {
 
       {/* The community handle (community plan move 3): one public name for votes, flags, pulse answers and pull logs. */}
       <CommunityHandleCard />
+
+      {/* Member rewards (lib/loyalty.ts): points, the daily streak, the level and the rewards. */}
+      <MemberRewardsCard />
 
       {/* My Collection — cards the user owns, valued live (separate from wishlist) */}
       <MyCollection />

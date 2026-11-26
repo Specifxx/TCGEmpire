@@ -26174,3 +26174,31 @@ An open call means the cap can't depend on someone remembering to check it, so t
   The panel then says "New clippers: PAUSED", and no new `CREATOR_DEALS` line is added until the next month.
 - A clipper's deal carries `kind: "clipper"`. Its `utmCampaign` must differ from every other deal's in its first six
   letters and digits, because the `cr` marker is built from them.
+## 2026-11-26 — Compounding daily streaks, and member rewards
+
+**Owner (26 Nov):** "the daily check-in gives too many tickets ... should just be like one ticket ... It compounds. Like, every
+consecutive day gives you more and more tickets", and "we actually need loyalty systems ... loyalty that will not make us a loss
+... I want that on all of our Empire websites".
+
+**Streaks (`lib/streak.ts`).** Day 1 of a streak is worth 1, day 2 is 2 ... up to `STREAK_CAP` (10) a day; a missed Sydney day
+starts again at 1. The cap keeps one streak from swamping a round: a perfect 60-day round is 555, against 50 for entering with the
+bonus. A giveaway round says its rule in `Giveaway.checkinRule`: the five December 2026 rounds are pinned `"flat"` (5 a day, the
+rule they were published with; a live sweepstakes' rules are not changed mid-round), and every later round is `"streak"` unless it
+says otherwise. `liveWeights` now reads each entrant's check-in DAYS, not a count, and `myGiveaway` returns `checkinRule`,
+`checkinToday` and `checkinTomorrow`, which the panel and the rules page read (sister panels fall back to 5 when absent).
+
+**Member rewards (`lib/loyalty.ts`, `lib/loyalty-server.ts`, `/api/loyalty`, `MemberRewardsCard`).** One balance on the shared
+account, so a member earns it on every site they are signed in to, each site drawing the card in its own name.
+- Earn: the daily check-in streak (`LoyaltyDay`, one row a member a Sydney day, any site) plus every community contribution point
+  (already capped at 5 a day). A giveaway check-in also writes the day's `LoyaltyDay`; a rewards check-in also checks in to the
+  SAME site's open giveaway, but only in a streak round, whose rules name the card. Nothing is earned for buying or for Premium.
+- Spend: only rewards that cost no cash. Today one: 7 days of Premium for 300 points, at most one Premium reward a Sydney month
+  (the cap the Premium pricing thread set, `LoyaltyRedemption` unique on `(userId, slot)` so two presses take one), extend-only
+  through `grantPremiumDays`, refused while the member has a live Stripe subscription (the days would be worth nothing to them).
+  A reward that costs money (packs, a voucher we pay for) waits for the owner's yes on its budget and is not shown or teased.
+- Levels (Member, Regular 100, Insider 500, Legend 2,000 lifetime points) are a badge, never a price gate.
+- Points have no cash value, can't be bought or moved, and spending them never changes giveaway tickets, so the draws stay free.
+- UX guard: the card lives on the profile page only, loads after render, and opens nothing by itself.
+
+**Why break-even holds.** The only reward costs no cash, and taking it needs about five weeks of daily visits; the plan
+(/mnt/project-files/loyalty/loyalty-plan-2026-11-26.html) models the value of those visits against any paid reward.

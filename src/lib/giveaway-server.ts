@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/db";
 import { contributionPoints } from "@/lib/contributions-server";
+import { recordLoyaltyDay } from "@/lib/loyalty-server";
 import {
   assignTickets,
   checkinDay,
+  checkinOutlook,
+  checkinPointsFor,
+  checkinRuleOf,
+  giveawayByKey,
   entryPoints,
   giveawayState,
   publicName,
@@ -31,7 +36,25 @@ export interface LiveWeight extends Points {
 }
 
 type WeightUser = { id: string; email: string; isAdmin: boolean; premiumUntil: Date | null };
-type WindowGiveaway = Pick<Giveaway, "key" | "opensAt" | "closesAt">;
+type WindowGiveaway = Pick<Giveaway, "key" | "opensAt" | "closesAt" | "checkinRule">;
+
+async function allCheckinDays(giveaway: string, ids: string[], window: { gte: Date; lte: Date }): Promise<{ userId: string; day: string }[]> {
+  const out: { userId: string; day: string }[] = [];
+  const PAGE = 20_000;
+  let cursor: string | undefined;
+  for (;;) {
+    const rows = await prisma.giveawayCheckin.findMany({
+      where: { giveaway, userId: { in: ids }, createdAt: window },
+      select: { id: true, userId: true, day: true },
+      orderBy: { id: "asc" },
+      take: PAGE,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+    });
+    for (const r of rows) out.push({ userId: r.userId, day: r.day });
+    if (rows.length < PAGE) return out;
+    cursor = rows[rows.length - 1].id;
+  }
+}
 
 /** Each account's points right now (lib/giveaway.ts entryPoints). */
 export async function liveWeights(
@@ -51,9 +74,9 @@ export async function liveWeights(
     prisma.giveawayReferral
       .findMany({ where: { giveaway: g.key, referrerId: { in: ids } }, select: { referrerId: true, referredId: true }, take: 20_000 })
       .catch(() => []),
-    prisma.giveawayCheckin
-      .groupBy({ by: ["userId"], where: { giveaway: g.key, userId: { in: ids }, createdAt: window }, _count: { _all: true } })
-      .catch(() => []),
+    // Every check-in day, not a count: a streak round (lib/giveaway.ts checkinRuleOf) scores the days in order. Read in full,
+    // page by page, and a failure throws: a partial list would silently change the draw's weights.
+    allCheckinDays(g.key, ids, window),
     prisma.giveawayEntry
       .findMany({ where: { giveaway: g.key, userId: { in: ids }, bonusClaimedAt: { not: null } }, select: { userId: true } })
       .catch(() => []),
@@ -92,15 +115,19 @@ export async function liveWeights(
   for (const r of byUser) add(r.userId, r._count._all);
   for (const r of sealed) add(r.userId, r._count._all);
   const emailCount = new Map(byEmail.map((r) => [r.email, r._count._all] as const));
-  const checkinCount = new Map(checkins.map((r) => [r.userId, r._count._all] as const));
+  const checkinDays = new Map<string, string[]>();
+  for (const r of checkins) checkinDays.set(r.userId, [...(checkinDays.get(r.userId) ?? []), r.day]);
+  // The registry is the source of truth for a round's rule; an object passed in without one falls back to it.
+  const rule = checkinRuleOf(giveawayByKey(g.key) ?? g);
   const claimed = new Set(claims.map((c) => c.userId));
   const now = Date.now();
   for (const u of users) {
     const premium = !!u.premiumUntil && u.premiumUntil.getTime() > now;
     const referrals = refCount.get(u.id) ?? 0;
     const held = (watches.get(u.id) ?? 0) + (emailCount.get(u.email.toLowerCase()) ?? 0);
-    const c = checkinCount.get(u.id) ?? 0;
-    const p = entryPoints({ premium, watches: held, bonusClaimed: claimed.has(u.id), checkins: c, referrals, starReferrals: starCount.get(u.id) ?? 0, contributions: contrib.get(u.id) ?? 0 });
+    const days = checkinDays.get(u.id) ?? [];
+    const c = new Set(days).size;
+    const p = entryPoints({ premium, watches: held, bonusClaimed: claimed.has(u.id), checkins: c, checkinPoints: checkinPointsFor(rule, days), referrals, starReferrals: starCount.get(u.id) ?? 0, contributions: contrib.get(u.id) ?? 0 });
     out.set(u.id, { ...p, weight: p.points, referrals, watches: held, checkins: c, admin: u.isAdmin || isAdminEmail(u.email) });
   }
   return out;
@@ -192,6 +219,11 @@ export interface MyGiveaway {
   checkedInToday: boolean;
   /** Consecutive Sydney days checked in, ending today or yesterday. */
   streak: number;
+  /** How this round scores check-ins (lib/giveaway.ts checkinRuleOf). */
+  checkinRule: "flat" | "streak";
+  /** What today's check-in is (or was) worth, and tomorrow's if the streak holds. */
+  checkinToday: number;
+  checkinTomorrow: number;
   premium: boolean;
   showName: boolean;
   tickets: { from: number; to: number; total: number } | null;
@@ -207,19 +239,6 @@ export async function accountByEmail(email: string): Promise<Account | null> {
   return prisma.user
     .findUnique({ where: { email }, select: { id: true, email: true, isAdmin: true, premiumUntil: true, emailVerified: true } })
     .catch(() => null);
-}
-
-function streakOf(days: string[], today: string): number {
-  const set = new Set(days);
-  const d = new Date(`${today}T12:00:00Z`);
-  // Today not yet checked in: the streak still stands from yesterday.
-  if (!set.has(today)) d.setUTCDate(d.getUTCDate() - 1);
-  let n = 0;
-  while (set.has(d.toISOString().slice(0, 10))) {
-    n++;
-    d.setUTCDate(d.getUTCDate() - 1);
-  }
-  return n;
 }
 
 export async function myGiveaway(g: Giveaway, user: Account, isAdminEmail: (e: string) => boolean, inviteBase: string): Promise<MyGiveaway> {
@@ -239,6 +258,8 @@ export async function myGiveaway(g: Giveaway, user: Account, isAdminEmail: (e: s
     if (mine) tickets = { from: mine.from, to: mine.to, total };
   }
   const p = w ?? entryPoints({ premium: false, watches: 0, bonusClaimed: false, checkins: 0, referrals: 0 });
+  const rule = checkinRuleOf(g);
+  const outlook = checkinOutlook(rule, dayList, today);
   return {
     state: giveawayState(g, now),
     signedIn: true,
@@ -248,7 +269,10 @@ export async function myGiveaway(g: Giveaway, user: Account, isAdminEmail: (e: s
     breakdown: { entry: p.entry, bonus: p.bonus, bonusVia: p.bonusVia, checkin: p.checkin, referral: p.referral, contribution: p.contribution, referralsCounted: p.referralsCounted, starCounted: p.starCounted },
     checkins: w?.checkins ?? 0,
     checkedInToday: dayList.includes(today),
-    streak: streakOf(dayList, today),
+    streak: outlook.streak,
+    checkinRule: rule,
+    checkinToday: outlook.today,
+    checkinTomorrow: outlook.tomorrow,
     premium: !!user.premiumUntil && user.premiumUntil.getTime() > now.getTime(),
     showName: entry?.showName ?? true,
     tickets,
@@ -307,11 +331,14 @@ export async function giveawayAction(
 }
 
 async function checkIn(g: Giveaway, userId: string): Promise<void> {
+  const day = checkinDay(new Date());
   await prisma.giveawayCheckin
-    .create({ data: { giveaway: g.key, userId, day: checkinDay(new Date()) }, select: { id: true } })
+    .create({ data: { giveaway: g.key, userId, day }, select: { id: true } })
     .catch((e: unknown) => {
       if ((e as { code?: string })?.code !== "P2002") throw e;
     });
+  // A giveaway check-in is also the day's member-rewards check-in (lib/loyalty.ts): one tap, both streaks.
+  await recordLoyaltyDay(userId, g.site, day);
 }
 
 /**

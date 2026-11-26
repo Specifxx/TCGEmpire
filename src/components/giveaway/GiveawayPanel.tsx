@@ -1,5 +1,6 @@
 "use client";
 
+import { STREAK_CAP } from "@/lib/streak";
 import { useEffect, useState, type ReactNode } from "react";
 
 // The giveaway entry panel (owner, 2026-11-22: "a point system ... as nice and aesthetic and usable and user friendly as possible").
@@ -16,6 +17,10 @@ export type Me = {
   checkins?: number;
   checkedInToday?: boolean;
   streak?: number;
+  /** "streak" rounds (lib/streak.ts) score 1, 2, 3 ... a day; "flat" rounds 5 a day. Older APIs send neither: flat. */
+  checkinRule?: "flat" | "streak";
+  checkinToday?: number;
+  checkinTomorrow?: number;
   premium?: boolean;
   showName?: boolean;
   tickets?: { from: number; to: number; total: number } | null;
@@ -157,6 +162,9 @@ export function GiveawayPanel({
     );
   }
 
+  const streakRule = me.checkinRule === "streak";
+  const ciToday = me.checkinToday ?? (streakRule ? 1 : 5);
+  const ciTomorrow = me.checkinTomorrow ?? (streakRule ? 2 : 5);
   const b = me.breakdown ?? { entry: 10, bonus: 0, bonusVia: null, checkin: 0, referral: 0, referralsCounted: 0 };
   const points = me.points ?? 0;
   const parts = [
@@ -211,9 +219,9 @@ export function GiveawayPanel({
         <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
           {/* Daily check-in */}
           <div className="rounded-xl border border-white/10 p-3">
-            <p className="font-semibold">Daily check-in · +5</p>
+            <p className="font-semibold">Daily check-in · +{ciToday}</p>
             <p className="mt-0.5 text-sm opacity-80">
-              {me.checkedInToday ? "Done for today. Come back tomorrow for 5 more." : "Tap once a day while the giveaway is open."}
+              {me.checkedInToday ? `Done for today. Come back tomorrow for ${ciTomorrow} more.` : streakRule ? `Each day in a row is worth one more point, up to ${STREAK_CAP} a day. Miss a day and it starts again at 1.` : "Tap once a day while the giveaway is open."}
               {(me.streak ?? 0) > 1 && <> {me.streak}-day streak.</>}
             </p>
             <button
@@ -222,7 +230,7 @@ export function GiveawayPanel({
               disabled={!!busy || me.checkedInToday}
               className={`mt-2 w-full rounded-lg px-3 py-2 text-sm font-semibold ${me.checkedInToday ? "cursor-default bg-white/5 opacity-60" : "bg-sky-400 text-black hover:brightness-110"}`}
             >
-              {me.checkedInToday ? "✓ Checked in today" : busy === "checkin" ? "Checking in…" : "Check in · +5"}
+              {me.checkedInToday ? "✓ Checked in today" : busy === "checkin" ? "Checking in…" : `Check in · +${ciToday}`}
             </button>
           </div>
 
