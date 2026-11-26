@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { setLessGroupKey, setLessSlugRedirect, titleGroupKey } from "../src/lib/sealed-import";
+import { misfiledSetLess, setLessGroupKey, setLessSlugRedirect, titleGroupKey } from "../src/lib/sealed-import";
 import { sealedSlug } from "../src/lib/sealed-slug";
 
 // ONE GROUP FOR GIFT OF THE RIFT (2026-11-19, DECISIONS.md). Real store titles from the 19 Nov sealed listings: they
@@ -53,4 +53,33 @@ test("the old title-derived slugs 301 to the one page; the page and other produc
 test("the sealed page redirects a moved slug before it 404s", () => {
   const page = readFileSync("src/app/sealed/[slug]/page.tsx", "utf8");
   assert.match(page, /setLessSlugRedirect\(params\.slug\)[\s\S]*permanentRedirect[\s\S]*notFound\(\)/);
+});
+
+// ONE GROUP FOR THE SECRET GARDEN BUNDLE (2026-11-26, DECISIONS.md). Real titles from the 25 Nov sealed export, filed
+// under four groups: TCGplayer's, Cardmarket's, Tier Zero's and (two that say "Unleashed") the Unleashed Bundle page.
+test("every Secret Garden title lands on TCGplayer's Secret Garden Box page, never the Unleashed Bundle's", () => {
+  for (const t of [
+    "Secret Garden Box", // TCGplayer's product name: its page's URL stays
+    "Secret Garden Box Set", // Cardmarket EU
+    "Riftbound Secret Garden Gift Box Set  - Event Exclusive Sealed", // Tier Zero Games UK
+    "Riftbound Unleashed Secret Garden Bundle English", // SpellNexus EU, was on UNL|Bundle
+    "Riftbound Secret Garden Bundle NIB Unleashed", // eBay US, was on UNL|Bundle
+  ]) {
+    assert.equal(titleGroupKey(t), "secretgardenbox", t);
+    assert.equal(misfiledSetLess(t, "UNL|Bundle"), true, t);
+  }
+  assert.equal(misfiledSetLess("Riftbound Unleashed Bundle", "UNL|Bundle"), false);
+  for (const t of ["Riftbound Secret Garden Bundle Case", "2x Riftbound Secret Garden Bundle", "Secret Garden Ultrasoft Poro Promo"]) {
+    assert.equal(setLessGroupKey(t), null, t);
+  }
+});
+
+test("the old Secret Garden slugs 301 to its one page", () => {
+  for (const old of ["secretgardenboxset", "riftboundsecretgardengiftboxseteventexcl"]) assert.equal(setLessSlugRedirect(old), "secretgardenbox", old);
+  assert.equal(setLessSlugRedirect("secretgardenbox"), null);
+});
+
+test("the eBay sealed pass refuses a set-less product answering another group's search", () => {
+  const src = readFileSync("src/lib/sealed-import.ts", "utf8");
+  assert.match(src, /searchEbaySealed\([\s\S]{0,200}if \(!r\) continue;[\s\S]{0,2500}misfiledSetLess\(r\.title, g\.groupKey\)[\s\S]{0,200}continue;/);
 });
