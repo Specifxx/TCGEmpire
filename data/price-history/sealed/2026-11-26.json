@@ -43,12 +43,13 @@
     },
     "LGC|Booster Pack": {
       "CA": 2400,
+      "EU": 499,
       "US": 599
     },
     "LGC|Bundle": {
       "AU": 6500,
       "CA": 4499,
-      "EU": 3500,
+      "EU": 3390,
       "SG": 6000,
       "UK": 3495,
       "US": 4199
@@ -58,6 +59,7 @@
     },
     "LGC|Champion Deck": {
       "CA": 1980,
+      "EU": 1990,
       "UK": 1889,
       "US": 2499
     },
@@ -70,7 +72,7 @@
     },
     "LGC|Champion Deck (Garen)": {
       "CA": 2495,
-      "EU": 2000,
+      "EU": 1999,
       "SG": 3000,
       "UK": 1976,
       "US": 1999
@@ -116,7 +118,7 @@
     },
     "OGN|Booster Box": {
       "AU": 40000,
-      "CA": 19995,
+      "CA": 14999,
       "EU": 6497,
       "SG": 21083,
       "UK": 13303,
@@ -240,10 +242,10 @@
       "CA": 92970,
       "EU": 56000,
       "UK": 53000,
-      "US": 50000
+      "US": 52500
     },
     "RAD|Booster Pack": {
-      "AU": 1000,
+      "AU": 999,
       "CA": 599,
       "EU": 395,
       "UK": 400,
@@ -258,7 +260,10 @@
       "US": 1999
     },
     "RAD|Bundle Case": {
-      "US": 34999
+      "US": 34989
+    },
+    "RAD|Champion Deck": {
+      "EU": 2990
     },
     "RAD|Nexus Night Pack": {
       "EU": 300,
@@ -272,7 +277,7 @@
     "RAD|Pre-Rift Kit": {
       "AU": 5000,
       "CA": 3299,
-      "EU": 3199,
+      "EU": 3000,
       "UK": 2999,
       "US": 2299
     },
@@ -291,7 +296,7 @@
     },
     "RAD|Sleeved Booster": {
       "EU": 500,
-      "US": 799
+      "US": 798
     },
     "RAD|Sleeved Booster (Art Set)": {
       "US": 3275
@@ -331,11 +336,11 @@
     },
     "SFD|Booster Box": {
       "AU": 28000,
-      "CA": 18998,
-      "EU": 9407,
+      "CA": 21999,
+      "EU": 7117,
       "SG": 8411,
       "UK": 9999,
-      "US": 13400
+      "US": 15450
     },
     "SFD|Booster Case": {
       "AU": 174000,
@@ -347,7 +352,7 @@
     "SFD|Booster Pack": {
       "AU": 1400,
       "CA": 1049,
-      "EU": 390,
+      "EU": 355,
       "US": 600
     },
     "SFD|Bulk Runes": {
@@ -423,6 +428,9 @@
     "SFD|Sleeved Booster (Art Set)": {
       "US": 3200
     },
+    "SFD|Starter Set": {
+      "EU": 1995
+    },
     "T1S|T1 Signature Edition|EN": {
       "AU": 921070,
       "CA": 800000,
@@ -457,6 +465,7 @@
     },
     "UNL|Champion Deck": {
       "CA": 2999,
+      "EU": 1990,
       "UK": 1999,
       "US": 1499
     },
@@ -499,7 +508,7 @@
     },
     "UNL|Pre-Rift Kit": {
       "AU": 6000,
-      "EU": 3650,
+      "EU": 2999,
       "UK": 5500,
       "US": 3499
     },
@@ -513,6 +522,7 @@
     "UNL|Starter Set": {
       "AU": 4000,
       "CA": 2299,
+      "EU": 1995,
       "US": 1399
     },
     "VEN|Booster Box": {
@@ -536,12 +546,12 @@
       "EU": 445,
       "SG": 800,
       "UK": 499,
-      "US": 475
+      "US": 482
     },
     "VEN|Bundle": {
       "AU": 6499,
       "CA": 5995,
-      "EU": 2900,
+      "EU": 2500,
       "UK": 2400,
       "US": 3087
     },
@@ -558,7 +568,7 @@
     },
     "VEN|Pre-Rift Event Kit": {
       "CA": 100000,
-      "EU": 3990,
+      "EU": 3500,
       "US": 3000
     },
     "VEN|Pre-Rift Kit": {
@@ -570,7 +580,7 @@
     "VEN|Showdown Decks": {
       "AU": 3000,
       "CA": 1995,
-      "EU": 1895,
+      "EU": 999,
       "SG": 2102,
       "UK": 1500,
       "US": 1099
@@ -665,8 +675,17 @@
     "riftboundleagueoflegendsstarterdeckjinx": {
       "US": 1500
     },
+    "riftboundleagueoflegendstcg1stanniversar": {
+      "EU": 14999
+    },
     "riftboundleagueoflegendstcgchampiondeck": {
       "US": 2999
+    },
+    "riftboundleagueoflegendstcgsecretgardeng": {
+      "EU": 7999
+    },
+    "riftboundleagueoflegendstradingcardgamea": {
+      "EU": 18999
     },
     "riftboundleagueoflegendsworldsbundle2025": {
       "US": 79999
@@ -732,6 +751,9 @@
     },
     "t1worldschampionsignatureeditionbundle": {
       "US": 420000
+    },
+    "vaultriftboundarcaneboxsetleagueoflegend": {
+      "EU": 60000
     },
     "worlds25commemorativebooster": {
       "EU": 850
