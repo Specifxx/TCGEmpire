@@ -1,0 +1,35 @@
+name: Discord say
+
+# One short text post from the hub bot into a hub room, published to following servers when it is a game room
+# (scripts/discord-say.ts). Dispatch only; first use: daily Riftbound Legacy reveal lines in #riftbound from 11 Dec.
+
+on:
+  workflow_dispatch:
+    inputs:
+      room:
+        description: "Hub room"
+        required: true
+        type: choice
+        options: [riftbound, announcements, pokemon, one-piece, magic, lorcana, yugioh, more-tcgs]
+      text:
+        description: "The post (\\n for a new line; no pings)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Post
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          ROOM: ${{ inputs.room }}
+          TEXT: ${{ inputs.text }}
+        run: npx -y tsx scripts/discord-say.ts
