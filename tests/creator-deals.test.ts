@@ -8,6 +8,8 @@ import {
   PROGRAMME_MONTHLY_CAP_CENTS,
   accruedCents,
   creatorDealRows,
+  programmeHeadroom,
+  CLIPPER_INTAKE_SHARE,
   dealDay,
   dealLink,
   earnedByDeal,
@@ -135,4 +137,33 @@ test("posted figures: only known deals, only sane numbers", () => {
   assert.deepEqual(Object.keys(out), ["pokechamp"]);
   assert.equal(out.pokechamp.buyClicks, 12);
   assert.equal(out.pokechamp.visitors, null);
+});
+
+test("open clipping: owed is credited oldest deal first and never takes the month past A$300", () => {
+  // 15 kept clippers (no trial cap), each with 600 clicks (A$24): A$360 accrued against A$300 left.
+  const deals = Array.from({ length: 15 }, (_, i) =>
+    deal({ id: `clip${i}`, utmCampaign: `clipper${i}`, start: `2026-11-${String(10 + i).padStart(2, "0")}`, status: "keep", kind: "clipper" }),
+  );
+  const stats = Object.fromEntries(deals.map((d) => [d.id, { asOf: "2026-11-29T00:00:00Z", buyClicks: 600, visitors: 900 }]));
+  const rows = creatorDealRows(stats, [], [], "2026-11-30", "AUD", deals);
+  const owed = rows.reduce((n, r) => n + r.owed, 0);
+  assert.equal(owed, 30_000);
+  assert.equal(rows[0].owed, 2400, "the oldest deal is credited in full");
+  assert.equal(rows[14].owed, 0, "the newest deal is held");
+  assert.equal(rows[14].heldByCap, 2400);
+  assert.equal(rows[12].owed + rows[12].heldByCap, 2400, "held plus owed is what was accrued");
+  const head = programmeHeadroom(rows, [], "2026-11-30", "AUD");
+  assert.equal(head.remaining, 0);
+  assert.equal(head.newClippersOpen, false);
+});
+
+test("payouts already made this month count against the cap, and intake closes at 90%", () => {
+  const paidOut = cost({ id: "p1", label: "Creator payout [other]", amountCents: 26_000 });
+  const rows = creatorDealRows({ pokechamp: { asOf: "2026-11-25T00:00:00Z", buyClicks: 500, visitors: 900 } }, [], [paidOut], "2026-11-30", "AUD", [deal()]);
+  assert.equal(rows[0].owed, 2000, "A$20 owed fits in the A$40 left");
+  const head = programmeHeadroom(rows, [paidOut], "2026-11-30", "AUD");
+  assert.equal(head.committed, 28_000);
+  assert.ok(28_000 >= 30_000 * CLIPPER_INTAKE_SHARE);
+  assert.equal(head.newClippersOpen, false);
+  assert.equal(programmeHeadroom([], [], "2026-11-30", "AUD").newClippersOpen, true);
 });
