@@ -7,7 +7,7 @@
 // list can seed every site's store probe (most of these shops sell several games).
 // Read-only: it writes eu-shop-directory.json and changes nothing.
 //   npx tsx scripts/eu-shop-directory.ts
-import { writeFileSync, appendFileSync } from "node:fs";
+import { writeFileSync, appendFileSync, readFileSync } from "node:fs";
 import { SCRAPE_HEADERS, robotsAllows, sleep } from "../src/lib/scrape-http";
 
 const EUROZONE = new Set(["AT", "BE", "HR", "CY", "EE", "FI", "FR", "DE", "GR", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PT", "SK", "SI", "ES"]);
@@ -60,6 +60,13 @@ async function getJson(url: string, ms = 20_000): Promise<any> {
     if (!host.includes(".")) continue;
     if (!byHost.has(host)) byHost.set(host, { host, name: String(s.name ?? host).trim(), country });
   }
+  // Plus the eurozone shops our sister sites already list (the Rift discovery pool).
+  try {
+    for (const p of JSON.parse(readFileSync("data/store-vetting/rift-discovery.json", "utf8")).stores as { name: string; base: string; country: string }[]) {
+      const host = new URL(p.base).host.toLowerCase().replace(/^www\./, "");
+      if (p.country === "EU" && !byHost.has(host)) byHost.set(host, { host, name: p.name, country: "EU" });
+    }
+  } catch {}
   const list = [...byHost.values()];
   console.log(`registry: ${rows.length} stores, ${list.length} eurozone shop domains`);
   const out: any[] = [];
