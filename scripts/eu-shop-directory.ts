@@ -12,6 +12,23 @@ import { SCRAPE_HEADERS, robotsAllows, sleep } from "../src/lib/scrape-http";
 
 const EUROZONE = new Set(["AT", "BE", "HR", "CY", "EE", "FI", "FR", "DE", "GR", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PT", "SK", "SI", "ES"]);
 const REGISTRY = "https://api.riftbound.uvsgames.com/api/v2/game-stores/?game_id=3&page_size=200&page=";
+// Which games a shop's collections name (handle or title), so one pass seeds every site.
+const GAMES: [string, RegExp][] = [
+  ["riftbound", /riftbound/i],
+  ["pokemon", /pok[eé]mon/i],
+  ["onepiece", /one-?piece/i],
+  ["lorcana", /lorcana/i],
+  ["mtg", /magic|\bmtg\b|mtg-/i],
+  ["yugioh", /yu-?gi-?oh|yugioh/i],
+  ["gundam", /gundam/i],
+  ["cyberpunk", /cyberpunk/i],
+  ["digimon", /digimon/i],
+  ["unionarena", /union-?arena/i],
+  ["fusionworld", /fusion-?world|dragon-?ball/i],
+  ["starwars", /star-?wars-?unlimited|\bswu\b/i],
+  ["fab", /flesh-?and-?blood|\bfab\b/i],
+  ["sports", /topps|panini|sports-?cards?/i],
+];
 const NOT_A_SHOP = /facebook|instagram|linktr|whatsapp|tiktok|twitter|youtube|discord|google\.|maps\.app|wa\.me|cardmarket|ebay\.|amazon\./i;
 
 async function getJson(url: string, ms = 20_000): Promise<any> {
@@ -62,12 +79,26 @@ async function getJson(url: string, ms = 20_000): Promise<any> {
         await sleep(500);
         const meta = await getJson(`${base}/meta.json`);
         if (!meta?.currency) continue;
-        out.push({ ...s, base, currency: meta.currency, shopName: meta.name ?? null });
+        const games: Record<string, string[]> = {};
+        if (meta.currency === "EUR" && allowed("/collections.json")) {
+          for (let page = 1; page <= 3; page++) {
+            await sleep(1000);
+            const d = await getJson(`${base}/collections.json?limit=250&page=${page}`);
+            const arr = (d?.collections ?? []) as { handle: string; title?: string; products_count?: number }[];
+            for (const c of arr) {
+              if (c.products_count === 0) continue;
+              const text = `${c.handle} ${c.title ?? ""}`;
+              for (const [g, re] of GAMES) if (re.test(text)) (games[g] ??= []).length < 12 && games[g].push(c.handle);
+            }
+            if (arr.length < 250) break;
+          }
+        }
+        out.push({ ...s, base, currency: meta.currency, shopName: meta.name ?? null, games });
       }
     }),
   );
   out.sort((a, b) => a.host.localeCompare(b.host));
-  for (const s of out) console.log(`SHOP\t${s.host}\t${s.name}\t${s.country}\t${s.currency}`);
+  for (const s of out) console.log(`SHOP\t${s.host}\t${s.name}\t${s.country}\t${s.currency}\t${Object.entries(s.games).map(([g, h]) => `${g}:${(h as string[]).join(",")}`).join(" ")}`);
   console.log(`${out.length} Shopify shops, ${out.filter((s) => s.currency === "EUR").length} charging EUR`);
   writeFileSync("eu-shop-directory.json", JSON.stringify(out, null, 1));
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${list.length} eurozone shop domains, ${out.length} Shopify\n`);
