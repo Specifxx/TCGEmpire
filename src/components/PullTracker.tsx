@@ -11,7 +11,9 @@ import { cardImageSrc } from "@/lib/card-image-url";
 import { trackEvent } from "@/lib/analytics";
 import { markSignupSource } from "@/lib/signup-source";
 import { trackAuthStart, trackSignupCta } from "@/lib/growth-events";
-import { pullKey, pullsCsv, shareCode, summarisePulls, type PullLine } from "@/lib/pull-tracker";
+import { pullBragFields, pullKey, pullsCsv, shareCode, summarisePulls, type PullLine } from "@/lib/pull-tracker";
+import { bragModel, prepareBrag, shareBrag, whenIdle } from "@/lib/brag-card";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { shareUrl } from "@/lib/share-link";
 import type { PullCard } from "@/lib/pull-tracker-server";
 import { Toast } from "./ui/Toast";
@@ -46,6 +48,14 @@ export function PullTracker({
   const [rarity, setRarity] = useState<string>("hits");
   const [saveState, setSaveState] = useState<{ kind: "idle" | "busy" } | { kind: "done"; text: string } | { kind: "error"; text: string }>({ kind: "idle" });
   const [shared, setShared] = useState<string | null>(null);
+  const [canShareFiles, setCanShareFiles] = useState(false);
+  useEffect(() => {
+    try {
+      setCanShareFiles(!!navigator.canShare?.({ files: [new File([new Blob(["x"])], "t.jpg", { type: "image/jpeg" })] }));
+    } catch {
+      /* no file sharing: the link alone */
+    }
+  }, []);
   const restored = useRef(false);
   // Community pull rates (lib/pull-rates.ts): the packs these pulls came from, and the one POST.
   const [packs, setPacks] = useState<string>("");
@@ -241,11 +251,47 @@ export function PullTracker({
   };
   const back = encodeURIComponent(pathname || `/tools/pull-tracker/${set.slug}`);
 
+  // The "I pulled" brag card (lib/brag-card.ts, 2026-11-26, community plan move 4): on a phone that can share a picture,
+  // the best card's art, its price and the log against what was paid, as a 1080x1350 image with the share link. Drawn
+  // ahead (a second after the last change, in idle time) so the tap opens the share sheet at once. Desktops and logs with
+  // nothing priced share the link alone, as before; that page has its own share image.
+  const bestCard = sum.best ? byNum.get(sum.best.num) ?? null : null;
+  const bragFields = pullBragFields(set.name, bestCard && sum.best?.eachCents ? { name: bestCard.name, eachCents: sum.best.eachCents } : null, sum, paidCents, (c) => formatMoney(c, cur));
+  const brag =
+    bragFields && canShareFiles
+      ? bragModel({ site: SITE_NAME, host: new URL(SITE_URL).host, accent: "#34d17e", ...bragFields, image: bestCard ? cardImageSrc(bestCard) : null, imageShape: "card", date: new Date() })
+      : null;
+  const bragKey = brag ? JSON.stringify(brag) : "";
+  useEffect(() => {
+    if (!brag) return;
+    let cancel = () => {};
+    const t = setTimeout(() => (cancel = whenIdle(() => void prepareBrag(brag))), 1000);
+    return () => {
+      clearTimeout(t);
+      cancel();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bragKey]);
+
   const share = async () => {
     const url = shareUrl(window.location.origin, `/tools/pull-tracker/${set.slug}/s/${shareCode(lines, paidCents, country)}`, "pulls");
     const text = `My ${set.name} pulls: ${formatMoney(sum.totalCents, cur)}${paidCents ? ` from ${formatMoney(paidCents, cur)}` : ""}`;
     trackEvent("pull_share", { set: set.code, lines: lines.length });
     trackEvent("share", { medium: "pulls" });
+    if (brag) {
+      const how = await shareBrag(await prepareBrag(brag), text, url, `my-${set.slug}-pull`);
+      if (how === "image" || how === "text") {
+        trackEvent("brag_share", { kind: "pull", how });
+        setShared(url);
+        return;
+      }
+      if (how === "cancelled") return;
+      if (how === "saved") {
+        trackEvent("brag_share", { kind: "pull", how });
+        setShared(url);
+        return;
+      }
+    }
     try {
       if (navigator.share) {
         await navigator.share({ title: text, text, url });

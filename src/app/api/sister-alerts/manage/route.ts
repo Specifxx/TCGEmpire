@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // Manage / stop sister-site alerts and weekly emails, addressed by the token in
 // every email. GET lists the address's alerts and weekly emails (and, with
-// ?stop=<id|all|digest:site> or ?weekly=<site>, asks to confirm that one
+// ?stop=<id|all|digest:site|stash:site> or ?weekly=<site>, asks to confirm that one
 // action); only a POST from the page's buttons changes anything.
 
 const select = { id: true, site: true, productId: true, region: true, targetCents: true, name: true, path: true } as const;
@@ -17,9 +17,14 @@ const siteName = (key: string) => sisterSite(key)?.name ?? key;
 async function render(token: string, email: string, note = "", stop = "", weekly = "") {
   const alerts: ListedAlert[] = await prisma.sisterAlert.findMany({ where: { email }, select, orderBy: { createdAt: "desc" }, take: 100 });
   const digests = await prisma.sisterDigest.findMany({ where: { email }, select: { site: true, region: true }, orderBy: { createdAt: "asc" }, take: 20 });
+  // A member's weekly collection email (lib/sister-stash.ts): stopping it keeps the collection itself.
+  const stashes = await prisma.sisterStash.findMany({ where: { email, weekly: true }, select: { site: true }, take: 20 });
   const digestStop = stop.startsWith("digest:") ? stop.slice(7) : "";
+  const stashStop = stop.startsWith("stash:") ? stop.slice(6) : "";
   const ask =
-    stop === "all" && (alerts.length || digests.length)
+    stashStop && stashes.some((x) => x.site === stashStop)
+      ? `<form method="post">${hidden("t", token)}${hidden("stop", stop)}<p><strong>Stop the weekly email about your ${escapeHtml(siteName(stashStop))} collection?</strong> Your collection stays as it is.</p><button type="submit">Yes, stop it</button></form>`
+      : stop === "all" && (alerts.length || digests.length || stashes.length)
       ? `<form method="post">${hidden("t", token)}${hidden("stop", "all")}<p><strong>Stop every price alert and weekly email for this address?</strong></p><button type="submit">Yes, stop them all</button></form>`
       : digestStop && digests.some((d) => d.site === digestStop)
         ? `<form method="post">${hidden("t", token)}${hidden("stop", stop)}<p><strong>Stop ${escapeHtml(siteName(digestStop))}'s weekly email?</strong></p><button type="submit">Yes, stop it</button></form>`
@@ -31,9 +36,10 @@ async function render(token: string, email: string, note = "", stop = "", weekly
   const list = alerts.length
     ? `<ul>${alerts.map((a) => `<li><span>${alertLabel(a)}</span><form method="post">${hidden("t", token)}${hidden("stop", a.id)}<button class="ghost" type="submit">Stop</button></form></li>`).join("")}</ul>${alerts.length > 1 ? `<form method="post">${hidden("t", token)}${hidden("stop", "all")}<button class="ghost" type="submit">Stop all</button></form>` : ""}`
     : `<p>You have no price alerts. You can set one on any of our sites.</p>`;
-  const weeklyList = digests.length
-    ? `<h1 style="margin-top:22px">Your weekly emails</h1><ul>${digests.map((d) => `<li><span>${escapeHtml(siteName(d.site))}'s biggest price drops<br><small>${escapeHtml(d.region)} stores · once a week</small></span><form method="post">${hidden("t", token)}${hidden("stop", `digest:${d.site}`)}<button class="ghost" type="submit">Stop</button></form></li>`).join("")}</ul>`
-    : "";
+  const weeklyList =
+    digests.length || stashes.length
+      ? `<h1 style="margin-top:22px">Your weekly emails</h1><ul>${digests.map((d) => `<li><span>${escapeHtml(siteName(d.site))}'s biggest price drops<br><small>${escapeHtml(d.region)} stores · once a week</small></span><form method="post">${hidden("t", token)}${hidden("stop", `digest:${d.site}`)}<button class="ghost" type="submit">Stop</button></form></li>`).join("")}${stashes.map((x) => `<li><span>Your ${escapeHtml(siteName(x.site))} collection<br><small>its value, once a week</small></span><form method="post">${hidden("t", token)}${hidden("stop", `stash:${x.site}`)}<button class="ghost" type="submit">Stop</button></form></li>`).join("")}</ul>`
+      : "";
   return page("Your price alerts", `${note}${ask}<h1>Your price alerts</h1>${list}${weeklyList}`);
 }
 
@@ -60,10 +66,14 @@ export async function POST(req: Request) {
   if (stop === "all") {
     await prisma.sisterAlert.deleteMany({ where: { email: a.email } });
     await prisma.sisterDigest.deleteMany({ where: { email: a.email } });
+    await prisma.sisterStash.updateMany({ where: { email: a.email }, data: { weekly: false } });
     note = "Every alert and weekly email is stopped.";
   } else if (stop.startsWith("digest:")) {
     await prisma.sisterDigest.deleteMany({ where: { email: a.email, site: stop.slice(7) } });
     note = "That weekly email is stopped.";
+  } else if (stop.startsWith("stash:")) {
+    await prisma.sisterStash.updateMany({ where: { email: a.email, site: stop.slice(6) }, data: { weekly: false } });
+    note = "The weekly collection email is stopped. Your collection is still saved.";
   } else if (stop) {
     await prisma.sisterAlert.deleteMany({ where: { email: a.email, id: stop } });
     note = "That alert is stopped.";
