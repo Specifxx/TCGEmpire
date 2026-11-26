@@ -1,0 +1,110 @@
+{
+ "at": "2026-11-26T07:46:25.761Z",
+ "model": "claude-haiku-5-5",
+ "passFound": 0.95,
+ "passWrong": 0.01,
+ "games": {
+  "pokemon": {
+   "pass": false,
+   "images": 730,
+   "cards": 146,
+   "skippedNoImage": 5,
+   "errors": 0,
+   "found": 0.8904,
+   "wrongMatch": 0,
+   "top": 0.611,
+   "matchShare": 0.4712,
+   "pickMedian": 7,
+   "medianMs": 1353,
+   "costUsd": 0.1872,
+   "coverage": {
+    "cards": 28876,
+    "priced": 17079,
+    "withNumber": 28273,
+    "usd1": {
+     "checked": 700,
+     "real": 691,
+     "placeholder": 0,
+     "missing": 9,
+     "share": 0.9871428571428571
+    },
+    "any": {
+     "checked": 300,
+     "real": 293,
+     "placeholder": 0,
+     "missing": 7,
+     "share": 0.9766666666666667
+    },
+    "placeholders": 0
+   }
+  },
+  "yugioh": {
+   "pass": true,
+   "images": 740,
+   "cards": 148,
+   "skippedNoImage": 3,
+   "errors": 0,
+   "found": 0.9541,
+   "wrongMatch": 0,
+   "top": 0.5689,
+   "matchShare": 0.2527,
+   "pickMedian": 5,
+   "medianMs": 1435,
+   "costUsd": 0.1922,
+   "coverage": {
+    "cards": 46701,
+    "priced": 13967,
+    "withNumber": 46685,
+    "usd1": {
+     "checked": 700,
+     "real": 685,
+     "placeholder": 0,
+     "missing": 15,
+     "share": 0.9785714285714285
+    },
+    "any": {
+     "checked": 300,
+     "real": 298,
+     "placeholder": 0,
+     "missing": 2,
+     "share": 0.9933333333333333
+    },
+    "placeholders": 0
+   }
+  },
+  "one-piece": {
+   "pass": true,
+   "images": 755,
+   "cards": 151,
+   "skippedNoImage": 0,
+   "errors": 0,
+   "found": 0.9722,
+   "wrongMatch": 0,
+   "top": 0.5987,
+   "matchShare": 0.4146,
+   "pickMedian": 3,
+   "medianMs": 1376,
+   "costUsd": 0.1949,
+   "coverage": {
+    "cards": 7519,
+    "priced": 3294,
+    "withNumber": 7278,
+    "usd1": {
+     "checked": 700,
+     "real": 686,
+     "placeholder": 0,
+     "missing": 14,
+     "share": 0.98
+    },
+    "any": {
+     "checked": 300,
+     "real": 295,
+     "placeholder": 0,
+     "missing": 5,
+     "share": 0.9833333333333333
+    },
+    "placeholders": 0
+   }
+  }
+ }
+}
