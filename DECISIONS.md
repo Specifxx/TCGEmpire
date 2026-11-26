@@ -26131,3 +26131,27 @@ A free week puts Premium in front of every new account without a card form.
 - **Read:** /admin/premium, per arm: accounts, trial or paid started, paying or in trial now. Interim 30 Dec, final
   6 Jan 2027 (21 days after the last sign-up). Win: started per account up 50% or more with p < 0.10; otherwise the
   window simply closes. A Counter row `fw1:<userId>` marks each free-week account.
+
+## 2026-11-26 — A Week Pass and a Founder Lifetime, as a test on the sister sites' Premium pages
+
+Test 2 of the Premium pricing reset the owner approved on 26 Nov ("Yes, run all three tests"). Most visitors buy once
+(a deck, a holiday haul) and will never subscribe; collectors who love the product would pay once for good. No collector
+app sells either today.
+
+- **Who and when:** members signed in on a sister site's /premium (MTG, Dex, YGO, TCG Prices), 7 Dec to 21 Dec 2026
+  (00:00 UTC), split by account id with the test's own salt (`passArm`, `lib/premium-pass.ts`). Arm B is offered, beside
+  the subscription, a **Week Pass, US$2.99** (7 days, charged once, never renews) and a **Founder Lifetime, US$99**
+  (Premium for good; first 100 members; accounts at least 14 days old). Arm A sees today's page. Rift's own /premium is
+  left to the P1/P2 copy tests. Anyone paying by subscription or an earlier pass is offered nothing; a free-week member
+  may buy.
+- **How it charges:** `/api/sister-premium/pass` opens a one-off Checkout with inline `price_data` (no Stripe Price,
+  no owner step), `customer_email` only: a pass never saves a Stripe customer, so it never marks the account "ever paid"
+  and never costs it the 14-day card trial later. The sister's status call returns `passes` (what this account may buy).
+- **Entitlement:** the webhook's `premium_pass` branch (`passPaid`), idempotent per Checkout session (Counter
+  `pass:s:<id>`, removed again if the grant fails so Stripe's retry works), extend-only premiumUntil. Lifetime is
+  premiumUntil 1 Jan 2126, so every existing read keeps working. Counters `pass:founder:sold` (the seat count) and
+  `pass:week:sold`.
+- **Hard constants:** amounts, seats and dates live in code, no environment variable (`tests/premium-pass.test.ts`).
+- **Read 4 Jan 2027:** revenue per /premium visitor and paid starts per arm; existing subscribers are never offered a
+  pass or re-priced. The Week Pass's "counts toward a year" credit from the plan is not built: it would need a coupon on
+  the subscription checkout, and the test reads the pass alone first.

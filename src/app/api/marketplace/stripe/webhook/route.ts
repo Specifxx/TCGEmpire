@@ -21,6 +21,7 @@ import { STORE_PLAN_PRICE_ID, isStorePlanSubscription, subscriptionIdOf, validat
 import { extendStorePlan, recordStorePlanStart } from "@/lib/store-plan-db";
 import { adAbandoned, adPaid } from "@/lib/sister-ads/server";
 import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
+import { passPaid } from "@/lib/premium-pass-server";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
@@ -96,6 +97,9 @@ export async function POST(req: Request) {
         // A sister site's paid featured listing (lib/sister-ads/): the card is
         // only authorised; the owner's approval captures it.
         if (session.metadata?.kind === "sister_ad") await adPaid(session);
+        // A Week Pass or Founder Lifetime (lib/premium-pass.ts, the 7-21 Dec 2026 ladder test): one payment, no
+        // subscription; extend-only premiumUntil, idempotent per session.
+        if (session.metadata?.kind === "premium_pass") await passPaid(session);
         // Store consulting ("store_consult") was retired on 2026-10-16
         // (DECISIONS.md, "Ten features nobody used"); no checkout creates one now.
         break;
