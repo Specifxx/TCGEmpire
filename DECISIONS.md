@@ -25818,3 +25818,27 @@ one block in `globals.css` ("The phone's home page, tidied", above the last redu
 hooks are `hero-gift`, `hero-sub`, `hero-markets`, `hero-ways`, `hero-meta`, `home-flow`, `home-give`, `home-shelf`, `shelf-note`.
 
 **Read:** phone bounce (non-Reddit) and buy clickers per 100 on the home page, the week after release against the week before.
+
+## 2026-11-26 — A daily QA guard walks every live site's core journeys (search, product, filters, Best Basket)
+
+**Owner, 2026-11-26**, after finding that sealed products could not be searched on OP Compare: "we need to catch these
+bugs claude! this is not good enough i need you to improve."
+
+**Why nothing caught it:** every guard we had reads data, jobs and limits (`ops-monitor`, the watchdogs), templates and
+SEO (`seo-preview-gate`), or links (`affiliate-gap-audit`). None of them used a site the way a buyer does. A search box
+that returns nothing for sealed product is green on all of them.
+
+**Now:** `scripts/qa-guard/` is a real browser at 1366px and 390px that, on each of the 13 live sites, types a single
+and a sealed query into the site's own header search, opens the first match, checks it shows a price and a buy link whose
+eBay / Amazon / TCGplayer tags are ours, uses the list page's keyword filter and opens Best Basket; on every page it
+records console errors, 5xx answers and (on a phone) anything wider than the screen. `docs/qa-guard.md` has the table.
+
+- **When:** hourly, only for sites whose build id changed (every release is walked within the hour), and every site
+  daily at 21:17 UTC. One plain GET per site an hour otherwise.
+- **Who hears:** one `qa-guard` issue per broken site in this repository, rewritten each run and closed when it passes.
+  A scheduled Claude session works those issues every day. Only what no agent can fix gets `qa:owner` and an
+  owner step. The job is red only when the guard itself broke (`JOBS` in `lib/ops/checks.ts`).
+- **Cost:** GitHub Actions only (public repository); about 26 page walks a day per site, all CDN-cached pages, no
+  Vercel function beyond the searches a visitor would make. The guard never clicks a buy link and names itself a bot.
+- **Rules:** a query is a word the catalogue always holds; a site that changes its product URLs or search box updates
+  its entry in `sites.ts` in the same PR; never loosen a check to make a site pass, fix the site.

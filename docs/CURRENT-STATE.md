@@ -144,6 +144,11 @@ longer lands on its entry.
   and ratings excluded [2026-10-30](../DECISIONS.md#L20941); a new job, API or limit gets a
   check in `lib/ops/checks.ts`. The Neon rows need the `NEON_API_KEY` Actions secret.
   `docs/ops-monitor.md`. [2026-10-14](../DECISIONS.md#L16978)
+- **A QA guard walks every live site like a buyer (owner, 2026-11-26):** `qa-guard.yml` (hourly after each release, all
+  sites daily) searches a single and a sealed product from each site's header box, opens it, checks the price and our buy
+  tags, the list filter and Best Basket, at 1366px and 390px, with no console errors or overflow; a broken site is one
+  `qa-guard` issue here that a daily Claude session fixes, and only `qa:owner` reaches the owner. `docs/qa-guard.md`.
+  [2026-11-26](../DECISIONS.md#2026-11-26-a-daily-qa-guard-walks-every-live-sites-core-journeys-search-product-filters-best-basket)
 - **Price reports and store suggestions are also filed in GitHub (2026-10-31):** each site's own
   repo, on a `reports` branch that never deploys or merges, one JSON file per report
   (`lib/reports-github.ts`, `REPORTS_GITHUB_TOKEN`); no user id, email or IP, and no page reads it. The daily
