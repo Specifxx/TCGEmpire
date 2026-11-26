@@ -12,7 +12,7 @@ export type Me = {
   emailVerified?: boolean;
   entered?: boolean;
   points?: number;
-  breakdown?: { entry: number; bonus: number; bonusVia: string | null; checkin: number; referral: number; referralsCounted: number; starCounted?: number };
+  breakdown?: { entry: number; bonus: number; bonusVia: string | null; checkin: number; referral: number; contribution?: number; referralsCounted: number; starCounted?: number };
   checkins?: number;
   checkedInToday?: boolean;
   streak?: number;
@@ -164,6 +164,7 @@ export function GiveawayPanel({
     { label: b.bonusVia === "premium" ? "Premium" : "Bonus", v: b.bonus, cls: "bg-gold" },
     { label: "Check-ins", v: b.checkin, cls: "bg-sky-400" },
     { label: "Friends", v: b.referral, cls: "bg-fuchsia-400" },
+    { label: "Community", v: b.contribution ?? 0, cls: "bg-emerald-400" },
   ].filter((p) => p.v > 0);
   const open = me.state === "open";
 

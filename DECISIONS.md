@@ -26010,3 +26010,23 @@ the address. Votes come only from the exact origins in `CODE_VOTE_SITES` (30 a m
 bounded `groupBy` over at most 60 codes, CDN-cached six hours, and adds the newest "worked" time so a page can say
 "last worked 2 days ago". Votes order nothing: a code list stays in the sister's own order, and no price or store row
 changes. A vote is a tap with no text, so it is not an inbox item.
+
+## 2026-11-26: Names on contributions: one community handle, points for helping, Top deal hunters
+
+**Decision.** Every account can choose ONE public handle (`User.handle`, `lib/handles.ts`: 3 to 20 of a-z 0-9 _, starting with a
+letter, stored lowercase, never a name that reads as ours, the team's or a slur). It is the only name ever published for what a
+member contributes, on every site of the shared account; without one a contribution still counts and is never named. A signed-in
+member's contributions are recorded in `Contribution` (private, cascade-deleted): a hot or cold vote (one per drop, whichever came
+first) or an expired flag on a deal-board drop (`/api/deal-votes`, the sister passes its member token), a pull log (`/api/pulls`;
+deleting the log deletes its row), and the collector pulse once it passes a token. Each is worth `CONTRIBUTION_POINTS` (1, a pull log
+3), at most `DAILY_CONTRIBUTION_CAP` (5, one check-in's worth) a Sydney day. Points made inside an open giveaway's window add to the
+entrant's points (`entryPoints` `contributions`, the rules and "How to earn points" say so): free activity, so paying still buys
+nothing a free account can't reach. `/api/community/top?site=&month=` lists the month's Top deal hunters (handles and points only,
+never the team, CDN six hours); `/api/deal-votes` GET adds `by`, the first member with a handle to vote each drop hot ("First
+vouched by @name": the Sealed Sniper found the deal, a member vouched for it, so we never write "spotted by"). `/api/community/me`
+and `/api/community/handle` serve the profile card here (`CommunityHandleCard`) and on the sisters; `/api/sister-premium/status`
+now also returns the member's handle.
+
+**Why.** Owner, 2026-11-26: "building a community is probably the harder part ... I really want to focus on the community aspect".
+The community plan (move 3): every contribution so far was anonymous, so nobody had a reason to tell anyone. Target 50 named
+contributors by 31 Dec. No new prompt: the handle lives on the profile page, and a vote's own reply is the only nudge.

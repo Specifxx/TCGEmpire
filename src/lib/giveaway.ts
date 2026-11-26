@@ -218,6 +218,8 @@ export interface PointsInput {
   referrals?: number;
   /** Of those, friends with Premium or STAR_FRIEND_CHECKINS check-ins (worth STAR_REFERRAL_POINTS each). */
   starReferrals?: number;
+  /** Community contribution points made while it was open (lib/contributions.ts: votes, flags, pulse answers, pull logs; capped a day). */
+  contributions?: number;
 }
 
 export interface Points {
@@ -227,6 +229,8 @@ export interface Points {
   bonusVia: BonusVia | null;
   checkin: number;
   referral: number;
+  /** Community contribution points (lib/contributions.ts). */
+  contribution: number;
   /** Friends counted (after the cap). */
   referralsCounted: number;
   /** Of those, star friends (Premium or active). */
@@ -244,7 +248,8 @@ export function entryPoints(p: PointsInput): Points {
   // Star friends count first, so the cap of ten keeps the best ones.
   const starCounted = Math.max(0, Math.min(referralsCounted, Math.floor(p.starReferrals ?? 0)));
   const referral = starCounted * STAR_REFERRAL_POINTS + (referralsCounted - starCounted) * REFERRAL_POINTS;
-  return { points: entry + bonus + checkin + referral, entry, bonus, bonusVia, checkin, referral, referralsCounted, starCounted, reason: bonusVia ?? "base" };
+  const contribution = Math.max(0, Math.floor(p.contributions ?? 0));
+  return { points: entry + bonus + checkin + referral + contribution, entry, bonus, bonusVia, checkin, referral, contribution, referralsCounted, starCounted, reason: bonusVia ?? "base" };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
