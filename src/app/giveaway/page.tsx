@@ -1,3 +1,4 @@
+import { STREAK_CAP } from "@/lib/streak";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site";
@@ -6,6 +7,7 @@ import {
   BONUS_POINTS,
   CHECKIN_POINTS,
   CURRENT_GIVEAWAY as G,
+  checkinRuleOf,
   ENTRY_POINTS,
   GIVEAWAY_EVERY_MONTHS,
   MAX_REFERRALS,
@@ -37,10 +39,15 @@ export const metadata: Metadata = {
 
 const closesText = "14 December 2026 at 11:59 pm Sydney time (AEDT)";
 
+// The December 2026 round keeps the flat check-in it opened with; later rounds score streaks (lib/giveaway.ts checkinRuleOf).
+const STREAK = checkinRuleOf(G) === "streak";
+
 const WAYS = [
   { pts: `+${ENTRY_POINTS}`, title: "Enter", text: "Sign in free and press Enter. That's your first 10 tickets.", tone: "text-brand-400" },
   { pts: `+${BONUS_POINTS}`, title: "Free bonus", text: "Watch any card's price, or just claim it. Premium members get it automatically.", tone: "text-gold" },
-  { pts: `+${CHECKIN_POINTS}`, title: "Check in daily", text: "One tap a day while the giveaway is open. It adds up fast.", tone: "text-sky-400" },
+  STREAK
+    ? { pts: `+1 to +${STREAK_CAP}`, title: "Check in daily", text: `Day one is 1 point, each day in a row one more, up to ${STREAK_CAP} a day.`, tone: "text-sky-400" }
+    : { pts: `+${CHECKIN_POINTS}`, title: "Check in daily", text: "One tap a day while the giveaway is open. It adds up fast.", tone: "text-sky-400" },
   { pts: `+${CONTRIBUTION_POINTS.hot}`, title: "Help the community", text: `Each deal you vote hot or cold or flag as gone, each collector pulse answer (+${CONTRIBUTION_POINTS.pull} for a pull log), signed in on any of our card sites. Up to ${DAILY_CONTRIBUTION_CAP} a day.`, tone: "text-emerald-400" },
   { pts: `+${REFERRAL_POINTS}`, title: "Invite friends", text: `Each friend who joins with your link and confirms their email, up to ${MAX_REFERRALS}. ${STAR_REFERRAL_POINTS} for a friend who takes Premium or checks in on ${STAR_FRIEND_CHECKINS} days.`, tone: "text-fuchsia-400" },
 ];
@@ -144,7 +151,15 @@ export default function GiveawayPage() {
           <li>
             <strong>How to enter.</strong> Between now and {closesText}, sign in to a free {SITE_NAME} account with a confirmed email address and press
             &quot;Enter the giveaway&quot; on this page. One account per person. Each account earns {ENTRY_POINTS} points for entering, a {BONUS_POINTS}
-            -point bonus (rule 2), {CHECKIN_POINTS} points for each day it checks in on this page while the giveaway is open (one a day, by Sydney date),
+            -point bonus (rule 2), {STREAK ? (
+              <>
+                1 point on the first day it checks in on this site while the giveaway is open (on this page or its Member rewards card), one
+                more point for each day in a row after that, up to {STREAK_CAP} a day, starting again at 1 after a day without a check-in (one a
+                day, by Sydney date),
+              </>
+            ) : (
+              <>{CHECKIN_POINTS} points for each day it checks in on this page while the giveaway is open (one a day, by Sydney date),</>
+            )}
             and {REFERRAL_POINTS} points for each friend who creates a new account with its invite link during the giveaway and confirms their email, up
             to {MAX_REFERRALS} friends. A friend counts {STAR_REFERRAL_POINTS} points instead of {REFERRAL_POINTS} once they also have Premium or have checked in on {STAR_FRIEND_CHECKINS} days of this giveaway, so a friend&apos;s free activity counts exactly as much as a friend&apos;s purchase. While the giveaway is open, an account signed in on any of
             our card sites also earns community points: {CONTRIBUTION_POINTS.hot} for each deal it votes hot or cold or flags as gone, {CONTRIBUTION_POINTS.pulse} for

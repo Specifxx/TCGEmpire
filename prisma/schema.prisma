@@ -201,6 +201,8 @@ model User {
   // Packs a member logged for the community pull rates (2026-11-26, lib/pull-rates.ts).
   pullLogs            PullLog[]
   contributions       Contribution[]
+  loyaltyDays         LoyaltyDay[]
+  loyaltyRedemptions  LoyaltyRedemption[]
 
   @@index([googleId])
   @@index([discordId])
@@ -2610,4 +2612,37 @@ model Contribution {
   @@index([userId, day])
   @@index([site, createdAt])
   @@index([site, kind, ref])
+}
+
+// Member rewards (lib/loyalty.ts, 2026-11-26): one row per Sydney day a member checked in, on any of our sites. Private: never in
+// PUBLIC_MODELS or data/public. The streak and the points are computed from these rows; nothing else is stored.
+model LoyaltyDay {
+  id        String   @id @default(cuid())
+  userId    String
+  /// Sydney day, YYYY-MM-DD
+  day       String
+  /// the site the check-in was made on (lib/sister-premium.ts keys, or "rift")
+  site      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
+  @@index([userId])
+}
+
+// A reward a member took with their points (lib/loyalty.ts REWARDS). `slot` makes "one Premium reward a month" race-proof. Private.
+model LoyaltyRedemption {
+  id        String   @id @default(cuid())
+  userId    String
+  reward    String
+  points    Int
+  slot      String
+  site      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, slot])
+  @@index([userId])
 }
