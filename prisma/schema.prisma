@@ -1720,8 +1720,10 @@ model GiveawayEntry {
   showName  Boolean  @default(true)
   // "Claim the free bonus" (lib/giveaway.ts BONUS_POINTS): the free way to the same points Premium gets automatically.
   bonusClaimedAt DateTime?
-  // The sister site the entry was made on (dex, mtg, ygo, op), or null for RiftCompare itself.
+  // The sister site the entry was made on (dex, mtg, ygo, op, tcgprices), or null for RiftCompare itself.
   site      String?
+  // TCG Prices' launch draw (lib/giveaway.ts APP_POINTS): when the entrant first opened the collection app from the home screen.
+  appClaimedAt DateTime?
 
   @@unique([giveaway, userId])
   @@index([giveaway])

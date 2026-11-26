@@ -52,6 +52,8 @@ import {
   PREMIUM_START_POINTS,
   DRAND_GENESIS,
   DRAND_PERIOD,
+  APP_POINTS,
+  APP_POINTS_CAP,
 } from "../src/lib/giveaway";
 import { winningTicket, drawSeed } from "../src/lib/giveaway-draw";
 
@@ -124,7 +126,17 @@ test("five sites, one giveaway each, every two months, prizes under the owner's 
   }
   const keys = new Set(GIVEAWAYS.map((g) => g.key));
   assert.equal(keys.size, GIVEAWAYS.length);
-  for (const g of GIVEAWAYS.filter((x) => x.site !== "rift")) assert.match(g.approxValue, /A\$1[0-9]|A\$20\b/);
+  for (const g of GIVEAWAYS.filter((x) => x.site !== "rift")) assert.match(g.approxValue, /A\$(?:[1-9]|1[0-9]|20)\b/);
+});
+
+test("TCG Prices' launch draw: one pack, closes with the others, home-screen points once", () => {
+  const g = giveawayFor("tcgprices", new Date("2026-11-27T00:00:00Z"));
+  assert.ok(g);
+  assert.equal(g!.closesAt, giveawayFor("dex", new Date("2026-11-27T00:00:00Z"))!.closesAt);
+  const base = { premium: false, watches: 0, bonusClaimed: false, checkins: 0 };
+  assert.equal(entryPoints({ ...base, app: true }).points - entryPoints(base).points, APP_POINTS);
+  assert.equal(entryPoints(base).app, 0);
+  assert.equal(APP_POINTS_CAP, 500);
 });
 
 test("the draw is weighted by entries", () => {

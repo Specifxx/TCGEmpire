@@ -218,7 +218,7 @@ export function fromFor(site: SisterAlertSite, env: Record<string, string | unde
 // The site's own giveaway, one line in the footer of its alert and weekly emails while it is open (owner, 2026-11-23: "Is there
 // anything we can do similar for Dex Compare and MTG Compare as well?"). Rift's own alert emails carry the same line
 // (lib/email.ts giveawayLine). Not a prompt: it sits in the footer, and it is gone by itself once the giveaway closes.
-const GIVEAWAY_SITE_KEYS: readonly string[] = ["dex", "mtg", "ygo", "op"];
+const GIVEAWAY_SITE_KEYS: readonly string[] = ["dex", "mtg", "ygo", "op", "tcgprices"];
 export function sisterGiveawayLine(siteKey: string, now: Date = new Date()): { html: string; text: string } | null {
   if (!GIVEAWAY_SITE_KEYS.includes(siteKey)) return null;
   const g = giveawayFor(siteKey as GiveawaySite, now);

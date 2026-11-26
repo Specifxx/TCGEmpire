@@ -26099,3 +26099,13 @@ two. Inside the three-day gap the restock is dropped and `missingSince` cleared,
 keeps `missingSince` and fires next run. A plain price alert is unchanged. `sister-alerts.yml` runs at 02:20 and 14:20 UTC
 (Dex imports at 08:47 and 20:47 and releases each one with its feed); the gap, the further-5% refire rule and the weekly
 emails' edition keys mean a second run a day sends nothing twice. DexCompare turns it on for the US only (`lib/follow.ts`).
+
+## 2026-11-26: TCG Prices' launch draw, with points for the home-screen app
+
+Owner's tap, 26 Nov ("Run a TCG Prices launch draw for home-screen installs?": "Yes, one pack, closes 14 Dec"), for the collection
+app's launch day (Cluely study, move 3). A sixth giveaway, `tcgprices-app-launch-2026-12` (one Delta Reign booster pack, the
+owner's purchase like the others), on the same engine, rules and close as the December round. One addition: `APP_POINTS` (25) for
+an entrant who opens TCG Prices' collection from their home screen, once each, for the first `APP_POINTS_CAP` (500) entrants of
+that draw (`GiveawayEntry.appClaimedAt`, action "app" on `/api/sister-giveaway`). Free for anyone, so the draw stays a free prize
+draw. The opening is reported by the page itself (display-mode standalone); it is not provable, and at 25 points for a A$9 pack
+that is accepted. TCG Prices' alert and weekly emails carry the footer line like the other sisters.
