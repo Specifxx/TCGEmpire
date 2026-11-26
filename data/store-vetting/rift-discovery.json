@@ -1,2729 +1,1589 @@
 {
- "note": "US shops TCG Prices lists (tcgcompare data/public/stores.json, 2026-11-25). scripts/store-candidates.ts reads each one's /collections.json for Riftbound collections; nothing is added to retailers.ts without a measured ADD.",
+ "note": "Eurozone shops our sister sites already list (Dex, MTG, TCG Prices, OP, Lorcana, YGO, Cyberpunk, Bandai, Gundam; 2026-11-26), minus the ones Rift tracks. scripts/store-candidates.ts reads each one's /collections.json for Riftbound collections; nothing is added to retailers.ts or sealed-stores.ts without a measured ADD. The US pool (2026-11-25) is in git history.",
  "stores": [
   {
-   "key": "151collectables",
-   "name": "151Collectables",
-   "base": "https://151collectables.com",
-   "country": "US"
+   "key": "1uprm",
+   "name": "1UP",
+   "base": "https://1uprm.com",
+   "country": "EU"
   },
   {
-   "key": "1stcapitalgaming",
-   "name": "1st Capital Gaming",
-   "base": "https://1stcapitalgaming.com",
-   "country": "US"
+   "key": "adcardcollectibles",
+   "name": "AdCard Collectibles",
+   "base": "https://adcardcollectibles.com",
+   "country": "EU"
   },
   {
-   "key": "4gsgames",
-   "name": "4GS Games",
-   "base": "https://4gsgames.com",
-   "country": "US"
+   "key": "aiegames",
+   "name": "Aie Games",
+   "base": "https://aie-games.be",
+   "country": "EU"
   },
   {
-   "key": "4horsemencomics",
-   "name": "Four Horsemen Comics and Gaming of Robinson Township",
-   "base": "https://4horsemencomics.com",
-   "country": "US"
+   "key": "allyoucanplay",
+   "name": "All You Can Play",
+   "base": "https://allyoucanplay.eu",
+   "country": "EU"
   },
   {
-   "key": "accidentallycoolgames",
-   "name": "Accidentally Cool Games",
-   "base": "https://accidentallycoolgames.com",
-   "country": "US"
+   "key": "animerch",
+   "name": "Animerch",
+   "base": "https://animerch.nl",
+   "country": "EU"
   },
   {
-   "key": "ajtradingbros",
-   "name": "A&J Trading Bros",
-   "base": "https://ajtradingbros.com",
-   "country": "US"
+   "key": "arcaneforge",
+   "name": "Arcane Forge",
+   "base": "https://arcaneforge.nl",
+   "country": "EU"
   },
   {
-   "key": "akhtradingcardco",
-   "name": "Akh Trading Card Co",
-   "base": "https://akhtradingcardco.com",
-   "country": "US"
+   "key": "area151",
+   "name": "Area151",
+   "base": "https://area151.es",
+   "country": "EU"
   },
   {
-   "key": "alchemistsrefuge",
-   "name": "Alchemist's Refuge",
-   "base": "https://alchemistsrefuge.shop",
-   "country": "US"
+   "key": "ashtcg",
+   "name": "ASH TCG",
+   "base": "https://ash-tcg.com",
+   "country": "EU"
   },
   {
-   "key": "allaccesscardshop",
-   "name": "AllAccessCardshop",
-   "base": "https://allaccesscardshop.com",
-   "country": "US"
+   "key": "azcardtrading",
+   "name": "AZ Card  & Games",
+   "base": "https://azcardtrading.it",
+   "country": "EU"
   },
   {
-   "key": "allpoketcg",
-   "name": "AllPokeTCG",
-   "base": "https://allpoketcg.com",
-   "country": "US"
+   "key": "baroncollections",
+   "name": "BaronCollections",
+   "base": "https://baroncollections.fr",
+   "country": "EU"
   },
   {
-   "key": "alohacardshop",
-   "name": "Aloha Card Shop",
-   "base": "https://www.alohacardshop.com",
-   "country": "US"
+   "key": "baruzcard",
+   "name": "Baruzcard.it",
+   "base": "https://baruzcard.it",
+   "country": "EU"
   },
   {
-   "key": "alphaomegahobby",
-   "name": "Alpha Omega Hobby",
-   "base": "https://alphaomegahobby.com",
-   "country": "US"
+   "key": "battlebear",
+   "name": "Battle Bear Trading Cards & Games",
+   "base": "https://battle-bear.de",
+   "country": "EU"
   },
   {
-   "key": "animeimports",
-   "name": "Anime Imports",
-   "base": "https://animeimports.net",
-   "country": "US"
+   "key": "bayzing",
+   "name": "Bayzing",
+   "base": "https://bayzing.com",
+   "country": "EU"
   },
   {
-   "key": "animeislandca",
-   "name": "Anime Island CA",
-   "base": "https://animeislandca.com",
-   "country": "US"
+   "key": "beamcardshop",
+   "name": "Beam Card Shop",
+   "base": "https://beamcardshop.com",
+   "country": "EU"
   },
   {
-   "key": "animetcg",
-   "name": "Anime TCG.net",
-   "base": "https://animetcg.net",
-   "country": "US"
+   "key": "bescards",
+   "name": "Bescards",
+   "base": "https://www.bescards.com",
+   "country": "EU"
   },
   {
-   "key": "arcanumsanctorum",
-   "name": "The Arcanum Sanctorum",
-   "base": "https://arcanumsanctorum.com",
-   "country": "US"
+   "key": "biridama",
+   "name": "Biridama TCG",
+   "base": "https://www.biridama.pt",
+   "country": "EU"
   },
   {
-   "key": "asgardkeep",
-   "name": "Asgard Keep",
-   "base": "https://asgardkeep.com",
-   "country": "US"
+   "key": "blockhousegames",
+   "name": "Blockhouse Games",
+   "base": "https://blockhousegames.net",
+   "country": "EU"
   },
   {
-   "key": "astralgamesonline",
-   "name": "Astral Comics & Games",
-   "base": "https://astralgamesonline.com",
-   "country": "US"
+   "key": "boostertcg",
+   "name": "Booster - Trading Cards & more",
+   "base": "https://boostertcg.de",
+   "country": "EU"
   },
   {
-   "key": "atlantiscomics",
-   "name": "Atlantis Games & Comics Norfolk",
-   "base": "https://atlantis-comics.com",
-   "country": "US"
+   "key": "boostrclub",
+   "name": "Boostrclub",
+   "base": "https://boostrclub.com",
+   "country": "EU"
   },
   {
-   "key": "atlasgames",
-   "name": "Atlas Games",
-   "base": "https://atlasgames.store",
-   "country": "US"
+   "key": "boutiqueludik",
+   "name": "Ludik",
+   "base": "https://boutique-ludik.fr",
+   "country": "EU"
   },
   {
-   "key": "awesomeccg",
-   "name": "Awesome Cards, Collectibles, & Games",
-   "base": "https://awesomeccg.com",
-   "country": "US"
+   "key": "breakthecase",
+   "name": "BreakTheCase",
+   "base": "https://www.breakthecase.de",
+   "country": "EU"
   },
   {
-   "key": "balancegamingfl",
-   "name": "Balance Martial Arts & Gaming",
-   "base": "https://balancegamingfl.com",
-   "country": "US"
+   "key": "brothersincards",
+   "name": "Brothers in Cards",
+   "base": "https://brothersincards.nl",
+   "country": "EU"
   },
   {
-   "key": "bamcards",
-   "name": "BAM Cards",
-   "base": "https://bamcards.com",
-   "country": "US"
+   "key": "bsastore",
+   "name": "BSA Carte Collezionabili",
+   "base": "https://bsastore.it",
+   "country": "EU"
   },
   {
-   "key": "bandegames",
-   "name": "B & E Games",
-   "base": "https://bandegames.com",
-   "country": "US"
+   "key": "cardbinder",
+   "name": "Card-Binder",
+   "base": "https://card-binder.com",
+   "country": "EU"
   },
   {
-   "key": "bardsandcards",
-   "name": "Bards and Cards (singles)",
-   "base": "https://singles.bardsandcards.com",
-   "country": "US"
+   "key": "cardcollector",
+   "name": "Card Collector",
+   "base": "https://card-collector.net",
+   "country": "EU"
   },
   {
-   "key": "baxtersrealm",
-   "name": "Baxter's Cards & Games",
-   "base": "https://baxtersrealm.com",
-   "country": "US"
+   "key": "cardhouse",
+   "name": "Card House Of The East",
+   "base": "https://card-house.nl",
+   "country": "EU"
   },
   {
-   "key": "bentonville",
-   "name": "Gear Gaming NWA",
-   "base": "https://bentonville.geargamingstore.com",
-   "country": "US"
+   "key": "cardknights",
+   "name": "Card-Knights",
+   "base": "https://card-knights.de",
+   "country": "EU"
   },
   {
-   "key": "bgetabletop",
-   "name": "BGE's Tabletop",
-   "base": "https://bgetabletop.com",
-   "country": "US"
+   "key": "cardbuddys",
+   "name": "Cardbuddys",
+   "base": "https://cardbuddys.de",
+   "country": "EU"
   },
   {
-   "key": "blackpanthersportscards",
-   "name": "Black Panther Sports Cards",
-   "base": "https://blackpanthersportscards.com",
-   "country": "US"
+   "key": "cardcapital",
+   "name": "CardCapital",
+   "base": "https://cardcapital.shop",
+   "country": "EU"
   },
   {
-   "key": "blackvaultgaming",
-   "name": "Black Vault Gaming",
-   "base": "https://blackvaultgaming.com",
-   "country": "US"
+   "key": "cardclub",
+   "name": "Card Club",
+   "base": "https://cardclub.de",
+   "country": "EU"
   },
   {
-   "key": "blackwolfcollectibles",
-   "name": "Black Wolf Collectibles",
-   "base": "https://blackwolfcollectibles.com",
-   "country": "US"
+   "key": "cardcollective",
+   "name": "Card Collective",
+   "base": "https://cardcollective.eu",
+   "country": "EU"
   },
   {
-   "key": "bluejayscauldron",
-   "name": "Blue Jay's Cauldron",
-   "base": "https://bluejayscauldron.com",
-   "country": "US"
+   "key": "cardcorner",
+   "name": "Cardcorner",
+   "base": "https://cardcorner.at",
+   "country": "EU"
   },
   {
-   "key": "bluemistcollectibles",
-   "name": "Blue Mist",
-   "base": "https://bluemistcollectibles.com",
-   "country": "US"
+   "key": "cardcosmos",
+   "name": "CardCosmos",
+   "base": "https://cardcosmos.de",
+   "country": "EU"
   },
   {
-   "key": "boardgamesdallas",
-   "name": "Common Ground Games",
-   "base": "https://boardgamesdallas.com",
-   "country": "US"
+   "key": "cardgames24",
+   "name": "cardgames24",
+   "base": "https://cardgames24.de",
+   "country": "EU"
   },
   {
-   "key": "boardwipe",
-   "name": "Board Wipe",
-   "base": "https://boardwipe.com",
-   "country": "US"
+   "key": "cardgamestore",
+   "name": "Card Game Store",
+   "base": "https://cardgamestore.de",
+   "country": "EU"
   },
   {
-   "key": "bonafidecomicstore",
-   "name": "Bona Fide Comics",
-   "base": "https://bonafidecomicstore.com",
-   "country": "US"
+   "key": "cardgazer",
+   "name": "Cardgazer TCG",
+   "base": "https://cardgazertcg.de",
+   "country": "EU"
   },
   {
-   "key": "boomloot",
-   "name": "BoomLoot",
-   "base": "https://boomloot.com",
-   "country": "US"
+   "key": "cardhome",
+   "name": "Cardhome",
+   "base": "https://cardhome.at",
+   "country": "EU"
   },
   {
-   "key": "boosterpackcards",
-   "name": "Booster Pack Cards",
-   "base": "https://boosterpackcards.com",
-   "country": "US"
+   "key": "cardhorizon",
+   "name": "Card Horizon",
+   "base": "https://cardhorizon.com",
+   "country": "EU"
   },
   {
-   "key": "brazosvalleyhobbyandgames",
-   "name": "Brazos Valley Hobby & Games",
-   "base": "https://brazosvalleyhobbyandgames.com",
-   "country": "US"
+   "key": "cardsplace",
+   "name": "Cardsplace",
+   "base": "https://cardsplace.de",
+   "country": "EU"
   },
   {
-   "key": "brickandboardgames",
-   "name": "Brick & Board Games and Cards",
-   "base": "https://brickandboardgames.com",
-   "country": "US"
+   "key": "cardverse",
+   "name": "Cardverse",
+   "base": "https://cardverse.it",
+   "country": "EU"
   },
   {
-   "key": "bricksandheroes",
-   "name": "Bricks And Heroes",
-   "base": "https://bricksandheroes.com",
-   "country": "US"
+   "key": "cardworld",
+   "name": "Cardworld",
+   "base": "https://cardworld.be",
+   "country": "EU"
   },
   {
-   "key": "bunkscardcorner",
-   "name": "Bunks Card Corner",
-   "base": "https://bunkscardcorner.com",
-   "country": "US"
+   "key": "cardyx",
+   "name": "CardyX",
+   "base": "https://cardyx.sk",
+   "country": "EU"
   },
   {
-   "key": "burbankcards",
-   "name": "Burbank Sportscards",
-   "base": "https://burbankcards.com",
-   "country": "US"
+   "key": "cardzone",
+   "name": "CardZone",
+   "base": "https://cardzone.es",
+   "country": "EU"
   },
   {
-   "key": "bytheboardgames",
-   "name": "By The Board Games & Entertainment",
-   "base": "https://bytheboardgames.com",
-   "country": "US"
+   "key": "cartespokemon",
+   "name": "Cartes Pokémon",
+   "base": "https://cartespokemon.com",
+   "country": "EU"
   },
   {
-   "key": "cadetstoys",
-   "name": "Cadets Toys and Comics",
-   "base": "https://cadetstoys.com",
-   "country": "US"
+   "key": "ccncards",
+   "name": "CCN Cards",
+   "base": "https://ccncards.de",
+   "country": "EU"
   },
   {
-   "key": "capefearcollectibles",
-   "name": "Cape Fear Collectibles",
-   "base": "https://www.capefearcollectibles.com",
-   "country": "US"
+   "key": "cityof",
+   "name": "City Of Cards",
+   "base": "https://cityof.cards",
+   "country": "EU"
   },
   {
-   "key": "capesandcrepes",
-   "name": "Capes and Crepes Board Game Cafe",
-   "base": "https://capesandcrepes.com",
-   "country": "US"
+   "key": "collectavenue",
+   "name": "Collect Avenue",
+   "base": "https://collect-avenue.com",
+   "country": "EU"
   },
   {
-   "key": "cardandcollectibleguys",
-   "name": "Card and Collectible Guys",
-   "base": "https://cardandcollectibleguys.com",
-   "country": "US"
+   "key": "collectionmania",
+   "name": "Collection Mania",
+   "base": "https://www.collectionmania.ie",
+   "country": "EU"
   },
   {
-   "key": "cardboardanddie",
-   "name": "Cardboard and Die",
-   "base": "https://cardboardanddie.com",
-   "country": "US"
+   "key": "collectorexpert",
+   "name": "Collector Expert",
+   "base": "https://collector-expert.de",
+   "country": "EU"
   },
   {
-   "key": "cardboardfiat",
-   "name": "cardboardfiat",
-   "base": "https://cardboardfiat.com",
-   "country": "US"
+   "key": "collectorstorecards",
+   "name": "Collector Store Cards",
+   "base": "https://collectorstorecards.it",
+   "country": "EU"
   },
   {
-   "key": "cardboyz",
-   "name": "Card Boyz",
-   "base": "https://cardboyz.com",
-   "country": "US"
+   "key": "collgamers",
+   "name": "CollGamers",
+   "base": "https://collgamers.nl",
+   "country": "EU"
   },
   {
-   "key": "cardcavern",
-   "name": "Card Cavern Trading Cards",
-   "base": "https://www.cardcaverntradingcards.com",
-   "country": "US"
+   "key": "comicattack",
+   "name": "Comic Attack",
+   "base": "https://comic-attack.de",
+   "country": "EU"
   },
   {
-   "key": "cardcollectorclub",
-   "name": "Card Collector Club",
-   "base": "https://cardcollectorclub.com",
-   "country": "US"
+   "key": "completecollections",
+   "name": "Complete Collections",
+   "base": "https://www.completecollections.ie",
+   "country": "EU"
   },
   {
-   "key": "cardcooptcg",
-   "name": "The Card Coop",
-   "base": "https://cardcooptcg.com",
-   "country": "US"
+   "key": "crispycards",
+   "name": "Crispy Cards",
+   "base": "https://crispycards.de",
+   "country": "EU"
   },
   {
-   "key": "cardfathertcg",
-   "name": "Card Father TCG",
-   "base": "https://cardfathertcg.com",
-   "country": "US"
+   "key": "daansshop",
+   "name": "Daans Shop Berkel",
+   "base": "https://daansshop.com",
+   "country": "EU"
   },
   {
-   "key": "cardgodshop",
-   "name": "Card God Shop",
-   "base": "https://cardgodshop.com",
-   "country": "US"
+   "key": "dadiemattoncini",
+   "name": "Dadi e Mattoncini",
+   "base": "https://dadiemattoncini.it",
+   "country": "EU"
   },
   {
-   "key": "cardhavengames",
-   "name": "Cardhaven Games",
-   "base": "https://cardhaven-games.com",
-   "country": "US"
+   "key": "dateacard",
+   "name": "Date A Card",
+   "base": "https://dateacard.fr",
+   "country": "EU"
   },
   {
-   "key": "cardmonstergames",
-   "name": "CM Games (Card Monster Games)",
-   "base": "https://cardmonstergames.com",
-   "country": "US"
+   "key": "davidptcg",
+   "name": "DavidPTCG",
+   "base": "https://davidptcg.nl",
+   "country": "EU"
   },
   {
-   "key": "cardnallgaming",
-   "name": "New Cut - Card N All Gaming",
-   "base": "https://cardnallgaming.com",
-   "country": "US"
+   "key": "dctrading",
+   "name": "DC-Trading",
+   "base": "https://dctrading.at",
+   "country": "EU"
   },
   {
-   "key": "cardpopusa",
-   "name": "CARDPOPUSA",
-   "base": "https://cardpopusa.com",
-   "country": "US"
+   "key": "dedondersteen",
+   "name": "De Dondersteen",
+   "base": "https://de-dondersteen.nl",
+   "country": "EU"
   },
   {
-   "key": "cardsafari",
-   "name": "Card Safari",
-   "base": "https://cardsafari.us",
-   "country": "US"
+   "key": "debroergrot",
+   "name": "De Broergrot",
+   "base": "https://www.debroergrot.nl",
+   "country": "EU"
   },
   {
-   "key": "cardshopnear",
-   "name": "Card Shop Near Me",
-   "base": "https://cardshopnear.me",
-   "country": "US"
+   "key": "defconduezero",
+   "name": "DEFCON 2.0",
+   "base": "https://defconduezero.com",
+   "country": "EU"
   },
   {
-   "key": "cardshq",
-   "name": "CardsHQ",
-   "base": "https://cardshq.com",
-   "country": "US"
+   "key": "deichcards",
+   "name": "Deichcards",
+   "base": "https://deichcards.de",
+   "country": "EU"
   },
   {
-   "key": "cardsnmo",
-   "name": "Cards N MO",
-   "base": "https://cardsnmo.com",
-   "country": "US"
+   "key": "dennistheripper",
+   "name": "Dennis The Ripper",
+   "base": "https://www.dennistheripper.de",
+   "country": "EU"
   },
   {
-   "key": "cardtopiacollectibles",
-   "name": "Cardtopia Collectibles",
-   "base": "https://cardtopiacollectibles.com",
-   "country": "US"
+   "key": "discarded",
+   "name": "Discarded",
+   "base": "https://discarded.ie",
+   "country": "EU"
   },
   {
-   "key": "cardxcards",
-   "name": "Card X Cards ",
-   "base": "https://cardxcards.com",
-   "country": "US"
+   "key": "divinecards",
+   "name": "Divine Cards",
+   "base": "https://divine-cards.at",
+   "country": "EU"
   },
   {
-   "key": "cashcardsunlimited",
-   "name": "Cash Cards Unlimited",
-   "base": "https://cashcardsunlimited.com",
-   "country": "US"
+   "key": "donmazo",
+   "name": "Don Mazo",
+   "base": "https://donmazo.com",
+   "country": "EU"
   },
   {
-   "key": "castlegameshoppe",
-   "name": "The Castle Games",
-   "base": "https://castlegameshoppe.com",
-   "country": "US"
+   "key": "dracaugames",
+   "name": "DracauGames",
+   "base": "https://www.dracaugames.com",
+   "country": "EU"
   },
   {
-   "key": "cbanons",
-   "name": "Cardboards Anonymous",
-   "base": "https://cbanons.com",
-   "country": "US"
+   "key": "dragoncard",
+   "name": "The Dragoncard",
+   "base": "https://www.dragoncard.nl",
+   "country": "EU"
   },
   {
-   "key": "ccgprime",
-   "name": "CCGPrime - Annex",
-   "base": "https://ccgprime.com",
-   "country": "US"
+   "key": "duelspoint",
+   "name": "Duels Point - Trading Card Games",
+   "base": "https://duelspoint.it",
+   "country": "EU"
   },
   {
-   "key": "championcardcollector",
-   "name": "Champion Card Collector",
-   "base": "https://championcardcollector.com",
-   "country": "US"
+   "key": "dungeonstreet",
+   "name": "Dungeon Street",
+   "base": "https://dungeonstreet.com",
+   "country": "EU"
   },
   {
-   "key": "championtcg",
-   "name": "ChampionTCG",
-   "base": "https://championtcg.com",
-   "country": "US"
+   "key": "dutchtcgcompany",
+   "name": "DutchTCGCompany",
+   "base": "https://dutchtcgcompany.com",
+   "country": "EU"
   },
   {
-   "key": "charmcitycollectibles",
-   "name": "Charm City Collectibles",
-   "base": "https://charmcitycollectibles.com",
-   "country": "US"
+   "key": "eclipsetcg",
+   "name": "Eclipse TCG",
+   "base": "https://eclipsetcg.be",
+   "country": "EU"
   },
   {
-   "key": "chasecardtcg",
-   "name": "ChaseCard TCG",
-   "base": "https://chasecardtcg.com",
-   "country": "US"
+   "key": "elitestoretcg",
+   "name": "ELITESTORETCG",
+   "base": "https://elitestoretcg.com",
+   "country": "EU"
   },
   {
-   "key": "cobbco",
-   "name": "Arena Games",
-   "base": "https://cobbco.store",
-   "country": "US"
+   "key": "emeraldcardcave",
+   "name": "EmeraldCardCave",
+   "base": "https://emeraldcardcave.de",
+   "country": "EU"
   },
   {
-   "key": "coffeecatcomics",
-   "name": "Coffee Cat Comics",
-   "base": "https://coffeecatcomics.com",
-   "country": "US"
+   "key": "engelfuss",
+   "name": "EngelFuẞ Verlag & Atelier",
+   "base": "https://engelfuss.com",
+   "country": "EU"
   },
   {
-   "key": "coldfoilheroes",
-   "name": "Cold Foil Heroes",
-   "base": "https://coldfoilheroes.com",
-   "country": "US"
+   "key": "escamon",
+   "name": "Escamon",
+   "base": "https://www.escamon.de",
+   "country": "EU"
   },
   {
-   "key": "colestreetgamevault",
-   "name": "Cole Street Game Vault",
-   "base": "https://colestreetgamevault.com",
-   "country": "US"
+   "key": "evlutcg",
+   "name": "Evolution TCG",
+   "base": "https://evlutcg.com",
+   "country": "EU"
   },
   {
-   "key": "collectbinghamton",
-   "name": "Collect Binghamton",
-   "base": "https://collectbinghamton.com",
-   "country": "US"
+   "key": "exchangeplayinvest",
+   "name": "E.P.I.di moscatiello gian luca",
+   "base": "https://exchangeplayinvest.com",
+   "country": "EU"
   },
   {
-   "key": "collectionhousecafe",
-   "name": "Collection House Cafe",
-   "base": "https://collectionhousecafe.com",
-   "country": "US"
+   "key": "factorycardstcg",
+   "name": "Factory Cards",
+   "base": "https://factorycardstcg.com",
+   "country": "EU"
   },
   {
-   "key": "collectorsemporium",
-   "name": "Collectors Emporium NY",
-   "base": "https://collectorsemporium.com",
-   "country": "US"
+   "key": "fancytreasure",
+   "name": "FancyTreasure",
+   "base": "https://fancytreasure.de",
+   "country": "EU"
   },
   {
-   "key": "collectorstore",
-   "name": "Collector Store",
-   "base": "https://collectorstore.com",
-   "country": "US"
+   "key": "fantasiacards",
+   "name": "FantasiaCards",
+   "base": "https://fantasiacards.de",
+   "country": "EU"
   },
   {
-   "key": "columbuscardshop",
-   "name": "Columbus Card Shop",
-   "base": "https://columbuscardshop.com",
-   "country": "US"
+   "key": "feenturm",
+   "name": "Feenturm.de",
+   "base": "https://feenturm.de",
+   "country": "EU"
   },
   {
-   "key": "commonlands",
-   "name": "Common Lands",
-   "base": "https://common-lands.com",
-   "country": "US"
+   "key": "freakcorp",
+   "name": "FreakCorp",
+   "base": "https://freakcorp.com",
+   "country": "EU"
   },
   {
-   "key": "constellationcollectivesac",
-   "name": "Constellation Collective Sacramento",
-   "base": "https://www.constellationcollectivesac.com",
-   "country": "US"
+   "key": "freakshowstore",
+   "name": "FREAKSHOW STORE GIRONA, SL",
+   "base": "https://freakshowstore.com",
+   "country": "EU"
   },
   {
-   "key": "contrariansgamecafe",
-   "name": "Contrarian's Game Cafe",
-   "base": "https://contrariangaming.com",
-   "country": "US"
+   "key": "fuhrioustc",
+   "name": "Fuhrious Tradingcards",
+   "base": "https://fuhrious-tc.shop",
+   "country": "EU"
   },
   {
-   "key": "cosmicbham",
-   "name": "Cosmic Games",
-   "base": "https://cosmicbham.com",
-   "country": "US"
+   "key": "fumetteriageco",
+   "name": "Fumetteria Geco",
+   "base": "https://fumetteriageco.it",
+   "country": "EU"
   },
   {
-   "key": "cosmicdestroyers",
-   "name": "Cosmic Destroyer\u2019s Collectibles ",
-   "base": "https://cosmicdestroyers.com",
-   "country": "US"
+   "key": "funside",
+   "name": "Funside Mantova",
+   "base": "https://funside.it",
+   "country": "EU"
   },
   {
-   "key": "cosmicgames",
-   "name": "Cosmic Games",
-   "base": "https://www.cosmicgames.com",
-   "country": "US"
+   "key": "gamersacademy",
+   "name": "Gamers Academy",
+   "base": "https://gamers-academy.org",
+   "country": "EU"
   },
   {
-   "key": "creatorpultgames",
-   "name": "Creatorpult Games",
-   "base": "https://creatorpultgames.com",
-   "country": "US"
+   "key": "gamerzparadize",
+   "name": "GamerzParadize",
+   "base": "https://gamerzparadize.nl",
+   "country": "EU"
   },
   {
-   "key": "cromatcg",
-   "name": "Croma TCG",
-   "base": "https://cromatcg.com",
-   "country": "US"
+   "key": "gamesalley",
+   "name": "Games Alley di Andrea Lancioni & Co SNC",
+   "base": "https://gamesalley.it",
+   "country": "EU"
   },
   {
-   "key": "danireonus",
-   "name": "Danireon Cards & Games",
-   "base": "https://www.danireon.com",
-   "country": "US"
+   "key": "gamesavenue",
+   "name": "Games Avenue",
+   "base": "https://gamesavenue.fr",
+   "country": "EU"
   },
   {
-   "key": "darkholdgames",
-   "name": "Darkhold Games",
-   "base": "https://darkholdgames.com",
-   "country": "US"
+   "key": "gameslink",
+   "name": "Games Link",
+   "base": "https://gameslink.gr",
+   "country": "EU"
   },
   {
-   "key": "dealinghigh",
-   "name": "Dealing High Collectibles",
-   "base": "https://dealinghigh.com",
-   "country": "US"
+   "key": "gamestimeaversa",
+   "name": "Games Time Aversa",
+   "base": "https://gamestimeaversa.com",
+   "country": "EU"
   },
   {
-   "key": "dealsndragons",
-   "name": "Deals N Dragons",
-   "base": "https://dealsndragons.com",
-   "country": "US"
+   "key": "geekfactorydeauville",
+   "name": "Geek Factory Touques",
+   "base": "https://geekfactorydeauville.fr",
+   "country": "EU"
   },
   {
-   "key": "deriumandwifey",
-   "name": "Derium's CCGs",
-   "base": "https://deriumandwifey.com",
-   "country": "US"
+   "key": "geeksheaven",
+   "name": "Geeksheaven",
+   "base": "https://geeksheaven.de",
+   "country": "EU"
   },
   {
-   "key": "digitalheroes",
-   "name": "Digital Heroes",
-   "base": "https://digitalheroes.com",
-   "country": "US"
+   "key": "gemcards",
+   "name": "Gem Cards",
+   "base": "https://gemcards.de",
+   "country": "EU"
   },
   {
-   "key": "dinoscardsandcollectibles",
-   "name": "Dino's Cards & Collectibles",
-   "base": "https://dinoscardsandcollectibles.com",
-   "country": "US"
+   "key": "glitchless",
+   "name": "Glitchless Game Store",
+   "base": "https://glitchless.de",
+   "country": "EU"
   },
   {
-   "key": "diostreasures",
-   "name": "Dio's Treasures",
-   "base": "https://diostreasures.com",
-   "country": "US"
+   "key": "godofcards",
+   "name": "God Of Cards",
+   "base": "https://godofcards.com",
+   "country": "EU"
   },
   {
-   "key": "dkscards",
-   "name": "DK's Cards",
-   "base": "https://dkscards.com",
-   "country": "US"
+   "key": "goodiesstore",
+   "name": "GOODIES STORE",
+   "base": "https://goodies-store.fr",
+   "country": "EU"
   },
   {
-   "key": "dockingbay93",
-   "name": "Docking Bay 93",
-   "base": "https://dockingbay93.com",
-   "country": "US"
+   "key": "goosegames",
+   "name": "Goose Games",
+   "base": "https://goose-games.de",
+   "country": "EU"
   },
   {
-   "key": "doubleboxgames",
-   "name": "Double Box Games",
-   "base": "https://doubleboxgames.com",
-   "country": "US"
+   "key": "goretrogaming",
+   "name": "GoRetroGaming",
+   "base": "https://goretrogaming.com",
+   "country": "EU"
   },
   {
-   "key": "doubleinfinitygaming",
-   "name": "Double Infinity Gaming",
-   "base": "https://doubleinfinitygaming.com",
-   "country": "US"
+   "key": "grancards",
+   "name": "GranCards",
+   "base": "https://grancards.com",
+   "country": "EU"
   },
   {
-   "key": "dragonegggames",
-   "name": "Dragon Egg Games",
-   "base": "https://www.dragon-egg-games.com",
-   "country": "US"
+   "key": "hallofgamestcg",
+   "name": "Hall of Games",
+   "base": "https://hallofgamestcg.de",
+   "country": "EU"
   },
   {
-   "key": "dragoneyegaming",
-   "name": "Dragon Eye Gaming",
-   "base": "https://dragoneyegaming.net",
-   "country": "US"
+   "key": "heartforcards",
+   "name": "Heartforcards",
+   "base": "https://heartforcards.com",
+   "country": "EU"
   },
   {
-   "key": "drawntogethergames",
-   "name": "Drawn Together Games",
-   "base": "https://drawntogethergames.com",
-   "country": "US"
+   "key": "hikarudistribution",
+   "name": "Hikaru Distribution",
+   "base": "https://hikarudistribution.com",
+   "country": "EU"
   },
   {
-   "key": "dublin",
-   "name": "Littleroot Games - Dublin",
-   "base": "https://dublin.littlerootgames.com",
-   "country": "US"
+   "key": "hitechgames",
+   "name": "Hi-Tech Games",
+   "base": "https://www.hitechgames.it",
+   "country": "EU"
   },
   {
-   "key": "duelanddice",
-   "name": "Duel and Dice",
-   "base": "https://duelanddice.com",
-   "country": "US"
+   "key": "hobbyhub",
+   "name": "HobbyHub",
+   "base": "https://hobbyhub.gr",
+   "country": "EU"
   },
   {
-   "key": "dvgtcg",
-   "name": "Dark Vassal Gaming",
-   "base": "https://dvgtcg.com",
-   "country": "US"
+   "key": "homelands",
+   "name": "Homelands",
+   "base": "https://homelands.es",
+   "country": "EU"
   },
   {
-   "key": "dxgamesllc",
-   "name": "Dx Games & More",
-   "base": "https://dxgamesllc.com",
-   "country": "US"
+   "key": "iberiancollect",
+   "name": "Iberian Collect",
+   "base": "https://iberiancollect.com",
+   "country": "EU"
   },
   {
-   "key": "dynamiccardcollectors",
-   "name": "Dynamic Card Collectors",
-   "base": "https://dynamiccardcollectors.com",
-   "country": "US"
+   "key": "iconiccards",
+   "name": "ICONIC CARDS",
+   "base": "https://iconic-cards.it",
+   "country": "EU"
   },
   {
-   "key": "eclipsecardsandhobby",
-   "name": "Eclipse Cards and Hobby",
-   "base": "https://www.eclipsecardsandhobby.com",
-   "country": "US"
+   "key": "ikigaicomicstienda",
+   "name": "IKIGAI COMICS",
+   "base": "https://ikigaicomicstienda.com",
+   "country": "EU"
   },
   {
-   "key": "elite4tcg",
-   "name": "Elite4TCG",
-   "base": "https://elite4tcg.com",
-   "country": "US"
+   "key": "isengard",
+   "name": "Isengard Fantasy Shop",
+   "base": "https://isengard.com.cy",
+   "country": "EU"
   },
   {
-   "key": "envycardstore",
-   "name": "Envy Cards",
-   "base": "https://envycardstore.com",
-   "country": "US"
+   "key": "itsmaxtoys",
+   "name": "ITSMAXTOYS",
+   "base": "https://itsmaxtoys.nl",
+   "country": "EU"
   },
   {
-   "key": "epictradingcollectibles",
-   "name": "Epic Trading Collectibles",
-   "base": "https://www.epictradingcollectibles.com",
-   "country": "US"
+   "key": "jjcollection",
+   "name": "JJ Collection",
+   "base": "https://www.jjcollection.es",
+   "country": "EU"
   },
   {
-   "key": "epikcg",
-   "name": "Epik Cards And Games",
-   "base": "https://epikcg.com",
-   "country": "US"
+   "key": "kaibacards",
+   "name": "Kaiba Cards",
+   "base": "https://kaibacards.at",
+   "country": "EU"
   },
   {
-   "key": "eternalgameschesterfield",
-   "name": "Eternal Games Chesterfield",
-   "base": "https://eternalgameschesterfield.com",
-   "country": "US"
+   "key": "kaiofcards",
+   "name": "Kai of Cards",
+   "base": "https://kaiofcards.com",
+   "country": "EU"
   },
   {
-   "key": "ettingames",
-   "name": "Ettin Games",
-   "base": "https://ettingames.com",
-   "country": "US"
+   "key": "kaizencards",
+   "name": "Kaizen Cards",
+   "base": "https://kaizencards.de",
+   "country": "EU"
   },
   {
-   "key": "evanstongames",
-   "name": "Evanston Games",
-   "base": "https://evanstongames.com",
-   "country": "US"
+   "key": "kardsgreifswald",
+   "name": "KARDS Greifswald",
+   "base": "https://kardsgreifswald.de",
+   "country": "EU"
   },
   {
-   "key": "evolvecardshop",
-   "name": "Evolve Card Shop",
-   "base": "https://evolvecardshop.com",
-   "country": "US"
+   "key": "kardz",
+   "name": "Kardz.eu",
+   "base": "https://kardz.eu",
+   "country": "EU"
   },
   {
-   "key": "evvgamingguild",
-   "name": "The Gaming Guild",
-   "base": "https://evvgamingguild.com",
-   "country": "US"
+   "key": "kartenmeier",
+   "name": "Kartenmeier",
+   "base": "https://kartenmeier.de",
+   "country": "EU"
   },
   {
-   "key": "expresstcg",
-   "name": "EXPRESS TCG",
-   "base": "https://expresstcg.com",
-   "country": "US"
+   "key": "kazuma",
+   "name": "Kazuma Ravenna",
+   "base": "https://kazuma.it",
+   "country": "EU"
   },
   {
-   "key": "expsharegames",
-   "name": "The Experience Share",
-   "base": "https://expsharegames.com",
-   "country": "US"
+   "key": "kingcards",
+   "name": "King Cards",
+   "base": "https://kingcards.nl",
+   "country": "EU"
   },
   {
-   "key": "fabfoundry",
-   "name": "FaB Foundry",
-   "base": "https://www.fabfoundry.co",
-   "country": "US"
+   "key": "koffiespel",
+   "name": "Koffie & Spel",
+   "base": "https://koffie-spel.be",
+   "country": "EU"
   },
   {
-   "key": "fabledtavern",
-   "name": "Fabled Tavern",
-   "base": "https://fabledtavern.com",
-   "country": "US"
+   "key": "konobacards",
+   "name": "Konoba Cards",
+   "base": "https://konobacards.fr",
+   "country": "EU"
   },
   {
-   "key": "fabricatorsforge",
-   "name": "Fabricator's Forge",
-   "base": "https://shop.fabricatorsforge.com",
-   "country": "US"
+   "key": "laboutiquedelsobre",
+   "name": "La Boutique del Sobre",
+   "base": "https://www.laboutiquedelsobre.com",
+   "country": "EU"
   },
   {
-   "key": "finalcuttcg",
-   "name": "FinalCutTCG",
-   "base": "https://finalcuttcg.com",
-   "country": "US"
+   "key": "laescotillajuegos",
+   "name": "La Escotilla",
+   "base": "https://laescotillajuegos.com",
+   "country": "EU"
   },
   {
-   "key": "firstcapitolcards",
-   "name": "First Capitol Cards",
-   "base": "https://firstcapitolcards.com",
-   "country": "US"
+   "key": "lagildastore",
+   "name": "La Gilda di Busto",
+   "base": "https://lagildastore.it",
+   "country": "EU"
   },
   {
-   "key": "five6gaming",
-   "name": "FIVE6 Gaming",
-   "base": "https://www.five6gaming.com",
-   "country": "US"
+   "key": "lairosshop",
+   "name": "Lairo's Shop",
+   "base": "https://lairos.shop",
+   "country": "EU"
   },
   {
-   "key": "flipsidegaming",
-   "name": "Flipside Gaming",
-   "base": "https://flipsidegaming.com",
-   "country": "US"
+   "key": "laliane",
+   "name": "L'ALIANE",
+   "base": "https://laliane.com",
+   "country": "EU"
   },
   {
-   "key": "forgottenpathgames",
-   "name": "Forgotten Path Games",
-   "base": "https://forgottenpathgames.com",
-   "country": "US"
+   "key": "lantredepo",
+   "name": "L'Antre de Po",
+   "base": "https://lantredepo.com",
+   "country": "EU"
   },
   {
-   "key": "foxfablehaven",
-   "name": "Fox Fable Haven",
-   "base": "https://foxfablehaven.com",
-   "country": "US"
+   "key": "laregledujeu",
+   "name": "La regle du jeu",
+   "base": "https://laregledujeu.fr",
+   "country": "EU"
   },
   {
-   "key": "frankscardshopnj",
-   "name": "Frank's Card Shop",
-   "base": "https://frankscardshopnj.com",
-   "country": "US"
+   "key": "laroccadelwargaming",
+   "name": "La Rocca Del Wargaming",
+   "base": "https://laroccadelwargaming.it",
+   "country": "EU"
   },
   {
-   "key": "funtimetoysandgifts",
-   "name": "Funtime Toys and Gifts",
-   "base": "https://funtimetoysandgifts.com",
-   "country": "US"
+   "key": "lebarjeu",
+   "name": "Le Bar'Jeu",
+   "base": "https://lebarjeu.fr",
+   "country": "EU"
   },
   {
-   "key": "gachaboba",
-   "name": "Gacha Boba",
-   "base": "https://gachaboba.com",
-   "country": "US"
+   "key": "lemantcg",
+   "name": "Leman TCG",
+   "base": "https://lemantcg.fr",
+   "country": "EU"
   },
   {
-   "key": "galacticgamez",
-   "name": "Galactic Gamez",
-   "base": "https://galacticgamez.com",
-   "country": "US"
+   "key": "lepotoryko",
+   "name": "LE POTO RYKO",
+   "base": "https://lepotoryko.fr",
+   "country": "EU"
   },
   {
-   "key": "galactictoys",
-   "name": "Galactic Toys & Collectibles",
-   "base": "https://galactictoys.com",
-   "country": "US"
+   "key": "lesdesmaskes",
+   "name": "Les Dés Maskés",
+   "base": "https://lesdesmaskes.fr",
+   "country": "EU"
   },
   {
-   "key": "galaxygamesllc",
-   "name": "Galaxy Games",
-   "base": "https://galaxygamesllc.com",
-   "country": "US"
+   "key": "lmshandel",
+   "name": "lms-handel",
+   "base": "https://lms-handel.de",
+   "country": "EU"
   },
   {
-   "key": "gamecraftgamestore",
-   "name": "GameCraft",
-   "base": "https://gamecraftgamestore.com",
-   "country": "US"
+   "key": "lootboxjeux",
+   "name": "Lootbox",
+   "base": "https://lootboxjeux.fr",
+   "country": "EU"
   },
   {
-   "key": "gamegridif",
-   "name": "Game Grid Idaho Falls",
-   "base": "https://gamegridif.com",
-   "country": "US"
+   "key": "lorenzone",
+   "name": "LorenZone",
+   "base": "https://lorenzone.fr",
+   "country": "EU"
   },
   {
-   "key": "gamelandia",
-   "name": "Gamelandia",
-   "base": "https://gamelandia.fun",
-   "country": "US"
+   "key": "lotusvalley",
+   "name": "Lotus Valley",
+   "base": "https://lotusvalley.pt",
+   "country": "EU"
   },
   {
-   "key": "gamenerdz",
-   "name": "Game Nerdz",
-   "base": "https://www.gamenerdz.com",
-   "country": "US"
+   "key": "luckydice",
+   "name": "Lucky Dice",
+   "base": "https://luckydice.it",
+   "country": "EU"
   },
   {
-   "key": "gameonarizona",
-   "name": "Game On Cottonwood",
-   "base": "https://gameonarizona.com",
-   "country": "US"
+   "key": "ludisphere",
+   "name": "Ludisphere",
+   "base": "https://ludisphere.fr",
+   "country": "EU"
   },
   {
-   "key": "gameostorus",
-   "name": "Game-O-Storus",
-   "base": "https://gameostorus.com",
-   "country": "US"
+   "key": "mabasso",
+   "name": "MaBasso",
+   "base": "https://mabasso.com",
+   "country": "EU"
   },
   {
-   "key": "gamerealm",
-   "name": "Game Realm",
-   "base": "https://gamerealm.com",
-   "country": "US"
+   "key": "madridnortetcg",
+   "name": "Madrid Norte TCG",
+   "base": "https://madridnortetcg.com",
+   "country": "EU"
   },
   {
-   "key": "gamersgauntlet",
-   "name": "Gamer's Gauntlet",
-   "base": "https://gamersgauntlet.net",
-   "country": "US"
+   "key": "magicomens",
+   "name": "Magic Omens",
+   "base": "https://magicomens.com",
+   "country": "EU"
   },
   {
-   "key": "gamersgetawaykc",
-   "name": "Gamers Getaway KC",
-   "base": "https://gamersgetawaykc.com",
-   "country": "US"
+   "key": "magictraders",
+   "name": "Magic Traders",
+   "base": "https://magictraders.nl",
+   "country": "EU"
   },
   {
-   "key": "gamersgrove",
-   "name": "Gamers Grove",
-   "base": "https://gamersgrove.com",
-   "country": "US"
+   "key": "manamecha",
+   "name": "Mana Mecha",
+   "base": "https://manamecha.fr",
+   "country": "EU"
   },
   {
-   "key": "gamersguildaz",
-   "name": "Gamers Guild AZ",
-   "base": "https://gamersguildaz.com",
-   "country": "US"
+   "key": "manatrust",
+   "name": "ManaTrust",
+   "base": "https://manatrust.com",
+   "country": "EU"
   },
   {
-   "key": "gamersguildusa",
-   "name": "Gamers Guild AZ",
-   "base": "https://gamersguildusa.com",
-   "country": "US"
+   "key": "manavortex",
+   "name": "MANA VORTEX SHOP",
+   "base": "https://manavortex.es",
+   "country": "EU"
   },
   {
-   "key": "gamersngeeks",
-   "name": "Gamers N Geeks",
-   "base": "https://gamersngeeks.com",
-   "country": "US"
+   "key": "manuelpoke3",
+   "name": "manuelpoke3",
+   "base": "https://manuelpoke3.it",
+   "country": "EU"
   },
   {
-   "key": "gamersparadisela",
-   "name": "Gamers Paradise",
-   "base": "https://gamersparadisela.com",
-   "country": "US"
+   "key": "mazeek",
+   "name": "Mazeek di Andrea Fiore ",
+   "base": "https://mazeek.it",
+   "country": "EU"
   },
   {
-   "key": "gamersrowmn",
-   "name": "Gamers Row llc",
-   "base": "https://gamersrowmn.com",
-   "country": "US"
+   "key": "mbforce",
+   "name": "MB-Force",
+   "base": "https://mb-force.de",
+   "country": "EU"
   },
   {
-   "key": "gamesandstuffonline",
-   "name": "Games and Stuff",
-   "base": "https://gamesandstuffonline.com",
-   "country": "US"
+   "key": "mcgillicuddystoyshopx",
+   "name": "McGillicuddy's Toy Shop",
+   "base": "https://mcgillicuddystoyshop.com",
+   "country": "EU"
   },
   {
-   "key": "gamescape",
-   "name": "Gamescape",
-   "base": "https://gamescape.com",
-   "country": "US"
+   "key": "mcgillicuddystoyshop",
+   "name": "McGillicuddy's Toy Shop",
+   "base": "https://mcgillicuddystoyshop.ie",
+   "country": "EU"
   },
   {
-   "key": "gameskingstore",
-   "name": "Games King",
-   "base": "https://gameskingstore.com",
-   "country": "US"
+   "key": "mentalvaultgames",
+   "name": "Mental Vault",
+   "base": "https://mentalvaultgames.com",
+   "country": "EU"
   },
   {
-   "key": "gamespacefl",
-   "name": "Game Space LLC",
-   "base": "https://gamespacefl.com",
-   "country": "US"
+   "key": "metamorfo",
+   "name": "Metamorfo (Santiago Palacios)",
+   "base": "https://metamorfo.es",
+   "country": "EU"
   },
   {
-   "key": "gamezenter",
-   "name": "Gamezenter",
-   "base": "https://gamezenter.com",
-   "country": "US"
+   "key": "metamorphcenter",
+   "name": "Metamorph Center",
+   "base": "https://metamorphcenter.com",
+   "country": "EU"
   },
   {
-   "key": "gaminggiant",
-   "name": "Gaming Giant",
-   "base": "https://gaminggiant.com",
-   "country": "US"
+   "key": "mikiscardshop",
+   "name": "Miki's Card Shop",
+   "base": "https://mikiscardshop.at",
+   "country": "EU"
   },
   {
-   "key": "gatecitygames",
-   "name": "Gate City Games",
-   "base": "https://gatecitygames.us",
-   "country": "US"
+   "key": "miraicards",
+   "name": "Mirai Cards Portugal",
+   "base": "https://miraicards.pt",
+   "country": "EU"
   },
   {
-   "key": "gatorscardden",
-   "name": "Gator's Card Den",
-   "base": "https://gatorscardden.com",
-   "country": "US"
+   "key": "mistcards",
+   "name": "MIST Cards",
+   "base": "https://mistcards.nl",
+   "country": "EU"
   },
   {
-   "key": "gatorsfeedsyourneeds",
-   "name": "Gators Games and Hobby",
-   "base": "https://gatorsfeedsyourneeds.com",
-   "country": "US"
+   "key": "misticards",
+   "name": "MistiCards",
+   "base": "https://misticards.com",
+   "country": "EU"
   },
   {
-   "key": "gclegion",
-   "name": "Gamers-Corps",
-   "base": "https://gclegion.com",
-   "country": "US"
+   "key": "mocards",
+   "name": "MoCards",
+   "base": "https://mocards.de",
+   "country": "EU"
   },
   {
-   "key": "geekerygames",
-   "name": "Geekery Games",
-   "base": "https://geekerygames.com",
-   "country": "US"
+   "key": "mojocards",
+   "name": "Mojo Cards",
+   "base": "https://mojocards.nl",
+   "country": "EU"
   },
   {
-   "key": "geekyglamorous",
-   "name": "GeekyGlamorous",
-   "base": "https://geekyglamorous.com",
-   "country": "US"
+   "key": "moonshadow",
+   "name": "Moon-Shadow Store",
+   "base": "https://moon-shadow.de",
+   "country": "EU"
   },
   {
-   "key": "gghobbycard",
-   "name": "GG Hobby Card",
-   "base": "https://gghobbycard.com",
-   "country": "US"
+   "key": "mrcollect",
+   "name": "Poke Planet (Mr Collect)",
+   "base": "https://mr-collect.de",
+   "country": "EU"
   },
   {
-   "key": "gglayton",
-   "name": "Game Grid Layton",
-   "base": "https://gglayton.com",
-   "country": "US"
+   "key": "mucollectibles",
+   "name": "MuCollectibles",
+   "base": "https://www.mucollectibles.de",
+   "country": "EU"
   },
   {
-   "key": "gglegends",
-   "name": "GG Legends",
-   "base": "https://store.gglehi.com",
-   "country": "US"
+   "key": "mulligantcg",
+   "name": "Mulligan TCG Shop",
+   "base": "https://mulligantcg.com",
+   "country": "EU"
   },
   {
-   "key": "ginzamkt",
-   "name": "GinzaTCG",
-   "base": "https://ginzamkt.com",
-   "country": "US"
+   "key": "mytradingcards",
+   "name": "Sit and Game by My-Tradingcards",
+   "base": "https://my-tradingcards.de",
+   "country": "EU"
   },
   {
-   "key": "glamorousgamers",
-   "name": "Glamorous Gamers Connect & Play Cafe",
-   "base": "https://www.glamorousgamers.com",
-   "country": "US"
+   "key": "mysticaltavern",
+   "name": "The Mystical Tavern",
+   "base": "https://mysticaltavern.com",
+   "country": "EU"
   },
   {
-   "key": "glhfinc",
-   "name": "Good Luck Have Fun Games",
-   "base": "https://glhfinc.com",
-   "country": "US"
+   "key": "nerdbank",
+   "name": "Spielewelt",
+   "base": "https://nerdbank.de",
+   "country": "EU"
   },
   {
-   "key": "gloriousgamesandgoods",
-   "name": "Glorious Games & Goods",
-   "base": "https://gloriousgamesandgoods.com",
-   "country": "US"
+   "key": "nextgentcg",
+   "name": "NextGen TCG",
+   "base": "https://nextgen-tcg.de",
+   "country": "EU"
   },
   {
-   "key": "gnomegames",
-   "name": "Gnome Games",
-   "base": "https://gnomegames.com",
-   "country": "US"
+   "key": "ninpostore",
+   "name": "Ninpo Store",
+   "base": "https://ninpostore.com",
+   "country": "EU"
   },
   {
-   "key": "goldengategames",
-   "name": "Golden Gate Games",
-   "base": "https://golden-gate-games.com",
-   "country": "US"
+   "key": "ohmygame",
+   "name": "Oh My Game",
+   "base": "https://ohmygame.fi",
+   "country": "EU"
   },
   {
-   "key": "gongaii",
-   "name": "Gongaii Games, Inc",
-   "base": "https://gongaii.com",
-   "country": "US"
+   "key": "onepiececardsfr",
+   "name": "Boutique Carte One Piece (onepiece-cards.com)",
+   "base": "https://onepiece-cards.com",
+   "country": "EU"
   },
   {
-   "key": "gootzygaming",
-   "name": "Gootzy Gaming",
-   "base": "https://gootzygaming.com",
-   "country": "US"
+   "key": "onitcgcard",
+   "name": "ONITCGCARD",
+   "base": "https://onitcgcard.com",
+   "country": "EU"
   },
   {
-   "key": "grailandgrade",
-   "name": "Grail and Grade",
-   "base": "https://grailandgrade.com",
-   "country": "US"
+   "key": "oportogg",
+   "name": "OportoGG",
+   "base": "https://oportogg.com",
+   "country": "EU"
   },
   {
-   "key": "graygauntletgames",
-   "name": "Gray Gauntlet Games",
-   "base": "https://graygauntletgames.com",
-   "country": "US"
+   "key": "opssmarket",
+   "name": "OPSS Market",
+   "base": "https://opssmarket.com",
+   "country": "EU"
   },
   {
-   "key": "greendoorcollectibles",
-   "name": "Green Door Collectibles",
-   "base": "https://greendoorcollectibles.com",
-   "country": "US"
+   "key": "orksendorks",
+   "name": "Orks & Dorks",
+   "base": "https://orksendorks.nl",
+   "country": "EU"
   },
   {
-   "key": "grognardgames",
-   "name": "Grognard Games",
-   "base": "https://grognardgames.com",
-   "country": "US"
+   "key": "otakura",
+   "name": "Otakura",
+   "base": "https://otakura.com",
+   "country": "EU"
   },
   {
-   "key": "guardiangamingvt",
-   "name": "Guardian Cards & Comics",
-   "base": "https://guardiangamingvt.com",
-   "country": "US"
+   "key": "outpostbrussels",
+   "name": "Outpost Brussels",
+   "base": "https://outpostbrussels.be",
+   "country": "EU"
   },
   {
-   "key": "guubuu",
-   "name": "GuuBuu Hobby",
-   "base": "https://guubuu.com",
-   "country": "US"
+   "key": "ozjuegos",
+   "name": "OZ JUEGOS",
+   "base": "https://ozjuegos.com",
+   "country": "EU"
   },
   {
-   "key": "haikupop",
-   "name": "Haiku Pop",
-   "base": "https://haikupop.com",
-   "country": "US"
+   "key": "panterland",
+   "name": "Panterland",
+   "base": "https://panterland.be",
+   "country": "EU"
   },
   {
-   "key": "hastygoblingames",
-   "name": "Hasty Goblin Games",
-   "base": "https://hastygoblingames.com",
-   "country": "US"
+   "key": "peeronline",
+   "name": "Peer Online Shop",
+   "base": "https://www.peer-online.de",
+   "country": "EU"
   },
   {
-   "key": "hauntedgamecafe",
-   "name": "The Haunted Game Cafe",
-   "base": "https://www.hauntedgamecafe.com",
-   "country": "US"
+   "key": "pelikrypta",
+   "name": "Ikamaan Pelikrypta/Ikamaa Oy",
+   "base": "https://pelikrypta.fi",
+   "country": "EU"
   },
   {
-   "key": "heroesandgames",
-   "name": "Heroes and Games",
-   "base": "https://heroesandgames.com",
-   "country": "US"
+   "key": "phoenixfeather",
+   "name": "Phoenix Feather",
+   "base": "https://phoenix-feather.eu",
+   "country": "EU"
   },
   {
-   "key": "hilltopcollectibles",
-   "name": "Hill Top Collectibles",
-   "base": "https://hilltopcollectibles.shop",
-   "country": "US"
+   "key": "pikamon",
+   "name": "Pikamon",
+   "base": "https://pikamon.eu",
+   "country": "EU"
   },
   {
-   "key": "hitmensportsbreaks",
-   "name": "Hitmen Sports Cards & Collectibles",
-   "base": "https://hitmensportsbreaks.com",
-   "country": "US"
+   "key": "pkmwinkel",
+   "name": "PKMWinkel",
+   "base": "https://www.pkmwinkel.nl",
+   "country": "EU"
   },
   {
-   "key": "hoarditall",
-   "name": "Hoard",
-   "base": "https://www.hoarditall.com",
-   "country": "US"
+   "key": "planeswalkers",
+   "name": "Planeswalkers Valencia",
+   "base": "https://planeswalkers.shop",
+   "country": "EU"
   },
   {
-   "key": "hobbiesvilleus",
-   "name": "Hobbiesville",
-   "base": "https://hobbiesville.com",
-   "country": "US"
+   "key": "playmaniac",
+   "name": "Play-Maniac",
+   "base": "https://www.play-maniac.de",
+   "country": "EU"
   },
   {
-   "key": "hobbyaddicts",
-   "name": "Hobby Addicts",
-   "base": "https://www.hobby-addicts.com",
-   "country": "US"
+   "key": "plugstarsath",
+   "name": "Plugstars Ath",
+   "base": "https://plugstarsath.com",
+   "country": "EU"
   },
   {
-   "key": "hobbycardshop",
-   "name": "Hobby Card Shop",
-   "base": "https://hobbycardshop.com",
-   "country": "US"
+   "key": "pokepower",
+   "name": "PokePower",
+   "base": "https://poke-power.eu",
+   "country": "EU"
   },
   {
-   "key": "hobbyvault",
-   "name": "Hobby Vault",
-   "base": "https://hobbyvault.com",
-   "country": "US"
+   "key": "pokebundles",
+   "name": "Pokebundles",
+   "base": "https://www.pokebundles.ie",
+   "country": "EU"
   },
   {
-   "key": "holohaven",
-   "name": "Holo Haven",
-   "base": "https://holohaven.com",
-   "country": "US"
+   "key": "pokeca",
+   "name": "Pokeca",
+   "base": "https://pokeca.nl",
+   "country": "EU"
   },
   {
-   "key": "holohorsegames",
-   "name": "Holo Horse Games LLC",
-   "base": "https://holohorsegames.com",
-   "country": "US"
+   "key": "slabstore",
+   "name": "Slabstore",
+   "base": "https://pokecardsstore.it",
+   "country": "EU"
   },
   {
-   "key": "houseruleslounge",
-   "name": "House Rules Board Game Lounge",
-   "base": "https://houseruleslounge.com",
-   "country": "US"
+   "key": "pokechest",
+   "name": "PokeChest",
+   "base": "https://pokechest.at",
+   "country": "EU"
   },
   {
-   "key": "hypercollectiblestcg",
-   "name": "Hyper Collectibles",
-   "base": "https://hypercollectiblestcg.com",
-   "country": "US"
+   "key": "pokefamily",
+   "name": "PokeFamily",
+   "base": "https://pokefamily.nl",
+   "country": "EU"
   },
   {
-   "key": "ichooseyou",
-   "name": "ichooseyou TCGs",
-   "base": "https://ichooseyou.cards",
-   "country": "US"
+   "key": "pokemillon",
+   "name": "PokeMillon",
+   "base": "https://www.pokemillon.com",
+   "country": "EU"
   },
   {
-   "key": "ihc",
-   "name": "IHC Cards",
-   "base": "https://ihc.cards",
-   "country": "US"
+   "key": "pokestock",
+   "name": "Pokestock",
+   "base": "https://pokestock.com",
+   "country": "EU"
   },
   {
-   "key": "immaculatetcg",
-   "name": "Immaculate Trading Cards ",
-   "base": "https://immaculatetcg.com",
-   "country": "US"
+   "key": "poneglyphcards",
+   "name": "PoneglyphCards",
+   "base": "https://poneglyphcards.it",
+   "country": "EU"
   },
   {
-   "key": "impactgamingcenter",
-   "name": "Impact Gaming Center",
-   "base": "https://impactgamingcenter.gg",
-   "country": "US"
+   "key": "primeprotector",
+   "name": "Prime Protector",
+   "base": "https://primeprotector.at",
+   "country": "EU"
   },
   {
-   "key": "indycardshop",
-   "name": "Indy Card Shop",
-   "base": "https://indycardshop.myshopify.com",
-   "country": "US"
+   "key": "pruckis",
+   "name": "Prückis Cards",
+   "base": "https://pruckis.de",
+   "country": "EU"
   },
   {
-   "key": "ip5f5c0a",
-   "name": "Rolling Hills Collectibles",
-   "base": "https://ip5f5c-0a.myshopify.com",
-   "country": "US"
+   "key": "psydeck",
+   "name": "Psydeck TCG",
+   "base": "https://psydeck.com",
+   "country": "EU"
   },
   {
-   "key": "itstimecards",
-   "name": "IT'S TIME! Sports Cards, TCG and eSports",
-   "base": "https://itstimecards.com",
-   "country": "US"
+   "key": "pushdichtcg",
+   "name": "Pushdich TCG",
+   "base": "https://www.pushdich-tcg.de",
+   "country": "EU"
   },
   {
-   "key": "j2games",
-   "name": "J2Games",
-   "base": "https://j2games.com",
-   "country": "US"
+   "key": "racoonrises",
+   "name": "Zum Waschbaeren",
+   "base": "https://racoon-rises.com",
+   "country": "EU"
   },
   {
-   "key": "jandjgamingfactory",
-   "name": "J and J Gaming Factory",
-   "base": "https://jandjgamingfactory.com",
-   "country": "US"
+   "key": "rarecards",
+   "name": "RareCards",
+   "base": "https://rarecards.nl",
+   "country": "EU"
   },
   {
-   "key": "jarocards",
-   "name": "Jaro Cards",
-   "base": "https://jarocards.com",
-   "country": "US"
+   "key": "recollectibles",
+   "name": "ReCollectibles",
+   "base": "https://recollectibles.de",
+   "country": "EU"
   },
   {
-   "key": "jawbreakers",
-   "name": "jawbreakers",
-   "base": "https://jawbreakers.cards",
-   "country": "US"
+   "key": "relictcg",
+   "name": "Relic",
+   "base": "https://relictcg.com",
+   "country": "EU"
   },
   {
-   "key": "jaystoysandgames",
-   "name": "Jays CD and Hobby",
-   "base": "https://jaystoysandgames.com",
-   "country": "US"
+   "key": "riplay",
+   "name": "RiPlay",
+   "base": "https://ri-play.com",
+   "country": "EU"
   },
   {
-   "key": "jchobby",
-   "name": "JC Hobby",
-   "base": "https://jchobby.com",
-   "country": "US"
+   "key": "ronintcg",
+   "name": "Ronin il Covo dei Samurai",
+   "base": "https://ronintcg.it",
+   "country": "EU"
   },
   {
-   "key": "jeffthrowcards",
-   "name": "Jeffthrowcards",
-   "base": "https://jeffthrowcards.myshopify.com",
-   "country": "US"
+   "key": "sgames",
+   "name": "S-Games",
+   "base": "https://s-games.at",
+   "country": "EU"
   },
   {
-   "key": "jerseyscc",
-   "name": "Jersey's Cards & Comics",
-   "base": "https://jerseyscc.com",
-   "country": "US"
+   "key": "sarumangames",
+   "name": "Saruman Games SC",
+   "base": "https://sarumangames.es",
+   "country": "EU"
   },
   {
-   "key": "jnstoys",
-   "name": "Jnstoys",
-   "base": "https://jnstoys.com",
-   "country": "US"
+   "key": "secretwonderscollectibles",
+   "name": "Secret Wonders Collectibles",
+   "base": "https://secretwonderscollectibles.be",
+   "country": "EU"
   },
   {
-   "key": "joshscards",
-   "name": "Josh's Cards",
-   "base": "https://joshscards.com",
-   "country": "US"
+   "key": "sephigames",
+   "name": "SephiGames",
+   "base": "https://sephigames.com",
+   "country": "EU"
   },
   {
-   "key": "journeysendgames",
-   "name": "Journey\u2019s End Games",
-   "base": "https://journeysendgames.com",
-   "country": "US"
+   "key": "shoguntcg",
+   "name": "Shogun TCG",
+   "base": "https://www.shoguntcg.nl",
+   "country": "EU"
   },
   {
-   "key": "jwwcards",
-   "name": "JWW Sports Cards & Gaming",
-   "base": "https://jwwcards.com",
-   "country": "US"
+   "key": "loufoque",
+   "name": "Loufoque",
+   "base": "https://shop.loufoque.fr",
+   "country": "EU"
   },
   {
-   "key": "keyitemscollect",
-   "name": "Key Items Collectibles",
-   "base": "https://keyitemscollect.com",
-   "country": "US"
+   "key": "side7",
+   "name": "Side7",
+   "base": "https://side7.nl",
+   "country": "EU"
   },
   {
-   "key": "keystonecardsandgames",
-   "name": "Keystone Cards and Games",
-   "base": "https://keystonecardsandgames.com",
-   "country": "US"
+   "key": "skupisve",
+   "name": "Skupi sve",
+   "base": "https://skupisve.hr",
+   "country": "EU"
   },
   {
-   "key": "keystonegames",
-   "name": "Keystone Games LLC",
-   "base": "https://keystonegames.net",
-   "country": "US"
+   "key": "speldorado",
+   "name": "Speldorado",
+   "base": "https://speldorado.com",
+   "country": "EU"
   },
   {
-   "key": "kingstablegames",
-   "name": "King's Table Games",
-   "base": "https://kingstablegames.com",
-   "country": "US"
+   "key": "spelenmeer",
+   "name": "Spel en Meer",
+   "base": "https://spelenmeer.nl",
+   "country": "EU"
   },
   {
-   "key": "kitchentabletcg",
-   "name": "Kitchen Table Cards and Games",
-   "base": "https://kitchentabletcg.com",
-   "country": "US"
+   "key": "spieles",
+   "name": "spiel-es.de",
+   "base": "https://spiel-es.de",
+   "country": "EU"
   },
   {
-   "key": "knightandday",
-   "name": "Knight and Day Games",
-   "base": "https://knightanddaygames.com",
-   "country": "US"
+   "key": "spieleheldtcg",
+   "name": "Spieleheld TCG",
+   "base": "https://spieleheldtcg.at",
+   "country": "EU"
   },
   {
-   "key": "kollectiblekings",
-   "name": "Kollectible Kings",
-   "base": "https://kollectiblekings.com",
-   "country": "US"
+   "key": "spielewelt",
+   "name": "Spielewelt Amberg",
+   "base": "https://spielewelt.de",
+   "country": "EU"
   },
   {
-   "key": "kollectkorner",
-   "name": "Kollect Korner",
-   "base": "https://www.kollectkorner.com",
-   "country": "US"
+   "key": "sunnystore",
+   "name": "Sunnystore",
+   "base": "https://sunnystore.es",
+   "country": "EU"
   },
   {
-   "key": "krakendice",
-   "name": "Kraken Dice",
-   "base": "https://krakendice.com",
-   "country": "US"
+   "key": "superelfcards",
+   "name": "Superelf Cards",
+   "base": "https://superelf-cards.de",
+   "country": "EU"
   },
   {
-   "key": "kryptonitekollectibles",
-   "name": "Kryptonite Kollectibles",
-   "base": "https://kryptonitekollectibles.com",
-   "country": "US"
+   "key": "swagykarp",
+   "name": "Swagykarp",
+   "base": "https://swagykarp.fi",
+   "country": "EU"
   },
   {
-   "key": "kwcollectibles",
-   "name": "Game Grid Key LLC",
-   "base": "https://kwcollectibles.com",
-   "country": "US"
+   "key": "tavernadelgargoyle",
+   "name": "Taverna del Gargoyle",
+   "base": "https://tavernadelgargoyle.it",
+   "country": "EU"
   },
   {
-   "key": "lakehartwellcollectibles",
-   "name": "Lake Hartwell Collectibles",
-   "base": "https://lakehartwellcollectibles.com",
-   "country": "US"
+   "key": "tcggarden",
+   "name": "TCG Garden",
+   "base": "https://tcg-garden.myshopify.com",
+   "country": "EU"
   },
   {
-   "key": "landfalloutpost",
-   "name": "Landfall Outpost",
-   "base": "https://landfalloutpost.com",
-   "country": "US"
+   "key": "otakuyatcg",
+   "name": "OTAKUYA TCG",
+   "base": "https://tcg.otakuya.es",
+   "country": "EU"
   },
   {
-   "key": "larrysgamestore",
-   "name": "Larry's Game Store",
-   "base": "https://larrysgamestore.com",
-   "country": "US"
+   "key": "tcgfamily",
+   "name": "TCGFAMILY",
+   "base": "https://tcgfamily.nl",
+   "country": "EU"
   },
   {
-   "key": "lasportscards",
-   "name": "LA Sports Cards",
-   "base": "https://lasportscards.com",
-   "country": "US"
+   "key": "tcgking",
+   "name": "TCG King",
+   "base": "https://tcgking.nl",
+   "country": "EU"
   },
   {
-   "key": "laytongaming",
-   "name": "Layton Gaming",
-   "base": "https://laytongaming.com",
-   "country": "US"
+   "key": "tcglegends",
+   "name": "TCG Legends",
+   "base": "https://tcglegends.nl",
+   "country": "EU"
   },
   {
-   "key": "lazarusgames",
-   "name": "Lazarus Games",
-   "base": "https://lazarus-games.com",
-   "country": "US"
+   "key": "tcgplatform",
+   "name": "TCG Platform",
+   "base": "https://tcgplatform.nl",
+   "country": "EU"
   },
   {
-   "key": "leftoversloungeshop",
-   "name": "Leftovers Lounge",
-   "base": "https://leftoversloungeshop.com",
-   "country": "US"
+   "key": "tcgreus",
+   "name": "TcgReus",
+   "base": "https://www.tcgreus.nl",
+   "country": "EU"
   },
   {
-   "key": "legacycomics",
-   "name": "Legacy Comics and Cards Inc",
-   "base": "https://legacycomics.com",
-   "country": "US"
+   "key": "tcgsphere",
+   "name": "TCG Sphere",
+   "base": "https://tcgsphere.fr",
+   "country": "EU"
   },
   {
-   "key": "legendsfanshop",
-   "name": "LegendsSportsGames",
-   "base": "https://legendsfanshop.com",
-   "country": "US"
+   "key": "tcgstar",
+   "name": "TCG STAR",
+   "base": "https://tcgstar.eu",
+   "country": "EU"
   },
   {
-   "key": "levelonegameshop",
-   "name": "Level One Game Shop",
-   "base": "https://levelonegameshop.com",
-   "country": "US"
+   "key": "tcgstars",
+   "name": "TCG Stars",
+   "base": "https://www.tcgstars.nl",
+   "country": "EU"
   },
   {
-   "key": "levelupgamesmd",
-   "name": "Level Up Games MD",
-   "base": "https://www.levelupgamesmd.com",
-   "country": "US"
+   "key": "tcgtavern",
+   "name": "TCG Tavern",
+   "base": "https://tcgtavern.de",
+   "country": "EU"
   },
   {
-   "key": "limitbreakcards",
-   "name": "Limit Break Cards",
-   "base": "https://limitbreakcards.com",
-   "country": "US"
+   "key": "tcgviert",
+   "name": "TCGViert",
+   "base": "https://tcgviert.com",
+   "country": "EU"
   },
   {
-   "key": "lingstergames",
-   "name": "LingSter Games",
-   "base": "https://lingstergames.com",
-   "country": "US"
+   "key": "teamlunti",
+   "name": "Team Lunti Trading Cards",
+   "base": "https://teamlunti.de",
+   "country": "EU"
   },
   {
-   "key": "lionhearthobby",
-   "name": "lionhearthobby",
-   "base": "https://lionhearthobby.com",
-   "country": "US"
+   "key": "templarsarena",
+   "name": "Templars Arena",
+   "base": "https://templarsarena.com",
+   "country": "EU"
   },
   {
-   "key": "littlewars",
-   "name": "Little Wars",
-   "base": "https://shop.littlewars.com",
-   "country": "US"
+   "key": "thehouseofgames",
+   "name": "House of Games",
+   "base": "https://thehouseofgames.eu",
+   "country": "EU"
   },
   {
-   "key": "loosepacks",
-   "name": "Loose Packs Trading Co.",
-   "base": "https://loosepacks.com",
-   "country": "US"
+   "key": "thelabgamestore",
+   "name": "The Lab Game Store",
+   "base": "https://thelabgamestore.com",
+   "country": "EU"
   },
   {
-   "key": "lootcardshop",
-   "name": "Loot Card Shop",
-   "base": "https://lootcardshop.com",
-   "country": "US"
+   "key": "threestonesgames",
+   "name": "Three Stones Games",
+   "base": "https://threestonesgames.com",
+   "country": "EU"
   },
   {
-   "key": "lost4toys",
-   "name": "Lost4toys",
-   "base": "https://lost4toys.com",
-   "country": "US"
+   "key": "tierra616",
+   "name": "Tierra616",
+   "base": "https://tierra616.es",
+   "country": "EU"
   },
   {
-   "key": "lspbstore",
-   "name": "lspbstore",
-   "base": "https://lspbstore.com",
-   "country": "US"
+   "key": "tkcollectibles",
+   "name": "TKCollectibles",
+   "base": "https://www.tkcollectibles.it",
+   "country": "EU"
   },
   {
-   "key": "lthobbies",
-   "name": "LTs Hobbies",
-   "base": "https://www.lthobbies.com",
-   "country": "US"
+   "key": "tobistoys",
+   "name": "Tobis Toys",
+   "base": "https://tobistoys.de",
+   "country": "EU"
   },
   {
-   "key": "luckyhits",
-   "name": "Lucky Hits Inc",
-   "base": "https://luckyhits.shop",
-   "country": "US"
+   "key": "todohits",
+   "name": "TodoHits",
+   "base": "https://todohits.com",
+   "country": "EU"
   },
   {
-   "key": "lumiusinc",
-   "name": "Lumius Inc",
-   "base": "https://lumiusinc.com",
-   "country": "US"
+   "key": "topdeck",
+   "name": "TopDeck",
+   "base": "https://topdeck.es",
+   "country": "EU"
   },
   {
-   "key": "madtownhobby",
-   "name": "Madtown Hobby",
-   "base": "https://madtownhobby.com",
-   "country": "US"
+   "key": "toytreasure",
+   "name": "Toy Treasure",
+   "base": "https://toy-treasure.com",
+   "country": "EU"
   },
   {
-   "key": "magessanctum",
-   "name": "Mage's Sanctum",
-   "base": "https://magessanctum.com",
-   "country": "US"
+   "key": "tradehunter",
+   "name": "Trade Hunter",
+   "base": "https://tradehunter.fr",
+   "country": "EU"
   },
   {
-   "key": "magicandmonsters",
-   "name": "Magic and Monsters",
-   "base": "https://magicandmonsters.com",
-   "country": "US"
+   "key": "tradingtoys",
+   "name": "Trading Toys",
+   "base": "https://www.tradingtoys.de",
+   "country": "EU"
   },
   {
-   "key": "magicdragonusa",
-   "name": "magicdragonusa",
-   "base": "https://magicdragonusa.com",
-   "country": "US"
+   "key": "treasurehubtcg",
+   "name": "TreasureHub TCG",
+   "base": "https://treasurehubtcg.com",
+   "country": "EU"
   },
   {
-   "key": "magnoliatcgexchange",
-   "name": "Magnolia TCG Exchange",
-   "base": "https://magnoliatcgexchange.com",
-   "country": "US"
+   "key": "tsukicenter",
+   "name": "Tsuki Center",
+   "base": "https://tsukicenter.com",
+   "country": "EU"
   },
   {
-   "key": "mainephasehobbies",
-   "name": "Maine Phase Hobbies & Games",
-   "base": "https://mainephasehobbies.com",
-   "country": "US"
+   "key": "underpaidcollectibles",
+   "name": "Underpaid Collectibles",
+   "base": "https://underpaidcollectibles.com",
+   "country": "EU"
   },
   {
-   "key": "manathril",
-   "name": "Manathril Cards and Collectibles",
-   "base": "https://manathril.com",
-   "country": "US"
+   "key": "varietycards",
+   "name": "Variety Cards",
+   "base": "https://variety-cards.de",
+   "country": "EU"
   },
   {
-   "key": "mantisgamestudio",
-   "name": "Mantis Game Studio",
-   "base": "https://mantisgamestudio.com",
-   "country": "US"
+   "key": "vaultofdelights",
+   "name": "Vault of Delights",
+   "base": "https://vaultofdelights.com",
+   "country": "EU"
   },
   {
-   "key": "manyrealms",
-   "name": "Many Realms",
-   "base": "https://manyrealms.com",
-   "country": "US"
+   "key": "vegastore",
+   "name": "VegaStore",
+   "base": "https://www.vegastore.fr",
+   "country": "EU"
   },
   {
-   "key": "meeplesandbeyond",
-   "name": "Meeples & Beyond",
-   "base": "https://meeplesandbeyond.com",
-   "country": "US"
+   "key": "venturacardgames",
+   "name": "Ventura Games",
+   "base": "https://venturacardgames.com",
+   "country": "EU"
   },
   {
-   "key": "metagames",
-   "name": "MetaGames.toys",
-   "base": "https://metagames.toys",
-   "country": "US"
+   "key": "versusgamecenter",
+   "name": "Versus Gamecenter Lisboa",
+   "base": "https://versusgamecenter.pt",
+   "country": "EU"
   },
   {
-   "key": "mhdealsplus",
-   "name": "MH Deals Plus",
-   "base": "https://mhdealsplus.com",
-   "country": "US"
+   "key": "welpietoys",
+   "name": "Welpie Toys (Corio Center)",
+   "base": "https://welpietoys.nl",
+   "country": "EU"
   },
   {
-   "key": "millenniumgames",
-   "name": "Millennium Games",
-   "base": "https://shop.millenniumgames.com",
-   "country": "US"
+   "key": "yonkotcg",
+   "name": "Yonko TCG",
+   "base": "https://yonko-tcg.de",
+   "country": "EU"
   },
   {
-   "key": "mindgamesandmagic",
-   "name": "Mindgames and Magic",
-   "base": "https://mindgamesandmagic.com",
-   "country": "US"
+   "key": "zillerstore",
+   "name": "Zillerstore",
+   "base": "https://zillerstore.it",
+   "country": "EU"
   },
   {
-   "key": "miniaturemarket",
-   "name": "Miniature Market",
-   "base": "https://www.miniaturemarket.com",
-   "country": "US"
-  },
-  {
-   "key": "minmaxgames",
-   "name": "MinMaxGames",
-   "base": "https://minmaxgames.com",
-   "country": "US"
-  },
-  {
-   "key": "mintedtcg",
-   "name": "Minted TCG",
-   "base": "https://mintedtcg.com",
-   "country": "US"
-  },
-  {
-   "key": "mojobreakgaming",
-   "name": "Mojobreak Gaming",
-   "base": "https://www.mojobreakgaming.com",
-   "country": "US"
-  },
-  {
-   "key": "mojobreakshop",
-   "name": "Mojobreak Shop",
-   "base": "https://mojobreakshop.com",
-   "country": "US"
-  },
-  {
-   "key": "moonshotgamestore",
-   "name": "Moonshot Games",
-   "base": "https://moonshotgamestore.com",
-   "country": "US"
-  },
-  {
-   "key": "mothershipatx",
-   "name": "Mothership Books and Games - Austin",
-   "base": "https://store.mothershipatx.com",
-   "country": "US"
-  },
-  {
-   "key": "motorcitygaming",
-   "name": "Motor City Gaming",
-   "base": "https://motorcitygaming.net",
-   "country": "US"
-  },
-  {
-   "key": "moxboardinghouse",
-   "name": "Mox Boarding House",
-   "base": "https://moxboardinghouse.com",
-   "country": "US"
-  },
-  {
-   "key": "moxiecardshop",
-   "name": "Moxie Card Shop",
-   "base": "https://moxiecardshop.com",
-   "country": "US"
-  },
-  {
-   "key": "moxvalleygames",
-   "name": "Mox Valley Games",
-   "base": "https://moxvalleygames.com",
-   "country": "US"
-  },
-  {
-   "key": "mymintcards",
-   "name": "Mint Cards & Collectibles",
-   "base": "https://mymintcards.com",
-   "country": "US"
-  },
-  {
-   "key": "mysterymtg",
-   "name": "Mystery MTG",
-   "base": "https://mysterymtg.com",
-   "country": "US"
-  },
-  {
-   "key": "mystictcg",
-   "name": "Mystic TCG",
-   "base": "https://mystictcg.com",
-   "country": "US"
-  },
-  {
-   "key": "mythicforgegames",
-   "name": "Mythic Forge Gaming",
-   "base": "https://mythicforgegames.com",
-   "country": "US"
-  },
-  {
-   "key": "mythichobbies",
-   "name": "Mythic Hobbies",
-   "base": "https://mythic-hobbies.com",
-   "country": "US"
-  },
-  {
-   "key": "mythicstoreus",
-   "name": "The Mythic Store",
-   "base": "https://themythicstore.com",
-   "country": "US"
-  },
-  {
-   "key": "n4ytcg",
-   "name": "N4YTCG",
-   "base": "https://www.n4ytcg.com",
-   "country": "US"
-  },
-  {
-   "key": "nerdzoic",
-   "name": "Nerdzoic",
-   "base": "https://nerdzoic.com",
-   "country": "US"
-  },
-  {
-   "key": "nexusentertainment",
-   "name": "Nexus Entertainment",
-   "base": "https://nexus-entertainment.com",
-   "country": "US"
-  },
-  {
-   "key": "nexuslgs",
-   "name": "NEXUS Games & Collectibles",
-   "base": "https://nexuslgs.com",
-   "country": "US"
-  },
-  {
-   "key": "nexustabletopgames",
-   "name": "Nexus Tabletop Games",
-   "base": "https://nexustabletopgames.com",
-   "country": "US"
-  },
-  {
-   "key": "nolatcg",
-   "name": "NOLA TCG Experience",
-   "base": "https://nolatcg.com",
-   "country": "US"
-  },
-  {
-   "key": "northeastgamesandhobbies",
-   "name": "Northeast Games & Hobbies",
-   "base": "https://northeastgamesandhobbies.com",
-   "country": "US"
-  },
-  {
-   "key": "northwestcardcompany",
-   "name": "Northwest Card Company",
-   "base": "https://northwestcardco.com",
-   "country": "US"
-  },
-  {
-   "key": "novabreak",
-   "name": "NovaBreak",
-   "base": "https://novabreak.com",
-   "country": "US"
-  },
-  {
-   "key": "npcollectiblesus",
-   "name": "NP Collectibles",
-   "base": "https://npcollectibles.com",
-   "country": "US"
-  },
-  {
-   "key": "nutmeggames",
-   "name": "Nutmeg Games",
-   "base": "https://nutmeggames.com",
-   "country": "US"
-  },
-  {
-   "key": "nxtlegacigaming",
-   "name": "Nxt Legaci Gaming",
-   "base": "https://nxtlegacigaming.com",
-   "country": "US"
-  },
-  {
-   "key": "oldschoolgamesandcards",
-   "name": "Old School Games and Cards",
-   "base": "https://oldschoolgamesandcards.com",
-   "country": "US"
-  },
-  {
-   "key": "onboardgaming",
-   "name": "On-Board Gaming",
-   "base": "https://on-boardgaming.com",
-   "country": "US"
-  },
-  {
-   "key": "onestoptcg",
-   "name": "OneStopTCG",
-   "base": "https://onestoptcg.com",
-   "country": "US"
-  },
-  {
-   "key": "overthebrick",
-   "name": "Over the Brick",
-   "base": "https://overthebrick.com",
-   "country": "US"
-  },
-  {
-   "key": "pandemoniumbooks",
-   "name": "Pandemonium Books and Games",
-   "base": "https://pandemoniumbooks.com",
-   "country": "US"
-  },
-  {
-   "key": "papajoeys",
-   "name": "Papa Joey's Collectibles",
-   "base": "https://papajoeys.com",
-   "country": "US"
-  },
-  {
-   "key": "paragoncity",
-   "name": "Paragon City Games",
-   "base": "https://paragoncity.shop",
-   "country": "US"
-  },
-  {
-   "key": "patsgames",
-   "name": "Pat's Games",
-   "base": "https://patsgames.com",
-   "country": "US"
-  },
-  {
-   "key": "pcatoys",
-   "name": "PCA Designer Toys",
-   "base": "https://pcatoys.com",
-   "country": "US"
-  },
-  {
-   "key": "phantasma",
-   "name": "Phantasma",
-   "base": "https://phantasmalv.com",
-   "country": "US"
-  },
-  {
-   "key": "phantomcardshop",
-   "name": "Phantom Card Shop",
-   "base": "https://phantomcardshop.com",
-   "country": "US"
-  },
-  {
-   "key": "phantomich",
-   "name": "Phantomich",
-   "base": "https://phantomich.com",
-   "country": "US"
-  },
-  {
-   "key": "phatcatzgaming",
-   "name": "Phat Catz Gaming",
-   "base": "https://phatcatzgaming.com",
-   "country": "US"
-  },
-  {
-   "key": "phillytcg",
-   "name": "Philly TCG",
-   "base": "https://phillytcg.com",
-   "country": "US"
-  },
-  {
-   "key": "phoenixcomicsandgames",
-   "name": "Phoenix Comics and Games",
-   "base": "https://shop.phoenixseattle.com",
-   "country": "US"
-  },
-  {
-   "key": "pieceofthegame",
-   "name": "Piece Of The Game",
-   "base": "https://shoppieceofthegame.com",
-   "country": "US"
-  },
-  {
-   "key": "pixelthattcg",
-   "name": "PixelThat TCG",
-   "base": "https://pixelthattcg.com",
-   "country": "US"
-  },
-  {
-   "key": "playhoboken",
-   "name": "Play! Hoboken",
-   "base": "https://playhoboken.com",
-   "country": "US"
-  },
-  {
-   "key": "playontcg",
-   "name": "Playontcg",
-   "base": "https://playontcg.com",
-   "country": "US"
-  },
-  {
-   "key": "pokeboxusa",
-   "name": "PokeBox USA",
-   "base": "https://www.pokeboxusa.com",
-   "country": "US"
-  },
-  {
-   "key": "pokecollect",
-   "name": "Poke-Collect",
-   "base": "https://poke-collect.com",
-   "country": "US"
-  },
-  {
-   "key": "pokemonplug",
-   "name": "Pokemon Plug",
-   "base": "https://pokemonplug.com",
-   "country": "US"
-  },
-  {
-   "key": "portalsshop",
-   "name": "Portals Games & Comics - Easton",
-   "base": "https://portalsshop.com",
-   "country": "US"
-  },
-  {
-   "key": "primepulltcg",
-   "name": "Primepull TCG",
-   "base": "https://primepulltcg.com",
-   "country": "US"
-  },
-  {
-   "key": "prodigygames",
-   "name": "Prodigy Games",
-   "base": "https://prodigy-games.myshopify.com",
-   "country": "US"
-  },
-  {
-   "key": "progressccg",
-   "name": "Progress CCG",
-   "base": "https://progressccg.com",
-   "country": "US"
-  },
-  {
-   "key": "projectccg",
-   "name": "ProjectCCG",
-   "base": "https://projectccg.com",
-   "country": "US"
-  },
-  {
-   "key": "prosoulgames",
-   "name": "ProSoul Games",
-   "base": "https://prosoulgames.com",
-   "country": "US"
-  },
-  {
-   "key": "psychoturtlegames",
-   "name": "Psycho Turtle Collectibles",
-   "base": "https://psychoturtlegames.com",
-   "country": "US"
-  },
-  {
-   "key": "pullbighits",
-   "name": "Do Big Things Collectibles",
-   "base": "https://www.pullbighits.com",
-   "country": "US"
-  },
-  {
-   "key": "punkouter",
-   "name": "PunkOuter Games",
-   "base": "https://punkouter.com",
-   "country": "US"
-  },
-  {
-   "key": "puzzledgamer",
-   "name": "Puzzled Gamer",
-   "base": "https://puzzledgamer.com",
-   "country": "US"
-  },
-  {
-   "key": "quicktcg",
-   "name": "QuickTCG",
-   "base": "https://quicktcg.com",
-   "country": "US"
-  },
-  {
-   "key": "rawmon",
-   "name": "Rawmon",
-   "base": "https://rawmon.org",
-   "country": "US"
-  },
-  {
-   "key": "razzocards",
-   "name": "Razzo Cards",
-   "base": "https://razzocards.com",
-   "country": "US"
-  },
-  {
-   "key": "realgoodeal",
-   "name": "Realgoodeal",
-   "base": "https://realgoodeal.com",
-   "country": "US"
-  },
-  {
-   "key": "reapergamestore",
-   "name": "Reaper Game Store",
-   "base": "https://reapergamestore.com",
-   "country": "US"
-  },
-  {
-   "key": "recessgames",
-   "name": "Recess Games",
-   "base": "https://recessgames.com",
-   "country": "US"
-  },
-  {
-   "key": "redemptioncards",
-   "name": "Redemption Cards",
-   "base": "https://redemptioncards.com",
-   "country": "US"
-  },
-  {
-   "key": "redfoxgamingonline",
-   "name": "Red Fox Gaming",
-   "base": "https://redfoxgamingonline.com",
-   "country": "US"
-  },
-  {
-   "key": "redraccoongames",
-   "name": "Red Raccoon Games",
-   "base": "https://redraccoongames.com",
-   "country": "US"
-  },
-  {
-   "key": "retrofixgames",
-   "name": "Retrofix Games",
-   "base": "https://retrofixgames.com",
-   "country": "US"
-  },
-  {
-   "key": "retrogamingofdenver",
-   "name": "Retro Gaming of Denver",
-   "base": "https://retrogamingofdenver.com",
-   "country": "US"
-  },
-  {
-   "key": "revcollectibles",
-   "name": "R.E.V. Collectibles",
-   "base": "https://revcollectibles.com",
-   "country": "US"
-  },
-  {
-   "key": "riftgate",
-   "name": "Riftgate",
-   "base": "https://riftgate.com",
-   "country": "US"
-  },
-  {
-   "key": "robohunters",
-   "name": "Robo Hunters",
-   "base": "https://robohunters.com",
-   "country": "US"
-  },
-  {
-   "key": "roboskillz",
-   "name": "RoboSkillz (BallSquad Shop)",
-   "base": "https://www.roboskillz.com",
-   "country": "US"
-  },
-  {
-   "key": "rocketcitytoys",
-   "name": "Rocket City Toys",
-   "base": "https://rocketcitytoys.com",
-   "country": "US"
-  },
-  {
-   "key": "safarizone",
-   "name": "Safari Zone Collectibles",
-   "base": "https://safari-zone.com",
-   "country": "US"
-  },
-  {
-   "key": "sagaconcepts",
-   "name": "Saga Concepts",
-   "base": "https://sagaconcepts.com",
-   "country": "US"
-  },
-  {
-   "key": "saltcitygames",
-   "name": "Salt City Games",
-   "base": "https://saltcitygames.shop",
-   "country": "US"
-  },
-  {
-   "key": "shallweplaygames",
-   "name": "Shall We Play? The Games and More Store",
-   "base": "https://shallweplaygames.com",
-   "country": "US"
-  },
-  {
-   "key": "shippintexas",
-   "name": "Shippin Texas",
-   "base": "https://shippintexas.com",
-   "country": "US"
-  },
-  {
-   "key": "shop2",
-   "name": "Four Horsemen Comics and Gaming of Morgantown",
-   "base": "https://shop.fourhorsemencomics.com",
-   "country": "US"
-  },
-  {
-   "key": "shopjdc",
-   "name": "JD Collectibles",
-   "base": "https://www.shopjdc.com",
-   "country": "US"
-  },
-  {
-   "key": "shufflenroll",
-   "name": "Shuffle N Roll",
-   "base": "https://shufflenroll.com",
-   "country": "US"
-  },
-  {
-   "key": "skyboxct",
-   "name": "Skybox Collectibles",
-   "base": "https://skyboxct.com",
-   "country": "US"
-  },
-  {
-   "key": "sleevedupcollectibles",
-   "name": "Sleeved Up Collectibles",
-   "base": "https://sleevedupcollectibles.com",
-   "country": "US"
-  },
-  {
-   "key": "smokeandmirrorshobby",
-   "name": "Smoke and Mirrors Hobby",
-   "base": "https://www.smokeandmirrorshobby.com",
-   "country": "US"
-  },
-  {
-   "key": "solacido",
-   "name": "Solacido",
-   "base": "https://solacido.com",
-   "country": "US"
-  },
-  {
-   "key": "spacecoast",
-   "name": "Space Coast Games",
-   "base": "https://spacecoast.games",
-   "country": "US"
-  },
-  {
-   "key": "spankyscardshop",
-   "name": "Spanky's Card Shop",
-   "base": "https://spankyscardshop.com",
-   "country": "US"
-  },
-  {
-   "key": "spankyslootstash",
-   "name": "Spanky's Loot Stash",
-   "base": "https://www.spankyslootstash.com",
-   "country": "US"
-  },
-  {
-   "key": "sparkstradingcards",
-   "name": "Sparks Trading Cards",
-   "base": "https://sparkstradingcards.com",
-   "country": "US"
-  },
-  {
-   "key": "spellcastersstash",
-   "name": "Spellcasters Stash",
-   "base": "https://spellcastersstash.com",
-   "country": "US"
-  },
-  {
-   "key": "spiedagames",
-   "name": "Spieda Games",
-   "base": "https://spiedagames.com",
-   "country": "US"
-  },
-  {
-   "key": "stateofcomics",
-   "name": "State of Comics",
-   "base": "https://stateofcomics.com",
-   "country": "US"
-  },
-  {
-   "key": "stevensongames",
-   "name": "Stevenson Games",
-   "base": "https://stevensongames.com",
-   "country": "US"
-  },
-  {
-   "key": "stgcards",
-   "name": "STG Cards and Collectables",
-   "base": "https://stgcards.com",
-   "country": "US"
-  },
-  {
-   "key": "stompinggroundstcg",
-   "name": "Stomping Grounds TCG",
-   "base": "https://singles.stompinggroundstcg.com",
-   "country": "US"
-  },
-  {
-   "key": "stompinggroundstcgus",
-   "name": "Stomping Grounds",
-   "base": "https://stompinggroundstcg.com",
-   "country": "US"
-  },
-  {
-   "key": "stonebrookcollectibles",
-   "name": "Stonebrook Collectibles",
-   "base": "https://stonebrookcollectibles.com",
-   "country": "US"
-  },
-  {
-   "key": "sunnyscardshop",
-   "name": "Sunny's Card Shop",
-   "base": "https://sunnyscardshop.myshopify.com",
-   "country": "US"
-  },
-  {
-   "key": "superanimestore",
-   "name": "Super Anime Store",
-   "base": "https://superanimestore.com",
-   "country": "US"
-  },
-  {
-   "key": "superkocards",
-   "name": "SuperKo Cards",
-   "base": "https://superkocards.com",
-   "country": "US"
-  },
-  {
-   "key": "svsportscards",
-   "name": "Spokane Valley Sports and Trading Cards",
-   "base": "https://svsportscards.com",
-   "country": "US"
-  },
-  {
-   "key": "sweetsandgeeks",
-   "name": "Sweets and Geeks",
-   "base": "https://sweetsandgeeks.com",
-   "country": "US"
-  },
-  {
-   "key": "swordsandspoons",
-   "name": "Swords and Spoons",
-   "base": "https://swordsandspoons.com",
-   "country": "US"
-  },
-  {
-   "key": "sydequest",
-   "name": "Sydequest Games LLC",
-   "base": "https://sydequest.games",
-   "country": "US"
-  },
-  {
-   "key": "syndicategames",
-   "name": "The Syndicate by Magic Buff",
-   "base": "https://syndicategames.store",
-   "country": "US"
-  },
-  {
-   "key": "tabletcg",
-   "name": "Tabletop Cards and Games",
-   "base": "https://tabletcg.com",
-   "country": "US"
-  },
-  {
-   "key": "tcgguy",
-   "name": "tcgguy",
-   "base": "https://tcgguy.com",
-   "country": "US"
-  },
-  {
-   "key": "tcghobby",
-   "name": "TCG Hobby",
-   "base": "https://www.tcghobby.com",
-   "country": "US"
-  },
-  {
-   "key": "tcghubandhobbies",
-   "name": "tcghubandhobbies",
-   "base": "https://tcghubandhobbies.com",
-   "country": "US"
-  },
-  {
-   "key": "tcgom",
-   "name": "tcgom",
-   "base": "https://tcgom.com",
-   "country": "US"
-  },
-  {
-   "key": "tcwarroom",
-   "name": "TC War Room",
-   "base": "https://tc-warroom.com",
-   "country": "US"
-  },
-  {
-   "key": "theapollosvault",
-   "name": "Apollo's Vault",
-   "base": "https://theapollosvault.com",
-   "country": "US"
-  },
-  {
-   "key": "thebanditshideout",
-   "name": "Bandits Hideout",
-   "base": "https://thebanditshideout.com",
-   "country": "US"
-  },
-  {
-   "key": "thecardboardbros",
-   "name": "The Cardboard Bros",
-   "base": "https://thecardboardbros.com",
-   "country": "US"
-  },
-  {
-   "key": "theclubhousecards",
-   "name": "ClubhouseCards",
-   "base": "https://theclubhousecards.com",
-   "country": "US"
-  },
-  {
-   "key": "thecollectionrealm",
-   "name": "The Collection Realm",
-   "base": "https://thecollectionrealm.com",
-   "country": "US"
-  },
-  {
-   "key": "thefourthplace",
-   "name": "The Fourth Place",
-   "base": "https://thefourthplaceforgeeks.com",
-   "country": "US"
-  },
-  {
-   "key": "thegamecornergames",
-   "name": "The Game Corner",
-   "base": "https://www.thegamecornergames.com",
-   "country": "US"
-  },
-  {
-   "key": "thegamestore",
-   "name": "The Game Store",
-   "base": "https://thegamestore.com",
-   "country": "US"
-  },
-  {
-   "key": "theguardtower",
-   "name": "The Guardtower",
-   "base": "https://theguardtower.com",
-   "country": "US"
-  },
-  {
-   "key": "thehobhub",
-   "name": "The Hobby Hub",
-   "base": "https://thehobhub.com",
-   "country": "US"
-  },
-  {
-   "key": "thehubtcg",
-   "name": "The Hub TCG",
-   "base": "https://thehubtcg.com",
-   "country": "US"
-  },
-  {
-   "key": "thehyperiongames",
-   "name": "Hyperion Games",
-   "base": "https://thehyperiongames.com",
-   "country": "US"
-  },
-  {
-   "key": "thekavecollectibles",
-   "name": "The Kave Collectibles",
-   "base": "https://thekavecollectibles.com",
-   "country": "US"
-  },
-  {
-   "key": "themightyhobby",
-   "name": "The Mighty Hobby LLC",
-   "base": "https://themightyhobby.com",
-   "country": "US"
-  },
-  {
-   "key": "thenerdmerchant",
-   "name": "The Nerd Merchant",
-   "base": "https://thenerdmerchant.com",
-   "country": "US"
-  },
-  {
-   "key": "theperkcards",
-   "name": "The Perk",
-   "base": "https://theperkcards.com",
-   "country": "US"
-  },
-  {
-   "key": "theplatypusparty",
-   "name": "The Platypus Party Card Shop",
-   "base": "https://theplatypusparty.myshopify.com",
-   "country": "US"
-  },
-  {
-   "key": "thepokehive",
-   "name": "TheHiveHQ",
-   "base": "https://thepokehive.com",
-   "country": "US"
-  },
-  {
-   "key": "thepokestops",
-   "name": "Pokestops",
-   "base": "https://thepokestops.com",
-   "country": "US"
-  },
-  {
-   "key": "theportalcomicsandgaming",
-   "name": "The Portal Comics and Gaming",
-   "base": "https://theportalcomicsandgaming.com",
-   "country": "US"
-  },
-  {
-   "key": "theshopcollectibles",
-   "name": "The Shop Collectibles LLC",
-   "base": "https://theshopcollectibles.com",
-   "country": "US"
-  },
-  {
-   "key": "thesportsroom",
-   "name": "The SportsRoom",
-   "base": "https://thesportsroompdx.com",
-   "country": "US"
-  },
-  {
-   "key": "thesportsshaq",
-   "name": "The Sports Shaq",
-   "base": "https://thesportsshaq.com",
-   "country": "US"
-  },
-  {
-   "key": "thetoytemple",
-   "name": "Toy Temple",
-   "base": "https://thetoytemple.com",
-   "country": "US"
-  },
-  {
-   "key": "thetrainercourt",
-   "name": "The Trainer Court",
-   "base": "https://www.thetrainercourt.com",
-   "country": "US"
-  },
-  {
-   "key": "thewarpgate",
-   "name": "The Warp Gate",
-   "base": "https://thewarpgate.net",
-   "country": "US"
-  },
-  {
-   "key": "threewstcg",
-   "name": "Three Ws TCG & More",
-   "base": "https://threewstcg.com",
-   "country": "US"
-  },
-  {
-   "key": "tier1games",
-   "name": "Tier 1 Games",
-   "base": "https://tier1games.com",
-   "country": "US"
-  },
-  {
-   "key": "timetravelersonline",
-   "name": "Time Travelers Online",
-   "base": "https://timetravelersonline.com",
-   "country": "US"
-  },
-  {
-   "key": "tofustrading",
-   "name": "Tofu's Trading",
-   "base": "https://tofustrading.com",
-   "country": "US"
-  },
-  {
-   "key": "tokenmtg",
-   "name": "TokenMTG",
-   "base": "https://tokenmtg.com",
-   "country": "US"
-  },
-  {
-   "key": "topcutcomics",
-   "name": "Top Cut Comics",
-   "base": "https://topcutcomics.com",
-   "country": "US"
-  },
-  {
-   "key": "topspot",
-   "name": "Topspot Cards",
-   "base": "https://topspot.cards",
-   "country": "US"
-  },
-  {
-   "key": "totalescapegames",
-   "name": "Total Escape Games",
-   "base": "https://totalescapegames.com",
-   "country": "US"
-  },
-  {
-   "key": "tothetable",
-   "name": "To The Table Board Game Cafe",
-   "base": "https://tothetable.game",
-   "country": "US"
-  },
-  {
-   "key": "toynadoalley",
-   "name": "Toynado Alley, LLC",
-   "base": "https://toynadoalley.com",
-   "country": "US"
-  },
-  {
-   "key": "trademarksportscards",
-   "name": "Trademark Cards and Collectibles",
-   "base": "https://trademarksportscards.com",
-   "country": "US"
-  },
-  {
-   "key": "tradeshop",
-   "name": "Trade Shop",
-   "base": "https://tradeshop.com",
-   "country": "US"
-  },
-  {
-   "key": "tradingcardmarket",
-   "name": "Trading Card Market",
-   "base": "https://tradingcardmarket.com",
-   "country": "US"
-  },
-  {
-   "key": "tradingcardmint",
-   "name": "Forever After Antiques and Collectibles Inc",
-   "base": "https://tradingcardmint.com",
-   "country": "US"
-  },
-  {
-   "key": "tradingcardworld",
-   "name": "Trading Card World",
-   "base": "https://tradingcardworld.store",
-   "country": "US"
-  },
-  {
-   "key": "triadgroup",
-   "name": "Triad Cards and Gaming",
-   "base": "https://triadgroup.shop",
-   "country": "US"
-  },
-  {
-   "key": "troveofcollectibles",
-   "name": "Trove of Collectibles",
-   "base": "https://troveofcollectibles.com",
-   "country": "US"
-  },
-  {
-   "key": "twopaircollectibles",
-   "name": "Two Pair Collectibles RFT",
-   "base": "https://twopaircollectibles.com",
-   "country": "US"
-  },
-  {
-   "key": "ultimasupply",
-   "name": "Ultima Supply",
-   "base": "https://ultimasupply.com",
-   "country": "US"
-  },
-  {
-   "key": "underhillgaming",
-   "name": "Underhill Gaming",
-   "base": "https://underhillgaming.myshopify.com",
-   "country": "US"
-  },
-  {
-   "key": "undiscoveredrealm",
-   "name": "Undiscovered Realm",
-   "base": "https://undiscoveredrealm.com",
-   "country": "US"
-  },
-  {
-   "key": "unpluggedgamestore",
-   "name": "Unplugged Gaming",
-   "base": "https://unpluggedgamestore.com",
-   "country": "US"
-  },
-  {
-   "key": "untappedmarket",
-   "name": "Untapped Market",
-   "base": "https://untappedmarket.games",
-   "country": "US"
-  },
-  {
-   "key": "uppercrust",
-   "name": "Upper Crust Games",
-   "base": "https://uppercrust.games",
-   "country": "US"
-  },
-  {
-   "key": "us",
-   "name": "Devastation Store Miami",
-   "base": "https://us.storedevastation.com",
-   "country": "US"
-  },
-  {
-   "key": "vaultedcardclub",
-   "name": "Vaulted Card Club",
-   "base": "https://vaultedcardclub.com",
-   "country": "US"
-  },
-  {
-   "key": "vaultgamestore",
-   "name": "The Vault Game Store",
-   "base": "https://vaultgamestore.com",
-   "country": "US"
-  },
-  {
-   "key": "vegassingles",
-   "name": "Vegas Singles",
-   "base": "https://vegas.singles",
-   "country": "US"
-  },
-  {
-   "key": "vgmx",
-   "name": "VGMX",
-   "base": "https://vgmx.com",
-   "country": "US"
-  },
-  {
-   "key": "victorypointlgs",
-   "name": "Victory Point Games",
-   "base": "https://victorypointlgs.com",
-   "country": "US"
-  },
-  {
-   "key": "videogametrader",
-   "name": "Video Game Trader LLC",
-   "base": "https://videogametrader.com",
-   "country": "US"
-  },
-  {
-   "key": "vrarestore",
-   "name": "vrarestore",
-   "base": "https://vrarestore.com",
-   "country": "US"
-  },
-  {
-   "key": "wargamesusa",
-   "name": "War Games USA",
-   "base": "https://www.wargamesusa.com",
-   "country": "US"
-  },
-  {
-   "key": "watsontcg",
-   "name": "WatsonTCG",
-   "base": "https://watsontcg.com",
-   "country": "US"
-  },
-  {
-   "key": "waywardcitygames",
-   "name": "Wayward City Games",
-   "base": "https://waywardcitygames.net",
-   "country": "US"
-  },
-  {
-   "key": "wegeektogether",
-   "name": "We Geek Together",
-   "base": "https://wegeektogether.com",
-   "country": "US"
-  },
-  {
-   "key": "wildcardcyclone",
-   "name": "WildCardCyclone",
-   "base": "https://wildcardcyclone.com",
-   "country": "US"
-  },
-  {
-   "key": "wilsontradingcardco",
-   "name": "Wilson Trading Card Co.",
-   "base": "https://wilsontradingcardco.com",
-   "country": "US"
-  },
-  {
-   "key": "wolcowgaming",
-   "name": "wolcow gaming",
-   "base": "https://wolcowgaming.com",
-   "country": "US"
-  },
-  {
-   "key": "wolfdentcg",
-   "name": "Wolf Den Gaming",
-   "base": "https://wolfdentcg.com",
-   "country": "US"
-  },
-  {
-   "key": "wulfgaming",
-   "name": "Wulf Gaming",
-   "base": "https://wulfgaming.com",
-   "country": "US"
-  },
-  {
-   "key": "wyattswarehouse",
-   "name": "Wyatts Collectibles LLC",
-   "base": "https://wyattswarehouse.com",
-   "country": "US"
-  },
-  {
-   "key": "xraygamestcg",
-   "name": "X-Ray Games",
-   "base": "https://xraygamestcg.com",
-   "country": "US"
-  },
-  {
-   "key": "zamliytcg",
-   "name": "Zamliy TCG",
-   "base": "https://zamliytcg.com",
-   "country": "US"
-  },
-  {
-   "key": "zcgamestcg",
-   "name": "ZCGames",
-   "base": "https://zcgamestcg.com",
-   "country": "US"
-  },
-  {
-   "key": "zenintcg",
-   "name": "ZeninTCG",
-   "base": "https://zenintcg.com",
-   "country": "US"
-  },
-  {
-   "key": "zenithgg",
-   "name": "Zenith GG",
-   "base": "https://zenithgg.com",
-   "country": "US"
-  },
-  {
-   "key": "zenithtcg",
-   "name": "Zenith TCG",
-   "base": "https://zenithtcg.com",
-   "country": "US"
-  },
-  {
-   "key": "zeroedingames",
-   "name": "Zeroed In Games",
-   "base": "https://zeroedingames.com",
-   "country": "US"
-  },
-  {
-   "key": "zulusgames",
-   "name": "Zulus Games",
-   "base": "https://zulusgames.com",
-   "country": "US"
+   "key": "zukacards",
+   "name": "ZukaCards",
+   "base": "https://zukacards.com",
+   "country": "EU"
   }
  ]
 }
