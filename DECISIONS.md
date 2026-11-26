@@ -25860,3 +25860,20 @@ section's uniform postage placeholder until the shipping probe measures them. 33
 **Also:** `scripts/eu-shop-directory.ts` (`eu-shop-directory.yml`, read-only) lists which shops in UVS Games' official
 Riftbound retailer registry run Shopify in EUR, and which games their collections name, to seed every card site's probe.
 Research workflows on a `claude/**` branch now commit their result there (artifacts can't be read from a session).
+
+## 2026-11-26 — One group for the Secret Garden Bundle
+
+**Found:** the page scorecard (23 Nov) listed `/blog/riftbound-secret-garden-bundle` as a FIX page (208 impressions in
+28 days to 23 Nov, position 9.6, no click; `gsc-queries` run 45761742671). The post still said the bundle "will never
+appear on our sealed comparison", but resellers list it now, and the 25 Nov export had it on FOUR pages: TCGplayer's
+`secretgardenbox` (with one eBay row), Cardmarket's "Secret Garden Box Set" (EU), Tier Zero's "… Gift Box Set - Event
+Exclusive Sealed" (UK) and, because two titles say "Unleashed" (its three boosters), `UNL|Bundle`: SpellNexus EUR 350
+and eBay US$229 beside a real Unleashed Bundle.
+
+**Now:** `SET_LESS_GROUPS` files any "secret garden" title saying bundle or box under TCGplayer's key `secretgardenbox`
+(its URL stays; a case, a lot or several boxes keeps its own page), as Gift of the Rift since 2026-11-19. Over the
+export exactly those 6 rows match and 4 move. The old title slugs 301 (`setLessSlugRedirect`). The eBay sealed pass also
+refuses a result whose title names a set-less product when it answers another group's search (`misfiledSetLess`), so it
+no longer sits on the Unleashed Bundle page until the cleanup runs. The post's SEO title leads with the price, its
+summary and body link the price page, and the September claim is corrected in a dated note; its 25 Nov numbers
+(TCGplayer US$230, Cardmarket from EUR 69.98) are the export's, not estimates.
