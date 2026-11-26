@@ -69,7 +69,7 @@ jobs:
           path: store-candidates.json
           retention-days: 30
       - name: Keep the result on a claude/** branch
-        if: always() && startsWith(github.ref_name, 'claude/')
+        if: always() && github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'claude/')
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898+github-actions[bot]@users.noreply.github.com"

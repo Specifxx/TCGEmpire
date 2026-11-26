@@ -25878,6 +25878,34 @@ no longer sits on the Unleashed Bundle page until the cleanup runs. The post's S
 summary and body link the price page, and the September claim is corrected in a dated note; its 25 Nov numbers
 (TCGplayer US$230, Cardmarket from EUR 69.98) are the export's, not estimates.
 
+## 2026-11-26 — Priced overnumbered cards say "Price" in the title; facet pages lead with a price table
+
+**Why (Search Recovery, Rift plan items 2 and 3):** Search Console, 28 days to 23 Nov: overnumbered card pages sat at
+position 4 to 10 for exactly their title's words ("kayn overnumbered" 48 impressions at 6.3, "pyke overnumbered" 68 at
+9.5, "renekton overnumber" 54 at 5.4, "ksante overnumber" 52 at 4.9) with 0 clicks across about 1,000 impressions. Their
+titles read "Kayn Overnumbered — Riftbound RAD 182/167": the ladder shed "Price" only to fit " | RiftCompare", a suffix the
+page has not rendered since 2026-10-23.
+
+**Now:** `cardTitle` returns `<short name> Overnumbered Price — Riftbound <set> <number>` for a priced overnumbered printing
+when it fits 60 on its own (all 108 do). Unpriced ones never say "Price". The collector number keeps it unique. Base cards
+already had this rule; signatures already say "Price". Other printings are unchanged. The same day, `FacetPageBody` puts a
+table of the 10 most valuable priced cards above the grid (#664).
+
+**Read:** clicks and CTR on `/card/*` overnumbered pages, 3 to 9 Dec against 16 to 22 Nov.
+
+## 2026-11-26 — Hot, cold and expired on Sealed Sniper drops (deal board, phase one)
+
+**Asked:** the COO's OzBargain study (move 1): let visitors vote a Sealed Sniper drop hot or cold and flag it expired, on
+TCG Prices first, stored here, as phase one of a TCG deal board. No sign-in, no raw IP, inline on the drop card, no prompt.
+
+**Now:** `DealVote` (private, never in `PUBLIC_MODELS`) holds one row per site, drop and visitor, where the visitor is an
+HMAC of IP + user agent under a key derived from `AUTH_SECRET` (`lib/deal-votes.ts`): the address is never stored. A
+second tap undoes a vote; hot and cold exclude each other; the expired flag is separate. `/api/deal-votes` takes votes
+only from the sites in `DEAL_VOTE_SITES` (exact origins, 30 a minute per address) and answers with that drop's fresh
+tally; its GET is one bounded `groupBy` over at most 60 drops, cached by the CDN for six hours (the route floor), so a
+board costs at most four reads a day per set of drops. Votes order nothing: no price, store row, alert or drop changes.
+A vote is a tap with no text and no address, so it is not an inbox item and does not call `notifyOwnerBounded`.
+
 ## 2026-11-26 — Stray files stay out of pull requests
 
 **Found:** threads share one `claude/*` branch name per repository, and several workflows commit their output to the

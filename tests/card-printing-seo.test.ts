@@ -80,7 +80,7 @@ test("a Signature card's title fits, and keeps the short name, the printing and 
   }
 });
 
-test("a long Overnumbered name needs the last rung — the one that drops 'Price'", () => {
+test("a priced Overnumbered card says the searcher's phrase, then Price (2026-11-26)", () => {
   const title = cardTitle({
     name: "Akali, Rogue Assassin",
     displayName: "Akali, Rogue Assassin (Overnumbered)",
@@ -91,13 +91,27 @@ test("a long Overnumbered name needs the last rung — the one that drops 'Price
     type: "Legend",
     credentials: ["Overnumbered"],
   });
-  assert.ok(titleFits(title), `over ${TITLE_MAX} with the suffix: ${title}`);
-  assert.match(title, /Akali Overnumbered/);
-  assert.match(title, /Riftbound/);
-  // "Akali Overnumbered Price — Riftbound VEN 189/166" is 62 with the suffix, so
-  // the fitting rung is the one without "Price". Losing that word costs less than
-  // losing "Riftbound" or the collector number, which is what used to happen.
+  // The query is "akali overnumbered"; the page renders no suffix since 2026-10-23, so
+  // "Price" fits 60 and is no longer shed (Search Recovery: overnumbered pages at
+  // position 4-10 with 0 clicks under the Price-less title).
+  assert.equal(title, "Akali Overnumbered Price — Riftbound VEN 189/166");
+  assert.ok(title.length <= TITLE_MAX);
+});
+
+test("an unpriced Overnumbered card still never promises a price", () => {
+  const title = cardTitle({
+    name: "Akali, Rogue Assassin",
+    displayName: "Akali, Rogue Assassin (Overnumbered)",
+    setName: "Vendetta",
+    identCode: "VEN 189/166",
+    hasPrice: false,
+    kind: "overnumbered",
+    type: "Legend",
+    credentials: ["Overnumbered"],
+  });
   assert.doesNotMatch(title, /Price/);
+  assert.match(title, /Akali/);
+  assert.match(title, /VEN 189\/166/);
 });
 
 test("base cards keep byte-identical titles — ~1,200 pages must not move", () => {

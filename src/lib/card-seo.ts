@@ -204,6 +204,18 @@ export function cardTitle(input: CardTitleInput): string {
   // about length, so it must not decide the overflow case. Ties keep the earlier
   // rung, so this changes nothing for any card that has a fitting candidate.
   const chosen = ladder.find(titleFits) ?? ladder.reduce((a, b) => (b.length < a.length ? b : a));
+  // Overnumbered printings too (Search Recovery, 2026-11-26). The 28 days to 23 Nov had them at
+  // position 4-10 for exactly their title's words ("kayn overnumbered", "pyke overnumbered",
+  // "renekton overnumber") and 0 clicks across ~1,000 impressions, under titles like
+  // "Kayn Overnumbered — Riftbound RAD 182/167": "Price" was shed only because the ladder still
+  // sizes against a suffix the page stopped rendering on 2026-10-23. The searcher's own phrase
+  // (short name + "Overnumbered") then "Price" fits 60 on its own, and the collector number keeps
+  // it unique (an overnumbered number belongs to one printing).
+  if (hasPrice && kind === "overnumbered" && !chosen.includes(" Price")) {
+    const P = input.printingWord ?? PRINTING_DISPLAY[kind];
+    const pricedShort = `${short} ${P} Price — Riftbound ${identCode}`;
+    if (pricedShort.length <= TITLE_MAX) return pricedShort;
+  }
   if (hasPrice && kind === "base" && !chosen.includes(" Price")) {
     const pricedRung = ladder.find((t) => t.includes(" Price — Riftbound ") && !t.includes("(") && t.length <= TITLE_MAX);
     if (pricedRung) return pricedRung;
