@@ -1,0 +1,31 @@
+# Eurozone shop directory (scripts/eu-shop-directory.ts): which shops in the
+# official Riftbound retailer registry run Shopify in EUR. Read-only research for
+# the store probes of every card site; it commits nothing.
+name: EU shop directory
+on:
+  workflow_dispatch: {}
+  push:
+    branches: ["claude/**"]
+    paths:
+      - scripts/eu-shop-directory.ts
+      - .github/workflows/eu-shop-directory.yml
+permissions:
+  contents: read
+jobs:
+  directory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx tsx scripts/eu-shop-directory.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eu-shop-directory
+          path: eu-shop-directory.json
+          retention-days: 30
