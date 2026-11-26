@@ -885,6 +885,27 @@ export async function storeVotes(d: OpsDeps): Promise<CheckResult> {
   return result(d, { id, area, title, severity: "ok", summary: `${votes} vote${votes === 1 ? "" : "s"} on ${stores} store${stores === 1 ? "" : "s"}.` });
 }
 
+/**
+ * Community pull rates (DECISIONS.md 2026-11-26, lib/pull-rates.ts): /pull-rates reads the one tally that
+ * /api/pulls/rates serves. Not answering JSON is a warn (the pages show Riot's odds only and logs may not
+ * save). Never crit: no price, link or buy depends on it. The summary carries the totals for the Monday read.
+ */
+export async function pullRates(d: OpsDeps): Promise<CheckResult> {
+  const id = "site:pull-rates";
+  const area: OpsArea = "site";
+  const title = "Community pull rates";
+  const r = await d.fetch(`${SITE}/api/pulls/rates`, { headers: { "User-Agent": "RiftCompareOpsMonitor/1.0" } });
+  const action = 'Open riftcompare.com/api/pulls/rates; tell Claude: "the community pull rates tally is down".';
+  if (!r.ok) return result(d, { id, area, title, severity: "warn", summary: `The tally answered HTTP ${r.status}.`, action });
+  const j = (await r.json().catch(() => null)) as { sets?: Record<string, { packs: number; logs: number; members: number; published: boolean }> } | null;
+  if (!j || typeof j.sets !== "object" || j.sets === null) return result(d, { id, area, title, severity: "warn", summary: "The tally did not answer JSON.", action });
+  const sets = Object.values(j.sets);
+  const packs = sets.reduce((n, s) => n + (s.packs ?? 0), 0);
+  const logs = sets.reduce((n, s) => n + (s.logs ?? 0), 0);
+  const live = sets.filter((s) => s.published).length;
+  return result(d, { id, area, title, severity: "ok", summary: `${logs} log${logs === 1 ? "" : "s"}, ${packs} pack${packs === 1 ? "" : "s"}; ${live} set${live === 1 ? "" : "s"} published.` });
+}
+
 export async function stripeChecks(d: OpsDeps): Promise<CheckResult[]> {
   const key = d.env.STRIPE_SECRET_KEY;
   const authTitle = "Stripe connection";
@@ -1288,6 +1309,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
   await add("deploy:production", "site", "Latest production build", () => deployState(d));
   await add("site:live", "site", "Live site", () => siteProbe(d));
   await add("site:store-votes", "site", "Store thumbs up / down (every site)", () => storeVotes(d));
+  await add("site:pull-rates", "site", "Community pull rates", () => pullRates(d));
   await add("discord:bot", "site", "Discord price bot", () => discordBot(d));
   await add("discord:members", "site", "Discord hub members", () => discordMembers(d));
   await add("partner:dexcompare", "data", "DexCompare store prices (Pokémon)", () => dexcompareIndex(d));

@@ -25966,6 +25966,38 @@ badge can check the claim, and it is the page the store would want to link anywa
 **Read:** badges live on store sites and referral visits from them, counted in the listing-backlinks tracker from the
 first send (1 to 2 Dec, November's numbers).
 
+## 2026-11-26 — Community pull rates
+
+**Asked:** move 4 of the OzBargain study (owner's thread, 26 Nov): a pull-rate tracker on the scanner, members log what a
+box or pack gave them and the site shows aggregated pull rates per set, live well before Legacy's previews (13 Dec).
+
+**Built on the pull tracker, not beside it.** `/tools/pull-tracker/<set>` (2026-10-16) already lets anyone tap their pulls,
+in their own browser. Its panel now has an "Add to the <set> pull rates" block: packs opened (1 pack / a box of 24 / any
+number to 48) and one button that sends the Epic-and-up cards already tapped. A signed-in member also gets "Scan a hit",
+which runs one photo through `/api/scan/identify` (their ordinary scan allowance; a file input, so no camera permission
+change) and adds the card when it is from that set. No pop-up and no new sign-in prompt: a signed-out visitor sees one line
+saying adding packs needs an account, under the tracker's existing save buttons (UX guard, one prompt a visit).
+
+**Storage:** two private tables, `PullLog` (member, set, packs, source) and `PullHit` (card, tier, count), cascading with
+the account. `POST /api/pulls` checks the log against the set's own cards (`parsePullLog`, `lib/pull-rates.ts`) and refuses
+rather than trims: another set's card, more than 48 packs, more than three hits a pack. Caps: 10 logs a member a UTC day
+(Counter), 480 packs a member per set. `GET` lists the member's own logs, `DELETE ?id=` takes one back ("Undo" in the panel).
+The owner gets the first log and every 50th through `notifyOwnerBounded` (kind `pull-log`), never one email a log.
+
+**Only Epic and up.** Riot publishes no Rare rate, and asking for two Rares a pack is the tedium that stops people logging.
+Tiers (`pullTier`, rarest wins): Ultimate, Signature, Overnumbered, Alternate art, other Showcase (alt-art runes and
+specials, no published rate), Epic. Riot's column is `PULL_RATES` from the Origins collectability article, labelled as such.
+
+**Public only in aggregate.** `lib/pull-rates-server.ts` makes three `groupBy` reads, memoised six hours on globalThis;
+`/pull-rates` and `/pull-rates/<set>` revalidate every 21600 s and `/api/pulls/rates` sends a six-hour CDN header. A set
+publishes nothing but "N packs by M members" until 3 members and 24 packs are in (`MIN_MEMBERS`, `MIN_PACKS`): before that
+no tier or card count leaves the server, so one box can never be read off the page. A set page is noindex until then;
+the hub is in the sitemap. Legacy's page exists now (Riot's pack contents, the dates) and logging opens on its first
+Pre-Rift day, 22 Jan 2027 (`opensOn`); 13 Dec is previews, not packs.
+
+**Watched:** the ops check `site:pull-rates` reads the tally (warn when it is not JSON, never crit) and its summary carries
+logs, packs and published sets for the Monday read. Not promoted on r/riftboundtcg (it bans scanner promotion).
+
 ## 2026-11-26 — "Worked / didn't work" votes on the sister sites' discount codes
 
 **Asked:** the OzBargain study's move 3, approved by the owner: discount-code pages for the stores that pay us commission

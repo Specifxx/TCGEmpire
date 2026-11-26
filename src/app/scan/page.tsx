@@ -41,7 +41,11 @@ export default function ScanPage() {
           </li>
         ))}
       </ol>
-      <p className="mt-8 text-center text-[11px] text-slate-500">
+      <p className="mt-8 text-center text-xs text-slate-400">
+        Opening packs? Scan your hits in the <a href="/tools/pull-tracker/radiance" className="underline">pull tracker</a> and they count toward the{" "}
+        <a href="/pull-rates" className="underline">community pull rates</a>.
+      </p>
+      <p className="mt-2 text-center text-[11px] text-slate-500">
         Free: 5 scans a day with a free account. Your photo is read once to find the card and is never stored.
       </p>
     </div>

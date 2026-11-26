@@ -12,6 +12,7 @@ import { CardTile, type CardTileData } from "@/components/CardTile";
 import { useQuickView } from "@/components/QuickView";
 import { useCountry } from "@/components/CountryProvider";
 import { trackEvent } from "@/lib/analytics";
+import { shrinkPhoto as shrink } from "@/lib/scan/shrink";
 
 type Confidence = "high" | "medium" | "low" | "none";
 interface ScanResult {
@@ -31,27 +32,6 @@ interface Scanned {
   chosen: CardTileData | null;
   feedback: "right" | "picked-other" | "not-listed" | null;
   added: boolean;
-}
-
-const MAX_SIDE = 1024;
-
-async function shrink(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" } as ImageBitmapOptions).catch(() => null);
-  let w: number, h: number, src: CanvasImageSource;
-  if (bitmap) {
-    w = bitmap.width; h = bitmap.height; src = bitmap;
-  } else {
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-    await img.decode();
-    w = img.naturalWidth; h = img.naturalHeight; src = img;
-  }
-  const k = Math.min(1, MAX_SIDE / Math.max(w, h));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(w * k);
-  canvas.height = Math.round(h * k);
-  canvas.getContext("2d")!.drawImage(src, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.82);
 }
 
 const CONF_COPY: Record<Confidence, { label: string; badge: string }> = {

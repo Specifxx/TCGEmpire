@@ -154,6 +154,11 @@ const GROUPS: ToolGroup[] = [
         desc: "Opened a box? Tap what you pulled, see what it is worth against what you paid, save it to your binder or share it.",
       },
       {
+        href: "/pull-rates",
+        title: "Community pull rates",
+        desc: "How often Epics, alt arts and overnumbered cards really turn up, from packs members logged, beside Riot's odds.",
+      },
+      {
         href: "/sealed",
         title: "Sealed prices",
         desc: `Booster boxes, packs, Proving Grounds and bundles priced across stores, with an in-stock-at-MSRP flag — and, with ${LIST_BADGE}, a watch that emails you on a restock or at RRP, checked ${SEALED_CHECK_CADENCE}.`,
