@@ -71,7 +71,7 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   [RECKONING_TITLE, "REC"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
-const SET_NAMES: Record<string, string> = {
+export const SET_NAMES: Record<string, string> = {
   OGN: "Origins", OGS: "Proving Grounds", SFD: "Spiritforged", UNL: "Unleashed", VEN: "Vendetta",
   RAD: "Radiance", LGC: "Legacy", REC: "The Reckoning",
 };
