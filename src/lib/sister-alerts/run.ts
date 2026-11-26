@@ -93,7 +93,7 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
   const tokenOf = new Map(addresses.map((a) => [a.email, a.token]));
   const alerts = (
     await db.sisterAlert.findMany({
-      select: { id: true, email: true, site: true, productId: true, region: true, targetCents: true, name: true, path: true, lastPriceCents: true, lastNotifiedCents: true, lastNotifiedAt: true, missingSince: true, createdAt: true },
+      select: { id: true, email: true, site: true, productId: true, region: true, targetCents: true, alsoRestock: true, name: true, path: true, lastPriceCents: true, lastNotifiedCents: true, lastNotifiedAt: true, missingSince: true, createdAt: true },
       orderBy: { createdAt: "asc" },
       take: 50000,
     })
@@ -143,9 +143,10 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
     if (v.kind === "fire" && item) {
       const key = `${a.email}\u0000${a.site}`;
       const list = fired.get(key) ?? [];
-      list.push({ id: a.id, site: a.site, name: item.n, path: item.u, region, priceCents: v.priceCents, targetCents: a.targetCents, restock: isRestockTarget(a.targetCents) });
+      list.push({ id: a.id, site: a.site, name: item.n, path: item.u, region, priceCents: v.priceCents, targetCents: a.targetCents, restock: isRestockTarget(a.targetCents) || v.restock === true });
       fired.set(key, list);
-      updates.push({ id: a.id, data: { ...meta, lastPriceCents: v.priceCents, lastCheckedAt: now, missingSince: null } });
+      // A follow's restock keeps missingSince until its email has left (step 6), so a deferred one fires next run.
+      updates.push({ id: a.id, data: { ...meta, lastPriceCents: v.priceCents, lastCheckedAt: now, ...(v.restock ? {} : { missingSince: null }) } });
       continue;
     }
     if (v.kind === "hold") {
@@ -196,7 +197,7 @@ export async function runSisterAlerts(deps: RunDeps): Promise<RunSummary> {
     const sent = new Map(sentIds.map((s) => [s.id, s.priceCents]));
     for (const u of updates) {
       const p = sent.get(u.id);
-      await db.sisterAlert.update({ where: { id: u.id }, data: p != null ? { ...u.data, lastNotifiedCents: p, lastNotifiedAt: now } : u.data });
+      await db.sisterAlert.update({ where: { id: u.id }, data: p != null ? { ...u.data, lastNotifiedCents: p, lastNotifiedAt: now, missingSince: null } : u.data });
     }
     if (expired.length) await db.sisterAlert.deleteMany({ where: { id: { in: expired } } });
   }

@@ -1011,6 +1011,8 @@ model SisterAlert {
   productId         String
   region            String
   targetCents       Int
+  // A follow (DexCompare, 2026-11-26): the price alert also emails once when the product is back after selling out.
+  alsoRestock       Boolean   @default(false)
   name              String?
   path              String?
   lastPriceCents    Int?

@@ -26084,3 +26084,18 @@ over at most 40 ids, CDN-cached six hours. Below 10 answers the GET returns only
 A pulse never orders prices, never touches a store row, deal, alert or ranking. MTG Compare is first (biggest audience,
 the r/mtgfinance crowd); the site shows it only to a visitor who already answered or skipped its other inline question,
 so a visit still meets one question at most (UX guard, owner 2026-11-23).
+
+## A follow: one alert for a price drop or a restock, checked twice a day (2026-11-26, owner)
+
+Owner, for DexCompare: "let a visitor follow a sealed product and get an alert when its cheapest in-stock price drops below a
+threshold they set, or when it comes back in stock. Check prices on the existing twice daily run, send one email per alert, no
+spam. Start with US Pokemon sealed products only." Most of it existed (price alerts, back-in-stock watches, My watches); what
+was missing is one alert that does both, and a check after each of Dex's two daily releases.
+
+**How:** `SisterAlert.alsoRestock` (default false; a site sends `restock: true` with a price alert). `evaluateAlert`: a follow
+waits while sold out (never expired for it, like a restock watch) and, on the first check that finds a price after a check that
+found none (`missingSince`), fires ONCE flagged as a restock, whatever the price; under the target that is still one email, not
+two. Inside the three-day gap the restock is dropped and `missingSince` cleared, so it never arrives days late; a deferred send
+keeps `missingSince` and fires next run. A plain price alert is unchanged. `sister-alerts.yml` runs at 02:20 and 14:20 UTC
+(Dex imports at 08:47 and 20:47 and releases each one with its feed); the gap, the further-5% refire rule and the weekly
+emails' edition keys mean a second run a day sends nothing twice. DexCompare turns it on for the US only (`lib/follow.ts`).

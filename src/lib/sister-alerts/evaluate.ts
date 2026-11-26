@@ -25,8 +25,15 @@ export const UNCONFIRMED_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const RESTOCK_TARGET_CENTS = 100_000_000;
 export const isRestockTarget = (targetCents: number) => targetCents >= RESTOCK_TARGET_CENTS;
 
+/**
+ * A FOLLOW (DexCompare, 2026-11-26, owner: "an alert when its cheapest in-stock price drops below a threshold they set, or
+ * when it comes back in stock") is a price alert with `alsoRestock`: besides the price rule above, it fires ONCE when the
+ * product comes back in stock after a check that found it sold out (`missingSince` set), whatever the price, and it is not
+ * removed for being sold out for 90 days. Same gap as every alert: never twice inside MIN_GAP_MS.
+ */
 export interface AlertState {
   targetCents: number;
+  alsoRestock?: boolean;
   lastNotifiedCents: number | null;
   lastNotifiedAt: Date | null;
   missingSince: Date | null;
@@ -34,7 +41,7 @@ export interface AlertState {
 }
 
 export type Verdict =
-  | { kind: "fire"; priceCents: number }
+  | { kind: "fire"; priceCents: number; restock?: true }
   | { kind: "hold"; priceCents: number | null; rearm: boolean; missingSince: Date | null }
   | { kind: "expire"; reason: "old" | "missing" };
 
@@ -44,10 +51,21 @@ export function evaluateAlert(a: AlertState, priceCents: number | null, now: Dat
     // Sold out: the watch waits, and the next in-stock price is a fresh restock.
     return { kind: "hold", priceCents: null, rearm: a.lastNotifiedCents != null, missingSince: null };
   }
+  if (priceCents == null && a.alsoRestock) {
+    // A follow waits while sold out; missingSince marks it so the next in-stock price is a restock.
+    return { kind: "hold", priceCents: null, rearm: false, missingSince: a.missingSince ?? now };
+  }
   if (priceCents == null) {
     const since = a.missingSince ?? now;
     if (now.getTime() - since.getTime() > MISSING_TTL_MS) return { kind: "expire", reason: "missing" };
     return { kind: "hold", priceCents: null, rearm: false, missingSince: since };
+  }
+  const recentGap = a.lastNotifiedAt != null && now.getTime() - a.lastNotifiedAt.getTime() < MIN_GAP_MS;
+  if (a.alsoRestock && a.missingSince != null && !isRestockTarget(a.targetCents)) {
+    // Back after selling out. At or under the target it is also a price hit; either way ONE email, flagged as a restock.
+    // Inside the gap the restock is dropped, not saved for later: a "back in stock" email days late is noise.
+    if (recentGap) return { kind: "hold", priceCents, rearm: false, missingSince: null };
+    return { kind: "fire", priceCents, restock: true };
   }
   if (priceCents > a.targetCents) {
     return { kind: "hold", priceCents, rearm: a.lastNotifiedCents != null, missingSince: null };

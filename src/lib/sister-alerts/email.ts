@@ -87,12 +87,12 @@ export interface BuiltMail {
   text: string;
 }
 
-export function buildConfirmEmail(siteKey: string, token: string, targetCents: number, region: SisterRegion, weekly = false): BuiltMail {
+export function buildConfirmEmail(siteKey: string, token: string, targetCents: number, region: SisterRegion, weekly = false, alsoRestock = false): BuiltMail {
   const site = sisterSite(siteKey)!;
   const url = serviceUrl("confirm", token, site);
   const restock = targetCents >= RESTOCK_TARGET_CENTS;
   const target = money(targetCents, region);
-  const what = restock ? `when a sold-out product is back in stock at ${REGION_LABEL[region]} stores` : `when a product drops to ${target} or less at ${REGION_LABEL[region]} stores`;
+  const what = restock ? `when a sold-out product is back in stock at ${REGION_LABEL[region]} stores` : `when a product drops to ${target} or less at ${REGION_LABEL[region]} stores${alsoRestock ? ", or is back in stock after selling out" : ""}`;
   const subject = `Confirm your ${site.name} price alert`;
   const inner = `
     <tr><td style="padding:8px 28px 6px;font-size:14px;line-height:1.6;color:#374151">Someone, hopefully you, asked ${escapeHtml(site.name)} to email this address ${escapeHtml(what)}${weekly ? `, and to send its biggest price drops once a week` : ""}. Confirm and we'll start checking prices every day.</td></tr>

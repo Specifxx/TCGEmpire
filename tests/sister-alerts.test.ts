@@ -86,6 +86,31 @@ test("missing products and old alerts expire", () => {
   assert.equal(suggestedTarget(13999), 12500);
 });
 
+test("a follow (price alert + back in stock) emails once on a restock after selling out, never twice in the gap", () => {
+  const follow = { ...base, alsoRestock: true };
+  // Sold out: waits, marks when, and is never expired for it.
+  const out = evaluateAlert(follow, null, now);
+  assert.ok(out.kind === "hold" && out.missingSince?.getTime() === now.getTime());
+  const longOut = { ...follow, missingSince: new Date(now.getTime() - MISSING_TTL_MS - DAY) };
+  assert.equal(evaluateAlert(longOut, null, now).kind, "hold", "a follow is not removed for being sold out");
+  // Back in stock above the target: one restock email.
+  const wasOut = { ...follow, missingSince: new Date(now.getTime() - DAY) };
+  assert.deepEqual(evaluateAlert(wasOut, 9900, now), { kind: "fire", priceCents: 9900, restock: true });
+  // Back in stock under the target: still ONE email (the restock one), not two.
+  assert.deepEqual(evaluateAlert(wasOut, 8000, now), { kind: "fire", priceCents: 8000, restock: true });
+  // Inside the gap after another email: dropped, and missingSince cleared so it never fires days late.
+  const recent = { ...wasOut, lastNotifiedCents: 8400, lastNotifiedAt: new Date(now.getTime() - DAY) };
+  const quiet = evaluateAlert(recent, 9900, now);
+  assert.ok(quiet.kind === "hold" && quiet.missingSince === null);
+  // Never sold out: an ordinary price alert.
+  assert.equal(evaluateAlert(follow, 9000, now).kind, "hold");
+  assert.deepEqual(evaluateAlert(follow, 8500, now), { kind: "fire", priceCents: 8500 });
+  // A plain price alert is unchanged: back in stock above target is quiet.
+  assert.equal(evaluateAlert({ ...base, missingSince: new Date(now.getTime() - DAY) }, 9900, now).kind, "hold");
+  assert.match(buildConfirmEmail("dex", "t", 8500, "US", false, true).text, /back in stock after selling out/);
+  assert.doesNotMatch(buildConfirmEmail("dex", "t", 8500, "US").text, /back in stock/);
+});
+
 test("the confirmation email carries no text from the form, and alerts carry unsubscribe, share and one sister deal", () => {
   const c = buildConfirmEmail("mtg", "tok123", 12500, "US");
   assert.match(c.subject, /MTG Compare/);

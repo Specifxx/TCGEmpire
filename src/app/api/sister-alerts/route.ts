@@ -44,6 +44,8 @@ const schema = z.object({
   // email is ignored) and lifts the 25-alert cap. kind "restock" (back in stock) is open to everyone (2026-11-18).
   token: z.string().max(4096).optional(),
   kind: z.enum(["price", "restock", "weekly"]).optional(),
+  // A follow (2026-11-26): a price alert that also emails once when the product is back after selling out.
+  restock: z.boolean().optional(),
 });
 
 export function OPTIONS(req: Request) {
@@ -62,6 +64,7 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Please check the email address and price." }, { status: 400, headers });
   const { site, productId, region, weekly, token, kind } = parsed.data;
+  const alsoRestock = kind !== "restock" && kind !== "weekly" && parsed.data.restock === true;
   // A site may only add alerts for itself.
   if (site !== fromSite.key) return NextResponse.json({ error: "Not allowed" }, { status: 403, headers });
   let email = parsed.data.email;
@@ -106,9 +109,9 @@ export async function POST(req: Request) {
     }
     if (already) {
       // A new target re-arms the alert.
-      await prisma.sisterAlert.update({ where: { id: already.id }, data: { targetCents, lastNotifiedCents: null } });
+      await prisma.sisterAlert.update({ where: { id: already.id }, data: { targetCents, alsoRestock, lastNotifiedCents: null } });
     } else {
-      await prisma.sisterAlert.create({ data: { email, site, productId, region, targetCents } });
+      await prisma.sisterAlert.create({ data: { email, site, productId, region, targetCents, alsoRestock } });
     }
     // Only a ticked box subscribes; an unticked one never unsubscribes (the email's own links do).
     if (weekly === true) {
@@ -120,7 +123,7 @@ export async function POST(req: Request) {
     const now = new Date();
     const due = !address.confirmSentAt || now.getTime() - address.confirmSentAt.getTime() > CONFIRM_RESEND_MS;
     if (due && (await claimMailSlot(prisma, now, undefined, site))) {
-      const mail = buildConfirmEmail(site, address.token, targetCents, region, weekly === true);
+      const mail = buildConfirmEmail(site, address.token, targetCents, region, weekly === true, alsoRestock);
       const sent = await sendSisterMail(site, email, mail.subject, mail.html, { text: mail.text, from: fromFor(sisterSite(site)!) });
       if (sent) await prisma.sisterAlertAddress.update({ where: { email }, data: { confirmSentAt: now } });
     }
