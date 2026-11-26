@@ -306,7 +306,7 @@ longer lands on its entry.
   panel on /admin/earnings sets paid ("Creators" costs naming `[id]`) against real tagged sales;
   under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24883) Since 2026-11-26 it is open to any clipper
   on the same terms; the ledger credits owed oldest first up to A$300 a month and pauses new clippers at 90%.
-  [2026-11-26](../DECISIONS.md#L26103)
+  [2026-11-26](../DECISIONS.md#L26113)
 - **RiftCompare Premium at $4.99/mo or $39.99/yr with a free 14-day trial again (owner,
   2026-11-05: "use something that we used early on which had the best
   retention"; August's setup, 7 of 7 trials paid):** the
