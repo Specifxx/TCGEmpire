@@ -6,7 +6,7 @@ import { premiumCheckoutEnabled } from "@/lib/premium";
 import { premiumCors, premiumSiteForOrigin, verifyPremiumSession } from "@/lib/sister-premium";
 import { billedByLine, brandFromSurface } from "@/lib/premium-brand";
 import { parsePassKind } from "@/lib/premium-pass";
-import { PASS_USER_SELECT, passOffersForUser, passSessionParams } from "@/lib/premium-pass-server";
+import { PASS_USER_SELECT, holdsPass, passOffersForUser, passSessionParams, releaseFounderSeat, reserveFounderSeat } from "@/lib/premium-pass-server";
 
 export const dynamic = "force-dynamic";
 
@@ -34,13 +34,19 @@ export async function POST(req: Request) {
   try {
     const user = await prisma.user.findUnique({ where: { email }, select: PASS_USER_SELECT });
     if (!user) return NextResponse.json({ error: "Sign in again" }, { status: 401, headers });
-    const offers = await passOffersForUser(user);
+    const offers = (await holdsPass(user.id)) ? [] : await passOffersForUser(user);
     if (!offers.some((o) => o.kind === kind)) {
       return NextResponse.json({ error: kind === "founder" ? "Founder places aren't open to this account." : "This pass isn't available right now." }, { status: 409, headers });
     }
     const brand = brandFromSurface(`sister-${site.key}`);
     prisma.premiumClick.create({ data: { userId: user.id, source: "checkout", surface: `sister-${site.key}:pass-${kind}`, tier: "premium" } }).catch(() => {});
-    const session = await stripe().checkout.sessions.create(
+    // A Founder seat is taken now, atomically (never more than 100), and given back if Stripe can't open the checkout
+    // or the checkout expires unpaid (the webhook's checkout.session.expired branch).
+    if (kind === "founder" && !(await reserveFounderSeat())) {
+      return NextResponse.json({ error: "All 100 Founder places are taken." }, { status: 409, headers });
+    }
+    const session = await stripe()
+      .checkout.sessions.create(
       passSessionParams({
         kind,
         userId: user.id,
@@ -50,7 +56,11 @@ export async function POST(req: Request) {
         successUrl: `${site.url}/premium?welcome=1`,
         cancelUrl: `${site.url}/premium`,
       }),
-    );
+    )
+      .catch(async (e: unknown) => {
+        if (kind === "founder") await releaseFounderSeat().catch(() => {});
+        throw e;
+      });
     if (!session.url) throw new Error("no checkout url");
     return NextResponse.json({ ok: true, url: session.url }, { headers });
   } catch (e) {

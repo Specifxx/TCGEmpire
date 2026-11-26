@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/db";
-import { PASS_USER_SELECT, passOffersForUser } from "@/lib/premium-pass-server";
+import { PASS_USER_SELECT, holdsPass, passOffersForUser } from "@/lib/premium-pass-server";
 import { maskEmail, premiumCors, premiumSiteForOrigin, premiumStatusFor, verifyPremiumSession } from "@/lib/sister-premium";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const handle = await prisma.user.findUnique({ where: { email }, select: { handle: true } }).then((u) => u?.handle ?? null).catch(() => null);
     // The price ladder test (lib/premium-pass.ts, 7-21 Dec 2026): the passes this account may buy now, else [].
     const passUser = await prisma.user.findUnique({ where: { email }, select: PASS_USER_SELECT }).catch(() => null);
-    const passes = passUser ? await passOffersForUser(passUser).catch(() => []) : [];
+    const passes = passUser && !(await holdsPass(passUser.id).catch(() => true)) ? await passOffersForUser(passUser).catch(() => []) : [];
     return NextResponse.json({ ok: true, premium: s.premium, until: s.until, who: maskEmail(email), handle, passes }, { headers });
   } catch (e) {
     console.warn("[sister-premium] status failed:", e);

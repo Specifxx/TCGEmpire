@@ -59,3 +59,14 @@ test("the webhook grants passes, and only the status and pass routes offer them"
   assert.match(server, /pass:s:\$\{session\.id\}/, "idempotent per Checkout session");
   assert.match(server, /session\.payment_status !== "paid"/);
 });
+
+test("Founder seats are reserved atomically at checkout and given back when it expires unpaid", () => {
+  const server = readFileSync("src/lib/premium-pass-server.ts", "utf8");
+  assert.match(server, /updateMany\(\{ where: \{ key: FOUNDER_SOLD_KEY, value: \{ lt: FOUNDER_SEATS \} \}/);
+  assert.match(server, /expires_at: Math\.floor\(Date\.now\(\) \/ 1000\) \+ 30 \* 60/);
+  const route = readFileSync("src/app/api/sister-premium/pass/route.ts", "utf8");
+  assert.match(route, /kind === "founder" && !\(await reserveFounderSeat\(\)\)/);
+  assert.match(readFileSync("src/app/api/marketplace/stripe/webhook/route.ts", "utf8"), /if \(session\.metadata\?\.kind === "premium_pass"\) await passExpired\(session\);/);
+  // A pass holder is paying: no second pass, no free-week checkout on top.
+  assert.match(readFileSync("src/lib/premium-free-week-server.ts", "utf8"), /pass:u:\$\{user\.id\}/);
+});

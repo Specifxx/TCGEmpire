@@ -3,8 +3,8 @@
 //
 // From 2 Dec to 16 Dec 2026 (00:00 UTC), every NEW account is put in arm "a" or "b" by its id. Arm "b" gets 7 days
 // of Premium at sign-up, no card, extend-only (it never shortens a period an account already has, e.g. a referred
-// friend's week). Arm "a" gets nothing new: it is today's site. The read is paid starts per new account at day 21
-// (30 Dec), on /admin/premium.
+// friend's week). Arm "a" gets nothing new: it is today's site. The read is paid starts per new account 21 days after
+// the last sign-up (6 Jan 2027; interim 30 Dec), on /admin/premium.
 //
 // HARD CONSTANTS, NOT ENV (the 2026-08-23 lesson in lib/premium.ts "NO PREMIUM ON SIGNUP"): a leftover variable in
 // Vercel must never be able to keep granting after the window. The window ends by itself; nothing needs a deploy to stop.

@@ -47,6 +47,7 @@ import {
   premiumLockInLine,
   premiumLockInHeadline,
   premiumTrialFee,
+  trialDaysPhrase,
   premiumEffectiveMonthly,
   annualSavingPct,
   introOfferEnabled,
@@ -152,6 +153,14 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   // A free-week member (lib/premium-free-week.ts, the 2-16 Dec 2026 test) is offered the card trial before the week
   // ends: the comp card below names the date and gives one button. Nobody else's page changes.
   const freeWeekKeep = !!user && already && checkoutLive && (await freeWeekMayCheckout(user).catch(() => false));
+  // The same trial rules checkout applies (days, fee, one per account), never a promise of its own.
+  const freeWeekTrial = freeWeekKeep && (await trialOfferedTo(dbUser));
+  const freeWeekThen = annualLive ? annualCompact : compactPrice;
+  const freeWeekLine = !freeWeekTrial
+    ? `Keep it for ${freeWeekThen}. Cancel any time.`
+    : PREMIUM_TRIAL_FEE_CENTS > 0
+      ? `Keep it: ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} for ${premiumTrialFee(PREMIUM_TRIAL_FEE_CENTS)}, then ${freeWeekThen}. Cancel any time before the trial ends.`
+      : `Keep it with ${trialDaysPhrase(PREMIUM_TRIAL_DAYS)} more free, then ${freeWeekThen}. Cancel any time before the trial ends.`;
   const plusLive = premiumPlusEnabled();
   const plusAnnualLive = plusAnnualEnabled();
   const plusPriceNumeric = tierMonthlyAmount("plus").replace(/[^0-9.]/g, "") || "2.99";
@@ -481,9 +490,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
               </p>
               {freeWeekKeep && (
                 <div className="mt-3 space-y-2" data-free-week>
-                  <p className="text-xs text-slate-400">
-                    Keep it with 14 more days free, then {annualLive ? annualCompact : compactPrice}. Cancel any time before the trial ends.
-                  </p>
+                  <p className="text-xs text-slate-400">{freeWeekLine}</p>
                   <Link href={premiumStartHref({ tier: "premium", plan: annualLive ? "annual" : "monthly", src: "premium-page", back: "/premium" })} className="btn-primary inline-flex">
                     Keep Premium
                   </Link>

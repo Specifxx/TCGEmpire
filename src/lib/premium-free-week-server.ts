@@ -40,6 +40,8 @@ export async function freeWeekEnd(userId: string): Promise<Date | null> {
  */
 export async function freeWeekMayCheckout(user: { id: string; stripeCustomerId: string | null; isAdmin?: boolean }): Promise<boolean> {
   if (user.isAdmin || user.stripeCustomerId) return false;
+  // A member who bought a pass (lib/premium-pass.ts) is paying: never a second checkout on top.
+  if (await prisma.counter.findUnique({ where: { key: `pass:u:${user.id}` }, select: { key: true } }).catch(() => null)) return false;
   const end = await freeWeekEnd(user.id).catch(() => null);
   return !!end && end.getTime() > Date.now();
 }
@@ -58,6 +60,8 @@ export async function freeWeekRead(): Promise<FreeWeekArmRead[]> {
   const rows = await prisma.user.findMany({
     where: { createdAt: { gte: new Date(FREE_WEEK.start), lt: new Date(FREE_WEEK.end) }, isAdmin: false },
     select: { id: true, stripeCustomerId: true, trialStartedAt: true, premiumUntil: true },
+    // A two-week window of sign-ups is a few hundred rows; the cap keeps an admin read bounded whatever happens.
+    take: 5000,
   });
   const now = Date.now();
   const out: Record<FreeWeekArm, FreeWeekArmRead> = {

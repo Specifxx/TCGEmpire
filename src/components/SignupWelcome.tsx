@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { trackEvent } from "@/lib/analytics";
 import { trackSignupComplete } from "@/lib/growth-events";
 import { useMe } from "@/lib/use-me";
+import { freeWeekOpen } from "@/lib/premium-free-week";
 import { useWatchlist } from "@/lib/use-watchlist";
 import type { Country } from "@/lib/country";
 import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
@@ -93,7 +94,7 @@ function SignupWelcomeInner() {
   // exists: the same toast says so, once, and points at what Premium does instead of the checklist. /api/me answers
   // after the welcome effect, so the toast is swapped in place rather than shown twice.
   useEffect(() => {
-    if (!welcomed.current || !loaded || !premium) return;
+    if (!welcomed.current || !loaded || !premium || !freeWeekOpen()) return;
     welcomed.current = false;
     setToast((t) => (t === WELCOME_FREE ? WELCOME_FREE_WEEK : t));
     setToastAction((a) => (a?.href === "/dashboard" ? { href: "/premium", label: "See what's in it →" } : a));

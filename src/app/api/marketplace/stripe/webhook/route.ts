@@ -21,7 +21,7 @@ import { STORE_PLAN_PRICE_ID, isStorePlanSubscription, subscriptionIdOf, validat
 import { extendStorePlan, recordStorePlanStart } from "@/lib/store-plan-db";
 import { adAbandoned, adPaid } from "@/lib/sister-ads/server";
 import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
-import { passPaid } from "@/lib/premium-pass-server";
+import { passExpired, passPaid } from "@/lib/premium-pass-server";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
@@ -107,6 +107,8 @@ export async function POST(req: Request) {
       case "checkout.session.expired": {
         const session = event.data.object as Stripe.Checkout.Session;
         if (session.metadata?.kind === "sister_ad") await adAbandoned(session);
+        // An unpaid Founder checkout gives its reserved seat back (lib/premium-pass-server.ts).
+        if (session.metadata?.kind === "premium_pass") await passExpired(session);
         break;
       }
       // Premium renewals — see rule 1 above for why both invoice events.

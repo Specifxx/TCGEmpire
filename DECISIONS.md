@@ -26148,9 +26148,13 @@ app sells either today.
   no owner step), `customer_email` only: a pass never saves a Stripe customer, so it never marks the account "ever paid"
   and never costs it the 14-day card trial later. The sister's status call returns `passes` (what this account may buy).
 - **Entitlement:** the webhook's `premium_pass` branch (`passPaid`), idempotent per Checkout session (Counter
-  `pass:s:<id>`, removed again if the grant fails so Stripe's retry works), extend-only premiumUntil. Lifetime is
-  premiumUntil 1 Jan 2126, so every existing read keeps working. Counters `pass:founder:sold` (the seat count) and
-  `pass:week:sold`.
+  `pass:s:<id>`, removed again if the grant fails so Stripe's retry works), extend-only premiumUntil, tier premium, in
+  one transaction with the holder marker `pass:u:<userId>` (a pass holder is paying: no second pass, no free-week
+  checkout on top). Lifetime is premiumUntil 1 Jan 2126, so every existing read keeps working. A paid session for a
+  missing account emails the owner to refund it.
+- **100 Founder seats, never 101:** a seat is taken atomically when the checkout opens (`updateMany` only while under
+  100), the checkout expires after 30 minutes, and `checkout.session.expired` gives an unpaid seat back. Any paid tier,
+  grandfathered Plus included, counts as already paying. Ops check `money:premium-passes` shows the tallies.
 - **Hard constants:** amounts, seats and dates live in code, no environment variable (`tests/premium-pass.test.ts`).
 - **Read 4 Jan 2027:** revenue per /premium visitor and paid starts per arm; existing subscribers are never offered a
   pass or re-priced. The Week Pass's "counts toward a year" credit from the plan is not built: it would need a coupon on

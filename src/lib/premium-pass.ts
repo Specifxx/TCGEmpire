@@ -31,7 +31,12 @@ export const PASSES: Record<PassKind, { cents: number; label: string; name: stri
 export const FOUNDER_SEATS = 100;
 export const FOUNDER_MIN_ACCOUNT_DAYS = 14;
 export const LIFETIME_UNTIL = Date.UTC(2126, 0, 1);
+/** Founder seats taken: reserved atomically when a checkout opens, released when that checkout expires unpaid. */
 export const FOUNDER_SOLD_KEY = "pass:founder:sold";
+/** Marks an account that bought a pass (its value is the epoch second it was granted). */
+export function passHolderKey(userId: string): string {
+  return `pass:u:${userId}`;
+}
 
 export function passTestOpen(now: number = Date.now()): boolean {
   return now >= PASS_TEST.start && now < PASS_TEST.end;
