@@ -158,3 +158,34 @@ export function parseShareCode(code: string): { lines: PullLine[]; paidCents: nu
   const m = q.get("m") as Country | null;
   return { lines, paidCents: parsePaid(q.get("paid")), country: m && COUNTRIES.includes(m) ? m : "US" };
 }
+
+// The "I pulled" brag card (2026-11-26, lib/brag-card.ts; community plan move 4): the best card of a pull log, its price
+// in the visitor's market, and what the whole log is worth against what they paid. Only numbers the tracker shows; null
+// when nothing is priced (the share is then the link alone).
+export function pullBragFields(
+  setName: string,
+  best: { name: string; eachCents: number } | null,
+  sum: Pick<PullSummary, "totalCents" | "diffCents" | "copies">,
+  paidCents: number | null,
+  money: (cents: number) => string,
+): { kicker: string; title: string; value: string; pill: { text: string; tone: "up" | "down" | "neutral" }; rows: { label: string; value: string; tone?: "up" | "down" | "neutral" }[]; cta: string } | null {
+  if (!best || !(best.eachCents > 0)) return null;
+  const won = sum.diffCents != null && sum.diffCents > 0;
+  const pill = paidCents
+    ? won
+      ? { text: `${money(sum.diffCents!)} more than I paid`, tone: "up" as const }
+      : { text: `My pulls: ${money(sum.totalCents)} from ${money(paidCents)}`, tone: "neutral" as const }
+    : { text: `My pulls: ${money(sum.totalCents)}`, tone: "neutral" as const };
+  return {
+    kicker: `I pulled · ${setName}`,
+    title: best.name,
+    value: money(best.eachCents),
+    pill,
+    rows: [
+      { label: "All my pulls", value: money(sum.totalCents), tone: won ? "up" : "neutral" },
+      ...(paidCents ? [{ label: "I paid", value: money(paidCents) }] : []),
+      { label: "Cards logged", value: String(sum.copies) },
+    ],
+    cta: "Log your pulls free",
+  };
+}

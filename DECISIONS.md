@@ -26034,3 +26034,15 @@ in one browser only (`ce_vault_v1`), so it could not follow a member to another 
 - **Inside the mail cap.** It runs in the daily `sister-alerts` call after the alerts and the biggest-drops email, claiming under the same
   `DIGEST_MAIL_CEILING` (20 of the shared 30), so a busy day defers it to the next and the alerts' reserve is never spent. A due site whose
   feed fails or is stale fails the job, which the ops monitor's job check sees.
+
+## 2026-11-26 — The pull tracker shares an "I pulled" picture
+
+Community plan move 4 (owner: community is what makes things blow up; target 200 shares in December). The pull tracker's
+"Share my win / Share my pulls" button, on a phone that can share a picture, now sends a 1080×1350 card drawn in the browser
+(`lib/brag-card.ts`, the same file as TCG Prices'): the best card's own art (our same-origin `/card-art/` copy, so the canvas
+stays readable), "I pulled · <set>", that card's price in the visitor's market, a pill ("$135.50 more than I paid", or the plain
+total when the log lost or no price was paid) and three rows (all my pulls, I paid, cards logged), with the share link
+(`/tools/pull-tracker/<set>/s/<code>`) beside it. Only the numbers the tracker shows (`pullBragFields`, `lib/pull-tracker.ts`);
+nothing priced means no card. Drawn ahead a second after the last change in idle time, so the tap opens the share sheet at once.
+Desktops share the link as before (that page has its own share image). Counted as `brag_share { kind: "pull", how }`.
+`tests/brag-card.test.ts`.
