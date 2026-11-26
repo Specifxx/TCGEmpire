@@ -26100,6 +26100,15 @@ keeps `missingSince` and fires next run. A plain price alert is unchanged. `sist
 (Dex imports at 08:47 and 20:47 and releases each one with its feed); the gap, the further-5% refire rule and the weekly
 emails' edition keys mean a second run a day sends nothing twice. DexCompare turns it on for the US only (`lib/follow.ts`).
 
+## 2026-11-26 — The scanner's daily limit offers Premium, once, where it is hit
+
+The free scanner stops at 5 a day with "They come back tomorrow." and nothing else: the visitor who has just used
+up a free allowance is the most willing buyer the site sees (metered paywalls convert at the moment of value), and
+Premium's 100 scans a day was named only on /premium. When /api/scan/identify answers `limited`, the failed scan's
+row now adds one line, "Premium scans up to 100 cards a day, free for 14 days. See Premium", linking to /premium
+with the click beacon `limit:scan` (the existing `limit:` surface family) and a `scan_limit_hit` event. Members
+never see it. No pop-up, no new limit, nothing moved behind Premium: the cap is unchanged. Premium pricing
+review, 26 Nov ("Rethink Premium pricing and model" thread).
 ## 2026-11-26 — Compounding daily streaks, and member rewards
 
 **Owner (26 Nov):** "the daily check-in gives too many tickets ... should just be like one ticket ... It compounds. Like, every
