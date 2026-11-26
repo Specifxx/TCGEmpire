@@ -1,5 +1,5 @@
 # TCG Singles DB card scanner: image coverage and accuracy (scripts/scan-eval/singles.ts; DECISIONS.md 2026-11-20).
-# About 2,250 small Haiku 5.5 reads (150 cards x 5 photo conditions x 3 games): roughly US$0.70 a run. Commits results back.
+# About 2,250 small Haiku 5.5 reads (150 cards x 5 photo conditions x 3 games): roughly US$0.70 a run. Results go to the scan-eval-results branch and the run's artifact.
 name: Singles scan eval
 on:
   workflow_dispatch:
@@ -44,11 +44,30 @@ jobs:
           EVAL_CARDS: "150"
       - run: cat scripts/scan-eval/results-singles/summary.md >> "$GITHUB_STEP_SUMMARY"
         if: always()
-      - name: Commit results
+      - uses: actions/upload-artifact@v4
         if: always()
+        with:
+          name: results-singles
+          path: scripts/scan-eval/results-singles
+          retention-days: 30
+      # Results never go back to the triggering branch: threads share claude/* branches, and a results commit there
+      # rode into unrelated pull requests (DECISIONS.md 2026-11-26 "Stray files stay out of pull requests").
+      # They go to the `scan-eval-results` branch (never merged, never deployed), one folder per eval.
+      - name: Publish results to the scan-eval-results branch
+        if: always()
+        env:
+          SRC: scripts/scan-eval/results-singles
+          DEST: results-singles
         run: |
-          git config user.name "scan-eval"
-          git config user.email "scan-eval@users.noreply.github.com"
-          git add scripts/scan-eval/results-singles
-          git commit -m "Singles scan eval results" || exit 0
-          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
+          [ -d "$SRC" ] || exit 0
+          pub="$RUNNER_TEMP/pub"
+          for i in 1 2 3 4; do
+            cd "$GITHUB_WORKSPACE"; rm -rf "$pub"; git worktree prune
+            if git fetch -q --depth 1 origin scan-eval-results; then git worktree add -q --detach "$pub" FETCH_HEAD; else git worktree add -q --orphan "$pub"; fi
+            rm -rf "$pub/$DEST" && cp -r "$SRC" "$pub/$DEST"
+            cd "$pub" && git add -A "$DEST"
+            git -c user.name=scan-eval -c user.email=scan-eval@users.noreply.github.com commit -qm "Singles scan eval results ($GITHUB_REF_NAME @ ${GITHUB_SHA::7})" || exit 0
+            git push -q origin HEAD:refs/heads/scan-eval-results && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
