@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { trackEvent } from "@/lib/analytics";
 import { trackSignupComplete } from "@/lib/growth-events";
 import { useMe } from "@/lib/use-me";
+import { freeWeekOpen } from "@/lib/premium-free-week";
 import { useWatchlist } from "@/lib/use-watchlist";
 import type { Country } from "@/lib/country";
 import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
@@ -28,12 +29,16 @@ import { Toast } from "./ui/Toast";
 // per-user state into any shared page. Self-wrapped in <Suspense> (same
 // pattern as GAPageViewTracker) because useSearchParams requires a boundary
 // in the app router — callers just mount <SignupWelcome />.
+const WELCOME_FREE = "Your free account is ready.";
+const WELCOME_FREE_WEEK = "Your account is ready, with 7 days of Premium free.";
+
 function SignupWelcomeInner() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const fired = useRef(false);
-  const { user, loaded } = useMe();
+  const { user, loaded, premium } = useMe();
+  const welcomed = useRef(false);
   const { watch } = useWatchlist();
   const claimed = useRef(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -59,10 +64,11 @@ function SignupWelcomeInner() {
     // is ready and points at the setup checklist, without pulling them off
     // what they were doing. On /dashboard the page itself says it.
     if (pathname !== "/dashboard") {
-      setToast("Your free account is ready.");
+      welcomed.current = true;
+      setToast(WELCOME_FREE);
       setToastAction({ href: "/dashboard", label: "Get set up →" });
       setTimeout(() => {
-        setToast((t) => (t === "Your free account is ready." ? null : t));
+        setToast((t) => (t === WELCOME_FREE || t === WELCOME_FREE_WEEK ? null : t));
       }, 8000);
     }
     // ?welcome= is set by the OAuth callback for a NEW account only, so this
@@ -83,6 +89,16 @@ function SignupWelcomeInner() {
     const qs = rest.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname ?? "/", { scroll: false });
   }, [searchParams, pathname, router]);
+
+  // A new account in the free Premium week test (lib/premium-free-week.ts, 2-16 Dec 2026) is Premium the moment it
+  // exists: the same toast says so, once, and points at what Premium does instead of the checklist. /api/me answers
+  // after the welcome effect, so the toast is swapped in place rather than shown twice.
+  useEffect(() => {
+    if (!welcomed.current || !loaded || !premium || !freeWeekOpen()) return;
+    welcomed.current = false;
+    setToast((t) => (t === WELCOME_FREE ? WELCOME_FREE_WEEK : t));
+    setToastAction((a) => (a?.href === "/dashboard" ? { href: "/premium", label: "See what's in it →" } : a));
+  }, [loaded, premium]);
 
   // Complete a watch that was mid-flight when the visitor chose the account
   // path in PriceAlertModal — the stash survives the OAuth round trip in

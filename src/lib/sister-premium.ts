@@ -11,6 +11,7 @@
 // links (lib/sister-sign-in.ts) but carries `use: "premium-session"`, which a
 // sign-in link never has, so one can never stand in for the other. It names
 // ONE site (aud) and an address (sub); it grants nothing by itself.
+import { grantFreeWeekIfNew } from "./premium-free-week-server";
 import { SignJWT, createRemoteJWKSet, jwtVerify } from "jose";
 import { sisterKeyPair, SISTER_SIGN_IN_ISSUER } from "./sister-sign-in";
 import { isPremium } from "./premium";
@@ -254,5 +255,7 @@ export async function memberFor(email: string, google?: GoogleIdentity | null, s
     },
     select: { id: true, email: true },
   });
+  // The free Premium week test (lib/premium-free-week.ts): half of new accounts, 2-16 Dec 2026 only.
+  await grantFreeWeekIfNew(created.id).catch(() => false);
   return { ...created, isNew: true };
 }

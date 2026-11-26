@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { applyReferral } from "@/lib/referral";
+import { grantFreeWeekIfNew } from "@/lib/premium-free-week-server";
 import { onSiteOAuth, providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, sisterRedirectUri, type OAuthProvider } from "@/lib/oauth";
 import { claimAlertsForUser } from "@/lib/alerts";
 import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
@@ -97,6 +98,8 @@ export async function GET(req: Request, { params }: { params: { provider: string
       clearSister(provider);
       // A new account made from a sister's Google or Discord button is credited to that sister (lib/sister-premium.ts).
       if (isNew) void prisma.user.update({ where: { id: user.id }, data: { signupSource: sisterSignupSource(sister.key) } }).catch(() => {});
+      // The free Premium week test (lib/premium-free-week.ts): half of new accounts, 2-16 Dec 2026 only.
+      if (isNew) await grantFreeWeekIfNew(user.id).catch(() => false);
       void claimAlertsForUser(user.id, user.email).catch(() => {});
       void prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
       return NextResponse.redirect(back);
@@ -121,6 +124,9 @@ export async function GET(req: Request, { params }: { params: { provider: string
     // ACCOUNT tier — alerts, portfolio, watchlist — is granted by virtue of the
     // account existing and is the durable payoff on its own.
     await applyReferral(user.id).catch(() => {});
+    // The free Premium week test (lib/premium-free-week.ts, owner 2026-11-26): half of new accounts get 7 days of
+    // Premium, 2-16 Dec 2026 only, hard-coded dates. This is the one measured exception to the note above.
+    await grantFreeWeekIfNew(user.id).catch(() => false);
     // Which CTA produced this account. The clicked sign-in surface set a
     // short-lived rc_signup_src cookie (see lib/signup-source.ts); the value is
     // whitelisted here before it touches the DB, and the write is best-effort —
@@ -254,6 +260,7 @@ async function finishAppSignIn(
     const linked = await upsertOAuthUser(provider, who.providerId, who.email, who.emailVerified, who.name, who.avatar);
     if (!linked) return failApp("oauth_unverified");
     if (linked.isNew) await applyReferral(linked.user.id).catch(() => {});
+    if (linked.isNew) await grantFreeWeekIfNew(linked.user.id).catch(() => false);
     void claimAlertsForUser(linked.user.id, linked.user.email).catch(() => {});
     appCode = await mintAppCode(linked.user.id, challenge);
   } catch {

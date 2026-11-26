@@ -8,6 +8,7 @@ import { introOfferEnabled } from "@/lib/site";
 import { buildCheckoutSessionParams } from "@/lib/checkout-params";
 import { parseCheckoutSelection, sanitizeBackPath } from "@/lib/premium-start";
 import { isPremiumSurface } from "@/lib/premium-surface";
+import { freeWeekMayCheckout } from "@/lib/premium-free-week-server";
 import { cookies } from "next/headers";
 import { affiliateCheckoutDiscount, findActiveAffiliate } from "@/lib/creator-affiliate";
 import { AFFILIATE_COOKIE } from "@/lib/creator-affiliate-code";
@@ -38,7 +39,9 @@ export async function POST(req: Request) {
   // upgrade, prorated) and a Premium member has nothing to buy. /premium/start
   // redirects these people too, but this is the real fence: the route is
   // reachable directly.
-  if (user && isPremium(user) && !user.isAdmin) {
+  // The one exception: a free-week member (lib/premium-free-week.ts) has no subscription to double, and starting
+  // the 14-day card trial before the week ends is the whole point of that test.
+  if (user && isPremium(user) && !user.isAdmin && !(await freeWeekMayCheckout(user))) {
     return NextResponse.json(
       { error: "You already have a subscription — manage it from /premium" },
       { status: 409 }

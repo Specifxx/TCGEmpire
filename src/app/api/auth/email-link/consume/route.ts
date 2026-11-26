@@ -3,6 +3,7 @@ import { createSession } from "@/lib/auth";
 import { consumeSignInToken, setNameIfPlaceholder } from "@/lib/email-sign-in";
 import { sanitizeNextPath, POST_SIGN_IN_FALLBACK } from "@/lib/next-param";
 import { applyReferral } from "@/lib/referral";
+import { grantFreeWeekIfNew } from "@/lib/premium-free-week-server";
 import { rateLimit, tooManyRequests, clientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,8 @@ export async function POST(req: Request) {
   // An invite (?ref= or a member's shared link, lib/referral.ts) counts for an emailed sign-up
   // too, when the link is opened in the browser that carried it: both get a week (2026-11-18).
   if (result.isNew) await applyReferral(result.userId).catch(() => {});
+  // The free Premium week test (lib/premium-free-week.ts): half of new accounts, 2-16 Dec 2026 only.
+  if (result.isNew) await grantFreeWeekIfNew(result.userId).catch(() => false);
   await createSession(result.userId);
   const next = sanitizeNextPath(typeof body?.next === "string" ? body.next : null) ?? POST_SIGN_IN_FALLBACK;
   const dest = result.isNew ? `${next}${next.includes("?") ? "&" : "?"}welcome=email` : next;

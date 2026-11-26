@@ -31,6 +31,12 @@ const opsDb = (): NonNullable<OpsDeps["db"]> => ({
   ebayAdsNewest: async () => (await prisma.ebayAdListing.aggregate({ _max: { updatedAt: true } }))._max.updatedAt,
   storeHealthNewest: async () => (await prisma.storeHealthSnapshot.aggregate({ _max: { day: true } }))._max.day,
   inbox: getInboxCounts,
+  // Two Counter rows by key (lib/premium-pass-server.ts).
+  premiumPasses: async () => {
+    const rows = await prisma.counter.findMany({ where: { key: { in: ["pass:founder:sold", "pass:week:sold"] } }, select: { key: true, value: true } });
+    const v = (k: string) => rows.find((r) => r.key === k)?.value ?? 0;
+    return { founderSeats: v("pass:founder:sold"), weekSold: v("pass:week:sold") };
+  },
   // Two small reads on a table of a few rows: a count, and the unlinked ones (capped).
   storePlans: async () => {
     const [total, unlinked] = await Promise.all([

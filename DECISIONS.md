@@ -26109,6 +26109,56 @@ row now adds one line, "Premium scans up to 100 cards a day, free for 14 days. S
 with the click beacon `limit:scan` (the existing `limit:` surface family) and a `scan_limit_hit` event. Members
 never see it. No pop-up, no new limit, nothing moved behind Premium: the cap is unchanged. Premium pricing
 review, 26 Nov ("Rethink Premium pricing and model" thread).
+## 2026-11-26 — A free Premium week for half of new accounts, as a test
+
+The owner chose "Yes, run all three tests" on the Premium pricing reset (26 Nov). The reset found price is not the
+constraint: it changed six times from September and new paying members stayed near five a month each time. The leak
+is between a Premium click and checkout (231 clicks in 30 days, about 18 checkouts), while 37% of card trials pay.
+A free week puts Premium in front of every new account without a card form.
+
+- **Who:** accounts created from 2 Dec to 16 Dec 2026 (00:00 UTC), split by an FNV-1a hash of the account id
+  (`freeWeekArm`, `lib/premium-free-week.ts`). Arm B gets 7 days of Premium at creation, extend-only (a referred
+  friend's week is not cut short), tier premium only when nothing was active. Arm A is today's site.
+- **Where:** the three places a new account is made: the OAuth callback (web, app and sister branches), the emailed
+  sign-in link, and a sister site's sign-in (`memberFor`). Not guest checkout: that account is buying anyway.
+- **No switch:** hard-coded dates, no environment variable (`tests/premium-free-week.test.ts` fails on one). The
+  two earlier sign-up grants were removed on 2026-08-23 because a leftover Vercel variable could have kept them
+  granting unseen, and neither was ever measured. This one is split, ends by itself and is read.
+- **Keeping it:** a free-week member with no Stripe customer may start the 14-day card trial before the week ends
+  (`freeWeekMayCheckout`: the checkout route's and /premium/start's one exception to "already entitled"). /premium
+  names the end date with one "Keep Premium" button (yearly first). The sign-up toast says "with 7 days of Premium
+  free" instead of a second toast. No emails, no pop-ups.
+- **Read:** /admin/premium, per arm: accounts, trial or paid started, paying or in trial now. Interim 30 Dec, final
+  6 Jan 2027 (21 days after the last sign-up). Win: started per account up 50% or more with p < 0.10; otherwise the
+  window simply closes. A Counter row `fw1:<userId>` marks each free-week account.
+
+## 2026-11-26 — A Week Pass and a Founder Lifetime, as a test on the sister sites' Premium pages
+
+Test 2 of the Premium pricing reset the owner approved on 26 Nov ("Yes, run all three tests"). Most visitors buy once
+(a deck, a holiday haul) and will never subscribe; collectors who love the product would pay once for good. No collector
+app sells either today.
+
+- **Who and when:** members signed in on a sister site's /premium (MTG, Dex, YGO, TCG Prices), 7 Dec to 21 Dec 2026
+  (00:00 UTC), split by account id with the test's own salt (`passArm`, `lib/premium-pass.ts`). Arm B is offered, beside
+  the subscription, a **Week Pass, US$2.99** (7 days, charged once, never renews) and a **Founder Lifetime, US$99**
+  (Premium for good; first 100 members; accounts at least 14 days old). Arm A sees today's page. Rift's own /premium is
+  left to the P1/P2 copy tests. Anyone paying by subscription or an earlier pass is offered nothing; a free-week member
+  may buy.
+- **How it charges:** `/api/sister-premium/pass` opens a one-off Checkout with inline `price_data` (no Stripe Price,
+  no owner step), `customer_email` only: a pass never saves a Stripe customer, so it never marks the account "ever paid"
+  and never costs it the 14-day card trial later. The sister's status call returns `passes` (what this account may buy).
+- **Entitlement:** the webhook's `premium_pass` branch (`passPaid`), idempotent per Checkout session (Counter
+  `pass:s:<id>`, removed again if the grant fails so Stripe's retry works), extend-only premiumUntil, tier premium, in
+  one transaction with the holder marker `pass:u:<userId>` (a pass holder is paying: no second pass, no free-week
+  checkout on top). Lifetime is premiumUntil 1 Jan 2126, so every existing read keeps working. A paid session for a
+  missing account emails the owner to refund it.
+- **100 Founder seats, never 101:** a seat is taken atomically when the checkout opens (`updateMany` only while under
+  100), the checkout expires after 30 minutes, and `checkout.session.expired` gives an unpaid seat back. Any paid tier,
+  grandfathered Plus included, counts as already paying. Ops check `money:premium-passes` shows the tallies.
+- **Hard constants:** amounts, seats and dates live in code, no environment variable (`tests/premium-pass.test.ts`).
+- **Read 4 Jan 2027:** revenue per /premium visitor and paid starts per arm; existing subscribers are never offered a
+  pass or re-priced. The Week Pass's "counts toward a year" credit from the plan is not built: it would need a coupon on
+  the subscription checkout, and the test reads the pass alone first.
 
 ## 2026-11-26: Open clipping on the creator terms, and the A$300 cap holds itself
 

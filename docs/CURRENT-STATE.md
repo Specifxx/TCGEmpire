@@ -306,7 +306,16 @@ longer lands on its entry.
   panel on /admin/earnings sets paid ("Creators" costs naming `[id]`) against real tagged sales;
   under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24883) Since 2026-11-26 it is open to any clipper
   on the same terms; the ledger credits owed oldest first up to A$300 a month and pauses new clippers at 90%.
-  [2026-11-26](../DECISIONS.md#L26113)
+  [2026-11-26](../DECISIONS.md#L26163)
+- **Week Pass US$2.99 and Founder Lifetime US$99 (100 seats), as a test on sister /premium pages, 7 to 21 Dec 2026
+  only (owner, 2026-11-26):** arm by account id (`lib/premium-pass.ts`), one-off Checkout with inline prices, no saved
+  customer, webhook `premium_pass`, extend-only, hard constants; read 4 Jan 2027
+  ([2026-11-26](../DECISIONS.md#2026-11-26--a-week-pass-and-a-founder-lifetime-as-a-test-on-the-sister-sites-premium-pages)).
+- **A free Premium week for half of new accounts, as a test, 2 to 16 Dec 2026 only (owner, 2026-11-26):** arm by account
+  id (`lib/premium-free-week.ts`), 7 days extend-only at creation (OAuth, emailed link, sister sign-in), hard-coded dates,
+  no env; a free-week member may start the 14-day card trial early; read on /admin/premium, 6 Jan 2027. Outside the
+  window, still no Premium on sign-up
+  ([2026-11-26](../DECISIONS.md#2026-11-26--a-free-premium-week-for-half-of-new-accounts-as-a-test)).
 - **RiftCompare Premium at $4.99/mo or $39.99/yr with a free 14-day trial again (owner,
   2026-11-05: "use something that we used early on which had the best
   retention"; August's setup, 7 of 7 trials paid):** the
