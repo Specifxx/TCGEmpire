@@ -144,6 +144,19 @@ async function main() {
       console.log(`      ${q.keys[0].slice(0, 58).padEnd(58)} ${String(q.clicks).padStart(4)} ${String(q.impressions).padStart(6)}  pos ${q.position.toFixed(1)}`);
   }
 
+  // Page two (2026-11-27, MTG-to-OP plan): every page whose average position is 10.5-20 with 20+ impressions, the
+  // candidates for an indexing request and internal links from the guides.
+  console.log("\nPAGE TWO (position 10.5-20, 20+ impressions), with their top queries");
+  console.log(head(70));
+  for (const r of pages
+    .filter((p) => p.position > 10.5 && p.position <= 20 && p.impressions >= 20)
+    .sort((a, b) => b.impressions - a.impressions)
+    .slice(0, 80)) {
+    console.log(line({ ...r, keys: [path(r.keys[0])] }, 70));
+    for (const q of qp.filter((x) => x.keys[1] === r.keys[0]).sort((a, b) => b.impressions - a.impressions).slice(0, 3))
+      console.log(`      ${q.keys[0].slice(0, 58).padEnd(58)} ${String(q.clicks).padStart(4)} ${String(q.impressions).padStart(6)}  pos ${q.position.toFixed(1)}`);
+  }
+
   // Every comparison and question query (all of them, not the top N): compare pairs and posts to write.
   const byQuery = new Map<string, { impr: number; clicks: number; pos: number; page: string }>();
   for (const r of qp) {
