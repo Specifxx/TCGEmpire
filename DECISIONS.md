@@ -26159,3 +26159,18 @@ app sells either today.
 - **Read 4 Jan 2027:** revenue per /premium visitor and paid starts per arm; existing subscribers are never offered a
   pass or re-priced. The Week Pass's "counts toward a year" credit from the plan is not built: it would need a coupon on
   the subscription checkout, and the test reads the pass alone first.
+
+## 2026-11-26: Open clipping on the creator terms, and the A$300 cap holds itself
+
+The owner said yes on 26 Nov (the Cluely brief's move 2) to opening the pay-per-buy-click programme to anyone who
+clips our 9:16 price clips onto their own TikTok, Shorts or Reels. The terms stay as they were: A$0.04 per tracked buy
+click, the same A$300 a month for everyone together, the day-21 cut under 1.5x, and nothing paid per view.
+
+An open call means the cap can't depend on someone remembering to check it, so the ledger now enforces it:
+
+- `creatorDealRows` credits owed amounts oldest deal first. It stops when this month's "Creators" payouts plus
+  everything owed reach A$300. Whatever is left over is `heldByCap`, shown on the panel in amber, and is never owed.
+- `programmeHeadroom` closes the door to new clippers once paid + owed reaches 90% (`CLIPPER_INTAKE_SHARE`, A$270).
+  The panel then says "New clippers: PAUSED", and no new `CREATOR_DEALS` line is added until the next month.
+- A clipper's deal carries `kind: "clipper"`. Its `utmCampaign` must differ from every other deal's in its first six
+  letters and digits, because the `cr` marker is built from them.

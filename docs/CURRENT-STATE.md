@@ -304,7 +304,9 @@ longer lands on its entry.
   A$0.04, A$25 trial cap) or a creator code, A$300 a month in all; a creator's link
   (`utm_medium=creator`) tags their visitors' sub-ids `cr<handle6>`, and the "Paid creators"
   panel on /admin/earnings sets paid ("Creators" costs naming `[id]`) against real tagged sales;
-  under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24883)
+  under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24883) Since 2026-11-26 it is open to any clipper
+  on the same terms; the ledger credits owed oldest first up to A$300 a month and pauses new clippers at 90%.
+  [2026-11-26](../DECISIONS.md#L26163)
 - **Week Pass US$2.99 and Founder Lifetime US$99 (100 seats), as a test on sister /premium pages, 7 to 21 Dec 2026
   only (owner, 2026-11-26):** arm by account id (`lib/premium-pass.ts`), one-off Checkout with inline prices, no saved
   customer, webhook `premium_pass`, extend-only, hard constants; read 4 Jan 2027
