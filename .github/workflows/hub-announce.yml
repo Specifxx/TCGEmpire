@@ -1,0 +1,35 @@
+name: Hub announce
+
+# Posts one prepared announcement (social/hub-posts/<post>/post.md + attachments) to the hub's Discord #announcements and
+# the Telegram channel, and pins it (scripts/hub-announce.ts). Dispatch only: each run posts once, so run it once per post.
+
+on:
+  workflow_dispatch:
+    inputs:
+      post:
+        description: "Folder under social/hub-posts/"
+        required: true
+      only:
+        description: "both, discord or telegram"
+        required: false
+        default: both
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Post and pin
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          POST: ${{ inputs.post }}
+          ONLY: ${{ inputs.only }}
+        run: npx -y tsx scripts/hub-announce.ts
