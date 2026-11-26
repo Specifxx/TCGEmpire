@@ -39,7 +39,7 @@
     },
     "LGC|Booster Case": {
       "EU": 71400,
-      "US": 69380
+      "US": 71800
     },
     "LGC|Booster Pack": {
       "CA": 2400,
@@ -48,7 +48,7 @@
     },
     "LGC|Bundle": {
       "AU": 6500,
-      "CA": 4499,
+      "CA": 5995,
       "EU": 3390,
       "SG": 6000,
       "UK": 3495,
@@ -58,7 +58,7 @@
       "US": 139999
     },
     "LGC|Champion Deck": {
-      "CA": 1980,
+      "CA": 2495,
       "EU": 1990,
       "UK": 1889,
       "US": 2499
@@ -317,22 +317,16 @@
       "CA": 899
     },
     "REC|Bundle": {
-      "CA": 4499,
+      "CA": 4995,
       "US": 4999
     },
     "REC|Champion Deck (Shyvana)": {
       "CA": 2199,
       "US": 1599
     },
-    "REC|Champion Deck (Shyvana) Display": {
-      "CA": 7882
-    },
     "REC|Champion Deck (Vayne)": {
       "CA": 2199,
       "US": 1599
-    },
-    "REC|Champion Deck (Vayne) Display": {
-      "CA": 7882
     },
     "SFD|Booster Box": {
       "AU": 28000,
@@ -479,7 +473,6 @@
     },
     "UNL|Champion Deck (Vex) Display": {
       "AU": 4000,
-      "CA": 7590,
       "US": 9999
     },
     "UNL|Champion Deck (Vi)": {
@@ -492,7 +485,6 @@
     },
     "UNL|Champion Deck (Vi) Display": {
       "AU": 4000,
-      "CA": 7590,
       "US": 4250
     },
     "UNL|Nexus Night Pack": {
@@ -538,7 +530,7 @@
       "CA": 96999,
       "EU": 60000,
       "UK": 57999,
-      "US": 64200
+      "US": 61000
     },
     "VEN|Booster Pack": {
       "AU": 1000,
@@ -681,9 +673,6 @@
     "riftboundleagueoflegendstcgchampiondeck": {
       "US": 2999
     },
-    "riftboundleagueoflegendstcgsecretgardeng": {
-      "EU": 7999
-    },
     "riftboundleagueoflegendstradingcardgamea": {
       "EU": 18999
     },
@@ -741,10 +730,8 @@
       "EU": 60000
     },
     "secretgardenbox": {
+      "EU": 6995,
       "US": 22900
-    },
-    "secretgardenboxset": {
-      "EU": 6995
     },
     "t1worldschampionplayerbundle": {
       "US": 17000
