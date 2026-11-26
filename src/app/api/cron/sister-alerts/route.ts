@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { runHasSiteFailure, runSisterAlerts } from "@/lib/sister-alerts/run";
 import { digestHasSiteFailure, runSisterDigest } from "@/lib/sister-alerts/digest";
+import { runStashDigest, stashHasSiteFailure } from "@/lib/sister-stash";
 import { liveRoute } from "@/lib/public-data/live-route";
 
 // The daily sister-site alert check (lib/sister-alerts/run.ts), then the weekly
 // biggest-drops email (lib/sister-alerts/digest.ts, after the alerts so they get
-// the day's mail first), called by
+// the day's mail first), then the members' weekly collection email (lib/sister-stash.ts), called by
 // .github/workflows/sister-alerts.yml with Authorization: Bearer <CRON_SECRET>.
 // ?dry=1 decides and counts but sends and writes nothing. Answers 500 when a
 // site that has alerts could not be checked (its feed failed or is stale), so
@@ -23,8 +24,9 @@ async function handle(req: Request) {
   try {
     const summary = await runSisterAlerts({ db: prisma, dryRun });
     const digest = await runSisterDigest({ db: prisma, dryRun });
-    const failed = runHasSiteFailure(summary) || digestHasSiteFailure(digest);
-    return NextResponse.json({ ok: !failed, ...summary, digest }, { status: failed ? 500 : 200 });
+    const stash = await runStashDigest({ db: prisma, dryRun });
+    const failed = runHasSiteFailure(summary) || digestHasSiteFailure(digest) || stashHasSiteFailure(stash);
+    return NextResponse.json({ ok: !failed, ...summary, digest, stash }, { status: failed ? 500 : 200 });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : "sister alert run failed" }, { status: 500 });
   }

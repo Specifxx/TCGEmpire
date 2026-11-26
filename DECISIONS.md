@@ -25905,3 +25905,27 @@ only from the sites in `DEAL_VOTE_SITES` (exact origins, 30 a minute per address
 tally; its GET is one bounded `groupBy` over at most 60 drops, cached by the CDN for six hours (the route floor), so a
 board costs at most four reads a day per set of drops. Votes order nothing: no price, store row, alert or drop changes.
 A vote is a tap with no text and no address, so it is not an inbox item and does not call `notifyOwnerBounded`.
+
+## 2026-11-26 — A signed-in member's collection follows them, and a weekly stash email
+
+Owner, 2026-11-26 ("get these implemented ASAP … designed in a very, very nice way … tested"), move 5 of the deal-site study (OzBargain,
+PriceCharting): a sealed stash tracker with a weekly "your stash moved" email, on TCG Prices first. TCG Prices's `/collection` list lived
+in one browser only (`ce_vault_v1`), so it could not follow a member to another device and nothing could email them about it.
+
+- **The list lives here too, for a signed-in member.** `SisterStash` (email + site, PRIVATE, never exported) holds the items: product id,
+  market, quantity, price when added, and the name, page and image for the member's own browser only. `/api/sister-premium/stash` takes the
+  same premium-session token as the watch list (any signed-in account, Premium or not), exact-origin CORS, 60 a minute per address,
+  `STASH_SITES` only (TCG Prices). Every write names the revision it was built on and is a compare-and-set (`updateMany … rev: baseRev`);
+  a stale write gets 409 with the current list, and the browser merges and tries again. The browser merges three ways against the last
+  list both sides agreed on (TCG Prices `lib/vault-sync.ts`), so adds and removals on two devices both survive and a quantity changed on
+  both keeps the larger, never the sum.
+- **The weekly email is opt-in and goes to the account's own address only.** An unticked switch on `/collection`; switching it on marks
+  the address confirmed for the shared alert service (signing in proved the inbox), whose manage page and RFC 8058 one-click unsubscribe
+  (`&stash=<site>`) stop it. Stopping it, or "stop all", only switches the email off: the list is never deleted from an email link.
+- **Real prices, the site's own words.** `lib/sister-stash.ts` values the list from the site's `/alert-feed.json` (lowest in-stock store
+  price per market, never eBay, Amazon or a conversion), like for like: the weekly change counts only items priced both this week and at
+  the last email (`lastPrices`), the first email compares with the price when added. Every name and link in it comes from the feed, never
+  from what the browser stored. Up to three items up and three down, by money moved; a list with nothing in stock today sends nothing.
+- **Inside the mail cap.** It runs in the daily `sister-alerts` call after the alerts and the biggest-drops email, claiming under the same
+  `DIGEST_MAIL_CEILING` (20 of the shared 30), so a busy day defers it to the next and the alerts' reserve is never spent. A due site whose
+  feed fails or is stale fails the job, which the ops monitor's job check sees.
