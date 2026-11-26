@@ -25842,3 +25842,21 @@ records console errors, 5xx answers and (on a phone) anything wider than the scr
   Vercel function beyond the searches a visitor would make. The guard never clicks a buy link and names itself a bot.
 - **Rules:** a query is a word the catalogue always holds; a site that changes its product URLs or search box updates
   its entry in `sites.ts` in the same PR; never loosen a check to make a site pass, fix the site.
+
+## 2026-11-26 — EU store sweep: 47 Riftbound sealed shops and 2 singles shops in the eurozone
+
+**Owner, 2026-11-26**, after a European affiliate network approached us: "we need a much bigger European scene … all
+those stores in, and we're trading in euros now."
+
+**Before:** 22 eurozone shops for singles (the August ceiling, still true for singles: European singles trade on
+Cardmarket) and ONE for sealed. Sealed was never swept in the EU.
+
+**Now:** `data/store-vetting/rift-discovery.json` holds the 264 eurozone shops our sister sites already vet (the US
+pool of 2026-11-25 is in git history), and `scripts/store-candidates.ts` judged each with the sealed import's own gates
+and the store-level vetting. 47 shops with 3+ in-stock Riftbound sealed products and no store-level flag go into
+`SEALED_ONLY_SHOPIFY`; TCGKing and TCG Stars (NL, 270 and 450 matching in-stock singles) into RETAILERS with the EU
+section's uniform postage placeholder until the shipping probe measures them. 33 shops decommissioned before stay out.
+
+**Also:** `scripts/eu-shop-directory.ts` (`eu-shop-directory.yml`, read-only) lists which shops in UVS Games' official
+Riftbound retailer registry run Shopify in EUR, and which games their collections name, to seed every card site's probe.
+Research workflows on a `claude/**` branch now commit their result there (artifacts can't be read from a session).

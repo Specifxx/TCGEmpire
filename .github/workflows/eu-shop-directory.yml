@@ -1,0 +1,41 @@
+# Eurozone shop directory (scripts/eu-shop-directory.ts): which shops in the
+# official Riftbound retailer registry run Shopify in EUR. Read-only research for
+# the store probes of every card site; it commits nothing.
+name: EU shop directory
+on:
+  workflow_dispatch: {}
+  push:
+    branches: ["claude/**"]
+    paths:
+      - scripts/eu-shop-directory.ts
+      - .github/workflows/eu-shop-directory.yml
+permissions:
+  contents: write
+jobs:
+  directory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx tsx scripts/eu-shop-directory.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eu-shop-directory
+          path: eu-shop-directory.json
+          retention-days: 30
+      - name: Keep the result on a claude/** branch
+        if: always() && startsWith(github.ref_name, 'claude/')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          mkdir -p research && cp -f eu-shop-directory.json research/ 2>/dev/null || true
+          git add -f research/eu-shop-directory.json || true
+          git commit -m "Research: eu-shop-directory.json (${{ github.run_id }})" || exit 0
+          git pull --rebase -q origin ${{ github.ref_name }} || true
+          git push origin HEAD:${{ github.ref_name }}
