@@ -41,4 +41,5 @@ async function main() {
   console.log((process.env.QA_ALL === "1" ? SITES.map((s) => s.key) : changed).join(","));
 }
 
-main();
+// Run only as a script, so tests can import buildId.
+if (/qa-guard[\\/]changed\.ts$/.test(process.argv[1] ?? "")) main();

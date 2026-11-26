@@ -242,7 +242,7 @@ const PRICE = /(US\$|A\$|AU\$|C\$|CA\$|NZ\$|S\$|SG\$|HK\$|£|€|\$)\s?\d[\d,]*(
 
 type Outbound = { href: string; text: string; rel: string };
 
-function tagProblem(href: string): string | null {
+export function tagProblem(href: string): string | null {
   let u: URL;
   try {
     u = new URL(href);

@@ -106,7 +106,9 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// Run only as a script, so tests can import the helpers.
+if (/qa-guard[\\/]issues\.ts$/.test(process.argv[1] ?? ""))
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
