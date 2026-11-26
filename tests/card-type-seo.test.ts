@@ -173,10 +173,10 @@ test("the previous pass's overnumbered result is unchanged", () => {
       credentials: ["Showcase", "Overnumbered"],
       kind: "overnumbered",
     }),
-    // 61 characters with "Price" and the suffix, so the ladder's last rung drops
-    // it — exactly as it did before this pass. The query phrase survives, which
-    // is what the rung is for.
-    "Ahri Overnumbered — Riftbound OGN 303/298"
+    // The query phrase ("ahri overnumbered") first, then "Price": since 2026-11-26 a
+    // priced overnumbered card keeps the word, which the ladder used to shed only to
+    // fit a suffix the page stopped rendering on 2026-10-23 (Search Recovery).
+    "Ahri Overnumbered Price — Riftbound OGN 303/298"
   );
 });
 
@@ -213,8 +213,10 @@ test("a comma-less special printing keeps its credential, even at the cost of 60
     assert.ok(t.includes(credentials[0]), `the credential must survive: ${t}`);
     assert.ok(t.includes(identCode), t);
     // Bounded, so a regression cannot quietly return to the 82-character title
-    // that started all of this.
-    assert.ok(t.length + " | RiftCompare".length <= 70, `${t} is ${t.length + 14}`);
+    // that started all of this. The page renders no suffix since 2026-10-23, so the
+    // bound is the rendered title itself (a priced overnumbered card says "Price"
+    // since 2026-11-26 and runs up to 60).
+    assert.ok(t.length <= 60, `${t} is ${t.length}`);
   }
 });
 
@@ -231,7 +233,8 @@ test("when nothing fits, the SHORTEST candidate ships — not the last one writt
     credentials: ["Showcase", "Overnumbered"],
     kind: "overnumbered",
   });
-  assert.equal(t, "Seal of Discord Overnumbered — Riftbound SFD 234/221");
+  // Priced, so the overnumbered price rung (2026-11-26) wins: 58 characters, rendered unsuffixed.
+  assert.equal(t, "Seal of Discord Overnumbered Price — Riftbound SFD 234/221");
   // Rung order says what we would RATHER keep; it is not a claim about length, so
   // it must not decide the overflow case.
   assert.ok(!t.includes("Showcase"), t);
