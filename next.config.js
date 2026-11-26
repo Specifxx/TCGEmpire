@@ -185,6 +185,8 @@ const nextConfig = {
       // ~300 Riftbound functions have no use for them.
       "/card/[id]": ["./data/fetch-live/**/*.json"],
       "/api/card/[id]": ["./data/fetch-live/**/*.json"],
+      // The monthly cheapest-store record (lib/store-wins.ts): the store pages and their leaderboard.
+      "/stores/**": ["./data/store-wins/**/*.json"],
       "/pokemon/**": ["./data/pokemon/**/*.json"],
       "/api/pokemon/**": ["./data/pokemon/**/*.json"],
       "/sitemaps/**": ["./data/pokemon/**/*.json"],

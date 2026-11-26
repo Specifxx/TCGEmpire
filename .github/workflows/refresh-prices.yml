@@ -298,6 +298,8 @@ jobs:
           npx tsx scripts/export-public-data.ts
           # The Compare Empire network's feed (lib/family.ts), from the files just exported; never fatal.
           npx tsx scripts/family-feed.ts || true
+          # The month's cheapest-store record (lib/store-wins.ts, the stores' monthly badge), from the same files; never fatal.
+          npx tsx scripts/store-wins.ts || true
           bash scripts/publish-public-data.sh "refresh-prices.yml (${{ github.event_name }}, run ${{ github.run_id }})"
 
       - name: Release the snapshot (the daily production deploy)
