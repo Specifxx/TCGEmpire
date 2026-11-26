@@ -116,6 +116,17 @@ test("a home page stuck on 500 while the catalogue answers is a look, not red", 
   assert.deepEqual(dead, {});
 });
 
+test("a home page stuck on a gateway 504 is unknown, never red (umart.com.au, 23 Nov)", async () => {
+  const pages: Fake = {};
+  for (const h of ["https://umart.com.au/", "https://umart.com.au/products.json?limit=1", "https://umart.com.au/robots.txt"]) pages[h] = { status: 504 };
+  const r = await withFetch(pages, () => vetHost("umart.com.au", new Set()));
+  assert.equal(r.state, "unknown");
+  assert.ok(!r.flags.some((f: { red: boolean }) => f.red));
+  // A plain 500 everywhere is still dead.
+  const dead = await withFetch({}, () => vetHost("gone.com", new Set()));
+  assert.ok(dead.flags.some((f: { kind: string; red: boolean }) => f.kind === "dead" && f.red));
+});
+
 test("a contact page counts as contact, a redirect to home does not", async () => {
   const { hasContactPage } = await import("../scripts/store-vetting.mjs");
   const big = "y".repeat(800);

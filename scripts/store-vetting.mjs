@@ -220,6 +220,14 @@ export async function vetHost(host, banned, verified = new Set()) {
       page = { state: "ok", flags: [{ kind: "home-error", red: false, detail: `home page answers ${page.detail}, but the shop itself answers (${again.alive})` }] };
     }
   }
+  if (page.state === "error" && GATEWAY.test(String(home.status))) {
+    // 502/504/52x come from the shop's CDN or proxy, which answered: the domain is up and
+    // its origin was slow or refused a runner. Not a dead shop (23 Nov: umart.com.au
+    // answered 504 twice here while CompareEmpire's own import read its catalogue that
+    // day). Unknown, like a block: counted as "could not be read", never red.
+    out.state = "unknown";
+    return out;
+  }
   out.state = page.state === "blocked" ? "blocked" : "ok";
   if (page.state === "error") out.flags.push({ kind: "dead", red: true, detail: `home page answers ${page.detail}, again after a pause, and neither its catalogue nor robots.txt answers` });
   if (page.flags) out.flags.push(...page.flags);
@@ -244,6 +252,9 @@ export async function vetHost(host, banned, verified = new Set()) {
   }
   return out;
 }
+
+/** Gateway answers: the shop's edge (Cloudflare, Akamai, a load balancer) is up, its origin is not answering us. */
+const GATEWAY = /^(502|504|52\d|530)$/;
 
 const sleepMs = (ms) => new Promise((r) => setTimeout(r, ms));
 /** Pause between a 5xx and its re-check. Tests set STORE_VETTING_RECHECK_MS=0. */
