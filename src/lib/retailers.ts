@@ -3515,6 +3515,30 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "US$6.25-7.43 Ground Advantage, US$2.09 letter (probed 2026-11-25) · no free-shipping threshold",
     country: "US",
   }, // sweep 2026-11-25: 754 in-stock singles match, cur=USD
+  // EU sweep 2026-11-26 (scripts/store-candidates.ts over the eurozone shops the sister sites
+  // vet): the two that cleared every check, 20+ in-stock singles on our cards and 80%+ of the
+  // collection matching. Postage is the EU section's uniform placeholder until the shipping
+  // probe measures them (shipping-rates.json "unmeasured").
+  tcgking: {
+    key: "tcgking",
+    name: "TCGKing",
+    base: "https://tcgking.nl",
+    collections: ["riftbound-all"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  }, // EU sweep 2026-11-26: 270 in-stock singles match, cur=EUR (NL)
+  tcgstars: {
+    key: "tcgstars",
+    name: "TCG Stars",
+    base: "https://www.tcgstars.nl",
+    collections: ["riftbound-single", "riftbound", "radiance-en", "riftbound-display"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  }, // EU sweep 2026-11-26: 450 in-stock singles match, cur=EUR (NL)
 
 };
 

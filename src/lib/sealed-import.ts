@@ -518,6 +518,12 @@ export function detectSet(title: string): string | null {
 // product), and a case, a lot or several bundles is never the single bundle.
 export const SET_LESS_GROUPS: readonly { re: RegExp; word: string; groupKey: string }[] = [
   { re: /^(?=.*\bgift\s+of\s+the\s+rift\b)(?=.*\bbundle\b)/i, word: "giftoftherift", groupKey: "giftoftheriftbundle" },
+  // Riot's event-only Secret Garden Bundle (2026-11-26, DECISIONS.md "One group for the Secret Garden Bundle"): the 25
+  // Nov export had it on four pages: TCGplayer's "Secret Garden Box" (secretgardenbox, with one eBay row), Cardmarket's
+  // "Secret Garden Box Set" (EU), Tier Zero's "… Gift Box Set - Event Exclusive Sealed" (UK) and, because two titles
+  // say "Unleashed" (its three boosters), the Unleashed Bundle page (SpellNexus EUR 350, eBay US$229 beside a real
+  // ~US$50 bundle). Stores call it a bundle, a box or a box set; any of the three is the one product.
+  { re: /^(?=.*\bsecret\s+garden\b)(?=.*\b(?:bundle|box)\b)/i, word: "secretgarden", groupKey: "secretgardenbox" },
 ];
 const SEVERAL = /\bcase\b|\blots?\b|\bset\s+of\s+\d|\b\d+\s*x\b|\bx\s*\d+\b|\(\s*\d+\s*(?:bundles|boxes)\s*\)/i;
 
@@ -1331,6 +1337,13 @@ async function refreshEbaySealedMarket(
     // cleanly. The others (Bundle, Champion Deck (<name>), the T1 seeds, …)
     // carry group names that do not round-trip through the classifier, and a
     // blanket equality check would silently empty them.
+    // A set-less product (SET_LESS_GROUPS) answering another group's search (2026-11-26: "Riftbound Secret Garden
+    // Bundle NIB Unleashed", US$229, came back for "Riftbound Unleashed Bundle" and sat on the UNL|Bundle page). The
+    // cleanup would drop it after the run; refusing it here keeps it off the page in between.
+    if (misfiledSetLess(r.title, g.groupKey)) {
+      console.warn(`eBay sealed ${mkt.country}: dropped "${r.title}" from ${g.groupKey}: it is ${setLessGroupKey(r.title)}.`);
+      continue;
+    }
     if (SELF_TYPED.has(g.productType) && classifySealed(r.title) !== g.productType) {
       console.warn(
         `eBay sealed ${mkt.country}: dropped "${r.title}" from ${g.groupKey} — ` +

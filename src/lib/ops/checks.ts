@@ -496,6 +496,9 @@ export const JOBS: { file: string; title: string; staleH: number; scheduledSince
   { file: "coverage-audit.yml", title: "Riftbound coverage audit (weekly)", staleH: 200, scheduledSince: "2026-11-24T09:23:00Z" },
   // Every six hours (2026-11-22): the five sites' giveaway draws, winner emails and redraws (lib/giveaway-run.ts).
   { file: "giveaway-draw.yml", title: "Giveaway draw job", staleH: 18, scheduledSince: "2026-11-23T00:41:00Z" },
+  // Hourly (2026-11-26): the QA guard walks every live site's core journeys after each release (scripts/qa-guard/).
+  // Red here means the guard itself broke; a broken SITE is a `qa-guard` issue the daily fix session works.
+  { file: "qa-guard.yml", title: "QA guard (live site journeys)", staleH: 30, scheduledSince: "2026-11-26T01:00:00Z" },
 ];
 
 export async function scheduledJobs(d: OpsDeps): Promise<CheckResult[]> {

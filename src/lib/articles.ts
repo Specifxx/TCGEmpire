@@ -3285,11 +3285,14 @@ For the running list of everything Riot has genuinely shown — kept strictly se
     slug: "riftbound-secret-garden-bundle",
     category: "blog",
     title: "Riftbound Secret Garden Bundle: What's In It",
+    // 26 Nov: 208 impressions in 28 days at position 9.6 and no click (page scorecard, 23 Nov). The events are over and
+    // the bundle now has its own price page, so a searcher wants its price first, then its contents.
+    seoTitle: "Riftbound Secret Garden Bundle Price + What's Inside",
     excerpt:
-      "What's in Riot's US$70 Secret Garden Bundle, every 2026 event where you can still buy one, and the supply map behind its Europe-vs-US price gap.",
+      "What Riot's US$70 Secret Garden Bundle holds, what it sells for now (live store, TCGplayer and Cardmarket prices) and why Europe once paid double.",
     author: "RiftCompare",
     date: "2026-09-12",
-    updated: "2026-09-25", // Deal Finder's cross-region view was cut; the gap line points at /market/records
+    updated: "2026-11-26", // its own sealed price page (/sealed/secretgardenbox) now that resellers list it
     readMins: 8,
     tags: ["news", "collecting", "sealed", "prices"],
     shop: [
@@ -3297,7 +3300,8 @@ For the running list of everything Riot has genuinely shown — kept strictly se
       { label: "Riftbound sealed on eBay", query: "Riftbound TCG sealed box" },
     ],
     summary: [
-      "**The Secret Garden Bundle is US$70 and event-exclusive** — no shop sells it, so it will never appear on our [sealed comparison](/sealed) at a retail price.",
+      "**Its price today is on [the Secret Garden Bundle price page](/sealed/secretgardenbox)** (updated 26 November): every store, TCGplayer and Cardmarket listing of it, by market. On 25 November TCGplayer's market price was US$230 and Cardmarket's lowest was EUR 69.98.",
+      "**The Secret Garden Bundle was US$70 and event-exclusive** — Riot sold it only at events, so the prices we compare are resale: shops and marketplaces reselling boxes bought there.",
       "**Nine events remain in 2026**, announced 11 September: PAX West and RQ Singapore (early Sept), RQ Los Angeles, PAX Australia, Paris Games Week, Spiel Essen, Lucca, the European Regional Championship and Convergence Fest in Las Vegas.",
       "**Europe has had zero Secret Garden events so far** — and four land inside 18 days in late October and early November. That is the single biggest scheduled supply event for this product.",
       "**Resale is running around €165-180 in Europe** against roughly US$88 and up in the States. That gap is geography, not grading.",
@@ -3333,7 +3337,9 @@ For the running list of everything Riot has genuinely shown — kept strictly se
         ebaySearch: true,
       },
     ],
-    body: `Riot published its remaining 2026 event schedule for the **Secret Garden Bundle** on 11 September, and for the first time the full distribution plan for this product is public. Read by region rather than by date, that list explains something the price data has been showing for weeks and nobody had a reason for: why the same US$70 box costs roughly twice as much in Europe as it does in the United States.
+    body: `*Updated 26 November:* the events below are now behind us, and the bundle has a page of its own. **[Compare Secret Garden Bundle prices](/sealed/secretgardenbox)** across the stores, TCGplayer and Cardmarket, in your market. On 25 November TCGplayer's market price was US$230 and Cardmarket's lowest listing EUR 69.98: the Europe-over-US gap this post describes has turned the other way. The rest of this post is as published in September.
+
+Riot published its remaining 2026 event schedule for the **Secret Garden Bundle** on 11 September, and for the first time the full distribution plan for this product is public. Read by region rather than by date, that list explains something the price data has been showing for weeks and nobody had a reason for: why the same US$70 box costs roughly twice as much in Europe as it does in the United States.
 
 ## What the Secret Garden Bundle actually is
 
@@ -3365,7 +3371,7 @@ Nine events were listed, and three have already passed:
 | 6-8 Nov | European Regional Championship, Stuttgart | Europe |
 | 11-13 Dec | Convergence Fest / NA Regional Championship, Las Vegas | North America |
 
-There is no tenth option. No local game store can order this, it is not on TCGplayer as retail stock, and it will never appear on [our sealed comparison](/sealed) with a shop price — the same situation as the [T1 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection), which is also distributed outside the retail channel entirely.
+There is no tenth option. No local game store can order this, it is not on TCGplayer as retail stock, and no shop sells it at Riot's price: what shops and TCGplayer list is resale, which is what [the bundle's price page](/sealed/secretgardenbox) compares — the same situation as the [T1 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection), which is also distributed outside the retail channel entirely.
 
 ## The price gap nobody had an explanation for
 

@@ -25819,6 +25819,7 @@ hooks are `hero-gift`, `hero-sub`, `hero-markets`, `hero-ways`, `hero-meta`, `ho
 
 **Read:** phone bounce (non-Reddit) and buy clickers per 100 on the home page, the week after release against the week before.
 
+<<<<<<< HEAD
 ## 2026-11-26 — Priced overnumbered cards say "Price" in the title; facet pages lead with a price table
 
 **Why (Search Recovery, Rift plan items 2 and 3):** Search Console, 28 days to 23 Nov: overnumbered card pages sat at
@@ -25833,3 +25834,63 @@ already had this rule; signatures already say "Price". Other printings are uncha
 table of the 10 most valuable priced cards above the grid (#664).
 
 **Read:** clicks and CTR on `/card/*` overnumbered pages, 3 to 9 Dec against 16 to 22 Nov.
+=======
+## 2026-11-26 — A daily QA guard walks every live site's core journeys (search, product, filters, Best Basket)
+
+**Owner, 2026-11-26**, after finding that sealed products could not be searched on OP Compare: "we need to catch these
+bugs claude! this is not good enough i need you to improve."
+
+**Why nothing caught it:** every guard we had reads data, jobs and limits (`ops-monitor`, the watchdogs), templates and
+SEO (`seo-preview-gate`), or links (`affiliate-gap-audit`). None of them used a site the way a buyer does. A search box
+that returns nothing for sealed product is green on all of them.
+
+**Now:** `scripts/qa-guard/` is a real browser at 1366px and 390px that, on each of the 13 live sites, types a single
+and a sealed query into the site's own header search, opens the first match, checks it shows a price and a buy link whose
+eBay / Amazon / TCGplayer tags are ours, uses the list page's keyword filter and opens Best Basket; on every page it
+records console errors, 5xx answers and (on a phone) anything wider than the screen. `docs/qa-guard.md` has the table.
+
+- **When:** hourly, only for sites whose build id changed (every release is walked within the hour), and every site
+  daily at 21:17 UTC. One plain GET per site an hour otherwise.
+- **Who hears:** one `qa-guard` issue per broken site in this repository, rewritten each run and closed when it passes.
+  A scheduled Claude session works those issues every day. Only what no agent can fix gets `qa:owner` and an
+  owner step. The job is red only when the guard itself broke (`JOBS` in `lib/ops/checks.ts`).
+- **Cost:** GitHub Actions only (public repository); about 26 page walks a day per site, all CDN-cached pages, no
+  Vercel function beyond the searches a visitor would make. The guard never clicks a buy link and names itself a bot.
+- **Rules:** a query is a word the catalogue always holds; a site that changes its product URLs or search box updates
+  its entry in `sites.ts` in the same PR; never loosen a check to make a site pass, fix the site.
+
+## 2026-11-26 — EU store sweep: 47 Riftbound sealed shops and 2 singles shops in the eurozone
+
+**Owner, 2026-11-26**, after a European affiliate network approached us: "we need a much bigger European scene … all
+those stores in, and we're trading in euros now."
+
+**Before:** 22 eurozone shops for singles (the August ceiling, still true for singles: European singles trade on
+Cardmarket) and ONE for sealed. Sealed was never swept in the EU.
+
+**Now:** `data/store-vetting/rift-discovery.json` holds the 264 eurozone shops our sister sites already vet (the US
+pool of 2026-11-25 is in git history), and `scripts/store-candidates.ts` judged each with the sealed import's own gates
+and the store-level vetting. 47 shops with 3+ in-stock Riftbound sealed products and no store-level flag go into
+`SEALED_ONLY_SHOPIFY`; TCGKing and TCG Stars (NL, 270 and 450 matching in-stock singles) into RETAILERS with the EU
+section's uniform postage placeholder until the shipping probe measures them. 33 shops decommissioned before stay out.
+
+**Also:** `scripts/eu-shop-directory.ts` (`eu-shop-directory.yml`, read-only) lists which shops in UVS Games' official
+Riftbound retailer registry run Shopify in EUR, and which games their collections name, to seed every card site's probe.
+Research workflows on a `claude/**` branch now commit their result there (artifacts can't be read from a session).
+
+## 2026-11-26 — One group for the Secret Garden Bundle
+
+**Found:** the page scorecard (23 Nov) listed `/blog/riftbound-secret-garden-bundle` as a FIX page (208 impressions in
+28 days to 23 Nov, position 9.6, no click; `gsc-queries` run 45761742671). The post still said the bundle "will never
+appear on our sealed comparison", but resellers list it now, and the 25 Nov export had it on FOUR pages: TCGplayer's
+`secretgardenbox` (with one eBay row), Cardmarket's "Secret Garden Box Set" (EU), Tier Zero's "… Gift Box Set - Event
+Exclusive Sealed" (UK) and, because two titles say "Unleashed" (its three boosters), `UNL|Bundle`: SpellNexus EUR 350
+and eBay US$229 beside a real Unleashed Bundle.
+
+**Now:** `SET_LESS_GROUPS` files any "secret garden" title saying bundle or box under TCGplayer's key `secretgardenbox`
+(its URL stays; a case, a lot or several boxes keeps its own page), as Gift of the Rift since 2026-11-19. Over the
+export exactly those 6 rows match and 4 move. The old title slugs 301 (`setLessSlugRedirect`). The eBay sealed pass also
+refuses a result whose title names a set-less product when it answers another group's search (`misfiledSetLess`), so it
+no longer sits on the Unleashed Bundle page until the cleanup runs. The post's SEO title leads with the price, its
+summary and body link the price page, and the September claim is corrected in a dated note; its 25 Nov numbers
+(TCGplayer US$230, Cardmarket from EUR 69.98) are the export's, not estimates.
+>>>>>>> origin/main
