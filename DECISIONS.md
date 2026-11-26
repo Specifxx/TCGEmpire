@@ -25877,3 +25877,20 @@ refuses a result whose title names a set-less product when it answers another gr
 no longer sits on the Unleashed Bundle page until the cleanup runs. The post's SEO title leads with the price, its
 summary and body link the price page, and the September claim is corrected in a dated note; its 25 Nov numbers
 (TCGplayer US$230, Cardmarket from EUR 69.98) are the export's, not estimates.
+
+## 2026-11-26 — Stray files stay out of pull requests
+
+**Found:** threads share one `claude/*` branch name per repository, and several workflows commit their output to the
+branch they ran on: the research sweeps (`eu-shop-directory.yml`, `coverage-audit.yml` write `research/`), the sister
+sites' store and page probes (`probe/`), and both scan evals (`scripts/scan-eval/results*/`). That output then rode into
+whatever pull request was opened from the branch next: the EU sweep's research JSON landed in #672, and a scan eval
+committed its results to the PR branch that triggered it.
+
+**Now:** the scan evals never push to the triggering branch. Each run's results go to the run's artifact and to the
+`scan-eval-results` branch (never merged, never deployed; `results/` and `results-singles/`, latest run of each, the
+history in its log). Every repository gets `.github/workflows/stray-paths.yml`, the same file everywhere except its
+`STRAY_EXTRA` line: a pull request that adds or changes a file under `research/`, `probe/`, `assets-candidates/` or
+`scripts/scan-eval/results*/`, a `qa-state.json` / `qa-report.json`, a `*.bundle`, an `.env*` (not `.env.example`),
+`.claude/settings.local.json`, `node_modules/` or `.next/` fails. Repositories whose `data/public/` belongs to their
+workflows alone add `^data/public/`. Deleting a stray file always passes. A pull request that means to change one of
+those paths takes the label `paths-ok` and says why in its body. `tests/stray-paths.test.ts` pins both.
