@@ -25818,3 +25818,18 @@ one block in `globals.css` ("The phone's home page, tidied", above the last redu
 hooks are `hero-gift`, `hero-sub`, `hero-markets`, `hero-ways`, `hero-meta`, `home-flow`, `home-give`, `home-shelf`, `shelf-note`.
 
 **Read:** phone bounce (non-Reddit) and buy clickers per 100 on the home page, the week after release against the week before.
+
+## 2026-11-26 — Priced overnumbered cards say "Price" in the title; facet pages lead with a price table
+
+**Why (Search Recovery, Rift plan items 2 and 3):** Search Console, 28 days to 23 Nov: overnumbered card pages sat at
+position 4 to 10 for exactly their title's words ("kayn overnumbered" 48 impressions at 6.3, "pyke overnumbered" 68 at
+9.5, "renekton overnumber" 54 at 5.4, "ksante overnumber" 52 at 4.9) with 0 clicks across about 1,000 impressions. Their
+titles read "Kayn Overnumbered — Riftbound RAD 182/167": the ladder shed "Price" only to fit " | RiftCompare", a suffix the
+page has not rendered since 2026-10-23.
+
+**Now:** `cardTitle` returns `<short name> Overnumbered Price — Riftbound <set> <number>` for a priced overnumbered printing
+when it fits 60 on its own (all 108 do). Unpriced ones never say "Price". The collector number keeps it unique. Base cards
+already had this rule; signatures already say "Price". Other printings are unchanged. The same day, `FacetPageBody` puts a
+table of the 10 most valuable priced cards above the grid (#664).
+
+**Read:** clicks and CTR on `/card/*` overnumbered pages, 3 to 9 Dec against 16 to 22 Nov.
