@@ -20,13 +20,13 @@ import { getSetRevealCount } from "@/lib/set-reveal-count";
 import { preordersHrefForSet, releaseDateLabel as calendarDateLabel } from "@/lib/release-calendar";
 import { RadianceHub } from "@/components/sets/RadianceHub";
 import { LegacyHub } from "@/components/sets/LegacyHub";
-import { LEGACY_FAQ } from "@/lib/sets/legacy";
+import { LEGACY_FAQ, LEGACY_TOTAL_CARDS } from "@/lib/sets/legacy";
 import { ReckoningHub } from "@/components/sets/ReckoningHub";
 import { RECKONING_FAQ } from "@/lib/sets/reckoning";
 import { ReleaseAlertSignup } from "@/components/ReleaseAlertSignup";
 import { RadiancePreorderCta } from "@/components/RadiancePreorderCta";
-import { RadianceReveals } from "@/components/sets/RadianceReveals";
-import { getRadianceReveals } from "@/lib/radiance-reveals";
+import { RadianceReveals, SetRevealsStrip } from "@/components/sets/RadianceReveals";
+import { getLegacyReveals, getRadianceReveals } from "@/lib/radiance-reveals";
 import { RADIANCE_FAQ, isBeforeRadianceRelease } from "@/lib/sets/radiance";
 import { faqPage } from "@/lib/jsonld";
 import { RelatedGuides } from "@/components/RelatedGuides";
@@ -382,6 +382,7 @@ export default async function SetPage({
   const { totalInSet, page, totalPages } = view;
 
   const radianceReveals = set.slug === "radiance" ? await getRadianceReveals(country) : null;
+  const legacyReveals = set.slug === "legacy" ? await getLegacyReveals(country) : null;
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
   // A comingSoon set (singles not on sale yet) can still be FULLY revealed —
@@ -588,6 +589,17 @@ export default async function SetPage({
           within one screen. */}
       {set.slug === "radiance" && isBeforeRadianceRelease() && <RadiancePreorderCta placement="section" />}
       {set.slug === "radiance" && <RadianceHub country={country} />}
+      {/* Legacy preview season (2026-11-27): the reveal counter and newest imported cards above the hub. */}
+      {set.slug === "legacy" && (
+        <SetRevealsStrip
+          data={legacyReveals}
+          setName="Legacy"
+          total={LEGACY_TOTAL_CARDS}
+          logHref="/blog/riftbound-legacy-spoilers-set-6"
+          logLabel="Every Legacy spoiler, with what each one means →"
+          emptyNote="No Legacy card has been revealed yet. Previews start at Convergence Fest on 13 December 2026; each card gets its page here the day Riot shows it."
+        />
+      )}
       {/* Legacy's hub (2026-11-01), the same role RadianceHub played before
           Radiance's cards imported: it is what earns LGC's hubReady. */}
       {set.slug === "legacy" && <LegacyHub country={country} />}

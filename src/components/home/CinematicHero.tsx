@@ -7,7 +7,6 @@ import { CountryHeroToggle } from "@/components/CountryHeroToggle";
 import { SearchBar } from "@/components/SearchBar";
 import { NavIcon, type NavIconName } from "@/components/NavIcon";
 import { HeroStats, type MarketStat } from "./HeroStats";
-import { RiftEmbers } from "./RiftEmbers";
 import { NocturneComing } from "./NocturneComing";
 import { HalloweenDecor } from "./HalloweenDecor";
 import { ChristmasGifts } from "./ChristmasGifts";
@@ -105,10 +104,8 @@ export function CinematicHero({
       {/* Background: flat band, the slow vortex, the embers. All decorative. */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
         <div className="rb-hero-band absolute inset-0 border-b border-ink-800 bg-ink-950" />
-        <div className="rb-depth-slow absolute inset-0">
-          <div className="rb-vortex" />
-        </div>
-        <RiftEmbers />
+        {/* The vortex and the embers canvas went with the 2026-11-27 redesign (globals.css rift-ds): no glows or
+            particles behind the headline. */}
         <HalloweenDecor />
         <div className="rb-paranoia absolute inset-0" />
       </div>

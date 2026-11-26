@@ -196,6 +196,10 @@ export interface Article {
   // Multiple galleries. Position each inside `body` with a `[[embed:N]]` marker on
   // its own line (N = index into this array); unplaced embeds render after the body.
   embeds?: ArticleEmbed[];
+  // A set's live "Latest reveals" strip (components/sets/RadianceReveals.tsx
+  // SetRevealsStrip), placed in `body` with a `[[reveals]]` line. Database cards
+  // only, imported by set-reveals.yml; renders nothing after the set's release.
+  reveals?: "legacy";
   // Card-image close-ups, positioned in `body` with `[[closeup:N]]` markers.
   closeups?: ArticleCloseUp[];
   // Override for the "Ready to buy?" CTA at the end of the article — lets a guide
@@ -12944,6 +12948,7 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
     author: "RiftCompare",
     date: "2026-09-12",
     readMins: 14,
+    reveals: "legacy",
     tags: ["legacy", "news", "set", "spoilers", "release", "draft"],
     // Riot's own Legacy key art from the 2027 product announcement, re-hosted
     // locally so next/image has a manifest entry and the thumbnail survives a
@@ -13018,6 +13023,8 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
 Riftbound's sixth set, **Legacy**, releases on **29 January 2027**. It is a genuinely significant release: 239 cards with a record 93 Showcase printings, a regional-identity theme, the game's first draft-focused design, and the first change Riftbound has ever made to what a booster pack contains.
 
 It has also been described as the biggest Riftbound set ever, and that part does not survive a careful look.
+
+[[reveals]]
 
 ## First, the size claim
 

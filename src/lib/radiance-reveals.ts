@@ -13,6 +13,7 @@ import { cardTileSelect } from "./cards";
 import type { Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
 import { isBeforeRadianceRelease } from "./sets/radiance";
+import { isBeforeLegacyRelease, LEGACY_SET_CODE } from "./sets/legacy";
 import type { CardTileData } from "@/components/CardTile";
 
 export interface RadianceReveals {
@@ -21,10 +22,26 @@ export interface RadianceReveals {
   latest: CardTileData[];
 }
 
-const WHERE = { setCode: "RAD", isPromo: false } as const;
+// Legacy (2026-11-27, "Win back RiftCompare visitors"): the same strip for
+// any set in its preview season. Rift's Google peaks were set-cycle news
+// (15-28 Sep, Google: 2,788 visitors, most on Radiance spoiler and mechanic
+// posts; 12-25 Nov, between sets: 1,129), so Legacy's reveals get the counter
+// on /sets/legacy and inside the spoilers post, filled by set-reveals.yml.
+export type SetReveals = RadianceReveals;
 
 export async function getRadianceReveals(country: Country): Promise<RadianceReveals | null> {
-  if (!isBeforeRadianceRelease()) return null;
+  return isBeforeRadianceRelease() ? getSetReveals("RAD", country) : null;
+}
+
+// `ttl` must be at least the reading page's own revalidate (db.ts rule 5): the
+// set page is dynamic and reads it at 900; a blog post (ISR, a day) passes 86400,
+// and the import's CONTENT_TAG purge still refreshes it the day cards land.
+export async function getLegacyReveals(country: Country, ttl = 900): Promise<SetReveals | null> {
+  return isBeforeLegacyRelease() ? getSetReveals(LEGACY_SET_CODE, country, ttl) : null;
+}
+
+async function getSetReveals(setCode: string, country: Country, ttl = 900): Promise<SetReveals | null> {
+  const WHERE = { setCode, isPromo: false } as const;
   try {
     return await unstable_cache(
       async (): Promise<RadianceReveals> => {
@@ -44,8 +61,8 @@ export async function getRadianceReveals(country: Country): Promise<RadianceReve
           latest: latest as unknown as CardTileData[],
         };
       },
-      ["radiance-reveals-v1", country],
-      { revalidate: 900, tags: [CONTENT_TAG] },
+      [setCode === "RAD" ? "radiance-reveals-v1" : `set-reveals-v1-${setCode}-${ttl}`, country],
+      { revalidate: ttl, tags: [CONTENT_TAG] },
     )();
   } catch {
     return null;
