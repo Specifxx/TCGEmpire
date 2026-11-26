@@ -1,6 +1,6 @@
 # Card scanner accuracy eval (scripts/scan-eval/run.ts; DECISIONS.md 2026-11-19 "Card scanner beta").
 # Runs on a claude/** branch when the eval or the scanner changes, or by hand. Makes about 700 small vision calls
-# (Haiku 5.5, plus Sonnet 5.5 on 120 hard images): roughly US$0.40-0.60 a run. Commits results back to the branch.
+# (Haiku 5.5, plus Sonnet 5.5 on 120 hard images): roughly US$0.40-0.60 a run. Results go to the scan-eval-results branch and the run's artifact.
 name: Scan eval
 on:
   workflow_dispatch:
@@ -31,11 +31,30 @@ jobs:
           EVAL_COMPARE: "0" # Sonnet 5.5 measured in run 2 (results-v2): 99.2% vs Haiku 96.7% on hard images, ~20x the price
       - run: cat scripts/scan-eval/results/summary.md >> "$GITHUB_STEP_SUMMARY"
         if: always()
-      - name: Commit results
+      - uses: actions/upload-artifact@v4
         if: always()
+        with:
+          name: results
+          path: scripts/scan-eval/results
+          retention-days: 30
+      # Results never go back to the triggering branch: threads share claude/* branches, and a results commit there
+      # rode into unrelated pull requests (DECISIONS.md 2026-11-26 "Stray files stay out of pull requests").
+      # They go to the `scan-eval-results` branch (never merged, never deployed), one folder per eval.
+      - name: Publish results to the scan-eval-results branch
+        if: always()
+        env:
+          SRC: scripts/scan-eval/results
+          DEST: results
         run: |
-          git config user.name "scan-eval"
-          git config user.email "scan-eval@users.noreply.github.com"
-          git add scripts/scan-eval/results
-          git commit -m "Scan eval results" || exit 0
-          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
+          [ -d "$SRC" ] || exit 0
+          pub="$RUNNER_TEMP/pub"
+          for i in 1 2 3 4; do
+            cd "$GITHUB_WORKSPACE"; rm -rf "$pub"; git worktree prune
+            if git fetch -q --depth 1 origin scan-eval-results; then git worktree add -q --detach "$pub" FETCH_HEAD; else git worktree add -q --orphan "$pub"; fi
+            rm -rf "$pub/$DEST" && cp -r "$SRC" "$pub/$DEST"
+            cd "$pub" && git add -A "$DEST"
+            git -c user.name=scan-eval -c user.email=scan-eval@users.noreply.github.com commit -qm "Scan eval results ($GITHUB_REF_NAME @ ${GITHUB_SHA::7})" || exit 0
+            git push -q origin HEAD:refs/heads/scan-eval-results && exit 0
+            sleep $((i * 5))
+          done
+          exit 1

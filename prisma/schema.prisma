@@ -2482,6 +2482,24 @@ model SisterAd {
   @@index([status, createdAt])
 }
 
+/// Hot/cold votes and "expired" flags on Sealed Sniper drops shown on a sister site's deal board
+/// (TCG Prices first, 2026-11-26; lib/deal-votes.ts). PRIVATE: never in PUBLIC_MODELS or the export.
+/// No account and no IP: `voter` is an HMAC (key derived from AUTH_SECRET) of IP + user agent, cut to 22 characters, so one
+/// visitor holds one vote per drop and the address itself is never stored.
+model DealVote {
+  site    String
+  /// the drop's id from the site's sniper-drops.json
+  dropId  String
+  voter   String
+  /// 1 hot, -1 cold, 0 none (an expired flag alone)
+  vote    Int      @default(0)
+  expired Boolean  @default(false)
+  at      DateTime @default(now()) @updatedAt
+
+  @@id([site, dropId, voter])
+  @@index([site, dropId])
+}
+
 // COMMUNITY PULL RATES (2026-11-26, DECISIONS.md "Community pull rates"; lib/pull-rates.ts).
 // A signed-in member says "I opened N packs of <set> and these were every Epic and Showcase in them".
 // PRIVATE: a log is never shown on its own. Pages read only lib/pull-rates-server.ts's grouped
