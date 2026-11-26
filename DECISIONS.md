@@ -26219,3 +26219,20 @@ to be the fastest place to see each Legacy card.
   refreshes it the day cards land. The set page is dynamic and keeps 900 s, as Radiance's did.
 - `set-reveals.yml` runs twice a day (05:37 and 13:37 UTC, before the daily release) instead of every second day: a spoiler
   search goes to whoever has the card first, and outside a reveal season the run is a no-op.
+## 2026-11-27 — RiftCompare redesign, phase one: the Empire design standard, CSS only
+
+Bill (2026-11-26): "a complete redesign of RiftCompare". The shared standard (/mnt/project-files/design-system/README.md,
+design thread, 2026-11-27) came from a visitor asking us to hire a designer "so it wasn't giving claudeslop". It replaces
+the 2026-10-16 homepage motion (vortex, embers, the sheen across "Riftbound", the turning search aura).
+
+- `rift-ds` block in `globals.css` (before the last reduced-motion block): "Riftbound" and the logo word in solid brand
+  green, a flat masthead hero with no vortex, embers or wash, left-aligned from 640px with the content starting at the top,
+  a solid search with a 1.5px edge and a 3px brand focus ring, 10px radius on cards, buttons and inputs and 6px on badges,
+  no lift or glow on hover, no glass (backdrop blur) anywhere, the seasonal line above the h1 as a plain link.
+- `CinematicHero` no longer renders the vortex layer or the `RiftEmbers` canvas (less JavaScript on the home page).
+- Unchanged on purpose: every URL, title, meta, h1/h2 outline and word of server HTML (Rift's Google slide began the week of
+  the 14 Nov template change, so phase one is styling only); Rift green; the Santa hat to 27 Dec; the owner's glowing
+  Premium label ("I only want the font to be glowing", in the Premium CTA comment).
+- Checked live by injecting the block into riftcompare.com in Bill's Chrome: home at 1440 and 390/430 (iframes), a card page.
+- Phase two (after the Legacy launch, so the two effects can be read apart): the card page's price block and the home
+  sections' hierarchy.

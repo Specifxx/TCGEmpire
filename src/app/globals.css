@@ -2180,6 +2180,157 @@ html[data-pab1="b"] .pab1-b { display: block; }
   }
 }
 
+/* rift-ds:start — Empire design system v1 on RiftCompare (2026-11-27; /mnt/project-files/design-system/README.md).
+   Bill (2026-11-26): "a complete redesign of RiftCompare"; a visitor on a sister site asked us to hire a designer
+   "so it wasn't giving claudeslop". This block removes the generated-template tells and applies the shared standard
+   to Rift's own components. It changes no markup, words, order, URL or h1/h2 outline: CSS only, so the server HTML
+   Google reads is byte-identical. Rift stays green; the Santa hat and the owner's Premium label stay as they are. */
+
+/* 1. The coloured word in the h1 and the logo: one solid brand green, no gradient, no sheen, no glow. */
+.rb-flame-text,
+.rb-flame-live {
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: rgb(var(--c-brand-400)) !important;
+  filter: none !important;
+  animation: none !important;
+}
+/* 2. The hero is a masthead: no vortex, embers or paranoia wash; a flat band with a hairline under it, content
+   that starts at the top instead of floating in a third of the screen, left-aligned from 640px. */
+#rc-hero .rb-vortex,
+#rc-hero .rb-depth-slow,
+#rc-hero canvas,
+#rc-hero .rb-paranoia {
+  display: none !important;
+}
+#rc-hero {
+  min-height: 0 !important;
+}
+#rc-hero .rb-hero-band {
+  background: rgb(var(--c-ink-950)) !important;
+  border-bottom: 1px solid rgb(var(--c-ink-800)) !important;
+}
+#rc-hero h1 {
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+@media (min-width: 640px) {
+  #rc-hero .rb-hero-content {
+    text-align: left;
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+  #rc-hero .rb-hero-content > *,
+  #rc-hero .rb-hero-content h1,
+  #rc-hero .rb-hero-content .hero-sub,
+  #rc-hero .rb-hero-content nav {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  #rc-hero .rb-hero-content form,
+  #rc-hero .rb-hero-content [role="search"],
+  #rc-hero .rb-hero-content .mx-auto {
+    margin-left: 0 !important;
+  }
+  #rc-hero .rb-hero-content .justify-center {
+    justify-content: flex-start !important;
+  }
+  #rc-hero .hero-markets > div {
+    align-items: flex-start !important;
+  }
+  #rc-hero .rb-hero-content .text-center {
+    text-align: left !important;
+  }
+}
+/* The seasonal line above the h1 (xmas-common, until 27 Dec) is a plain link here, not a pill. */
+#rc-hero .xmas-banner {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  color: rgb(var(--c-brand-400)) !important;
+}
+
+/* 3. The search: solid, a firm 1.5px edge, the brand focus ring. No turning aura. */
+.rb-search-aura::before {
+  content: none !important;
+  animation: none !important;
+}
+#rc-hero input[type="search"],
+#rc-hero input[type="text"],
+header input[type="search"],
+header input[type="text"] {
+  border-width: 1.5px !important;
+  border-color: rgb(var(--c-ink-600)) !important;
+  border-radius: 10px !important;
+}
+.input:focus,
+#rc-hero input:focus,
+header input:focus {
+  border-color: rgb(var(--c-brand-400)) !important;
+  box-shadow: 0 0 0 3px rgb(var(--c-brand-400) / 0.18) !important;
+  outline: none !important;
+}
+
+/* 4. Shape: 10px on cards, plates, inputs and buttons; 6px on badges and tags. Pills stay only on filter chips and
+   the header's account and Premium controls (rounded-full utilities, untouched). */
+.card-surface,
+.btn,
+.input,
+.rb-way {
+  border-radius: 10px !important;
+}
+.chip,
+.tag {
+  border-radius: 6px !important;
+}
+
+/* 5. Interaction: hover is a firmer border, never a lift, a glow or a spotlight. */
+.card-surface,
+.rb-way {
+  box-shadow: none !important;
+}
+.rb-way:hover,
+.rb-way:focus-visible {
+  transform: none !important;
+}
+.group:hover .ct-art {
+  transform: none !important;
+}
+.rb-glow-hover:hover,
+.rb-glow-hover:focus-visible {
+  box-shadow: none !important;
+}
+.ct-tile:hover,
+[class*="hover:-translate-y"]:hover {
+  transform: none !important;
+}
+.ct-tile:hover,
+[class*="hover:shadow-glow"]:hover {
+  box-shadow: none !important;
+}
+
+/* 6. No glass. Panels that blurred what was behind them get a solid surface instead. */
+[class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+header[class*="backdrop-blur"],
+header [class*="backdrop-blur"] {
+  background-color: rgb(var(--c-ink-950)) !important;
+}
+
+/* 7. Loading skeletons may pulse; nothing else on Rift does (checked 2026-11-27). */
+
+/* 8. Type: tighter display headings. */
+main h2 {
+  letter-spacing: -0.01em;
+}
+/* rift-ds:end */
+
 @media (prefers-reduced-motion: reduce) {
   .gw-flash { animation: none; }
   .gw-prize, .gw-prize:hover { transform: none; transition: none; }
