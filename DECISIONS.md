@@ -25922,3 +25922,18 @@ history in its log). Every repository gets `.github/workflows/stray-paths.yml`, 
 `.claude/settings.local.json`, `node_modules/` or `.next/` fails. Repositories whose `data/public/` belongs to their
 workflows alone add `^data/public/`. Deleting a stray file always passes. A pull request that means to change one of
 those paths takes the label `paths-ok` and says why in its body. `tests/stray-paths.test.ts` pins both.
+
+## 2026-11-26 — Restock sightings: a member-posted forum in the Discord hub (three-week test)
+
+Bill approved move 7 of the OzBargain report: members post the restocks they see, which agents cannot crawl (big-box
+shelves block us). It is a Discord forum, `#restock-sightings` (1575416782443913308), not a page and not a bot form:
+the forum's own composer is the report form (title, required tags for game, region, in store or online, a photo), it
+costs no code to run, and a member needs nothing new to post. Our pinned how-to carries the moderator-only tag
+"How to post" so it never counts as a sighting. Rules in the post guidelines: real sightings seen by the poster, no
+selling, no reselling, no referral or affiliate links; "Sold out" tag and a "gone" reply instead of deleting. 🔥 is the
+default reaction, posts are slowed to one per two minutes, and the forum is a default channel in onboarding.
+
+`scripts/discord-hub-stats.ts` adds one daily line through `lib/discord/sightings.ts`: sightings since launch and in
+seven days, distinct posters, replies, 🔥 reactions, sold-out marks and the split by tag. Counts only, never a title or
+anything a member wrote. Read on 17 Dec 2026: keep it if members (not us) posted 10 or more sightings in the three
+weeks; build a page on TCG Prices only then (the report's own rule). Otherwise the forum is archived, not deleted.
