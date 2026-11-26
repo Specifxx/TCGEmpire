@@ -66,6 +66,8 @@ import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
 import { AppPremiumNotice } from "@/components/AppPremiumNotice";
 import { PremiumDealProof } from "@/components/premium/PremiumDealProof";
 import { pabActive } from "@/lib/premium-ab";
+import { freeWeekMayCheckout } from "@/lib/premium-free-week-server";
+import { premiumStartHref } from "@/lib/premium-start";
 import { loadPremiumProofDeal } from "@/lib/premium-proof";
 
 export const dynamic = "force-dynamic";
@@ -147,6 +149,9 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
   const compactPrice = `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD === "month" ? "mo" : PREMIUM_PRICE_PERIOD}`;
   const annualLive = premiumAnnualEnabled();
   const annualCompact = `${PREMIUM_ANNUAL_AMOUNT}/yr`;
+  // A free-week member (lib/premium-free-week.ts, the 2-16 Dec 2026 test) is offered the card trial before the week
+  // ends: the comp card below names the date and gives one button. Nobody else's page changes.
+  const freeWeekKeep = !!user && already && checkoutLive && (await freeWeekMayCheckout(user).catch(() => false));
   const plusLive = premiumPlusEnabled();
   const plusAnnualLive = plusAnnualEnabled();
   const plusPriceNumeric = tierMonthlyAmount("plus").replace(/[^0-9.]/g, "") || "2.99";
@@ -470,9 +475,21 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
             // plan or renewal to describe, only the date it runs to. It DOES
             // have a tier though (grantPremiumDays stamps one), and saying
             // "Premium" at a Plus comp was simply wrong.
-            <p className="mt-2 text-sm text-slate-300">
-              {TIER_NAMES[currentTier ?? "premium"]} until {fmtDate(user.premiumUntil)}
-            </p>
+            <>
+              <p className="mt-2 text-sm text-slate-300">
+                {freeWeekKeep ? "Your free Premium week ends" : `${TIER_NAMES[currentTier ?? "premium"]} until`} {fmtDate(user.premiumUntil)}
+              </p>
+              {freeWeekKeep && (
+                <div className="mt-3 space-y-2" data-free-week>
+                  <p className="text-xs text-slate-400">
+                    Keep it with 14 more days free, then {annualLive ? annualCompact : compactPrice}. Cancel any time before the trial ends.
+                  </p>
+                  <Link href={premiumStartHref({ tier: "premium", plan: annualLive ? "annual" : "monthly", src: "premium-page", back: "/premium" })} className="btn-primary inline-flex">
+                    Keep Premium
+                  </Link>
+                </div>
+              )}
+            </>
           ) : null}
         </div>
       )}

@@ -830,6 +830,9 @@ export function referralPremiumActive(): boolean {
 }
 
 // NO PREMIUM ON SIGNUP. REMOVED 2026-08-23, DELIBERATELY AND ENTIRELY.
+// ONE MEASURED EXCEPTION (owner, 2026-11-26): lib/premium-free-week.ts gives half of the accounts created between
+// 2 and 16 Dec 2026 a 7-day week, by arm, with hard-coded dates and no environment switch, so it can be read and ends
+// by itself. Nothing below changes outside that window.
 //
 // New accounts used to receive an automatic 3-day Premium grant in the OAuth
 // callback's isNew branch (SIGNUP_PREMIUM_DAYS, env-overridable). The whole

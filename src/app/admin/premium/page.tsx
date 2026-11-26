@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { freeWeekRead, type FreeWeekArmRead } from "@/lib/premium-free-week-server";
+import { FREE_WEEK } from "@/lib/premium-free-week";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +42,8 @@ export default async function PremiumInterestAdminPage({ searchParams }: { searc
   let anon = 0;
   let converted = 0;
   let error = false;
+  // The free Premium week test (lib/premium-free-week.ts): new accounts 2-16 Dec 2026, read 6 Jan 2027.
+  const fw: FreeWeekArmRead[] = now.getTime() >= FREE_WEEK.start ? await freeWeekRead().catch(() => []) : [];
   try {
     const [all, e7, e30, checkout, recovery30, recent] = await Promise.all([
       prisma.premiumClick.count(),
@@ -115,6 +119,24 @@ export default async function PremiumInterestAdminPage({ searchParams }: { searc
         <Stat label="Recovery emails · 30d" value={num(totals.recovery30)} sub="abandoned checkout" />
         <Stat label="Interested → Premium" value={num(converted)} sub="of recent signed-in" />
       </div>
+      {fw.length > 0 && (
+        <div className="mt-4 rounded-xl border border-ink-700 bg-ink-850 p-4 text-sm" data-free-week-read>
+          <div className="text-[11px] uppercase tracking-wide text-slate-500">Free Premium week test · new accounts 2–16 Dec · read 6 Jan</div>
+          <table className="mt-2 w-full text-left">
+            <thead><tr className="text-slate-500"><th className="py-1">Arm</th><th>Accounts</th><th>Started trial or paid</th><th>Paying or in trial now</th></tr></thead>
+            <tbody>
+              {fw.map((r) => (
+                <tr key={r.arm} className="text-slate-200">
+                  <td className="py-1">{r.arm === "a" ? "A · no free week" : "B · free week"}</td>
+                  <td className="num">{num(r.accounts)}</td>
+                  <td className="num">{num(r.started)} ({r.accounts ? Math.round((r.started / r.accounts) * 1000) / 10 : 0}%)</td>
+                  <td className="num">{num(r.payingNow)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {error ? (
         <div className="mt-6 rounded-xl border border-ink-700 bg-ink-850 p-8 text-center text-sm text-slate-400">

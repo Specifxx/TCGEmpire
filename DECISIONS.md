@@ -26109,3 +26109,25 @@ row now adds one line, "Premium scans up to 100 cards a day, free for 14 days. S
 with the click beacon `limit:scan` (the existing `limit:` surface family) and a `scan_limit_hit` event. Members
 never see it. No pop-up, no new limit, nothing moved behind Premium: the cap is unchanged. Premium pricing
 review, 26 Nov ("Rethink Premium pricing and model" thread).
+## 2026-11-26 — A free Premium week for half of new accounts, as a test
+
+The owner chose "Yes, run all three tests" on the Premium pricing reset (26 Nov). The reset found price is not the
+constraint: it changed six times from September and new paying members stayed near five a month each time. The leak
+is between a Premium click and checkout (231 clicks in 30 days, about 18 checkouts), while 37% of card trials pay.
+A free week puts Premium in front of every new account without a card form.
+
+- **Who:** accounts created from 2 Dec to 16 Dec 2026 (00:00 UTC), split by an FNV-1a hash of the account id
+  (`freeWeekArm`, `lib/premium-free-week.ts`). Arm B gets 7 days of Premium at creation, extend-only (a referred
+  friend's week is not cut short), tier premium only when nothing was active. Arm A is today's site.
+- **Where:** the three places a new account is made: the OAuth callback (web, app and sister branches), the emailed
+  sign-in link, and a sister site's sign-in (`memberFor`). Not guest checkout: that account is buying anyway.
+- **No switch:** hard-coded dates, no environment variable (`tests/premium-free-week.test.ts` fails on one). The
+  two earlier sign-up grants were removed on 2026-08-23 because a leftover Vercel variable could have kept them
+  granting unseen, and neither was ever measured. This one is split, ends by itself and is read.
+- **Keeping it:** a free-week member with no Stripe customer may start the 14-day card trial before the week ends
+  (`freeWeekMayCheckout`: the checkout route's and /premium/start's one exception to "already entitled"). /premium
+  names the end date with one "Keep Premium" button (yearly first). The sign-up toast says "with 7 days of Premium
+  free" instead of a second toast. No emails, no pop-ups.
+- **Read:** /admin/premium, per arm: accounts, trial or paid started, paying or in trial now. Interim 30 Dec, final
+  6 Jan 2027 (21 days after the last sign-up). Win: started per account up 50% or more with p < 0.10; otherwise the
+  window simply closes. A Counter row `fw1:<userId>` marks each free-week account.
