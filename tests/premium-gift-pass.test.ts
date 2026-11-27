@@ -115,3 +115,19 @@ test("the pass is granted before the email and taken back if the send fails; bat
   assert.ok(s.includes("g.revert()"));
   assert.ok(/TIME_BUDGET_MS = 230_000/.test(s));
 });
+
+test("Gmail BCC route: admin-gated, grants through the same Counter row, capped under Gmail's daily limit", () => {
+  const route = readFileSync("src/app/api/admin/premium-gift-pass/route.ts", "utf8");
+  assert.match(route, /me\?\.isAdmin/);
+  assert.match(route, /status: 404/);
+  const page = readFileSync("src/app/admin/premium-gift-pass/page.tsx", "utf8");
+  assert.match(page, /notFound\(\)/);
+  const server = readFileSync("src/lib/premium-gift-pass-server.ts", "utf8");
+  const fn = server.slice(server.indexOf("export async function grantGiftPassBccBatch"));
+  assert.match(fn, /giftAudience\(rows, \{ optedOut, sent, site, now \}\)/, "same audience and skip rules as the Brevo batch");
+  assert.match(fn, /await grant\(r\.id/, "same grant, so the Counter row stops a second email");
+  assert.match(fn, /giftPassOpen\(now\)/, "closed after 1 Dec 12:00 UTC");
+  assert.match(server, /GIFT_BCC_MAX = 450/);
+  const unsub = readFileSync("src/app/api/premium-gift-pass/unsubscribe/route.ts", "utf8");
+  assert.match(unsub, /if \(!token\) return page\(p\.get\("site"\) \?\? "rift", "email"\)/, "a BCC link with no token asks for the address");
+});
