@@ -316,6 +316,11 @@ longer lands on its entry.
   no env; a free-week member may start the 14-day card trial early; read on /admin/premium, 6 Jan 2027. Outside the
   window, still no Premium on sign-up
   ([2026-11-26](../DECISIONS.md#2026-11-26--a-free-premium-week-for-half-of-new-accounts-as-a-test)).
+- **A 3-day Premium pass, emailed per site to free accounts, 27 Nov to 1 Dec 2026 only (owner, 2026-11-27):** one email per
+  verified non-paying account, in the name of the site it was made on (RiftCompare or a shared-Premium sister, never
+  RiftCompare on a sister), listing that site's /premium features; a send grants 3 days extend-only (Counter `gp3:<id>`),
+  batches per site by the dispatch-only `premium-gift-pass-send.yml`, sends stop 1 Dec 12:00 UTC; a holder may still subscribe
+  ([2026-11-27](../DECISIONS.md#2026-11-27-a-3-day-premium-pass-emailed-per-site-to-free-accounts)).
 - **RiftCompare Premium at $4.99/mo or $39.99/yr with a free 14-day trial again (owner,
   2026-11-05: "use something that we used early on which had the best
   retention"; August's setup, 7 of 7 trials paid):** the
@@ -383,7 +388,7 @@ longer lands on its entry.
   Premium email page: the showcase email (live Deal Finder snippet, feature list, Premium at its own
   prices, no trial, no affiliate links) to every non-paying account, newest first, plus the win-back console.
   [2026-11-21](../DECISIONS.md#2026-11-21-one-premium-email-page-the-showcase-email-with-a-live-deal-finder-snippet-newest-members-first)
-  It and the one-off dormant watchlist recap are the ONLY marketing sends let past `MARKETING_EMAIL_OFF` (`MARKETING_ALLOWED`); every other promotional
+  It, the one-off dormant watchlist recap and the 3-day pass are the ONLY marketing sends let past `MARKETING_EMAIL_OFF` (`MARKETING_ALLOWED`); every other promotional
   sender stays off. [2026-11-22](../DECISIONS.md#2026-11-22-the-premium-email-is-the-one-marketing-send-turned-back-on)
   [2026-11-22](../DECISIONS.md#2026-11-22-the-watchlist-recap-is-let-through-the-owner-said-yes) `/premium/welcome` leads with
   watching a card until the account has one. [2026-10-12](../DECISIONS.md#L16934)

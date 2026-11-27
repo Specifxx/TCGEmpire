@@ -81,9 +81,11 @@ export interface SendEmailExtras {
 // (/admin/premium-offer). Only that campaign is let through; the newsletter, digests, welcome, release-day,
 // win-back and checkout-recovery mail stay off (DECISIONS.md, 2026-11-22). It keeps its opt-out link,
 // List-Unsubscribe headers and the announcement opt-out list.
-export type MarketingCampaign = "premium-offer" | "watch-recap";
+export type MarketingCampaign = "premium-offer" | "watch-recap" | "premium-gift-pass";
 // Bill, 2026-11-22 (decision card): "Yes, send it" for the one-off watchlist recap to dormant accounts.
-export const MARKETING_ALLOWED: ReadonlySet<MarketingCampaign> = new Set(["premium-offer", "watch-recap"]);
+// Bill, 2026-11-27: "send like batches separately per website to all of these registered users who aren't premium … give them
+// like a 3-day pass" (lib/premium-gift-pass.ts; it stops sending by itself on 1 Dec 2026).
+export const MARKETING_ALLOWED: ReadonlySet<MarketingCampaign> = new Set(["premium-offer", "watch-recap", "premium-gift-pass"]);
 
 // Bill, 2026-11-09: email is for accounts, billing and the alerts people asked for. Every promotional,
 // news or announcement send passes `marketing: true` and is refused here, whichever provider carries it.
@@ -177,7 +179,8 @@ function parseFrom(raw: string): { name: string; email: string } {
 // part as `textContent` and extra headers (List-Unsubscribe) as `headers`.
 // Callers that pass neither send exactly what they always did.
 export async function sendEmailBrevo(to: string, subject: string, html: string, extras: SendEmailExtras = {}): Promise<boolean> {
-  return sendViaBrevo(process.env.BREVO_API_KEY, "BREVO_API_KEY", parseFrom(process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`), to, subject, html, extras);
+  // `from` only renames the verified sender (a sister site's name on it, lib/premium-brand.ts brandFrom).
+  return sendViaBrevo(process.env.BREVO_API_KEY, "BREVO_API_KEY", parseFrom(extras.from ?? process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`), to, subject, html, extras);
 }
 
 // A second Brevo account with its own key and sender (DexCompare's alerts,
