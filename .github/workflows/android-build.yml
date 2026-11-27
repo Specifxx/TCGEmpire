@@ -73,6 +73,22 @@ jobs:
           path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
+      # --- Unsigned release bundle (no secrets in GitHub; owner rule 2026-11-27) ---
+      # The upload key lives in the project's ops notes, never in GitHub. A session signs
+      # this bundle with jarsigner and uploads it to Play's closed track.
+      - name: Build unsigned release AAB
+        if: env.ANDROID_KEYSTORE_BASE64 == ''
+        run: ./gradlew --no-daemon bundleRelease
+        working-directory: mobile/android
+
+      - name: Upload unsigned release AAB
+        if: env.ANDROID_KEYSTORE_BASE64 == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: riftcompare-release-aab-unsigned
+          path: mobile/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
       # --- Signed release bundle (only when signing secrets are present) ---
       - name: Configure release signing
         if: env.ANDROID_KEYSTORE_BASE64 != ''
