@@ -104,7 +104,7 @@ export function ShareButton({
       }}
       aria-label={name ? `Share ${name}` : "Share this page"}
       title="Share"
-      className={`btn-ghost whitespace-nowrap${responsive ? " w-12 px-0 sm:w-auto sm:px-4" : ""} ${className ?? ""}`}
+      className={`btn-ghost whitespace-nowrap${responsive ? (arm === "reward" ? " px-3 sm:px-4" : " w-12 px-0 sm:w-auto sm:px-4") : ""} ${className ?? ""}`}
     >
       {/* The glyph swaps to a check while copied, so a phone — where the label
           is hidden — still gets a confirmation. */}

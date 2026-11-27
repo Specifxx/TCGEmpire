@@ -96,7 +96,7 @@ test("a rating or Don't ask again ends it for good; closing waits a month; it gi
 
 test("the prompt is a closable corner card, not a modal, and still posts a rating", () => {
   const layout = read("src/app/layout.tsx");
-  assert.match(layout, /<RateUsPrompt \/>/);
+  assert.doesNotMatch(layout, /<RateUsPrompt|RateUsPrompt"\)/, "the corner card is off (owner, 2026-11-27: enough feedback)");
   const c = read("src/components/RateUsPrompt.tsx");
   assert.doesNotMatch(c, /<Dialog\b/, "never a modal: the page stays usable");
   assert.match(c, /useEscapeLayer\(open, close\)/, "Escape closes it");

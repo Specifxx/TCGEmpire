@@ -76,9 +76,6 @@ const RateUsStrip = dynamic(() => import("@/components/RateUsStrip").then((m) =>
 });
 // The giveaway's one corner card while it is open (owner, 2026-11-22; lib/giveaway-prompt.ts): browser-only.
 const GiveawayPrompt = dynamic(() => import("@/components/giveaway/GiveawayPrompt").then((m) => m.GiveawayPrompt), { ssr: false });
-const RateUsPrompt = dynamic(() => import("@/components/RateUsPrompt").then((m) => m.RateUsPrompt), {
-  ssr: false,
-});
 // Real footer ad content — kept SSR'd (ssr: true, the default) for the same
 // reason the rest of the site's ad units are: an AdSense reviewer or crawler
 // fetching raw HTML must still see it. Only the JS is split out of the
@@ -476,9 +473,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <SignupWelcome />
                 {/* Feedback panel: opened only by the footer's "Rate & review" link. Never auto-opens, no floating button. */}
                 <FeedbackWidget />
-                {/* The one uninvited opinion ask: a corner rating card, only
-                    after real engagement, at most twice (lib/rate-prompt.ts). */}
-                <RateUsPrompt />
+                {/* The corner rating card (RateUsPrompt) is off (owner, 2026-11-27: "the feedback pop-up on Rift Compare can be
+                    taken down … we already have enough feedback"). Ratings still come from the footer link and the
+                    "Rate us" strip at the end of a page, both in the page and opened only when asked. */}
                 {/* The giveaway card shares the rating card's one-interruption-a-visit slot (lib/giveaway-prompt.ts). */}
                 <GiveawayPrompt />
                 {/* A fixed bottom tab bar USED TO BE here (<BottomTabBar />).

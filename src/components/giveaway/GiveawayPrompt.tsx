@@ -58,7 +58,8 @@ export function GiveawayPrompt() {
     const ask = () =>
       shouldShowGiveawayPrompt(load(), Date.now(), path, {
         pages,
-        otherPromptShown: flag(GIVEAWAY_PROMPT_SESSION_KEY) || flag(RATE_SESSION_KEY) || flag(PRICING_NUDGE_SESSION_KEY),
+        // "tcg-sale-popup": the Cyber Weekend sale card (TcgSalePopup) already had this visit's one prompt.
+        otherPromptShown: flag(GIVEAWAY_PROMPT_SESSION_KEY) || flag(RATE_SESSION_KEY) || flag(PRICING_NUDGE_SESSION_KEY) || flag("tcg-sale-popup"),
       });
     if (!ask()) return;
     return armNudge({
@@ -68,6 +69,8 @@ export function GiveawayPrompt() {
         save(markShown(load(), Date.now()));
         try {
           sessionStorage.setItem(GIVEAWAY_PROMPT_SESSION_KEY, "1");
+          // Hold the visit's one prompt slot, so the sale card (TcgSalePopup) stands down after it.
+          if (!sessionStorage.getItem("rc_prompt_slot")) sessionStorage.setItem("rc_prompt_slot", "giveaway");
         } catch {
           /* nothing */
         }
