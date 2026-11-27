@@ -50,8 +50,11 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # ubuntu-latest ships the Android SDK at $ANDROID_HOME; android-actions/setup-android
+      # now fails installing the retired 'tools' package, so accept the licences and let
+      # Gradle fetch any missing platform itself.
+      - name: Accept Android SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Install Capacitor deps
         run: npm ci
