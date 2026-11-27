@@ -53,9 +53,12 @@ test("every place a new account is made grants it, and only for a new account", 
   assert.match(sister, /await grantFreeWeekIfNew\(created\.id\)/);
 });
 
-test("checkout lets only a free-week member start the card trial while entitled", () => {
+test("checkout lets only a free-week member (or a 3-day pass holder) start the card trial while entitled", () => {
   const route = readFileSync("src/app/api/premium/checkout/route.ts", "utf8");
   assert.match(route, /isPremium\(user\) && !user\.isAdmin && !\(await freeWeekMayCheckout\(user\)\)/);
   const server = readFileSync("src/lib/premium-free-week-server.ts", "utf8");
-  assert.match(server, /if \(user\.isAdmin \|\| user\.stripeCustomerId\) return false;/);
+  // Admins never; a Stripe customer only while an emailed 3-day pass is the account's only Premium (2026-11-27).
+  assert.match(server, /if \(user\.isAdmin\) return false;/);
+  assert.match(server, /if \(user\.stripeCustomerId\) return false;\n  const end = await freeWeekEnd/);
+  assert.ok(server.indexOf("giftPassCounterKey(user.id)") < server.indexOf("if (user.stripeCustomerId) return false;"));
 });

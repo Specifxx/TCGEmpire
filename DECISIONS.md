@@ -26326,3 +26326,29 @@ was only 9 to 20% of them, and the owner asked to "capture this opportunity with
 product price table carries a small chip saying what its sale is (`TcgSaleChip`, 9AM 27 Nov to 11PM 30 Nov New York time,
 `lib/bf-mode.ts`). It is drawn only in the browser after the clock is read, so cached HTML never shows it outside the sale. It
 ranks nothing and marks no row the cheapest. Delete it with the bar after the sale.
+
+## 2026-11-27: A 3-day Premium pass, emailed per site to free accounts
+
+Owner, 27 Nov: "send like batches separately per website to all of these registered users who aren't premium, and make it
+formatted really well and really clearly outline the features for premium, and then give them like a 3-day pass". Every
+shared-Premium site's accounts are rows in RiftCompare's `User` table, so one sender serves RiftCompare and the ten sister
+sites on the shared account (Dex, MTG, YGO, TCG Prices, Gundam, Lorcana, Cyberpunk, Scent, KaeYoung, SportsCardCompare).
+OP Compare has its own accounts and gets its own send.
+
+- **The email is the pass.** Each email grants 3 days of Premium (`premiumUntil`, extend-only, tier set only when no period was
+  active) and writes Counter `gp3:<id>` in the same transaction just BEFORE the send; a refused send is put back as it was, so
+  nobody gets an email without the pass, or two. A batch stops at 230 s and returns its counts.
+  Granting on send, not on a claim link, keeps every link on the member's own site: a claim on riftcompare.com would show a
+  DexCompare member RiftCompare and send them across hosts.
+- **Per site, white-labelled.** The site is `signupSource` ("sister:<key>", else RiftCompare; OP and Bandai accounts are left
+  out). Subject, header, colour, sender display name, features and links are that site's (the sending address and the opt-out page's host stay RiftCompare's verified ones, as in the sister alert mail; Dex sends from its own Brevo account when its key is set); the features are the lines its /premium page
+  lists, nothing more. The opt-out is a plain page in the site's own name (`/api/premium-gift-pass/unsubscribe`) writing the
+  same `AnnouncementOptOut` row every announcement reads. `sendEmailBrevo` now honours `from` (a sender display name only).
+- **Who:** non-paying, non-admin, non-seed accounts with a verified address (emailed link or Google), not opted out, not
+  emailed a Premium email in the last 72 hours, newest first. Batches of 90 (300 at most) through Brevo, Dex through its own
+  Brevo account when its key is set; a spent daily allowance stops the batch.
+- **Fits the tests:** hard-coded window, sends stop 1 Dec 2026 12:00 UTC, so the last pass ends 4 Dec, before the Week Pass test
+  (7 Dec). The free week (2-16 Dec) is for accounts made in its window, so the audiences never meet. A pass holder may still
+  start checkout (the same exception as the free week, now on sister checkout too).
+- Marketing: `premium-gift-pass` joins `MARKETING_ALLOWED` on the owner's ask. Dispatch only (`premium-gift-pass-send.yml`):
+  dry run by default, a send names one site.

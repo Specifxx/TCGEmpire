@@ -5,6 +5,7 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { stripe } from "@/lib/stripe";
 import { buildCheckoutSessionParams } from "@/lib/checkout-params";
 import { isPremium, premiumCheckoutEnabled, priceCurrencyOf, priceIdFor, trialOfferedTo, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS } from "@/lib/premium";
+import { freeWeekMayCheckout } from "@/lib/premium-free-week-server";
 import { premiumCors, premiumSiteForOrigin, verifyPremiumSession } from "@/lib/sister-premium";
 import { billedByLine, brandFromSurface } from "@/lib/premium-brand";
 
@@ -36,7 +37,8 @@ export async function POST(req: Request) {
       select: { id: true, email: true, stripeCustomerId: true, trialStartedAt: true, premiumUntil: true, premiumTier: true, premiumTierFloor: true, isAdmin: true },
     });
     if (!user) return NextResponse.json({ error: "Sign in again" }, { status: 401, headers });
-    if (isPremium(user, "premium")) return NextResponse.json({ error: "You're already a member." }, { status: 409, headers });
+    // A free week or the emailed 3-day pass is a gift, not a subscription: its holder may still subscribe (premium-free-week-server.ts).
+    if (isPremium(user, "premium") && !(await freeWeekMayCheckout(user).catch(() => false))) return NextResponse.json({ error: "You're already a member." }, { status: 409, headers });
     const priceId = priceIdFor("premium", plan);
     const trialEligible = await trialOfferedTo(user);
     const currency = trialEligible && PREMIUM_TRIAL_FEE_CENTS > 0 ? await priceCurrencyOf(priceId) : "usd";

@@ -1,6 +1,7 @@
 // The free Premium week's database half (lib/premium-free-week.ts holds the rules). Called once, from the three
 // places a NEW account is created (OAuth, emailed sign-in link, a sister site's sign-in); never on a later sign-in.
 import { prisma } from "./db";
+import { giftPassCounterKey } from "./premium-gift-pass";
 import { FREE_WEEK, freeWeekArm, freeWeekCounterKey, freeWeekGrantFor, freeWeekUntil, type FreeWeekArm } from "./premium-free-week";
 
 /**
@@ -39,9 +40,18 @@ export async function freeWeekEnd(userId: string): Promise<Date | null> {
  * whichever date is later. Everyone else entitled stays fenced off, as before.
  */
 export async function freeWeekMayCheckout(user: { id: string; stripeCustomerId: string | null; isAdmin?: boolean }): Promise<boolean> {
-  if (user.isAdmin || user.stripeCustomerId) return false;
+  if (user.isAdmin) return false;
   // A member who bought a pass (lib/premium-pass.ts) is paying: never a second checkout on top.
   if (await prisma.counter.findUnique({ where: { key: `pass:u:${user.id}` }, select: { key: true } }).catch(() => null)) return false;
+  // The emailed 3-day pass (lib/premium-gift-pass.ts, 2026-11-27) is a gift: its holder may subscribe while the pass is the ONLY
+  // Premium on the account (premiumUntil no later than the pass's end), lapsed subscribers with a Stripe customer included. A
+  // subscription started since moves premiumUntil past the pass, and the fence closes again.
+  const gift = await prisma.counter.findUnique({ where: { key: giftPassCounterKey(user.id) }, select: { value: true } }).catch(() => null);
+  if (gift && gift.value * 1000 > Date.now()) {
+    const u = await prisma.user.findUnique({ where: { id: user.id }, select: { premiumUntil: true } }).catch(() => null);
+    if (u?.premiumUntil && u.premiumUntil.getTime() <= gift.value * 1000 + 60_000) return true;
+  }
+  if (user.stripeCustomerId) return false;
   const end = await freeWeekEnd(user.id).catch(() => null);
   return !!end && end.getTime() > Date.now();
 }
