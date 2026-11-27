@@ -156,18 +156,19 @@ export function giftAudience(
       ex.admins++;
       continue;
     }
-    if (u.premiumUntil && u.premiumUntil.getTime() > now) {
-      ex.paying++;
-      continue;
-    }
     const site = giftSiteOf(u.signupSource);
     if (!site) {
       ex.otherSite++;
       continue;
     }
     const tally = (bySite[site] ??= { pending: 0, sent: 0 });
+    // Sent first: a pass holder is Premium for 3 days and must read as sent, not as paying.
     if (opts.sent.has(u.id)) {
       tally.sent++;
+      continue;
+    }
+    if (u.premiumUntil && u.premiumUntil.getTime() > now) {
+      ex.paying++;
       continue;
     }
     if (!u.emailVerified && !u.googleId) {

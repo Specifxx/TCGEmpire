@@ -26319,12 +26319,13 @@ shared-Premium site's accounts are rows in RiftCompare's `User` table, so one se
 sites on the shared account (Dex, MTG, YGO, TCG Prices, Gundam, Lorcana, Cyberpunk, Scent, KaeYoung, SportsCardCompare).
 OP Compare has its own accounts and gets its own send.
 
-- **The email is the pass.** A successful send grants 3 days of Premium (`premiumUntil`, extend-only, tier set only when no
-  period was active) and writes Counter `gp3:<id>` in the same transaction, so nobody gets two and a failed send is retried.
+- **The email is the pass.** Each email grants 3 days of Premium (`premiumUntil`, extend-only, tier set only when no period was
+  active) and writes Counter `gp3:<id>` in the same transaction just BEFORE the send; a refused send is put back as it was, so
+  nobody gets an email without the pass, or two. A batch stops at 230 s and returns its counts.
   Granting on send, not on a claim link, keeps every link on the member's own site: a claim on riftcompare.com would show a
   DexCompare member RiftCompare and send them across hosts.
 - **Per site, white-labelled.** The site is `signupSource` ("sister:<key>", else RiftCompare; OP and Bandai accounts are left
-  out). Subject, header, colour, sender name, features and links are that site's; the features are the lines its /premium page
+  out). Subject, header, colour, sender display name, features and links are that site's (the sending address and the opt-out page's host stay RiftCompare's verified ones, as in the sister alert mail; Dex sends from its own Brevo account when its key is set); the features are the lines its /premium page
   lists, nothing more. The opt-out is a plain page in the site's own name (`/api/premium-gift-pass/unsubscribe`) writing the
   same `AnnouncementOptOut` row every announcement reads. `sendEmailBrevo` now honours `from` (a sender display name only).
 - **Who:** non-paying, non-admin, non-seed accounts with a verified address (emailed link or Google), not opted out, not

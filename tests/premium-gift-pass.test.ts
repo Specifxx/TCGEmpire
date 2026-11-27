@@ -101,3 +101,17 @@ test("a pass holder may still subscribe, on RiftCompare and on a sister site", (
   assert.ok(readFileSync("src/lib/premium-free-week-server.ts", "utf8").includes("giftPassCounterKey"));
   assert.ok(readFileSync("src/app/api/sister-premium/checkout/route.ts", "utf8").includes("freeWeekMayCheckout"));
 });
+
+test("opening the opt-out link only asks; the button or one-click POST opts out", () => {
+  const r = readFileSync("src/app/api/premium-gift-pass/unsubscribe/route.ts", "utf8");
+  const get = r.slice(r.indexOf("export async function GET"), r.indexOf("export async function POST"));
+  assert.ok(!get.includes("optOut("), "GET must not opt out");
+  assert.ok(r.slice(r.indexOf("export async function POST")).includes("optOut("));
+});
+
+test("the pass is granted before the email and taken back if the send fails; batches stop in time", () => {
+  const s = readFileSync("src/lib/premium-gift-pass-server.ts", "utf8");
+  assert.ok(s.indexOf("await grant(") < s.indexOf("await send("));
+  assert.ok(s.includes("g.revert()"));
+  assert.ok(/TIME_BUDGET_MS = 230_000/.test(s));
+});

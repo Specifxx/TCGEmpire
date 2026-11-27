@@ -88,24 +88,40 @@ async function send(site: string, to: string, subject: string, html: string, ext
   const common = { ...extras, marketing: true, campaign: "premium-gift-pass" } as const;
   const dexKey = process.env.DEX_BREVO_API_KEY?.trim();
   if (site === "dex" && dexKey) {
+    // Dex's own account only: a refused Dex send never falls back to RiftCompare's allowance (sign-in and alert mail need it).
     const from = process.env.DEX_EMAIL_FROM?.replace(/^[^<]*</, "DexCompare <") ?? "DexCompare <alerts@dexcompare.app>";
-    if (await sendEmailBrevoAccount(dexKey, "DEX_BREVO_API_KEY", from, to, subject, html, common)) return true;
+    return sendEmailBrevoAccount(dexKey, "DEX_BREVO_API_KEY", from, to, subject, html, common);
   }
   return sendEmailBrevo(to, subject, html, { ...common, from: brandFrom(brand) });
 }
 
-/** Grant the pass and mark the account sent, together: extend-only, tier "premium" only when no period was active. */
-async function grant(userId: string, now: number): Promise<number> {
-  const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true } });
+/**
+ * Grant the pass and mark the account sent, together, BEFORE the email goes: extend-only, tier "premium" only when no period
+ * was active. Granting first means an email that went out can never be followed by a missing pass or a second email. If the
+ * send then fails, `revert` puts the account back exactly as it was, so the next batch tries again.
+ */
+async function grant(userId: string, now: number): Promise<{ until: number; revert: () => Promise<void> }> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true, premiumTier: true } });
   const current = u?.premiumUntil ? u.premiumUntil.getTime() : null;
   const hadActive = current !== null && current > now;
   const until = giftPassUntil(now, current);
   await prisma.$transaction([
     prisma.user.update({ where: { id: userId }, data: { premiumUntil: new Date(until), ...(hadActive ? {} : { premiumTier: "premium" }) } }),
-    prisma.counter.upsert({ where: { key: giftPassCounterKey(userId) }, create: { key: giftPassCounterKey(userId), value: Math.floor(until / 1000) }, update: {} }),
+    prisma.counter.create({ data: { key: giftPassCounterKey(userId), value: Math.floor(until / 1000) } }),
   ]);
-  return until;
+  return {
+    until,
+    revert: async () => {
+      await prisma.$transaction([
+        prisma.user.update({ where: { id: userId }, data: { premiumUntil: u?.premiumUntil ?? null, ...(u?.premiumTier ? { premiumTier: u.premiumTier } : {}) } }),
+        prisma.counter.deleteMany({ where: { key: giftPassCounterKey(userId) } }),
+      ]);
+    },
+  };
 }
+
+/** Stop starting new sends after this long, so a batch always returns its counts inside the function's 300 s. */
+const TIME_BUDGET_MS = 230_000;
 
 export async function runGiftPassBatch(opts: { dryRun: boolean; site: string | null; limit?: number }): Promise<GiftRunResult> {
   const now = Date.now();
@@ -124,7 +140,13 @@ export async function runGiftPassBatch(opts: { dryRun: boolean; site: string | n
   let failed = 0;
   const errors = new Set<string>();
   const brand = giftBrand(site);
+  const started = Date.now();
+  let stopped: string | null = null;
   for (const r of a.pending.slice(0, limit)) {
+    if (Date.now() - started > TIME_BUDGET_MS) {
+      stopped = "time budget reached; run again for the rest";
+      break;
+    }
     const key = r.email.trim().toLowerCase();
     const token = await prisma.announcementOptOut
       .upsert({ where: { email: key }, create: { email: key, token: randomUUID() }, update: {} })
@@ -135,26 +157,30 @@ export async function runGiftPassBatch(opts: { dryRun: boolean; site: string | n
       if (errors.size < 5) errors.add("opt-out row could not be written");
       continue;
     }
-    const until = giftPassUntil(Date.now(), r.currentUntil);
-    const mail = buildGiftPassEmail({ brand, displayName: r.displayName, until, ...giftUnsubUrls(token, site) });
+    const g = await grant(r.id, Date.now()).catch(() => null);
+    if (!g) {
+      failed++;
+      if (errors.size < 5) errors.add("the pass could not be granted (already sent, or the database refused); nothing was emailed");
+      continue;
+    }
+    const mail = buildGiftPassEmail({ brand, displayName: r.displayName, until: g.until, ...giftUnsubUrls(token, site) });
     const ok = await send(site, r.email, mail.subject, mail.html, { text: mail.text, headers: mail.headers }).catch(() => false);
     if (ok) {
       sentN++;
-      await grant(r.id, Date.now()).catch((e: unknown) => {
-        if (errors.size < 5) errors.add(`sent but the grant failed: ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`.slice(0, 200));
-      });
     } else {
       failed++;
+      await g.revert().catch(() => {
+        if (errors.size < 5) errors.add("a send failed and its pass could not be taken back");
+      });
       if (errors.size < 5) errors.add(getLastEmailError() ?? "the mail provider returned false with no reason");
-      // Brevo's daily allowance is spent: stop the batch rather than fail every remaining address.
-      if (/\b(402|429)\b|limit|quota|credits/i.test(getLastEmailError() ?? "")) break;
+      // The daily allowance is spent: stop the batch rather than fail every remaining address.
+      if (/\b(402|429)\b|limit|quota|credits/i.test(getLastEmailError() ?? "")) {
+        stopped = "the mail provider's daily allowance is spent; run again tomorrow";
+        break;
+      }
     }
     await new Promise((res) => setTimeout(res, THROTTLE_MS));
   }
+  if (stopped && errors.size < 5) errors.add(stopped);
   return { ...base, sent: sentN, failed, remaining: a.pending.length - sentN, ...(errors.size ? { errors: [...errors] } : {}) };
-}
-
-/** May an account holding a pass start checkout although it is entitled? Yes while the pass is its only Premium. */
-export async function giftPassHolder(userId: string): Promise<boolean> {
-  return !!(await prisma.counter.findUnique({ where: { key: giftPassCounterKey(userId) }, select: { key: true } }).catch(() => null));
 }
