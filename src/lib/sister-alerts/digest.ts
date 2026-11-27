@@ -21,7 +21,7 @@ import { sendSisterMail } from "./send";
 import { discordInvite } from "./discord";
 import { MAILING_ADDRESS } from "../mailing-address";
 import { fetchFeed as realFetchFeed, feedIsFresh, type AlertFeed } from "./feed";
-import { button, discordLine, discordText, sisterGiveawayLine, feedbackAsk, fromFor, money, REGION_LABEL, serviceUrl, shell, senderOf, siteLink, type BuiltMail } from "./email";
+import { button, tcgplayerSaleLine, discordLine, discordText, sisterGiveawayLine, feedbackAsk, fromFor, money, REGION_LABEL, serviceUrl, shell, senderOf, siteLink, type BuiltMail } from "./email";
 import { SISTER_ALERT_SITES, SISTER_REGIONS, sisterSite, type SisterAlertSite, type SisterRegion } from "./sites";
 import { claimMailSlot, mailLane, SISTER_DAILY_MAIL_CAP } from "./mail-cap";
 
@@ -151,7 +151,7 @@ export function editionDue(builtAt: Date | null, now: Date): boolean {
 const pctOff = (d: Drop) => Math.round(((d.was - d.now) / d.was) * 100);
 
 /** One subscriber's weekly email: the site's biggest drops in their region, each linking to the site's own page. */
-export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: Drop[], token: string, occasion: string | null = null): BuiltMail {
+export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: Drop[], token: string, occasion: string | null = null, now: Date = new Date()): BuiltMail {
   const site = sisterSite(siteKey)!;
   const rows = drops.slice(0, MAX_DROPS);
   const top = rows[0]!;
@@ -169,6 +169,11 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
     })
     .join("");
   const cta = `<tr><td style="padding:14px 28px 6px">${button(site, siteLink(site, "/", "weekly-drops", region), `Compare prices on ${site.name}`)}</td></tr>`;
+  // TCGplayer's Cyber Weekend sale, while it is on (owner, 2026-11-27): one labelled block under the drops, never above them.
+  const sale = tcgplayerSaleLine(site.key, now);
+  const saleHtml = sale
+    ? `<tr><td style="padding:8px 28px 2px"><div style="border:1px solid #e5e7eb;border-radius:10px;padding:11px 14px;font-size:14px;line-height:1.5;color:#374151">${sale.html.replace(/<br\/>$/, "")}</div></td></tr>`
+    : "";
   const note = `<tr><td style="padding:10px 28px 16px;font-size:12px;line-height:1.6;color:#6b7280">Each price is the lowest in-stock price at ${REGION_LABEL[region]} stores we compare, this week against last week, before postage. Stores change prices quickly, so check before you buy.<br/>${feedbackAsk(site, "weekly-drops")}</td></tr>`;
   const stop = `${serviceUrl("manage", token, site)}&stop=${encodeURIComponent(`digest:${site.key}`)}`;
   const footer = `<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280">You're getting this because you asked ${escapeHtml(site.name)} for its weekly biggest price drops. <a href="${escapeHtml(stop)}" style="color:#4b5563">Stop the weekly email</a> · <a href="${escapeHtml(serviceUrl("manage", token, site))}" style="color:#4b5563">Manage your emails</a><br/>${sisterGiveawayLine(site.key)?.html ?? ""}${discordLine(site.key)}Sent by ${senderOf(site)}.</td></tr>`;
@@ -177,6 +182,7 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
     "",
     ...rows.map((d) => `${d.n}: ${money(d.now, region)} (was ${money(d.was, region)}, down ${pctOff(d)}%)\n${siteLink(site, d.u, "weekly-drops", region)}`),
     "",
+    ...(sale ? [sale.text, ""] : []),
     `Lowest in-stock price at ${REGION_LABEL[region]} stores, this week against last week, before postage.`,
     `What would make ${site.name} better? Tell us in a sentence: ${siteLink(site, "/feedback", "weekly-drops", region)}`,
     `Stop the weekly email: ${stop}`,
@@ -186,7 +192,7 @@ export function buildDigestEmail(siteKey: string, region: SisterRegion, drops: D
     MAILING_ADDRESS,
   ].join("\n");
   const heading = `${rows.length} biggest price drops this week`;
-  return { subject, html: shell(site, heading, items + cta + note, footer, `${top.n}: ${money(top.now, region)}, down ${pctOff(top)}%`), text };
+  return { subject, html: shell(site, heading, items + cta + saleHtml + note, footer, `${top.n}: ${money(top.now, region)}, down ${pctOff(top)}%`), text };
 }
 
 /** RFC 8058 one-click unsubscribe for the weekly email: stops that site's digest only. */
