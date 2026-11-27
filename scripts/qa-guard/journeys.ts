@@ -435,6 +435,25 @@ export function pulseProblems(box: Rect & { clipped: boolean }, buttons: (Rect &
   return out;
 }
 
+export const PULSE_MEASURE = String.raw`(() => {
+  var el = document.querySelector(__SEL__);
+  function r(e) { var b = e.getBoundingClientRect(); return { x: b.left, y: b.top + window.scrollY, w: b.width, h: b.height }; }
+  var buttons = Array.prototype.map.call(el.querySelectorAll("button"), function (b) {
+    var o = r(b); o.clipped = b.scrollWidth > b.clientWidth + 1; o.label = (b.innerText || "").trim().slice(0, 20); return o;
+  });
+  var host = location.host.replace(/^www\./, "");
+  var buys = Array.prototype.filter.call(document.querySelectorAll("a[href]"), function (a) {
+    if (el.contains(a) || a.getClientRects().length === 0) return false;
+    try {
+      var u = new URL(a.href);
+      if (u.host.replace(/^www\./, "") === host) return /^\/(out|go|r|api\/out|api\/go|api\/click|click|redirect|buy)\b/i.test(u.pathname);
+      return /sponsored|nofollow/.test(a.getAttribute("rel") || "") || /ebay|tcgplayer|amazon/.test(u.host);
+    } catch (e) { return false; }
+  }).map(r);
+  var box = r(el); box.clipped = el.scrollWidth > el.clientWidth + 1;
+  return { box: box, buttons: buttons, buys: buys };
+})()`;
+
 /** Collector pulse at phone width: present, fits, and keeps clear of the buy rows. Reads the page only: never answers. */
 export async function pulseJourney(t: Tracked, site: Site, link: Link): Promise<Omit<Check, "site" | "viewport">> {
   const journey = "collector pulse";
@@ -468,28 +487,9 @@ export async function pulseJourney(t: Tracked, site: Site, link: Link): Promise<
   }
   await box.scrollIntoViewIfNeeded().catch(() => {});
   const width = page.viewportSize()?.width ?? 390;
-  const m = await page.evaluate((s) => {
-    const el = document.querySelector(s) as HTMLElement;
-    const r = (e: Element) => {
-      const b = e.getBoundingClientRect();
-      return { x: b.left, y: b.top + window.scrollY, w: b.width, h: b.height };
-    };
-    const buttons = [...el.querySelectorAll("button")].map((b) => ({ ...r(b), clipped: b.scrollWidth > b.clientWidth + 1, label: (b.innerText || "").trim().slice(0, 20) }));
-    const host = location.host.replace(/^www\./, "");
-    const buys = [...document.querySelectorAll("a[href]")]
-      .filter((a) => !el.contains(a) && (a as HTMLElement).getClientRects().length > 0)
-      .filter((a) => {
-        try {
-          const u = new URL((a as HTMLAnchorElement).href);
-          if (u.host.replace(/^www\./, "") === host) return /^\/(out|go|r|api\/out|api\/go|api\/click|click|redirect|buy)\b/i.test(u.pathname);
-          return /sponsored|nofollow/.test(a.getAttribute("rel") || "") || /ebay|tcgplayer|amazon/.test(u.host);
-        } catch {
-          return false;
-        }
-      })
-      .map(r);
-    return { box: { ...r(el), clipped: el.scrollWidth > el.clientWidth + 1 }, buttons, buys };
-  }, sel);
+  // A plain string, not a function: tsx wraps named functions in a `__name` helper the page does not have.
+  type Measured = { box: Rect & { clipped: boolean }; buttons: (Rect & { clipped: boolean; label: string })[]; buys: Rect[] };
+  const m = (await page.evaluate(PULSE_MEASURE.replace("__SEL__", JSON.stringify(sel)))) as Measured;
   const problems = pulseProblems(m.box, m.buttons, m.buys, width);
   return problems.length
     ? { journey, ok: false, level: "fail", detail: `on ${link.path}: ${problems.slice(0, 4).join("; ")}`, url: finalUrl }
