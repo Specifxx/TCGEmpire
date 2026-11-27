@@ -18,7 +18,7 @@ name: Android build
 on:
   workflow_dispatch:
   push:
-    branches: [claude/riftcompare-mobile-app-hBUYw]
+    branches: [main, "claude/**"]
     paths:
       - "mobile/**"
       - ".github/workflows/android-build.yml"
@@ -41,13 +41,13 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
           cache: gradle
 
       - name: Set up Android SDK

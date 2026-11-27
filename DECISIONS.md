@@ -26283,3 +26283,19 @@ design-system/README.md):
 - **Motion:** the scroll entrances and parallax are off.
 - **Unchanged:** buy-button fill, the Santa hat, the owner's Premium label and the light palette. No URL, title, meta, h1/h2 or
   server-HTML text changed.
+
+## 2026-11-27: Android app 2.0.0 (the September native layer on main, Ledger colours, pull to refresh, in-app updates)
+
+Owner (2026-11-27): the app "needs to be significantly upgraded", built again to match the website, then put on the closed test.
+The build on Play (version code 1, 16 Sep) came from `claude/riftcompare-android-app-pone02`, whose `mobile/` never reached `main`;
+`main` still held the older Capacitor 6 shell. 2.0.0 (version code 2) moves that native layer to `main` and adds:
+- **Ledger colours:** window, splash, status and navigation bars, offline screen and launcher shortcuts use ink-950 `#090a0c`
+  and brand-400 `#34d17e` instead of the old navy. The splash shows the site's green R on its own (Android 12+ uses
+  `drawable-nodpi/splash_icon.png`; the pre-12 `splash.png` files are regenerated).
+- **Pull to refresh** (`MainActivity`): a SwipeRefreshLayout around Capacitor's WebView, armed only when the page is scrolled to the
+  top, 120dp to trigger, stopped by the WebView's page-loaded or error event (10s backstop). Insets stay right because Capacitor's
+  SystemBars pads the decor view, not the WebView.
+- **Play in-app updates:** on launch the app offers Play's immediate update screen when a newer build exists, so testers move to
+  each new build without waiting for the store; silent off Play.
+The website half is unchanged: the app still loads riftcompare.com, so every site change reaches it without a store build.
+`.github/workflows/android-build.yml` now runs on JDK 21 (AGP 8.13) for `main` and `claude/**` pushes under `mobile/`.

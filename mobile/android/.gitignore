@@ -100,7 +100,11 @@ app/src/main/assets/capacitor.config.json
 app/src/main/assets/capacitor.plugins.json
 app/src/main/res/xml/config.xml
 
-# Release signing — NEVER commit these
+# Release signing — NEVER commit these.
+# keystore.properties holds the store/key passwords in plaintext, and the
+# keystore itself is the identity Play verifies uploads against. local.properties
+# is above; google-services.json carries the Firebase project config if push is
+# ever added (see mobile/README.md).
 keystore.properties
 *.keystore
 *.jks
