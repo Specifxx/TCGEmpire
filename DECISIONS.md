@@ -26311,6 +26311,21 @@ The build on Play (version code 1, 16 Sep) came from `claude/riftcompare-android
 The website half is unchanged: the app still loads riftcompare.com, so every site change reaches it without a store build.
 `.github/workflows/android-build.yml` now runs on JDK 21 (AGP 8.13) for `main` and `claude/**` pushes under `mobile/`.
 
+## 2026-11-27 — Black Friday mode runs to the end of TCGplayer's sale (owner)
+
+The owner asked the same day for "a lot more effort this weekend into Black Friday and Cyber Monday … capture this
+opportunity with TCG Player", so the bar (`lib/bf-mode.ts`, `BfModeBar`) no longer stops at 10:00 UTC on 28 Nov: it runs
+until 04:00 UTC on 1 Dec, when TCGplayer's sale ends (11PM 30 Nov New York). Its label follows the weekend (Black Friday,
+Cyber Weekend from 28 Nov 10:00 UTC, Cyber Monday from 30 Nov 05:00 UTC), and on Cyber Monday it links the Cyber Monday page.
+Same place, same ✕, no pop-up; it still switches itself off with no build. Delete the files after the sale.
+
+## 2026-11-27 — "Sale: 10% store credit" on the TCGplayer row while its sale runs (owner)
+
+The first hourly read of Black Friday (27 Nov, 00:00 to 12:00 UTC) had buy clickers up 48% across the card sites, but TCGplayer
+was only 9 to 20% of them, and the owner asked to "capture this opportunity with TCG Player". So TCGplayer's own row in every
+product price table carries a small chip saying what its sale is (`TcgSaleChip`, 9AM 27 Nov to 11PM 30 Nov New York time,
+`lib/bf-mode.ts`). It is drawn only in the browser after the clock is read, so cached HTML never shows it outside the sale. It
+ranks nothing and marks no row the cheapest. Delete it with the bar after the sale.
 ## 2026-11-27: A 3-day Premium pass, emailed per site to free accounts
 
 Owner, 27 Nov: "send like batches separately per website to all of these registered users who aren't premium, and make it
