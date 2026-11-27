@@ -26245,3 +26245,16 @@ an entrant who opens TCG Prices' collection from their home screen, once each, f
 that draw (`GiveawayEntry.appClaimedAt`, action "app" on `/api/sister-giveaway`). Free for anyone, so the draw stays a free prize
 draw. The opening is reported by the page itself (display-mode standalone); it is not provable, and at 25 points for a A$9 pack
 that is accepted. TCG Prices' alert and weekly emails carry the footer line like the other sisters.
+
+## Set pages lead with "Card List & Price Guide" again (2026-11-27)
+
+Search Console (28 days to 23 Nov, maintenance gsc-queries run 45761742671): `/sets/radiance` had 3,583
+impressions at position 8.1 and a 1.2% CTR, and its top five queries are all price searches: "riftbound
+radiance card list price" 393 (10 clicks), "riftbound radiance price guide" 274 at 5.9 and "radiance price
+guide" 143 at 6.9 (no clicks between them), "price list" 259, "card prices" 245, "card price" 153. The title
+was the 2026-10-23 brand-free rung "Radiance Card List: All N Cards, Cheapest First": no "Riftbound", no
+"price". The released ladder now opens with `Riftbound <Set> Card List & Price Guide (All <N> Cards)` (fits 60
+for Radiance, Unleashed, Origins, Vendetta), then "+ Prices", then the old rung as a fallback; "Card List"
+still leads the words. The keyword map's 12 Nov row gave the Radiance price queries to
+`/blog/riftbound-radiance-price-guide`, but Google sends them to the set hub (the post had 196 impressions),
+so the map follows Google. Read: `/sets/radiance` CTR and the "price guide" rows after ~10 Dec.

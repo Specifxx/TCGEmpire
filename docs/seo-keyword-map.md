@@ -257,7 +257,8 @@ Price searches were answered by `/` and `/browse` (split queries "riftbound card
 
 | Query pattern | Primary URL | Secondary (different angle) |
 |---|---|---|
-| `radiance price guide`, `riftbound radiance card prices`, `radiance card list price`, `kda riftbound price`, `blade of the exile riftbound`, `radiance booster box price` | `/blog/riftbound-radiance-price-guide` (rarity medians, dearest playables, K/DA specials, sealed by market, all computed) | `/sets/radiance` is the card list and gallery; `/blog/where-to-buy-riftbound-radiance` keeps "where", `/radiance-preorders` keeps the pre-order list |
+| `kda riftbound price`, `blade of the exile riftbound`, `radiance booster box price` | `/blog/riftbound-radiance-price-guide` (rarity medians, dearest playables, K/DA specials, sealed by market, all computed) | `/sets/radiance` is the card list and gallery; `/blog/where-to-buy-riftbound-radiance` keeps "where", `/radiance-preorders` keeps the pre-order list |
+| `radiance price guide`, `riftbound radiance price guide`, `riftbound radiance card prices`, `radiance card list price`, `riftbound radiance price list` (moved 2026-11-27) | `/sets/radiance`: Google chose the set hub (3,583 impressions in 28 days to 23 Nov, the post 196), so the set title leads `Riftbound <Set> Card List & Price Guide (All <N> Cards)` again (DECISIONS.md 2026-11-27) | `/blog/riftbound-radiance-price-guide` keeps the rarity medians and K/DA angle |
 | `radiance signature price(s)`, `riftbound signature card prices`, `radiance overnumbered price` | `/blog/riftbound-radiance-signature-prices-now` (16 Signatures + 17 overnumbered, three dates) | `/blog/riftbound-radiance-signature-cards` keeps "what is it / how many / who signed", with a 12 November price table at the top and the 17 October snapshot kept for the record |
 
 ## How to use this file going forward

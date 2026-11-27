@@ -86,6 +86,13 @@ test("set pages: 'Card List: All N Cards + Prices' leads, and the grid is not pu
   assert.match(previewArm, /Card List: \$\{revealLabel\} So Far/);
   assert.doesNotMatch(previewArm, /All \$\{|\+ Prices|Price Guide|Revealed|Spoilers/);
   assert.match(releasedArm, /Card List: All \$\{cardCount\} Cards \+ Prices/);
+  // 2026-11-27: the price-guide rung leads the released arm (/sets/radiance is
+  // found by price searches), and fits 60 for the sets that drive them.
+  const lead = releasedArm.indexOf("Card List & Price Guide (All ${cardCount} Cards)");
+  assert.ok(lead > 0 && lead < releasedArm.indexOf("Cards + Prices") && lead < releasedArm.indexOf("Cheapest First"));
+  for (const [name, n] of [["Radiance", 199], ["Unleashed", 219], ["Origins", 298], ["Vendetta", 166]] as const) {
+    assert.ok(`Riftbound ${name} Card List & Price Guide (All ${n} Cards)`.length <= 60, name);
+  }
   const previewDesc = src.slice(src.indexOf("const previewDescCandidates"), src.indexOf("const descCandidates"));
   assert.ok(previewDesc.length > 0);
   assert.doesNotMatch(previewDesc, /compared across stores|Updated daily|complete/);

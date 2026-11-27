@@ -224,11 +224,20 @@ export async function generateMetadata({
         // the page keeps the query it will own once cards import.
         [`Riftbound ${set.name}: Legends, Products & Card List`, `Riftbound ${set.name}: Legends & Products`]
       : [
-        // 2026-10-23 CTR pass (owner-approved): brand-free, the count and the
-        // "cheapest first" hook up front. The "+ Prices" rung stays next.
-        ...(cardCount > 0 ? [`${set.name} Card List: All ${cardCount} Cards, Cheapest First`] : []),
-        ...(cardCount > 0 ? [`Riftbound ${set.name} Card List: All ${cardCount} Cards + Prices`] : []),
+        // 2026-11-27 (Search Console, 28 days to 23 Nov): the price-guide rung
+        // leads again. The 2026-10-23 "<Set> Card List: All N Cards, Cheapest
+        // First" lead dropped both "Riftbound" and the word "price", and
+        // /sets/radiance (3,583 impressions, 1.2% CTR, position 8.1) is found
+        // almost only by price searches: "riftbound radiance card list price"
+        // 393 (10 clicks), "riftbound radiance price guide" 274 at 5.9 and
+        // "radiance price guide" 143 at 6.9 (0 clicks between them), "price
+        // list" 259, "card prices" 245, "card price" 153. "Card List" still
+        // leads the words (list intent first, tests/seo-landing-pages.test.ts);
+        // the count stays. Longer set names fall to the "+ Prices" rung, then
+        // to the old brand-free rung, which is kept as a fallback.
         ...(cardCount > 0 ? [`Riftbound ${set.name} Card List & Price Guide (All ${cardCount} Cards)`] : []),
+        ...(cardCount > 0 ? [`Riftbound ${set.name} Card List: All ${cardCount} Cards + Prices`] : []),
+        ...(cardCount > 0 ? [`${set.name} Card List: All ${cardCount} Cards, Cheapest First`] : []),
         `Riftbound ${set.name} Card List & Price Guide`,
         ...titleCandidates.map((t) => `${t} | RiftCompare`),
       ];
