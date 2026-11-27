@@ -11,27 +11,27 @@
      renders pixel-identically. The light set is further down under
      `:root[data-theme="light"]`; src/lib/theme-shared.ts explains the switch
      and tests/theme.test.ts pins that both sets define every variable. */
-  /* Riftbound's deep teal-navy (2026-10-16 rebrand, DECISIONS.md "The
+  /* Design v2 (2026-11-27): neutral near-black greys, Rift green the one accent. Before it, Riftbound's deep teal-navy (2026-10-16 rebrand, DECISIONS.md "The
      Riftbound rebrand"). The official site sits on #013951 with #336073
      rules; these surfaces are that hue taken darker, because a price table
      reads better on a near-black ground and the 4.5:1 text guarantees below
      have to hold on every one of them. #336073 itself is ink-600's neighbour,
      and the hero band (.rb-hero-band) shows the true #013951. */
-  --c-ink-950: 4 19 28;
-  --c-ink-900: 7 26 37;
-  --c-ink-850: 11 34 48;
-  --c-ink-800: 16 43 59;
-  --c-ink-700: 29 60 78;
-  --c-ink-600: 47 86 106;
+  --c-ink-950: 9 10 12;
+  --c-ink-900: 17 18 21;
+  --c-ink-850: 24 26 30;
+  --c-ink-800: 31 33 38;
+  --c-ink-700: 44 46 53;
+  --c-ink-600: 62 65 73;
   /* Green text on the dark surfaces: #34D17E (green again, owner 2026-11-20). */
   --c-brand-400: 52 209 126;
   --c-slate-100: 241 245 249;
   --c-slate-200: 226 232 240;
-  --c-slate-300: 203 213 225;
-  --c-slate-400: 148 163 184;
-  --c-slate-500: 133 147 166;
+  --c-slate-300: 214 215 219;
+  --c-slate-400: 166 169 177;
+  --c-slate-500: 150 153 162;
   /* Lifted again for the teal surfaces: #76828f measured 4.17:1 on ink-850. */
-  --c-slate-600: 128 144 156;
+  --c-slate-600: 132 135 145;
   --c-slate-700: 51 65 85;
   --c-slate-800: 30 41 59;
   --c-slate-900: 15 23 42;
@@ -58,8 +58,8 @@
   --c-lime-300: 190 242 100;
   --c-purple-300: 216 180 254;
   --c-blue-300: 147 197 253;
-  --page-bg: #05161f;
-  --page-fg: #e8eef1;
+  --page-bg: #090a0c;
+  --page-fg: #ededef;
   /* The wordmark gradient (lib/brand.ts FLAME_STOPS): gold at the top to the
      Riftbound orange by 58% of the height. Painted through the logo masks and
      .rb-flame-text; decoration only, never a button. */
@@ -68,9 +68,9 @@
   --shadow-glow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 12px rgba(0, 0, 0, 0.45);
   /* The scrolled header's drop (NavbarShell SCROLLED, tailwind `shadow-header`). */
   --shadow-header: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --scroll-track: #071a25;
-  --scroll-thumb: #1d3c4e;
-  --scroll-thumb-hover: #2f566a;
+  --scroll-track: #111215;
+  --scroll-thumb: #2c2e35;
+  --scroll-thumb-hover: #3e4149;
   /* Height of the native AdMob banner inside the Capacitor shell — see the
      native-app rule further down. 0 on the web, where there is no banner. */
   --native-banner-h: 0px;
@@ -2180,11 +2180,15 @@ html[data-pab1="b"] .pab1-b { display: block; }
   }
 }
 
-/* rift-ds:start — Empire design system v1 on RiftCompare (2026-11-27; /mnt/project-files/design-system/README.md).
-   Bill (2026-11-26): "a complete redesign of RiftCompare"; a visitor on a sister site asked us to hire a designer
-   "so it wasn't giving claudeslop". This block removes the generated-template tells and applies the shared standard
-   to Rift's own components. It changes no markup, words, order, URL or h1/h2 outline: CSS only, so the server HTML
-   Google reads is byte-identical. Rift stays green; the Santa hat and the owner's Premium label stay as they are. */
+/* empire-v2:start — "Ledger", the Empire design language v2 (2026-11-27; the project's design-system/README.md).
+   Owner (2026-11-27): rework the sites so they look state of the art and expert-designed, not vibe-coded. v1 took the
+   template tells off; v2 gives the site a point of view, a price ledger: Geist for words and headings, Geist Mono for
+   every figure, near-black neutral surfaces (tokens set in place at the top of this file), product photos on one paper
+   plate, mono table heads over hairline rows, nothing that blurs or rises in on scroll. The brand colour stays the one
+   accent (Rift green), buy buttons keep their fill, the Santa hat and the owner's Premium label stay. The first
+   numbered sections (1-8) are v1, rift-ds (the Rift thread's redesign, same day), folded in; the second run (1-5) is v2. CSS and fonts only: no word, order, URL, heading or ranking change. */
+
+/* v1 (rift-ds), kept: */
 
 /* 1. The coloured word in the h1 and the logo: one solid brand green, no gradient, no sheen, no glow. */
 .rb-flame-text,
@@ -2278,10 +2282,12 @@ header input:focus {
 /* 4. Shape: 10px on cards, plates, inputs and buttons; 6px on badges and tags. Pills stay only on filter chips and
    the header's account and Premium controls (rounded-full utilities, untouched). */
 .card-surface,
-.btn,
-.input,
 .rb-way {
-  border-radius: 10px !important;
+  border-radius: 12px !important;
+}
+.btn,
+.input {
+  border-radius: 8px !important;
 }
 .chip,
 .tag {
@@ -2329,7 +2335,61 @@ header [class*="backdrop-blur"] {
 main h2 {
   letter-spacing: -0.01em;
 }
-/* rift-ds:end */
+/* 1. Type: one family. Tight display tracking, mono figures. */
+body {
+  font-feature-settings: "ss01", "cv11";
+  letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, .font-display { letter-spacing: -0.03em; }
+h1 { font-weight: 700; }
+h2, h3 { font-weight: 600 !important; }
+.num, .font-mono, .tabular-nums { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* 2. Surfaces: flat bordered cards, 12 / 8 / 6 radii, no shadow, a firmer edge on hover. */
+.card-surface { border-radius: 12px !important; box-shadow: none !important; }
+.btn, .input { border-radius: 8px !important; }
+.chip, .tag { border-radius: 6px !important; }
+.card-surface:hover { box-shadow: none !important; }
+
+/* 3. Product photos: one paper plate, inset inside the card, the photo multiplied onto it. */
+.card-surface > .bg-white\/95,
+.card-surface > a > .bg-white\/95 {
+  background: #f3f2ee !important;
+  margin: 6px 6px 0;
+  border-radius: 8px;
+}
+.card-surface .bg-white\/95 img { mix-blend-mode: multiply; }
+.card-surface > .bg-white\/95 > span.rounded-sm {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.02em;
+  border-radius: 4px !important;
+}
+
+/* 4. The price is the loudest thing on a tile. */
+.card-surface .num.text-lg { font-size: 1.2rem; font-weight: 650; letter-spacing: -0.025em; }
+
+/* 5. Price tables: a ledger. Mono uppercase heads, hairline rows with a hover tint. */
+table thead th {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+table tbody tr { transition: background-color 120ms ease; }
+table tbody tr:hover { background: rgb(var(--c-ink-850) / 0.7); }
+/* Sealed photos on Rift: the same paper plate (SealedTile draws its photo on an ink-950 square). */
+.card-surface > .aspect-square.bg-ink-950 {
+  background: #f3f2ee !important;
+  margin: 6px 6px 0;
+  border-radius: 8px;
+}
+.card-surface > .aspect-square.bg-ink-950 img { mix-blend-mode: multiply; }
+.card-surface > .aspect-square.bg-ink-950 img, .group:hover .card-surface > .aspect-square.bg-ink-950 img { transform: none !important; }
+/* Scroll: nothing rises in or drifts (the .rb-sd entrances and the parallax depths). */
+.rb-sd, .rb-sd-stagger > *, .rb-depth-slow, .rb-depth-mid { animation: none !important; opacity: 1 !important; transform: none !important; }
+/* empire-v2:end */
 
 @media (prefers-reduced-motion: reduce) {
   .gw-flash { animation: none; }

@@ -26258,3 +26258,20 @@ for Radiance, Unleashed, Origins, Vendetta), then "+ Prices", then the old rung 
 still leads the words. The keyword map's 12 Nov row gave the Radiance price queries to
 `/blog/riftbound-radiance-price-guide`, but Google sends them to the set hub (the post had 196 impressions),
 so the map follows Google. Read: `/sets/radiance` CTR and the "price guide" rows after ~10 Dec.
+
+## 2026-11-27 — Empire design language v2, "Ledger" (phase two of the Rift redesign)
+
+Bill (2026-11-27): rework the sites so they look state of the art and expert-designed, not vibe-coded. The Rift thread handed
+phase two to the design agent. v2 replaces the rift-ds block with ONE `empire-v2` block in `globals.css`, still before the final
+reduced-motion rule, that keeps every v1 rule (the tells stay off) and adds the network's shared look (the project's
+design-system/README.md):
+- **Fonts:** Geist for words and headings, Geist Mono for figures. The self-hosted files are now Geist (OFL) and the Inter,
+  JetBrains Mono and Cinzel files are gone; the `inter` / `jetbrainsMono` / `cinzel` consts and their CSS variables keep their
+  names, so the preload rules still hold. Cinzel's fantasy caps read as a theme, not a price tool (the Rift thread agreed).
+- **Colour:** dark surfaces and the slate text ramp are neutral near-black greys instead of teal-navy, so Rift green is the one
+  accent. Every text shade still clears 4.5:1 (`tests/theme.test.ts` pins the new values).
+- **Tiles and tables:** sealed photos sit on the paper plate. Cards are 12px, buttons and inputs 8px. Table heads are mono and
+  uppercase over hairline rows.
+- **Motion:** the scroll entrances and parallax are off.
+- **Unchanged:** buy-button fill, the Santa hat, the owner's Premium label and the light palette. No URL, title, meta, h1/h2 or
+  server-HTML text changed.
