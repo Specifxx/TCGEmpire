@@ -15,6 +15,7 @@ phone (390px) widths, and files what it cannot finish.
 | product page: buy links | it has a buy link; every eBay link carries `campid=5339155912`, every Amazon link a `tag=`, every TCGplayer link goes through the partner link (the site's own `/out` redirects are read, never followed) |
 | filters | the list page's own keyword box narrows the list to products naming the word (a list with dropdowns only is a warning) |
 | best basket | the tool renders its controls with no error |
+| collector pulse (MTG, phone only) | the product page's Collector pulse box draws, fits the 390px screen, has three full-size answer buttons, and sits below the buy rows without touching or crowding one (`pulse: true` in `sites.ts`; never answered) |
 | on every page | no console errors (trackers and ad scripts excepted), no 5xx from the site, and on a phone nothing wider than the screen |
 
 A failed journey is tried once more on a fresh page before it counts. The guard says it is a bot in its

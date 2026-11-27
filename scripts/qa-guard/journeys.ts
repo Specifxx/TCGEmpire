@@ -407,6 +407,95 @@ export async function basketJourney(t: Tracked, site: Site, product?: Link): Pro
   return { journey, ok: true, level: "warn", detail: `opens, but no "+ Shortlist" button was found on ${product?.path ?? "a product page"} to test it with`, url };
 }
 
+export type Rect = { x: number; y: number; w: number; h: number };
+
+/**
+ * The Collector pulse box judged at phone width (coordinator, 2026-11-27): it fits the screen, its three answers are
+ * full-size tap targets with their words unclipped, and it sits BELOW the buy rows with room to breathe, never on top of
+ * one or above them (CollectorPulse.tsx: "never beside a price or a buy button"). Pure, so tests pin it.
+ */
+export function pulseProblems(box: Rect & { clipped: boolean }, buttons: (Rect & { clipped: boolean; label: string })[], buys: Rect[], width: number): string[] {
+  const out: string[] = [];
+  if (box.x < -1 || box.x + box.w > width + 1) out.push(`the box is ${Math.round(box.w)}px wide at x=${Math.round(box.x)}, past the ${width}px screen`);
+  if (box.clipped) out.push("the box's content is wider than the box");
+  if (buttons.length !== 3) out.push(`${buttons.length} answer buttons, not 3`);
+  for (const b of buttons) {
+    if (b.h < 40 || b.w < 44) out.push(`"${b.label}" is ${Math.round(b.w)}x${Math.round(b.h)}px, under a 44x40 tap target`);
+    else if (b.clipped) out.push(`"${b.label}" has its words cut off`);
+  }
+  const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  const hit = buys.filter((r) => overlaps(box, r)).length;
+  if (hit) out.push(`it overlaps ${hit} buy link${hit === 1 ? "" : "s"}`);
+  if (buys.length) {
+    const firstBuy = Math.min(...buys.map((r) => r.y));
+    if (box.y < firstBuy) out.push(`it sits above the buy rows (box at y=${Math.round(box.y)}, first buy link at y=${Math.round(firstBuy)})`);
+    const above = buys.filter((r) => r.y + r.h <= box.y + 1).map((r) => box.y - (r.y + r.h));
+    if (!hit && above.length && Math.min(...above) < 8) out.push(`it is ${Math.max(0, Math.round(Math.min(...above)))}px under a buy link (crowded, want 8px or more)`);
+  }
+  return out;
+}
+
+/** Collector pulse at phone width: present, fits, and keeps clear of the buy rows. Reads the page only: never answers. */
+export async function pulseJourney(t: Tracked, site: Site, link: Link): Promise<Omit<Check, "site" | "viewport">> {
+  const journey = "collector pulse";
+  const { page } = t;
+  // Until 5 Dec the box shows only to a visitor who answered the tool-interest question (one prompt a visit); the guard
+  // takes that visitor's place so the box draws. Nothing is sent: the key is local to the guard's own browser.
+  await page.addInitScript(() => {
+    try {
+      if (localStorage.getItem("tool-interest") == null) localStorage.setItem("tool-interest", "qa-guard");
+    } catch {}
+  });
+  let asked = false;
+  let answered = 0;
+  page.on("response", (r) => {
+    if (/\/api\/sentiment\b/.test(r.url())) {
+      asked = true;
+      answered = r.status();
+    }
+  });
+  page.on("requestfailed", (r) => {
+    if (/\/api\/sentiment\b/.test(r.url())) asked = true;
+  });
+  const { status, finalUrl } = await go(t, link.href);
+  if (status >= 400) return { journey, ok: false, level: "fail", detail: `HTTP ${status} for ${link.path}`, url: link.href };
+  const sel = 'aside[data-pulse], aside[aria-label="Collector pulse"]';
+  const box = page.locator(sel).first();
+  await box.waitFor({ state: "attached", timeout: 10_000 }).catch(() => {});
+  if (!(await box.count())) {
+    if (!asked) return { journey, ok: true, level: "warn", detail: `no Collector pulse box on ${link.path} (this build does not ask for one)`, url: finalUrl };
+    return { journey, ok: false, level: "fail", detail: `the Collector pulse box did not draw on ${link.path} (its /api/sentiment answered ${answered || "nothing"})`, url: finalUrl };
+  }
+  await box.scrollIntoViewIfNeeded().catch(() => {});
+  const width = page.viewportSize()?.width ?? 390;
+  const m = await page.evaluate((s) => {
+    const el = document.querySelector(s) as HTMLElement;
+    const r = (e: Element) => {
+      const b = e.getBoundingClientRect();
+      return { x: b.left, y: b.top + window.scrollY, w: b.width, h: b.height };
+    };
+    const buttons = [...el.querySelectorAll("button")].map((b) => ({ ...r(b), clipped: b.scrollWidth > b.clientWidth + 1, label: (b.innerText || "").trim().slice(0, 20) }));
+    const host = location.host.replace(/^www\./, "");
+    const buys = [...document.querySelectorAll("a[href]")]
+      .filter((a) => !el.contains(a) && (a as HTMLElement).getClientRects().length > 0)
+      .filter((a) => {
+        try {
+          const u = new URL((a as HTMLAnchorElement).href);
+          if (u.host.replace(/^www\./, "") === host) return /^\/(out|go|r|api\/out|api\/go|api\/click|click|redirect|buy)\b/i.test(u.pathname);
+          return /sponsored|nofollow/.test(a.getAttribute("rel") || "") || /ebay|tcgplayer|amazon/.test(u.host);
+        } catch {
+          return false;
+        }
+      })
+      .map(r);
+    return { box: { ...r(el), clipped: el.scrollWidth > el.clientWidth + 1 }, buttons, buys };
+  }, sel);
+  const problems = pulseProblems(m.box, m.buttons, m.buys, width);
+  return problems.length
+    ? { journey, ok: false, level: "fail", detail: `on ${link.path}: ${problems.slice(0, 4).join("; ")}`, url: finalUrl }
+    : { journey, ok: true, level: "ok", detail: `fits the screen, 3 answers, clear of ${m.buys.length} buy links`, url: finalUrl };
+}
+
 /** Wider than the screen: the classic phone bug. Reports the widest element so the fix is quick. */
 export async function overflow(page: Page): Promise<string | null> {
   return page.evaluate(() => {

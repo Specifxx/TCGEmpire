@@ -37,6 +37,8 @@ export type Site = {
   filters?: { path: string; q: string };
   /** The Best Basket page. */
   basket?: string;
+  /** Product pages carry the Collector pulse box (MTG's CollectorPulse.tsx): checked at phone width, never answered. */
+  pulse?: boolean;
   /** Paths whose console errors are known and owned elsewhere (rare; say why). */
   notes?: string;
 };
@@ -92,6 +94,7 @@ export const SITES: Site[] = [
     product: /^\/[a-z]{2}\/p\/[^/]+\/?$/,
     filters: { path: "/us/sealed", q: "commander" },
     basket: "/us/best-basket",
+    pulse: true,
   },
   {
     key: "gundam",
