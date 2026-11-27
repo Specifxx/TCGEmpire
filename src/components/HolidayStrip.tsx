@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BfModeBar } from "@/components/BfModeBar";
+import { TcgSalePopup } from "@/components/TcgSalePopup";
 import { affiliateUrl } from "@/lib/affiliate";
 import { bfModeOn, bfPhase } from "@/lib/bf-mode";
 import { saleStrip } from "@/lib/holiday-strip";
@@ -28,6 +29,7 @@ export function HolidayStrip({ today = new Date().toISOString().slice(0, 10) }: 
   const on = bfModeOn(Date.now());
   if (!on) return strip;
   return (
+    <>
     <BfModeBar
       on={on} phase={bfPhase(Date.now())}
       href="/black-friday"
@@ -46,5 +48,12 @@ export function HolidayStrip({ today = new Date().toISOString().slice(0, 10) }: 
     >
       {strip}
     </BfModeBar>
+    {/* TCGplayer's sale card (owner, 2026-11-27): once a visit, never while typing, closes for good (TcgSalePopup.tsx). */}
+    <TcgSalePopup slotKey="rc_prompt_slot" dealsHref="/black-friday">
+      <a href={affiliateUrl("https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?productLineName=riftbound-league-of-legends-trading-card-game&q=booster+box&ProductTypeName=Sealed+Products", "tcgplayer", "/bf-popup")} rel="sponsored nofollow noopener noreferrer" target="_blank">Booster boxes</a>
+      <a href={affiliateUrl("https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?productLineName=riftbound-league-of-legends-trading-card-game&ProductTypeName=Sealed+Products", "tcgplayer", "/bf-popup")} rel="sponsored nofollow noopener noreferrer" target="_blank">All sealed</a>
+      <a href={affiliateUrl("https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?productLineName=riftbound-league-of-legends-trading-card-game&ProductTypeName=Cards", "tcgplayer", "/bf-popup")} rel="sponsored nofollow noopener noreferrer" target="_blank">Singles</a>
+    </TcgSalePopup>
+    </>
   );
 }
