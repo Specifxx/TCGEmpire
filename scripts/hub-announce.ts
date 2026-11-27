@@ -6,7 +6,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const CHANNEL = "1564578305166803054"; // #announcements in TCG Deals & Restocks
+// Rooms in TCG Deals & Restocks a post may go to; only #announcements pins (ROOM, default announcements).
+export const ROOMS: Record<string, { id: string; pin: boolean }> = {
+  announcements: { id: "1564578305166803054", pin: true },
+  "sealed-sniper": { id: "1573082997203275887", pin: false },
+};
 const TELEGRAM_CHAT = "@tcgdealsrestocks";
 const MEDIA = /\.(mp4|jpe?g|png)$/i;
 
@@ -22,7 +26,8 @@ export const telegramPlain = (t: string): string => t.replace(/\*\*/g, "").repla
 
 const mime = (f: string) => (f.endsWith(".mp4") ? "video/mp4" : f.endsWith(".png") ? "image/png" : "image/jpeg");
 
-async function discord(token: string, text: string, files: string[]): Promise<void> {
+async function discord(token: string, text: string, files: string[], room: { id: string; pin: boolean }): Promise<void> {
+  const CHANNEL = room.id;
   const form = new FormData();
   form.append("payload_json", JSON.stringify({ content: text, allowed_mentions: { parse: [] } }));
   files.forEach((f, i) => form.append(`files[${i}]`, new Blob([fs.readFileSync(f)], { type: mime(f) }), path.basename(f)));
@@ -31,6 +36,7 @@ async function discord(token: string, text: string, files: string[]): Promise<vo
   if (!r.ok) throw new Error(`Discord post: HTTP ${r.status} ${(await r.text()).slice(0, 200)}`);
   const m = (await r.json()) as { id: string };
   console.log(`discord: posted https://discord.com/channels/1564578153534591006/${CHANNEL}/${m.id}`);
+  if (!room.pin) return;
   const p = await fetch(`https://discord.com/api/v10/channels/${CHANNEL}/pins/${m.id}`, { method: "PUT", headers: h });
   console.log(p.ok ? "discord: pinned" : `discord: pin failed, HTTP ${p.status} (the bot may lack Manage Messages)`);
 }
@@ -58,9 +64,11 @@ async function main() {
   if (!/^[\w-]+$/.test(id)) throw new Error("POST must be a folder name under social/hub-posts/");
   const { text, files } = readPost(path.join(process.cwd(), "social", "hub-posts", id));
   const only = (process.env.ONLY ?? "both").trim();
+  const room = ROOMS[(process.env.ROOM ?? "").trim() || "announcements"];
+  if (!room) throw new Error(`ROOM must be one of ${Object.keys(ROOMS).join(", ")}`);
   const dt = process.env.DISCORD_BOT_TOKEN?.trim();
   const tt = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  if (only !== "telegram") dt ? await discord(dt, text, files) : console.log("discord: no bot token, skipped");
+  if (only !== "telegram") dt ? await discord(dt, text, files, room) : console.log("discord: no bot token, skipped");
   if (only !== "discord") tt ? await telegram(tt, text, files) : console.log("telegram: no bot token, skipped");
 }
 

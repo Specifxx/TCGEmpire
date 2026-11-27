@@ -13,6 +13,10 @@ on:
         description: "both, discord or telegram"
         required: false
         default: both
+      room:
+        description: "Discord room: announcements (pinned) or sealed-sniper (not pinned)"
+        required: false
+        default: announcements
 
 permissions:
   contents: read
@@ -32,4 +36,5 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           POST: ${{ inputs.post }}
           ONLY: ${{ inputs.only }}
+          ROOM: ${{ inputs.room }}
         run: npx -y tsx scripts/hub-announce.ts
