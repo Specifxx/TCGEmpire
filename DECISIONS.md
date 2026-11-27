@@ -26373,3 +26373,4 @@ rules, Counter row and 1 Dec window as the Brevo batch, so nobody gets it twice 
 BCC plus one copy of the site-branded email to paste. A BCC carries no per-person token, so its unsubscribe link opens the
 site's opt-out page with no token, which asks for the address and writes the same AnnouncementOptOut row. Gmail allows about
 500 recipients a day per account; a batch stays at 450 or under. Dex and OP keep their own mail accounts (no Rift allowance).
+- Released urgently on 2026-11-27 (owner: "deploy it urgently"), from main once the 8-hour gate opened.
