@@ -39,7 +39,8 @@ export type ShopifySealedStore = RetailerInfo & {
   currency: string;
   country: NonNullable<RetailerInfo["country"]>;
   /** "bigcommerce" / "shopware": read from category pages (lib/storefront-html.ts), `sealedCollections` being the paths. */
-  platform?: "shopify" | "bigcommerce" | "shopware";
+  /** "squarespace": the shop's ?format=json view (lib/squarespace.ts), only with `squarespaceConsent`. */
+  platform?: "shopify" | "bigcommerce" | "shopware" | "squarespace";
   /** Pages of 250 to read per configured collection (default 10). Only for a
    *  store whose Riftbound products sit deep in a big general collection. */
   maxPages?: number;
@@ -52,6 +53,25 @@ export type ShopifySealedStore = RetailerInfo & {
 // Shopify stores, sealed only. Probed 2026-09-24: storefront currency from
 // /cart.js, collections from the store's own sitemap (discoverCollections).
 export const SEALED_ONLY_SHOPIFY: ShopifySealedStore[] = [
+  {
+    // Topaz Cards, UK (Topaz Cards Ltd, Companies House 16751520), on Squarespace
+    // Commerce. Its owner asked to be listed (11 Nov) and said yes IN WRITING on
+    // 2026-11-27 to our reading ?format=json once or twice a day, which
+    // Squarespace's default robots.txt otherwise disallows (lib/squarespace.ts).
+    // Sealed, GBP, code RIFTCOMPARE5 (5% off a first order). Postage not measured.
+    key: "topazcards",
+    name: "Topaz Cards",
+    base: "https://topaz-cards.co.uk",
+    collections: [],
+    sealedCollections: ["/shop/other-tcgs/riftbound"],
+    shippingFlatCents: 0,
+    freeOverCents: 0,
+    shippingNote: "shipping at checkout",
+    country: "UK",
+    currency: "GBP",
+    platform: "squarespace",
+    squarespaceConsent: "2026-11-27, Mike (owner), email to riftcompare@gmail.com: yes to ?format=json once or twice a day",
+  },
   {
     // Miniature Market, St. Louis: one of the biggest US game retailers, on
     // Shopware 6 (no feed). Its Riftbound category is read from its listing
