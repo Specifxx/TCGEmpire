@@ -26284,6 +26284,17 @@ design-system/README.md):
 - **Unchanged:** buy-button fill, the Santa hat, the owner's Premium label and the light palette. No URL, title, meta, h1/h2 or
   server-HTML text changed.
 
+## 2026-11-27 — Penny, the mascot who suggests a first search
+
+Owner, 27 Nov: "cute little things that are smiling, welcoming, inviting … a little mascot saying, hey, search this term
+here … people really like being told what to do". Penny, a smiling ginger cat who waves (our own flat SVG, no game or
+character art), sits under the home page's search with "New here? Search your first item. Try one of these:" and three
+example searches for this game. A tap types the example into the search box and runs it (a plain GET form is sent).
+`components/MascotGuide.tsx` is the same file on every card site; only the examples differ.
+
+- Inline in the hero, server-rendered, no layout shift. Never a pop-up, an overlay or a second prompt (one prompt per visit).
+- One short wave on load and on hover, none under reduced motion. Neutral bubble that reads on dark and light.
+- The h1, title, meta, URLs and order of the page are unchanged; the hero gains one line of text and three buttons.
 ## 2026-11-27: Android app 2.0.0 (the September native layer on main, Ledger colours, pull to refresh, in-app updates)
 
 Owner (2026-11-27): the app "needs to be significantly upgraded", built again to match the website, then put on the closed test.

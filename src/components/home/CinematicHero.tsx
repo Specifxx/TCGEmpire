@@ -10,6 +10,7 @@ import { HeroStats, type MarketStat } from "./HeroStats";
 import { NocturneComing } from "./NocturneComing";
 import { HalloweenDecor } from "./HalloweenDecor";
 import { ChristmasGifts } from "./ChristmasGifts";
+import { MascotGuide } from "@/components/MascotGuide";
 import type { CardTileData } from "@/components/CardTile";
 import type { Country } from "@/lib/country";
 
@@ -135,6 +136,8 @@ export function CinematicHero({
             <SearchBar variant="hero" autoFocusDesktop trendingCards={trendingCards} />
           </Suspense>
         </div>
+        {/* Penny suggests a first search (owner, 2026-11-27: "a little mascot saying, hey, search this term here"). */}
+        <MascotGuide examples={["Jinx", "Kai'Sa", "Booster Box"]} fallbackHref="/browse?q=" />
 
         <div className="rb-rise hero-markets" style={riseAt(3)}>
           <CountryHeroToggle />
