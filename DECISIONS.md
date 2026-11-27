@@ -26236,3 +26236,12 @@ the 2026-10-16 homepage motion (vortex, embers, the sheen across "Riftbound", th
 - Checked live by injecting the block into riftcompare.com in Bill's Chrome: home at 1440 and 390/430 (iframes), a card page.
 - Phase two (after the Legacy launch, so the two effects can be read apart): the card page's price block and the home
   sections' hierarchy.
+## 2026-11-26: TCG Prices' launch draw, with points for the home-screen app
+
+Owner's tap, 26 Nov ("Run a TCG Prices launch draw for home-screen installs?": "Yes, one pack, closes 14 Dec"), for the collection
+app's launch day (Cluely study, move 3). A sixth giveaway, `tcgprices-app-launch-2026-12` (one Delta Reign booster pack, the
+owner's purchase like the others), on the same engine, rules and close as the December round. One addition: `APP_POINTS` (25) for
+an entrant who opens TCG Prices' collection from their home screen, once each, for the first `APP_POINTS_CAP` (500) entrants of
+that draw (`GiveawayEntry.appClaimedAt`, action "app" on `/api/sister-giveaway`). Free for anyone, so the draw stays a free prize
+draw. The opening is reported by the page itself (display-mode standalone); it is not provable, and at 25 points for a A$9 pack
+that is accepted. TCG Prices' alert and weekly emails carry the footer line like the other sisters.

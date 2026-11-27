@@ -27,7 +27,7 @@ export const dynamic = "force-dynamic";
 // giveaway only: { method: "email", email } mails a 20-minute link to opcompare.app/giveaway#c=<code>, and { code } turns that
 // proof of the inbox into the RiftCompare account for the address (memberFor) and a premium-session token for OP, which the page
 // keeps. Nothing about OP's own account is read or changed.
-const SITES: GiveawaySite[] = ["dex", "mtg", "ygo", "op"];
+const SITES: GiveawaySite[] = ["dex", "mtg", "ygo", "op", "tcgprices"];
 const OP_SITE: PremiumSite = { key: "op", name: "OP Compare", url: "https://opcompare.app" };
 
 function siteFor(origin: string | null): PremiumSite | null {

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { contributionPoints } from "@/lib/contributions-server";
 import { recordLoyaltyDay } from "@/lib/loyalty-server";
 import {
+  APP_POINTS_CAP,
   assignTickets,
   checkinDay,
   checkinOutlook,
@@ -67,7 +68,7 @@ export async function liveWeights(
   const ids = users.map((u) => u.id);
   const emails = users.map((u) => u.email.toLowerCase());
   const window = { gte: new Date(g.opensAt), lte: new Date(g.closesAt) };
-  const [byUser, byEmail, sealed, refs, checkins, claims, contrib] = await Promise.all([
+  const [byUser, byEmail, sealed, refs, checkins, claims, contrib, apps] = await Promise.all([
     prisma.priceAlert.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _count: { _all: true } }).catch(() => []),
     prisma.priceAlert.groupBy({ by: ["email"], where: { email: { in: emails } }, _count: { _all: true } }).catch(() => []),
     prisma.sealedWatch.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _count: { _all: true } }).catch(() => []),
@@ -81,6 +82,9 @@ export async function liveWeights(
       .findMany({ where: { giveaway: g.key, userId: { in: ids }, bonusClaimedAt: { not: null } }, select: { userId: true } })
       .catch(() => []),
     contributionPoints(ids, window).catch(() => new Map<string, number>()),
+    prisma.giveawayEntry
+      .findMany({ where: { giveaway: g.key, userId: { in: ids }, appClaimedAt: window }, select: { userId: true } })
+      .catch(() => []),
   ]);
   // A referral counts once the friend's account has a confirmed email, and never for the inviter's own account. A star friend
   // (lib/giveaway.ts STAR_REFERRAL_POINTS) also has Premium now, or STAR_FRIEND_CHECKINS check-ins in this giveaway.
@@ -120,6 +124,7 @@ export async function liveWeights(
   // The registry is the source of truth for a round's rule; an object passed in without one falls back to it.
   const rule = checkinRuleOf(giveawayByKey(g.key) ?? g);
   const claimed = new Set(claims.map((c) => c.userId));
+  const appOpened = new Set(apps.map((a) => a.userId));
   const now = Date.now();
   for (const u of users) {
     const premium = !!u.premiumUntil && u.premiumUntil.getTime() > now;
@@ -127,7 +132,7 @@ export async function liveWeights(
     const held = (watches.get(u.id) ?? 0) + (emailCount.get(u.email.toLowerCase()) ?? 0);
     const days = checkinDays.get(u.id) ?? [];
     const c = new Set(days).size;
-    const p = entryPoints({ premium, watches: held, bonusClaimed: claimed.has(u.id), checkins: c, checkinPoints: checkinPointsFor(rule, days), referrals, starReferrals: starCount.get(u.id) ?? 0, contributions: contrib.get(u.id) ?? 0 });
+    const p = entryPoints({ premium, watches: held, bonusClaimed: claimed.has(u.id), checkins: c, checkinPoints: checkinPointsFor(rule, days), referrals, starReferrals: starCount.get(u.id) ?? 0, contributions: contrib.get(u.id) ?? 0, app: appOpened.has(u.id) });
     out.set(u.id, { ...p, weight: p.points, referrals, watches: held, checkins: c, admin: u.isAdmin || isAdminEmail(u.email) });
   }
   return out;
@@ -214,7 +219,9 @@ export interface MyGiveaway {
   emailVerified: boolean;
   entered: boolean;
   points: number;
-  breakdown: { entry: number; bonus: number; bonusVia: string | null; checkin: number; referral: number; contribution: number; referralsCounted: number; starCounted: number };
+  breakdown: { entry: number; bonus: number; bonusVia: string | null; checkin: number; referral: number; contribution: number; app: number; referralsCounted: number; starCounted: number };
+  /** TCG Prices' launch draw: whether this entrant has the home-screen points, and how many of the APP_POINTS_CAP are left. */
+  app: { claimed: boolean; left: number } | null;
   checkins: number;
   checkedInToday: boolean;
   /** Consecutive Sydney days checked in, ending today or yesterday. */
@@ -266,7 +273,8 @@ export async function myGiveaway(g: Giveaway, user: Account, isAdminEmail: (e: s
     emailVerified: !!user.emailVerified,
     entered: !!entry,
     points: entry ? p.points : 0,
-    breakdown: { entry: p.entry, bonus: p.bonus, bonusVia: p.bonusVia, checkin: p.checkin, referral: p.referral, contribution: p.contribution, referralsCounted: p.referralsCounted, starCounted: p.starCounted },
+    breakdown: { entry: p.entry, bonus: p.bonus, bonusVia: p.bonusVia, checkin: p.checkin, referral: p.referral, contribution: p.contribution, app: p.app, referralsCounted: p.referralsCounted, starCounted: p.starCounted },
+    app: g.site === "tcgprices" ? { claimed: p.app > 0, left: await appPointsLeft(g) } : null,
     checkins: w?.checkins ?? 0,
     checkedInToday: dayList.includes(today),
     streak: outlook.streak,
@@ -323,11 +331,25 @@ export async function giveawayAction(
     await prisma.giveawayEntry.update({ where: key, data: { bonusClaimedAt: new Date() }, select: { id: true } });
     return { ok: true };
   }
+  // TCG Prices' launch: opened from the home screen. Once per entrant, for the first APP_POINTS_CAP of the draw.
+  if (action === "app" && g.site === "tcgprices") {
+    const had = await prisma.giveawayEntry.findUnique({ where: key, select: { appClaimedAt: true } });
+    if (had?.appClaimedAt) return { ok: true };
+    if ((await appPointsLeft(g)) <= 0) return { ok: false, status: 409, error: "The home-screen points have all gone." };
+    await prisma.giveawayEntry.update({ where: key, data: { appClaimedAt: new Date() }, select: { id: true } });
+    return { ok: true };
+  }
   if (action === "show-name" && typeof opts.showName === "boolean") {
     await prisma.giveawayEntry.update({ where: key, data: { showName: opts.showName }, select: { id: true } });
     return { ok: true };
   }
   return { ok: false, status: 400, error: "Unknown action." };
+}
+
+/** How many of APP_POINTS_CAP are left in this draw. */
+export async function appPointsLeft(g: Giveaway): Promise<number> {
+  const n = await prisma.giveawayEntry.count({ where: { giveaway: g.key, appClaimedAt: { not: null } } }).catch(() => APP_POINTS_CAP);
+  return Math.max(0, APP_POINTS_CAP - n);
 }
 
 async function checkIn(g: Giveaway, userId: string): Promise<void> {

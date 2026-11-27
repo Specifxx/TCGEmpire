@@ -21,7 +21,7 @@
 
 import { streakOutlook, streakPoints } from "./streak";
 
-export type GiveawaySite = "rift" | "dex" | "mtg" | "ygo" | "op";
+export type GiveawaySite = "rift" | "dex" | "mtg" | "ygo" | "op" | "tcgprices";
 
 export interface GiveawaySiteInfo {
   name: string;
@@ -38,6 +38,7 @@ export const GIVEAWAY_SITES: Record<GiveawaySite, GiveawaySiteInfo> = {
   mtg: { name: "MTG Compare", url: "https://mtgcompare.app", game: "Magic: The Gathering", owner: "Wizards of the Coast" },
   ygo: { name: "YGO Compare", url: "https://ygocompare.com", game: "Yu-Gi-Oh! TCG", owner: "Konami" },
   op: { name: "OP Compare", url: "https://opcompare.app", game: "One Piece Card Game", owner: "Bandai and Eiichiro Oda / Shueisha" },
+  tcgprices: { name: "TCG Prices", url: "https://tcgprices.app", game: "Pokémon TCG", owner: "Nintendo, Creatures, GAME FREAK and The Pokémon Company" },
 };
 
 export interface Giveaway {
@@ -172,6 +173,24 @@ export const GIVEAWAYS: Giveaway[] = [
     claimDays: 14,
     checkinRule: "flat",
   },
+  // TCG Prices' launch draw for its collection app (owner's tap, 2026-11-26: "Yes, one pack, closes 14 Dec"). Same rules and
+  // points as the others, plus APP_POINTS for the first APP_POINTS_CAP entrants who open the collection from their home screen.
+  {
+    key: "tcgprices-app-launch-2026-12",
+    site: "tcgprices",
+    title: "Win a Delta Reign booster pack",
+    prizeShort: "a Delta Reign booster pack",
+    prize: "One Pokémon TCG Mega Evolution: Delta Reign (ME06) booster pack",
+    prizeDetail: `One sealed English booster pack, ${POSTED}.`,
+    prizeHref: "/collection",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/712099_200w.jpg",
+    approxValue: "about A$9 (A$8.95 to A$9.99 at Australian stores, 22 Nov 2026)",
+    opensAt: "2026-11-26T00:00:00Z",
+    closesAt: DEC_CLOSE,
+    drawOn: "15 December 2026",
+    claimDays: 14,
+    checkinRule: "flat",
+  },
 ];
 
 /** RiftCompare's own current giveaway (its pages, emails and referral links). */
@@ -231,6 +250,12 @@ export const REFERRAL_POINTS = 25;
  */
 export const STAR_REFERRAL_POINTS = 100;
 export const STAR_FRIEND_CHECKINS = 3;
+/**
+ * TCG Prices' launch (2026-11-26): points for opening the collection app from the home screen, once per entrant, for the first
+ * APP_POINTS_CAP entrants of that draw. Free for anyone (no purchase), so the draw stays a free prize draw.
+ */
+export const APP_POINTS = 25;
+export const APP_POINTS_CAP = 500;
 export const MAX_REFERRALS = 10;
 
 export type BonusVia = "premium" | "watch" | "claim";
@@ -253,6 +278,8 @@ export interface PointsInput {
   starReferrals?: number;
   /** Community contribution points made while it was open (lib/contributions.ts: votes, flags, pulse answers, pull logs; capped a day). */
   contributions?: number;
+  /** Opened the collection app from the home screen (APP_POINTS, TCG Prices' launch draw only). */
+  app?: boolean;
 }
 
 export interface Points {
@@ -264,6 +291,8 @@ export interface Points {
   referral: number;
   /** Community contribution points (lib/contributions.ts). */
   contribution: number;
+  /** APP_POINTS, or 0. */
+  app: number;
   /** Friends counted (after the cap). */
   referralsCounted: number;
   /** Of those, star friends (Premium or active). */
@@ -282,7 +311,8 @@ export function entryPoints(p: PointsInput): Points {
   const starCounted = Math.max(0, Math.min(referralsCounted, Math.floor(p.starReferrals ?? 0)));
   const referral = starCounted * STAR_REFERRAL_POINTS + (referralsCounted - starCounted) * REFERRAL_POINTS;
   const contribution = Math.max(0, Math.floor(p.contributions ?? 0));
-  return { points: entry + bonus + checkin + referral + contribution, entry, bonus, bonusVia, checkin, referral, contribution, referralsCounted, starCounted, reason: bonusVia ?? "base" };
+  const app = p.app ? APP_POINTS : 0;
+  return { points: entry + bonus + checkin + referral + contribution + app, entry, bonus, bonusVia, checkin, referral, contribution, app, referralsCounted, starCounted, reason: bonusVia ?? "base" };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
