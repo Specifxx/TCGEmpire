@@ -4436,7 +4436,10 @@ Radiance releases **23 October 2026**.`,
     slug: "riftbound-deploy-explained",
     category: "guide",
     title: "Riftbound Deploy Explained: Official Rules",
-    seoTitle: "Riftbound Deploy Explained: Rules + Every Deploy Card",
+    // 2026-11-27: still 0.8% CTR at position 7.0 (2,377 impressions, 28 days to
+    // 17 Nov) after the 3 Nov FAQ fix; "riftbound deploy" 204 at 5.2, 0 clicks.
+    // The searcher's question leads the title now, as on Disarm's.
+    seoTitle: "What Is Deploy in Riftbound? Gear Rules + Every Card",
     // 2026-11-03: "deploy riftbound" + "riftbound deploy" 1,430 impressions in
     // 28 days at position 6–7 and ONE click. The FAQ (which feeds FAQPage
     // JSON-LD and the snippet) still answered from the PAX West leak, "not yet
@@ -4446,7 +4449,7 @@ Radiance releases **23 October 2026**.`,
       "Deploy gear is played to a battlefield, not a unit, and is killed when an opponent holds that battlefield. The rules, Deploy vs Equip, every card priced.",
     author: "RiftCompare",
     date: "2026-09-08",
-    updated: "2026-10-23",
+    updated: "2026-11-27",
     readMins: 5,
     tags: ["radiance", "mechanics", "deploy", "leak", "spoilers", "guide"],
     hero: {
@@ -4455,8 +4458,8 @@ Radiance releases **23 October 2026**.`,
     },
     summary: [
       "**Official since Riot's 9 October patch notes.** The Radiance core rules define Deploy (in effect from 16 October); the details are in [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata).",
-      "**Deploy is a leaked Gear keyword from Riftbound: Radiance**, reportedly tied to holding one specific battlefield rather than being attached to a unit.",
-      "**Lose the battlefield, lose the card**: the leaked wording says an opponent taking that battlefield kills the Gear outright, not just switches it off.",
+      "**Deploy is a Gear keyword from Riftbound: Radiance**: the gear is played to a battlefield rather than your base or a unit.",
+      "**Lose the battlefield, lose the card**: when an opponent holds that battlefield, the gear is killed outright, not just switched off.",
       "**It's the opposite risk profile from [Equip](/keywords/equip)**, which stays functional on its unit regardless of what's happening on the board.",
       "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-spoilers)); now printed on Pillaged Armory and Dockside Lock-Up, two finished Radiance cards.",
     ],
@@ -4646,12 +4649,19 @@ Yes. Riot's Radiance core rules patch notes (9 October 2026, in effect from 16 O
     slug: "riftbound-disarm-explained",
     category: "guide",
     title: "Riftbound Disarm Explained: Official Rules",
-    seoTitle: "Riftbound Disarm Explained: Official Rules + Cards",
+    // 2026-11-27 (Search Console, 28 days to 17 Nov): 2,529 impressions, 17
+    // clicks (0.7%) at position 6.0; "riftbound disarm" 351 at 5.0 with ZERO
+    // clicks. The snippet said "confirmed" while the summary and FAQ (which feeds
+    // FAQPage JSON-LD) still said "leaked", "reportedly" and "exact numbers
+    // aren't known yet", six weeks after the rules made it official. Same fix as
+    // Deploy's on 2026-11-03, plus the searcher's question as the title (R17 and
+    // the keyword pages, #643). Read CTR after ~10 Dec; Showoff is the control.
+    seoTitle: "What Does Disarm Do in Riftbound? Rules + Every Card",
     excerpt:
-      "Riftbound Disarm, confirmed in Riot's Radiance rules: what the attack trigger does, how it differs from Assault, and every Disarm card with prices.",
+      "Disarm: the first time this unit attacks in a combat, an enemy unit there gets -1 Might this turn (-2 for Disarm 2). Rules, vs Assault, every card.",
     author: "RiftCompare",
     date: "2026-09-08",
-    updated: "2026-10-23",
+    updated: "2026-11-27",
     readMins: 5,
     tags: ["radiance", "mechanics", "disarm", "leak", "spoilers", "guide"],
     hero: {
@@ -4660,18 +4670,18 @@ Yes. Riot's Radiance core rules patch notes (9 October 2026, in effect from 16 O
     },
     summary: [
       "**Official since Riot's 9 October patch notes.** The Radiance core rules define Disarm (in effect from 16 October); the details are in [our patch notes write-up](/blog/riftbound-radiance-patch-notes-errata).",
-      "**Disarm is a leaked combat mechanic from Riftbound: Radiance**, reportedly weakening an enemy unit's Might when the Disarm unit attacks.",
-      "**It's the reported mirror image of [Assault](/keywords/assault)**: Assault gives the attacker +X Might; Disarm instead lowers an enemy unit's Might — a debuff aimed outward rather than a self-buff.",
-      "**It reportedly pairs with direct-damage spells** like Falling Star — shrink a blocker's Might first, and a fixed amount of damage goes further toward lethal.",
+      "**Disarm is an attack trigger from Riftbound: Radiance**: the first time a unit with Disarm attacks in a combat, an enemy unit at that battlefield gets -1 Might this turn (-2 for Disarm 2).",
+      "**It's the mirror image of [Assault](/keywords/assault)**: Assault gives the attacker +X Might; Disarm instead lowers an enemy unit's Might — a debuff aimed outward rather than a self-buff.",
+      "**The PAX West source suggested pairing it with direct-damage spells** like Falling Star — shrink a blocker's Might first, and a fixed amount of damage goes further toward lethal.",
       "**Confirmed in print, 29 September.** First seen in a photo of Riot's PAX West demo material ([the leak roundup](/blog/riftbound-radiance-spoilers)); now printed on Kai'Sa, Rebel and Disposal Expert, two finished Radiance cards.",
     ],
     faq: [
       { q: "What is Disarm in Riftbound?", a: "Disarm is a Radiance attack trigger. The first time a unit with Disarm attacks in a combat, an enemy unit at that battlefield gets -1 Might this turn (-2 for Disarm 2). Several instances of Disarm combine into one trigger using their total. It is in Riot's Radiance core rules, in effect from 16 October 2026." },
       { q: "How does the Disarm mechanic work?", a: "When your Disarm unit attacks, pick an enemy unit at that battlefield; it loses Might equal to the Disarm value for the rest of the turn. It is built into the unit, so it happens every combat that unit attacks in, not once like a spell." },
-      { q: "Is Disarm the opposite of Assault?", a: "That's how the leak's own source frames it, and the wording supports the comparison: Assault gives the attacker +X Might while attacking — a self-buff. Disarm, as leaked, instead lowers an enemy unit's Might when this unit attacks — a debuff aimed at the opponent's board." },
-      { q: "Does Disarm work with direct damage spells?", a: "The leak's own source suggests pairing Disarm with direct-damage spells like Falling Star — a real Fury-domain Spell from the Origins set. Shrinking a blocker's Might first would make a fixed amount of direct damage go further toward actually killing it, though Disarm's exact numbers aren't known yet." },
+      { q: "Is Disarm the opposite of Assault?", a: "In effect, yes: Assault gives the attacker +X Might while attacking — a self-buff. Disarm instead lowers an enemy unit's Might by its value (-1, or -2 for Disarm 2) for the turn when this unit attacks — a debuff aimed at the opponent's board." },
+      { q: "Does Disarm work with direct damage spells?", a: "The leak's own source suggests pairing Disarm with direct-damage spells like Falling Star — a real Fury-domain Spell from the Origins set. Shrinking a blocker's Might first would make a fixed amount of direct damage go further toward actually killing it; Disarm takes off 1 Might (2 for Disarm 2) for the turn." },
       { q: "Is Disarm confirmed by Riot?", a: "Yes. It was first reported from a fan photo of Riot's demo reference material at PAX West 2026, appeared on finished Radiance cards from Preview Season (25 September), and Riot's Radiance core rules patch notes of 9 October 2026 add it to the rules, in effect from 16 October." },
-      { q: "How is Disarm different from Deploy and Showoff?", a: "Disarm weakens an enemy unit's Might on attack; Deploy is a Gear keyword tied to holding a battlefield; Showoff is a modal reveal effect triggered on play. All three reportedly leaked together but don't appear designed to combo directly." },
+      { q: "How is Disarm different from Deploy and Showoff?", a: "Disarm weakens an enemy unit's Might on attack; Deploy is a Gear keyword tied to holding a battlefield; Showoff is a modal reveal effect triggered on play. All three first leaked together at PAX West but don't appear designed to combo directly." },
     ],
     browseCta: {
       href: "/blog/riftbound-radiance-spoilers",
