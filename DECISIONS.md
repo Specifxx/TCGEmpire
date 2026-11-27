@@ -26401,3 +26401,5 @@ through `pagination.nextPageUrl`, and returns the Shopify shape for the sealed i
 entry lacks `squarespaceConsent` (who, when, how), and any page in another currency (kept, never converted); a failed read keeps
 yesterday's rows. Sealed only for now (`SEALED_ONLY_SHOPIFY`). The other 86 Squarespace shops stay out: a yes from one owner is not
 a yes from the platform. `tests/squarespace.test.ts`.
+
+Rift released urgently (owner asked) on 27 Nov at 22:20 UTC, 8 hours after the last urgent build, so the phone share fix reaches phones today.
