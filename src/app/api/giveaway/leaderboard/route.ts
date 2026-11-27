@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAdminEmail } from "@/lib/admin-emails";
+import { isGiveawayTeamEmail } from "@/lib/admin-emails";
 import { CURRENT_GIVEAWAY, GIVEAWAY_SITES, giveawayFor, giveawayState, type GiveawaySite } from "@/lib/giveaway";
 import { latestWinner, publicBoard } from "@/lib/giveaway-server";
 
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   let board = { entrants: 0, points: 0, top: [] as { name: string; points: number }[] };
   let winner = null;
   try {
-    [board, winner] = await Promise.all([publicBoard(g, isAdminEmail), latestWinner(g.key)]);
+    [board, winner] = await Promise.all([publicBoard(g, isGiveawayTeamEmail), latestWinner(g.key)]);
   } catch (e) {
     console.error("[giveaway] leaderboard failed:", e);
   }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { isAdminEmail } from "@/lib/admin-emails";
+import { isGiveawayTeamEmail } from "@/lib/admin-emails";
 import { SITE_URL } from "@/lib/site";
 import { prisma } from "@/lib/db";
 import { CURRENT_GIVEAWAY, giveawayByKey, giveawayState } from "@/lib/giveaway";
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   const key = new URL(req.url).searchParams.get("giveaway");
   const g = key ? giveawayByKey(key) : CURRENT_GIVEAWAY;
   if (!g) return NextResponse.json({ error: "No such giveaway" }, { status: 404, headers: noStore });
-  const rows = await giveawayEntrants(g, isAdminEmail);
+  const rows = await giveawayEntrants(g, isGiveawayTeamEmail);
   const esc = (v: string | number | boolean | null) => {
     const s = v == null ? "" : String(v);
     // Quote every cell, and defuse spreadsheet formulas in user-written names.

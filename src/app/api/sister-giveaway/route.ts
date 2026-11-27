@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { isAdminEmail } from "@/lib/admin-emails";
+import { isGiveawayTeamEmail } from "@/lib/admin-emails";
 import { escapeHtml, sendEmail } from "@/lib/email";
 import {
   EMAIL_SHAPE,
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status, headers });
       if (r.first) await milestone(g);
     }
-    const me = await myGiveaway(g, user, isAdminEmail, site.url);
+    const me = await myGiveaway(g, user, isGiveawayTeamEmail, site.url);
     return NextResponse.json({ ok: true, giveaway: g.key, ...me, ...(site === OP_SITE && body?.code !== undefined ? { token } : {}) }, { headers });
   } catch (e) {
     console.warn("[sister-giveaway] failed:", e);

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { isAdminEmail } from "@/lib/admin-emails";
+import { isGiveawayTeamEmail } from "@/lib/admin-emails";
 import { prisma } from "@/lib/db";
 import { GIVEAWAYS, GIVEAWAY_SITES, giveawayState, giveawayFunnel, sydneyDay, sitePath, MAX_REFERRALS } from "@/lib/giveaway";
 import { giveawayEntrants, type Entrant } from "@/lib/giveaway-server";
@@ -34,7 +34,7 @@ export default async function GiveawayAdminPage() {
   const now = new Date();
   const sections = await Promise.all(
     GIVEAWAYS.map(async (g) => {
-      const rows = await giveawayEntrants(g, isAdminEmail).catch(() => null);
+      const rows = await giveawayEntrants(g, isGiveawayTeamEmail).catch(() => null);
       const draws = await prisma.giveawayDraw.findMany({ where: { giveaway: g.key }, orderBy: { attempt: "asc" } }).catch(() => []);
       const claim = await prisma.giveawayClaim.findFirst({ where: { giveaway: g.key }, orderBy: { createdAt: "desc" } }).catch(() => null);
       return { g, state: giveawayState(g, now), rows, draws, claim };

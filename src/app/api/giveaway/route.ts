@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { entryMilestone as milestone } from "@/lib/giveaway-run";
 import { SITE_URL } from "@/lib/site";
-import { isAdminEmail } from "@/lib/admin-emails";
+import { isGiveawayTeamEmail } from "@/lib/admin-emails";
 import { CURRENT_GIVEAWAY, giveawayByKey, giveawayState, type Giveaway } from "@/lib/giveaway";
 import { giveawayAction, myGiveaway, type Account } from "@/lib/giveaway-server";
 
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ state: giveawayState(g, new Date()), signedIn: false }, { headers: noStore });
   try {
-    return NextResponse.json(await myGiveaway(g, account(user), isAdminEmail, SITE_URL), { headers: noStore });
+    return NextResponse.json(await myGiveaway(g, account(user), isGiveawayTeamEmail, SITE_URL), { headers: noStore });
   } catch (e) {
     console.error("[giveaway] status failed:", e);
     return NextResponse.json({ error: "Couldn't load your entry. Try again." }, { status: 503, headers: noStore });
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     const r = await giveawayAction(g, account(user), action, { showName: body?.showName, site: null });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status, headers: noStore });
     if (r.first) await milestone(g);
-    return NextResponse.json({ ok: true, ...(await myGiveaway(g, account(user), isAdminEmail, SITE_URL)) }, { headers: noStore });
+    return NextResponse.json({ ok: true, ...(await myGiveaway(g, account(user), isGiveawayTeamEmail, SITE_URL)) }, { headers: noStore });
   } catch (e) {
     console.error("[giveaway] action failed:", e);
     return NextResponse.json({ error: "Couldn't save that. Please try again." }, { status: 503, headers: noStore });

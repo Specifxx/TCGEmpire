@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { isAdminEmail } from "@/lib/admin-emails";
+import { isGiveawayTeamEmail } from "@/lib/admin-emails";
 import { escapeHtml, emailButton, emailShell, sendEmail } from "@/lib/email";
 import { notifyOwnerBounded } from "@/lib/ops/notify-owner";
 import { SITE_URL } from "@/lib/site";
@@ -60,7 +60,7 @@ export async function runGiveawayDraws({ dryRun = false, now = new Date(), list 
     }
     const attempt = last ? last.attempt + 1 : 0;
     const earlier = new Set(draws.map((d) => d.winnerId));
-    const pool = (await giveawayEntrants(g, isAdminEmail)).filter((e) => !e.admin && !earlier.has(e.userId));
+    const pool = (await giveawayEntrants(g, isGiveawayTeamEmail)).filter((e) => !e.admin && !earlier.has(e.userId));
     const { runs, total } = assignTickets(pool);
     if (total === 0) {
       out.push({ giveaway: g.key, did: "no-entries" });

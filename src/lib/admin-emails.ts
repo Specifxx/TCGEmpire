@@ -14,3 +14,12 @@ export const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "mastermisclick@gmail.c
 export function isAdminEmail(email: string | null | undefined): boolean {
   return !!email && ADMIN_EMAILS.includes(email.toLowerCase());
 }
+
+// Who is "the team" for the giveaways (rule 3: people who run the sites and their household can't win). Every admin,
+// plus the company mailboxes, which can hold an account without being an admin (2026-11-27: an owner account was seen
+// entered on a sister giveaway). Left out of every draw, the public leaderboard and the entrant counts.
+const GIVEAWAY_TEAM_EXTRA = ["compareempire@gmail.com", "riftcompare@gmail.com"];
+
+export function isGiveawayTeamEmail(email: string | null | undefined): boolean {
+  return isAdminEmail(email) || (!!email && GIVEAWAY_TEAM_EXTRA.includes(email.toLowerCase()));
+}
