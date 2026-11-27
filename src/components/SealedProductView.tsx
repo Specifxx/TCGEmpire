@@ -12,6 +12,15 @@ import { BlackFridayStrip, type BlackFridayStripData } from "./BlackFridayStrip"
 import { DropShare } from "./DropShare";
 import { dropText, isStoreRetailer } from "@/lib/share-link";
 import { headlineOffer } from "@/lib/sealed-offers";
+import { useEffect, useState } from "react";
+import { OutboundLink } from "./OutboundLink";
+import { affiliateUrl } from "@/lib/affiliate";
+import { buyButtonClass } from "./CardMarketSection";
+import { barTestSeen, type BarArm } from "@/lib/bar-test";
+
+/** Where the sealed page's phone buy bar hides: the board and the price card. */
+const SEALED_BOARD_ID = "sealed-prices";
+const SEALED_TOP_ATTR = "data-sealed-price";
 
 // The market-dependent half of a sealed product's page, /sealed/<slug> (2026-11-03). The page is one CDN copy for every
 // visitor (no cookie or header read on the server, like /card/[id]), so it hands this island the product's group in
@@ -32,6 +41,9 @@ export function SealedProductView({
   bf?: Partial<Record<Country, BlackFridayStripData>>;
 }) {
   const { country } = useCountry();
+  // The phone buy bar test (lib/bar-test.ts): counted once a visit on a phone sealed page, from 3 Dec; null (no bar) before then.
+  const [arm, setArm] = useState<BarArm | null>(null);
+  useEffect(() => setArm(barTestSeen()), []);
   const own = byMarket[country] ?? null;
   const shownMarket: Country | null = own ? country : byMarket[DEFAULT_COUNTRY] ? DEFAULT_COUNTRY : ((Object.keys(byMarket)[0] as Country | undefined) ?? null);
   const group = shownMarket ? byMarket[shownMarket]! : null;
@@ -48,7 +60,7 @@ export function SealedProductView({
     <div className="grid gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
       {/* flex-wrap, and the alert form on a row of its own (2026-11-14): beside the 112px photo on a phone the form had
           a 190px column, its label ran to four lines and its field read "you@e". From lg the card is one column as before. */}
-      <div className="card-surface flex flex-wrap gap-4 p-4 lg:flex-col lg:flex-nowrap">
+      <div data-sealed-price="" className="card-surface flex flex-wrap gap-4 p-4 lg:flex-col lg:flex-nowrap">
         <div className="grid aspect-square w-28 shrink-0 self-start place-items-center sm:w-40 lg:w-full overflow-hidden rounded-lg border border-ink-800 bg-ink-950 p-3">
           {group.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -96,7 +108,7 @@ export function SealedProductView({
           />
         )}
       </div>
-      <div className="card-surface min-w-0 p-4 sm:p-5">
+      <div id={SEALED_BOARD_ID} className="card-surface min-w-0 p-4 sm:p-5">
         {!own && (
           <p className="mb-3 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-xs text-slate-400">
             No store we track in {COUNTRIES[country].place} lists this right now. These are {COUNTRIES[shownMarket].place} prices, in {currency}.
@@ -109,6 +121,61 @@ export function SealedProductView({
         </p>
       </div>
     </div>
+    {arm === "bar" && own && <SealedStickyBuyBar group={own} fmt={fmt} country={shownMarket} />}
     </>
+  );
+}
+
+/** The bar test's "bar" arm: the market's cheapest in-stock listing (the board's own cheapest row and link), pinned below lg. */
+function SealedStickyBuyBar({ group, fmt, country }: { group: SealedGroup; fmt: (cents: number) => string; country: Country }) {
+  const best = headlineOffer(group.listings);
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (!best) return;
+    const board = document.getElementById(SEALED_BOARD_ID);
+    const top = document.querySelector(`[${SEALED_TOP_ATTR}]`);
+    const seen = new Map<Element, boolean>();
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) seen.set(e.target, e.isIntersecting);
+      // Hidden while the board or the price card is on screen (so on first paint).
+      setShow(seen.size > 0 && ![...seen.values()].some(Boolean));
+    });
+    for (const el of [board, top]) if (el) io.observe(el);
+    return () => io.disconnect();
+  }, [best]);
+  // Lift the corner launchers (.above-bottombar) clear of the bar while it shows, as the card page's bar does.
+  useEffect(() => {
+    if (!show) return;
+    document.body.setAttribute("data-rc-buybar", "");
+    return () => document.body.removeAttribute("data-rc-buybar");
+  }, [show]);
+  if (!best) return null;
+  const store = best.retailerName.length > 22 ? `${best.retailerName.slice(0, 21)}…` : best.retailerName;
+  return (
+    <div
+      aria-hidden={!show}
+      className={`buybar fixed inset-x-0 z-40 border-t border-ink-700 bg-ink-950/95 px-4 py-2 backdrop-blur transition-transform duration-200 lg:hidden ${
+        show ? "translate-y-0" : "pointer-events-none translate-y-[120%]"
+      }`}
+    >
+      <div className="mx-auto flex max-w-xl items-center gap-2">
+        <div className="min-w-0 flex-1 text-sm">
+          <span className="num font-bold text-white">{fmt(best.priceCents)}</span>
+          <span className="text-slate-400"> at {store}</span>
+        </div>
+        <OutboundLink
+          href={affiliateUrl(best.url, best.retailer, "/sealed")}
+          retailer={best.retailer}
+          country={country}
+          kind="sealed"
+          pageType="sealed"
+          surface="sticky_buy_bar"
+          inStock
+          className={`${buyButtonClass(best.retailer)} shrink-0 justify-center`}
+        >
+          Buy →
+        </OutboundLink>
+      </div>
+    </div>
   );
 }

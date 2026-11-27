@@ -12,6 +12,7 @@ import { cartArmNow } from "@/lib/cart-list";
 import { dockArmNow } from "@/lib/dock-arm";
 import { adLookNow } from "@/lib/ad-look";
 import { topArmNow } from "@/lib/top-pair";
+import { barTestClick } from "@/lib/bar-test";
 import { ebayBtnNow } from "@/lib/ebay-btn";
 import { ebayPopNow } from "@/lib/ebay-pop";
 import { isNativeApp, openExternal } from "@/lib/native";
@@ -228,6 +229,7 @@ export function OutboundLink({
     // Straight-to-checkout test (lib/checkout-link.ts): did this click open the
     // store's checkout with the item in it, or its product page?
     const checkout = isCheckoutLink(href);
+    barTestClick(e.currentTarget, isPaidLink(href));
     trackEvent("buy_click", { dock_arm: dockArmNow(), ad_look: adLookNow(), cart_arm: cartArmNow(), top_arm: topArmNow(), ebay_btn: ebayBtnNow(), ebay_pop: ebayPopNow(),
       link_type: checkout ? "checkout" : "product",
       retailer,
