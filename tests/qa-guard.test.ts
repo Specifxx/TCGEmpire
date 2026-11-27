@@ -47,3 +47,20 @@ test("qa guard: every live site has a search, a product pattern and a fix reposi
   }
   for (const k of ["rift", "op", "dex", "mtg", "gundam", "lorcana", "ygo", "cyberpunk", "tcgprices", "singles", "ce", "ky", "scent"]) assert.ok(keys.has(k), `${k} is guarded`);
 });
+
+test("qa guard: the Collector pulse box must fit a phone and keep clear of the buy rows", async () => {
+  const { pulseProblems } = await import("../scripts/qa-guard/journeys");
+  const btn = (x: number, label: string, extra = {}) => ({ x, y: 1210, w: 110, h: 42, clipped: false, label, ...extra });
+  const good = { x: 16, y: 1200, w: 358, h: 110, clipped: false };
+  const buttons = [btn(30, "Buying"), btn(146, "Holding"), btn(262, "Skipping")];
+  const buys = [{ x: 16, y: 900, w: 358, h: 44 }, { x: 16, y: 1000, w: 358, h: 44 }];
+  assert.deepEqual(pulseProblems(good, buttons, buys, 390), []);
+  assert.match(pulseProblems({ ...good, w: 420 }, buttons, buys, 390).join(), /past the 390px screen/);
+  assert.match(pulseProblems(good, buttons, [...buys, { x: 16, y: 1190, w: 358, h: 44 }], 390).join(), /overlaps 1 buy link/);
+  assert.match(pulseProblems({ ...good, y: 800 }, buttons, buys, 390).join(), /above the buy rows/);
+  assert.match(pulseProblems(good, buttons, [{ x: 16, y: 1150, w: 358, h: 46 }], 390).join(), /crowded/);
+  assert.match(pulseProblems(good, [btn(30, "Buying", { h: 30 }), ...buttons.slice(1)], buys, 390).join(), /tap target/);
+  assert.match(pulseProblems(good, buttons.slice(0, 2), buys, 390).join(), /2 answer buttons/);
+  const { SITES } = await import("../scripts/qa-guard/sites");
+  assert.equal(SITES.find((s) => s.key === "mtg")?.pulse, true, "MTG Compare's product pages carry the pulse box");
+});

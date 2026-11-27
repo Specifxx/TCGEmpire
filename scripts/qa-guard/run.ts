@@ -13,6 +13,7 @@ import { appendFileSync, writeFileSync } from "node:fs";
 import { SITES, VIEWPORTS, type Site, type Viewport } from "./sites";
 import {
   basketJourney,
+  pulseJourney,
   filterJourney,
   go,
   openPage,
@@ -99,6 +100,12 @@ async function runSite(browser: Browser, site: Site, v: Viewport): Promise<Check
       if (first) firsts.push({ kind: spec.kind, link: first });
     }
     for (const { kind, link } of firsts) await fresh(`product ${kind}`, (t) => productJourney(t, site, link, kind));
+
+    // 2b. Collector pulse, phone width only (where a crowded box hurts): on the first product page the searches found.
+    if (site.pulse && v.mobile) {
+      const pick = firsts.find((f) => f.kind === "sealed") ?? firsts[0];
+      if (pick) await fresh("collector pulse", (t) => pulseJourney(t, site, pick.link));
+    }
 
     // 3. Filters and Best Basket.
     if (site.filters) await fresh("filters", (t) => filterJourney(t, site));
