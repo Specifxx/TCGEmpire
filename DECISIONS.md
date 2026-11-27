@@ -26363,3 +26363,13 @@ Gundam, Lorcana, YGO, Cyberpunk, Bandai, TCG Prices). Rift's alert emails get it
 always "Ad"-labelled, `rel="sponsored"`, through the Impact link with sharedid `email-<site>-cyber`, never above a price, and
 gone by itself when the sale ends. The Black Friday edition of 27 Nov 14:20 UTC goes out before this ships; the Cyber Monday
 edition (30 Nov) and every alert email from the next release carry it. `tests/cyber-email-line.test.ts`.
+
+## 2026-11-27: The 3-day pass can also go by Gmail BCC
+
+Owner, the same day: "you don't even need to send through Brevo, because that wastes our API … send it manually through
+the browser … all these BCC emails", with the RiftCompare and Compare Empire Gmail accounts. `/admin/premium-gift-pass`
+(admin only) picks a site, grants the pass to up to 450 pending accounts (`grantGiftPassBccBatch`: the same audience, skip
+rules, Counter row and 1 Dec window as the Brevo batch, so nobody gets it twice either way) and shows their addresses for
+BCC plus one copy of the site-branded email to paste. A BCC carries no per-person token, so its unsubscribe link opens the
+site's opt-out page with no token, which asks for the address and writes the same AnnouncementOptOut row. Gmail allows about
+500 recipients a day per account; a batch stays at 450 or under. Dex and OP keep their own mail accounts (no Rift allowance).

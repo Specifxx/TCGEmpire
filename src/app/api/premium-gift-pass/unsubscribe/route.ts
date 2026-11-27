@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { escapeHtml } from "@/lib/email";
 import { giftBrand } from "@/lib/premium-gift-pass-server";
@@ -17,7 +18,18 @@ async function optOut(token: string): Promise<boolean> {
   return true;
 }
 
-type State = "ask" | "done" | "bad";
+/** The Gmail BCC copy's link carries no token (one email, many people): the page asks for the address instead. */
+async function optOutEmail(raw: string): Promise<boolean> {
+  const email = raw.trim().toLowerCase();
+  if (!email || email.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return false;
+  const now = new Date();
+  await prisma.announcementOptOut
+    .upsert({ where: { email }, create: { email, token: randomUUID(), optedOutAt: now }, update: { optedOutAt: now } })
+    .catch(() => null);
+  return true;
+}
+
+type State = "ask" | "email" | "done" | "bad";
 
 function page(site: string, state: State, token = ""): Response {
   const key = GIFT_FEATURES[site] ? site : "rift";
@@ -27,7 +39,9 @@ function page(site: string, state: State, token = ""): Response {
   const body =
     state === "ask"
       ? `<h1>Unsubscribe from ${escapeHtml(b.name)} news?</h1><p>You won't get news or offers from ${escapeHtml(b.name)} again. Price alerts you set yourself and sign-in links still arrive.</p><form method="post" action="${escapeHtml(action)}"><button type="submit">Unsubscribe</button></form>`
-      : state === "done"
+      : state === "email"
+        ? `<h1>Unsubscribe from ${escapeHtml(b.name)} news?</h1><p>Type the address we emailed and you won't get news or offers from ${escapeHtml(b.name)} again. Price alerts you set yourself and sign-in links still arrive.</p><form method="post" action="${escapeHtml(`?site=${encodeURIComponent(key)}`)}"><input type="email" name="email" required placeholder="you@example.com" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #d1d5db;border-radius:9px;font-size:15px;margin-bottom:12px"><button type="submit">Unsubscribe</button></form>`
+        : state === "done"
         ? `<h1>You're unsubscribed</h1><p>${escapeHtml(b.name)} won't send you news or offers again. Price alerts you set yourself and sign-in links still arrive.</p>`
         : `<h1>Link not recognised</h1><p>This link is invalid. Reply to any of our emails and we'll take you off by hand.</p>`;
   const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${escapeHtml(b.name)}</title>
@@ -40,10 +54,17 @@ export async function GET(req: Request) {
   const p = new URL(req.url).searchParams;
   const token = p.get("token") ?? "";
   const known = token && token.length <= 100 ? await prisma.announcementOptOut.findUnique({ where: { token }, select: { token: true } }).catch(() => null) : null;
+  if (!token) return page(p.get("site") ?? "rift", "email");
   return page(p.get("site") ?? "rift", known ? "ask" : "bad", token);
 }
 
 export async function POST(req: Request) {
   const p = new URL(req.url).searchParams;
-  return page(p.get("site") ?? "rift", (await optOut(p.get("token") ?? "")) ? "done" : "bad");
+  const token = p.get("token") ?? "";
+  if (!token) {
+    const form = await req.formData().catch(() => null);
+    const email = form?.get("email");
+    return page(p.get("site") ?? "rift", typeof email === "string" && (await optOutEmail(email)) ? "done" : "email");
+  }
+  return page(p.get("site") ?? "rift", (await optOut(token)) ? "done" : "bad");
 }

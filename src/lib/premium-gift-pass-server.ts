@@ -185,3 +185,47 @@ export async function runGiftPassBatch(opts: { dryRun: boolean; site: string | n
   if (stopped && errors.size < 5) errors.add(stopped);
   return { ...base, sent: sentN, failed, remaining: a.pending.length - sentN, ...(errors.size ? { errors: [...errors] } : {}) };
 }
+
+/** The most addresses one Gmail BCC batch takes (a regular Gmail account sends to about 500 people a day). */
+export const GIFT_BCC_MAX = 450;
+
+export interface GiftBccBatch {
+  ok: boolean;
+  error?: string;
+  site: string | null;
+  granted: number;
+  failed: number;
+  remaining: number;
+  emails: string[];
+  subject?: string;
+  html?: string;
+  text?: string;
+}
+
+/**
+ * The owner's Gmail route (2026-11-27, owner: "you don't need to send through Brevo … send it manually … all these BCC
+ * emails"): grant the pass to up to `limit` pending accounts of ONE site and hand back their addresses and one copy of the
+ * email, to send by hand from Gmail as a BCC. Same audience, same Counter row, same window as the Brevo batch, so nobody
+ * gets the pass or the email twice whichever way it went. The copy has no personal name and its unsubscribe link opens the
+ * site's opt-out page, which asks for the address (a BCC cannot carry each person's token).
+ */
+export async function grantGiftPassBccBatch(opts: { site: string | null; limit?: number }): Promise<GiftBccBatch> {
+  const now = Date.now();
+  const site = opts.site && (opts.site === "rift" || GIFT_FEATURES[opts.site]) ? opts.site : null;
+  const empty = { site, granted: 0, failed: 0, remaining: 0, emails: [] as string[] };
+  if (!site) return { ...empty, ok: false, error: "name one site" };
+  if (!giftPassOpen(now)) return { ...empty, ok: false, error: "the 3-day pass closed on 1 Dec 2026, 12:00 UTC" };
+  const limit = Math.min(opts.limit && opts.limit > 0 ? opts.limit : GIFT_DEFAULT_BATCH, GIFT_BCC_MAX);
+  const [rows, optedOut, sent] = await Promise.all([loadRows(), loadOptedOut(), loadSent()]);
+  const a = giftAudience(rows, { optedOut, sent, site, now });
+  const emails: string[] = [];
+  let failed = 0;
+  for (const r of a.pending.slice(0, limit)) {
+    const g = await grant(r.id, Date.now()).catch(() => null);
+    if (g) emails.push(r.email.trim());
+    else failed++;
+  }
+  const unsub = `${SITE_URL}/api/premium-gift-pass/unsubscribe?site=${encodeURIComponent(site)}`;
+  const mail = buildGiftPassEmail({ brand: giftBrand(site), displayName: "", until: now + GIFT_PASS.days * 86_400_000, unsubUrl: unsub, oneClickUrl: unsub });
+  return { ok: true, site, granted: emails.length, failed, remaining: a.pending.length - emails.length, emails, subject: mail.subject, html: mail.html, text: mail.text };
+}
