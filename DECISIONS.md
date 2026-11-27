@@ -26310,3 +26310,28 @@ The build on Play (version code 1, 16 Sep) came from `claude/riftcompare-android
   each new build without waiting for the store; silent off Play.
 The website half is unchanged: the app still loads riftcompare.com, so every site change reaches it without a store build.
 `.github/workflows/android-build.yml` now runs on JDK 21 (AGP 8.13) for `main` and `claude/**` pushes under `mobile/`.
+
+## 2026-11-27: A 3-day Premium pass, emailed per site to free accounts
+
+Owner, 27 Nov: "send like batches separately per website to all of these registered users who aren't premium, and make it
+formatted really well and really clearly outline the features for premium, and then give them like a 3-day pass". Every
+shared-Premium site's accounts are rows in RiftCompare's `User` table, so one sender serves RiftCompare and the ten sister
+sites on the shared account (Dex, MTG, YGO, TCG Prices, Gundam, Lorcana, Cyberpunk, Scent, KaeYoung, SportsCardCompare).
+OP Compare has its own accounts and gets its own send.
+
+- **The email is the pass.** A successful send grants 3 days of Premium (`premiumUntil`, extend-only, tier set only when no
+  period was active) and writes Counter `gp3:<id>` in the same transaction, so nobody gets two and a failed send is retried.
+  Granting on send, not on a claim link, keeps every link on the member's own site: a claim on riftcompare.com would show a
+  DexCompare member RiftCompare and send them across hosts.
+- **Per site, white-labelled.** The site is `signupSource` ("sister:<key>", else RiftCompare; OP and Bandai accounts are left
+  out). Subject, header, colour, sender name, features and links are that site's; the features are the lines its /premium page
+  lists, nothing more. The opt-out is a plain page in the site's own name (`/api/premium-gift-pass/unsubscribe`) writing the
+  same `AnnouncementOptOut` row every announcement reads. `sendEmailBrevo` now honours `from` (a sender display name only).
+- **Who:** non-paying, non-admin, non-seed accounts with a verified address (emailed link or Google), not opted out, not
+  emailed a Premium email in the last 72 hours, newest first. Batches of 90 (300 at most) through Brevo, Dex through its own
+  Brevo account when its key is set; a spent daily allowance stops the batch.
+- **Fits the tests:** hard-coded window, sends stop 1 Dec 2026 12:00 UTC, so the last pass ends 4 Dec, before the Week Pass test
+  (7 Dec). The free week (2-16 Dec) is for accounts made in its window, so the audiences never meet. A pass holder may still
+  start checkout (the same exception as the free week, now on sister checkout too).
+- Marketing: `premium-gift-pass` joins `MARKETING_ALLOWED` on the owner's ask. Dispatch only (`premium-gift-pass-send.yml`):
+  dry run by default, a send names one site.

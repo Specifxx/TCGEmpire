@@ -1,6 +1,7 @@
 // The free Premium week's database half (lib/premium-free-week.ts holds the rules). Called once, from the three
 // places a NEW account is created (OAuth, emailed sign-in link, a sister site's sign-in); never on a later sign-in.
 import { prisma } from "./db";
+import { giftPassCounterKey } from "./premium-gift-pass";
 import { FREE_WEEK, freeWeekArm, freeWeekCounterKey, freeWeekGrantFor, freeWeekUntil, type FreeWeekArm } from "./premium-free-week";
 
 /**
@@ -43,7 +44,10 @@ export async function freeWeekMayCheckout(user: { id: string; stripeCustomerId: 
   // A member who bought a pass (lib/premium-pass.ts) is paying: never a second checkout on top.
   if (await prisma.counter.findUnique({ where: { key: `pass:u:${user.id}` }, select: { key: true } }).catch(() => null)) return false;
   const end = await freeWeekEnd(user.id).catch(() => null);
-  return !!end && end.getTime() > Date.now();
+  if (end && end.getTime() > Date.now()) return true;
+  // The emailed 3-day pass (lib/premium-gift-pass.ts, 2026-11-27) is a gift too: its holder may subscribe before it ends.
+  const gift = await prisma.counter.findUnique({ where: { key: giftPassCounterKey(user.id) }, select: { value: true } }).catch(() => null);
+  return !!gift && gift.value * 1000 > Date.now();
 }
 
 export interface FreeWeekArmRead {

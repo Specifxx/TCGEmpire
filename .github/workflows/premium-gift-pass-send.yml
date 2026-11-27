@@ -1,0 +1,52 @@
+name: Premium 3-day pass batch
+
+# Sends ONE batch of the 3-day Premium pass email for ONE site through /api/cron/premium-gift-pass (lib/premium-gift-pass.ts;
+# owner, 2026-11-27: "send like batches separately per website to all of these registered users who aren't premium").
+# Dispatch only, never scheduled: each run is a deliberate send. Dry run counts every site's audience; a send names one
+# site. The route grants the pass with each email, never twice, and stops for good on 1 Dec 2026, 12:00 UTC.
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: "Site (rift, dex, mtg, ygo, tcgprices, gundam, lorcana, cyberpunk, scent, kaeyoung, wax)"
+        type: string
+        default: "dex"
+      limit:
+        description: "Accounts in this batch (at most 300)"
+        type: string
+        default: "90"
+      dry:
+        description: "1 = count only, 0 = send"
+        type: choice
+        options: ["1", "0"]
+        default: "1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: premium-gift-pass-send
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Ask the site to send one batch
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://riftcompare.com' }}
+          TARGET: ${{ inputs.site }}
+          LIMIT: ${{ inputs.limit }}
+          DRY: ${{ inputs.dry }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "::error::CRON_SECRET is not set"; exit 1; fi
+          case "$LIMIT" in ''|*[!0-9]*) echo "::error::limit must be a number"; exit 1;; esac
+          case "$TARGET" in ''|*[!a-z]*) echo "::error::site must be a site key"; exit 1;; esac
+          code=$(curl -sS -o result.json -w '%{http_code}' -X POST --max-time 290 \
+            -H "Authorization: Bearer $CRON_SECRET" "$SITE_URL/api/cron/premium-gift-pass?dry=$DRY&site=$TARGET&limit=$LIMIT")
+          echo "HTTP $code"
+          # Counts and error reasons only; the route never returns an address.
+          jq '{ok, dryRun, site, open, pending, sent, failed, remaining, bySite, excluded, errors, error}' result.json || cat result.json
+          [ "$code" = "200" ] || { echo "::error::The site did not send the batch (HTTP $code)"; exit 1; }
