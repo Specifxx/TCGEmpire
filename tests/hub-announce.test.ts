@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { readPost, telegramPlain } from "../scripts/hub-announce";
+import { ROOMS, readPost, telegramPlain } from "../scripts/hub-announce";
 
 test("every prepared hub post fits Discord and carries at most 4 media files under 10 MB", () => {
   const root = "social/hub-posts";
@@ -16,4 +16,10 @@ test("every prepared hub post fits Discord and carries at most 4 media files und
 
 test("Telegram gets plain text", () => {
   assert.equal(telegramPlain("**Hi** [site](https://x.example) <https://y.example>"), "Hi site: https://x.example https://y.example");
+});
+
+test("only #announcements pins; #sealed-sniper posts unpinned", () => {
+  assert.equal(ROOMS.announcements.pin, true);
+  assert.equal(ROOMS["sealed-sniper"].pin, false);
+  assert.equal(ROOMS["sealed-sniper"].id, "1573082997203275887");
 });
