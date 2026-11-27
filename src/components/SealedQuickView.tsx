@@ -27,6 +27,7 @@ import { sealedPath, sealedSlug } from "@/lib/sealed-slug";
 import { AmazonLiveSlot } from "./AmazonLiveSlot";
 import { AmazonCheckRow } from "./AmazonCheckRow";
 import Link from "next/link";
+import { TcgSaleChip } from "@/components/TcgSaleChip";
 
 // Quick-view popup for sealed products — the sealed twin of QuickView.tsx (cards).
 // Clicking a SealedTile opens this instead of expanding the whole /sealed page, so
@@ -268,6 +269,7 @@ export function SealedOffers({ group, currency, amazon = false, source = "sealed
                       price and "Sold out", no longer by fading the whole row to 55% (2.4:1). The pinned marketplace
                       rows keep their markup. */}
                   <span className={pinned ? "truncate text-sm font-semibold text-white" : `min-w-0 max-w-full text-sm font-semibold [overflow-wrap:anywhere] ${isOpen ? "text-white" : "text-slate-400"}`}>{l.retailerName}</span>
+                  {l.retailer.startsWith("tcgplayer") ? <TcgSaleChip /> : null}
                   <StoreVote url={l.url} name={l.retailerName} className="shrink-0 text-slate-400" />
                 </div>
                 {bt === "plain" && <BestPriceNote has={noteHas} />}
