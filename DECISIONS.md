@@ -26259,6 +26259,14 @@ still leads the words. The keyword map's 12 Nov row gave the Radiance price quer
 `/blog/riftbound-radiance-price-guide`, but Google sends them to the set hub (the post had 196 impressions),
 so the map follows Google. Read: `/sets/radiance` CTR and the "price guide" rows after ~10 Dec.
 
+## 2026-11-27 — Black Friday mode for one day (owner)
+
+Owner, 27 Nov: "for one day, have the site turn into Black Friday mode … advertising way more about products and links". For
+Black Friday in every time zone (00:00 UTC 27 Nov to 10:00 UTC 28 Nov, `lib/bf-mode.ts`) the promo line under the header becomes
+one bold Black Friday bar: the Black Friday deals page, and a labelled TCGplayer sale link (subId tcgplayer, page bf-mode). Same
+place as the line, in the server HTML, never a pop-up, fixed or floating; ✕ hides it for the visit. The browser re-reads the
+clock, so a cached page reverts on time with no build; the files can go after Cyber Monday.
+
 ## 2026-11-27 — Empire design language v2, "Ledger" (phase two of the Rift redesign)
 
 Bill (2026-11-27): rework the sites so they look state of the art and expert-designed, not vibe-coded. The Rift thread handed

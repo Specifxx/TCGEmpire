@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { BfModeBar } from "@/components/BfModeBar";
+import { affiliateUrl } from "@/lib/affiliate";
+import { bfModeOn } from "@/lib/bf-mode";
 import { saleStrip } from "@/lib/holiday-strip";
 import { STRIP_BOOT, StripClose } from "./StripClose";
 
@@ -6,10 +9,10 @@ import { STRIP_BOOT, StripClose } from "./StripClose";
 // page can show yesterday's link for up to its revalidate window, which is why the switch to Cyber Monday falls on the
 // Sunday, a day after Black Friday weekend's busiest day.
 // Dismissible for 7 days (owner's UX review, 2026-11-24, P0 6), hidden before paint once closed (StripClose.tsx).
+// For Black Friday itself (lib/bf-mode.ts, owner 2026-11-27) the line becomes the bold Black Friday bar, which falls back to it.
 export function HolidayStrip({ today = new Date().toISOString().slice(0, 10) }: { today?: string }) {
   const s = saleStrip(today);
-  if (!s) return null;
-  return (
+  const strip = s ? (
     <>
       <div className="relative border-b border-gold/20 bg-gold/10" data-holiday-strip={s.href.slice(1)}>
         <p className="container-app truncate py-1.5 pr-10 text-center text-xs sm:text-sm">
@@ -21,5 +24,27 @@ export function HolidayStrip({ today = new Date().toISOString().slice(0, 10) }: 
       </div>
       <script dangerouslySetInnerHTML={{ __html: STRIP_BOOT }} />
     </>
+  ) : null;
+  const on = bfModeOn(Date.now());
+  if (!on) return strip;
+  return (
+    <BfModeBar
+      on={on}
+      href="/black-friday"
+      title="Riftbound sealed deals"
+      line="booster boxes and displays against every store and eBay today"
+      ad={
+        <a
+          href={affiliateUrl("https://www.tcgplayer.com/search/riftbound-league-of-legends-trading-card-game/product?ProductTypeName=Sealed+Products", "tcgplayer", "/bf-mode")}
+          rel="sponsored nofollow noopener noreferrer"
+          target="_blank"
+          className="underline underline-offset-2"
+        >
+          <span style={{ color: "#fff" }}>TCGplayer sale: 10% store credit on everything</span> · Ad
+        </a>
+      }
+    >
+      {strip}
+    </BfModeBar>
   );
 }
