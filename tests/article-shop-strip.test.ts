@@ -33,12 +33,12 @@ const SHOP_MARKER = /^\[\[shop(?::\d+)?\]\]$/m;
 
 // The exact production regex. Kept in sync by the source assertion below, so
 // this file can exercise the split without importing a server component.
-const SPLIT = /^\[\[(embed|closeup|shop)(?::(\d+))?\]\]$/m;
+const SPLIT = /^\[\[(embed|closeup|shop|reveals)(?::(\d+))?\]\]$/m;
 
 test("ArticleView's split regex still accepts shop and keeps a stride of 3", () => {
   const src = read("src/components/ArticleView.tsx");
   assert.ok(
-    src.includes(String.raw`/^\[\[(embed|closeup|shop)(?::(\d+))?\]\]$/m`),
+    src.includes(String.raw`/^\[\[(embed|closeup|shop|reveals)(?::(\d+))?\]\]$/m`),
     "ArticleView's body-split regex changed — update SPLIT here and re-check the stride",
   );
 
@@ -63,7 +63,7 @@ test("adding shop to the regex did not shift any existing article's split", () =
   // byte-identically under both — that is what proves the change was additive.
   const legacy = /^\[\[(embed|closeup):(\d+)\]\]$/m;
   for (const a of ALL) {
-    if (SHOP_MARKER.test(a.body)) continue;
+    if (SHOP_MARKER.test(a.body) || /^\[\[reveals\]\]$/m.test(a.body)) continue;
     assert.deepEqual(
       a.body.split(new RegExp(legacy.source, "m")),
       a.body.split(new RegExp(SPLIT.source, "m")),
@@ -152,5 +152,19 @@ test("the highest-intent guides all carry a buy path", () => {
       (a.shop && a.shop.length > 0) || a.ebayPicks,
       `${slug}: transactional guide with no eBay buy path`,
     );
+  }
+});
+
+test("a [[reveals]] line splits like [[shop]]: kind 'reveals', no index (2026-11-27)", () => {
+  const parts = "a\n\n[[reveals]]\n\nb".split(SPLIT);
+  assert.equal(parts.length % 3, 1);
+  assert.equal(parts[1], "reveals");
+  assert.equal(parts[2], undefined);
+});
+
+test("every [[reveals]] marker names a reveal set to render (2026-11-27)", () => {
+  for (const a of ALL) {
+    if (!/^\[\[reveals\]\]$/m.test(a.body)) continue;
+    assert.ok(a.reveals, `${a.slug}: has a [[reveals]] marker but no reveals set`);
   }
 });

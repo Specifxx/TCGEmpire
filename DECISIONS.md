@@ -26100,6 +26100,142 @@ keeps `missingSince` and fires next run. A plain price alert is unchanged. `sist
 (Dex imports at 08:47 and 20:47 and releases each one with its feed); the gap, the further-5% refire rule and the weekly
 emails' edition keys mean a second run a day sends nothing twice. DexCompare turns it on for the US only (`lib/follow.ts`).
 
+## 2026-11-26 — The scanner's daily limit offers Premium, once, where it is hit
+
+The free scanner stops at 5 a day with "They come back tomorrow." and nothing else: the visitor who has just used
+up a free allowance is the most willing buyer the site sees (metered paywalls convert at the moment of value), and
+Premium's 100 scans a day was named only on /premium. When /api/scan/identify answers `limited`, the failed scan's
+row now adds one line, "Premium scans up to 100 cards a day, free for 14 days. See Premium", linking to /premium
+with the click beacon `limit:scan` (the existing `limit:` surface family) and a `scan_limit_hit` event. Members
+never see it. No pop-up, no new limit, nothing moved behind Premium: the cap is unchanged. Premium pricing
+review, 26 Nov ("Rethink Premium pricing and model" thread).
+## 2026-11-26 — A free Premium week for half of new accounts, as a test
+
+The owner chose "Yes, run all three tests" on the Premium pricing reset (26 Nov). The reset found price is not the
+constraint: it changed six times from September and new paying members stayed near five a month each time. The leak
+is between a Premium click and checkout (231 clicks in 30 days, about 18 checkouts), while 37% of card trials pay.
+A free week puts Premium in front of every new account without a card form.
+
+- **Who:** accounts created from 2 Dec to 16 Dec 2026 (00:00 UTC), split by an FNV-1a hash of the account id
+  (`freeWeekArm`, `lib/premium-free-week.ts`). Arm B gets 7 days of Premium at creation, extend-only (a referred
+  friend's week is not cut short), tier premium only when nothing was active. Arm A is today's site.
+- **Where:** the three places a new account is made: the OAuth callback (web, app and sister branches), the emailed
+  sign-in link, and a sister site's sign-in (`memberFor`). Not guest checkout: that account is buying anyway.
+- **No switch:** hard-coded dates, no environment variable (`tests/premium-free-week.test.ts` fails on one). The
+  two earlier sign-up grants were removed on 2026-08-23 because a leftover Vercel variable could have kept them
+  granting unseen, and neither was ever measured. This one is split, ends by itself and is read.
+- **Keeping it:** a free-week member with no Stripe customer may start the 14-day card trial before the week ends
+  (`freeWeekMayCheckout`: the checkout route's and /premium/start's one exception to "already entitled"). /premium
+  names the end date with one "Keep Premium" button (yearly first). The sign-up toast says "with 7 days of Premium
+  free" instead of a second toast. No emails, no pop-ups.
+- **Read:** /admin/premium, per arm: accounts, trial or paid started, paying or in trial now. Interim 30 Dec, final
+  6 Jan 2027 (21 days after the last sign-up). Win: started per account up 50% or more with p < 0.10; otherwise the
+  window simply closes. A Counter row `fw1:<userId>` marks each free-week account.
+
+## 2026-11-26 — A Week Pass and a Founder Lifetime, as a test on the sister sites' Premium pages
+
+Test 2 of the Premium pricing reset the owner approved on 26 Nov ("Yes, run all three tests"). Most visitors buy once
+(a deck, a holiday haul) and will never subscribe; collectors who love the product would pay once for good. No collector
+app sells either today.
+
+- **Who and when:** members signed in on a sister site's /premium (MTG, Dex, YGO, TCG Prices), 7 Dec to 21 Dec 2026
+  (00:00 UTC), split by account id with the test's own salt (`passArm`, `lib/premium-pass.ts`). Arm B is offered, beside
+  the subscription, a **Week Pass, US$2.99** (7 days, charged once, never renews) and a **Founder Lifetime, US$99**
+  (Premium for good; first 100 members; accounts at least 14 days old). Arm A sees today's page. Rift's own /premium is
+  left to the P1/P2 copy tests. Anyone paying by subscription or an earlier pass is offered nothing; a free-week member
+  may buy.
+- **How it charges:** `/api/sister-premium/pass` opens a one-off Checkout with inline `price_data` (no Stripe Price,
+  no owner step), `customer_email` only: a pass never saves a Stripe customer, so it never marks the account "ever paid"
+  and never costs it the 14-day card trial later. The sister's status call returns `passes` (what this account may buy).
+- **Entitlement:** the webhook's `premium_pass` branch (`passPaid`), idempotent per Checkout session (Counter
+  `pass:s:<id>`, removed again if the grant fails so Stripe's retry works), extend-only premiumUntil, tier premium, in
+  one transaction with the holder marker `pass:u:<userId>` (a pass holder is paying: no second pass, no free-week
+  checkout on top). Lifetime is premiumUntil 1 Jan 2126, so every existing read keeps working. A paid session for a
+  missing account emails the owner to refund it.
+- **100 Founder seats, never 101:** a seat is taken atomically when the checkout opens (`updateMany` only while under
+  100), the checkout expires after 30 minutes, and `checkout.session.expired` gives an unpaid seat back. Any paid tier,
+  grandfathered Plus included, counts as already paying. Ops check `money:premium-passes` shows the tallies.
+- **Hard constants:** amounts, seats and dates live in code, no environment variable (`tests/premium-pass.test.ts`).
+- **Read 4 Jan 2027:** revenue per /premium visitor and paid starts per arm; existing subscribers are never offered a
+  pass or re-priced. The Week Pass's "counts toward a year" credit from the plan is not built: it would need a coupon on
+  the subscription checkout, and the test reads the pass alone first.
+
+## 2026-11-26: Open clipping on the creator terms, and the A$300 cap holds itself
+
+The owner said yes on 26 Nov (the Cluely brief's move 2) to opening the pay-per-buy-click programme to anyone who
+clips our 9:16 price clips onto their own TikTok, Shorts or Reels. The terms stay as they were: A$0.04 per tracked buy
+click, the same A$300 a month for everyone together, the day-21 cut under 1.5x, and nothing paid per view.
+
+An open call means the cap can't depend on someone remembering to check it, so the ledger now enforces it:
+
+- `creatorDealRows` credits owed amounts oldest deal first. It stops when this month's "Creators" payouts plus
+  everything owed reach A$300. Whatever is left over is `heldByCap`, shown on the panel in amber, and is never owed.
+- `programmeHeadroom` closes the door to new clippers once paid + owed reaches 90% (`CLIPPER_INTAKE_SHARE`, A$270).
+  The panel then says "New clippers: PAUSED", and no new `CREATOR_DEALS` line is added until the next month.
+- A clipper's deal carries `kind: "clipper"`. Its `utmCampaign` must differ from every other deal's in its first six
+  letters and digits, because the `cr` marker is built from them.
+## 2026-11-26 — Compounding daily streaks, and member rewards
+
+**Owner (26 Nov):** "the daily check-in gives too many tickets ... should just be like one ticket ... It compounds. Like, every
+consecutive day gives you more and more tickets", and "we actually need loyalty systems ... loyalty that will not make us a loss
+... I want that on all of our Empire websites".
+
+**Streaks (`lib/streak.ts`).** Day 1 of a streak is worth 1, day 2 is 2 ... up to `STREAK_CAP` (10) a day; a missed Sydney day
+starts again at 1. The cap keeps one streak from swamping a round: a perfect 60-day round is 555, against 50 for entering with the
+bonus. A giveaway round says its rule in `Giveaway.checkinRule`: the five December 2026 rounds are pinned `"flat"` (5 a day, the
+rule they were published with; a live sweepstakes' rules are not changed mid-round), and every later round is `"streak"` unless it
+says otherwise. `liveWeights` now reads each entrant's check-in DAYS, not a count, and `myGiveaway` returns `checkinRule`,
+`checkinToday` and `checkinTomorrow`, which the panel and the rules page read (sister panels fall back to 5 when absent).
+
+**Member rewards (`lib/loyalty.ts`, `lib/loyalty-server.ts`, `/api/loyalty`, `MemberRewardsCard`).** One balance on the shared
+account, so a member earns it on every site they are signed in to, each site drawing the card in its own name.
+- Earn: the daily check-in streak (`LoyaltyDay`, one row a member a Sydney day, any site) plus every community contribution point
+  (already capped at 5 a day). A giveaway check-in also writes the day's `LoyaltyDay`; a rewards check-in also checks in to the
+  SAME site's open giveaway, but only in a streak round, whose rules name the card. Nothing is earned for buying or for Premium.
+- Spend: only rewards that cost no cash. Today one: 7 days of Premium for 300 points, at most one Premium reward a Sydney month
+  (the cap the Premium pricing thread set, `LoyaltyRedemption` unique on `(userId, slot)` so two presses take one), extend-only
+  through `grantPremiumDays`, refused while the member has a live Stripe subscription (the days would be worth nothing to them).
+  A reward that costs money (packs, a voucher we pay for) waits for the owner's yes on its budget and is not shown or teased.
+- Levels (Member, Regular 100, Insider 500, Legend 2,000 lifetime points) are a badge, never a price gate.
+- Points have no cash value, can't be bought or moved, and spending them never changes giveaway tickets, so the draws stay free.
+- UX guard: the card lives on the profile page only, loads after render, and opens nothing by itself.
+
+**Why break-even holds.** The only reward costs no cash, and taking it needs about five weeks of daily visits; the plan
+(/mnt/project-files/loyalty/loyalty-plan-2026-11-26.html) models the value of those visits against any paid reward.
+
+## 2026-11-27 — Legacy preview season: live reveals on the set page and the spoilers post
+
+Bill (2026-11-26): "Rift Compare keeps on losing visitors". Vercel, Google referrals to riftcompare.com: 15-28 Sep 2,788
+visitors, 20 Oct-2 Nov 3,062, 12-25 Nov 1,129. In both peaks most Google visitors landed on set-cycle news: Radiance leaked
+mechanics 331, Radiance spoilers 283, the Deploy keyword explainer 274 (Sep); the Radiance signature-cards post 754 (late Oct,
+87 now). Between sets that demand is gone, and Legacy's previews (Convergence Fest, 11-13 Dec) are the recovery, so the site has
+to be the fastest place to see each Legacy card.
+
+- `lib/radiance-reveals.ts` now serves any set (`getSetReveals`): Legacy's counter and newest 12 imported cards show on
+  `/sets/legacy` and, through a `[[reveals]]` body marker (`Article.reveals`), inside `/blog/riftbound-legacy-spoilers-set-6`.
+  Database cards only (set-reveals.yml writes them), and both switch off on Legacy's street date. Before the first card they say
+  when previews start.
+- The post is ISR for a day, so it reads the loader with a one-day TTL (db.ts rule 5); the import's `CONTENT_TAG` purge still
+  refreshes it the day cards land. The set page is dynamic and keeps 900 s, as Radiance's did.
+- `set-reveals.yml` runs twice a day (05:37 and 13:37 UTC, before the daily release) instead of every second day: a spoiler
+  search goes to whoever has the card first, and outside a reveal season the run is a no-op.
+## 2026-11-27 — RiftCompare redesign, phase one: the Empire design standard, CSS only
+
+Bill (2026-11-26): "a complete redesign of RiftCompare". The shared standard (/mnt/project-files/design-system/README.md,
+design thread, 2026-11-27) came from a visitor asking us to hire a designer "so it wasn't giving claudeslop". It replaces
+the 2026-10-16 homepage motion (vortex, embers, the sheen across "Riftbound", the turning search aura).
+
+- `rift-ds` block in `globals.css` (before the last reduced-motion block): "Riftbound" and the logo word in solid brand
+  green, a flat masthead hero with no vortex, embers or wash, left-aligned from 640px with the content starting at the top,
+  a solid search with a 1.5px edge and a 3px brand focus ring, 10px radius on cards, buttons and inputs and 6px on badges,
+  no lift or glow on hover, no glass (backdrop blur) anywhere, the seasonal line above the h1 as a plain link.
+- `CinematicHero` no longer renders the vortex layer or the `RiftEmbers` canvas (less JavaScript on the home page).
+- Unchanged on purpose: every URL, title, meta, h1/h2 outline and word of server HTML (Rift's Google slide began the week of
+  the 14 Nov template change, so phase one is styling only); Rift green; the Santa hat to 27 Dec; the owner's glowing
+  Premium label ("I only want the font to be glowing", in the Premium CTA comment).
+- Checked live by injecting the block into riftcompare.com in Bill's Chrome: home at 1440 and 390/430 (iframes), a card page.
+- Phase two (after the Legacy launch, so the two effects can be read apart): the card page's price block and the home
+  sections' hierarchy.
 ## 2026-11-26: TCG Prices' launch draw, with points for the home-screen app
 
 Owner's tap, 26 Nov ("Run a TCG Prices launch draw for home-screen installs?": "Yes, one pack, closes 14 Dec"), for the collection

@@ -1059,6 +1059,24 @@ export async function newSetDetected(d: OpsDeps): Promise<CheckResult> {
 // that email was missed. Whether STRIPE_STORE_PRICE_ID is still set while plans
 // exist is the site's own "Site settings" check (lib/ops/self-report.ts), since
 // that variable lives in Vercel, not here.
+/**
+ * The Premium price ladder test (lib/premium-pass.ts, 7-21 Dec 2026): the Founder Lifetime has a hard 100-seat limit.
+ * Ok with the tallies; warn when every seat is taken (the offer stops by itself; the owner may want to know). Never crit.
+ */
+export async function premiumPasses(d: OpsDeps): Promise<CheckResult> {
+  const id = "money:premium-passes";
+  const title = "Premium Week Pass and Founder Lifetime (test)";
+  if (!d.db?.premiumPasses) return unknown(d, id, "money", title, "No database connection from here.");
+  try {
+    const { founderSeats, weekSold } = await d.db.premiumPasses();
+    const summary = `${founderSeats} of 100 Founder places taken; ${weekSold} Week Pass${weekSold === 1 ? "" : "es"} sold.`;
+    if (founderSeats >= 100) return result(d, { id, area: "money", title, severity: "warn", summary: `${summary} Founder is sold out and no longer offered.`, action: "Nothing to do unless you want more Founder places; tell Claude if so." });
+    return result(d, { id, area: "money", title, severity: "ok", summary });
+  } catch (e) {
+    return unknown(d, id, "money", title, `Could not read it (${msg(e)}).`);
+  }
+}
+
 export async function storePlansUnlinked(d: OpsDeps): Promise<CheckResult> {
   const id = "stores:unlinked";
   const title = "Stores plan: stores waiting for their report";
@@ -1319,6 +1337,7 @@ export async function runChecks(d: OpsDeps): Promise<CheckResult[]> {
 
   await add("stripe", "money", "Stripe", () => stripeChecks(d));
   await add("stores:unlinked", "money", "Stores plan: stores waiting for their report", () => storePlansUnlinked(d));
+  await add("money:premium-passes", "money", "Premium Week Pass and Founder Lifetime (test)", () => premiumPasses(d));
   await add("stores:codes", "money", "Store partner codes", async () => storeCodesRecheck(d));
   await add("amazon:prices", "money", "Amazon prices (Creators API)", () => amazonPrices(d));
   await add("fetchtcg:row", "money", "Fetch TCG row (card pages)", () => fetchtcgRow(d));

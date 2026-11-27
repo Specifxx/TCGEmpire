@@ -39,6 +39,8 @@ export interface OpsDeps {
     storeHealthNewest(): Promise<Date | null>;
     inbox(): Promise<InboxCounts>;
     /** Stores plans (lib/store-plan.ts): how many exist, and the paid ones not yet linked to a tracked store. */
+    /** The Premium price ladder test's tallies (lib/premium-pass.ts): Founder seats taken and Week Passes sold. */
+    premiumPasses?(): Promise<{ founderSeats: number; weekSold: number }>;
     storePlans?(): Promise<{ total: number; unlinked: { storeName: string; createdAt: Date; activeUntil: Date | null }[] }>;
     /** TCGplayer Riftbound sets the sealed import could not map to SETS (lib/sealed-import.ts, recordUnknownSets); null before the first import wrote the row. */
     unknownSets?(): Promise<{ checkedAt: Date | null; sets: { setName: string; sample: string }[] } | null>;

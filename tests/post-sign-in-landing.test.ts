@@ -39,7 +39,10 @@ test("a brand-new account is greeted as new, with the setup checklist first on t
 test("a new account returned to its page gets one quiet 'account ready' toast pointing at the dashboard", () => {
   const w = code("src/components/SignupWelcome.tsx");
   assert.match(w, /markSignupSession\(\);/);
-  assert.match(w, /if \(pathname !== "\/dashboard"\) \{\s*setToast\("Your free account is ready\."\);\s*setToastAction\(\{ href: "\/dashboard", label: "Get set up →" \}\);/);
+  assert.match(w, /const WELCOME_FREE = "Your free account is ready\.";/);
+  assert.match(w, /if \(pathname !== "\/dashboard"\) \{\s*welcomed\.current = true;\s*setToast\(WELCOME_FREE\);\s*setToastAction\(\{ href: "\/dashboard", label: "Get set up →" \}\);/);
+  // A free-week account (lib/premium-free-week.ts) gets the same ONE toast, reworded in place, never a second one.
+  assert.match(w, /setToast\(\(t\) => \(t === WELCOME_FREE \? WELCOME_FREE_WEEK : t\)\);/);
   // A completed pending watch is more specific, so its toast takes over and drops
   // the action (one path since 2026-10-16, when a single card and the chase-card
   // list became one loop; a list's toast then offers "See them →").

@@ -22,6 +22,10 @@ import { creatorMark, hasMark } from "@/lib/paid-visit";
 // • The kill rule is code (verdictForDeal): on day TRIAL_DAYS a creator who has not earned
 //   KEEP_ROI (1.5x) of what they were paid is cut, and a creator past their trial cap
 //   stops accruing until the verdict.
+// • Open clipping (owner, 2026-11-26, the Cluely brief's move 2): anyone may post our 9:16 price clips with a tracked
+//   link on the same terms, so the A$300 cap must hold on its own. `creatorDealRows` credits owed amounts oldest deal
+//   first and stops at the month's cap (`heldByCap`), and `programmeHeadroom` closes the door to NEW clippers once the
+//   month's paid + owed reaches CLIPPER_INTAKE_SHARE of the cap. Nothing is ever paid per view.
 
 export interface CreatorDeal {
   /** Short id, also the bracket tag in cost labels: "[pokechamp]". */
@@ -42,6 +46,8 @@ export interface CreatorDeal {
   currency: string;
   /** "cut" once the verdict says so (or they leave); "keep" after a passed trial. */
   status: "trial" | "keep" | "cut";
+  /** "clipper": joined through the open clip call (2026-11-26); absent = invited creator. */
+  kind?: "creator" | "clipper";
 }
 
 export const TRIAL_DAYS = 21;
@@ -52,6 +58,8 @@ export const PROGRAMME_MONTHLY_CAP_CENTS = 30_000;
 export const DEFAULT_RATE_CENTS = 4;
 export const DEFAULT_TRIAL_CAP_CENTS = 2_500;
 export const COST_CATEGORY = "Creators";
+/** New clippers are accepted only while the month's paid + owed is under this share of the cap (A$270 of A$300). */
+export const CLIPPER_INTAKE_SHARE = 0.9;
 
 // One line per signed creator. A deal is added only after the creator says yes in writing.
 export const CREATOR_DEALS: readonly CreatorDeal[] = [];
@@ -192,12 +200,15 @@ export interface CreatorDealRow {
   earned: DealEarned;
   /** In `display`. */
   paid: number;
-  /** Accrued but not yet paid, in `display` (never negative). */
+  /** Accrued but not yet paid, in `display` (never negative), after the programme's monthly cap. */
   owed: number;
+  /** Accrued but not credited because the month's A$300 was already spent or owed to older deals, in `display`. */
+  heldByCap: number;
   verdict: DealVerdict;
 }
 
-/** Pure: one row per deal, everything in `display`. */
+/** Pure: one row per deal, everything in `display`. Owed amounts are credited oldest deal first and never take the
+ *  month's paid + owed past PROGRAMME_MONTHLY_CAP_CENTS: the rest is `heldByCap`, so an open clip call cannot overspend. */
 export function creatorDealRows(
   stats: Record<string, CreatorStats> | null | undefined,
   tagSources: readonly (readonly TagDay[])[],
@@ -206,12 +217,37 @@ export function creatorDealRows(
   display: string,
   deals: readonly CreatorDeal[] = CREATOR_DEALS,
 ): CreatorDealRow[] {
-  return deals.map((deal) => {
+  let budget = Math.max(0, toDisplay(PROGRAMME_MONTHLY_CAP_CENTS, "AUD", display) - programmeSpentThisMonth(costs, today, display));
+  const order = deals
+    .map((deal, i) => ({ deal, i }))
+    .sort((a, b) => (a.deal.start < b.deal.start ? -1 : a.deal.start > b.deal.start ? 1 : a.i - b.i));
+  const rows: CreatorDealRow[] = new Array(deals.length);
+  for (const { deal, i } of order) {
     const s = stats?.[deal.id] ?? null;
     const earned = earnedByDeal(deal, tagSources, display);
     const paid = paidTo(deal, costs, today, display);
-    const owed = Math.max(0, toDisplay(accruedCents(deal, s?.buyClicks ?? null), deal.currency, display) - paid);
+    const accrued = Math.max(0, toDisplay(accruedCents(deal, s?.buyClicks ?? null), deal.currency, display) - paid);
+    const owed = Math.min(accrued, budget);
+    budget -= owed;
     const day = dealDay(deal, today);
-    return { deal, mark: markOf(deal), day, stats: s, earned, paid, owed, verdict: verdictForDeal(deal, day, paid, owed, earned.cents) };
-  });
+    rows[i] = { deal, mark: markOf(deal), day, stats: s, earned, paid, owed, heldByCap: accrued - owed, verdict: verdictForDeal(deal, day, paid, owed, earned.cents) };
+  }
+  return rows;
+}
+
+export interface ProgrammeHeadroom {
+  /** The cap, in `display`. */
+  cap: number;
+  /** Paid this month plus everything still owed, in `display`. */
+  committed: number;
+  remaining: number;
+  /** False once committed reaches CLIPPER_INTAKE_SHARE of the cap: add no new clipper deal this month. */
+  newClippersOpen: boolean;
+}
+
+/** Pure: how much of this month's A$300 is paid or owed, and whether a new clipper may still be signed. */
+export function programmeHeadroom(rows: readonly Pick<CreatorDealRow, "owed">[], costs: readonly CostEntry[], today: string, display: string): ProgrammeHeadroom {
+  const cap = toDisplay(PROGRAMME_MONTHLY_CAP_CENTS, "AUD", display);
+  const committed = programmeSpentThisMonth(costs, today, display) + rows.reduce((n, r) => n + r.owed, 0);
+  return { cap, committed, remaining: Math.max(0, cap - committed), newClippersOpen: committed < cap * CLIPPER_INTAKE_SHARE };
 }

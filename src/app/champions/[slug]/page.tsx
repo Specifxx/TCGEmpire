@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // champion (a few dozen rows of three scalar fields), so this is well inside
   // the per-request budget in lib/db.ts.
   const rows = await prisma.card
-    .findMany({ where: championCardWhere(champ), select: { domain: true, setCode: true } })
+    .findMany({ where: championCardWhere(champ), select: { domain: true, setCode: true, type: true } })
     .catch(() => null);
   const cardCount = rows?.length ?? -1;
 
@@ -74,16 +74,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // champion pages rendered over 60 chars and 43 over 65, part of Bing's 397
   // "Title too long" warnings.
   //
-  // "Prices" front-loaded right after the champion's name (searchers type
-  // "<champion> riftbound price", not "riftbound cards <champion>") — unlike
-  // the set page's "Card List & Prices" order, there is no committed evidence
-  // here that price-first hurts this template, and every indexed champion hub
-  // clears CHAMPION_THIN_THRESHOLD so it always has real printings to price.
+  // QUERY ORDER, 2026-11-26 (Search Console, 28 days to 23 Nov): the search
+  // these hubs actually get is "<champion> riftbound" — "kennen riftbound" 90
+  // impressions at position 5.0 and "seraphine riftbound" 122 at 5.5, both with
+  // ZERO clicks, under the old "<name> Prices — Riftbound Champion Cards" title.
+  // The title now opens with the searcher's own two words in their order, then
+  // says what the page has: the champion's Legend (only when this champion's
+  // own rows include one — never asserted) and prices. "Prices" stays in every
+  // rung but the last.
+  const hasLegend = rows?.some((r) => r.type === "Legend") ?? false;
   const titleCandidates = [
-    `${champ.name} Prices — Riftbound Champion Cards & Printings`,
-    `${champ.name} Prices — Riftbound Champion Cards`,
-    `${champ.name} — Riftbound Cards`,
-    `Riftbound ${champ.name} Cards`,
+    ...(hasLegend ? [`${champ.name} Riftbound Cards — Legend & Prices`] : []),
+    `${champ.name} Riftbound Cards — Prices & Printings`,
+    `${champ.name} Riftbound Cards & Prices`,
+    `${champ.name} Riftbound Cards`,
   ];
   const title =
     titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];

@@ -304,7 +304,18 @@ longer lands on its entry.
   A$0.04, A$25 trial cap) or a creator code, A$300 a month in all; a creator's link
   (`utm_medium=creator`) tags their visitors' sub-ids `cr<handle6>`, and the "Paid creators"
   panel on /admin/earnings sets paid ("Creators" costs naming `[id]`) against real tagged sales;
-  under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24883)
+  under 1.5x on day 21 is cut. [2026-11-20](../DECISIONS.md#L24883) Since 2026-11-26 it is open to any clipper
+  on the same terms; the ledger credits owed oldest first up to A$300 a month and pauses new clippers at 90%.
+  [2026-11-26](../DECISIONS.md#L26163)
+- **Week Pass US$2.99 and Founder Lifetime US$99 (100 seats), as a test on sister /premium pages, 7 to 21 Dec 2026
+  only (owner, 2026-11-26):** arm by account id (`lib/premium-pass.ts`), one-off Checkout with inline prices, no saved
+  customer, webhook `premium_pass`, extend-only, hard constants; read 4 Jan 2027
+  ([2026-11-26](../DECISIONS.md#2026-11-26--a-week-pass-and-a-founder-lifetime-as-a-test-on-the-sister-sites-premium-pages)).
+- **A free Premium week for half of new accounts, as a test, 2 to 16 Dec 2026 only (owner, 2026-11-26):** arm by account
+  id (`lib/premium-free-week.ts`), 7 days extend-only at creation (OAuth, emailed link, sister sign-in), hard-coded dates,
+  no env; a free-week member may start the 14-day card trial early; read on /admin/premium, 6 Jan 2027. Outside the
+  window, still no Premium on sign-up
+  ([2026-11-26](../DECISIONS.md#2026-11-26--a-free-premium-week-for-half-of-new-accounts-as-a-test)).
 - **RiftCompare Premium at $4.99/mo or $39.99/yr with a free 14-day trial again (owner,
   2026-11-05: "use something that we used early on which had the best
   retention"; August's setup, 7 of 7 trials paid):** the
@@ -325,7 +336,7 @@ longer lands on its entry.
   ([2026-11-03](../DECISIONS.md#one-interruption-per-visit-never-on-arrival));
   while a giveaway is open its corner card shares that one slot (from a visit's second page, at most three times two
   days apart, never on the home page, giveaway, account or Premium pages, never after an entry), and the home page
-  carries its banner under the hero ([2026-11-22](../DECISIONS.md#2026-11-22-giveaway-on-the-home-page-and-one-corner-card); entries are points, one RiftCompare account for five sites' giveaways (Rift, Dex, MTG, YGO, OP), every two months, drawn from a public drand number, the winner claiming by a private address form ([2026-11-22](../DECISIONS.md#2026-11-22-giveaways-on-five-sites-by-points-drawn-in-public));
+  carries its banner under the hero ([2026-11-22](../DECISIONS.md#2026-11-22-giveaway-on-the-home-page-and-one-corner-card); entries are points, one RiftCompare account for five sites' giveaways (Rift, Dex, MTG, YGO, OP), every two months, drawn from a public drand number, the winner claiming by a private address form ([2026-11-22](../DECISIONS.md#2026-11-22-giveaways-on-five-sites-by-points-drawn-in-public)); from the rounds after December 2026 a check-in compounds (1, 2, 3 ... up to 10 a day, a missed day starts again), and one shared-account Member rewards balance (streak + contribution points, spent only on cash-free rewards: 7 days of Premium a month, never for payers, never touching tickets) sits on the profile page, no prompt ([2026-11-26](../DECISIONS.md#2026-11-26-compounding-daily-streaks-and-member-rewards));
   a tapped star counts even when the form is closed unsent ([2026-10-28](../DECISIONS.md#L20608)); one rating-and-review form everywhere (corner card,
   footer panel, a "Rate us" row at the end of every page except the home pages (2026-11-13), /feedback), reviews
   shown unless unticked, still admin-approved ([2026-10-27](../DECISIONS.md#L20240)); no floating button ([2026-10-27](../DECISIONS.md#L20201)); the homepage hero and the

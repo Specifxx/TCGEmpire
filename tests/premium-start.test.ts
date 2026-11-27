@@ -138,7 +138,8 @@ test("/premium/start sends away everyone who must not buy from it", () => {
   // Covers Premium members, admins AND Plus members: a Plus member upgrades in
   // place (prorated) on /premium, and pushing them through checkout would open
   // a second Stripe subscription alongside the one they already pay for.
-  assert.match(src, /if \(isPremium\(user\)\) redirect\("\/premium"\)/,
+  // The one exception: a free-week member with no Stripe customer (lib/premium-free-week-server.ts freeWeekMayCheckout).
+  assert.match(src, /if \(isPremium\(user\) && !\(user && \(await freeWeekMayCheckout\(user\)\)\)\) redirect\("\/premium"\)/,
     "an already-entitled visitor must never reach the launcher");
 });
 

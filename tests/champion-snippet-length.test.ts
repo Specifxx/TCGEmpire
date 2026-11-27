@@ -82,3 +82,20 @@ test("every champion's description fits, for every shape its data can take", () 
     }
   }
 });
+
+test("the champion title opens with the search it gets: '<champion> Riftbound'", () => {
+  // 2026-11-26: "kennen riftbound" (90 impressions, position 5.0) and
+  // "seraphine riftbound" (122, 5.5) earned zero clicks under the old
+  // "<name> Prices — Riftbound Champion Cards" title.
+  const block = SRC.slice(SRC.indexOf("const titleCandidates = ["), SRC.indexOf("const title ="));
+  const rungs = [...block.matchAll(/`\$\{champ\.name\} ([^`]*)`/g)].map((m) => m[1]);
+  assert.ok(rungs.length >= 3, "the title ladder lost its rungs");
+  for (const r of rungs) assert.ok(r.startsWith("Riftbound Cards"), `rung does not open with the query: ${r}`);
+  // The Legend rung is only offered when this champion's own rows hold one.
+  assert.match(block, /hasLegend \?/);
+  assert.match(SRC, /select: \{ domain: true, setCode: true, type: true \}/);
+  for (const c of CHAMPIONS) {
+    const rendered = rungs.map((r) => `${c.name} ${r} | RiftCompare`);
+    assert.ok(rendered.some((t) => t.length <= 60), `${c.name} has no title rung under 60 characters`);
+  }
+});

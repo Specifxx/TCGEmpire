@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { AuthForm } from "@/components/AuthForm";
 import { CheckoutLauncher } from "@/components/CheckoutLauncher";
 import { enabledProviders } from "@/lib/oauth";
+import { freeWeekMayCheckout } from "@/lib/premium-free-week-server";
 import { isPremium, premiumCheckoutEnabled, premiumPlusEnabled, premiumTrialEnabled, trialOfferedTo, PREMIUM_TRIAL_DAYS, PREMIUM_TRIAL_FEE_CENTS, hasEverPaid } from "@/lib/premium";
 import { parseCheckoutSelection, parseStartSrc, sanitizeBackPath, PREMIUM_START_PATH } from "@/lib/premium-start";
 import { TIER_NAMES, premiumTrialFee, trialDaysPhrase, tierAnnualAmount, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, introOfferEnabled, introPriceLine } from "@/lib/site";
@@ -57,7 +58,8 @@ export default async function PremiumStartPage({
   // wants Premium upgrades IN PLACE there (prorated, api/premium/upgrade);
   // sending them through checkout would open a second subscription. The checkout
   // route refuses this too — this is just the version with somewhere to go.
-  if (isPremium(user)) redirect("/premium");
+  // A free-week member (lib/premium-free-week.ts) may start the card trial before the week ends.
+  if (isPremium(user) && !(user && (await freeWeekMayCheckout(user)))) redirect("/premium");
 
   const tierName = TIER_NAMES[tier];
   const fullPriceLine =

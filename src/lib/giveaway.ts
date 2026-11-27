@@ -19,6 +19,8 @@
 //
 // This file is pure (no database, no node built-ins) so the pages, the client islands, the API and the tests share it.
 
+import { streakOutlook, streakPoints } from "./streak";
+
 export type GiveawaySite = "rift" | "dex" | "mtg" | "ygo" | "op" | "tcgprices";
 
 export interface GiveawaySiteInfo {
@@ -58,6 +60,30 @@ export interface Giveaway {
   closesAt: string; // ISO
   drawOn: string; // human date
   claimDays: number;
+  /**
+   * How check-ins score (lib/streak.ts). "flat": CHECKIN_POINTS a day, the rule the December 2026 rounds opened with and keep
+   * to their close (a published rule is never changed mid-round). "streak" (the default for every later round, owner
+   * 2026-11-26): 1 on the first day of a streak, 2 on the second ... up to STREAK_CAP a day; a missed day starts again at 1.
+   */
+  checkinRule?: CheckinRule;
+}
+
+export type CheckinRule = "flat" | "streak";
+
+/** A round's check-in rule: "streak" unless the round says "flat". */
+export function checkinRuleOf(g: Pick<Giveaway, "checkinRule">): CheckinRule {
+  return g.checkinRule === "flat" ? "flat" : "streak";
+}
+
+/** Points for an entrant's check-in days (Sydney YYYY-MM-DD, inside the window) under a round's rule. */
+export function checkinPointsFor(rule: CheckinRule, days: string[]): number {
+  return rule === "flat" ? new Set(days).size * CHECKIN_POINTS : streakPoints(days);
+}
+
+/** What today's check-in is (or was) worth under a rule, and tomorrow's if the streak holds. */
+export function checkinOutlook(rule: CheckinRule, days: string[], today: string): { streak: number; today: number; tomorrow: number } {
+  const o = streakOutlook(days, today);
+  return rule === "flat" ? { streak: o.streak, today: CHECKIN_POINTS, tomorrow: CHECKIN_POINTS } : { streak: o.streak, today: o.today, tomorrow: o.tomorrow };
 }
 
 // Every giveaway closes on the 14th at 23:59 Sydney time and is drawn on the 15th; a new round opens on the 15th, every two
@@ -85,6 +111,7 @@ export const GIVEAWAYS: Giveaway[] = [
     closesAt: DEC_CLOSE,
     drawOn: "15 December 2026",
     claimDays: 14,
+    checkinRule: "flat",
   },
   {
     key: "dex-delta-reign-2026-12",
@@ -99,6 +126,7 @@ export const GIVEAWAYS: Giveaway[] = [
     closesAt: DEC_CLOSE,
     drawOn: "15 December 2026",
     claimDays: 14,
+    checkinRule: "flat",
   },
   {
     key: "mtg-star-trek-2026-12",
@@ -113,6 +141,7 @@ export const GIVEAWAYS: Giveaway[] = [
     closesAt: DEC_CLOSE,
     drawOn: "15 December 2026",
     claimDays: 14,
+    checkinRule: "flat",
   },
   {
     key: "ygo-beyond-the-brave-2026-12",
@@ -127,6 +156,7 @@ export const GIVEAWAYS: Giveaway[] = [
     closesAt: DEC_CLOSE,
     drawOn: "15 December 2026",
     claimDays: 14,
+    checkinRule: "flat",
   },
   {
     key: "op-op18-2026-12",
@@ -141,6 +171,7 @@ export const GIVEAWAYS: Giveaway[] = [
     closesAt: DEC_CLOSE,
     drawOn: "15 December 2026",
     claimDays: 14,
+    checkinRule: "flat",
   },
   // TCG Prices' launch draw for its collection app (owner's tap, 2026-11-26: "Yes, one pack, closes 14 Dec"). Same rules and
   // points as the others, plus APP_POINTS for the first APP_POINTS_CAP entrants who open the collection from their home screen.
@@ -158,6 +189,7 @@ export const GIVEAWAYS: Giveaway[] = [
     closesAt: DEC_CLOSE,
     drawOn: "15 December 2026",
     claimDays: 14,
+    checkinRule: "flat",
   },
 ];
 
@@ -238,6 +270,8 @@ export interface PointsInput {
   bonusClaimed: boolean;
   /** Sydney days checked in while the giveaway was open. */
   checkins: number;
+  /** Check-in points already scored by the round's rule (checkinPointsFor); when absent, checkins × CHECKIN_POINTS. */
+  checkinPoints?: number;
   /** Confirmed friends who joined through the invite link while it was open. */
   referrals?: number;
   /** Of those, friends with Premium or STAR_FRIEND_CHECKINS check-ins (worth STAR_REFERRAL_POINTS each). */
@@ -272,7 +306,7 @@ export function entryPoints(p: PointsInput): Points {
   const checkins = Math.max(0, Math.floor(p.checkins));
   const entry = ENTRY_POINTS;
   const bonus = bonusVia ? BONUS_POINTS : 0;
-  const checkin = checkins * CHECKIN_POINTS;
+  const checkin = p.checkinPoints !== undefined ? Math.max(0, Math.floor(p.checkinPoints)) : checkins * CHECKIN_POINTS;
   // Star friends count first, so the cap of ten keeps the best ones.
   const starCounted = Math.max(0, Math.min(referralsCounted, Math.floor(p.starReferrals ?? 0)));
   const referral = starCounted * STAR_REFERRAL_POINTS + (referralsCounted - starCounted) * REFERRAL_POINTS;

@@ -26,7 +26,7 @@ test("the reveal count is cached, tagged, non-promo, and wraps a raw count", () 
   assert.match(src, /\["set-reveal-count-v1", code\]/);
   assert.match(src, /\{ revalidate: 900, tags: \[CONTENT_TAG\] \}/);
   // The same WHERE as the hub's "N of 180 revealed" counter.
-  assert.match(read("src/lib/radiance-reveals.ts"), /\{ setCode: "RAD", isPromo: false \}/);
+  assert.match(read("src/lib/radiance-reveals.ts"), /const WHERE = \{ setCode, isPromo: false \}/);
 });
 
 test("/radiance-preorders: 'Booster Box' in a title and description that fit", () => {
