@@ -383,7 +383,9 @@ export const PENDING_EU_STORES: PendingEuStoreCandidate[] = [
 // file already holds Crystal Commerce and CoolStuffInc to:
 //
 //   * SQUARESPACE (86 stores, the largest real candidate) — disqualified on
-//     PERMISSION, not feasibility. Squarespace's own PLATFORM-DEFAULT
+//     PERMISSION, not feasibility. (2026-11-27: a store whose OWNER says yes in
+//     writing is now read by lib/squarespace.ts, its consent recorded on its
+//     entry — Topaz Cards first. Without that yes, this verdict stands.) Squarespace's own PLATFORM-DEFAULT
 //     robots.txt (confirmed identical across four independently-checked
 //     stores: cardhalla.com, cardhousegaming.co, battleandbrew.com,
 //     3arrowsgames.com) explicitly disallows the one technique that would

@@ -14,6 +14,7 @@ import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
 import { withLiveStock } from "./preorder-live-stock";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { fetchHtmlStoreProducts } from "./storefront-html";
+import { fetchSquarespaceStoreProducts } from "./squarespace";
 import { isShopify, withShopifyVariant } from "./checkout-link";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents, ebaySpentThisRun, isGradedListing, SEALED_DECK_CHAMPIONS, flatName } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
@@ -898,6 +899,11 @@ export async function importSealed(): Promise<number> {
     if (store.platform === "cardhive") continue;
     if (store.platform === "woocommerce") {
       batches.push({ products: await fetchWooSealedProducts(store), strict: false });
+    } else if (store.platform === "squarespace") {
+      // Its shop paths' ?format=json, read only with the owner's recorded yes (lib/squarespace.ts).
+      const paths = store.sealedCollections ?? [];
+      if (!paths.length) continue;
+      batches.push({ products: await fetchSquarespaceStoreProducts(store, paths), strict: false, own: true });
     } else if (store.platform === "bigcommerce" || store.platform === "shopware") {
       // Its sealed category paths, read like a configured collection (lib/storefront-html.ts);
       // a store with none configured is singles-only here.
