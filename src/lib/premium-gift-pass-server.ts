@@ -53,7 +53,8 @@ export function giftUnsubUrls(token: string, site: string): { unsubUrl: string; 
 
 async function loadRows(): Promise<GiftUserRow[]> {
   return prisma.user.findMany({
-    where: { AND: [NOT_SEED_WHERE, { isAdmin: false }, { OR: [{ premiumUntil: null }, { premiumUntil: { lte: new Date() } }] }] },
+    // Every account, paying ones too, so the dry run can count pass holders as sent and payers as paying (giftAudience decides).
+    where: { AND: [NOT_SEED_WHERE, { isAdmin: false }] },
     orderBy: { createdAt: "desc" },
     take: 20_000,
     select: {
