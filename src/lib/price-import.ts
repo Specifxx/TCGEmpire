@@ -1930,6 +1930,8 @@ export async function importPrices(): Promise<ImportSummary> {
         ? await fetchWooStoreProducts(store)
         : store.platform === "cardhive"
           ? await fetchCardHiveProducts(store.base, allCardRows)
+          : store.platform === "squarespace"
+            ? [] // sealed only (lib/squarespace.ts); never the Shopify path, which would read nothing
           : store.platform === "bigcommerce" || store.platform === "shopware"
             ? await fetchHtmlStoreProducts(store, store.collections ?? [])
             : await fetchShopifyStoreProducts(store);

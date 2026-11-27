@@ -61,8 +61,17 @@ export interface RetailerInfo {
   // `sealedCollections` the paths the sealed importer reads. A theme that draws
   // its grid in the browser cannot be read; the probe
   // (scripts/probe-html-stores.ts) proves a store before it is added.
-  platform?: "shopify" | "woocommerce" | "cardhive" | "bigcommerce" | "shopware";
-  // BigCommerce / Shopware only: category paths holding Riftbound SEALED product,
+  //
+  // "squarespace" reads the shop's `?format=json` view (lib/squarespace.ts,
+  // 2026-11-27), which Squarespace's default robots.txt disallows: it is read
+  // ONLY with the owner's written yes recorded in `squarespaceConsent`.
+  // `sealedCollections` are then the shop paths ("/shop/other-tcgs/riftbound").
+  platform?: "shopify" | "woocommerce" | "cardhive" | "bigcommerce" | "shopware" | "squarespace";
+  // Squarespace only: who said yes to reading ?format=json, when and how
+  // ("2026-11-27, Mike (owner), email to riftcompare@"). Without it the
+  // adapter refuses the store.
+  squarespaceConsent?: string;
+  // BigCommerce / Shopware / Squarespace only: category paths holding Riftbound SEALED product,
   // read by lib/sealed-import.ts (the Shopify path discovers these itself).
   sealedCollections?: string[];
   // The currency the storefront actually CHARGES, when it is not the market's

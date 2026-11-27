@@ -26390,3 +26390,16 @@ Owner, 27 Nov: "make sure that users have a good experience … not too many pop
 can be taken down a little because we already have enough feedback". The rate-us corner card never opens by itself any
 more (`AUTO_ASK = false`); a "Rate us" link still opens it. During Cyber Weekend the visit's one prompt goes to the sale card.
 - Rift: the corner card (`RateUsPrompt`) is unmounted from the layout; the "Share · get a deal" button in the quick view and on the card page sizes to its words on phones (it was a 48px square, so the words ran off the screen).
+
+## 2026-11-27 — Squarespace shops, read only with the owner's written yes
+
+Squarespace was ruled out in the August sweep on PERMISSION (`lib/pending-platforms.ts`): its default robots.txt disallows
+`/*?format=json`, the only view that carries a shop's prices and stock. Topaz Cards (UK, Topaz Cards Ltd) asked to be listed and,
+on 27 Nov, its owner said yes in writing to our reading that view once or twice a day. So `lib/squarespace.ts` reads a shop path's
+`?format=json` (both variant shapes Squarespace ships: `priceMoney`/`stock` and the older minor-unit `price`/`qtyInStock`), pages
+through `pagination.nextPageUrl`, and returns the Shopify shape for the sealed importer's usual gates. It refuses any store whose
+entry lacks `squarespaceConsent` (who, when, how), and any page in another currency (kept, never converted); a failed read keeps
+yesterday's rows. Sealed only for now (`SEALED_ONLY_SHOPIFY`). The other 86 Squarespace shops stay out: a yes from one owner is not
+a yes from the platform. `tests/squarespace.test.ts`.
+
+Rift released urgently (owner asked) on 27 Nov at 22:20 UTC, 8 hours after the last urgent build, so the phone share fix reaches phones today.
