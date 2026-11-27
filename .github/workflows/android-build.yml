@@ -26,6 +26,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: mobile
@@ -88,6 +90,26 @@ jobs:
           name: riftcompare-release-aab-unsigned
           path: mobile/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
+
+      # Cloud sessions cannot reach the artifact store, so the same unsigned bundle is
+      # also kept on the orphan branch `android-builds` (one commit, replaced each run;
+      # never merged, never deployed), where a session fetches it with git and signs it.
+      - name: Keep unsigned AAB on the android-builds branch
+        if: env.ANDROID_KEYSTORE_BASE64 == '' && github.event_name != 'pull_request'
+        working-directory: ${{ runner.temp }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir out && cd out
+          cp "$GITHUB_WORKSPACE/mobile/android/app/build/outputs/bundle/release/app-release.aab" app-release-unsigned.aab
+          VC=$(grep -m1 versionCode "$GITHUB_WORKSPACE/mobile/android/app/build.gradle" | tr -dc 0-9)
+          VN=$(grep -m1 versionName "$GITHUB_WORKSPACE/mobile/android/app/build.gradle" | cut -d'"' -f2)
+          printf 'versionName=%s\nversionCode=%s\nsource=%s@%s\nsha256=%s\n' "$VN" "$VC" "$GITHUB_REF_NAME" "$GITHUB_SHA" "$(sha256sum app-release-unsigned.aab | cut -d' ' -f1)" > BUILD.txt
+          git init -q -b android-builds
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -qm "Unsigned AAB $VN ($VC) from $GITHUB_REF_NAME@${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" android-builds
 
       # --- Signed release bundle (only when signing secrets are present) ---
       - name: Configure release signing
