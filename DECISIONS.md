@@ -26318,3 +26318,14 @@ opportunity with TCG Player", so the bar (`lib/bf-mode.ts`, `BfModeBar`) no long
 until 04:00 UTC on 1 Dec, when TCGplayer's sale ends (11PM 30 Nov New York). Its label follows the weekend (Black Friday,
 Cyber Weekend from 28 Nov 10:00 UTC, Cyber Monday from 30 Nov 05:00 UTC), and on Cyber Monday it links the Cyber Monday page.
 Same place, same ✕, no pop-up; it still switches itself off with no build. Delete the files after the sale.
+
+## TCGplayer's Cyber Weekend sale inside the alert and weekly emails (2026-11-27, owner)
+
+Owner, 27 Nov: "put a lot more effort this weekend into Black Friday and Cyber Monday plays … capture this opportunity with TCG
+Player". No extra send: while TCGplayer's sale is on (9AM New York 27 Nov to 11PM 30 Nov, `cyberBannerState` in
+lib/tcgplayer-cyber.ts) the emails people already asked for carry one labelled line. Sister alert emails get it in the footer and
+the weekly drops email gets it as a block under the drops (both `tcgplayerSaleLine`, only for the sites TCGplayer sells: Dex, MTG,
+Gundam, Lorcana, YGO, Cyberpunk, Bandai, TCG Prices). Rift's alert emails get it in the footer (`tcgplayerSaleFooterLine`). It is
+always "Ad"-labelled, `rel="sponsored"`, through the Impact link with sharedid `email-<site>-cyber`, never above a price, and
+gone by itself when the sale ends. The Black Friday edition of 27 Nov 14:20 UTC goes out before this ships; the Cyber Monday
+edition (30 Nov) and every alert email from the next release carry it. `tests/cyber-email-line.test.ts`.
