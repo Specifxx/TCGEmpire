@@ -42,7 +42,7 @@ test("the fonts are self-hosted: the build never fetches Google Fonts", () => {
   // builds once a day; that build must not depend on a third-party fetch.
   const src = read("src/app/layout.tsx");
   assert.ok(!/from "next\/font\/google"/.test(src), "layout must not import next/font/google");
-  for (const f of ["inter-latin-wght.woff2", "cinzel-latin-wght.woff2", "jetbrains-mono-latin-wght.woff2"]) {
+  for (const f of ["Geist-Variable.woff2", "GeistMono-Variable.woff2"]) {
     assert.ok(existsSync(join(process.cwd(), "src/app/fonts", f)), `missing self-hosted font ${f}`);
   }
 });

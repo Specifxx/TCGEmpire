@@ -117,7 +117,7 @@ const ReferralCapture = dynamic(() => import("@/components/ReferralCapture").the
 // through next/font/local. Nothing changes for visitors: same families, same
 // CSS variables, same display: swap and size-matched fallbacks.
 const inter = localFont({
-  src: "./fonts/inter-latin-wght.woff2",
+  src: "./fonts/Geist-Variable.woff2",
   weight: "100 900",
   variable: "--font-sans",
   display: "swap",
@@ -132,20 +132,21 @@ const inter = localFont({
 // matched, so the swap does not move anything. Inter (body) and Cinzel (the
 // H1) stay preloaded.
 const jetbrainsMono = localFont({
-  src: "./fonts/jetbrains-mono-latin-wght.woff2",
-  weight: "100 800",
+  src: "./fonts/GeistMono-Variable.woff2",
+  weight: "100 900",
   variable: "--font-mono",
   display: "swap",
   preload: false,
   adjustFontFallback: "Arial",
 });
-// Roman titling serif for headings only — the Beaufort-style look-alike (see note above).
+// Headings: Geist since the 2026-11-27 design v2 ("Ledger"; the Cinzel titling serif before it). The const names
+// stay so the preload rules and tests that name them still read; the files are Geist and Geist Mono (OFL, fonts/Geist-OFL.txt).
 const cinzel = localFont({
-  src: "./fonts/cinzel-latin-wght.woff2",
-  weight: "700 800",
+  src: "./fonts/Geist-Variable.woff2",
+  weight: "100 900",
   variable: "--font-display",
   display: "swap",
-  adjustFontFallback: "Times New Roman",
+  adjustFontFallback: "Arial",
 });
 
 export const metadata: Metadata = {

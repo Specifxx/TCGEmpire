@@ -61,9 +61,9 @@ test("tailwind's themed tokens are all CSS variables, and both palettes define e
 test("the dark palette is the Riftbound palette, and everything else is pixel-identical", () => {
   const rgb = (hex: string) => hex.match(/[0-9a-f]{2}/gi)!.map((h) => parseInt(h, 16)).join(" ");
   const expected: Record<string, string> = {
-    "c-ink-950": "#04131c", "c-ink-900": "#071a25", "c-ink-850": "#0b2230", "c-ink-800": "#102b3b", "c-ink-700": "#1d3c4e", "c-ink-600": "#2f566a",
-    "c-brand-400": "#34d17e", "c-slate-500": "#8593a6", "c-slate-600": "#80909c",
-    "c-slate-400": "#94a3b8", "c-slate-300": "#cbd5e1", "c-slate-200": "#e2e8f0", // Tailwind stock
+    "c-ink-950": "#090a0c", "c-ink-900": "#111215", "c-ink-850": "#181a1e", "c-ink-800": "#1f2126", "c-ink-700": "#2c2e35", "c-ink-600": "#3e4149",
+    "c-brand-400": "#34d17e", "c-slate-500": "#9699a2", "c-slate-600": "#848791",
+    "c-slate-400": "#a6a9b1", "c-slate-300": "#d6d7db", "c-slate-200": "#e2e8f0", // design v2 neutrals (2026-11-27); 200 Tailwind stock
     "c-accent": "#eef1f5", "c-gold": "#caa85a", "c-up": "#3fb950", "c-down": "#f0506e", "c-white": "#ffffff",
     // Tailwind stock: the chromatic text shades
     "c-rose-200": "#fecdd3", "c-rose-300": "#fda4af", "c-rose-400": "#fb7185", "c-red-300": "#fca5a5", "c-red-400": "#f87171",
@@ -72,8 +72,8 @@ test("the dark palette is the Riftbound palette, and everything else is pixel-id
     "c-purple-300": "#d8b4fe", "c-blue-300": "#93c5fd",
   };
   for (const [k, hex] of Object.entries(expected)) assert.equal(DARK[k], rgb(hex), `${k} dark`);
-  assert.match(block(":root"), /--page-bg:\s*#05161f;/);
-  assert.match(block(":root"), /--page-fg:\s*#e8eef1;/);
+  assert.match(block(":root"), /--page-bg:\s*#090a0c;/);
+  assert.match(block(":root"), /--page-fg:\s*#ededef;/);
   assert.match(CSS, /background-color: var\(--page-bg\);\s*\n\s*color: var\(--page-fg\);/);
 });
 
