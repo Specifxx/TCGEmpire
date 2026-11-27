@@ -26373,3 +26373,10 @@ rules, Counter row and 1 Dec window as the Brevo batch, so nobody gets it twice 
 BCC plus one copy of the site-branded email to paste. A BCC carries no per-person token, so its unsubscribe link opens the
 site's opt-out page with no token, which asks for the address and writes the same AnnouncementOptOut row. Gmail allows about
 500 recipients a day per account; a batch stays at 450 or under. Dex and OP keep their own mail accounts (no Rift allowance).
+
+## 2026-11-27 — The rating card no longer asks on its own
+
+Owner, 27 Nov: "make sure that users have a good experience … not too many pop-ups … the feedback pop-up on Rift Compare
+can be taken down a little because we already have enough feedback". The rate-us corner card never opens by itself any
+more (`AUTO_ASK = false`); a "Rate us" link still opens it. During Cyber Weekend the visit's one prompt goes to the sale card.
+- Rift: the corner card (`RateUsPrompt`) is unmounted from the layout; the "Share · get a deal" button in the quick view and on the card page sizes to its words on phones (it was a 48px square, so the words ran off the screen).
