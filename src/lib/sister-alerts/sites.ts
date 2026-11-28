@@ -10,10 +10,10 @@
 // alerts), CamCompare and Compare Empire (their own alert tables). KaeYoung, left out on
 // 2026-11-02, joined with ScentCompare on 2026-11-19 when the owner asked for accounts everywhere.
 
-export type SisterAlertSiteKey = "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "bandai" | "tcgprices" | "wax" | "wargame" | "figure" | "scent" | "kaeyoung";
+export type SisterAlertSiteKey = "dex" | "mtg" | "gundam" | "lorcana" | "ygo" | "cyberpunk" | "bandai" | "tcgprices" | "wax" | "wargame" | "figure" | "scent" | "kaeyoung" | "brick";
 /** "scent", "kbeauty", "sports" and "hobby" are groups of one: their emails never end with another site's deal (KaeYoung carries no
  *  sister links, and the two sides of the network never link each other: owner, 2026-11-17). */
-export type SisterGroup = "cards" | "hobby" | "scent" | "kbeauty" | "sports";
+export type SisterGroup = "cards" | "hobby" | "scent" | "kbeauty" | "sports" | "brick";
 
 export interface SisterAlertSite {
   key: SisterAlertSiteKey;
@@ -47,6 +47,10 @@ export const SISTER_ALERT_SITES: SisterAlertSite[] = [
   // ScentCompare and KaeYoung (2026-11-19, owner: "accounts for every single one of our compare sites", Premium with deals and alerts).
   { key: "scent", name: "ScentCompare", url: "https://scentcompare.app", group: "scent", color: "#1d4ed8", quiet: true },
   { key: "kaeyoung", name: "KaeYoung", url: "https://kaeyoung.com", group: "kbeauty", color: "#e11d6b", quiet: true },
+  // BrickCompare (2026-11-28, owner: sealed LEGO, "reuse the existing alert engine, do not build a second one"). Not a card site,
+  // so a group of one and quiet (its emails never name RiftCompare). Its domain is not bought yet: the canonical URL is the
+  // recommended brickcompare.app, and brickcompare.vercel.app is accepted as an origin so sign-in and alerts can be tried there first.
+  { key: "brick", name: "BrickCompare", url: "https://brickcompare.app", group: "brick", color: "#d9480f", quiet: true, oldHosts: ["brickcompare.vercel.app"] },
 ];
 
 export const SISTER_ALERT_KEYS = SISTER_ALERT_SITES.map((s) => s.key) as [SisterAlertSiteKey, ...SisterAlertSiteKey[]];

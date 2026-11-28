@@ -50,6 +50,9 @@ export const SISTER_PREMIUM_SITES: PremiumSite[] = [
   // Compare Empire (2026-11-28, owner: "stores like Compare Empire should also have login … all the features that users have"): sign-in,
   // Premium (no banner ads) and its OWN price alerts, which stay in its own table (DECISIONS.md there, 2026-11-19). Quiet: never names RiftCompare.
   { key: "ce", name: "Compare Empire", url: "https://compareempire.com" },
+  // BrickCompare (2026-11-28, owner: sealed LEGO; the collection tracker and alerts on the same account). Email link only until it has
+  // its own Google client. brickcompare.vercel.app is accepted while the domain is not bought (lib/sister-alerts/sites.ts).
+  { key: "brick", name: "BrickCompare", url: "https://brickcompare.app", oldHosts: ["brickcompare.vercel.app"] },
 ];
 
 /**

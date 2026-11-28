@@ -46,6 +46,7 @@ export const ON_SITE_ALERT_LINKS: ReadonlySet<string> = new Set<string>([
   "wax",
   "scent",
   "kaeyoung",
+  "brick",
 ]);
 
 export const serviceUrl = (path: string, token: string, site?: Pick<SisterAlertSite, "key" | "url">) =>

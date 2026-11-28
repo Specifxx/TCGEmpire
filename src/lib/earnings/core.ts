@@ -999,6 +999,7 @@ export const TAG_NAMES: Record<string, string> = {
   wax: "SportsCardCompare",
   motor: "MotorCompare",
   tcgprices: "TCG Prices",
+  brick: "BrickCompare (LEGO)",
   // Amazon tracking IDs several sites share (lib/earnings/amazon.ts).
   amazon: "Amazon, shared ID (several sites)",
 };

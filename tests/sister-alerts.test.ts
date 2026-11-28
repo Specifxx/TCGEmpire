@@ -275,7 +275,10 @@ test("the routes keep their safety rails", () => {
     const get = src.slice(src.indexOf("export async function GET"), src.indexOf("export async function POST"));
     assert.ok(!/\.(update|delete|deleteMany|create)\(/.test(get), `${p}: a GET never changes anything`);
   }
-  assert.equal(SISTER_ALERT_SITES.length, 13);
+  assert.equal(SISTER_ALERT_SITES.length, 14);
+  assert.equal(allowedOrigin("https://brickcompare.app")?.key, "brick");
+  assert.equal(allowedOrigin("https://brickcompare.vercel.app")?.key, "brick");
+  assert.equal(allowedOrigin("https://brickcompare.app.evil.com"), null);
   assert.equal(allowedOrigin("https://bandaicompare.com")?.key, "bandai");
   assert.equal(allowedOrigin("https://tcgprices.app")?.key, "tcgprices");
   assert.equal(allowedOrigin("https://compareempire.com"), null, "Compare Empire has its own alerts");
