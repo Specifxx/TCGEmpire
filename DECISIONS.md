@@ -26403,3 +26403,15 @@ yesterday's rows. Sealed only for now (`SEALED_ONLY_SHOPIFY`). The other 86 Squa
 a yes from the platform. `tests/squarespace.test.ts`.
 
 Rift released urgently (owner asked) on 27 Nov at 22:20 UTC, 8 hours after the last urgent build, so the phone share fix reaches phones today.
+
+## 2026-11-27 — The sealed page's phone buy bar test, from 3 Dec (Head of Conversion)
+
+The card page has a phone buy bar (2026-09-26, `CardMobileBuy.tsx`); a sealed product's page has none, so on a phone its buy rows
+scroll away and nothing brings them back. Dex, MTG and OP all have one on their product pages. So, 50/50 in the browser from 3 Dec
+(`lib/bar-test.ts`, localStorage `bar-test`), phones and `/sealed/<slug>` only, never the quick view: "none" keeps today's page;
+"bar" pins "<price> at <store> · Buy →" to the foot of the screen once the price card and the board have scrolled away, hidden again
+while either is on screen. It is the market's cheapest in-stock listing, the board's own cheapest row and link, in the visitor's own
+market only. One event, `bar_test` {k}: "<arm>:seen" once a visit, "<arm>:paid" / "<arm>:store" on the visit's first buy click of each
+kind on a sealed page. Read 16 Dec: paid clickers per 100 seen visits per arm. Rift's only new test (the card page's top-pair test is
+read 3 Dec); it rides the normal release. MTG and OP test the paid link inside their existing bars at the same time.
+Fallback release on 28 Nov at 02:50 UTC, so exactly one of the two urgent commits builds.

@@ -38,7 +38,7 @@
     },
     "LGC|Booster Case": {
       "EU": 71400,
-      "US": 84999
+      "US": 84998
     },
     "LGC|Booster Pack": {
       "CA": 2400,
@@ -122,13 +122,13 @@
       "EU": 6497,
       "SG": 26000,
       "UK": 13950,
-      "US": 14299
+      "US": 12999
     },
     "OGN|Booster Case": {
       "AU": 333870,
       "CA": 199999,
       "EU": 75000,
-      "US": 93399
+      "US": 92500
     },
     "OGN|Booster Pack": {
       "AU": 1800,
@@ -243,7 +243,7 @@
       "CA": 92970,
       "EU": 54980,
       "UK": 53000,
-      "US": 54000
+      "US": 52999
     },
     "RAD|Booster Pack": {
       "AU": 999,
@@ -288,7 +288,7 @@
       "EU": 1400,
       "SG": 3262,
       "UK": 1800,
-      "US": 850
+      "US": 800
     },
     "RAD|Showdown Decks Display": {
       "AU": 5200,
@@ -308,7 +308,7 @@
     "REC|Booster Box": {
       "CA": 14999,
       "EU": 11900,
-      "US": 13499
+      "US": 12700
     },
     "REC|Booster Case": {
       "CA": 89999,
@@ -341,18 +341,18 @@
     },
     "SFD|Booster Box": {
       "AU": 28000,
-      "CA": 21478,
+      "CA": 18998,
       "EU": 7117,
       "SG": 8417,
       "UK": 9999,
-      "US": 15997
+      "US": 13400
     },
     "SFD|Booster Case": {
       "AU": 174000,
       "CA": 134999,
       "EU": 59000,
       "UK": 71900,
-      "US": 92949
+      "US": 91000
     },
     "SFD|Booster Pack": {
       "AU": 1400,
@@ -445,7 +445,7 @@
     },
     "UNL|Booster Box": {
       "AU": 23999,
-      "CA": 18999,
+      "CA": 17999,
       "EU": 8999,
       "SG": 25000,
       "UK": 9999,
@@ -545,7 +545,7 @@
       "CA": 96999,
       "EU": 59800,
       "UK": 56499,
-      "US": 62500
+      "US": 61280
     },
     "VEN|Booster Pack": {
       "AU": 1000,
@@ -560,7 +560,7 @@
       "CA": 5999,
       "EU": 2900,
       "UK": 2974,
-      "US": 3300
+      "US": 3087
     },
     "VEN|Bundle Case": {
       "US": 48441
@@ -590,7 +590,7 @@
       "EU": 1500,
       "SG": 2103,
       "UK": 1000,
-      "US": 1099
+      "US": 1000
     },
     "VEN|Showdown Decks Display": {
       "AU": 4499,
@@ -622,6 +622,12 @@
     },
     "arcaneimmersivemusicexperiencebooster": {
       "EU": 6300
+    },
+    "aspirantsclimbriftboundworldsbundle2025": {
+      "US": 3528
+    },
+    "bandletreeriftboundworldsbundle2025": {
+      "US": 9517
     },
     "giftoftheriftbundle": {
       "AU": 34500,
@@ -734,7 +740,7 @@
       "US": 34500
     },
     "riftboundxkdacouturecollectionsealedprom": {
-      "US": 27000
+      "US": 23501
     },
     "riftboundxt12025worldschampionsignaturee": {
       "EU": 105000
@@ -757,6 +763,9 @@
     },
     "t1worldschampionsignatureeditionbundle": {
       "US": 398500
+    },
+    "thegrandplazariftboundworldsbundle2025": {
+      "US": 3394
     },
     "vaultriftboundarcaneboxsetleagueoflegend": {
       "EU": 60000
