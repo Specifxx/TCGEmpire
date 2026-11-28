@@ -26490,3 +26490,16 @@ engine, do not build a second one". The site holds no database and no mail key, 
 - **Earnings:** `brick` is in the earnings site list (Vercel project `brickcompare`) and the tag names. Its eBay and Amazon tags
   carry the set number (`brick-<region>-<placement>-<set>`), so a by-set split reads straight from the tags.
 - It is not in Empire HQ yet: that waits for the domain.
+
+## 2026-11-28 — A Pre-Rift Event Kit page prices only the store's 16-player kit
+
+**Found:** in the 27 Nov sealed export, 36 of the 59 rows on the `<SET>|Pre-Rift Event Kit` pages were one player kit (or an
+event seat) that its store or eBay seller called an "Event Kit", at 30-150 in its own currency. Riot's Pre-Rift Event Kit is
+the store's product: 16 player kits plus a 24-pack display, US$480 MSRP, TCGplayer US$440-1,900 for every set. So
+/sealed/lgc-pre-rift-event-kit led with US$29.99 and US$49.99 beside TCGplayer's US$1,199.
+
+- **The type's floor is 200 in the market's own currency** (`SEALED_MIN_CENTS`, was 15): under half the MSRP in every market,
+  above every player kit in the export. The lowest real store kit was universetcg's EUR 605. It only refuses: the rows leave
+  the Event Kit pages on the next sealed refresh (`cleanupStaleSealed`) and at render.
+- **Not moved to the Pre-Rift Kit page.** A price is not proof a listing is the player kit and not a seat; a wrong merge is
+  worse than a missing row. A store whose title says "Pre-Rift Kit" still lands there.

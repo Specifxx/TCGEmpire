@@ -1167,7 +1167,13 @@ const SEALED_MIN_CENTS: Record<string, number> = {
   // far less than the box, and these keep a loose card out of the box's row.
   "K/DA Couture Collection": 6000,
   "Worlds 2026 Edition": 3500,
-  "Pre-Rift Event Kit": 1500,
+  // The Pre-Rift Event Kit is the STORE's kit: 16 player kits plus a 24-pack display (Riot's US MSRP US$480; TCGplayer
+  // US$440-1,900 for every set, universetcg EUR 605, Canadian stores CA$929-2,228). Stores and eBay sellers also call
+  // one player kit or an event seat an "Event Kit" (2026-11-28, data/public/sealed-listings.json of 27 Nov: 36 of 59 rows
+  // at 30-150 in their own currency, e.g. "Riftbound: Legacy Pre-Rift Event Kit" US$49.99 and "(Preorder) Legacy -
+  // Pre-Rift Event Kit [LGC]" US$29.99 beside TCGplayer's US$1,199 on /sealed/lgc-pre-rift-event-kit), so the page's
+  // "from" price was a player kit's. 200 in any market's currency is under half the MSRP everywhere; it only refuses.
+  "Pre-Rift Event Kit": 20000,
   "Pre-Rift Kit": 800,
   "Proving Grounds": 800,
   "Starter Set": 800,
