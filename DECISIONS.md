@@ -26434,3 +26434,16 @@ Gmail answers a compose link longer than about 8 KB with a 400, so a 450-address
 window. The console sends a batch in chunks of addresses whose link stays under ~6 KB (about 220 addresses), and the
 read-only `granted` action lists a batch again by the pass end its Counter rows hold, so a batch whose compose failed is
 sent without granting anyone twice. Released urgently on the owner's standing go (28 Nov: "ignore the deploy limit").
+
+## Pre-Rift seats titled "Event", "@ venue" or a dated session (2026-11-28)
+
+The 27 Nov sealed export still had seats on the Pre-Rift Kit pages: the two cheapest US rows on /sealed/lgc-pre-rift-kit
+were "(Plainfield) Riftbound Legacy Pre-Rift Event" (Moonshot, US$34.99) and "Riftbound: Legacy Pre-Rift @ The Refuge"
+(US$30), beside TCGplayer's US$69.97 kit. The UK and EU Legacy pages had "Aberdeen - 24 January 2027" and "Event -
+27.01.2027". Riot's two products are the "Pre-Rift Kit" and the "Pre-Rift Event Kit", so `isPreRiftEntry` now also
+refuses a kit-less Pre-Rift title that says the singular "event" with no box, case, display, pack or "sealed" word. It
+also refuses "@ <venue>" (never "@ RRP"), a day + month + year, a full d.m.yyyy date, or a short weekday before a date
+("Sat 5/2"). A bracketed shipping or release note ("(Release Date 06 Feb 2026)", "(Ships 22.01.2027)") is taken out before
+any sign is read: it dates the product, not an event. This reverses the 2026-11-25 line that counted only the plural
+"events". Over the whole 27 Nov export it refuses exactly 9 more rows of 4,963 (US 7, UK 1, EU 1). "Prerift Pack",
+"Pre-Rift Player Pack" and bare titles stay. Test: tests/radiance-sealed-gaps.test.ts (PR #727).
