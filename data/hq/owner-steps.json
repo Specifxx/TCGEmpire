@@ -189,6 +189,15 @@
       "why": "One Premium now serves every site; a DexCompare or YGO Compare member must never see RiftCompare on Stripe's page, receipt, portal or card statement (owner, 2026-11-25).",
       "added": "2026-11-25",
       "prompt": "premium/chrome-prompt-stripe-compare-empire-branding.md"
+    },
+    {
+      "id": "ce-oauth-callbacks",
+      "site": "ce",
+      "kind": "chrome",
+      "title": "Add Compare Empire's sign-in return addresses to the Discord and Google apps (5 minutes, optional)",
+      "why": "Compare Empire's new accounts work today, but Google and Discord sign-in pass through riftcompare.com for a second until its own callbacks are registered.",
+      "added": "2026-11-28",
+      "prompt": "accounts/chrome-prompt-compare-empire-oauth-callbacks.md"
     }
   ]
 }

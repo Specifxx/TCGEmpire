@@ -65,8 +65,10 @@ export function redirectUri(provider: OAuthProvider): string {
  * - Discord: all 11 sister callbacks are in the Discord app.
  * - Google: 9 are in Rift's Google client. Google allows 10 unverified authorized domains per project, so DexCompare (its own Google
  *   client, never this flow) and SportsCardCompare stay on Rift's callback until the domains are verified in Search Console.
+ * - Compare Empire (2026-11-28) is on neither app yet: its buttons go straight to riftcompare.com (never through its rewrite, whose
+ *   cookies would land on the wrong host) until the owner registers compareempire.com/account-service/oauth/<provider>/callback.
  */
-const OFF_SITE_OAUTH: Record<OAuthProvider, readonly string[]> = { discord: [], google: ["dex", "wax"] };
+const OFF_SITE_OAUTH: Record<OAuthProvider, readonly string[]> = { discord: ["ce"], google: ["dex", "wax", "ce"] };
 
 export function onSiteOAuth(provider: OAuthProvider, siteKey: string): boolean {
   return !OFF_SITE_OAUTH[provider].includes(siteKey);

@@ -26447,3 +26447,20 @@ also refuses "@ <venue>" (never "@ RRP"), a day + month + year, a full d.m.yyyy 
 any sign is read: it dates the product, not an event. This reverses the 2026-11-25 line that counted only the plural
 "events". Over the whole 27 Nov export it refuses exactly 9 more rows of 4,963 (US 7, UK 1, EU 1). "Prerift Pack",
 "Pre-Rift Player Pack" and bare titles stay. Test: tests/radiance-sealed-gaps.test.ts (PR #727).
+
+## 2026-11-28 — Compare Empire joins the shared account (sign-in and Premium), and keeps its own alerts
+
+**Asked:** the owner (28 Nov): "stores like Compare Empire should also have login, like the login feature and all the features that
+users have." ScentCompare, KaeYoung and SportsCardCompare already have accounts (2026-11-19). FigureCompare, MotorCompare,
+CamCompare and WargameCompare are idle (only fixes), so Compare Empire is the one site left.
+
+- **`ce` is a premium site** (`SISTER_PREMIUM_SITES`): sign-in by emailed link, Google or Discord, Premium (no banner ads), the
+  same token flow as every sister.
+- **Its price alerts stay its own** (Compare Empire's DECISIONS.md, 2026-11-19: per storage variant, its own small table). So it is
+  NOT a shared-alert site and `allowedOrigin("https://compareempire.com")` stays null (`tests/sister-alerts.test.ts`). The sign-in
+  email takes its look from `signInMailBrand` instead (quiet: it names only Compare Empire). Compare Empire's server checks a
+  member's token itself against `/api/sister-sign-in/jwks` to list and set that member's own alerts.
+- **Google and Discord go straight to riftcompare.com for now** (`OFF_SITE_OAUTH`): neither app lists Compare Empire's own callback,
+  and the start route's state cookie must land on the host the provider returns to. Registering
+  `compareempire.com/account-service/oauth/<provider>/callback` is an owner step (`ce-oauth-callbacks`); then drop `ce` from the
+  list and switch its buttons to the rewrite.
