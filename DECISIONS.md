@@ -26427,3 +26427,10 @@ shipping on Direct orders over $50, help.tcgplayer.com "Buying from TCGplayer Di
 code, credit or countdown (`tests/offer-calendar.test.ts`). The card keeps its rules: once a visit, the visit's one prompt slot,
 never while typing; after the sale its ✕ keeps it away for 7 days instead of for good. Both re-read the clock in the browser, so the
 switch needs no build. Change a partner line only after reading its page again.
+
+## 2026-11-28: Gmail BCC batches go in chunks under 8 KB
+
+Gmail answers a compose link longer than about 8 KB with a 400, so a 450-address BCC batch cannot open in one compose
+window. The console sends a batch in chunks of addresses whose link stays under ~6 KB (about 220 addresses), and the
+read-only `granted` action lists a batch again by the pass end its Counter rows hold, so a batch whose compose failed is
+sent without granting anyone twice. Released urgently on the owner's standing go (28 Nov: "ignore the deploy limit").
