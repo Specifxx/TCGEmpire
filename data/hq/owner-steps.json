@@ -198,6 +198,15 @@
       "why": "Compare Empire's new accounts work today, but Google and Discord sign-in pass through riftcompare.com for a second until its own callbacks are registered.",
       "added": "2026-11-28",
       "prompt": "accounts/chrome-prompt-compare-empire-oauth-callbacks.md"
+    },
+    {
+      "id": "awesome-fab-pr",
+      "site": "tcgprices",
+      "kind": "chrome",
+      "title": "Open one GitHub pull request adding TCG Prices to the Awesome FaB list (5 minutes, ready-to-paste)",
+      "why": "The list welcomes pull requests and has no price tool; a merged line is a link from the Flesh and Blood community to tcgprices.app (authority goal: 5 linking sites by 21 Dec). Needs your own GitHub account.",
+      "added": "2026-11-28",
+      "prompt": "tcgcompare/authority/github-pr-awesome-fab.md"
     }
   ]
 }
