@@ -1172,8 +1172,9 @@ const SEALED_MIN_CENTS: Record<string, number> = {
   // one player kit or an event seat an "Event Kit" (2026-11-28, data/public/sealed-listings.json of 27 Nov: 36 of 59 rows
   // at 30-150 in their own currency, e.g. "Riftbound: Legacy Pre-Rift Event Kit" US$49.99 and "(Preorder) Legacy -
   // Pre-Rift Event Kit [LGC]" US$29.99 beside TCGplayer's US$1,199 on /sealed/lgc-pre-rift-event-kit), so the page's
-  // "from" price was a player kit's. 200 in any market's currency is under half the MSRP everywhere; it only refuses.
-  "Pre-Rift Event Kit": 20000,
+  // "from" price was a player kit's. 150 in the market's own currency is under half the MSRP in every market (GBP 150 is
+  // about US$190, half the MSRP US$240) and above every player kit but one (an out-of-stock A$151.51). It only refuses.
+  "Pre-Rift Event Kit": 15000,
   "Pre-Rift Kit": 800,
   "Proving Grounds": 800,
   "Starter Set": 800,
