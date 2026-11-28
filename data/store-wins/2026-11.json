@@ -27,7 +27,8 @@
   "2026-11-23",
   "2026-11-24",
   "2026-11-26",
-  "2026-11-27"
+  "2026-11-27",
+  "2026-11-28"
  ],
  "products": {
   "giftoftheriftbundle": {
@@ -301,19 +302,19 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "VEN|Booster Box": 11
+    "VEN|Booster Box": 12
    }
   },
   "4gsgames": {
    "name": "4GS Games",
    "country": "US",
    "wins": {
-    "UNL|Champion Deck (Vex)": 2
+    "UNL|Champion Deck (Vex)": 3
    },
    "contested": {
-    "UNL|Champion Deck (Vex)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Showdown Decks": 2
+    "UNL|Champion Deck (Vex)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "6ixtcgsmarkham": {
@@ -321,14 +322,14 @@
    "country": "CA",
    "wins": {
     "SFD|Booster Box": 1,
-    "REC|Booster Box": 2,
-    "LGC|Pre-Rift Kit": 1
+    "REC|Booster Box": 3,
+    "LGC|Pre-Rift Kit": 2
    },
    "contested": {
     "VEN|Booster Box": 8,
-    "SFD|Booster Box": 3,
-    "REC|Booster Box": 2,
-    "LGC|Pre-Rift Kit": 1,
+    "SFD|Booster Box": 4,
+    "REC|Booster Box": 3,
+    "LGC|Pre-Rift Kit": 2,
     "SFD|Booster Case": 1
    }
   },
@@ -337,11 +338,11 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
     "VEN|Bundle": 15,
     "VEN|Pre-Rift Kit": 5,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "abyssgamestore": {
@@ -349,14 +350,14 @@
    "country": "CA",
    "wins": {
     "giftoftheriftbundle": 2,
-    "RAD|Booster Box": 1
+    "RAD|Booster Box": 2
    },
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 24,
-    "RAD|Showdown Decks": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Bundle": 14,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 25,
+    "RAD|Showdown Decks": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Bundle": 15,
     "giftoftheriftbundle": 2
    }
   },
@@ -365,24 +366,24 @@
    "country": "AU",
    "wins": {
     "RAD|Bundle": 2,
-    "SFD|Champion Deck (Fiora) Display": 26,
-    "SFD|Champion Deck (Rumble) Display": 26,
-    "UNL|Champion Deck (Vex) Display": 26,
-    "UNL|Champion Deck (Vi) Display": 26
+    "SFD|Champion Deck (Fiora) Display": 27,
+    "SFD|Champion Deck (Rumble) Display": 27,
+    "UNL|Champion Deck (Vex) Display": 27,
+    "UNL|Champion Deck (Vi) Display": 27
    },
    "contested": {
-    "OGN|Champion Deck (Jinx)": 26,
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks Display": 26,
-    "SFD|Champion Deck (Fiora) Display": 26,
-    "SFD|Champion Deck (Rumble) Display": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Champion Deck (Vex) Display": 26,
-    "UNL|Champion Deck (Vi) Display": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
+    "OGN|Champion Deck (Jinx)": 27,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks Display": 27,
+    "SFD|Champion Deck (Fiora) Display": 27,
+    "SFD|Champion Deck (Rumble) Display": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Champion Deck (Vex) Display": 27,
+    "UNL|Champion Deck (Vi) Display": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
     "SFD|Booster Box": 14
    }
   },
@@ -391,11 +392,11 @@
    "country": "AU",
    "wins": {},
    "contested": {
-    "OGN|Champion Deck (Jinx)": 26,
-    "OGN|Champion Deck (Viktor)": 26,
-    "OGS|Proving Grounds": 26,
-    "UNL|Champion Deck (Vex)": 26,
-    "UNL|Champion Deck (Vi)": 26
+    "OGN|Champion Deck (Jinx)": 27,
+    "OGN|Champion Deck (Viktor)": 27,
+    "OGS|Proving Grounds": 27,
+    "UNL|Champion Deck (Vex)": 27,
+    "UNL|Champion Deck (Vi)": 27
    }
   },
   "aiegames": {
@@ -403,8 +404,8 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "alchemistsrefuge": {
@@ -415,14 +416,14 @@
    },
    "contested": {
     "LGC|Pre-Rift Kit": 2,
-    "OGN|Booster Pack": 2,
-    "OGS|Proving Grounds": 2,
-    "UNL|Champion Deck (Vi)": 2,
+    "OGN|Booster Pack": 3,
+    "OGS|Proving Grounds": 3,
+    "UNL|Champion Deck (Vi)": 3,
     "UNL|Pre-Rift Kit": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Bundle": 2,
-    "VEN|Pre-Rift Kit": 2,
-    "VEN|Showdown Decks": 2
+    "VEN|Booster Pack": 3,
+    "VEN|Bundle": 3,
+    "VEN|Pre-Rift Kit": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "allyoucanplay": {
@@ -430,11 +431,11 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "UNL|Champion Deck (Vi)": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "UNL|Champion Deck (Vi)": 3
    }
   },
   "altf4": {
@@ -445,19 +446,19 @@
     "OGN|Booster Box": 2
    },
    "contested": {
-    "OGN|Booster Pack": 26,
+    "OGN|Booster Pack": 27,
     "SFD|Booster Box": 24,
-    "SFD|Booster Pack": 26,
+    "SFD|Booster Pack": 27,
     "SFD|Champion Deck (Rumble)": 24,
-    "UNL|Booster Pack": 26,
+    "UNL|Booster Pack": 27,
     "UNL|Champion Deck (Vi)": 24,
-    "VEN|Booster Box": 26,
+    "VEN|Booster Box": 27,
     "VEN|Booster Case": 17,
     "VEN|Showdown Decks": 24,
-    "LGC|Booster Box": 2,
+    "LGC|Booster Box": 3,
     "OGN|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "VEN|Booster Pack": 2
+    "RAD|Booster Pack": 3,
+    "VEN|Booster Pack": 3
    }
   },
   "alwaysgames": {
@@ -466,7 +467,7 @@
    "wins": {},
    "contested": {
     "OGN|Booster Box": 11,
-    "OGN|Booster Pack": 26
+    "OGN|Booster Pack": 27
    }
   },
   "amusengames": {
@@ -474,7 +475,7 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "animealley": {
@@ -484,7 +485,7 @@
     "VEN|Booster Pack": 2
    },
    "contested": {
-    "VEN|Booster Box": 26,
+    "VEN|Booster Box": 27,
     "VEN|Booster Pack": 26
    }
   },
@@ -493,13 +494,13 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Champion Deck (Jinx)": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Bundle": 2,
-    "VEN|Booster Box": 2
+    "OGN|Booster Box": 3,
+    "OGN|Champion Deck (Jinx)": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Bundle": 3,
+    "VEN|Booster Box": 3
    }
   },
   "ateliertcg": {
@@ -513,34 +514,34 @@
     "RAD|Bundle": 6,
     "UNL|Booster Box": 3,
     "OGN|Booster Pack": 2,
-    "LGC|Bundle": 8,
-    "LGC|Proving Grounds 2nd Edition": 8,
-    "REC|Bundle": 8,
-    "LGC|Booster Box": 6,
-    "LGC|Champion Deck": 2,
-    "SFD|Booster Pack": 1
+    "LGC|Bundle": 9,
+    "LGC|Proving Grounds 2nd Edition": 9,
+    "REC|Bundle": 9,
+    "LGC|Booster Box": 7,
+    "LGC|Champion Deck": 3,
+    "SFD|Booster Pack": 2
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGN|Booster Pack": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
+    "OGN|Booster Box": 27,
+    "OGN|Booster Pack": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
     "RAD|Bundle": 9,
-    "SFD|Booster Box": 26,
-    "SFD|Booster Pack": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Booster Pack": 26,
-    "VEN|Booster Box": 19,
-    "VEN|Booster Pack": 19,
+    "SFD|Booster Box": 27,
+    "SFD|Booster Pack": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Booster Pack": 27,
+    "VEN|Booster Box": 20,
+    "VEN|Booster Pack": 20,
     "VEN|Bundle": 1,
-    "VEN|Showdown Decks": 19,
-    "LGC|Booster Box": 8,
-    "LGC|Bundle": 8,
-    "LGC|Proving Grounds 2nd Edition": 8,
-    "REC|Booster Box": 8,
-    "REC|Bundle": 8,
-    "RAD|Showdown Decks Display": 6,
-    "LGC|Champion Deck": 2
+    "VEN|Showdown Decks": 20,
+    "LGC|Booster Box": 9,
+    "LGC|Bundle": 9,
+    "LGC|Proving Grounds 2nd Edition": 9,
+    "REC|Booster Box": 9,
+    "REC|Bundle": 9,
+    "RAD|Showdown Decks Display": 7,
+    "LGC|Champion Deck": 3
    }
   },
   "atlantiscomics": {
@@ -548,9 +549,9 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "atomilicollectables": {
@@ -566,10 +567,10 @@
    "country": "UK",
    "wins": {},
    "contested": {
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27,
     "SFD|Booster Box": 6,
     "RAD|Booster Box": 2
    }
@@ -579,12 +580,12 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "UNL|Pre-Rift Kit": 2,
-    "VEN|Booster Box": 2
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "UNL|Pre-Rift Kit": 3,
+    "VEN|Booster Box": 3
    }
   },
   "bananagames": {
@@ -597,33 +598,33 @@
     "UNL|Booster Box": 9,
     "VEN|Booster Box": 10,
     "REC|Bundle": 7,
-    "LGC|Champion Deck (Garen)": 10,
-    "LGC|Champion Deck (Tryndamere)": 10,
+    "LGC|Champion Deck (Garen)": 11,
+    "LGC|Champion Deck (Tryndamere)": 11,
     "REC|Booster Box": 7,
-    "VEN|Booster Pack": 9,
+    "VEN|Booster Pack": 10,
     "RAD|Booster Case": 2
    },
    "contested": {
-    "LGC|Booster Box": 26,
-    "SFD|Booster Box": 23,
-    "SFD|Booster Pack": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Booster Box": 20,
-    "UNL|Booster Pack": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks Display": 26,
+    "LGC|Booster Box": 27,
+    "SFD|Booster Box": 24,
+    "SFD|Booster Pack": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Booster Box": 21,
+    "UNL|Booster Pack": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks Display": 27,
     "LGC|Bundle": 17,
-    "RAD|Booster Box": 6,
-    "RAD|Booster Pack": 2,
-    "REC|Booster Box": 15,
-    "REC|Bundle": 15,
-    "LGC|Champion Deck (Garen)": 10,
-    "LGC|Champion Deck (Tryndamere)": 10,
+    "RAD|Booster Box": 7,
+    "RAD|Booster Pack": 3,
+    "REC|Booster Box": 16,
+    "REC|Bundle": 16,
+    "LGC|Champion Deck (Garen)": 11,
+    "LGC|Champion Deck (Tryndamere)": 11,
     "RAD|Booster Case": 9,
-    "giftoftheriftbundle": 3
+    "giftoftheriftbundle": 4
    }
   },
   "battlebearkl": {
@@ -640,27 +641,27 @@
    "wins": {},
    "contested": {
     "OGN|Booster Pack": 11,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "bentogaming": {
    "name": "Bento Gaming",
    "country": "CA",
    "wins": {
-    "VEN|Booster Box": 1
+    "VEN|Booster Box": 2
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGS|Proving Grounds": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26
+    "OGN|Booster Box": 27,
+    "OGS|Proving Grounds": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "blacklistcards": {
@@ -669,8 +670,8 @@
    "wins": {},
    "contested": {
     "UNL|Booster Box": 9,
-    "VEN|Booster Box": 26,
-    "SFD|Booster Box": 17
+    "VEN|Booster Box": 27,
+    "SFD|Booster Box": 18
    }
   },
   "blackrosehobbies": {
@@ -680,7 +681,7 @@
    "contested": {
     "OGN|Booster Box": 1,
     "VEN|Booster Box": 8,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "blackvaultgaming": {
@@ -691,12 +692,12 @@
    },
    "contested": {
     "RAD|Booster Box": 23,
-    "RAD|Booster Pack": 26,
-    "RAD|Showdown Decks": 26,
+    "RAD|Booster Pack": 27,
+    "RAD|Showdown Decks": 27,
     "SFD|Booster Pack": 17,
-    "UNL|Champion Deck (Vex)": 9,
-    "VEN|Booster Pack": 25,
-    "VEN|Showdown Decks": 26,
+    "UNL|Champion Deck (Vex)": 10,
+    "VEN|Booster Pack": 26,
+    "VEN|Showdown Decks": 27,
     "RAD|Bundle": 10,
     "OGN|Booster Pack": 4
    }
@@ -706,11 +707,11 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "boardsandswords": {
@@ -718,8 +719,8 @@
    "country": "UK",
    "wins": {},
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "SFD|Champion Deck (Rumble)": 26
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "SFD|Champion Deck (Rumble)": 27
    }
   },
   "boosterpackcards": {
@@ -727,12 +728,12 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Pack": 2,
-    "SFD|Booster Pack": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Booster Pack": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2
+    "OGN|Booster Pack": 3,
+    "SFD|Booster Pack": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Booster Pack": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3
    }
   },
   "boutiquelapioche": {
@@ -740,12 +741,12 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGN|Booster Pack": 26,
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "OGS|Proving Grounds": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
+    "OGN|Booster Box": 27,
+    "OGN|Booster Pack": 27,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "OGS|Proving Grounds": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
     "VEN|Booster Pack": 25
    }
   },
@@ -754,14 +755,14 @@
    "country": "CA",
    "wins": {
     "RAD|Booster Box": 1,
-    "UNL|Champion Deck (Vi)": 2
+    "UNL|Champion Deck (Vi)": 3
    },
    "contested": {
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 2
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 3
    }
   },
   "brickandboardgames": {
@@ -770,27 +771,27 @@
    "wins": {},
    "contested": {
     "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "SFD|Booster Pack": 2,
+    "RAD|Booster Pack": 3,
+    "SFD|Booster Pack": 3,
     "UNL|Booster Box": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Showdown Decks": 2
+    "VEN|Booster Box": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "brints": {
    "name": "Brints Collectibles",
    "country": "SG",
    "wins": {
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "VEN|Booster Box": 6
    },
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 26,
+    "OGN|Champion Deck (Lee Sin)": 27,
     "SFD|Booster Box": 4,
-    "SFD|Champion Deck (Rumble)": 26,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Box": 4,
-    "VEN|Booster Box": 26
+    "VEN|Booster Box": 27
    }
   },
   "cadetstoys": {
@@ -799,8 +800,8 @@
    "wins": {},
    "contested": {
     "OGN|Booster Box": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
     "VEN|Booster Box": 2
    }
   },
@@ -810,12 +811,12 @@
    "wins": {},
    "contested": {
     "OGN|Booster Box": 3,
-    "RAD|Booster Pack": 26,
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Booster Pack": 27,
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "cardbot": {
@@ -823,19 +824,22 @@
    "country": "AU",
    "wins": {},
    "contested": {
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "UNL|Booster Box": 18
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "UNL|Booster Box": 19
    }
   },
   "cardbrawlers": {
    "name": "Card Brawlers",
    "country": "CA",
-   "wins": {},
+   "wins": {
+    "giftoftheriftbundle": 1
+   },
    "contested": {
-    "RAD|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
     "UNL|Champion Deck (Vi)": 24,
-    "VEN|Booster Box": 5
+    "VEN|Booster Box": 5,
+    "giftoftheriftbundle": 1
    }
   },
   "cardcaster": {
@@ -843,20 +847,20 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Box": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Box": 27,
     "SFD|Booster Pack": 7,
-    "UNL|Booster Box": 13,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26,
-    "LGC|Booster Box": 9,
-    "OGN|Booster Box": 9,
-    "giftoftheriftbundle": 3
+    "UNL|Booster Box": 14,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27,
+    "LGC|Booster Box": 10,
+    "OGN|Booster Box": 10,
+    "giftoftheriftbundle": 4
    }
   },
   "cardcooptcg": {
@@ -864,10 +868,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 2,
-    "SFD|Champion Deck": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Showdown Decks": 3,
+    "SFD|Champion Deck": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "cardcosmos": {
@@ -876,8 +880,8 @@
    "wins": {},
    "contested": {
     "RAD|Booster Box": 1,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3
    }
   },
   "carddynasty": {
@@ -887,40 +891,41 @@
     "RAD|Showdown Decks": 21,
     "UNL|Champion Deck (Vi)": 24,
     "giftoftheriftbundle": 4,
-    "REC|Champion Deck (Shyvana)": 2,
-    "REC|Champion Deck (Vayne)": 2,
+    "REC|Champion Deck (Shyvana)": 3,
+    "REC|Champion Deck (Vayne)": 3,
     "SFD|Booster Case": 1,
-    "UNL|Booster Box": 1,
-    "UNL|Booster Pack": 1
+    "UNL|Booster Box": 2,
+    "UNL|Booster Pack": 2,
+    "RAD|Booster Case": 1
    },
    "contested": {
-    "LGC|Booster Box": 26,
-    "OGN|Booster Box": 26,
-    "OGN|Booster Pack": 26,
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 6,
-    "RAD|Booster Pack": 25,
+    "LGC|Booster Box": 27,
+    "OGN|Booster Box": 27,
+    "OGN|Booster Pack": 27,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 7,
+    "RAD|Booster Pack": 26,
     "RAD|Bundle": 1,
     "RAD|Showdown Decks": 25,
-    "SFD|Booster Pack": 6,
+    "SFD|Booster Pack": 7,
     "SFD|Champion Deck (Rumble)": 8,
-    "UNL|Booster Pack": 4,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
+    "UNL|Booster Pack": 5,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
     "VEN|Booster Case": 2,
-    "VEN|Booster Pack": 25,
-    "LGC|Pre-Rift Kit": 22,
-    "LGC|Proving Grounds 2nd Edition": 10,
-    "REC|Booster Box": 10,
-    "REC|Bundle": 10,
-    "giftoftheriftbundle": 8,
-    "REC|Champion Deck (Shyvana)": 2,
-    "REC|Champion Deck (Vayne)": 2,
-    "RAD|Booster Case": 1,
-    "REC|Booster Case": 1,
-    "SFD|Booster Box": 1,
+    "VEN|Booster Pack": 26,
+    "LGC|Pre-Rift Kit": 23,
+    "LGC|Proving Grounds 2nd Edition": 11,
+    "REC|Booster Box": 11,
+    "REC|Bundle": 11,
+    "giftoftheriftbundle": 9,
+    "REC|Champion Deck (Shyvana)": 3,
+    "REC|Champion Deck (Vayne)": 3,
+    "RAD|Booster Case": 2,
+    "REC|Booster Case": 2,
+    "SFD|Booster Box": 2,
     "SFD|Booster Case": 1,
-    "UNL|Booster Box": 1
+    "UNL|Booster Box": 2
    }
   },
   "cardfathertcg": {
@@ -928,19 +933,19 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "VEN|Showdown Decks": 26,
-    "VEN|Pre-Rift Kit": 2
+    "VEN|Showdown Decks": 27,
+    "VEN|Pre-Rift Kit": 3
    }
   },
   "cardgazer": {
    "name": "Cardgazer TCG",
    "country": "EU",
    "wins": {
-    "RAD|Showdown Decks": 2
+    "RAD|Showdown Decks": 3
    },
    "contested": {
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3
    }
   },
   "cardgoblin": {
@@ -948,11 +953,11 @@
    "country": "UK",
    "wins": {
     "OGS|Proving Grounds": 1,
-    "RAD|Booster Pack": 3
+    "RAD|Booster Pack": 4
    },
    "contested": {
     "OGS|Proving Grounds": 9,
-    "RAD|Booster Pack": 3
+    "RAD|Booster Pack": 4
    }
   },
   "cardhorizon": {
@@ -960,14 +965,14 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "cardhub": {
@@ -975,9 +980,9 @@
    "country": "AU",
    "wins": {},
    "contested": {
-    "VEN|Booster Box": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26
+    "VEN|Booster Box": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "cardsbeyond": {
@@ -987,8 +992,8 @@
    "contested": {
     "SFD|Booster Box": 24,
     "VEN|Booster Box": 4,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "cardshopnear": {
@@ -999,30 +1004,30 @@
     "VEN|Booster Box": 2
    },
    "contested": {
-    "OGN|Booster Pack": 2,
+    "OGN|Booster Pack": 3,
     "RAD|Bundle": 2,
-    "SFD|Booster Pack": 2,
-    "UNL|Booster Pack": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2
+    "SFD|Booster Pack": 3,
+    "UNL|Booster Pack": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3
    }
   },
   "cardshq": {
    "name": "CardsHQ",
    "country": "US",
    "wins": {
-    "OGN|Sleeved Booster": 2,
-    "UNL|Champion Deck": 2
+    "OGN|Sleeved Booster": 3,
+    "UNL|Champion Deck": 3
    },
    "contested": {
-    "OGN|Sleeved Booster": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Champion Deck": 2,
-    "UNL|Champion Deck": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Sleeved Booster": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Champion Deck": 3,
+    "UNL|Champion Deck": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "cardsnmo": {
@@ -1037,24 +1042,24 @@
     "UNL|Booster Box": 2
    },
    "contested": {
-    "OGN|Booster Pack": 9,
-    "OGS|Proving Grounds": 9,
+    "OGN|Booster Pack": 10,
+    "OGS|Proving Grounds": 10,
     "SFD|Booster Box": 5,
-    "SFD|Champion Deck (Fiora)": 9,
-    "SFD|Champion Deck (Rumble)": 9,
-    "UNL|Booster Box": 9,
-    "UNL|Booster Pack": 9,
+    "SFD|Champion Deck (Fiora)": 10,
+    "SFD|Champion Deck (Rumble)": 10,
+    "UNL|Booster Box": 10,
+    "UNL|Booster Pack": 10,
     "UNL|Champion Deck (Vex)": 5,
-    "UNL|Champion Deck (Vi)": 9,
-    "UNL|Pre-Rift Kit": 9,
+    "UNL|Champion Deck (Vi)": 10,
+    "UNL|Pre-Rift Kit": 10,
     "VEN|Booster Box": 9,
-    "VEN|Booster Pack": 9,
-    "VEN|Bundle": 9,
-    "VEN|Pre-Rift Kit": 9,
-    "VEN|Showdown Decks": 9,
-    "OGN|Champion Deck (Lee Sin)": 3,
-    "SFD|Pre-Rift Kit": 3,
-    "OGN|Champion Deck (Viktor)": 2
+    "VEN|Booster Pack": 10,
+    "VEN|Bundle": 10,
+    "VEN|Pre-Rift Kit": 10,
+    "VEN|Showdown Decks": 10,
+    "OGN|Champion Deck (Lee Sin)": 4,
+    "SFD|Pre-Rift Kit": 4,
+    "OGN|Champion Deck (Viktor)": 3
    }
   },
   "cardsplace": {
@@ -1062,35 +1067,36 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Pack": 2,
-    "SFD|Champion Deck (Fiora)": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Champion Deck (Lee Sin)": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Pack": 3,
+    "SFD|Champion Deck (Fiora)": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "cardyx": {
    "name": "CardyX",
    "country": "EU",
    "wins": {
-    "UNL|Booster Pack": 2
+    "UNL|Booster Pack": 3
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Pack": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Booster Pack": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Pack": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Booster Pack": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3,
+    "SFD|Booster Box": 1
    }
   },
   "cartesleo": {
@@ -1104,12 +1110,12 @@
    },
    "contested": {
     "OGN|Booster Box": 4,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "VEN|Booster Box": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "VEN|Booster Box": 27,
     "VEN|Showdown Decks": 6,
-    "VEN|Booster Pack": 20,
-    "SFD|Booster Box": 3
+    "VEN|Booster Pack": 21,
+    "SFD|Booster Box": 4
    }
   },
   "cartessportivesrivesud": {
@@ -1121,19 +1127,19 @@
     "VEN|Bundle": 1
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vi)": 26,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vi)": 27,
     "VEN|Bundle": 25,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 25,
-    "VEN|Booster Box": 25,
-    "LGC|Booster Box": 23,
-    "LGC|Bundle": 23,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 26,
+    "VEN|Booster Box": 26,
+    "LGC|Booster Box": 24,
+    "LGC|Bundle": 24,
     "giftoftheriftbundle": 1,
-    "LGC|Champion Deck": 2
+    "LGC|Champion Deck": 3
    }
   },
   "castlegameshoppe": {
@@ -1141,31 +1147,31 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "LGC|Booster Box": 2,
-    "LGC|Booster Pack": 2,
-    "LGC|Bundle": 2,
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Booster Pack": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Booster Pack": 2,
-    "UNL|Bundle": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "UNL|Pre-Rift Kit": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Bundle": 2,
-    "VEN|Pre-Rift Kit": 2,
-    "VEN|Showdown Decks": 2,
-    "giftoftheriftbundle": 2
+    "LGC|Booster Box": 3,
+    "LGC|Booster Pack": 3,
+    "LGC|Bundle": 3,
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Booster Pack": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Booster Pack": 3,
+    "UNL|Bundle": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "UNL|Pre-Rift Kit": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Bundle": 3,
+    "VEN|Pre-Rift Kit": 3,
+    "VEN|Showdown Decks": 3,
+    "giftoftheriftbundle": 3
    }
   },
   "ccgprime": {
@@ -1173,9 +1179,9 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Bundle": 2
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Bundle": 3
    }
   },
   "cgrealm": {
@@ -1187,11 +1193,11 @@
     "VEN|Booster Pack": 10
    },
    "contested": {
-    "RAD|Booster Box": 26,
+    "RAD|Booster Box": 27,
     "RAD|Bundle": 3,
-    "VEN|Booster Box": 26,
+    "VEN|Booster Box": 27,
     "OGN|Booster Box": 1,
-    "VEN|Booster Pack": 19
+    "VEN|Booster Pack": 20
    }
   },
   "championcardcollector": {
@@ -1199,17 +1205,17 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "SFD|Booster Pack": 2,
-    "SFD|Champion Deck": 2,
-    "UNL|Bundle": 2,
-    "UNL|Champion Deck": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "SFD|Booster Pack": 3,
+    "SFD|Champion Deck": 3,
+    "UNL|Bundle": 3,
+    "UNL|Champion Deck": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "championcitygames": {
@@ -1217,27 +1223,29 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "OGN|Booster Box": 25,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "OGN|Booster Box": 26,
     "SFD|Booster Box": 7
    }
   },
   "championtcg": {
    "name": "ChampionTCG",
    "country": "US",
-   "wins": {},
+   "wins": {
+    "VEN|Showdown Decks": 1
+   },
    "contested": {
     "OGN|Booster Box": 1,
     "OGN|Booster Pack": 1,
-    "UNL|Booster Box": 2,
-    "UNL|Booster Pack": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "UNL|Booster Box": 3,
+    "UNL|Booster Pack": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "cherry": {
@@ -1245,26 +1253,26 @@
    "country": "AU",
    "wins": {
     "OGN|Champion Deck (Viktor)": 21,
-    "RAD|Booster Pack": 11,
+    "RAD|Booster Pack": 12,
     "RAD|Showdown Decks": 9
    },
    "contested": {
-    "OGN|Champion Deck (Jinx)": 26,
-    "OGN|Champion Deck (Lee Sin)": 26,
+    "OGN|Champion Deck (Jinx)": 27,
+    "OGN|Champion Deck (Lee Sin)": 27,
     "OGN|Champion Deck (Viktor)": 21,
-    "OGS|Proving Grounds": 26,
+    "OGS|Proving Grounds": 27,
     "RAD|Booster Box": 6,
-    "RAD|Booster Pack": 13,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Booster Pack": 26,
-    "UNL|Champion Deck (Vex)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Pack": 2,
-    "SFD|Booster Pack": 2,
-    "VEN|Booster Pack": 2
+    "RAD|Booster Pack": 14,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Booster Pack": 27,
+    "UNL|Champion Deck (Vex)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Pack": 3,
+    "SFD|Booster Pack": 3,
+    "VEN|Booster Pack": 3
    }
   },
   "chonkycollectibles": {
@@ -1275,7 +1283,7 @@
     "LGC|Booster Box": 2
    },
    "contested": {
-    "RAD|Booster Box": 24,
+    "RAD|Booster Box": 25,
     "RAD|Booster Pack": 23,
     "UNL|Booster Pack": 6,
     "LGC|Booster Box": 2
@@ -1286,14 +1294,14 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 20,
-    "RAD|Booster Pack": 21,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Showdown Decks": 26,
-    "VEN|Booster Pack": 17,
-    "OGN|Booster Box": 2,
-    "VEN|Booster Box": 2
+    "RAD|Booster Box": 21,
+    "RAD|Booster Pack": 22,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Showdown Decks": 27,
+    "VEN|Booster Pack": 18,
+    "OGN|Booster Box": 3,
+    "VEN|Booster Box": 3
    }
   },
   "cobbco": {
@@ -1301,11 +1309,11 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "colestreetgamevault": {
@@ -1313,8 +1321,8 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "collgamers": {
@@ -1322,17 +1330,17 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Champion Deck (Lee Sin)": 2,
-    "OGN|Champion Deck (Viktor)": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "UNL|Pre-Rift Kit": 2,
-    "VEN|Pre-Rift Kit": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGN|Champion Deck (Lee Sin)": 3,
+    "OGN|Champion Deck (Viktor)": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "UNL|Pre-Rift Kit": 3,
+    "VEN|Pre-Rift Kit": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "commonboxgames": {
@@ -1340,20 +1348,20 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 15
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 16
    }
   },
   "commonlands": {
    "name": "Common Lands",
    "country": "US",
    "wins": {
-    "VEN|Sleeved Booster": 2
+    "VEN|Sleeved Booster": 3
    },
    "contested": {
-    "OGN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2,
-    "VEN|Sleeved Booster": 2
+    "OGN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3,
+    "VEN|Sleeved Booster": 3
    }
   },
   "creatorpultgames": {
@@ -1361,22 +1369,23 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 2,
-    "SFD|Champion Deck": 2,
-    "giftoftheriftbundle": 2
+    "RAD|Showdown Decks": 3,
+    "SFD|Champion Deck": 3,
+    "giftoftheriftbundle": 3
    }
   },
   "cromatcg": {
    "name": "Croma TCG",
    "country": "US",
    "wins": {
-    "RAD|Showdown Decks": 2
+    "RAD|Showdown Decks": 3
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "OGN|Booster Box": 1
    }
   },
   "cryptmtg": {
@@ -1388,13 +1397,13 @@
     "giftoftheriftbundle": 1
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 25,
+    "OGS|Proving Grounds": 27,
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 26,
     "giftoftheriftbundle": 1
    }
   },
@@ -1403,16 +1412,16 @@
    "country": "AU",
    "wins": {
     "VEN|Booster Box": 3,
-    "VEN|Bundle": 10,
-    "VEN|Booster Pack": 8
+    "VEN|Bundle": 11,
+    "VEN|Booster Pack": 9
    },
    "contested": {
-    "UNL|Champion Deck (Vex) Display": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26,
-    "VEN|Showdown Decks Display": 26
+    "UNL|Champion Deck (Vex) Display": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27,
+    "VEN|Showdown Decks Display": 27
    }
   },
   "dadiemattoncini": {
@@ -1420,9 +1429,9 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3
    }
   },
   "danireon": {
@@ -1430,15 +1439,15 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
+    "OGN|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
     "UNL|Booster Box": 6,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 23,
-    "RAD|Booster Pack": 16,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 24,
+    "RAD|Booster Pack": 17,
     "VEN|Booster Pack": 6
    }
   },
@@ -1447,16 +1456,16 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "OGN|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Box": 6,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 23,
-    "RAD|Booster Pack": 16,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 24,
+    "RAD|Booster Pack": 17,
     "VEN|Booster Pack": 6
    }
   },
@@ -1465,24 +1474,24 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "VEN|Bundle": 2
+    "VEN|Bundle": 3
    }
   },
   "dealsndragons": {
    "name": "Deals N Dragons",
    "country": "US",
    "wins": {
-    "OGN|Champion Deck (Lee Sin)": 2,
-    "OGN|Champion Deck (Viktor)": 2
+    "OGN|Champion Deck (Lee Sin)": 3,
+    "OGN|Champion Deck (Viktor)": 3
    },
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 2,
-    "OGN|Champion Deck (Viktor)": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2
+    "OGN|Champion Deck (Lee Sin)": 3,
+    "OGN|Champion Deck (Viktor)": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3
    }
   },
   "deckoutgaming": {
@@ -1491,30 +1500,30 @@
    "wins": {},
    "contested": {
     "RAD|Booster Box": 7,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "defconduezero": {
    "name": "DEFCON 2.0",
    "country": "EU",
    "wins": {
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Pre-Rift Kit": 2
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Pre-Rift Kit": 3
    },
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "UNL|Pre-Rift Kit": 2,
-    "VEN|Bundle": 2,
-    "VEN|Pre-Rift Kit": 2,
-    "VEN|Showdown Decks": 2
+    "OGS|Proving Grounds": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "UNL|Pre-Rift Kit": 3,
+    "VEN|Bundle": 3,
+    "VEN|Pre-Rift Kit": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "derpycards": {
@@ -1522,12 +1531,12 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 16
+    "OGN|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 17
    }
   },
   "desertcitygames": {
@@ -1540,7 +1549,7 @@
    "contested": {
     "OGN|Booster Pack": 17,
     "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 21
+    "RAD|Showdown Decks": 22
    }
   },
   "dkscards": {
@@ -1549,47 +1558,47 @@
    "wins": {
     "VEN|Booster Pack": 17,
     "RAD|Pre-Rift Kit": 3,
-    "OGN|Booster Pack": 2
+    "OGN|Booster Pack": 3
    },
    "contested": {
     "RAD|Booster Box": 9,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 8,
-    "RAD|Pre-Rift Kit": 14,
-    "RAD|Showdown Decks": 26,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 9,
+    "RAD|Pre-Rift Kit": 15,
+    "RAD|Showdown Decks": 27,
     "VEN|Booster Box": 12,
-    "VEN|Booster Pack": 26,
-    "OGN|Booster Pack": 2
+    "VEN|Booster Pack": 27,
+    "OGN|Booster Pack": 3
    }
   },
   "doubleinfinitygaming": {
    "name": "Double Infinity Gaming",
    "country": "US",
    "wins": {
-    "RAD|Pre-Rift Kit": 2,
+    "RAD|Pre-Rift Kit": 3,
     "giftoftheriftbundle": 1,
-    "UNL|Booster Box": 1
+    "UNL|Booster Box": 2
    },
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "UNL|Booster Box": 2,
-    "VEN|Booster Box": 2,
-    "giftoftheriftbundle": 2
+    "OGS|Proving Grounds": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "UNL|Booster Box": 3,
+    "VEN|Booster Box": 3,
+    "giftoftheriftbundle": 3
    }
   },
   "dracaugames": {
    "name": "DracauGames",
    "country": "EU",
    "wins": {
-    "VEN|Bundle": 1
+    "VEN|Bundle": 2
    },
    "contested": {
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "dragoncard": {
@@ -1597,9 +1606,9 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "OGS|Proving Grounds": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "drawforturn": {
@@ -1608,7 +1617,7 @@
    "wins": {},
    "contested": {
     "VEN|Booster Box": 21,
-    "VEN|Showdown Decks": 26,
+    "VEN|Showdown Decks": 27,
     "OGN|Booster Box": 5,
     "LGC|Pre-Rift Kit": 2
    }
@@ -1618,10 +1627,10 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3
    }
   },
   "eacollectibles": {
@@ -1629,23 +1638,25 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 23,
-    "SFD|Booster Box": 11
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 24,
+    "SFD|Booster Box": 12
    }
   },
   "eclipsegames": {
    "name": "Eclipse Games",
    "country": "CA",
-   "wins": {},
+   "wins": {
+    "OGN|Booster Box": 1
+   },
    "contested": {
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 6
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 7
    }
   },
   "elduelista": {
@@ -1653,35 +1664,35 @@
    "country": "EU",
    "wins": {
     "OGS|Proving Grounds": 20,
-    "RAD|Booster Box": 3,
+    "RAD|Booster Box": 4,
     "RAD|Booster Case": 1,
-    "giftoftheriftbundle": 2
+    "giftoftheriftbundle": 3
    },
    "contested": {
     "OGS|Proving Grounds": 20,
-    "UNL|Champion Deck (Vi)": 26,
-    "RAD|Booster Box": 6,
-    "RAD|Booster Case": 6,
-    "giftoftheriftbundle": 7,
-    "VEN|Showdown Decks": 2
+    "UNL|Champion Deck (Vi)": 27,
+    "RAD|Booster Box": 7,
+    "RAD|Booster Case": 7,
+    "giftoftheriftbundle": 8,
+    "VEN|Showdown Decks": 3
    }
   },
   "elementalarcade": {
    "name": "Elemental Arcade",
    "country": "AU",
    "wins": {
-    "SFD|Champion Deck (Fiora) Display": 26,
-    "SFD|Champion Deck (Rumble) Display": 26,
-    "UNL|Champion Deck (Vi) Display": 26,
-    "VEN|Showdown Decks Display": 26
+    "SFD|Champion Deck (Fiora) Display": 27,
+    "SFD|Champion Deck (Rumble) Display": 27,
+    "UNL|Champion Deck (Vi) Display": 27,
+    "VEN|Showdown Decks Display": 27
    },
    "contested": {
-    "RAD|Showdown Decks Display": 26,
-    "SFD|Champion Deck (Fiora) Display": 26,
-    "SFD|Champion Deck (Rumble) Display": 26,
+    "RAD|Showdown Decks Display": 27,
+    "SFD|Champion Deck (Fiora) Display": 27,
+    "SFD|Champion Deck (Rumble) Display": 27,
     "UNL|Booster Box": 1,
-    "UNL|Champion Deck (Vi) Display": 26,
-    "VEN|Showdown Decks Display": 26
+    "UNL|Champion Deck (Vi) Display": 27,
+    "VEN|Showdown Decks Display": 27
    }
   },
   "emmettstoystop": {
@@ -1689,11 +1700,11 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 25,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 26,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
     "RAD|Bundle": 22
    }
   },
@@ -1702,15 +1713,15 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "SFD|Booster Box": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "UNL|Booster Box": 12
+    "OGN|Booster Box": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "SFD|Booster Box": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "UNL|Booster Box": 13
    }
   },
   "endturn": {
@@ -1719,45 +1730,45 @@
    "wins": {},
    "contested": {
     "VEN|Bundle": 15,
-    "VEN|Showdown Decks": 25
+    "VEN|Showdown Decks": 26
    }
   },
   "enterthebattlefield": {
    "name": "Enter the Battlefield",
    "country": "CA",
    "wins": {
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "UNL|Booster Pack": 24,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "UNL|Booster Pack": 25,
     "UNL|Booster Box": 9
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGN|Booster Pack": 26,
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 25,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Box": 26,
-    "SFD|Booster Pack": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Booster Pack": 24,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26
+    "OGN|Booster Box": 27,
+    "OGN|Booster Pack": 27,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 26,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Box": 27,
+    "SFD|Booster Pack": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Booster Pack": 25,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "envycardstore": {
    "name": "Envy Cards",
    "country": "US",
    "wins": {
-    "SFD|Champion Deck": 2
+    "SFD|Champion Deck": 3
    },
    "contested": {
-    "SFD|Champion Deck": 2,
-    "VEN|Showdown Decks": 2
+    "SFD|Champion Deck": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "epictradingcollectibles": {
@@ -1765,30 +1776,30 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "UNL|Booster Pack": 2,
-    "UNL|Champion Deck": 2,
-    "VEN|Booster Pack": 2
+    "UNL|Booster Pack": 3,
+    "UNL|Champion Deck": 3,
+    "VEN|Booster Pack": 3
    }
   },
   "espercards": {
    "name": "Esper Cards & Games",
    "country": "CA",
    "wins": {
-    "SFD|Champion Deck": 26
+    "SFD|Champion Deck": 27
    },
    "contested": {
-    "OGN|Booster Box": 21,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 21,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Pack": 25,
-    "SFD|Champion Deck": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Champion Deck": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 13,
-    "UNL|Booster Pack": 23,
-    "OGN|Booster Pack": 17
+    "OGN|Booster Box": 22,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 22,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Pack": 26,
+    "SFD|Champion Deck": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Champion Deck": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 14,
+    "UNL|Booster Pack": 24,
+    "OGN|Booster Pack": 18
    }
   },
   "eternalgameschesterfield": {
@@ -1796,20 +1807,20 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "UNL|Booster Box": 2,
-    "VEN|Showdown Decks": 2
+    "UNL|Booster Box": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "eternalmagic": {
    "name": "Eternal Magic",
    "country": "AU",
    "wins": {
-    "SFD|Booster Box": 21,
+    "SFD|Booster Box": 22,
     "OGN|Booster Box": 1
    },
    "contested": {
-    "OGN|Champion Deck (Viktor)": 26,
-    "SFD|Booster Box": 26,
+    "OGN|Champion Deck (Viktor)": 27,
+    "SFD|Booster Box": 27,
     "OGN|Booster Box": 1
    }
   },
@@ -1818,16 +1829,16 @@
    "country": "UK",
    "wins": {
     "VEN|Showdown Decks": 24,
-    "OGN|Booster Pack": 19
+    "OGN|Booster Pack": 20
    },
    "contested": {
     "OGN|Booster Box": 14,
     "OGN|Champion Deck (Lee Sin)": 19,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Pack": 19
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Pack": 20
    }
   },
   "evlutcg": {
@@ -1835,31 +1846,31 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "OGN|Champion Deck (Jinx)": 2,
-    "OGN|Champion Deck (Lee Sin)": 2,
-    "OGN|Champion Deck (Viktor)": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Booster Case": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2
+    "OGN|Champion Deck (Jinx)": 3,
+    "OGN|Champion Deck (Lee Sin)": 3,
+    "OGN|Champion Deck (Viktor)": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Booster Case": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3
    }
   },
   "evolvecardshop": {
    "name": "Evolve Card Shop",
    "country": "US",
    "wins": {
-    "UNL|Bundle": 2
+    "UNL|Bundle": 3
    },
    "contested": {
-    "SFD|Booster Box": 2,
-    "SFD|Booster Pack": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Bundle": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Bundle": 2
+    "SFD|Booster Box": 3,
+    "SFD|Booster Pack": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Bundle": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Bundle": 3
    }
   },
   "exorgames": {
@@ -1867,14 +1878,14 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Bundle": 26,
+    "OGS|Proving Grounds": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Bundle": 27,
     "riftboundchampiondeckvi": 22,
     "riftboundshowdowndeckevelynnvsseraphine": 22,
-    "RAD|Showdown Decks": 4,
-    "UNL|Champion Deck (Vi)": 4,
-    "VEN|Showdown Decks": 4
+    "RAD|Showdown Decks": 5,
+    "UNL|Champion Deck (Vi)": 5,
+    "VEN|Showdown Decks": 5
    }
   },
   "fabfoundry": {
@@ -1882,16 +1893,16 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "UNL|Pre-Rift Kit": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2,
-    "VEN|Booster Box": 1
+    "OGN|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "UNL|Pre-Rift Kit": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3,
+    "VEN|Booster Box": 2
    }
   },
   "fabledtavern": {
@@ -1899,15 +1910,15 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "fabricatorsforge": {
@@ -1927,46 +1938,46 @@
    "name": "Face to Face Games",
    "country": "CA",
    "wins": {
-    "RAD|Pre-Rift Kit": 18,
+    "RAD|Pre-Rift Kit": 19,
     "VEN|Showdown Decks": 9,
     "VEN|Booster Pack": 3,
     "SFD|Booster Pack": 7,
     "RAD|Booster Pack": 11,
     "RAD|Booster Box": 3,
-    "RAD|Bundle": 2,
-    "OGN|Champion Deck (Viktor)": 1
+    "RAD|Bundle": 3,
+    "OGN|Champion Deck (Viktor)": 2
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Pre-Rift Kit": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Box": 26,
-    "SFD|Booster Pack": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Pre-Rift Kit": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Box": 27,
+    "SFD|Booster Pack": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
     "OGN|Booster Box": 7,
-    "OGN|Champion Deck (Viktor)": 1
+    "OGN|Champion Deck (Viktor)": 2
    }
   },
   "factorycardstcg": {
    "name": "Factory Cards",
    "country": "EU",
    "wins": {
-    "RAD|Pre-Rift Kit": 2,
-    "giftoftheriftbundle": 1
+    "RAD|Pre-Rift Kit": 3,
+    "giftoftheriftbundle": 2
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "VEN|Showdown Decks": 2,
-    "giftoftheriftbundle": 1
+    "RAD|Booster Box": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "VEN|Showdown Decks": 3,
+    "giftoftheriftbundle": 2
    }
   },
   "fafnirshoard": {
@@ -1974,36 +1985,36 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Pack": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
-    "VEN|Booster Pack": 25,
-    "OGN|Booster Box": 18
+    "OGN|Booster Pack": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
+    "VEN|Booster Pack": 26,
+    "OGN|Booster Box": 19
    }
   },
   "fantasyforged": {
    "name": "Fantasy Forged",
    "country": "CA",
    "wins": {
-    "VEN|Showdown Decks Display": 8,
-    "OGN|Champion Deck (Viktor)": 1,
-    "VEN|Bundle": 1
+    "VEN|Showdown Decks Display": 9,
+    "OGN|Champion Deck (Viktor)": 2,
+    "VEN|Bundle": 2
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGS|Proving Grounds": 26,
-    "SFD|Booster Box": 26,
-    "SFD|Booster Pack": 26,
+    "OGN|Booster Box": 27,
+    "OGS|Proving Grounds": 27,
+    "SFD|Booster Box": 27,
+    "SFD|Booster Pack": 27,
     "SFD|Champion Deck (Fiora)": 15,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Booster Pack": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
-    "VEN|Showdown Decks Display": 26,
-    "VEN|Bundle": 18,
-    "OGN|Champion Deck (Lee Sin)": 1,
-    "OGN|Champion Deck (Viktor)": 1
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Booster Pack": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
+    "VEN|Showdown Decks Display": 27,
+    "VEN|Bundle": 19,
+    "OGN|Champion Deck (Lee Sin)": 2,
+    "OGN|Champion Deck (Viktor)": 2
    }
   },
   "fireanddice": {
@@ -2014,7 +2025,7 @@
    },
    "contested": {
     "UNL|Champion Deck (Vi)": 3,
-    "giftoftheriftbundle": 8
+    "giftoftheriftbundle": 9
    }
   },
   "five6gaming": {
@@ -2026,14 +2037,14 @@
    },
    "contested": {
     "RAD|Booster Box": 5,
-    "RAD|Booster Pack": 9,
-    "RAD|Showdown Decks": 9,
+    "RAD|Booster Pack": 10,
+    "RAD|Showdown Decks": 10,
     "SFD|Booster Pack": 3,
     "UNL|Booster Box": 9,
-    "UNL|Champion Deck (Vi)": 9,
-    "VEN|Booster Box": 9,
-    "VEN|Booster Pack": 9,
-    "VEN|Bundle": 9
+    "UNL|Champion Deck (Vi)": 10,
+    "VEN|Booster Box": 10,
+    "VEN|Booster Pack": 10,
+    "VEN|Bundle": 10
    }
   },
   "flukeandbox": {
@@ -2041,13 +2052,13 @@
    "country": "AU",
    "wins": {
     "OGN|Booster Box": 19,
-    "OGN|Champion Deck (Jinx)": 4
+    "OGN|Champion Deck (Jinx)": 5
    },
    "contested": {
-    "SFD|Booster Box": 26,
-    "VEN|Booster Box": 26,
-    "OGN|Booster Box": 21,
-    "OGN|Champion Deck (Jinx)": 4
+    "SFD|Booster Box": 27,
+    "VEN|Booster Box": 27,
+    "OGN|Booster Box": 22,
+    "OGN|Champion Deck (Jinx)": 5
    }
   },
   "fourelements": {
@@ -2055,19 +2066,20 @@
    "country": "SG",
    "wins": {
     "SFD|Booster Box": 4,
-    "SFD|Champion Deck (Rumble)": 26,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Box": 4,
     "VEN|Booster Box": 7,
-    "OGN|Booster Box": 2
+    "OGN|Booster Box": 3
    },
    "contested": {
     "SFD|Booster Box": 4,
-    "SFD|Champion Deck (Rumble)": 26,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Box": 4,
-    "VEN|Booster Box": 15,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 14,
-    "OGN|Booster Box": 2
+    "VEN|Booster Box": 16,
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 15,
+    "OGN|Booster Box": 3,
+    "RAD|Showdown Decks": 1
    }
   },
   "freshbrewed": {
@@ -2075,9 +2087,9 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "RAD|Booster Pack": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Booster Pack": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "fusiongamingonline": {
@@ -2087,19 +2099,19 @@
     "RAD|Booster Pack": 10
    },
    "contested": {
-    "OGN|Booster Pack": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
+    "OGN|Booster Pack": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
     "RAD|Bundle": 25,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Pack": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Booster Pack": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 23,
-    "VEN|Booster Box": 23
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Pack": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Booster Pack": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 24,
+    "VEN|Booster Box": 24
    }
   },
   "gachaboba": {
@@ -2107,36 +2119,36 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Pack": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "SFD|Booster Pack": 26,
-    "VEN|Showdown Decks": 26
+    "OGN|Booster Pack": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "SFD|Booster Pack": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "galactictoys": {
    "name": "Galactic Toys & Collectibles",
    "country": "US",
    "wins": {
-    "RAD|Booster Pack": 2,
-    "VEN|Booster Pack": 1
+    "RAD|Booster Pack": 3,
+    "VEN|Booster Pack": 2
    },
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Booster Pack": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Booster Pack": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Booster Pack": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Booster Pack": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "game3": {
@@ -2144,14 +2156,14 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 18,
+    "OGS|Proving Grounds": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 19,
     "RAD|Bundle": 16,
-    "VEN|Booster Box": 18,
-    "RAD|Booster Pack": 15,
-    "VEN|Booster Pack": 15
+    "VEN|Booster Box": 19,
+    "RAD|Booster Pack": 16,
+    "VEN|Booster Pack": 16
    }
   },
   "gamenerdz": {
@@ -2159,7 +2171,7 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 26
+    "RAD|Booster Box": 27
    }
   },
   "gameostorus": {
@@ -2167,38 +2179,38 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "OGS|Proving Grounds": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Booster Pack": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Booster Pack": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Pre-Rift Kit": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "OGS|Proving Grounds": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Booster Pack": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Booster Pack": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Pre-Rift Kit": 3
    }
   },
   "gamerealm": {
    "name": "Game Realm",
    "country": "US",
    "wins": {
-    "UNL|Booster Pack": 2
+    "UNL|Booster Pack": 3
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Booster Pack": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Booster Pack": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "gamersgauntlet": {
@@ -2206,21 +2218,22 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "UNL|Champion Deck": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "UNL|Champion Deck": 3
    }
   },
   "gamersguildusa": {
    "name": "Gamers Guild AZ",
    "country": "US",
    "wins": {
-    "VEN|Showdown Decks": 2
+    "VEN|Showdown Decks": 2,
+    "RAD|Bundle": 1
    },
    "contested": {
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "gamerslair": {
@@ -2238,27 +2251,27 @@
    "country": "UK",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
-    "OGS|Proving Grounds": 20
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
+    "OGS|Proving Grounds": 21
    }
   },
   "gamerzparadize": {
    "name": "GamerzParadize",
    "country": "EU",
    "wins": {
-    "LGC|Champion Deck (Garen)": 2,
-    "OGN|Booster Pack": 2
+    "LGC|Champion Deck (Garen)": 3,
+    "OGN|Booster Pack": 3
    },
    "contested": {
-    "LGC|Booster Box": 2,
-    "LGC|Champion Deck (Garen)": 2,
-    "LGC|Proving Grounds 2nd Edition": 2,
-    "OGN|Booster Pack": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Pre-Rift Kit": 2,
+    "LGC|Booster Box": 3,
+    "LGC|Champion Deck (Garen)": 3,
+    "LGC|Proving Grounds 2nd Edition": 3,
+    "OGN|Booster Pack": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Pre-Rift Kit": 3,
     "RAD|Showdown Decks": 2
    }
   },
@@ -2270,7 +2283,7 @@
     "LGC|Proving Grounds 2nd Edition": 3,
     "RAD|Booster Box": 6,
     "VEN|Booster Box": 1,
-    "VEN|Showdown Decks": 17,
+    "VEN|Showdown Decks": 18,
     "REC|Booster Box": 5,
     "REC|Bundle": 7,
     "REC|Champion Deck": 7,
@@ -2280,23 +2293,23 @@
    "contested": {
     "OGN|Booster Box": 21,
     "OGN|Booster Pack": 23,
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
     "SFD|Champion Deck (Rumble)": 24,
-    "UNL|Booster Box": 26,
-    "UNL|Booster Pack": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
-    "LGC|Proving Grounds 2nd Edition": 11,
+    "UNL|Booster Box": 27,
+    "UNL|Booster Pack": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
+    "LGC|Proving Grounds 2nd Edition": 12,
     "REC|Booster Box": 5,
-    "REC|Bundle": 15,
+    "REC|Bundle": 16,
     "REC|Champion Deck": 7,
-    "REC|Champion Deck (Shyvana)": 2,
-    "REC|Champion Deck (Vayne)": 2
+    "REC|Champion Deck (Shyvana)": 3,
+    "REC|Champion Deck (Vayne)": 3
    }
   },
   "gamesalley": {
@@ -2304,8 +2317,8 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "SFD|Champion Deck (Rumble)": 2,
-    "VEN|Bundle": 2
+    "SFD|Champion Deck (Rumble)": 3,
+    "VEN|Bundle": 3
    }
   },
   "gamesandstuffonline": {
@@ -2313,10 +2326,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Champion Deck (Jinx)": 2,
-    "RAD|Booster Box": 2,
-    "UNL|Champion Deck (Vi)": 2
+    "OGN|Booster Box": 3,
+    "OGN|Champion Deck (Jinx)": 3,
+    "RAD|Booster Box": 3,
+    "UNL|Champion Deck (Vi)": 3
    }
   },
   "gamesarena88": {
@@ -2324,21 +2337,21 @@
    "country": "AU",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Showdown Decks": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "gamesavenue": {
    "name": "Games Avenue",
    "country": "EU",
    "wins": {
-    "RAD|Bundle": 2,
+    "RAD|Bundle": 3,
     "VEN|Bundle": 1
    },
    "contested": {
-    "RAD|Bundle": 2,
+    "RAD|Bundle": 3,
     "VEN|Bundle": 1,
-    "VEN|Showdown Decks": 2
+    "VEN|Showdown Decks": 3
    }
   },
   "gatecitygames": {
@@ -2346,9 +2359,9 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "gatorscardden": {
@@ -2362,24 +2375,24 @@
     "RAD|Showdown Decks": 20,
     "SFD|Booster Box": 1,
     "SFD|Booster Pack": 17,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Box": 1,
     "UNL|Booster Pack": 24
    },
    "contested": {
     "RAD|Booster Box": 1,
-    "RAD|Booster Pack": 26,
+    "RAD|Booster Pack": 27,
     "RAD|Bundle": 23,
     "RAD|Pre-Rift Kit": 1,
-    "RAD|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
     "SFD|Booster Box": 1,
     "SFD|Booster Pack": 17,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Box": 1,
     "UNL|Booster Pack": 24,
-    "UNL|Champion Deck (Vi)": 26,
+    "UNL|Champion Deck (Vi)": 27,
     "VEN|Booster Box": 1
    }
   },
@@ -2405,14 +2418,14 @@
     "RAD|Booster Box": 7
    },
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 22,
-    "RAD|Bundle": 26,
-    "RAD|Pre-Rift Kit": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 23,
+    "RAD|Bundle": 27,
+    "RAD|Pre-Rift Kit": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
     "OGN|Sleeved Booster": 8
    }
   },
@@ -2421,28 +2434,28 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3
    }
   },
   "geeksheaven": {
    "name": "Geeksheaven",
    "country": "EU",
    "wins": {
-    "secretgardenbox": 2
+    "secretgardenbox": 3
    },
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "UNL|Starter Set": 2,
-    "VEN|Showdown Decks": 2,
-    "giftoftheriftbundle": 2,
-    "secretgardenbox": 2
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "UNL|Starter Set": 3,
+    "VEN|Showdown Decks": 3,
+    "giftoftheriftbundle": 3,
+    "secretgardenbox": 3
    }
   },
   "gglegends": {
@@ -2451,8 +2464,8 @@
    "wins": {},
    "contested": {
     "RAD|Booster Box": 6,
-    "RAD|Showdown Decks": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Showdown Decks": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "glhfinc": {
@@ -2460,11 +2473,11 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "VEN|Bundle": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "VEN|Bundle": 3
    }
   },
   "goblingaming": {
@@ -2472,59 +2485,59 @@
    "country": "UK",
    "wins": {
     "RAD|Booster Pack": 23,
-    "VEN|Booster Pack": 26,
+    "VEN|Booster Pack": 27,
     "VEN|Booster Box": 6,
-    "VEN|Bundle": 16
+    "VEN|Bundle": 17
    },
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Showdown Decks": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Showdown Decks": 27,
     "SFD|Champion Deck (Rumble)": 6,
-    "UNL|Champion Deck (Vi)": 26,
+    "UNL|Champion Deck (Vi)": 27,
     "VEN|Booster Box": 7,
-    "VEN|Booster Pack": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Bundle": 18
+    "VEN|Booster Pack": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Bundle": 19
    }
   },
   "grandjgames": {
    "name": "Grand J Games",
    "country": "AU",
    "wins": {
-    "RAD|Booster Box": 1,
-    "VEN|Booster Box": 1
+    "RAD|Booster Box": 2,
+    "VEN|Booster Box": 2
    },
    "contested": {
-    "RAD|Booster Box": 23,
-    "RAD|Bundle": 23,
-    "RAD|Showdown Decks": 23,
-    "VEN|Booster Box": 23
+    "RAD|Booster Box": 24,
+    "RAD|Bundle": 24,
+    "RAD|Showdown Decks": 24,
+    "VEN|Booster Box": 24
    }
   },
   "grognardgames": {
    "name": "Grognard Games",
    "country": "US",
    "wins": {
-    "SFD|Champion Deck (Rumble)": 26
+    "SFD|Champion Deck (Rumble)": 27
    },
    "contested": {
-    "SFD|Champion Deck (Rumble)": 26
+    "SFD|Champion Deck (Rumble)": 27
    }
   },
   "groovycollectables": {
    "name": "Groovy Collectables",
    "country": "AU",
    "wins": {
-    "VEN|Showdown Decks": 26,
+    "VEN|Showdown Decks": 27,
     "UNL|Champion Deck (Vex)": 2
    },
    "contested": {
     "UNL|Champion Deck (Vex)": 16,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26,
-    "VEN|Showdown Decks Display": 26
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27,
+    "VEN|Showdown Decks Display": 27
    }
   },
   "gsgameon": {
@@ -2532,25 +2545,25 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "gtgames": {
    "name": "GT Games",
    "country": "CA",
    "wins": {
-    "SFD|Champion Deck": 26,
-    "VEN|Booster Case": 16
+    "SFD|Champion Deck": 27,
+    "VEN|Booster Case": 17
    },
    "contested": {
     "OGN|Booster Pack": 1,
-    "SFD|Champion Deck": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 25,
-    "VEN|Showdown Decks": 26,
+    "SFD|Champion Deck": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 26,
+    "VEN|Showdown Decks": 27,
     "RAD|Booster Box": 10,
-    "VEN|Booster Case": 16
+    "VEN|Booster Case": 17
    }
   },
   "guubuu": {
@@ -2558,37 +2571,37 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "haikupop": {
    "name": "Haiku Pop",
    "country": "US",
    "wins": {
-    "UNL|Pre-Rift Kit": 2
+    "UNL|Pre-Rift Kit": 3
    },
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "UNL|Pre-Rift Kit": 2
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "UNL|Pre-Rift Kit": 3
    }
   },
   "hastygoblingames": {
    "name": "Hasty Goblin Games",
    "country": "US",
    "wins": {
-    "UNL|Champion Deck": 26
+    "UNL|Champion Deck": 27
    },
    "contested": {
     "RAD|Booster Box": 3,
-    "UNL|Champion Deck": 26,
-    "VEN|Showdown Decks": 26
+    "UNL|Champion Deck": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "hauntedgamecafeus": {
@@ -2596,12 +2609,12 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "hbtcollectables": {
@@ -2622,16 +2635,16 @@
    "name": "Heartforcards",
    "country": "EU",
    "wins": {
-    "OGN|Booster Box": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Booster Pack": 2
+    "OGN|Booster Box": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Booster Pack": 3
    },
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGS|Proving Grounds": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGS|Proving Grounds": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "hfxgames": {
@@ -2639,8 +2652,8 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Showdown Decks": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "hobbiesville": {
@@ -2649,19 +2662,22 @@
    "wins": {
     "UNL|Booster Box": 14,
     "RAD|Bundle": 6,
-    "RAD|Pre-Rift Kit": 3
+    "RAD|Pre-Rift Kit": 3,
+    "SFD|Booster Box": 1
    },
    "contested": {
-    "OGS|Proving Grounds": 24,
+    "OGS|Proving Grounds": 25,
     "RAD|Bundle": 22,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 19,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 20,
     "VEN|Pre-Rift Kit": 17,
-    "VEN|Showdown Decks": 26,
+    "VEN|Showdown Decks": 27,
     "UNL|Booster Box": 15,
     "RAD|Pre-Rift Kit": 3,
     "LGC|Proving Grounds 2nd Edition": 1,
-    "RAD|Booster Box": 2
+    "RAD|Booster Box": 3,
+    "OGN|Booster Box": 1,
+    "SFD|Booster Box": 1
    }
   },
   "hobbiesvilleca": {
@@ -2671,19 +2687,22 @@
     "LGC|Proving Grounds 2nd Edition": 1,
     "RAD|Bundle": 2,
     "RAD|Pre-Rift Kit": 3,
-    "UNL|Booster Box": 1
+    "UNL|Booster Box": 1,
+    "SFD|Booster Box": 1
    },
    "contested": {
-    "OGS|Proving Grounds": 24,
+    "OGS|Proving Grounds": 25,
     "RAD|Bundle": 22,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 19,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 20,
     "VEN|Pre-Rift Kit": 17,
-    "VEN|Showdown Decks": 26,
+    "VEN|Showdown Decks": 27,
     "LGC|Proving Grounds 2nd Edition": 2,
     "UNL|Booster Box": 15,
     "RAD|Pre-Rift Kit": 3,
-    "RAD|Booster Box": 2
+    "RAD|Booster Box": 3,
+    "OGN|Booster Box": 1,
+    "SFD|Booster Box": 1
    }
   },
   "hobbycollectorsaustralia": {
@@ -2692,25 +2711,27 @@
    "wins": {
     "UNL|Booster Pack": 1,
     "RAD|Booster Pack": 15,
-    "VEN|Booster Pack": 8,
+    "VEN|Booster Pack": 9,
     "OGN|Booster Pack": 6,
-    "SFD|Booster Pack": 2
+    "SFD|Booster Pack": 3,
+    "OGN|Booster Box": 1
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "OGN|Booster Box": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Pack": 1,
-    "UNL|Champion Deck (Vex)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26,
-    "SFD|Booster Pack": 11,
-    "SFD|Booster Box": 18,
-    "RAD|Booster Pack": 17,
-    "RAD|Bundle": 14,
-    "VEN|Booster Pack": 8,
-    "OGN|Booster Pack": 6
+    "UNL|Champion Deck (Vex)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27,
+    "SFD|Booster Pack": 12,
+    "SFD|Booster Box": 19,
+    "RAD|Booster Pack": 18,
+    "RAD|Bundle": 15,
+    "VEN|Booster Pack": 9,
+    "OGN|Booster Pack": 6,
+    "UNL|Booster Box": 1
    }
   },
   "hobbyexpert": {
@@ -2719,7 +2740,7 @@
    "wins": {},
    "contested": {
     "RAD|Showdown Decks": 8,
-    "VEN|Showdown Decks": 4
+    "VEN|Showdown Decks": 5
    }
   },
   "hobbysag": {
@@ -2727,7 +2748,7 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "UNL|Champion Deck (Vi)": 26
+    "UNL|Champion Deck (Vi)": 27
    }
   },
   "hpwcards": {
@@ -2737,22 +2758,22 @@
     "OGN|Booster Box": 6
    },
    "contested": {
-    "OGN|Booster Box": 26
+    "OGN|Booster Box": 27
    }
   },
   "hypercollectiblestcg": {
    "name": "Hyper Collectibles",
    "country": "US",
    "wins": {
-    "OGN|Champion Deck (Jinx)": 2
+    "OGN|Champion Deck (Jinx)": 3
    },
    "contested": {
-    "LGC|Booster Box": 2,
-    "OGN|Champion Deck (Jinx)": 2,
+    "LGC|Booster Box": 3,
+    "OGN|Champion Deck (Jinx)": 3,
     "RAD|Booster Box": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "ikigaicomicstienda": {
@@ -2760,10 +2781,10 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "impactgamingcenter": {
@@ -2771,8 +2792,8 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27
    }
   },
   "impactleague": {
@@ -2780,39 +2801,40 @@
    "country": "UK",
    "wins": {
     "OGN|Booster Box": 3,
-    "VEN|Booster Pack": 26,
-    "SFD|Booster Box": 10,
+    "VEN|Booster Pack": 27,
+    "SFD|Booster Box": 11,
     "VEN|Bundle": 2,
-    "UNL|Booster Box": 2
+    "UNL|Booster Box": 3
    },
    "contested": {
     "OGN|Booster Box": 3,
-    "RAD|Booster Box": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
     "VEN|Bundle": 4,
     "VEN|Showdown Decks": 18,
-    "SFD|Booster Box": 10,
-    "UNL|Booster Box": 2
+    "SFD|Booster Box": 11,
+    "UNL|Booster Box": 3
    }
   },
   "infinitycards": {
    "name": "Infinity Cards & Collectibles",
    "country": "CA",
    "wins": {
-    "VEN|Booster Box": 7
+    "VEN|Booster Box": 7,
+    "OGN|Booster Pack": 1
    },
    "contested": {
     "RAD|Booster Pack": 11,
-    "RAD|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
     "UNL|Champion Deck (Vi)": 13,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 21,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 6,
-    "OGN|Booster Pack": 1,
-    "giftoftheriftbundle": 1
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 22,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 7,
+    "OGN|Booster Pack": 2,
+    "giftoftheriftbundle": 2
    }
   },
   "inngames": {
@@ -2820,7 +2842,7 @@
    "country": "AU",
    "wins": {},
    "contested": {
-    "UNL|Champion Deck (Vex)": 26
+    "UNL|Champion Deck (Vex)": 27
    }
   },
   "invasioninc": {
@@ -2831,11 +2853,11 @@
     "VEN|Booster Box": 5
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "RAD|Booster Box": 13,
+    "OGS|Proving Grounds": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "RAD|Booster Box": 14,
     "OGN|Booster Box": 3
    }
   },
@@ -2845,11 +2867,11 @@
    "wins": {},
    "contested": {
     "OGN|Booster Box": 24,
-    "OGS|Proving Grounds": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
+    "OGS|Proving Grounds": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
     "VEN|Bundle": 6,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "itstimecards": {
@@ -2857,12 +2879,12 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
     "SFD|Booster Box": 2,
     "VEN|Booster Box": 2,
-    "VEN|Showdown Decks": 2
+    "VEN|Showdown Decks": 3
    }
   },
   "j2games": {
@@ -2870,9 +2892,9 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Pack": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Pack": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "jacksonqueen": {
@@ -2880,23 +2902,23 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGN|Booster Pack": 26,
-    "OGN|Champion Deck (Lee Sin)": 26,
+    "OGN|Booster Box": 27,
+    "OGN|Booster Pack": 27,
+    "OGN|Champion Deck (Lee Sin)": 27,
     "OGS|Proving Grounds": 20,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 15,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 16,
     "RAD|Bundle": 13,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Box": 26,
-    "SFD|Booster Pack": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Booster Box": 26,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Box": 27,
+    "SFD|Booster Pack": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Booster Box": 27,
     "UNL|Champion Deck (Vi)": 25,
-    "VEN|Booster Box": 26,
+    "VEN|Booster Box": 27,
     "VEN|Booster Pack": 22,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "jandjgamingfactory": {
@@ -2905,30 +2927,30 @@
    "wins": {},
    "contested": {
     "OGN|Booster Box": 1,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3
    }
   },
   "jawbreakers": {
    "name": "jawbreakers",
    "country": "US",
    "wins": {
-    "OGN|Sleeved Booster": 2
+    "OGN|Sleeved Booster": 3
    },
    "contested": {
-    "OGN|Sleeved Booster": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2,
-    "VEN|Sleeved Booster": 2
+    "OGN|Sleeved Booster": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3,
+    "VEN|Sleeved Booster": 3
    }
   },
   "jeux3dragons": {
@@ -2937,44 +2959,44 @@
    "wins": {
     "VEN|Showdown Decks": 2,
     "VEN|Booster Pack": 3,
-    "LGC|Champion Deck (Ashe)": 8,
-    "LGC|Champion Deck (Lux)": 8,
+    "LGC|Champion Deck (Ashe)": 9,
+    "LGC|Champion Deck (Lux)": 9,
     "RAD|Booster Pack": 2
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26,
-    "LGC|Booster Box": 8,
-    "LGC|Bundle": 8,
-    "LGC|Champion Deck (Ashe)": 8,
-    "LGC|Champion Deck (Garen)": 8,
-    "LGC|Champion Deck (Lux)": 8,
-    "LGC|Champion Deck (Tryndamere)": 8,
-    "REC|Booster Box": 8,
-    "REC|Bundle": 8,
+    "OGN|Booster Box": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27,
+    "LGC|Booster Box": 9,
+    "LGC|Bundle": 9,
+    "LGC|Champion Deck (Ashe)": 9,
+    "LGC|Champion Deck (Garen)": 9,
+    "LGC|Champion Deck (Lux)": 9,
+    "LGC|Champion Deck (Tryndamere)": 9,
+    "REC|Booster Box": 9,
+    "REC|Bundle": 9,
     "REC|Champion Deck": 6,
-    "REC|Champion Deck (Shyvana)": 2,
-    "REC|Champion Deck (Vayne)": 2
+    "REC|Champion Deck (Shyvana)": 3,
+    "REC|Champion Deck (Vayne)": 3
    }
   },
   "jwwcards": {
    "name": "JWW Sports Cards & Gaming",
    "country": "US",
    "wins": {
-    "UNL|Champion Deck (Vex)": 2
+    "UNL|Champion Deck (Vex)": 3
    },
    "contested": {
-    "SFD|Champion Deck (Fiora)": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "SFD|Champion Deck (Fiora)": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "kadoone": {
@@ -2987,17 +3009,17 @@
    },
    "contested": {
     "OGN|Booster Box": 22,
-    "OGS|Proving Grounds": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Pack": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 15,
-    "VEN|Booster Pack": 12,
+    "OGS|Proving Grounds": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Pack": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 16,
+    "VEN|Booster Pack": 13,
     "SFD|Booster Box": 6,
-    "LGC|Proving Grounds 2nd Edition": 7,
-    "RAD|Booster Box": 5,
+    "LGC|Proving Grounds 2nd Edition": 8,
+    "RAD|Booster Box": 6,
     "LGC|Booster Box": 1,
-    "RAD|Bundle": 2
+    "RAD|Bundle": 3
    }
   },
   "kanzengames": {
@@ -3005,17 +3027,17 @@
    "country": "CA",
    "wins": {
     "RAD|Booster Box": 2,
-    "VEN|Showdown Decks": 14,
-    "RAD|Showdown Decks": 5
+    "VEN|Showdown Decks": 15,
+    "RAD|Showdown Decks": 6
    },
    "contested": {
     "RAD|Booster Pack": 6,
     "RAD|Bundle": 6,
-    "RAD|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
     "VEN|Booster Box": 13,
     "VEN|Booster Pack": 14,
     "RAD|Booster Box": 2,
-    "VEN|Showdown Decks": 14
+    "VEN|Showdown Decks": 15
    }
   },
   "keystonegames": {
@@ -3023,20 +3045,20 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Champion Deck (Fiora)": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Booster Pack": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Champion Deck (Fiora)": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Booster Pack": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "kingdomtitans": {
@@ -3046,26 +3068,26 @@
     "VEN|Booster Case": 1,
     "OGN|Booster Box": 1,
     "RAD|Booster Case": 7,
-    "REC|Booster Box": 1,
-    "REC|Booster Case": 1
+    "REC|Booster Box": 2,
+    "REC|Booster Case": 2
    },
    "contested": {
-    "UNL|Champion Deck (Vi)": 26,
-    "OGN|Booster Box": 10,
-    "RAD|Booster Box": 17,
-    "RAD|Booster Pack": 17,
-    "RAD|Bundle": 17,
-    "RAD|Showdown Decks": 17,
-    "VEN|Booster Box": 17,
-    "VEN|Booster Case": 17,
-    "VEN|Booster Pack": 17,
-    "RAD|Booster Case": 9,
-    "giftoftheriftbundle": 8,
-    "LGC|Booster Box": 1,
-    "REC|Booster Box": 1,
-    "REC|Booster Case": 1,
-    "REC|Champion Deck (Shyvana)": 1,
-    "REC|Champion Deck (Vayne)": 1
+    "UNL|Champion Deck (Vi)": 27,
+    "OGN|Booster Box": 11,
+    "RAD|Booster Box": 18,
+    "RAD|Booster Pack": 18,
+    "RAD|Bundle": 18,
+    "RAD|Showdown Decks": 18,
+    "VEN|Booster Box": 18,
+    "VEN|Booster Case": 18,
+    "VEN|Booster Pack": 18,
+    "RAD|Booster Case": 10,
+    "giftoftheriftbundle": 9,
+    "LGC|Booster Box": 2,
+    "REC|Booster Box": 2,
+    "REC|Booster Case": 2,
+    "REC|Champion Deck (Shyvana)": 2,
+    "REC|Champion Deck (Vayne)": 2
    }
   },
   "kitchentabletcg": {
@@ -3073,11 +3095,11 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
+    "RAD|Booster Box": 3,
     "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Showdown Decks": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "kollecter": {
@@ -3088,25 +3110,25 @@
    },
    "contested": {
     "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Showdown Decks": 26,
+    "RAD|Booster Pack": 27,
+    "RAD|Showdown Decks": 27,
     "UNL|Starter Set": 7,
-    "VEN|Showdown Decks": 26,
-    "RAD|Bundle": 11,
-    "OGN|Champion Deck (Lee Sin)": 4
+    "VEN|Showdown Decks": 27,
+    "RAD|Bundle": 12,
+    "OGN|Champion Deck (Lee Sin)": 5
    }
   },
   "kollectkorner": {
    "name": "Kollect Korner",
    "country": "US",
    "wins": {
-    "REC|Bundle": 21
+    "REC|Bundle": 22
    },
    "contested": {
-    "REC|Booster Box": 21,
-    "REC|Bundle": 21,
-    "LGC|Booster Box": 7,
-    "LGC|Bundle": 2
+    "REC|Booster Box": 22,
+    "REC|Bundle": 22,
+    "LGC|Booster Box": 8,
+    "LGC|Bundle": 3
    }
   },
   "kunaigames": {
@@ -3117,17 +3139,17 @@
     "OGN|Booster Box": 1
    },
    "contested": {
-    "RAD|Booster Pack": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 16,
-    "VEN|Booster Pack": 14,
-    "VEN|Showdown Decks": 20,
+    "RAD|Booster Pack": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 17,
+    "VEN|Booster Pack": 15,
+    "VEN|Showdown Decks": 21,
     "OGN|Booster Box": 8,
-    "OGN|Booster Pack": 8,
-    "RAD|Booster Box": 8,
-    "RAD|Pre-Rift Kit": 8,
-    "RAD|Bundle": 7,
-    "RAD|Showdown Decks Display": 2
+    "OGN|Booster Pack": 9,
+    "RAD|Booster Box": 9,
+    "RAD|Pre-Rift Kit": 9,
+    "RAD|Bundle": 8,
+    "RAD|Showdown Decks Display": 3
    }
   },
   "kwcollectibles": {
@@ -3135,26 +3157,26 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Pre-Rift Kit": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Pre-Rift Kit": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "laboitemystere": {
    "name": "La Boîte Mystère",
    "country": "CA",
    "wins": {
-    "VEN|Bundle": 1
+    "VEN|Bundle": 2
    },
    "contested": {
-    "VEN|Bundle": 17
+    "VEN|Bundle": 18
    }
   },
   "laboutiquemythique": {
@@ -3163,18 +3185,18 @@
    "wins": {
     "OGN|Booster Box": 2,
     "OGN|Booster Pack": 6,
-    "UNL|Champion Deck": 5
+    "UNL|Champion Deck": 6
    },
    "contested": {
-    "OGN|Champion Deck": 26,
-    "OGS|Proving Grounds": 26,
-    "UNL|Champion Deck": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 23,
-    "OGN|Booster Pack": 24,
-    "LGC|Proving Grounds 2nd Edition": 8
+    "OGN|Champion Deck": 27,
+    "OGS|Proving Grounds": 27,
+    "UNL|Champion Deck": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 24,
+    "OGN|Booster Pack": 25,
+    "LGC|Proving Grounds 2nd Edition": 9
    }
   },
   "laescotillajuegos": {
@@ -3184,28 +3206,28 @@
     "RAD|Pre-Rift Kit": 1
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "lagildastore": {
    "name": "La Gilda di Busto",
    "country": "EU",
    "wins": {
-    "LGC|Champion Deck": 2,
-    "UNL|Champion Deck (Vex)": 2
+    "LGC|Champion Deck": 3,
+    "UNL|Champion Deck (Vex)": 3
    },
    "contested": {
-    "LGC|Booster Box": 2,
-    "LGC|Bundle": 2,
-    "LGC|Champion Deck": 2,
-    "LGC|Proving Grounds 2nd Edition": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "VEN|Showdown Decks": 2
+    "LGC|Booster Box": 3,
+    "LGC|Bundle": 3,
+    "LGC|Champion Deck": 3,
+    "LGC|Proving Grounds 2nd Edition": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "lakecards": {
@@ -3216,10 +3238,10 @@
     "UNL|Champion Deck (Vex)": 2
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "UNL|Champion Deck (Vex)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26
+    "OGN|Booster Box": 27,
+    "UNL|Champion Deck (Vex)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "laroccadelwargaming": {
@@ -3227,11 +3249,11 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "SFD|Booster Box": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "SFD|Booster Box": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "lasportscards": {
@@ -3239,9 +3261,9 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "lecoindujeu": {
@@ -3249,41 +3271,41 @@
    "country": "CA",
    "wins": {
     "VEN|Booster Pack": 3,
-    "RAD|Booster Pack": 10,
+    "RAD|Booster Pack": 11,
     "RAD|Booster Box": 2,
     "SFD|Booster Pack": 3
    },
    "contested": {
     "OGN|Booster Box": 25,
-    "OGN|Booster Pack": 26,
-    "RAD|Booster Pack": 25,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Pack": 26,
+    "OGN|Booster Pack": 27,
+    "RAD|Booster Pack": 26,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Pack": 27,
     "UNL|Booster Box": 16,
-    "UNL|Booster Pack": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
+    "UNL|Booster Pack": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
     "VEN|Bundle": 18,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 17
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 18
    }
   },
   "letsplaycards": {
    "name": "Let's Play! Cards and Games",
    "country": "CA",
    "wins": {
-    "SFD|Champion Deck (Fiora)": 26,
+    "SFD|Champion Deck (Fiora)": 27,
     "UNL|Champion Deck (Vex)": 7,
     "SFD|Champion Deck (Rumble)": 4
    },
    "contested": {
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Champion Deck (Vex)": 7,
-    "UNL|Champion Deck (Vi)": 26,
-    "RAD|Showdown Decks": 2
+    "UNL|Champion Deck (Vi)": 27,
+    "RAD|Showdown Decks": 3
    }
   },
   "levelupgames": {
@@ -3294,17 +3316,17 @@
     "SFD|Booster Box": 1
    },
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "OGN|Champion Deck (Viktor)": 24,
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "OGN|Champion Deck (Viktor)": 25,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
     "SFD|Booster Pack": 22,
     "UNL|Booster Box": 22,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 4,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 5,
     "SFD|Booster Box": 2
    }
   },
@@ -3321,18 +3343,18 @@
    "name": "LingSter Games",
    "country": "US",
    "wins": {
-    "SFD|Booster Pack": 2,
-    "UNL|Booster Pack": 2
+    "SFD|Booster Pack": 3,
+    "UNL|Booster Pack": 3
    },
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "SFD|Booster Pack": 2,
-    "UNL|Booster Pack": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "SFD|Booster Pack": 3,
+    "UNL|Booster Pack": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3
    }
   },
   "livingrealms": {
@@ -3340,21 +3362,21 @@
    "country": "UK",
    "wins": {
     "OGN|Champion Deck (Jinx)": 7,
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "UNL|Champion Deck (Vi)": 26,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "UNL|Champion Deck (Vi)": 27,
     "OGN|Booster Pack": 1
    },
    "contested": {
     "OGN|Champion Deck (Jinx)": 7,
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 19,
-    "RAD|Booster Pack": 26,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 20,
+    "RAD|Booster Pack": 27,
     "RAD|Bundle": 5,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 15,
-    "VEN|Booster Pack": 26,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 16,
+    "VEN|Booster Pack": 27,
     "VEN|Showdown Decks": 25,
     "OGN|Booster Pack": 1
    }
@@ -3364,9 +3386,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "UNL|Booster Box": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "UNL|Booster Box": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3,
+    "OGN|Booster Box": 1
    }
   },
   "lthobbies": {
@@ -3374,10 +3397,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "luckydice": {
@@ -3385,23 +3408,23 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "UNL|Champion Deck (Vi)": 2
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "UNL|Champion Deck (Vi)": 3
    }
   },
   "ludisphere": {
    "name": "Ludisphere",
    "country": "EU",
    "wins": {
-    "LGC|Bundle": 2
+    "LGC|Bundle": 3
    },
    "contested": {
-    "LGC|Bundle": 2,
-    "LGC|Champion Deck": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2
+    "LGC|Bundle": 3,
+    "LGC|Champion Deck": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3
    }
   },
   "madmerchantgames": {
@@ -3412,20 +3435,20 @@
     "riftboundshowdowndeckevelynnvsseraphine": 22
    },
    "contested": {
-    "RAD|Booster Pack": 26,
-    "VEN|Booster Box": 26,
+    "RAD|Booster Pack": 27,
+    "VEN|Booster Box": 27,
     "riftboundchampiondeckvi": 22,
     "riftboundshowdowndeckevelynnvsseraphine": 22,
     "OGN|Booster Pack": 6,
-    "VEN|Booster Pack": 16,
-    "OGN|Booster Box": 13,
-    "RAD|Booster Box": 15,
+    "VEN|Booster Pack": 17,
+    "OGN|Booster Box": 14,
+    "RAD|Booster Box": 16,
     "RAD|Bundle": 8,
-    "RAD|Showdown Decks": 4,
-    "SFD|Champion Deck (Rumble)": 4,
-    "UNL|Champion Deck (Vi)": 4,
-    "VEN|Showdown Decks": 4,
-    "giftoftheriftbundle": 1
+    "RAD|Showdown Decks": 5,
+    "SFD|Champion Deck (Rumble)": 5,
+    "UNL|Champion Deck (Vi)": 5,
+    "VEN|Showdown Decks": 5,
+    "giftoftheriftbundle": 2
    }
   },
   "manaconfluence": {
@@ -3436,7 +3459,7 @@
    },
    "contested": {
     "UNL|Booster Box": 3,
-    "VEN|Booster Box": 26
+    "VEN|Booster Box": 27
    }
   },
   "manamarket": {
@@ -3444,33 +3467,41 @@
    "country": "AU",
    "wins": {
     "OGS|Proving Grounds": 6,
-    "OGN|Champion Deck (Viktor)": 5
+    "OGN|Champion Deck (Viktor)": 6
    },
    "contested": {
-    "OGN|Champion Deck (Jinx)": 26,
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "OGN|Champion Deck (Viktor)": 26,
+    "OGN|Champion Deck (Jinx)": 27,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "OGN|Champion Deck (Viktor)": 27,
     "OGS|Proving Grounds": 7,
     "SFD|Booster Box": 23,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Champion Deck (Vex)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Champion Deck (Vex)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27
+   }
+  },
+  "manamarketeu": {
+   "name": "Mana Market EU",
+   "country": "EU",
+   "wins": {},
+   "contested": {
+    "giftoftheriftbundle": 1
    }
   },
   "manatrust": {
    "name": "ManaTrust",
    "country": "EU",
    "wins": {
-    "UNL|Starter Set": 2
+    "UNL|Starter Set": 3
    },
    "contested": {
-    "SFD|Booster Box": 2,
-    "UNL|Starter Set": 2,
-    "VEN|Bundle": 2
+    "SFD|Booster Box": 3,
+    "UNL|Starter Set": 3,
+    "VEN|Bundle": 3
    }
   },
   "mantatrading": {
@@ -3479,8 +3510,8 @@
    "wins": {},
    "contested": {
     "OGN|Booster Box": 24,
-    "VEN|Showdown Decks": 26,
-    "RAD|Showdown Decks": 4
+    "VEN|Showdown Decks": 27,
+    "RAD|Showdown Decks": 5
    }
   },
   "manyrealms": {
@@ -3488,26 +3519,26 @@
    "country": "US",
    "wins": {
     "RAD|Pre-Rift Kit": 12,
-    "REC|Booster Box": 21,
+    "REC|Booster Box": 22,
     "OGN|Booster Box": 4,
     "giftoftheriftbundle": 6,
-    "VEN|Booster Box": 1
+    "VEN|Booster Box": 2
    },
    "contested": {
-    "RAD|Booster Box": 26,
+    "RAD|Booster Box": 27,
     "RAD|Booster Case": 1,
-    "RAD|Showdown Decks": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Bundle": 22,
+    "RAD|Showdown Decks": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Bundle": 23,
     "RAD|Pre-Rift Kit": 13,
-    "REC|Booster Box": 21,
-    "REC|Bundle": 21,
+    "REC|Booster Box": 22,
+    "REC|Bundle": 22,
     "OGN|Booster Box": 8,
-    "giftoftheriftbundle": 8
+    "giftoftheriftbundle": 9
    }
   },
   "masterset": {
@@ -3517,12 +3548,12 @@
     "UNL|Champion Deck": 21
    },
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck": 27,
     "UNL|Champion Deck": 21,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "mayhemcollectables": {
@@ -3542,19 +3573,19 @@
    "name": "McGillicuddy's Toy Shop",
    "country": "EU",
    "wins": {
-    "VEN|Booster Pack": 2
+    "VEN|Booster Pack": 3
    },
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "SFD|Booster Box": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2,
+    "OGN|Booster Box": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "SFD|Booster Box": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3,
     "giftoftheriftbundle": 1
    }
   },
@@ -3563,15 +3594,15 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Booster Pack": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Booster Pack": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "miniaturemarket": {
@@ -3579,37 +3610,37 @@
    "country": "US",
    "wins": {
     "RAD|Booster Box": 1,
-    "LGC|Booster Box": 6,
+    "LGC|Booster Box": 7,
     "RAD|Booster Pack": 6,
-    "LGC|Booster Pack": 2,
-    "LGC|Bundle": 2,
-    "LGC|Champion Deck (Ashe)": 1,
-    "LGC|Champion Deck (Garen)": 1,
-    "LGC|Champion Deck (Lux)": 1,
-    "LGC|Champion Deck (Tryndamere)": 1,
-    "giftoftheriftbundle": 1
+    "LGC|Booster Pack": 3,
+    "LGC|Bundle": 3,
+    "LGC|Champion Deck (Ashe)": 2,
+    "LGC|Champion Deck (Garen)": 2,
+    "LGC|Champion Deck (Lux)": 2,
+    "LGC|Champion Deck (Tryndamere)": 2,
+    "giftoftheriftbundle": 2
    },
    "contested": {
-    "RAD|Booster Box": 26,
-    "LGC|Booster Box": 6,
-    "OGN|Booster Box": 8,
+    "RAD|Booster Box": 27,
+    "LGC|Booster Box": 7,
+    "OGN|Booster Box": 9,
     "OGN|Booster Pack": 8,
-    "RAD|Booster Pack": 8,
-    "RAD|Bundle": 8,
-    "SFD|Booster Box": 8,
-    "SFD|Booster Pack": 8,
-    "UNL|Booster Box": 8,
-    "UNL|Booster Pack": 8,
-    "VEN|Booster Box": 8,
-    "VEN|Booster Pack": 8,
-    "VEN|Bundle": 8,
-    "LGC|Booster Pack": 2,
-    "LGC|Bundle": 2,
-    "LGC|Champion Deck (Ashe)": 1,
-    "LGC|Champion Deck (Garen)": 1,
-    "LGC|Champion Deck (Lux)": 1,
-    "LGC|Champion Deck (Tryndamere)": 1,
-    "giftoftheriftbundle": 1
+    "RAD|Booster Pack": 9,
+    "RAD|Bundle": 9,
+    "SFD|Booster Box": 9,
+    "SFD|Booster Pack": 9,
+    "UNL|Booster Box": 9,
+    "UNL|Booster Pack": 9,
+    "VEN|Booster Box": 9,
+    "VEN|Booster Pack": 9,
+    "VEN|Bundle": 9,
+    "LGC|Booster Pack": 3,
+    "LGC|Bundle": 3,
+    "LGC|Champion Deck (Ashe)": 2,
+    "LGC|Champion Deck (Garen)": 2,
+    "LGC|Champion Deck (Lux)": 2,
+    "LGC|Champion Deck (Tryndamere)": 2,
+    "giftoftheriftbundle": 2
    }
   },
   "mintcollectables": {
@@ -3619,28 +3650,30 @@
     "RAD|Bundle": 2
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
     "UNL|Starter Set": 7,
     "VEN|Booster Box": 23,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "mintedtcg": {
    "name": "Minted TCG",
    "country": "US",
-   "wins": {},
+   "wins": {
+    "OGN|Booster Box": 1
+   },
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "miraicards": {
@@ -3648,8 +3681,8 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Showdown Decks": 3
    }
   },
   "monstercardcorner": {
@@ -3658,30 +3691,30 @@
    "wins": {
     "RAD|Showdown Decks": 22,
     "RAD|Booster Box": 1,
-    "OGN|Booster Box": 10
+    "OGN|Booster Box": 11
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Bundle": 26,
-    "OGN|Booster Box": 10,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Bundle": 27,
+    "OGN|Booster Box": 11,
     "RAD|Bundle": 9,
-    "SFD|Booster Box": 4,
-    "UNL|Booster Box": 2
+    "SFD|Booster Box": 5,
+    "UNL|Booster Box": 3
    }
   },
   "moonshadow": {
    "name": "Moon-Shadow Store",
    "country": "EU",
    "wins": {
-    "OGS|Proving Grounds": 2,
+    "OGS|Proving Grounds": 3,
     "VEN|Showdown Decks": 1
    },
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Bundle": 2,
+    "OGS|Proving Grounds": 3,
+    "RAD|Bundle": 3,
     "VEN|Showdown Decks": 1
    }
   },
@@ -3691,14 +3724,14 @@
    "wins": {},
    "contested": {
     "LGC|Pre-Rift Kit": 2,
-    "OGN|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Pack": 2,
-    "SFD|Champion Deck": 2,
-    "UNL|Champion Deck": 2,
-    "UNL|Pre-Rift Kit": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Pack": 3,
+    "SFD|Champion Deck": 3,
+    "UNL|Champion Deck": 3,
+    "UNL|Pre-Rift Kit": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "moxinthehole": {
@@ -3707,17 +3740,17 @@
    "wins": {
     "RAD|Booster Box": 6,
     "VEN|Booster Box": 13,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    },
    "contested": {
     "RAD|Booster Box": 24,
-    "RAD|Bundle": 4,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
+    "RAD|Bundle": 5,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
     "riftboundleagueoflegendstcgevelynnvssera": 9,
-    "RAD|Showdown Decks": 4
+    "RAD|Showdown Decks": 5
    }
   },
   "mucollectibles": {
@@ -3725,12 +3758,12 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "mysterymtg": {
@@ -3739,29 +3772,29 @@
    "wins": {},
    "contested": {
     "RAD|Bundle": 8,
-    "RAD|Showdown Decks": 26,
-    "VEN|Bundle": 15
+    "RAD|Showdown Decks": 27,
+    "VEN|Bundle": 16
    }
   },
   "mystictcg": {
    "name": "Mystic TCG",
    "country": "US",
    "wins": {
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Bundle": 2
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Bundle": 3
    },
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Champion Deck (Fiora)": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Bundle": 2,
-    "VEN|Pre-Rift Kit": 2
+    "OGN|Booster Box": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Champion Deck (Fiora)": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Bundle": 3,
+    "VEN|Pre-Rift Kit": 3
    }
   },
   "mythicstore": {
@@ -3770,19 +3803,19 @@
    "wins": {
     "OGN|Booster Box": 2,
     "OGN|Booster Pack": 1,
-    "LGC|Proving Grounds 2nd Edition": 3,
-    "OGN|Champion Deck": 2
+    "LGC|Proving Grounds 2nd Edition": 4,
+    "OGN|Champion Deck": 3
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "UNL|Champion Deck": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 19,
-    "OGN|Booster Pack": 22,
-    "LGC|Proving Grounds 2nd Edition": 3,
-    "OGN|Champion Deck": 2
+    "OGS|Proving Grounds": 27,
+    "UNL|Champion Deck": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 20,
+    "OGN|Booster Pack": 23,
+    "LGC|Proving Grounds 2nd Edition": 4,
+    "OGN|Champion Deck": 3
    }
   },
   "mytradingcards": {
@@ -3790,9 +3823,9 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "LGC|Booster Box": 2,
-    "LGC|Bundle": 2,
-    "RAD|Booster Box": 2
+    "LGC|Booster Box": 3,
+    "LGC|Bundle": 3,
+    "RAD|Booster Box": 3
    }
   },
   "nerdmerchant": {
@@ -3800,7 +3833,7 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "VEN|Showdown Decks": 4
+    "VEN|Showdown Decks": 5
    }
   },
   "newrealmgames": {
@@ -3813,15 +3846,15 @@
    },
    "contested": {
     "OGN|Booster Box": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
+    "VEN|Showdown Decks": 27,
     "LGC|Booster Box": 9,
-    "LGC|Proving Grounds 2nd Edition": 9,
-    "REC|Booster Box": 9,
-    "REC|Bundle": 9,
+    "LGC|Proving Grounds 2nd Edition": 10,
+    "REC|Booster Box": 10,
+    "REC|Bundle": 10,
     "REC|Champion Deck": 7,
-    "REC|Champion Deck (Shyvana)": 2,
-    "REC|Champion Deck (Vayne)": 2
+    "REC|Champion Deck (Shyvana)": 3,
+    "REC|Champion Deck (Vayne)": 3
    }
   },
   "nexustabletopgames": {
@@ -3841,11 +3874,11 @@
     "OGS|Proving Grounds": 4
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26,
-    "SFD|Champion Deck (Rumble)": 25,
-    "giftoftheriftbundle": 2
+    "OGS|Proving Grounds": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27,
+    "SFD|Champion Deck (Rumble)": 26,
+    "giftoftheriftbundle": 3
    }
   },
   "npcollectibles": {
@@ -3853,14 +3886,14 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 23,
+    "OGN|Booster Box": 24,
     "SFD|Booster Box": 20,
-    "SFD|Champion Deck (Rumble)": 26,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Box": 21,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 10,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 11,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "npcollectiblesca": {
@@ -3868,14 +3901,14 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 23,
+    "OGN|Booster Box": 24,
     "SFD|Booster Box": 20,
-    "SFD|Champion Deck (Rumble)": 26,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Box": 21,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 10,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 11,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "nxtlegacigaming": {
@@ -3883,10 +3916,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "obsessiongaming": {
@@ -3894,9 +3927,9 @@
    "country": "AU",
    "wins": {},
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27
    }
   },
   "onboardgaming": {
@@ -3906,8 +3939,8 @@
     "RAD|Pre-Rift Kit": 16
    },
    "contested": {
-    "RAD|Pre-Rift Kit": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Pre-Rift Kit": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "onecollectiblestcg": {
@@ -3915,31 +3948,33 @@
    "country": "SG",
    "wins": {
     "RAD|Booster Box": 18,
-    "VEN|Booster Box": 13,
-    "VEN|Showdown Decks": 20
+    "VEN|Booster Box": 14,
+    "VEN|Showdown Decks": 21,
+    "RAD|Showdown Decks": 1
    },
    "contested": {
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 20,
-    "VEN|Booster Box": 25
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 21,
+    "VEN|Booster Box": 26,
+    "RAD|Showdown Decks": 1
    }
   },
   "oneplacetcs": {
    "name": "One Place Trading Card Store",
    "country": "AU",
    "wins": {
-    "UNL|Booster Pack": 25,
+    "UNL|Booster Pack": 26,
     "SFD|Booster Pack": 9,
     "UNL|Champion Deck (Vex)": 3
    },
    "contested": {
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Booster Pack": 26,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Booster Pack": 27,
     "UNL|Champion Deck (Vex)": 22,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
     "SFD|Booster Pack": 9
    }
   },
@@ -3953,12 +3988,12 @@
     "VEN|Showdown Decks": 3
    },
    "contested": {
-    "OGN|Booster Pack": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Pack": 26,
+    "OGN|Booster Pack": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Pack": 27,
     "VEN|Bundle": 21,
     "VEN|Pre-Rift Kit": 21,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "otakura": {
@@ -3966,14 +4001,14 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2,
-    "giftoftheriftbundle": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3,
+    "giftoftheriftbundle": 3
    }
   },
   "ozzie": {
@@ -3981,21 +4016,21 @@
    "country": "AU",
    "wins": {
     "RAD|Booster Pack": 9,
-    "UNL|Champion Deck (Vex)": 15,
-    "UNL|Champion Deck (Vi)": 26
+    "UNL|Champion Deck (Vex)": 16,
+    "UNL|Champion Deck (Vi)": 27
    },
    "contested": {
     "OGN|Champion Deck (Jinx)": 24,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Champion Deck (Vex)": 15,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Champion Deck (Vex)": 16,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "papajoeys": {
@@ -4003,12 +4038,12 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Pack": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Pack": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "paradoxtcg": {
@@ -4027,7 +4062,7 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "VEN|Showdown Decks": 9
+    "VEN|Showdown Decks": 10
    }
   },
   "pelikrypta": {
@@ -4035,36 +4070,36 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "LGC|Booster Box": 2,
-    "LGC|Bundle": 2,
-    "RAD|Booster Box": 2,
-    "SFD|Booster Box": 2,
-    "UNL|Booster Box": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Showdown Decks": 2
+    "LGC|Booster Box": 3,
+    "LGC|Bundle": 3,
+    "RAD|Booster Box": 3,
+    "SFD|Booster Box": 3,
+    "UNL|Booster Box": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "phantomich": {
    "name": "Phantomich",
    "country": "US",
    "wins": {
-    "LGC|Booster Box": 1
+    "LGC|Booster Box": 2
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Booster Box": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2,
-    "LGC|Booster Box": 1,
-    "LGC|Bundle": 1,
-    "LGC|Champion Deck (Ashe)": 1,
-    "LGC|Champion Deck (Garen)": 1,
-    "LGC|Champion Deck (Lux)": 1,
-    "LGC|Champion Deck (Tryndamere)": 1,
-    "giftoftheriftbundle": 1
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Booster Box": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3,
+    "LGC|Booster Box": 2,
+    "LGC|Bundle": 2,
+    "LGC|Champion Deck (Ashe)": 2,
+    "LGC|Champion Deck (Garen)": 2,
+    "LGC|Champion Deck (Lux)": 2,
+    "LGC|Champion Deck (Tryndamere)": 2,
+    "giftoftheriftbundle": 2
    }
   },
   "phatcatzgaming": {
@@ -4072,13 +4107,13 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "phillytcg": {
@@ -4086,10 +4121,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "UNL|Booster Box": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "UNL|Booster Box": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "plenty": {
@@ -4097,7 +4132,7 @@
    "country": "AU",
    "wins": {},
    "contested": {
-    "UNL|Champion Deck (Vi)": 26
+    "UNL|Champion Deck (Vi)": 27
    }
   },
   "pokebox": {
@@ -4105,16 +4140,16 @@
    "country": "AU",
    "wins": {
     "VEN|Booster Pack": 18,
-    "RAD|Showdown Decks": 23
+    "RAD|Showdown Decks": 24
    },
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Champion Deck (Vi)": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Champion Deck (Vi)": 27,
     "VEN|Booster Box": 17,
     "VEN|Booster Pack": 18,
-    "RAD|Showdown Decks": 23,
+    "RAD|Showdown Decks": 24,
     "RAD|Bundle": 3
    }
   },
@@ -4125,7 +4160,7 @@
    "contested": {
     "OGN|Booster Box": 14,
     "VEN|Booster Pack": 16,
-    "RAD|Showdown Decks": 25
+    "RAD|Showdown Decks": 26
    }
   },
   "pokejeux": {
@@ -4135,9 +4170,9 @@
     "OGN|Champion Deck (Viktor)": 23
    },
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 26,
+    "OGN|Champion Deck (Lee Sin)": 27,
     "OGN|Champion Deck (Viktor)": 23,
-    "RAD|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
     "VEN|Booster Box": 10,
     "giftoftheriftbundle": 1
    }
@@ -4146,20 +4181,20 @@
    "name": "PokeMillon",
    "country": "EU",
    "wins": {
-    "UNL|Booster Box": 2
+    "UNL|Booster Box": 3
    },
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Champion Deck (Fiora)": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Champion Deck (Fiora)": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "pokepower": {
@@ -4168,8 +4203,8 @@
    "wins": {},
    "contested": {
     "RAD|Booster Box": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "poneglyphcards": {
@@ -4177,33 +4212,34 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "progressccg": {
    "name": "Progress CCG",
    "country": "US",
    "wins": {
-    "RAD|Booster Box": 2
+    "RAD|Booster Box": 3
    },
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "VEN|Showdown Decks": 1
    }
   },
   "psydeck": {
    "name": "Psydeck TCG",
    "country": "EU",
    "wins": {
-    "RAD|Booster Pack": 1
+    "RAD|Booster Pack": 2
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Showdown Decks": 3
    }
   },
   "punkouter": {
@@ -4213,15 +4249,15 @@
     "OGN|Booster Box": 1
    },
    "contested": {
-    "RAD|Booster Box": 24,
-    "RAD|Booster Pack": 26,
-    "RAD|Showdown Decks": 26,
+    "RAD|Booster Box": 25,
+    "RAD|Booster Pack": 27,
+    "RAD|Showdown Decks": 27,
     "SFD|Booster Pack": 15,
-    "UNL|Booster Pack": 26,
+    "UNL|Booster Pack": 27,
     "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 26,
-    "OGN|Booster Box": 3,
-    "OGN|Booster Pack": 6
+    "VEN|Booster Pack": 27,
+    "OGN|Booster Box": 4,
+    "OGN|Booster Pack": 7
    }
   },
   "pvpshoppe": {
@@ -4229,26 +4265,26 @@
    "country": "CA",
    "wins": {
     "LGC|Booster Box": 2,
-    "LGC|Champion Deck (Ashe)": 8,
-    "LGC|Champion Deck (Lux)": 8,
-    "RAD|Showdown Decks Display": 6
+    "LGC|Champion Deck (Ashe)": 9,
+    "LGC|Champion Deck (Lux)": 9,
+    "RAD|Showdown Decks Display": 7
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 26,
+    "OGN|Booster Box": 27,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 27,
     "UNL|Champion Deck (Vex)": 1,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
-    "LGC|Booster Box": 10,
-    "LGC|Champion Deck (Garen)": 10,
-    "LGC|Champion Deck (Tryndamere)": 10,
-    "LGC|Champion Deck (Ashe)": 8,
-    "LGC|Champion Deck (Lux)": 8,
-    "RAD|Showdown Decks Display": 6,
-    "SFD|Champion Deck (Rumble)": 4
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
+    "LGC|Booster Box": 11,
+    "LGC|Champion Deck (Garen)": 11,
+    "LGC|Champion Deck (Tryndamere)": 11,
+    "LGC|Champion Deck (Ashe)": 9,
+    "LGC|Champion Deck (Lux)": 9,
+    "RAD|Showdown Decks Display": 7,
+    "SFD|Champion Deck (Rumble)": 5
    }
   },
   "quicktcg": {
@@ -4256,31 +4292,32 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "raptorgames": {
    "name": "Raptor Games",
    "country": "AU",
    "wins": {
-    "RAD|Showdown Decks Display": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "RAD|Showdown Decks Display": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Champion Deck (Vex)": 6
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 23,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks Display": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
+    "OGN|Booster Box": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 24,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks Display": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
     "UNL|Champion Deck (Vex)": 6,
-    "UNL|Champion Deck (Vi)": 7
+    "UNL|Champion Deck (Vi)": 8,
+    "SFD|Booster Pack": 1
    }
   },
   "realgoodeal": {
@@ -4288,19 +4325,19 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Champion Deck": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGN|Champion Deck": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "reapergamestore": {
@@ -4308,20 +4345,20 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "redriotgames": {
    "name": "Red Riot Games",
    "country": "CA",
    "wins": {
-    "OGN|Champion Deck": 26
+    "OGN|Champion Deck": 27
    },
    "contested": {
-    "OGN|Champion Deck": 26,
-    "RAD|Showdown Decks": 26
+    "OGN|Champion Deck": 27,
+    "RAD|Showdown Decks": 27
    }
   },
   "redsun": {
@@ -4332,22 +4369,22 @@
     "RAD|Showdown Decks": 2
    },
    "contested": {
-    "RAD|Booster Pack": 26,
-    "RAD|Showdown Decks": 26,
-    "LGC|Proving Grounds 2nd Edition": 4
+    "RAD|Booster Pack": 27,
+    "RAD|Showdown Decks": 27,
+    "LGC|Proving Grounds 2nd Edition": 5
    }
   },
   "reefsidegames": {
    "name": "Reefside Games",
    "country": "AU",
    "wins": {
-    "UNL|Champion Deck (Vi) Display": 26
+    "UNL|Champion Deck (Vi) Display": 27
    },
    "contested": {
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vi) Display": 26,
-    "VEN|Showdown Decks Display": 26,
-    "UNL|Champion Deck (Vi)": 4
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vi) Display": 27,
+    "VEN|Showdown Decks Display": 27,
+    "UNL|Champion Deck (Vi)": 5
    }
   },
   "retroempire": {
@@ -4355,22 +4392,22 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 16
+    "RAD|Showdown Decks": 17
    }
   },
   "retrofixgames": {
    "name": "Retrofix Games",
    "country": "US",
    "wins": {
-    "VEN|Bundle": 2
+    "VEN|Bundle": 3
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
     "VEN|Booster Box": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "revcollectibles": {
@@ -4378,9 +4415,9 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "SFD|Booster Box": 2,
-    "UNL|Booster Box": 2
+    "OGS|Proving Grounds": 3,
+    "SFD|Booster Box": 3,
+    "UNL|Booster Box": 3
    }
   },
   "robohunters": {
@@ -4390,36 +4427,36 @@
     "RAD|Showdown Decks": 2
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "rollnplay": {
    "name": "Roll N Play",
    "country": "UK",
    "wins": {
-    "OGS|Proving Grounds": 24,
-    "RAD|Bundle": 26,
-    "RAD|Booster Box": 19,
-    "VEN|Booster Box": 7,
-    "SFD|Champion Deck (Rumble)": 11
+    "OGS|Proving Grounds": 25,
+    "RAD|Bundle": 27,
+    "RAD|Booster Box": 20,
+    "VEN|Booster Box": 8,
+    "SFD|Champion Deck (Rumble)": 12
    },
    "contested": {
     "OGN|Champion Deck (Jinx)": 7,
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "OGS|Proving Grounds": 25,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Champion Deck (Vi)": 26,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "OGS|Proving Grounds": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Champion Deck (Vi)": 27,
     "VEN|Bundle": 26,
-    "RAD|Showdown Decks": 19,
-    "VEN|Showdown Decks": 19,
-    "VEN|Booster Box": 15,
-    "VEN|Booster Pack": 13
+    "RAD|Showdown Decks": 20,
+    "VEN|Showdown Decks": 20,
+    "VEN|Booster Box": 16,
+    "VEN|Booster Pack": 14
    }
   },
   "royaltycardsandcollectibles": {
@@ -4431,8 +4468,8 @@
    "contested": {
     "UNL|Booster Box": 8,
     "UNL|Champion Deck (Vi)": 5,
-    "UNL|Booster Pack": 18,
-    "VEN|Showdown Decks": 7
+    "UNL|Booster Pack": 19,
+    "VEN|Showdown Decks": 8
    }
   },
   "saltcitygames": {
@@ -4440,9 +4477,9 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "sccollection": {
@@ -4450,7 +4487,7 @@
    "country": "SG",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 15
+    "RAD|Booster Box": 16
    }
   },
   "screenfreegames": {
@@ -4460,15 +4497,15 @@
     "LGC|Pre-Rift Kit": 14
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGN|Booster Pack": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "LGC|Bundle": 25,
-    "RAD|Booster Pack": 21,
-    "RAD|Booster Box": 19,
+    "OGN|Booster Box": 27,
+    "OGN|Booster Pack": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "LGC|Bundle": 26,
+    "RAD|Booster Pack": 22,
+    "RAD|Booster Box": 20,
     "LGC|Pre-Rift Kit": 14,
-    "REC|Booster Box": 15
+    "REC|Booster Box": 16
    }
   },
   "sephigames": {
@@ -4478,8 +4515,8 @@
     "giftoftheriftbundle": 6
    },
    "contested": {
-    "RAD|Booster Box": 8,
-    "giftoftheriftbundle": 8
+    "RAD|Booster Box": 9,
+    "giftoftheriftbundle": 9
    }
   },
   "shippintexas": {
@@ -4495,20 +4532,20 @@
     "SFD|Booster Box": 4
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Box": 25,
-    "RAD|Booster Pack": 26,
-    "RAD|Showdown Decks": 26,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Box": 26,
+    "RAD|Booster Pack": 27,
+    "RAD|Showdown Decks": 27,
     "SFD|Booster Box": 26,
-    "SFD|Booster Pack": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Bundle": 19,
-    "OGN|Booster Box": 8,
-    "OGN|Booster Pack": 8,
-    "OGN|Booster Case": 2
+    "SFD|Booster Pack": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Bundle": 20,
+    "OGN|Booster Box": 9,
+    "OGN|Booster Pack": 9,
+    "OGN|Booster Case": 3
    }
   },
   "shopponistore": {
@@ -4522,12 +4559,12 @@
     "OGN|Booster Box": 1,
     "OGS|Proving Grounds": 4,
     "SFD|Booster Box": 1,
-    "VEN|Bundle": 26,
-    "SFD|Champion Deck (Rumble)": 25,
+    "VEN|Bundle": 27,
+    "SFD|Champion Deck (Rumble)": 26,
     "UNL|Champion Deck (Vex)": 25,
-    "UNL|Champion Deck (Vi)": 25,
-    "VEN|Showdown Decks": 25,
-    "giftoftheriftbundle": 8
+    "UNL|Champion Deck (Vi)": 26,
+    "VEN|Showdown Decks": 26,
+    "giftoftheriftbundle": 9
    }
   },
   "shuffleandcutgames": {
@@ -4538,12 +4575,12 @@
     "SFD|Booster Box": 4
    },
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "UNL|Booster Box": 17,
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "UNL|Booster Box": 18,
     "UNL|Champion Deck (Vi)": 13,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
     "OGN|Booster Box": 4,
     "SFD|Booster Box": 4
    }
@@ -4553,37 +4590,37 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "silvergoblin": {
    "name": "Gobelin d'Argent - Silver Goblin",
    "country": "CA",
    "wins": {
-    "OGS|Proving Grounds": 25
+    "OGS|Proving Grounds": 26
    },
    "contested": {
-    "OGS|Proving Grounds": 25,
-    "RAD|Showdown Decks": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 5,
-    "RAD|Bundle": 5
+    "OGS|Proving Grounds": 26,
+    "RAD|Showdown Decks": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 6,
+    "RAD|Bundle": 6
    }
   },
   "skupisve": {
    "name": "Skupi sve",
    "country": "EU",
    "wins": {
-    "VEN|Booster Box": 2
+    "VEN|Booster Box": 3
    },
    "contested": {
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "skyboxct": {
@@ -4591,12 +4628,12 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Showdown Decks": 2
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "skyfoxgames": {
@@ -4604,25 +4641,25 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGN|Booster Pack": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Box": 26,
-    "SFD|Booster Pack": 26,
-    "SFD|Champion Deck": 26,
-    "UNL|Booster Pack": 26,
-    "UNL|Champion Deck": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
-    "LGC|Booster Box": 17,
-    "LGC|Bundle": 1,
-    "LGC|Proving Grounds 2nd Edition": 1,
-    "REC|Booster Box": 1,
-    "REC|Bundle": 1
+    "OGN|Booster Box": 27,
+    "OGN|Booster Pack": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Box": 27,
+    "SFD|Booster Pack": 27,
+    "SFD|Champion Deck": 27,
+    "UNL|Booster Pack": 27,
+    "UNL|Champion Deck": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
+    "LGC|Booster Box": 18,
+    "LGC|Bundle": 2,
+    "LGC|Proving Grounds 2nd Edition": 2,
+    "REC|Booster Box": 2,
+    "REC|Bundle": 2
    }
   },
   "solacido": {
@@ -4630,7 +4667,7 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "VEN|Showdown Decks": 2
+    "VEN|Showdown Decks": 3
    }
   },
   "spankyscardshop": {
@@ -4641,14 +4678,14 @@
     "SFD|Booster Box": 17
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGN|Booster Pack": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 25,
-    "VEN|Showdown Decks": 26,
+    "OGN|Booster Box": 27,
+    "OGN|Booster Pack": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 26,
+    "VEN|Showdown Decks": 27,
     "SFD|Booster Box": 25,
-    "SFD|Booster Pack": 25
+    "SFD|Booster Pack": 26
    }
   },
   "spankyslootstash": {
@@ -4656,8 +4693,8 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "sparkstradingcards": {
@@ -4665,7 +4702,7 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 2
+    "RAD|Showdown Decks": 3
    }
   },
   "spellboundgames": {
@@ -4677,10 +4714,10 @@
    },
    "contested": {
     "OGS|Proving Grounds": 25,
-    "RAD|Booster Box": 26,
-    "VEN|Booster Box": 26,
+    "RAD|Booster Box": 27,
+    "VEN|Booster Box": 27,
     "riftboundleagueoflegendstcgevelynnvssera": 9,
-    "RAD|Showdown Decks": 4
+    "RAD|Showdown Decks": 5
    }
   },
   "spellcastersstash": {
@@ -4688,11 +4725,11 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Pack": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Pack": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "spellnexus": {
@@ -4703,36 +4740,36 @@
     "SFD|Booster Box": 24,
     "VEN|Booster Box": 9,
     "VEN|Bundle": 9,
-    "UNL|Champion Deck (Vi)": 23,
+    "UNL|Champion Deck (Vi)": 24,
     "RAD|Bundle": 14,
-    "LGC|Booster Box": 7,
+    "LGC|Booster Box": 8,
     "LGC|Bundle": 9,
-    "LGC|Proving Grounds 2nd Edition": 11,
+    "LGC|Proving Grounds 2nd Edition": 12,
     "REC|Booster Box": 1,
-    "LGC|Booster Case": 5,
-    "RAD|Booster Case": 5,
-    "UNL|Booster Case": 2
+    "LGC|Booster Case": 6,
+    "RAD|Booster Case": 6,
+    "UNL|Booster Case": 3
    },
    "contested": {
     "OGS|Proving Grounds": 3,
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 17,
-    "SFD|Booster Box": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26,
-    "LGC|Booster Box": 7,
-    "LGC|Bundle": 11,
-    "LGC|Proving Grounds 2nd Edition": 11,
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 18,
+    "SFD|Booster Box": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27,
+    "LGC|Booster Box": 8,
+    "LGC|Bundle": 12,
+    "LGC|Proving Grounds 2nd Edition": 12,
     "REC|Booster Box": 1,
-    "LGC|Booster Case": 5,
-    "RAD|Booster Case": 5,
-    "LGC|Champion Deck (Garen)": 2,
-    "UNL|Booster Case": 2,
-    "VEN|Booster Case": 2,
-    "secretgardenbox": 2
+    "LGC|Booster Case": 6,
+    "RAD|Booster Case": 6,
+    "LGC|Champion Deck (Garen)": 3,
+    "UNL|Booster Case": 3,
+    "VEN|Booster Case": 3,
+    "secretgardenbox": 3
    }
   },
   "spellroo": {
@@ -4740,42 +4777,43 @@
    "country": "AU",
    "wins": {
     "RAD|Bundle": 2,
-    "VEN|Booster Pack": 8
+    "VEN|Booster Pack": 9,
+    "OGN|Booster Pack": 1
    },
    "contested": {
     "OGN|Booster Box": 2,
-    "OGN|Champion Deck (Jinx)": 11,
+    "OGN|Champion Deck (Jinx)": 12,
     "OGN|Champion Deck (Viktor)": 5,
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Pack": 18,
     "UNL|Champion Deck (Vex)": 15,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
     "UNL|Pre-Rift Kit": 22,
-    "OGN|Booster Pack": 6
+    "OGN|Booster Pack": 7
    }
   },
   "spielewelt": {
    "name": "Spielewelt Amberg",
    "country": "EU",
    "wins": {
-    "OGN|Champion Deck (Jinx)": 2,
-    "OGN|Champion Deck (Lee Sin)": 2,
-    "OGN|Champion Deck (Viktor)": 2
+    "OGN|Champion Deck (Jinx)": 3,
+    "OGN|Champion Deck (Lee Sin)": 3,
+    "OGN|Champion Deck (Viktor)": 3
    },
    "contested": {
-    "OGN|Champion Deck (Jinx)": 2,
-    "OGN|Champion Deck (Lee Sin)": 2,
-    "OGN|Champion Deck (Viktor)": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Champion Deck (Jinx)": 3,
+    "OGN|Champion Deck (Lee Sin)": 3,
+    "OGN|Champion Deck (Viktor)": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "springerhobbies": {
@@ -4783,10 +4821,10 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 26,
-    "RAD|Booster Box": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "VEN|Booster Box": 26,
+    "OGN|Booster Box": 27,
+    "RAD|Booster Box": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "VEN|Booster Box": 27,
     "RAD|Bundle": 2
    }
   },
@@ -4794,18 +4832,18 @@
    "name": "Devastation Store Miami",
    "country": "US",
    "wins": {
-    "SFD|Pre-Rift Kit": 2
+    "SFD|Pre-Rift Kit": 3
    },
    "contested": {
-    "OGN|Booster Box": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "SFD|Pre-Rift Kit": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Bundle": 2,
-    "VEN|Pre-Rift Kit": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "SFD|Pre-Rift Kit": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Bundle": 3,
+    "VEN|Pre-Rift Kit": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "sunnyhobbies": {
@@ -4813,9 +4851,9 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27
    }
   },
   "superelfcards": {
@@ -4823,12 +4861,12 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Pre-Rift Kit": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Pre-Rift Kit": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "sweetsandgeeks": {
@@ -4842,26 +4880,26 @@
     "UNL|Booster Box": 1
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "OGN|Booster Pack": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Pre-Rift Kit": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Box": 26,
+    "OGN|Booster Box": 27,
+    "OGN|Booster Pack": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Pre-Rift Kit": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Box": 27,
     "SFD|Booster Pack": 22,
-    "SFD|Champion Deck (Rumble)": 26,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Booster Pack": 2,
     "UNL|Champion Deck (Vex)": 3,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Pre-Rift Kit": 26,
-    "VEN|Showdown Decks": 26,
-    "VEN|Booster Box": 6,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Pre-Rift Kit": 27,
+    "VEN|Showdown Decks": 27,
+    "VEN|Booster Box": 7,
     "OGN|Champion Deck (Lee Sin)": 1,
     "SFD|Pre-Rift Kit": 1,
-    "UNL|Booster Box": 1,
+    "UNL|Booster Box": 2,
     "UNL|Pre-Rift Kit": 1,
     "VEN|Bundle": 1
    }
@@ -4874,29 +4912,30 @@
     "OGN|Booster Pack": 1
    },
    "contested": {
-    "RAD|Booster Box": 26,
+    "RAD|Booster Box": 27,
     "SFD|Champion Deck (Rumble)": 14,
     "UNL|Booster Box": 18,
     "UNL|Booster Pack": 24,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
     "OGN|Booster Box": 17,
-    "OGN|Booster Pack": 21,
-    "RAD|Showdown Decks": 4
+    "OGN|Booster Pack": 22,
+    "RAD|Showdown Decks": 5,
+    "LGC|Booster Box": 1
    }
   },
   "tcgalchemists": {
    "name": "The TCG Alchemists",
    "country": "SG",
    "wins": {
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "SFD|Champion Deck (Rumble)": 26
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "SFD|Champion Deck (Rumble)": 27
    },
    "contested": {
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "SFD|Champion Deck (Rumble)": 26
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "SFD|Champion Deck (Rumble)": 27
    }
   },
   "tcgking": {
@@ -4904,28 +4943,28 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "OGN|Champion Deck (Jinx)": 2,
-    "OGN|Champion Deck (Lee Sin)": 2,
-    "OGN|Champion Deck (Viktor)": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "SFD|Booster Box": 2,
-    "SFD|Booster Pack": 2,
-    "SFD|Champion Deck (Fiora)": 2,
-    "SFD|Champion Deck (Rumble)": 2,
-    "UNL|Booster Box": 2,
-    "UNL|Booster Pack": 2,
-    "UNL|Champion Deck (Vex)": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Booster Pack": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "OGN|Champion Deck (Jinx)": 3,
+    "OGN|Champion Deck (Lee Sin)": 3,
+    "OGN|Champion Deck (Viktor)": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "SFD|Booster Box": 3,
+    "SFD|Booster Pack": 3,
+    "SFD|Champion Deck (Fiora)": 3,
+    "SFD|Champion Deck (Rumble)": 3,
+    "UNL|Booster Box": 3,
+    "UNL|Booster Pack": 3,
+    "UNL|Champion Deck (Vex)": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Booster Pack": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "tcgstar": {
@@ -4933,9 +4972,9 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "VEN|Showdown Decks": 2,
-    "giftoftheriftbundle": 2
+    "RAD|Booster Box": 3,
+    "VEN|Showdown Decks": 3,
+    "giftoftheriftbundle": 3
    }
   },
   "tcgstars": {
@@ -4945,9 +4984,9 @@
     "RAD|Booster Pack": 1
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3
    }
   },
   "tcgtavern": {
@@ -4955,10 +4994,10 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "teamcardgame": {
@@ -4966,26 +5005,26 @@
    "country": "SG",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2
+    "RAD|Booster Box": 3
    }
   },
   "teamcardtitan": {
    "name": "Team Card Titan",
    "country": "AU",
    "wins": {
-    "RAD|Bundle": 20,
+    "RAD|Bundle": 21,
     "VEN|Bundle": 16,
     "RAD|Booster Box": 21,
     "VEN|Booster Box": 22
    },
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
     "SFD|Booster Box": 12,
-    "VEN|Booster Box": 26,
+    "VEN|Booster Box": 27,
     "VEN|Bundle": 16,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "tefuda": {
@@ -4993,12 +5032,12 @@
    "country": "SG",
    "wins": {
     "VEN|Showdown Decks": 6,
-    "RAD|Booster Box": 2
+    "RAD|Booster Box": 3
    },
    "contested": {
     "VEN|Showdown Decks": 6,
-    "OGN|Booster Box": 2,
-    "RAD|Booster Box": 2
+    "OGN|Booster Box": 3,
+    "RAD|Booster Box": 3
    }
   },
   "thecardcave": {
@@ -5008,7 +5047,7 @@
     "RAD|Showdown Decks": 9
    },
    "contested": {
-    "RAD|Showdown Decks": 26
+    "RAD|Showdown Decks": 27
    }
   },
   "thecollectionrealm": {
@@ -5020,11 +5059,11 @@
    },
    "contested": {
     "OGN|Booster Box": 25,
-    "SFD|Booster Box": 26,
-    "UNL|Booster Box": 26,
-    "VEN|Booster Box": 26,
-    "RAD|Booster Box": 18,
-    "giftoftheriftbundle": 8
+    "SFD|Booster Box": 27,
+    "UNL|Booster Box": 27,
+    "VEN|Booster Box": 27,
+    "RAD|Booster Box": 19,
+    "giftoftheriftbundle": 9
    }
   },
   "thecombatcompany": {
@@ -5037,10 +5076,10 @@
    },
    "contested": {
     "RAD|Booster Box": 21,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "UNL|Booster Box": 8,
-    "VEN|Booster Box": 8
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "UNL|Booster Box": 9,
+    "VEN|Booster Box": 9
    }
   },
   "thedropcardshop": {
@@ -5060,17 +5099,17 @@
     "UNL|Booster Box": 1
    },
    "contested": {
-    "OGN|Champion Deck (Jinx)": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck (Rumble)": 26,
+    "OGN|Champion Deck (Jinx)": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck (Rumble)": 27,
     "UNL|Champion Deck (Vex)": 20,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27,
     "OGN|Booster Box": 3,
-    "RAD|Booster Box": 9,
-    "RAD|Bundle": 17,
+    "RAD|Booster Box": 10,
+    "RAD|Bundle": 18,
     "UNL|Booster Box": 1,
-    "SFD|Champion Deck (Fiora)": 10,
+    "SFD|Champion Deck (Fiora)": 11,
     "VEN|Booster Box": 3
    }
   },
@@ -5082,8 +5121,8 @@
    },
    "contested": {
     "OGN|Booster Box": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27,
     "RAD|Bundle": 14
    }
   },
@@ -5091,15 +5130,15 @@
    "name": "The Hobby Hub",
    "country": "US",
    "wins": {
-    "OGN|Booster Case": 2,
-    "VEN|Pre-Rift Kit": 2
+    "OGN|Booster Case": 3,
+    "VEN|Pre-Rift Kit": 3
    },
    "contested": {
-    "OGN|Booster Case": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "VEN|Pre-Rift Kit": 2
+    "OGN|Booster Case": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "VEN|Pre-Rift Kit": 3
    }
   },
   "thehouseofgames": {
@@ -5107,9 +5146,9 @@
    "country": "EU",
    "wins": {},
    "contested": {
-    "OGS|Proving Grounds": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2
+    "OGS|Proving Grounds": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3
    }
   },
   "thehubtcg": {
@@ -5117,10 +5156,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Pack": 26,
-    "RAD|Showdown Decks": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 3
+    "RAD|Booster Pack": 27,
+    "RAD|Showdown Decks": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 4
    }
   },
   "theperkcards": {
@@ -5128,10 +5167,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Booster Box": 2
+    "OGN|Booster Box": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Booster Box": 3
    }
   },
   "thepokestops": {
@@ -5139,11 +5178,11 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "RAD|Booster Box": 2,
-    "SFD|Booster Box": 2,
-    "VEN|Booster Box": 2,
-    "VEN|Bundle": 2
+    "OGN|Booster Box": 3,
+    "RAD|Booster Box": 3,
+    "SFD|Booster Box": 3,
+    "VEN|Booster Box": 3,
+    "VEN|Bundle": 3
    }
   },
   "thesidedeck": {
@@ -5151,16 +5190,16 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Showdown Decks": 4
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Showdown Decks": 5
    }
   },
   "thetcggroup": {
@@ -5168,11 +5207,11 @@
    "country": "UK",
    "wins": {},
    "contested": {
-    "RAD|Bundle": 26,
+    "RAD|Bundle": 27,
     "RAD|Pre-Rift Kit": 9,
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "thewarpgate": {
@@ -5184,11 +5223,11 @@
    },
    "contested": {
     "OGN|Booster Box": 10,
-    "UNL|Booster Pack": 26,
+    "UNL|Booster Pack": 27,
     "VEN|Pre-Rift Kit": 20,
-    "VEN|Showdown Decks": 26,
+    "VEN|Showdown Decks": 27,
     "VEN|Booster Pack": 5,
-    "OGN|Booster Pack": 9
+    "OGN|Booster Pack": 10
    }
   },
   "thistletavern": {
@@ -5202,55 +5241,55 @@
     "SFD|Champion Deck (Rumble)": 15,
     "UNL|Champion Deck (Vi)": 4,
     "VEN|Bundle": 8,
-    "RAD|Booster Pack": 2
+    "RAD|Booster Pack": 3
    },
    "contested": {
-    "LGC|Champion Deck (Ashe)": 26,
-    "LGC|Champion Deck (Garen)": 26,
-    "LGC|Champion Deck (Lux)": 26,
-    "LGC|Champion Deck (Tryndamere)": 26,
-    "OGS|Proving Grounds": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
+    "LGC|Champion Deck (Ashe)": 27,
+    "LGC|Champion Deck (Garen)": 27,
+    "LGC|Champion Deck (Lux)": 27,
+    "LGC|Champion Deck (Tryndamere)": 27,
+    "OGS|Proving Grounds": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
     "SFD|Champion Deck (Rumble)": 15,
     "UNL|Champion Deck (Vi)": 4,
     "VEN|Bundle": 24,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "threestonesgames": {
    "name": "Three Stones Games",
    "country": "EU",
    "wins": {
-    "RAD|Booster Box": 1,
-    "VEN|Showdown Decks": 1
+    "RAD|Booster Box": 2,
+    "VEN|Showdown Decks": 2
    },
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
-    "VEN|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
+    "VEN|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "tierzerogames": {
    "name": "Tier Zero Games",
    "country": "UK",
    "wins": {
-    "LGC|Champion Deck (Ashe)": 4,
-    "LGC|Champion Deck (Garen)": 4,
-    "LGC|Champion Deck (Lux)": 4,
-    "LGC|Champion Deck (Tryndamere)": 4
+    "LGC|Champion Deck (Ashe)": 5,
+    "LGC|Champion Deck (Garen)": 5,
+    "LGC|Champion Deck (Lux)": 5,
+    "LGC|Champion Deck (Tryndamere)": 5
    },
    "contested": {
-    "LGC|Champion Deck (Ashe)": 26,
-    "LGC|Champion Deck (Garen)": 26,
-    "LGC|Champion Deck (Lux)": 26,
-    "LGC|Champion Deck (Tryndamere)": 26,
+    "LGC|Champion Deck (Ashe)": 27,
+    "LGC|Champion Deck (Garen)": 27,
+    "LGC|Champion Deck (Lux)": 27,
+    "LGC|Champion Deck (Tryndamere)": 27,
     "OGS|Proving Grounds": 25,
     "RAD|Booster Box": 25,
-    "RAD|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
     "SFD|Champion Deck (Fiora)": 3
    }
   },
@@ -5265,48 +5304,48 @@
     "VEN|Bundle": 15,
     "RAD|Pre-Rift Kit": 1,
     "UNL|Pre-Rift Kit": 9,
-    "VEN|Pre-Rift Kit": 2
+    "VEN|Pre-Rift Kit": 3
    },
    "contested": {
-    "OGN|Booster Box": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Box": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Bundle": 26,
-    "VEN|Showdown Decks": 26,
-    "RAD|Booster Box": 23,
-    "RAD|Pre-Rift Kit": 3,
-    "UNL|Pre-Rift Kit": 11,
-    "VEN|Pre-Rift Kit": 2
+    "OGN|Booster Box": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Box": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Bundle": 27,
+    "VEN|Showdown Decks": 27,
+    "RAD|Booster Box": 24,
+    "RAD|Pre-Rift Kit": 4,
+    "UNL|Pre-Rift Kit": 12,
+    "VEN|Pre-Rift Kit": 3
    }
   },
   "tkotoyco": {
    "name": "TKO Toy Co",
    "country": "CA",
    "wins": {
-    "SFD|Champion Deck": 26,
+    "SFD|Champion Deck": 27,
     "VEN|Pre-Rift Kit": 17,
     "RAD|Pre-Rift Kit": 2
    },
    "contested": {
-    "OGN|Champion Deck": 26,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
+    "OGN|Champion Deck": 27,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
     "RAD|Bundle": 5,
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck": 26,
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck": 27,
     "UNL|Champion Deck": 4,
     "VEN|Booster Box": 20,
-    "VEN|Booster Pack": 26,
+    "VEN|Booster Pack": 27,
     "VEN|Bundle": 13,
     "VEN|Pre-Rift Kit": 17,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 24,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 25,
     "OGN|Booster Pack": 11,
-    "RAD|Pre-Rift Kit": 12
+    "RAD|Pre-Rift Kit": 13
    }
   },
   "tokyotoys": {
@@ -5314,16 +5353,16 @@
    "country": "UK",
    "wins": {
     "OGN|Booster Box": 7,
-    "OGN|Booster Pack": 18
+    "OGN|Booster Pack": 19
    },
    "contested": {
-    "OGN|Booster Box": 17,
-    "OGN|Booster Pack": 18,
-    "RAD|Booster Box": 18,
-    "RAD|Booster Pack": 18,
+    "OGN|Booster Box": 18,
+    "OGN|Booster Pack": 19,
+    "RAD|Booster Box": 19,
+    "RAD|Booster Pack": 19,
     "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 18,
-    "VEN|Booster Box": 18
+    "RAD|Showdown Decks": 19,
+    "VEN|Booster Box": 19
    }
   },
   "topspot": {
@@ -5331,11 +5370,11 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "torchlightgh": {
@@ -5343,18 +5382,18 @@
    "country": "CA",
    "wins": {
     "VEN|Bundle": 24,
-    "SFD|Champion Deck (Rumble)": 3,
+    "SFD|Champion Deck (Rumble)": 4,
     "giftoftheriftbundle": 1
    },
    "contested": {
-    "RAD|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
     "SFD|Booster Box": 25,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Champion Deck (Vi)": 26,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Champion Deck (Vi)": 27,
     "VEN|Bundle": 24,
-    "VEN|Showdown Decks": 26,
-    "VEN|Booster Box": 15,
-    "giftoftheriftbundle": 3
+    "VEN|Showdown Decks": 27,
+    "VEN|Booster Box": 16,
+    "giftoftheriftbundle": 4
    }
   },
   "totalcards": {
@@ -5362,8 +5401,8 @@
    "country": "UK",
    "wins": {},
    "contested": {
-    "RAD|Showdown Decks": 26,
-    "VEN|Booster Box": 2
+    "RAD|Showdown Decks": 27,
+    "VEN|Booster Box": 3
    }
   },
   "toysnowman": {
@@ -5371,12 +5410,12 @@
    "country": "CA",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 22,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
+    "OGN|Booster Box": 23,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
     "RAD|Booster Box": 11
    }
   },
@@ -5385,10 +5424,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGS|Proving Grounds": 2,
+    "OGN|Booster Box": 3,
+    "OGS|Proving Grounds": 3,
     "VEN|Booster Box": 2,
-    "VEN|Showdown Decks": 2
+    "VEN|Showdown Decks": 3
    }
   },
   "tradingcardsxxx": {
@@ -5400,13 +5439,13 @@
     "VEN|Bundle": 8
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vex)": 24,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Bundle": 16,
-    "VEN|Showdown Decks": 26
+    "OGS|Proving Grounds": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vex)": 25,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Bundle": 17,
+    "VEN|Showdown Decks": 27
    }
   },
   "tradingcardworld": {
@@ -5414,26 +5453,26 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "triadgroup": {
    "name": "Triad Cards and Gaming",
    "country": "US",
    "wins": {
-    "OGS|Proving Grounds": 26,
+    "OGS|Proving Grounds": 27,
     "UNL|Pre-Rift Kit": 7,
     "VEN|Showdown Decks": 5
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "SFD|Champion Deck (Rumble)": 8,
-    "VEN|Showdown Decks": 26,
+    "OGS|Proving Grounds": 27,
+    "SFD|Champion Deck (Rumble)": 9,
+    "VEN|Showdown Decks": 27,
     "UNL|Pre-Rift Kit": 7,
-    "OGN|Booster Box": 6,
-    "UNL|Champion Deck (Vex)": 2
+    "OGN|Booster Box": 7,
+    "UNL|Champion Deck (Vex)": 3
    }
   },
   "trinityhobby": {
@@ -5444,10 +5483,10 @@
    },
    "contested": {
     "OGN|Booster Box": 17,
-    "RAD|Showdown Decks": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
     "LGC|Booster Box": 2
    }
   },
@@ -5459,10 +5498,10 @@
    },
    "contested": {
     "RAD|Booster Box": 3,
-    "RAD|Showdown Decks": 26,
+    "RAD|Showdown Decks": 27,
     "SFD|Booster Box": 17,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Showdown Decks": 26
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Showdown Decks": 27
    }
   },
   "trollaustralia": {
@@ -5472,10 +5511,10 @@
     "SFD|Booster Box": 1
    },
    "contested": {
-    "SFD|Champion Deck (Rumble)": 26,
-    "RAD|Bundle": 24,
+    "SFD|Champion Deck (Rumble)": 27,
+    "RAD|Bundle": 25,
     "SFD|Booster Box": 1,
-    "VEN|Booster Box": 24
+    "VEN|Booster Box": 25
    }
   },
   "trollaustraliamelb": {
@@ -5483,44 +5522,44 @@
    "country": "AU",
    "wins": {
     "OGN|Champion Deck (Jinx)": 22,
-    "OGN|Champion Deck (Lee Sin)": 26,
-    "VEN|Booster Pack": 8
+    "OGN|Champion Deck (Lee Sin)": 27,
+    "VEN|Booster Pack": 9
    },
    "contested": {
-    "OGN|Champion Deck (Jinx)": 26,
-    "OGN|Champion Deck (Lee Sin)": 26,
+    "OGN|Champion Deck (Jinx)": 27,
+    "OGN|Champion Deck (Lee Sin)": 27,
     "SFD|Booster Box": 3,
-    "SFD|Champion Deck (Fiora)": 26,
-    "SFD|Champion Deck (Rumble)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Showdown Decks": 26,
-    "VEN|Booster Pack": 10
+    "SFD|Champion Deck (Fiora)": 27,
+    "SFD|Champion Deck (Rumble)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Showdown Decks": 27,
+    "VEN|Booster Pack": 11
    }
   },
   "troveofcollectibles": {
    "name": "Trove of Collectibles",
    "country": "US",
    "wins": {
-    "OGN|Booster Pack": 8
+    "OGN|Booster Pack": 9
    },
    "contested": {
-    "RAD|Booster Box": 26,
-    "OGN|Booster Pack": 8,
-    "UNL|Champion Deck (Vi)": 4
+    "RAD|Booster Box": 27,
+    "OGN|Booster Pack": 9,
+    "UNL|Champion Deck (Vi)": 5
    }
   },
   "turnordergames": {
    "name": "Turn Order Games",
    "country": "AU",
    "wins": {
-    "OGS|Proving Grounds": 15
+    "OGS|Proving Grounds": 16
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26
+    "OGS|Proving Grounds": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27
    }
   },
   "turtletcg": {
@@ -5529,15 +5568,15 @@
    "wins": {
     "UNL|Booster Pack": 1,
     "UNL|Pre-Rift Kit": 22,
-    "UNL|Booster Box": 13
+    "UNL|Booster Box": 14
    },
    "contested": {
-    "OGN|Champion Deck (Jinx)": 26,
+    "OGN|Champion Deck (Jinx)": 27,
     "RAD|Booster Box": 12,
-    "RAD|Showdown Decks": 26,
-    "UNL|Booster Box": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
+    "RAD|Showdown Decks": 27,
+    "UNL|Booster Box": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
     "VEN|Bundle": 10,
     "UNL|Booster Pack": 1,
     "UNL|Pre-Rift Kit": 22,
@@ -5560,9 +5599,9 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Booster Box": 2
+    "RAD|Booster Box": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Booster Box": 3
    }
   },
   "universetcg": {
@@ -5572,31 +5611,31 @@
     "UNL|Booster Box": 8,
     "SFD|Champion Deck (Rumble)": 6,
     "LGC|Bundle": 8,
-    "SFD|Champion Deck (Fiora)": 2,
-    "VEN|Booster Case": 2
+    "SFD|Champion Deck (Fiora)": 3,
+    "VEN|Booster Case": 3
    },
    "contested": {
-    "OGS|Proving Grounds": 26,
+    "OGS|Proving Grounds": 27,
     "SFD|Booster Box": 9,
     "UNL|Booster Box": 8,
-    "VEN|Bundle": 26,
-    "SFD|Champion Deck (Rumble)": 17,
+    "VEN|Bundle": 27,
+    "SFD|Champion Deck (Rumble)": 18,
     "UNL|Champion Deck (Vex)": 1,
-    "UNL|Champion Deck (Vi)": 17,
-    "VEN|Showdown Decks": 14,
-    "LGC|Booster Box": 7,
-    "LGC|Bundle": 11,
-    "LGC|Proving Grounds 2nd Edition": 11,
-    "RAD|Booster Box": 11,
+    "UNL|Champion Deck (Vi)": 18,
+    "VEN|Showdown Decks": 15,
+    "LGC|Booster Box": 8,
+    "LGC|Bundle": 12,
+    "LGC|Proving Grounds 2nd Edition": 12,
+    "RAD|Booster Box": 12,
     "RAD|Booster Case": 1,
-    "RAD|Bundle": 11,
-    "RAD|Showdown Decks": 11,
+    "RAD|Bundle": 12,
+    "RAD|Showdown Decks": 12,
     "REC|Booster Box": 1,
-    "UNL|Pre-Rift Kit": 11,
-    "giftoftheriftbundle": 8,
-    "LGC|Booster Case": 5,
-    "SFD|Champion Deck (Fiora)": 2,
-    "VEN|Booster Case": 2
+    "UNL|Pre-Rift Kit": 12,
+    "giftoftheriftbundle": 9,
+    "LGC|Booster Case": 6,
+    "SFD|Champion Deck (Fiora)": 3,
+    "VEN|Booster Case": 3
    }
   },
   "unpluggedgamestore": {
@@ -5604,11 +5643,11 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Champion Deck (Jinx)": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Bundle": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Booster Box": 2
+    "OGN|Champion Deck (Jinx)": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Bundle": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Booster Box": 3
    }
   },
   "uppercrust": {
@@ -5616,15 +5655,15 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2,
-    "RAD|Bundle": 2,
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3,
+    "RAD|Bundle": 3,
     "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Champion Deck (Vi)": 2,
-    "VEN|Showdown Decks": 2
+    "RAD|Showdown Decks": 3,
+    "UNL|Champion Deck (Vi)": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "vaultgamestore": {
@@ -5632,8 +5671,8 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 22,
-    "VEN|Booster Box": 21
+    "RAD|Booster Box": 23,
+    "VEN|Booster Box": 22
    }
   },
   "vgmx": {
@@ -5641,10 +5680,10 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGN|Booster Pack": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Booster Pack": 2
+    "OGN|Booster Box": 3,
+    "OGN|Booster Pack": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Booster Pack": 3
    }
   },
   "vulcancollectibles": {
@@ -5653,12 +5692,12 @@
    "wins": {},
    "contested": {
     "UNL|Champion Deck (Vex)": 7,
-    "UNL|Champion Deck (Vi)": 26,
+    "UNL|Champion Deck (Vi)": 27,
     "VEN|Bundle": 4,
-    "VEN|Showdown Decks": 26,
+    "VEN|Showdown Decks": 27,
     "riftboundshowdowndeckevelynnvsseraphine": 22,
-    "RAD|Showdown Decks": 4,
-    "SFD|Booster Box": 3
+    "RAD|Showdown Decks": 5,
+    "SFD|Booster Box": 4
    }
   },
   "wanderingadventures": {
@@ -5668,10 +5707,10 @@
     "LGC|Pre-Rift Kit": 7
    },
    "contested": {
-    "OGN|Booster Box": 3,
+    "OGN|Booster Box": 4,
     "LGC|Pre-Rift Kit": 21,
-    "VEN|Booster Box": 9,
-    "VEN|Booster Pack": 3
+    "VEN|Booster Box": 10,
+    "VEN|Booster Pack": 4
    }
   },
   "wegeektogether": {
@@ -5679,13 +5718,13 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "LGC|Booster Box": 2,
-    "LGC|Bundle": 2,
-    "LGC|Proving Grounds 2nd Edition": 2,
-    "RAD|Booster Box": 2,
-    "RAD|Pre-Rift Kit": 2,
-    "RAD|Showdown Decks": 2,
-    "VEN|Booster Box": 2
+    "LGC|Booster Box": 3,
+    "LGC|Bundle": 3,
+    "LGC|Proving Grounds 2nd Edition": 3,
+    "RAD|Booster Box": 3,
+    "RAD|Pre-Rift Kit": 3,
+    "RAD|Showdown Decks": 3,
+    "VEN|Booster Box": 3
    }
   },
   "wolcowgaming": {
@@ -5693,11 +5732,11 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "OGN|Booster Box": 2,
-    "OGS|Proving Grounds": 2,
-    "RAD|Showdown Decks": 2,
-    "UNL|Booster Pack": 2,
-    "VEN|Showdown Decks": 2
+    "OGN|Booster Box": 3,
+    "OGS|Proving Grounds": 3,
+    "RAD|Showdown Decks": 3,
+    "UNL|Booster Pack": 3,
+    "VEN|Showdown Decks": 3
    }
   },
   "wolfdentcg": {
@@ -5707,19 +5746,19 @@
     "OGN|Booster Pack": 14
    },
    "contested": {
-    "OGN|Booster Pack": 26,
+    "OGN|Booster Pack": 27,
     "OGS|Proving Grounds": 15,
-    "RAD|Booster Box": 26,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Booster Pack": 26,
+    "RAD|Booster Box": 27,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Booster Pack": 27,
     "VEN|Booster Box": 11,
     "VEN|Booster Pack": 20,
     "VEN|Bundle": 3,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 2,
-    "SFD|Champion Deck": 2
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 3,
+    "SFD|Champion Deck": 3
    }
   },
   "wonderlandgames": {
@@ -5732,9 +5771,9 @@
    "contested": {
     "RAD|Booster Box": 23,
     "RAD|Bundle": 23,
-    "RAD|Showdown Decks Display": 26,
+    "RAD|Showdown Decks Display": 27,
     "VEN|Booster Box": 22,
-    "VEN|Showdown Decks": 26
+    "VEN|Showdown Decks": 27
    }
   },
   "wulfgaming": {
@@ -5754,20 +5793,20 @@
     "VEN|Booster Pack": 2
    },
    "contested": {
-    "RAD|Booster Box": 26,
+    "RAD|Booster Box": 27,
     "RAD|Booster Case": 1,
-    "RAD|Booster Pack": 26,
-    "RAD|Bundle": 26,
-    "RAD|Pre-Rift Kit": 26,
-    "RAD|Showdown Decks": 26,
-    "SFD|Champion Deck (Fiora)": 26,
-    "UNL|Champion Deck (Vi)": 26,
-    "VEN|Booster Box": 26,
-    "VEN|Booster Pack": 26,
-    "VEN|Showdown Decks": 26,
-    "OGN|Booster Box": 12,
+    "RAD|Booster Pack": 27,
+    "RAD|Bundle": 27,
+    "RAD|Pre-Rift Kit": 27,
+    "RAD|Showdown Decks": 27,
+    "SFD|Champion Deck (Fiora)": 27,
+    "UNL|Champion Deck (Vi)": 27,
+    "VEN|Booster Box": 27,
+    "VEN|Booster Pack": 27,
+    "VEN|Showdown Decks": 27,
+    "OGN|Booster Box": 13,
     "VEN|Bundle": 5,
-    "OGN|Booster Pack": 7
+    "OGN|Booster Pack": 8
    }
   },
   "yardsgames": {
@@ -5775,7 +5814,7 @@
    "country": "UK",
    "wins": {},
    "contested": {
-    "RAD|Bundle": 26
+    "RAD|Bundle": 27
    }
   },
   "zamliytcg": {
@@ -5783,8 +5822,8 @@
    "country": "US",
    "wins": {},
    "contested": {
-    "RAD|Booster Box": 26,
-    "OGN|Booster Pack": 8
+    "RAD|Booster Box": 27,
+    "OGN|Booster Pack": 9
    }
   },
   "zatugames": {
@@ -5794,21 +5833,21 @@
     "RAD|Pre-Rift Kit": 9,
     "SFD|Champion Deck (Fiora)": 3,
     "RAD|Booster Pack": 7,
-    "LGC|Proving Grounds 2nd Edition": 4
+    "LGC|Proving Grounds 2nd Edition": 5
    },
    "contested": {
-    "OGS|Proving Grounds": 20,
+    "OGS|Proving Grounds": 21,
     "RAD|Pre-Rift Kit": 9,
-    "VEN|Showdown Decks": 26,
+    "VEN|Showdown Decks": 27,
     "RAD|Bundle": 9,
     "SFD|Champion Deck (Fiora)": 3,
-    "SFD|Champion Deck (Rumble)": 23,
+    "SFD|Champion Deck (Rumble)": 24,
     "RAD|Booster Box": 8,
-    "RAD|Showdown Decks": 18,
-    "RAD|Booster Pack": 10,
-    "VEN|Booster Box": 8,
-    "VEN|Booster Pack": 8,
-    "LGC|Proving Grounds 2nd Edition": 4
+    "RAD|Showdown Decks": 19,
+    "RAD|Booster Pack": 11,
+    "VEN|Booster Box": 9,
+    "VEN|Booster Pack": 9,
+    "LGC|Proving Grounds 2nd Edition": 5
    }
   },
   "zulusgames": {
@@ -5820,7 +5859,7 @@
    "contested": {
     "RAD|Booster Box": 2,
     "RAD|Bundle": 2,
-    "UNL|Champion Deck (Vi)": 2,
+    "UNL|Champion Deck (Vi)": 3,
     "VEN|Bundle": 1
    }
   }
