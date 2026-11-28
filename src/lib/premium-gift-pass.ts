@@ -73,6 +73,8 @@ export const GIFT_FEATURES: Record<string, GiftFeature[]> = {
   wax: [NO_ADS, ALERTS, RESTOCK, WATCH, COLLECTION],
   scent: [NO_ADS, ALERTS, WATCH, { title: "Back-in-stock and price-drop emails", line: "For every bottle on your list.", path: "/watches" }],
   kaeyoung: [NO_ADS, ALERTS, WATCH, { title: "Back-in-stock and price-drop emails", line: "For every product on your list.", path: "/watches" }],
+  // Compare Empire's /premium (2026-11-28): no banner ads, and price alerts that need no confirmation email when signed in.
+  ce: [NO_ADS, { title: "Price alerts without the confirmation email", line: "Signed in, an alert is live the moment you set it.", path: "/account" }],
   // RiftCompare's own Premium, as /premium states it (lib/email.ts premiumEmailFeatures).
   rift: [
     { title: "Every deal in Deal Finder", line: "Cards selling below TCGplayer market right now, the whole list.", path: "/tools/deal-finder" },

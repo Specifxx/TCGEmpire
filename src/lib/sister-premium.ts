@@ -16,6 +16,7 @@ import { SignJWT, createRemoteJWKSet, jwtVerify } from "jose";
 import { sisterKeyPair, SISTER_SIGN_IN_ISSUER } from "./sister-sign-in";
 import { isPremium } from "./premium";
 import { prisma } from "./db";
+import type { SisterAlertSite } from "./sister-alerts/sites";
 
 export interface PremiumSite {
   key: string;
@@ -46,7 +47,21 @@ export const SISTER_PREMIUM_SITES: PremiumSite[] = [
   { key: "cyberpunk", name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com" },
   // SportsCardCompare (2026-11-19, the same rollout): sign-in, watch list, back-in-stock, collection behind sign-in and Premium. Quiet.
   { key: "wax", name: "SportsCardCompare", url: "https://sportscardcompare.com" },
+  // Compare Empire (2026-11-28, owner: "stores like Compare Empire should also have login … all the features that users have"): sign-in,
+  // Premium (no banner ads) and its OWN price alerts, which stay in its own table (DECISIONS.md there, 2026-11-19). Quiet: never names RiftCompare.
+  { key: "ce", name: "Compare Empire", url: "https://compareempire.com" },
 ];
+
+/**
+ * The sign-in email's look for a premium site that keeps its own alerts and so is not a shared-alert site (Compare Empire, 2026-11-28:
+ * its alert table is its own, and it must never accept a shared alert, tests/sister-alerts.test.ts). Quiet: the email names only it.
+ */
+const SIGN_IN_ONLY_BRANDS: Record<string, { color: string }> = { ce: { color: "#5B3DF5" } };
+
+export function signInMailBrand(site: PremiumSite): SisterAlertSite | null {
+  const b = SIGN_IN_ONLY_BRANDS[site.key];
+  return b ? { key: site.key as SisterAlertSite["key"], name: site.name, url: site.url, group: "home" as SisterAlertSite["group"], color: b.color, quiet: true } : null;
+}
 
 export const PREMIUM_SESSION_DAYS = 60;
 const KID = "sister-sign-in-1";

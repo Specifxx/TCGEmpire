@@ -21,6 +21,7 @@ import {
   verifyEmailLinkCode,
   verifyGoogleCredential,
   type PremiumSite,
+  signInMailBrand,
 } from "@/lib/sister-premium";
 
 export const dynamic = "force-dynamic";
@@ -72,7 +73,7 @@ export async function POST(req: Request) {
       if (!rateLimit(`sister-premium-link:${email}`, 3, 60 * 60_000).ok) {
         return NextResponse.json({ error: "We've just sent you a link. Check your inbox (and spam)." }, { status: 429, headers });
       }
-      const mailSite = sisterSite(site.key);
+      const mailSite = sisterSite(site.key) ?? signInMailBrand(site);
       if (!mailSite) return NextResponse.json({ error: "Email sign-in isn't available here." }, { status: 503, headers });
       const url = emailLinkUrl(site, await signEmailLinkCode(site, email));
       const subject = `Your ${site.name} sign-in link`;

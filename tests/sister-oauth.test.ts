@@ -37,6 +37,7 @@ test("on-site sign-in (2026-11-21): only a listed provider via the sister's own 
   for (const k of ["dex", "mtg", "tcgprices", "gundam", "ygo", "lorcana", "cyberpunk", "scent", "kaeyoung", "wax"]) assert.ok(onSiteOAuth("discord", k), k);
   for (const k of ["mtg", "tcgprices", "gundam", "ygo", "lorcana", "cyberpunk", "scent", "kaeyoung"]) assert.ok(onSiteOAuth("google", k), k);
   assert.ok(!onSiteOAuth("google", "wax") && !onSiteOAuth("google", "dex"), "not registered in Google Cloud (10-domain limit; Dex has its own client)");
+  assert.ok(!onSiteOAuth("google", "ce") && !onSiteOAuth("discord", "ce"), "Compare Empire's callbacks are not registered with either app yet (2026-11-28)");
   assert.equal(sisterRedirectUri(sisterForCookie("mtg")!.url, "discord"), "https://mtgcompare.app/account-service/oauth/discord/callback");
   const start = read("src/app/api/sister-premium/oauth/[provider]/route.ts");
   assert.match(start, /q\.get\("via"\) === "site" && onSiteOAuth\(provider, site\.key\)/);
