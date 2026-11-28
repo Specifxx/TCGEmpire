@@ -50,6 +50,17 @@ const SEEDS: { seedKey: string; label: string; category: string; amountCents: nu
     recurrence: "once",
     note: "Approximate total so far, as one entry.",
   },
+  {
+    // Bought on Vercel 2026-11-28 with the owner's written yes; auto-renew off (owner: "dont renew"), so one charge only.
+    seedKey: "domain-brickcompare-app-2026",
+    label: "Domain brickcompare.app (purchase)",
+    category: "Hosting",
+    amountCents: 1099,
+    currency: "USD",
+    startDay: "2026-11-28",
+    recurrence: "once",
+    note: "US$9.99 + US$1.00 tax on Vercel. Auto-renew off; expires 2027-11-28.",
+  },
 ];
 
 let seeded = false;
