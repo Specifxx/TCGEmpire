@@ -186,6 +186,17 @@ export const SITES: Site[] = [
     basket: "/basket",
   },
   {
+    key: "brick",
+    name: "BrickCompare",
+    url: "https://brickcompare.app",
+    repo: "compare-empire/brickcompare",
+    searches: [{ kind: "sealed", q: "Millennium Falcon", expect: ["falcon"] }],
+    product: /^\/(?:(?:au|uk|ca|eu|sg)\/)?set\/\d{3,7}-[^/]+\/?$/,
+    searchPage: "/search?q={q}",
+    filters: { path: "/deals", q: "star" },
+    basket: "/shortlist",
+  },
+  {
     key: "scent",
     name: "ScentCompare",
     url: "https://scentcompare.app",

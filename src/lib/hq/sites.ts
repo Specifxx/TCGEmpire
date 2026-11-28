@@ -28,8 +28,10 @@ export interface HqSite {
   url: string;
   /** Search Console host, normalised (no scheme, no www). */
   host: string;
-  /** GitHub repo under Specifxx. */
+  /** GitHub repo under Specifxx (or under `owner`). */
   repo: string;
+  /** The repo's owner when it is not Specifxx (BrickCompare lives in the compare-empire organisation). */
+  owner?: string;
   /** Affiliate-tag prefixes whose earnings belong to this site. */
   tags: string[];
   /** Its own monitor publishes ops-status/status.json; null for RiftCompare (HQ reads its report directly) and sites without one. */
@@ -97,6 +99,18 @@ export const HQ_SITES: HqSite[] = [
     monitor: null,
     jobs: [{ file: "refresh-prices.yml", label: "Price refresh", maxAgeH: 12 }],
   },
+  // BrickCompare (owner, 2026-11-28): sealed LEGO, launched 28 Nov. No published ops-status yet: HQ watches its price refresh.
+  {
+    key: "brick",
+    label: "BrickCompare",
+    url: "https://brickcompare.app",
+    host: "brickcompare.app",
+    repo: "brickcompare",
+    owner: "compare-empire",
+    tags: ["brick"],
+    monitor: null,
+    jobs: [{ file: "refresh-prices.yml", label: "Price refresh", maxAgeH: 14 }],
+  },
   { key: "motor", label: "MotorCompare", url: "https://motorcompare.app", host: "motorcompare.app", repo: "motorcompare", tags: ["motor"], monitor: { workflow: "ops-monitor.yml", everyH: 3 } },
   // A private repository: Actions runs cannot be read with RiftCompare's token, so only its home page is probed.
   { key: "ce", label: "Compare Empire", url: "https://compareempire.com", host: "compareempire.com", repo: "compareempiretake2", tags: ["ce"], monitor: null, jobs: [] },
@@ -117,5 +131,6 @@ export function siteForTag(prefix: string): HqSite | null {
   return HQ_SITES.find((s) => s.tags.includes(prefix)) ?? null;
 }
 
-export const statusUrl = (s: HqSite) => `https://raw.githubusercontent.com/${OWNER_REPO}/${s.repo}/ops-status/status.json`;
-export const actionsUrl = (s: HqSite, workflow: string) => `https://github.com/${OWNER_REPO}/${s.repo}/actions/workflows/${workflow}`;
+export const repoPath = (s: Pick<HqSite, "repo" | "owner">) => `${s.owner ?? OWNER_REPO}/${s.repo}`;
+export const statusUrl = (s: HqSite) => `https://raw.githubusercontent.com/${repoPath(s)}/ops-status/status.json`;
+export const actionsUrl = (s: HqSite, workflow: string) => `https://github.com/${repoPath(s)}/actions/workflows/${workflow}`;

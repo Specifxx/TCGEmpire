@@ -4,7 +4,7 @@
 // runs. GitHub's API is read with the Actions token (public repositories only).
 // Every read is guarded: a source that cannot be read is "unknown", never an
 // alert and never a false ok. DECISIONS.md, "Empire HQ and the one Monday report".
-import { HQ_SITES, OWNER_REPO, statusUrl, type HqSite } from "./sites";
+import { HQ_SITES, OWNER_REPO, repoPath, statusUrl, type HqSite } from "./sites";
 import { healthFromProbe, healthFromStatus, type RunLite, type SiteHealth } from "./status";
 
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
@@ -27,7 +27,7 @@ async function text(deps: CollectDeps, url: string, headers: Record<string, stri
 async function runsOf(deps: CollectDeps, site: HqSite, file: string): Promise<RunLite[] | null> {
   const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
   if (deps.githubToken) headers.Authorization = `Bearer ${deps.githubToken}`;
-  const r = await text(deps, `https://api.github.com/repos/${OWNER_REPO}/${site.repo}/actions/workflows/${file}/runs?status=completed&per_page=5`, headers);
+  const r = await text(deps, `https://api.github.com/repos/${repoPath(site)}/actions/workflows/${file}/runs?status=completed&per_page=5`, headers);
   if (!r || r.status !== 200) return null;
   try {
     const j = JSON.parse(r.body) as { workflow_runs?: { conclusion: string | null; created_at: string }[] };
