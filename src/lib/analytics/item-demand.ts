@@ -9,7 +9,8 @@ import { siteForProject } from "@/lib/earnings/sites";
 //
 // Two real signals from Vercel's PUBLIC Web Analytics API (the same token and team as /admin/analytics):
 //   views   pageviews of each product page (by=requestPath, filtered to the site's product routes), last 28 and last 7 days.
-//   clicks  `buy_product` events by product (DexCompare sends them with every buy click; a site that sends none has none).
+//   clicks  `buy_product` events by product (DexCompare sends them with every buy click); a site that sends none gets its
+//           `buy_click` events by product page instead, keyed by the page's slug (2026-11-28).
 // The API answers at most 100 rows a query: the top 100 product pages a window, which is the head the home page needs.
 // Counts only: no visitor, no query string (requestPath is the path), nothing private.
 
@@ -49,6 +50,33 @@ export const DEMAND_ROUTES: Record<string, string[]> = {
   cc: ["/cameras/[slug]", "/lenses/[slug]", "/[market]/cameras/[slug]", "/[market]/lenses/[slug]"],
   ce: ["/[category]/[slug]", "/us/[category]/[slug]", "/uk/[category]/[slug]", "/ca/[category]/[slug]", "/sg/[category]/[slug]"],
 };
+
+/** Sites whose home ranking keys clicks by something other than the page slug (WargameCompare: the product id). */
+const NO_CLICK_FALLBACK = new Set(["wgc", "rc"]);
+
+/** The static part of each product route, for a contains() filter: "/[region]/p/[slug]" → "/p/". Routes with no static
+ *  segment are left out, and a fragment two routes share is asked once (so a click is never counted twice). Pure. */
+export function routeFragments(routes: readonly string[]): string[] {
+  const out = new Set<string>();
+  for (const r of routes) {
+    const fixed = r.split("/").filter((x) => x && !x.startsWith("["));
+    if (fixed.length) out.add(`/${fixed.join("/")}/`);
+  }
+  return [...out];
+}
+
+/** Path → count into slug → count: the segment after the fragment, only when it is the path's last one. Pure. */
+export function slugCounts(byPath: Map<string, number>, frag: string): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const [path, n] of byPath) {
+    const i = path.indexOf(frag);
+    if (i < 0) continue;
+    const slug = path.slice(i + frag.length).replace(/\/$/, "");
+    if (!slug || slug.includes("/")) continue;
+    out.set(slug, (out.get(slug) ?? 0) + n);
+  }
+  return out;
+}
 
 export const isDemandSite = (s: string) => Object.prototype.hasOwnProperty.call(DEMAND_ROUTES, s);
 
@@ -111,7 +139,14 @@ export async function loadItemDemand(site: string): Promise<ItemDemand> {
         for (const m of byRoute) if (m.size) (got = true), merge(views, m);
         // No row through the route filter (a route Vercel names differently): the top 100 paths unfiltered; the site keeps its own.
         if (!got) merge(views, await ask(VISITS, { projectId: p.id, since, by: "requestPath" }, "requestPath", "pageviews"));
-        merge(clicks, await ask(EVENTS, { projectId: p.id, since, by: "eventData/product", filter: "eventName eq 'buy_product'" }, "eventData", "count"));
+        const named = await ask(EVENTS, { projectId: p.id, since, by: "eventData/product", filter: "eventName eq 'buy_product'" }, "eventData", "count");
+        merge(clicks, named);
+        // No buy_product (every site but DexCompare): its buy_click events by the product page they came from, keyed by the
+        // page's slug (the quick view moves the URL to the product page, so its clicks count too). Clicks, unlike page views,
+        // are not inflated by the scraper bots that hit MTG's and other sites' product pages (2026-11-28, live stats read).
+        if (!named.size && !NO_CLICK_FALLBACK.has(site))
+          for (const frag of routeFragments(routes))
+            merge(clicks, slugCounts(await ask(EVENTS, { projectId: p.id, since, by: "requestPath", filter: `eventName eq 'buy_click' and contains(requestPath,'${frag}')` }, "requestPath", "count"), frag));
       }
       return { views, clicks };
     };

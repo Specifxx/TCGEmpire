@@ -22,3 +22,17 @@ test("only known sites answer, and the route is public counts with a six-hour CD
   assert.match(route, /s-maxage=21600/);
   assert.match(route, /s-maxage=60/);
 });
+
+test("buy_click fallback: product route fragments, asked once each", async () => {
+  const { routeFragments } = await import("../src/lib/analytics/item-demand");
+  assert.deepEqual(routeFragments(["/[region]/p/[slug]"]), ["/p/"]);
+  assert.deepEqual(routeFragments(["/card/[slug]", "/kit/[slug]"]), ["/card/", "/kit/"]);
+  assert.deepEqual(routeFragments(["/cameras/[slug]", "/[market]/cameras/[slug]"]), ["/cameras/"], "shared fragment counted once");
+  assert.deepEqual(routeFragments(["/[category]/[slug]"]), [], "no static segment: no fallback");
+});
+
+test("buy_click fallback: clicks keyed by the page's slug, every region summed", async () => {
+  const { slugCounts } = await import("../src/lib/analytics/item-demand");
+  const m = slugCounts(new Map([["/us/p/star-trek-play-booster-box", 85], ["/ca/p/star-trek-play-booster-box", 5], ["/us/p/x/extra", 9], ["/us/sealed", 4], ["/us/p/", 2]]), "/p/");
+  assert.deepEqual([...m], [["star-trek-play-booster-box", 90]]);
+});

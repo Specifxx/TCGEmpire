@@ -26447,3 +26447,15 @@ also refuses "@ <venue>" (never "@ RRP"), a day + month + year, a full d.m.yyyy 
 any sign is read: it dates the product, not an event. This reverses the 2026-11-25 line that counted only the plural
 "events". Over the whole 27 Nov export it refuses exactly 9 more rows of 4,963 (US 7, UK 1, EU 1). "Prerift Pack",
 "Pre-Rift Player Pack" and bare titles stay. Test: tests/radiance-sealed-gaps.test.ts (PR #727).
+
+## 2026-11-28: Home-page demand counts buy clicks on every site, not only DexCompare
+
+`/api/demand/<site>` (lib/analytics/item-demand.ts) fed every sister's home ranking with product page views plus
+`buy_product` clicks, but only DexCompare sends `buy_product`, so 17 sites ranked by page views alone, and views are the
+number the scraper bots inflate (MTG Compare 21-27 Nov: 7,971 visitors with no device and 16,064 desktop beside 7,912
+phones; its 788 buy clickers that week were real). A site with no `buy_product` now gets its `buy_click` events by product
+page (`contains(requestPath,'<fragment>')`, the static part of each product route), keyed by the page's slug, which is the
+`clickKey` every home ranking already reads. The quick view moves the URL to the product page, so its clicks count too.
+WargameCompare (keys by product id) and RiftCompare (its own ClickEvent rows) are left out; a route with no static
+segment (Compare Empire's `/[category]/[slug]`) gets no fallback. The admin "Most clicked" table reads the same loader,
+so those sites now show clicks instead of views. Tests: tests/item-demand.test.ts.
