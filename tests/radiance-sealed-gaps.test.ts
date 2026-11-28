@@ -86,6 +86,16 @@ test("a Pre-Rift title with no 'kit' and an event or component sign is refused; 
     "Riftbound: Radiance Win-A-Box Pre-Rift Oct 17th",
     "Unleashed Pre-Rift Precon - Ivern",
     "Riftbound League of Legends TCG: Unleashed Pre-Rift Deck",
+    // 2026-11-28, from the 27 Nov export: exactly these 9 rows more are refused.
+    "(Plainfield) Riftbound Legacy Pre-Rift Event",
+    "Riftbound: Legacy Pre-Rift @ The Refuge",
+    "Riftbound Legacy Pre-Rift Event - 27.01.2027",
+    "Riftbound Legacy Pre-Rift - Aberdeen - 24 January 2027",
+    "Riftbound Unleashed Pre-Rift Event Unleashed Weekend (Sat 5/2 & Sun 5/3)",
+    "Riftbound Radiance Pre-Rift Event",
+    "Riftbound Vendetta Pre-Rift Event",
+    "Radiance Pre-Rift - Riftbound Event",
+    "Unleashed - Pre-Rift Event - Unleashed (UNL)",
   ]) {
     assert.ok(isPreRiftEntry(t), t);
     assert.ok(!isTrackableSealedTitle(t), t);
@@ -101,6 +111,12 @@ test("a Pre-Rift title with no 'kit' and an event or component sign is refused; 
     "Riftbound Radiance Prerift English",
     "Riftbound League of Legends Legacy Booster Pack (Ships Jan 2027)",
     "RIFTBOUND GIFT OF THE RIFT BUNDLE Dec 4 Pre-Order",
+    "Legacy Pre-Rift Riftbound",
+    "Riftbound - League of Legends TCG: Radiance Prerift Pack",
+    "Riftound TCG: Unleashed Pre-Rift Player Pack (TCG)",
+    "Riftbound TCG League Of Legends Unleashed Pre-Rift Pack",
+    "Riftbound: Legacy Pre-Rift Event Kit",
+    "Riftbound Spiritforged Pre-Rift Kit (Release Date 06 Feb 2026)",
   ]) {
     assert.ok(!isPreRiftEntry(t), t);
   }

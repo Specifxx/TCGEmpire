@@ -223,9 +223,16 @@ const EVENT_ENTRY = /\b(?:mon|tues|wednes|thurs|fri|satur|sun)day\b|\b\d{1,2}(?:
 // 2026-10-16 (18h00)", "Radiance Pre-Rift at Jack's #1", "Radiance Win-A-Box Pre-Rift Oct 17th". A component: "Unleashed
 // Pre-Rift Precon - Ivern" (US$12.99, one deck out of the kit) and "Unleashed Pre-Rift Deck". A title with "kit" in it
 // is never touched, nor a bare "Riftbound Vendetta Pre-Rift" with no sign either way: the rule only refuses.
+// More seat shapes (2026-11-28, every title from data/public/sealed-listings.json of 27 Nov): Riot's products are the
+// "Pre-Rift Kit" and the "Pre-Rift Event Kit", so a title that says "Event" but no "kit" sells the event itself:
+// "(Plainfield) Riftbound Legacy Pre-Rift Event" (Moonshot, US$34.99) and "Riftbound: Legacy Pre-Rift @ The Refuge"
+// (US$30) were the two cheapest US rows on /sealed/lgc-pre-rift-kit beside TCGplayer's US$69.97 kit; "Riftbound Legacy
+// Pre-Rift Event - 27.01.2027", "Riftbound Legacy Pre-Rift - Aberdeen - 24 January 2027", "Riftbound Unleashed Pre-Rift
+// Event Unleashed Weekend (Sat 5/2 & Sun 5/3)". Signs: "event", "@ <venue>", a day before the month, a dotted or
+// slashed date, a short weekday before a date. "Prerift Pack" and "Pre-Rift Player Pack" name no event and are kept.
 const PRE_RIFT = /\bpre[-\s]?rift\b/i;
 const PRE_RIFT_ENTRY_SIGN =
-  /\bevents\b|\b(?:two|\d)\s+dates\b|\bat\s+[a-z]+'s\b|\bwin[-\s]a[-\s]box\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?\b(?!\d)|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}h\d{2}\b|\b\d{1,2}:\d{2}\b|\bprecons?\b|\bdecks?\b/i;
+  /\bevents?\b|@\s*\S|\b\d{1,2}(?:st|nd|rd|th)?\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b|\b\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?\b|\b(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)\.?\s+\d|\b(?:two|\d)\s+dates\b|\bat\s+[a-z]+'s\b|\bwin[-\s]a[-\s]box\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?\b(?!\d)|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}h\d{2}\b|\b\d{1,2}:\d{2}\b|\bprecons?\b|\bdecks?\b/i;
 export function isPreRiftEntry(title: string): boolean {
   return PRE_RIFT.test(title) && !/\bkits?\b/i.test(title) && PRE_RIFT_ENTRY_SIGN.test(title);
 }
