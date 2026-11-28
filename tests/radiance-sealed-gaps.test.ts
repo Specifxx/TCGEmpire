@@ -117,6 +117,14 @@ test("a Pre-Rift title with no 'kit' and an event or component sign is refused; 
     "Riftbound TCG League Of Legends Unleashed Pre-Rift Pack",
     "Riftbound: Legacy Pre-Rift Event Kit",
     "Riftbound Spiritforged Pre-Rift Kit (Release Date 06 Feb 2026)",
+    // Shapes a real product could carry (2026-11-28 review): a shipping note, a fraction, a price "@", a case of event kits.
+    "Riftbound Legacy Pre-Rift Pack (Release Date 23 Jan 2027)",
+    "Riftbound Legacy Pre-Rift Player Pack (Arrives 22 January)",
+    "Riftbound Legacy Pre-Rift Pack (Ships 22.01.2027)",
+    "Riftbound Pre-Rift Pack 1/2 Price",
+    "Radiance Pre-Rift Bundle @ RRP",
+    "Riftbound Vendetta Pre-Rift Event Sealed Case",
+    "Riftbound Pre-Rift Pack - 1 Market Exclusive",
   ]) {
     assert.ok(!isPreRiftEntry(t), t);
   }
