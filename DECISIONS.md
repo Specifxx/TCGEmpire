@@ -26414,3 +26414,4 @@ while either is on screen. It is the market's cheapest in-stock listing, the boa
 market only. One event, `bar_test` {k}: "<arm>:seen" once a visit, "<arm>:paid" / "<arm>:store" on the visit's first buy click of each
 kind on a sealed page. Read 16 Dec: paid clickers per 100 seen visits per arm. Rift's only new test (the card page's top-pair test is
 read 3 Dec); it rides the normal release. MTG and OP test the paid link inside their existing bars at the same time.
+Fallback release on 28 Nov at 02:50 UTC, so exactly one of the two urgent commits builds.
