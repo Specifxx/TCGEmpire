@@ -131,3 +131,12 @@ test("Gmail BCC route: admin-gated, grants through the same Counter row, capped 
   const unsub = readFileSync("src/app/api/premium-gift-pass/unsubscribe/route.ts", "utf8");
   assert.match(unsub, /if \(!token\) return page\(p\.get\("site"\) \?\? "rift", "email"\)/, "a BCC link with no token asks for the address");
 });
+
+test("Gmail BCC route can list a batch again without granting it twice", () => {
+  const route = readFileSync("src/app/api/admin/premium-gift-pass/route.ts", "utf8");
+  assert.match(route, /action === "granted"/);
+  const server = readFileSync("src/lib/premium-gift-pass-server.ts", "utf8");
+  const fn = server.slice(server.indexOf("export async function listGiftPassGranted"));
+  assert.doesNotMatch(fn, /grant\(|counter\.create|user\.update/, "read only");
+  assert.match(fn, /giftSiteOf\(u\.signupSource\) === opts\.site/);
+});

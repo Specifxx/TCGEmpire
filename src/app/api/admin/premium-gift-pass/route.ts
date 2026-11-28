@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { grantGiftPassBccBatch, runGiftPassBatch } from "@/lib/premium-gift-pass-server";
+import { grantGiftPassBccBatch, listGiftPassGranted, runGiftPassBatch } from "@/lib/premium-gift-pass-server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -28,5 +28,15 @@ export async function POST(req: Request) {
     if (r.ok) console.log(`admin gift pass (Gmail BCC): granted ${r.granted} on ${r.site} (failed ${r.failed}, remaining ${r.remaining}) by ${me?.email ?? "ADMIN_TOKEN"}`);
     return NextResponse.json(r, { status: r.ok ? 200 : 400 });
   }
-  return NextResponse.json({ ok: false, error: "action must be preview or grant" }, { status: 400 });
+  if (body?.action === "granted") {
+    // Read back who a batch was granted to (by the pass end it wrote), to send a Gmail that failed. Nothing is granted.
+    const fromMs = Number(body?.fromMs);
+    const toMs = Number(body?.toMs);
+    if (!site || !Number.isFinite(fromMs) || !Number.isFinite(toMs) || toMs < fromMs) {
+      return NextResponse.json({ ok: false, error: "site, fromMs and toMs are required" }, { status: 400 });
+    }
+    const emails = await listGiftPassGranted({ site, fromMs, toMs });
+    return NextResponse.json({ ok: true, site, emails });
+  }
+  return NextResponse.json({ ok: false, error: "action must be preview, grant or granted" }, { status: 400 });
 }
