@@ -26448,6 +26448,15 @@ any sign is read: it dates the product, not an event. This reverses the 2026-11-
 "events". Over the whole 27 Nov export it refuses exactly 9 more rows of 4,963 (US 7, UK 1, EU 1). "Prerift Pack",
 "Pre-Rift Player Pack" and bare titles stay. Test: tests/radiance-sealed-gaps.test.ts (PR #727).
 
+## 2026-11-28: Accounts dashboard splits Premium into paying, trial and promotional
+
+Owner (28 Nov): the accounts dashboard's Premium count should separate promotional Premium from Premium that is actually paid for. `premiumUntil` can't do this on its own, because the 3-day pass, the free week, the launch promo, reward days and admin grants all extend it the same way a payment does. So the split is read from Stripe.
+- **Paying:** the account's `stripeCustomerId` has a live subscription, meaning active or past_due (`isActive`, the same definition /admin/subscriptions uses).
+- **Trial:** its subscription is trialing.
+- **Promotional:** every other account with Plus or Premium on.
+- Each account counts once (`splitPremiumAccounts`, `lib/subscription-metrics.ts`, test in `tests/subscription-metrics.test.ts`).
+- /admin/accounts shows the three numbers under the totals, and "—" when Stripe can't be read.
+- The maintenance `funnel-report` task prints the same split, as counts only.
 ## 2026-11-28 — Compare Empire joins the shared account (sign-in and Premium), and keeps its own alerts
 
 **Asked:** the owner (28 Nov): "stores like Compare Empire should also have login, like the login feature and all the features that
