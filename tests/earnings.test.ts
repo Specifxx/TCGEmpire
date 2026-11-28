@@ -263,6 +263,7 @@ test("costs: the pre-filled entry is what the owner said, seeded once, and the r
   const costs = readFileSync(new URL("../src/lib/earnings/costs.ts", import.meta.url), "utf8");
   assert.doesNotMatch(costs, /seedKey: "vercel-pro"/, "Vercel comes from its invoices, not an estimate");
   assert.match(costs, /seedKey: "ads-reddit-meta-2026",[\s\S]*?amountCents: 20000,[\s\S]*?recurrence: "once"/);
+  assert.match(costs, /seedKey: "domain-brickcompare-app-2026",[\s\S]*?amountCents: 1099,[\s\S]*?startDay: "2026-11-28",[\s\S]*?recurrence: "once"/, "the BrickCompare domain, once (auto-renew off)");
   assert.match(costs, /createMany\(\{ data: SEEDS, skipDuplicates: true \}\)/, "seeded once: a removed seed keeps its row and its seedKey");
   assert.match(costs, /where: \{ removedAt: null \}/);
   const route = readFileSync(new URL("../src/app/api/admin/earnings/costs/route.ts", import.meta.url), "utf8");
