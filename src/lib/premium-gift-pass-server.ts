@@ -11,6 +11,7 @@ import { NOT_SEED_WHERE } from "./premium";
 import { RIFT_BRAND, brandFrom, brandFromSignupSource, type PremiumBrand } from "./premium-brand";
 import { SITE_URL } from "./site";
 import {
+  giftSiteOf,
   GIFT_DEFAULT_BATCH,
   GIFT_FEATURES,
   GIFT_MAX_BATCH,
@@ -228,4 +229,21 @@ export async function grantGiftPassBccBatch(opts: { site: string | null; limit?:
   const unsub = `${SITE_URL}/api/premium-gift-pass/unsubscribe?site=${encodeURIComponent(site)}`;
   const mail = buildGiftPassEmail({ brand: giftBrand(site), displayName: "", until: now + GIFT_PASS.days * 86_400_000, unsubUrl: unsub, oneClickUrl: unsub });
   return { ok: true, site, granted: emails.length, failed, remaining: a.pending.length - emails.length, emails, subject: mail.subject, html: mail.html, text: mail.text };
+}
+
+/**
+ * The addresses a BCC batch was granted to, read back from the Counter rows (owner's Gmail route, 2026-11-28): a batch's
+ * list is shown once, so if the Gmail step fails (Gmail refuses a compose link over ~8 KB) the same people can be listed
+ * again and sent, never granted twice. `fromMs`/`toMs` bound the pass END the grant wrote (grant time + 3 days).
+ */
+export async function listGiftPassGranted(opts: { site: string; fromMs: number; toMs: number }): Promise<string[]> {
+  const rows = await prisma.counter.findMany({
+    where: { key: { startsWith: `${GIFT_PASS.key}:` }, value: { gte: Math.floor(opts.fromMs / 1000), lte: Math.ceil(opts.toMs / 1000) } },
+    select: { key: true },
+    take: 5000,
+  });
+  const ids = rows.map((r) => r.key.slice(GIFT_PASS.key.length + 1));
+  if (!ids.length) return [];
+  const users = await prisma.user.findMany({ where: { id: { in: ids } }, select: { email: true, signupSource: true }, orderBy: { createdAt: "desc" } });
+  return users.filter((u) => giftSiteOf(u.signupSource) === opts.site).map((u) => u.email.trim());
 }
