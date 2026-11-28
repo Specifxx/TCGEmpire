@@ -7,6 +7,8 @@ import { AccountsExport, type ExportUser } from "@/components/admin/AccountsExpo
 import { GrantPremiumForm } from "@/components/admin/GrantPremiumForm";
 import { TierFloorForm } from "@/components/admin/TierFloorForm";
 import { NOT_SEED_WHERE } from "@/lib/premium";
+import { stripeEnabled } from "@/lib/stripe";
+import { fetchAllSubscriptions, splitPremiumAccounts } from "@/lib/subscription-metrics";
 import { DexTab } from "./DexTab";
 import { SISTER_PREMIUM_SITES } from "@/lib/sister-premium";
 
@@ -99,6 +101,9 @@ export default async function AccountsAdminPage({
   // is answerable from this page instead of being two bare integers (7d/30d).
   let daily: { day: string; count: number }[] = [];
   let bySource: [string, number][] = [];
+  // Paying vs trial vs promotional, of everyone with Plus or Premium on now. Null when
+  // Stripe isn't configured or can't be read: the page says so rather than guessing.
+  let premiumSplit: { paying: number; trial: number; promotional: number; capped: boolean } | null = null;
   let unclaimedAlertEmails = 0;
   let releaseAlertEmails = 0;
   let error = false;
@@ -197,6 +202,17 @@ export default async function AccountsAdminPage({
     ]);
     rows = list;
     totals = { all, verified, premium, plus, active7, new7, new30 };
+    if (stripeEnabled()) {
+      try {
+        const [subs, holders] = await Promise.all([
+          fetchAllSubscriptions(),
+          prisma.user.findMany({ where: { AND: [notSeed, active] }, select: { stripeCustomerId: true }, take: 20_000 }),
+        ]);
+        premiumSplit = { ...splitPremiumAccounts(holders, subs.rows), capped: subs.capped };
+      } catch (e) {
+        console.error("[admin/accounts] premium split failed:", e);
+      }
+    }
     unclaimedAlertEmails = Number(anonEmails[0]?.n ?? 0);
     releaseAlertEmails = Number(releaseEmails[0]?.n ?? 0);
     // Bucket by UTC day, zero-filling so a quiet day renders as a gap, not a
@@ -266,6 +282,24 @@ export default async function AccountsAdminPage({
         />
         <Stat label="Radiance release alert" value={num(releaseAlertEmails)} sub="distinct emails signed up" />
       </div>
+
+      {/* Plus + Premium split by where the days came from (owner, 2026-11-28). Paying
+          is read from Stripe, not from premiumUntil, which promotions extend too. */}
+      {!error && (
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Stat
+            label="Paying (Stripe)"
+            value={premiumSplit ? num(premiumSplit.paying) : "—"}
+            sub={premiumSplit ? `active subscription${premiumSplit.capped ? " · list capped" : ""}` : "Stripe not readable"}
+          />
+          <Stat label="On a trial" value={premiumSplit ? num(premiumSplit.trial) : "—"} sub="card on file, not charged yet" />
+          <Stat
+            label="Promotional"
+            value={premiumSplit ? num(premiumSplit.promotional) : "—"}
+            sub="3-day pass, free week, promo, rewards, grants"
+          />
+        </div>
+      )}
 
       {/* Signups over time + where they came from. The bar strip answers "did
           last week's change move signups"; the source table answers "which

@@ -33,6 +33,9 @@ export interface SubRow {
   // `surface`, stamped by api/premium/checkout since 2026-09-23; see
   // lib/premium-surface.ts). Null/undefined for everything older.
   surface?: string | null;
+  // Optional — the Stripe customer id, so an account (User.stripeCustomerId) can be
+  // matched to the subscription that pays for it (splitPremiumAccounts below).
+  customerId?: string | null;
 }
 
 const DAY = 86_400_000;
@@ -52,6 +55,7 @@ export function toSubRow(sub: Stripe.Subscription): SubRow {
     trialEndMs: sub.trial_end ? sub.trial_end * 1000 : null,
     priceId: price?.id ?? null,
     surface: typeof sub.metadata?.surface === "string" ? sub.metadata.surface : null,
+    customerId: typeof sub.customer === "string" ? sub.customer : (sub.customer?.id ?? null),
   };
 }
 
@@ -235,6 +239,34 @@ export function computeSubscriptionMetrics(rows: SubRow[], nowMs: number, cohort
     byCurrency,
     cohorts,
   };
+}
+
+// The accounts dashboard's split of everyone with Premium or Plus on right now (owner,
+// 2026-11-28: "split it by premium promotional and actual premium"). PAYING: the
+// account's Stripe customer has a live subscription (isActive: active or past_due).
+// TRIAL: its subscription is trialing (card on file, not charged yet). PROMOTIONAL:
+// every other active account, whose days came from us, not from a payment: the
+// 3-day pass, the free week, the launch promo, reward days, admin grants. An
+// account counts once, in the first bucket that fits.
+export function splitPremiumAccounts(
+  accounts: { stripeCustomerId: string | null }[],
+  rows: Pick<SubRow, "status" | "customerId">[],
+): { paying: number; trial: number; promotional: number } {
+  const paying = new Set<string>();
+  const trial = new Set<string>();
+  for (const r of rows) {
+    if (!r.customerId) continue;
+    if (isActive(r.status)) paying.add(r.customerId);
+    else if (r.status === "trialing") trial.add(r.customerId);
+  }
+  const out = { paying: 0, trial: 0, promotional: 0 };
+  for (const a of accounts) {
+    const c = a.stripeCustomerId;
+    if (c && paying.has(c)) out.paying += 1;
+    else if (c && trial.has(c)) out.trial += 1;
+    else out.promotional += 1;
+  }
+  return out;
 }
 
 // Impure: page through every subscription in the account (price expanded so the

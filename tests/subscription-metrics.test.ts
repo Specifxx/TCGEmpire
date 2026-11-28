@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { computeSubscriptionMetrics, monthlyValueCents, type SubRow } from "../src/lib/subscription-metrics";
+import { computeSubscriptionMetrics, monthlyValueCents, splitPremiumAccounts, type SubRow } from "../src/lib/subscription-metrics";
 
 // Fixed clock so cohort months and 30d windows are deterministic.
 const NOW = Date.UTC(2026, 7, 27); // 2026-08-27
@@ -86,4 +86,23 @@ test("MRR, plan mix, ARPU, churn, LTV and cohorts compute correctly", () => {
   assert.equal(m.cohorts[0].active, 3); // active or trialing all count as retained
   const jul = m.cohorts.find((c) => c.month === "2026-07");
   assert.ok(jul && jul.started === 2 && jul.active === 1 && jul.retentionPct === 50, "B stayed, F churned");
+});
+
+test("splitPremiumAccounts: paying from a live subscription, trial, and everything else promotional", () => {
+  const rows = [
+    { status: "active" as const, customerId: "cus_paid" },
+    { status: "past_due" as const, customerId: "cus_late" },
+    { status: "trialing" as const, customerId: "cus_trial" },
+    { status: "canceled" as const, customerId: "cus_gone" },
+    // A customer with an old cancelled sub and a new live one still pays.
+    { status: "canceled" as const, customerId: "cus_paid" },
+  ];
+  const accounts = [
+    { stripeCustomerId: "cus_paid" },
+    { stripeCustomerId: "cus_late" },
+    { stripeCustomerId: "cus_trial" },
+    { stripeCustomerId: "cus_gone" }, // lapsed payer now on a 3-day pass
+    { stripeCustomerId: null }, // never paid: pass, free week, promo
+  ];
+  assert.deepEqual(splitPremiumAccounts(accounts, rows), { paying: 2, trial: 1, promotional: 2 });
 });

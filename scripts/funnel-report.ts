@@ -27,7 +27,7 @@ import { prisma } from "../src/lib/db";
 import { NOT_SEED_WHERE } from "../src/lib/premium";
 import { tierFromPriceId } from "../src/lib/premium";
 import { stripeEnabled } from "../src/lib/stripe";
-import { fetchAllSubscriptions, isActive, monthlyValueCents } from "../src/lib/subscription-metrics";
+import { fetchAllSubscriptions, isActive, monthlyValueCents, splitPremiumAccounts } from "../src/lib/subscription-metrics";
 import { surfaceTables, type ClickRow, type SurfaceSub } from "../src/lib/funnel-surfaces";
 
 const WEEKS = Math.max(1, Math.min(52, Number(process.env.WEEKS ?? 8)));
@@ -166,6 +166,15 @@ async function main() {
       const ended = s.endedAtMs ?? (s.status === "canceled" ? s.canceledAtMs : null);
       bump(ended, (r) => r.cancellations++);
     }
+    // Who has Plus or Premium on right now, by where the days came from (the same
+    // split as /admin/accounts). Counts only.
+    const holders = await prisma.user.findMany({
+      where: { AND: [NOT_SEED_WHERE, { premiumUntil: { gt: new Date(now) } }] },
+      select: { stripeCustomerId: true },
+      take: 20_000,
+    });
+    const split = splitPremiumAccounts(holders, rows);
+    console.log(`Premium on now: ${holders.length} = paying ${split.paying} + trial ${split.trial} + promotional ${split.promotional}\n`);
     const live = rows.filter((s) => isActive(s.status));
     const byCur = new Map<string, number>();
     for (const s of live) byCur.set(s.currency, (byCur.get(s.currency) ?? 0) + monthlyValueCents(s));
