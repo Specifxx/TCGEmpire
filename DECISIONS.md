@@ -26473,3 +26473,20 @@ CamCompare and WargameCompare are idle (only fixes), so Compare Empire is the on
   and the start route's state cookie must land on the host the provider returns to. Registering
   `compareempire.com/account-service/oauth/<provider>/callback` is an owner step (`ce-oauth-callbacks`); then drop `ce` from the
   list and switch its buttons to the rewrite.
+
+## 2026-11-28 — BrickCompare joins the shared account, alerts and collection
+
+**Asked:** the owner (28 Nov) asked for BrickCompare, a new sealed LEGO price comparison site at brickcompare.app (domain not
+bought yet), with a collection tracker and price alerts "using the same auth as RiftCompare" and "reuse the existing alert
+engine, do not build a second one". The site holds no database and no mail key, so it takes every one of them from here.
+
+- **`brick` is a shared-alert site** (`SISTER_ALERT_SITES`, group `brick`, quiet: its emails name only BrickCompare and carry no
+  other site's deal) and **a premium site** (`SISTER_PREMIUM_SITES`): sign-in by emailed link, watches and the price-drop and
+  back-in-stock alerts, read once a day from its static `/alert-feed.json` (feed v1, the lowest in-stock store price, never eBay
+  or Amazon, never converted).
+- **Its collection is a stash site** (`STASH_SITES`, beside TCG Prices): one row per member, owned sets and what they paid.
+- **`brickcompare.vercel.app` is an old host** of both lists, so the preview acceptance test (sign in, collect, alert) can run
+  before the domain exists. Exact origins only; `tests/sister-alerts.test.ts` and `tests/sister-premium.test.ts` pin them.
+- **Earnings:** `brick` is in the earnings site list (Vercel project `brickcompare`) and the tag names. Its eBay and Amazon tags
+  carry the set number (`brick-<region>-<placement>-<set>`), so a by-set split reads straight from the tags.
+- It is not in Empire HQ yet: that waits for the domain.

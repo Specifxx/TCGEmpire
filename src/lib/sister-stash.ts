@@ -26,7 +26,7 @@ import { claimMailSlot, mailLane } from "./sister-alerts/mail-cap";
 import { DIGEST_MAIL_CEILING } from "./sister-alerts/digest";
 
 /** Sites whose /collection syncs here and may send the weekly stash email. Each must also be a sister alert site (its feed). */
-export const STASH_SITES = new Set<string>(["tcgprices"]);
+export const STASH_SITES = new Set<string>(["tcgprices", "brick"]);
 
 export const STASH_MAX_ITEMS = 300;
 export const STASH_MAX_QTY = 99;
