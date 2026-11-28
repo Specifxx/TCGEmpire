@@ -140,3 +140,18 @@ test("TCGplayer sealed is priced at its cheapest English listing, with market as
   assert.match(src, /const price = listing\?\.price \?\? market;/);
   assert.match(src, /priceCents: Math\.round\(price \* 100\),/);
 });
+
+test("a player kit or seat called an 'Event Kit' never prices the 16-player store kit (2026-11-28)", async () => {
+  const { sealedFloorCents } = await import("../src/lib/ebay");
+  // Rows from the 27 Nov export: one player kit each, filed as the store's Pre-Rift Event Kit.
+  for (const cents of [2999, 4999, 4000, 3500, 4499, 9743, 10499]) {
+    assert.ok(cents < sealedFloorCents("Pre-Rift Event Kit"), String(cents));
+  }
+  // The store kit itself: TCGplayer US$440.01 (Radiance), universetcg EUR 605, commonboxgames CA$929.54, and a UK store
+  // kit on clearance at GBP 189 (still over half the US$480 MSRP).
+  for (const cents of [44001, 60500, 92954, 18900]) {
+    assert.ok(cents >= sealedFloorCents("Pre-Rift Event Kit"), String(cents));
+  }
+  // The player kit's own page keeps its floor: TCGplayer's US$21.45 Radiance kit and US$29.99 store kits stay.
+  assert.ok(2145 >= sealedFloorCents("Pre-Rift Kit"));
+});
